@@ -23,23 +23,20 @@ THE SOFTWARE.
 #pragma once
 #include <set>
 #include <memory>
-#include <algorithm>
 #include "bounding_box_graph.h"
 #include "meta_data.h"
 #include "node.h"
-#include "node_flip.h"
+#include "node_resize_mirror_normalize.h"
 #include "parameter_vx.h"
-
-class FlipMetaNode:public MetaNode
+class ResizeMirrorNormalizeMetaNode:public MetaNode
 {
     public:
-        FlipMetaNode() {};
+        ResizeMirrorNormalizeMetaNode() {};
         void update_parameters(MetaDataBatch* input_meta_data, bool segmentation)override;
-        std::shared_ptr<FlipNode> _node = nullptr;
+        std::shared_ptr<ResizeMirrorNormalizeNode> _node = nullptr;
     private:
         void initialize();
-        vx_array _src_width, _src_height;
-        std::vector<uint> _src_width_val, _src_height_val;
-        vx_array _flip_axis;
-        std::vector<int> _flip_axis_val;
+        vx_array _src_width, _src_height, _dst_width, _dst_height, _mirror;
+        std::vector<uint> _src_width_val, _src_height_val, _dst_width_val, _dst_height_val, _mirror_val;
+        float _dst_to_src_width_ratio, _dst_to_src_height_ratio;
 };

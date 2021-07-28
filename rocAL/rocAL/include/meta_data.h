@@ -34,17 +34,22 @@ typedef  std::vector<int> BoundingBoxLabels;
 typedef  struct { int w; int h; } ImgSize;
 typedef  std::vector<ImgSize> ImgSizes;
 
+typedef std::vector<std::vector<float>> coords;
+typedef std::vector<coords> MaskCords;
+
 struct MetaData
 {
     int& get_label() { return _label_id; }
     BoundingBoxCords& get_bb_cords() { return _bb_cords; }
     BoundingBoxLabels& get_bb_labels() { return _bb_label_ids; }
     ImgSizes& get_img_sizes() {return _img_sizes; }
+    MaskCords& get_mask_cords() { return _mask_cords;}
 protected:
     BoundingBoxCords _bb_cords = {}; // For bb use
     BoundingBoxLabels _bb_label_ids = {};// For bb use
     ImgSizes _img_sizes = {};
     int _label_id = -1; // For label use only
+    MaskCords _mask_cords = {};
 };
 
 struct Label : public MetaData
@@ -67,9 +72,17 @@ struct BoundingBox : public MetaData
         _bb_label_ids = std::move(bb_label_ids);
         _img_sizes = std::move(img_sizes);
     }
+    BoundingBox(BoundingBoxCords bb_cords,BoundingBoxLabels bb_label_ids ,ImgSizes img_sizes, MaskCords mask_cords)
+    {
+        _bb_cords =std::move(bb_cords);
+        _bb_label_ids = std::move(bb_label_ids);
+        _img_sizes = std::move(img_sizes);
+        _mask_cords = std::move(mask_cords);
+    }
     void set_bb_cords(BoundingBoxCords bb_cords) { _bb_cords =std::move(bb_cords); }
     void set_bb_labels(BoundingBoxLabels bb_label_ids) {_bb_label_ids = std::move(bb_label_ids); }
     void set_img_sizes(ImgSizes img_sizes) { _img_sizes =std::move(img_sizes); }
+    void set_mask_cords(MaskCords mask_cords) { _mask_cords = std::move(mask_cords);}
 };
 
 struct MetaDataBatch
@@ -78,6 +91,7 @@ struct MetaDataBatch
     virtual void clear() = 0;
     virtual void resize(int batch_size) = 0;
     virtual int size() = 0;
+    virtual int mask_size() = 0;
     virtual MetaDataBatch&  operator += (MetaDataBatch& other) = 0;
     MetaDataBatch* concatenate(MetaDataBatch* other)
     {
@@ -89,11 +103,13 @@ struct MetaDataBatch
     std::vector<BoundingBoxCords>& get_bb_cords_batch() { return _bb_cords; }
     std::vector<BoundingBoxLabels>& get_bb_labels_batch() { return _bb_label_ids; }
     std::vector<ImgSizes>& get_img_sizes_batch() { return _img_sizes; }
+    std::vector<MaskCords>& get_mask_cords_batch() { return _mask_cords; }
 protected:
     std::vector<int> _label_id = {}; // For label use only
     std::vector<BoundingBoxCords> _bb_cords = {};
     std::vector<BoundingBoxLabels> _bb_label_ids = {};
     std::vector<ImgSizes> _img_sizes = {};
+    std::vector<MaskCords> _mask_cords = {};
 };
 
 struct LabelBatch : public MetaDataBatch
@@ -115,6 +131,10 @@ struct LabelBatch : public MetaDataBatch
     {
         return _label_id.size();
     }
+    int mask_size() override
+    {
+        return 0;
+    }
     std::shared_ptr<MetaDataBatch> clone() override
     {
         return std::make_shared<LabelBatch>(*this);
@@ -133,12 +153,14 @@ struct BoundingBoxBatch: public MetaDataBatch
         _bb_cords.clear();
         _bb_label_ids.clear();
         _img_sizes.clear();
+        _mask_cords.clear();
     }
     MetaDataBatch&  operator += (MetaDataBatch& other) override
     {
         _bb_cords.insert(_bb_cords.end(),other.get_bb_cords_batch().begin(), other.get_bb_cords_batch().end());
         _bb_label_ids.insert(_bb_label_ids.end(), other.get_bb_labels_batch().begin(), other.get_bb_labels_batch().end());
         _img_sizes.insert(_img_sizes.end(),other.get_img_sizes_batch().begin(), other.get_img_sizes_batch().end());
+        _mask_cords.insert(_mask_cords.end(),other.get_mask_cords_batch().begin(), other.get_mask_cords_batch().end());
         return *this;
     }
     void resize(int batch_size) override
@@ -146,10 +168,15 @@ struct BoundingBoxBatch: public MetaDataBatch
         _bb_cords.resize(batch_size);
         _bb_label_ids.resize(batch_size);
         _img_sizes.resize(batch_size);
+        _mask_cords.resize(batch_size);
     }
     int size() override
     {
         return _bb_cords.size();
+    }
+    int mask_size() override
+    {
+        return _mask_cords.size();
     }
     std::shared_ptr<MetaDataBatch> clone() override
     {
