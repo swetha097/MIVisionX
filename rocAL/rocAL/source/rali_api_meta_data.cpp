@@ -293,6 +293,62 @@ RALI_API_CALL raliGetBoundingBoxCords(RaliContext p_context, float* buf)
     }
 }
 
+unsigned
+RALI_API_CALL raliGetMaskCount(RaliContext p_context, int* buf)
+{
+    if (!p_context)
+        THROW("Invalid rali context passed to raliGetMaskCount")
+    unsigned size = 0, count = 0;
+    auto context = static_cast<Context*>(p_context);
+    auto meta_data = context->master_graph->meta_data();
+    size_t meta_data_batch_size = meta_data.second->get_mask_cords_batch().size();
+    if(context->user_batch_size() != meta_data_batch_size)
+        THROW("meta data batch size is wrong " + TOSTR(meta_data_batch_size) + " != "+ TOSTR(context->user_batch_size() ))
+    if(!meta_data.second)
+        THROW("No mask has been loaded for this output image")
+    for(unsigned i = 0; i < meta_data_batch_size; i++)
+    {
+        unsigned object_count = meta_data.second->get_mask_cords_batch()[i].size();
+        for(unsigned int j = 0; j < object_count; j++) {
+            unsigned polygon_count = meta_data.second->get_mask_cords_batch()[i][j].size();
+            buf[count++] = polygon_count;
+            size += polygon_count;
+        }
+    }
+    return size;
+}
+
+void
+RALI_API_CALL raliGetMaskCoordinates(RaliContext p_context, int *bufcount, float *buf)
+{
+    if (!p_context)
+        THROW("Invalid rali context passed to raliGetMaskCoordinates")
+    auto context = static_cast<Context*>(p_context);
+    auto meta_data = context->master_graph->meta_data();
+    size_t meta_data_batch_size = meta_data.second->get_mask_cords_batch().size();
+    if(context->user_batch_size() != meta_data_batch_size)
+        THROW("meta data batch size is wrong " + TOSTR(meta_data_batch_size) + " != "+ TOSTR(context->user_batch_size() ))
+    if(!meta_data.second)
+        THROW("No mask has been loaded for this output image")
+    int size = 0, count = 0;
+    auto ptr = buf;
+    for(unsigned image_idx = 0; image_idx < meta_data_batch_size; image_idx++)
+    {
+        unsigned object_count = meta_data.second->get_mask_cords_batch()[image_idx].size();
+        for(unsigned int i = 0; i < object_count; i++)
+        {
+            unsigned polygon_count = meta_data.second->get_mask_cords_batch()[image_idx][i].size();
+            for(unsigned int j = 0; j < polygon_count; j++)
+            {
+                unsigned polygon_size = meta_data.second->get_mask_cords_batch()[image_idx][i][j].size();
+                bufcount[size++] = polygon_size;
+                memcpy(ptr, meta_data.second->get_mask_cords_batch()[image_idx][i][j].data(), sizeof(float) * meta_data.second->get_mask_cords_batch()[image_idx][i][j].size());
+                ptr += polygon_size;
+            }
+        }
+    }
+}
+
 void
 RALI_API_CALL raliGetImageSizes(RaliContext p_context, int* buf)
 {   

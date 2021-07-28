@@ -25,12 +25,12 @@ void BoundingBoxGraph::process(MetaDataBatch *meta_data)
 {
     for (auto &meta_node : _meta_nodes)
     {
-        meta_node->update_parameters(meta_data);
+        meta_node->update_parameters(meta_data, is_segmentation());
     }
 }
 
 //not required since the bbox are normalized in the very beggining -> remove the call in master graph also
-void BoundingBoxGraph::update_meta_data(MetaDataBatch *input_meta_data, decoded_image_info decode_image_info)
+void BoundingBoxGraph::update_meta_data(MetaDataBatch *input_meta_data, decoded_image_info decode_image_info, bool segmentation)
 {
     std::vector<uint32_t> original_height = decode_image_info._original_height;
     std::vector<uint32_t> original_width = decode_image_info._original_width;
@@ -49,6 +49,47 @@ void BoundingBoxGraph::update_meta_data(MetaDataBatch *input_meta_data, decoded_
         BoundingBoxCord temp_box;
         temp_box.l = temp_box.t = temp_box.r = temp_box.b = 0;
         BoundingBoxLabels bb_labels;
+        float mask_data[MAX_BUFFER];
+        int poly_count[bb_count];
+        std::vector<int> poly_size;
+        MaskCords mask_coords;
+        coords mask_cord;
+        std::vector<float> mask;
+        int idx = 0, index = 1;
+        if (segmentation)
+        {
+            auto ptr = mask_data;
+            for (unsigned int object_index = 0; object_index < bb_count; object_index++)
+            {
+                unsigned polygon_count = input_meta_data->get_mask_cords_batch()[i][object_index].size();
+                poly_count[object_index] = polygon_count;
+                for (unsigned int polygon_index = 0; polygon_index < polygon_count; polygon_index++)
+                {
+                    unsigned polygon_size = input_meta_data->get_mask_cords_batch()[i][object_index][polygon_index].size();
+                    poly_size.push_back(polygon_size);
+                    memcpy(ptr, input_meta_data->get_mask_cords_batch()[i][object_index][polygon_index].data(), sizeof(float) * input_meta_data->get_mask_cords_batch()[i][object_index][polygon_index].size());
+                    ptr += polygon_size;
+                }
+            }
+            for (unsigned int loop_index_1 = 0, k = 0; loop_index_1 < poly_size.size(); loop_index_1++)
+            {
+                for (int loop_idx_2 = 0; loop_idx_2 < poly_size[loop_index_1]; loop_idx_2 += 2, idx += 2)
+                {
+                    mask.push_back(mask_data[idx] * _dst_to_src_width_ratio);
+                    mask.push_back(mask_data[idx + 1] * _dst_to_src_height_ratio);
+                }
+                mask_cord.push_back(mask);
+                mask.clear();
+                if (poly_count[k] == index++)
+                {
+                    mask_coords.push_back(mask_cord);
+                    mask_cord.clear();
+                    k++;
+                    index = 1;
+                }
+            }
+        }
+
         int m = 0;
         for (uint j = 0; j < bb_count; j++)
         {
@@ -61,6 +102,7 @@ void BoundingBoxGraph::update_meta_data(MetaDataBatch *input_meta_data, decoded_
             box.r = (coords_buf[m++] * _dst_to_src_width_ratio);
             box.b = (coords_buf[m++] * _dst_to_src_height_ratio);
             bb_coords.push_back(box);
+            bb_labels.push_back(labels_buf[j]);
         }
         if (bb_coords.size() == 0)
         {
@@ -68,6 +110,13 @@ void BoundingBoxGraph::update_meta_data(MetaDataBatch *input_meta_data, decoded_
             bb_labels.push_back(0);
         }
         input_meta_data->get_bb_cords_batch()[i] = bb_coords;
+        input_meta_data->get_bb_labels_batch()[i] = bb_labels;
+        if (segmentation)
+        {
+            input_meta_data->get_mask_cords_batch()[i] = mask_coords;
+            mask_coords.clear();
+            poly_size.clear();
+        }
     }
 }
 

@@ -926,7 +926,7 @@ void MasterGraph::output_routine()
                         }
                         else
                         {
-                            _meta_data_graph->update_meta_data(_augmented_meta_data, decode_image_info);
+                            _meta_data_graph->update_meta_data(_augmented_meta_data, decode_image_info, is_segmentation());
                         }
                         _meta_data_graph->process(_augmented_meta_data);
                     }
@@ -993,11 +993,11 @@ void MasterGraph::stop_processing()
         _output_thread.join();
 }
 
-MetaDataBatch * MasterGraph::create_coco_meta_data_reader(const char *source_path, bool is_output)
+MetaDataBatch * MasterGraph::create_coco_meta_data_reader(const char *source_path, bool is_output, bool mask)
 {
     if( _meta_data_reader)
         THROW("A metadata reader has already been created")
-    MetaDataConfig config(MetaDataType::BoundingBox, MetaDataReaderType::COCO_META_DATA_READER, source_path);
+    MetaDataConfig config(MetaDataType::BoundingBox, MetaDataReaderType::COCO_META_DATA_READER, source_path, std::map<std::string, std::string>(), std::string(), mask);
     _meta_data_graph = create_meta_data_graph(config);
     _meta_data_reader = create_meta_data_reader(config);
     _meta_data_reader->init(config);
