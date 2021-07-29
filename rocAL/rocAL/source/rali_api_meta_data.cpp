@@ -27,6 +27,7 @@ THE SOFTWARE.
 #include "commons.h"
 #include "context.h"
 #include "rali_api.h"
+#define MAX_BUFFER 10000
 
 void
 RALI_API_CALL raliRandomBBoxCrop(RaliContext p_context, bool all_boxes_overlap, bool no_crop, RaliFloatParam p_aspect_ratio, bool has_shape, int crop_width, int crop_height, int num_attempts, RaliFloatParam p_scaling, int total_num_attempts, int64_t seed)
@@ -67,12 +68,12 @@ RALI_API_CALL raliCreateLabelReader(RaliContext p_context, const char* source_pa
 }
 
 RaliMetaData
-RALI_API_CALL raliCreateCOCOReader(RaliContext p_context, const char* source_path, bool is_output){
+RALI_API_CALL raliCreateCOCOReader(RaliContext p_context, const char* source_path, bool is_output, bool mask){
     if (!p_context)
         THROW("Invalid rali context passed to raliCreateCOCOReader")
     auto context = static_cast<Context*>(p_context);
 
-    return context->master_graph->create_coco_meta_data_reader(source_path, is_output);
+    return context->master_graph->create_coco_meta_data_reader(source_path, is_output, mask);
 
 }
 

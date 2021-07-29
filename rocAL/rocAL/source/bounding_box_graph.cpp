@@ -20,6 +20,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 #include "bounding_box_graph.h"
+#define MAX_BUFFER 10000
 
 void BoundingBoxGraph::process(MetaDataBatch *meta_data)
 {

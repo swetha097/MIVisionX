@@ -593,7 +593,7 @@ class COCOReader(Node):
 
     def rali_c_func_call(self, handle):
         b.setSeed(self._seed)
-        b.COCOReader(handle, self._annotations_file, True)
+        b.COCOReader(handle, self._annotations_file, True, False)
         # b.labelReader(handle,self._file_root)
         return self._file_root
 
