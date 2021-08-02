@@ -125,13 +125,10 @@ void ResizeMirrorNormalizeMetaNode::update_parameters(MetaDataBatch *input_meta_
         for (uint j = 0; j < bb_count; j++)
         {
             BoundingBoxCord box;
-            float temp_l, temp_t;
-            temp_l = (coords_buf[m++] * _dst_to_src_width_ratio);
-            temp_t = (coords_buf[m++] * _dst_to_src_height_ratio);
-            box.l = std::max(temp_l,0.0f);
-            box.t = std::max(temp_t,0.0f);
-            box.r = (coords_buf[m++] * _dst_to_src_width_ratio);
-            box.b = (coords_buf[m++] * _dst_to_src_height_ratio);
+            box.l = coords_buf[m++];
+            box.t = coords_buf[m++];
+            box.r = coords_buf[m++];
+            box.b = coords_buf[m++];
 
             if(_mirror_val[i] == 0)
             {
