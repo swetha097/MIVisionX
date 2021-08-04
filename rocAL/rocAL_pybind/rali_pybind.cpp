@@ -147,6 +147,17 @@ namespace rali{
         return py::cast<py::none>(Py_None);
     }
 
+    // void wrapper_raliCreateCOCOReader(RaliContext context,  py::args args)
+    // {
+    //     //  if (kwargs)
+    //     // /// .. do something with kwargs
+    //     // for (auto item : kwargs)
+    //     // std::cout << "key=" << std::string(py::str(item.first)) << ", "
+    //     //           << "value=" << std::string(py::str(item.second)) << std::endl;
+    //     std::cout<<"wrapper coco reader "<<args;
+    //     raliCreateCOCOReader(context, args[0],args[1]);
+
+    // }
     py::object wrapper_one_hot_label_copy(RaliContext context, py::array_t<int> array , unsigned numOfClasses)
     {
         auto buf = array.request();
@@ -270,7 +281,7 @@ namespace rali{
         m.def("raliCopyToOutputTensor32",&wrapper_tensor32);
         m.def("raliCopyToOutputTensor16",&wrapper_tensor16);
         // rali_api_data_loaders.h
-         m.def("COCO_ImageDecoderSlice",&raliJpegCOCOFileSourcePartial,"Reads file from the source given and decodes it according to the policy",
+        m.def("COCO_ImageDecoderSlice",&raliJpegCOCOFileSourcePartial,"Reads file from the source given and decodes it according to the policy",
             py::return_value_policy::reference,
             py::arg("context"),
             py::arg("source_path"),
@@ -346,20 +357,7 @@ namespace rali{
             py::arg("decode_size_policy") = RALI_USE_MOST_FREQUENT_SIZE,
             py::arg("max_width") = 0,
             py::arg("max_height") = 0);
-        m.def("COCO_ImageDecoderShard",&raliJpegCOCOFileSourceSingleShard,"Reads file from the source given and decodes it according to the shard id and number of shards",
-            py::return_value_policy::reference,
-            py::arg("context"),
-            py::arg("source_path"),
-	        py::arg("json_path"),
-            py::arg("color_format"),
-            py::arg("shard_id"),
-            py::arg("shard_count"),
-            py::arg("is_output"),
-            py::arg("shuffle") = false,
-            py::arg("loop") = false,
-            py::arg("decode_size_policy") = RALI_USE_MOST_FREQUENT_SIZE,
-            py::arg("max_width") = 0,
-            py::arg("max_height") = 0);
+        m.def("COCO_ImageDecoderShard",&raliJpegCOCOFileSourceSingleShard);
         m.def("TF_ImageDecoder",&raliJpegTFRecordSource,"Reads file from the source given and decodes it according to the policy only for TFRecords",
             py::return_value_policy::reference,
             py::arg("p_context"),
@@ -576,13 +574,7 @@ namespace rali{
             py::arg("crop_height"),
             py::arg("crop_depth"),
             py::arg("is_output"));
-        m.def("Brightness",&raliBrightness,
-            py::return_value_policy::reference,
-            py::arg("context"),
-            py::arg("input"),
-            py::arg("is_output"),
-            py::arg("alpha") = NULL,
-            py::arg("beta") = NULL);
+        m.def("Brightness",&raliBrightness);
         m.def("GammaCorrection",&raliGamma,
             py::return_value_policy::reference,
             py::arg("context"),

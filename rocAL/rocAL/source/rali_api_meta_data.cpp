@@ -68,10 +68,12 @@ RALI_API_CALL raliCreateLabelReader(RaliContext p_context, const char* source_pa
 
 RaliMetaData
 RALI_API_CALL raliCreateCOCOReader(RaliContext p_context, const char* source_path, bool is_output){
+    std::cerr<<"Comes to raliCreateCocoReader";
+    // exit(0);
     if (!p_context)
         THROW("Invalid rali context passed to raliCreateCOCOReader")
     auto context = static_cast<Context*>(p_context);
-
+    std::cout<<"Source path :: "<<source_path;
     return context->master_graph->create_coco_meta_data_reader(source_path, is_output);
 
 }

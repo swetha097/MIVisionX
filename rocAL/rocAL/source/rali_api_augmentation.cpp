@@ -478,6 +478,10 @@ raliBrightness(
         RaliFloatParam p_alpha,
         RaliFloatParam p_beta)
 {
+    std::cerr<<"\n**************************************************************************";
+    std::cerr<<"\n coming to rali brightness";
+    std::cerr<<"\n args passed- is_output "<<is_output;
+    std::cerr<<"\n**************************************************************************";
     Image* output = nullptr;
     if(!p_input || !p_context)
         THROW("Null values passed as input")

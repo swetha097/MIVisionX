@@ -1,3 +1,5 @@
+from amd.rali.global_cfg import Node
+from numpy.core.fromnumeric import trace 
 import rali_pybind as b
 import amd.rali.types as types
 import numpy as np
@@ -119,6 +121,8 @@ class Pipeline(object):
         self._numOfClasses = None
         self._oneHotEncoding = False
         self._castLabels = False
+        self._prev_input_image = None
+        self._current_output_image = None
 
     def store_values(self, operator):
         """
@@ -248,6 +252,7 @@ class Pipeline(object):
                                        multiplier[0], multiplier[1], multiplier[2], offset[0], offset[1], offset[2], (1 if reverse_channels else 0))
 
     def copyToTensorNCHW(self, array,  multiplier, offset, reverse_channels, tensor_dtype):
+        print("Comes to copyToTensorNCHW")
         out = np.frombuffer(array, dtype=array.dtype)
         if tensor_dtype == types.FLOAT:
             b.raliCopyToOutputTensor32(self._handle, np.ascontiguousarray(out, dtype=array.dtype), types.NCHW,
@@ -264,6 +269,122 @@ class Pipeline(object):
     def GetOneHotEncodedLabels(self, array):
         return b.getOneHotEncodedLabels(self._handle, array, self._numOfClasses)
 
+
+    def set_outputs(self,*output_list):
+        print(f'output_list {output_list}')
+        # if(isinstance(output_list,)) #How to check if its an instance of the Node()
+        set_output_images = []
+        output_traces_list = []
+        for output in output_list:
+            print(f'output {output}')
+            if(isinstance(output, Node)):
+                print("TRUE")
+                print(f'{type(output)}')
+                output.is_output = True
+                output.kwargs_pybind["is_output"] = True
+                set_output_images.append(output)
+        print(f'set_output_image_list {set_output_images}')
+        # Create the Output Tracing List [ [ TraceList1 ],[ TraceList2 ],[ TraceList3 ] ..[ TraceListN ]   ]  by Backtracing the Nodes (N is the number of output Nodes set by the user)
+        # TraceList1 = [ Current Node, Number of Prev Nodes, PrevNode1 , PrevNode2 ...PrevNodeN ]
+        for node in set_output_images:
+            print(f'node {node}')
+            output_dict = []
+            # if(isinstance(output, Node)): #Remove this line of code
+            node = [node]
+            while node[0].submodule_name != "readers":
+                print("while loop")
+                current_nodes = [node[0]]
+                print(f'current_nodes {current_nodes}')
+                for current_node in current_nodes:
+                    current_list = []
+                    current_list.append(current_node)  # Append Node
+                    number_of_prev_nodes = len(current_node.prev)
+                    # Append number of Previous Node
+                    current_list.append(number_of_prev_nodes)
+                    for prev_node in current_node.prev:
+                        # Append Previous Nodes
+                        if(prev_node.CMN == True): # Needs to be changed at later stages
+                            self._tensor_layout = prev_node.kwargs['output_layout']
+                            self._tensor_dtype = prev_node.kwargs['output_dtype']
+                            self._multiplier = list(map(lambda x: 1/x ,prev_node.kwargs['std']))
+                            self._offset = list(map(lambda x,y: -(x/y), prev_node.kwargs['mean'], prev_node.kwargs['std']))
+                            #changing operator std and mean to (1,0) to make sure there is no double normalization
+                            prev_node.kwargs['std'] = [1.0]
+                            prev_node.kwargs['mean'] = [0.0]
+                        current_list.append(prev_node)
+                    node = current_node.prev  # List of Prev Nodes
+                    print(f'current node prevs {current_nodes}')
+                    output_dict.append(current_list)
+                    print(f'output_dict {output_dict}')
+            #Reader Node
+            self._name = node[0].node_name   #Store the name of the reader in a variable for further use     
+            current_list=[node[0],0, "NULL"]
+            output_dict.append(current_list)
+            output_traces_list.append(output_dict)
+        print(f'output_traces_list {output_traces_list}')   
+
+        # Excecute the rali c func call's
+        for trace_list in output_traces_list: #trace_list =  [ [ Current Node , Number of Prev Nodes, PrevNode1 , PrevNode2 ...PrevNodeN ] , [ Current Node, Number of Prev Nodes, PrevNode1 , PrevNode2 ...PrevNodeN ] , .....]
+            print(f'trace_list {trace_list}')
+            trace_list.reverse()
+            print(f'reaversed trace_list {trace_list}')
+            for trace in trace_list: # trace = [ Current Node, Number of Prev Nodes, PrevNode1 , PrevNode2 ...PrevNodeN ] , # trace[0] = Current Node
+                print(f'trace {trace}')
+                print(f'trace[0].node_name {trace[0].node_name}')
+                print(f'trace[0].has_output_image {trace[0].has_output_image}')
+                if not trace[0].visited :
+                    if((trace[0].has_output_image) and (not trace[0].has_input_image)):
+                        print("has output image & does not have input image")
+                        l= list(trace[0].kwargs_pybind.values())
+                        trace[0].set_output_image (trace[0].rali_c_func_call(self._handle,*l))
+                        trace[0].set_visited(True)
+                    elif((trace[0].has_output_image) and ( trace[0].has_input_image)): ## Handle case where number of in images =2,3 also (YTD) , branches output, readers case, nodes which has no output/input
+                        print("has output image & input image (1,2,3)")
+                        if trace[1] == 1: # Number of input Nodes is one
+                            trace[0].kwargs_pybind["input_image"] = trace[0].prev[0].output_image #Prev node output to current node input
+                            l= list(trace[0].kwargs_pybind.values())
+                            trace[0].set_output_image(trace[0].rali_c_func_call(self._handle,*l))
+                        elif trace[1] == 2: # Number of input Nodes is two
+                            trace[0].kwargs_pybind["input_image"] = trace[0].prev[0].output_image #Prev node0 output to current node input
+                            trace[0].kwargs_pybind["input_image1"] = trace[0].prev[1].output_image #Prev node1 output to current node input
+                            l= list(trace[0].kwargs_pybind.values())
+                            trace[0].set_output_image(trace[0].rali_c_func_call(self._handle,*l))
+                        elif trace[1] == 3: # Number of input Nodes is three
+                            trace[0].kwargs_pybind["input_image"] = trace[0].prev[0].output_image #Prev node0 output to current node input
+                            trace[0].kwargs_pybind["input_image1"] = trace[0].prev[1].output_image #Prev node1 output to current node input
+                            trace[0].kwargs_pybind["input_image2"] = trace[0].prev[2].output_image #Prev node2 output to current node input
+                            l= list(trace[0].kwargs_pybind.values())
+                            trace[0].set_output_image(trace[0].rali_c_func_call(self._handle,*l))
+                        trace[0].set_visited(True)
+                    else:
+                        print("Either a reader Node / dummy Node ")
+                        if trace[0].submodule_name == "readers" :
+                            l= list(trace[0].kwargs_pybind.values())
+                            trace[0].rali_c_func_call(self._handle,*l)
+                        else:
+                            print("Dummy Node")
+                            l= list(trace[0].kwargs_pybind.values())
+                            trace[0].rali_c_func_call(self._handle,*l)
+                            trace[0] = trace[0].prev[0]  # Need to check this !!
+                        trace[0].set_visited(True)
+
+        # exit(0)
+        status = b.raliVerify(self._handle)
+        if(status != types.OK):
+            print("Verify graph failed")
+
+
+
+
+
+
+            
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exception_type, exception_value, traceback):
+        pass
 
     def GetImageNameLen(self, array):
         return b.getImageNameLen(self._handle, array)
