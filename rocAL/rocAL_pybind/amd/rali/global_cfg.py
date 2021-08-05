@@ -13,9 +13,10 @@ class Node:
         self.is_output = False
         self.has_output_image = False
         self.has_input_image = False
-        self.CMN = False
-        self.output_image = None
-        self.visited = False
+        self.CMN = False # Set True only for CMN Node
+        self.output_image = None # To store the output image
+        self.visited = False # To know if we have already visited the Node
+        self.augmentation_node = False
         self.input_image = []
 
     def __repr__(self):

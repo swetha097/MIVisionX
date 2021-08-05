@@ -11,7 +11,7 @@ def coco(*inputs,file_root, annotations_file='', bytes_per_sample_hint=0, dump_m
     #Output
     labels = []
     bboxes = []
-    kwargs_pybind = {"source_path": annotations_file, "is_output":False}
+    kwargs_pybind = {"source_path": annotations_file, "is_output":True}
     #Node Object
     current_node=Node()
     current_node.prev.append("NULL")
@@ -19,6 +19,7 @@ def coco(*inputs,file_root, annotations_file='', bytes_per_sample_hint=0, dump_m
     current_node.submodule_name ="readers"
     current_node.rali_c_func_call = b.COCOReader
     current_node.kwargs_pybind = kwargs_pybind
+    current_node.augmentation_node = True
     current_node.kwargs = {"file_root": file_root, "annotations_file": annotations_file, "bytes_per_sample_hint": bytes_per_sample_hint,
                            "dump_meta_files": dump_meta_files, "dump_meta_files_path": dump_meta_files_path, "file_list": file_list, "initial_fill": initial_fill,  "lazy_init": lazy_init, "ltrb": ltrb, "masks": masks, "meta_files_path": meta_files_path, "num_shards": num_shards, "pad_last_batch": pad_last_batch, "prefetch_queue_depth": prefetch_queue_depth,
                            "preserve": preserve, "random_shuffle": random_shuffle, "ratio": ratio, "read_ahead": read_ahead,

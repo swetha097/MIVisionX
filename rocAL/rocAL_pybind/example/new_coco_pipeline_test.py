@@ -217,18 +217,10 @@ def draw_patches(img,idx, bboxes):
     image = cv2.cvtColor(image, cv2.COLOR_RGB2BGR )
  
     _,htot ,wtot = img.shape
-    
-    for (l, t ,r,b) in bboxes:
-        
-        loc_ = [l, t ,r, b]
-        color = (255, 0, 0)
-        thickness = 2
-        image = cv2.UMat(image).get()
-        image = cv2.rectangle(image, (int(loc_[0]*wtot ),int( loc_[1] *htot)),(int((loc_[2] *wtot) ) ,int((loc_[3] *htot) )) , color, thickness)  
-        cv2.imwrite(str(idx)+"_"+"train"+".png", image)
+    image = cv2.UMat(image).get()
+    cv2.imwrite(str(idx)+"_"+"train"+".png", image)
 
 def main():
-    print("INSIDE main!")
     if len(sys.argv) < 5:
         print('Please pass the folder image_folder Annotation_file cpu/gpu batch_size display(True/False)')
         exit(0)
@@ -245,24 +237,17 @@ def main():
     di = 0
     crop_size = 300
     random_seed = random.SystemRandom().randint(0, 2**32 - 1)
-    # pipe = COCOPipeline(batch_size=bs, num_threads=nt, device_id=di,seed = random_seed,
-    #                     data_dir=image_path, ann_dir=ann_path, crop=crop_size, rali_cpu=_rali_cpu, default_boxes=dboxes, display=display)
-    # pipe.build()
-
-    data_dir = "/home/neel/sample_test/coco/coco_10_img/val_2017"
-    ann_dir = "/home/neel/sample_test/coco/coco_10_img/annotations/instances_val2017.json"
-
 
     pipe = Pipeline(batch_size=bs, num_threads=1,device_id=0, seed=2, rali_cpu=_rali_cpu)
 
     with pipe:
         jpegs, bb, labels = fn.readers.coco(
-            file_root=data_dir, annotations_file=ann_dir, random_shuffle=True, seed=1)
+            file_root=image_path, annotations_file=ann_path, random_shuffle=True, seed=1)
         images = fn.decoders.image(jpegs,
             device="cpu", output_type=types.RGB)
         images1 = fn.brightness(images, brightness = 1)
         images2 = fn.brightness(images, brightness = 2)
-        pipe.set_outputs(images1,images2, bb , labels)
+        pipe.set_outputs(images2, bb , labels)
 
     data_loader = RALICOCOIterator(
         pipe, multiplier=pipe._multiplier, offset=pipe._offset,display=display)

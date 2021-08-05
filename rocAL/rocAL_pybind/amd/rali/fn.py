@@ -45,6 +45,7 @@ seed (int, optional, default = -1) – Random seed (If not provided it will be p
     current_node.node_name = "Brightness"
     current_node.rali_c_func_call = b.Brightness
     current_node.kwargs_pybind = kwargs_pybind
+    current_node.augmentation_node = True
     current_node.kwargs = {"brightness": brightness, "bytes_per_sample_hint": bytes_per_sample_hint, "image_type": image_type,
                            "preserve": preserve, "seed": seed, "device": device}
     current_node.has_input_image = True

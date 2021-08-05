@@ -12,6 +12,7 @@ def image(*inputs, **kwargs):
     reader = inputs[0].node_name
     current_node.has_input_image = False
     current_node.has_output_image = True
+    current_node.augmentation_node = True
     if( reader == 'COCOReader'):
         current_node.rali_c_func_call=b.COCO_ImageDecoderShard
         current_node.kwargs_pybind = {

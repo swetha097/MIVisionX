@@ -253,8 +253,11 @@ class Pipeline(object):
 
     def copyToTensorNCHW(self, array,  multiplier, offset, reverse_channels, tensor_dtype):
         print("Comes to copyToTensorNCHW")
+        print(f' multiplier {multiplier}')
+        print(f' offset {offset}')
         out = np.frombuffer(array, dtype=array.dtype)
         if tensor_dtype == types.FLOAT:
+            print(f'TYPE : float')
             b.raliCopyToOutputTensor32(self._handle, np.ascontiguousarray(out, dtype=array.dtype), types.NCHW,
                                        multiplier[0], multiplier[1], multiplier[2], offset[0], offset[1], offset[2], (1 if reverse_channels else 0))
         elif tensor_dtype == types.FLOAT16:
@@ -294,7 +297,7 @@ class Pipeline(object):
             while node[0].submodule_name != "readers":
                 print("while loop")
                 current_nodes = [node[0]]
-                print(f'current_nodes {current_nodes}')
+                prev_node_list =[]
                 for current_node in current_nodes:
                     current_list = []
                     current_list.append(current_node)  # Append Node
@@ -311,27 +314,26 @@ class Pipeline(object):
                             #changing operator std and mean to (1,0) to make sure there is no double normalization
                             prev_node.kwargs['std'] = [1.0]
                             prev_node.kwargs['mean'] = [0.0]
+
                         current_list.append(prev_node)
-                    node = current_node.prev  # List of Prev Nodes
-                    print(f'current node prevs {current_nodes}')
+                        if(prev_node.augmentation_node == True):
+                            prev_node_list.append(prev_node)
+                    # node = current_node.prev  # List of Prev Nodes
+                    node = prev_node_list
+                    print(f'current node prevs {node}')
                     output_dict.append(current_list)
-                    print(f'output_dict {output_dict}')
             #Reader Node
             self._name = node[0].node_name   #Store the name of the reader in a variable for further use     
             current_list=[node[0],0, "NULL"]
             output_dict.append(current_list)
             output_traces_list.append(output_dict)
         print(f'output_traces_list {output_traces_list}')   
-
         # Excecute the rali c func call's
         for trace_list in output_traces_list: #trace_list =  [ [ Current Node , Number of Prev Nodes, PrevNode1 , PrevNode2 ...PrevNodeN ] , [ Current Node, Number of Prev Nodes, PrevNode1 , PrevNode2 ...PrevNodeN ] , .....]
             print(f'trace_list {trace_list}')
             trace_list.reverse()
             print(f'reaversed trace_list {trace_list}')
             for trace in trace_list: # trace = [ Current Node, Number of Prev Nodes, PrevNode1 , PrevNode2 ...PrevNodeN ] , # trace[0] = Current Node
-                print(f'trace {trace}')
-                print(f'trace[0].node_name {trace[0].node_name}')
-                print(f'trace[0].has_output_image {trace[0].has_output_image}')
                 if not trace[0].visited :
                     if((trace[0].has_output_image) and (not trace[0].has_input_image)):
                         print("has output image & does not have input image")
@@ -341,18 +343,26 @@ class Pipeline(object):
                     elif((trace[0].has_output_image) and ( trace[0].has_input_image)): ## Handle case where number of in images =2,3 also (YTD) , branches output, readers case, nodes which has no output/input
                         print("has output image & input image (1,2,3)")
                         if trace[1] == 1: # Number of input Nodes is one
-                            trace[0].kwargs_pybind["input_image"] = trace[0].prev[0].output_image #Prev node output to current node input
+                            trace[0].kwargs_pybind["input_image"] = trace[0].prev[0].output_image if trace[0].prev[0].visited else trace[0].prev[0].rali_c_func_call(self._handle,*list(trace[0].prev[0].kwargs_pybind.values()))#Prev node output to current node input
                             l= list(trace[0].kwargs_pybind.values())
                             trace[0].set_output_image(trace[0].rali_c_func_call(self._handle,*l))
                         elif trace[1] == 2: # Number of input Nodes is two
-                            trace[0].kwargs_pybind["input_image"] = trace[0].prev[0].output_image #Prev node0 output to current node input
-                            trace[0].kwargs_pybind["input_image1"] = trace[0].prev[1].output_image #Prev node1 output to current node input
+                            trace[0].kwargs_pybind["input_image"] = trace[0].prev[0].output_image if trace[0].prev[0].visited else trace[0].prev[0].rali_c_func_call(self._handle,*list(trace[0].prev[0].kwargs_pybind.values()))#Prev node0 output to current node input
+                            trace[0].kwargs_pybind["input_image1"] = trace[0].prev[1].output_image if trace[0].prev[1].visited else trace[0].prev[1].rali_c_func_call(self._handle,*list(trace[0].prev[1].kwargs_pybind.values()))#Prev node1 output to current node input
                             l= list(trace[0].kwargs_pybind.values())
                             trace[0].set_output_image(trace[0].rali_c_func_call(self._handle,*l))
                         elif trace[1] == 3: # Number of input Nodes is three
-                            trace[0].kwargs_pybind["input_image"] = trace[0].prev[0].output_image #Prev node0 output to current node input
-                            trace[0].kwargs_pybind["input_image1"] = trace[0].prev[1].output_image #Prev node1 output to current node input
-                            trace[0].kwargs_pybind["input_image2"] = trace[0].prev[2].output_image #Prev node2 output to current node input
+                            trace[0].kwargs_pybind["input_image"] = trace[0].prev[0].output_image if trace[0].prev[0].visited else trace[0].prev[0].rali_c_func_call(self._handle,*list(trace[0].prev[0].kwargs_pybind.values()))#Prev node0 output to current node input
+                            trace[0].kwargs_pybind["input_image1"] = trace[0].prev[1].output_image if trace[0].prev[1].visited else trace[0].prev[1].rali_c_func_call(self._handle,*list(trace[0].prev[1].kwargs_pybind.values()))#Prev node1 output to current node input
+                            trace[0].kwargs_pybind["input_image2"] = trace[0].prev[2].output_image if trace[0].prev[2].visited else trace[0].prev[2].rali_c_func_call(self._handle,*list(trace[0].prev[2].kwargs_pybind.values()))#Prev node2 output to current node input
+                            l= list(trace[0].kwargs_pybind.values())
+                            trace[0].set_output_image(trace[0].rali_c_func_call(self._handle,*l))
+                        elif trace[1] == 4: # Number of input Nodes is three
+                            trace[0].kwargs_pybind["input_image"] = trace[0].prev[0].output_image if trace[0].prev[0].visited else trace[0].prev[0].rali_c_func_call(self._handle,*list(trace[0].prev[0].kwargs_pybind.values()))#Prev node0 output to current node input
+                            trace[0].kwargs_pybind["input_image1"] = trace[0].prev[1].output_image if trace[0].prev[1].visited else trace[0].prev[1].rali_c_func_call(self._handle,*list(trace[0].prev[1].kwargs_pybind.values()))#Prev node1 output to current node input
+                            trace[0].kwargs_pybind["input_image2"] = trace[0].prev[2].output_image if trace[0].prev[2].visited else trace[0].prev[2].rali_c_func_call(self._handle,*list(trace[0].prev[2].kwargs_pybind.values()))#Prev node2 output to current node input
+                            trace[0].kwargs_pybind["input_image4"] = trace[0].prev[3].output_image if trace[0].prev[3].visited else trace[0].prev[3].rali_c_func_call(self._handle,*list(trace[0].prev[3].kwargs_pybind.values()))#Prev node2 output to current node input
+
                             l= list(trace[0].kwargs_pybind.values())
                             trace[0].set_output_image(trace[0].rali_c_func_call(self._handle,*l))
                         trace[0].set_visited(True)
@@ -381,6 +391,7 @@ class Pipeline(object):
             
 
     def __enter__(self):
+        print("enters")
         return self
 
     def __exit__(self, exception_type, exception_value, traceback):
