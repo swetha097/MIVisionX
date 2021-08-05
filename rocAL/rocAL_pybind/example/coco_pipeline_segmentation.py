@@ -6,6 +6,7 @@ import ctypes
 import logging
 import random
 from amd.rali.pipeline import Pipeline
+from tqdm import tqdm
 import amd.rali.ops as ops
 import amd.rali.types as types
 
@@ -450,6 +451,15 @@ class RALICOCOIterator(object):
             self.roi_image_size_wh.append(torch.Size(roi_tmp_list))
             self.label_2d_numpy = (self.labels[sum_count : sum_count+count])
             self.bb_2d_numpy = (self.bboxes[sum_count*4 : (sum_count+count)*4])
+
+            print("\nBefore : self.bb_2d_numpy\n", self.bb_2d_numpy)
+            self.bb_2d_numpy[0] *= self.img_roi_size2d_numpy_wh[0]
+            self.bb_2d_numpy[1] *= self.img_roi_size2d_numpy_wh[1]
+            self.bb_2d_numpy[2] *= self.img_roi_size2d_numpy_wh[0]
+            self.bb_2d_numpy[3] *= self.img_roi_size2d_numpy_wh[1]
+
+            print("\nAfter : self.bb_2d_numpy\n", self.bb_2d_numpy)
+
             self.bb_2d_numpy = np.reshape(self.bb_2d_numpy, (-1, 4)).tolist()
 
             val_dataset = get_val_dataset()
@@ -555,19 +565,21 @@ def main():
     epochs = 15
     for epoch in range(int(epochs)):
         print("EPOCH:::::",epoch)
-        for i,(images,targets) in enumerate(data_loader, 0):
+        #for i,(images,targets) in enumerate(data_loader, 0):
+        for i, (images, targets) in enumerate(tqdm(data_loader)):
             print("*******************************",i,"************************")
             print("****************IMAGES****************")
             print(images.tensors)
             print(images.image_sizes)
+            print("Targets : ", targets)
             print("\nBBOXES:\n", targets[0].bbox)
             print("\nLABELS:\n", targets[0].extra_fields['labels'])
-            print("\nMASK POLYGONS :\n", targets[0].extra_fields['masks'])
+            #print("\nMASK POLYGONS :\n", targets[0].extra_fields['masks'])
             #torch.save(images.tensors,'images.pt')
             #torch.save(targets,'targets.pt')   
-            print("\n &&&&&&&&&&&&&&&&&&&&&&&&&   Targets:::::")
-            print(targets[0].bbox)
-            print(targets[0].extra_fields['labels'])
+            #print("\n &&&&&&&&&&&&&&&&&&&&&&&&&   Targets:::::")
+            #print(targets[0].bbox)
+            #print(targets[0].extra_fields['labels'])
         data_loader.reset()
 
 

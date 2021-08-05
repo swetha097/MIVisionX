@@ -50,16 +50,6 @@ void ResizeMirrorNormalizeMetaNode::update_parameters(MetaDataBatch *input_meta_
     vxCopyArrayRange((vx_array)_dst_width, 0, _batch_size, sizeof(uint), _dst_width_val.data(), VX_READ_ONLY, VX_MEMORY_TYPE_HOST);
     vxCopyArrayRange((vx_array)_dst_height, 0, _batch_size, sizeof(uint), _dst_height_val.data(), VX_READ_ONLY, VX_MEMORY_TYPE_HOST);
 
-    // for(int i = 0; i < _batch_size; i++)
-    // {
-    //     std::cerr<<"\n SOURCE :";
-    //     std::cerr << "\nSource width & height : " << _src_width_val[i] << " x "  << _src_height_val[i] << std::endl;
-    // }
-    // for(int i = 0; i < _batch_size; i++)
-    // {
-    //     std::cerr<<"\n DST :";
-    //     std::cerr << "\nDestination width & height : " << _dst_width_val[i] << " x "  << _dst_height_val[i] << std::endl;
-    // }
     for (int i = 0; i < _batch_size; i++)
     {
         _dst_to_src_width_ratio = _dst_width_val[i] / float(_src_width_val[i]);
@@ -129,18 +119,12 @@ void ResizeMirrorNormalizeMetaNode::update_parameters(MetaDataBatch *input_meta_
             box.t = coords_buf[m++];
             box.r = coords_buf[m++];
             box.b = coords_buf[m++];
-
+            
             if(_mirror_val[i] == 0)
             {
                 float l = 1 - box.r;
                 box.r = 1 - box.l;
                 box.l = l;     
-            }
-            else if(_mirror_val[i] == 1)
-            {
-                float t = 1 - box.b;
-                box.b = 1 - box.t;
-                box.t = t;
             }
 
             bb_coords.push_back(box);
