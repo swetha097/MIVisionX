@@ -683,13 +683,7 @@ namespace rali{
             py::arg("context"),
             py::arg("input"),
             py::arg("is_output"));
-        m.def("Blend",&raliBlend,
-            py::return_value_policy::reference,
-            py::arg("context"),
-            py::arg("input1"),
-            py::arg("input2"),
-            py::arg("is_output"),
-            py::arg("ratio") = NULL);
+        m.def("Blend",&raliBlend);
         m.def("Flip",&raliFlip,
             py::return_value_policy::reference,
             py::arg("context"),

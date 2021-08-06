@@ -55,3 +55,22 @@ seed (int, optional, default = -1) – Random seed (If not provided it will be p
     add_node(inputs[0],current_node)
 
     return (current_node)
+
+
+def blend(*inputs,**kwargs):
+    current_node = Node()
+ 
+
+    kwargs_pybind = {"input_image0":inputs[0].output_image, "input_image1":inputs[1].output_image, "is_output":current_node.is_output ,"ratio":None}
+    #Node Object
+    current_node.node_name = "Blend"
+    current_node.rali_c_func_call = b.Blend
+    current_node.kwargs_pybind = kwargs_pybind
+    current_node.augmentation_node = True
+    current_node.has_input_image = True
+    current_node.has_output_image = True
+
+    #Connect the Prev Node(inputs[0]) < === > Current Node
+    add_node(inputs[0],current_node)
+    add_node(inputs[1],current_node)
+    return (current_node)

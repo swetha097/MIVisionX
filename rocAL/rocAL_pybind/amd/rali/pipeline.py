@@ -289,9 +289,11 @@ class Pipeline(object):
             # if(isinstance(output, Node)): #Remove this line of code
             node = [node]
             while node[0].submodule_name != "readers":
-                current_nodes = [node[0]]
+                print(f'node : {node}')
+                current_nodes = node
                 prev_node_list =[]
                 for current_node in current_nodes:
+                    print(f'current node :: {current_node}')
                     current_list = []
                     current_list.append(current_node)  # Append Node
                     number_of_prev_nodes = len(current_node.prev)
@@ -299,6 +301,7 @@ class Pipeline(object):
                     current_list.append(number_of_prev_nodes)
                     for prev_node in current_node.prev:
                         # Append Previous Nodes
+                        print(f'prev_node node :: {prev_node}')
                         if(prev_node.CMN == True): # Needs to be changed at later stages
                             self._tensor_layout = prev_node.kwargs['output_layout']
                             self._tensor_dtype = prev_node.kwargs['output_dtype']
@@ -319,28 +322,29 @@ class Pipeline(object):
             current_list=[node[0],0, "NULL"]
             output_dict.append(current_list)
             output_traces_list.append(output_dict)
+            print(f' output_traces_list {output_traces_list}')
         # Excecute the rali c func call's
         for trace_list in output_traces_list: #trace_list =  [ [ Current Node , Number of Prev Nodes, PrevNode1 , PrevNode2 ...PrevNodeN ] , [ Current Node, Number of Prev Nodes, PrevNode1 , PrevNode2 ...PrevNodeN ] , .....]
             trace_list.reverse()
             for trace in trace_list: # trace = [ Current Node, Number of Prev Nodes, PrevNode1 , PrevNode2 ...PrevNodeN ] , # trace[0] = Current Node
                 if not trace[0].visited :
                     if((trace[0].has_output_image) and (not trace[0].has_input_image)):
-                        l= list(trace[0].kwargs_pybind.values())
+                        l= (trace[0].kwargs_pybind.values())
                         trace[0].set_output_image (trace[0].rali_c_func_call(self._handle,*l))
                         trace[0].set_visited(True)
                     elif((trace[0].has_output_image) and ( trace[0].has_input_image)): 
                         for i in range(trace[1]):
                             name = "input_image" + str(i)
-                            trace[0].kwargs_pybind[name] = trace[0].prev[i].output_image if trace[0].prev[i].visited else trace[0].prev[i].rali_c_func_call(self._handle,*list(trace[0].prev[i].kwargs_pybind.values()))#Prev nodei output to current node input
-                        l= list(trace[0].kwargs_pybind.values())
+                            trace[0].kwargs_pybind[name] = trace[0].prev[i].output_image if trace[0].prev[i].visited else trace[0].prev[i].rali_c_func_call(self._handle,*(trace[0].prev[i].kwargs_pybind.values()))#Prev nodei output to current node input
+                        l= (trace[0].kwargs_pybind.values())
                         trace[0].set_output_image(trace[0].rali_c_func_call(self._handle,*l))
                         trace[0].set_visited(True)
                     else:
                         if trace[0].submodule_name == "readers" :
-                            l= list(trace[0].kwargs_pybind.values())
+                            l= (trace[0].kwargs_pybind.values())
                             trace[0].rali_c_func_call(self._handle,*l)
                         else:
-                            l= list(trace[0].kwargs_pybind.values())
+                            l= (trace[0].kwargs_pybind.values())
                             trace[0].rali_c_func_call(self._handle,*l)
                             trace[0] = trace[0].prev[0]  # Need to check this !!
                         trace[0].set_visited(True)
