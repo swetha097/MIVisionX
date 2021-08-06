@@ -40,7 +40,7 @@ seed (int, optional, default = -1) – Random seed (If not provided it will be p
     print("output_image BRIGHTNESS {inputs[0].output_image}")
     print(inputs[0].output_image)
     
-    kwargs_pybind = {"input_image":inputs[0].output_image, "is_output":current_node.is_output ,"alpha": None,"beta": None}
+    kwargs_pybind = {"input_image0":inputs[0].output_image, "is_output":current_node.is_output ,"alpha": None,"beta": None}
     #Node Object
     current_node.node_name = "Brightness"
     current_node.rali_c_func_call = b.Brightness
