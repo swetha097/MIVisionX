@@ -277,6 +277,7 @@ class Pipeline(object):
         print(f'output_list {output_list}')
         set_output_images = []
         output_traces_list = []
+        backtraced_nodes = []
         for output in output_list:
             if(isinstance(output, Node)):
                 output.is_output = True
@@ -286,56 +287,55 @@ class Pipeline(object):
         # TraceList1 = [ Current Node, Number of Prev Nodes, PrevNode1 , PrevNode2 ...PrevNodeN ]
         for node in set_output_images:
             output_dict = []
-            # if(isinstance(output, Node)): #Remove this line of code
             node = [node]
-            while node[0].submodule_name != "readers":
+            while (len(node)!=0 and node[0].submodule_name != "readers"):
                 print(f'node : {node}')
                 current_nodes = node
                 prev_node_list =[]
                 for current_node in current_nodes:
-                    print(f'current node :: {current_node}')
-                    current_list = []
-                    current_list.append(current_node)  # Append Node
-                    number_of_prev_nodes = len(current_node.prev)
-                    # Append number of Previous Node
-                    current_list.append(number_of_prev_nodes)
-                    for prev_node in current_node.prev:
-                        # Append Previous Nodes
-                        print(f'prev_node node :: {prev_node}')
-                        if(prev_node.CMN == True): # Needs to be changed at later stages
-                            self._tensor_layout = prev_node.kwargs['output_layout']
-                            self._tensor_dtype = prev_node.kwargs['output_dtype']
-                            self._multiplier = list(map(lambda x: 1/x ,prev_node.kwargs['std']))
-                            self._offset = list(map(lambda x,y: -(x/y), prev_node.kwargs['mean'], prev_node.kwargs['std']))
-                            #changing operator std and mean to (1,0) to make sure there is no double normalization
-                            prev_node.kwargs['std'] = [1.0]
-                            prev_node.kwargs['mean'] = [0.0]
+                    if current_node.submodule_name != "readers":
+                        print(f'current node :: {current_node}')
+                        current_list = []
+                        current_list.append(current_node)  # Append Node
+                        number_of_prev_nodes = len(current_node.prev)
+                        # Append number of Previous Node
+                        current_list.append(number_of_prev_nodes)
+                        for prev_node in current_node.prev:
+                            # Append Previous Nodes
+                            print(f'prev_node node :: {prev_node}')
+                            if(prev_node.CMN == True): # Needs to be changed at later stages
+                                self._tensor_layout = prev_node.kwargs['output_layout']
+                                self._tensor_dtype = prev_node.kwargs['output_dtype']
+                                self._multiplier = list(map(lambda x: 1/x ,prev_node.kwargs['std']))
+                                self._offset = list(map(lambda x,y: -(x/y), prev_node.kwargs['mean'], prev_node.kwargs['std']))
+                                #changing operator std and mean to (1,0) to make sure there is no double normalization
+                                prev_node.kwargs['std'] = [1.0]
+                                prev_node.kwargs['mean'] = [0.0]
 
-                        current_list.append(prev_node)
-                        if(prev_node.augmentation_node == True):
-                            prev_node_list.append(prev_node)
-                    # node = current_node.prev  # List of Prev Nodes
-                    node = prev_node_list
-                    output_dict.append(current_list)
+                            current_list.append(prev_node)
+                            if(prev_node.augmentation_node == True):
+                                prev_node_list.append(prev_node)
+                        # node = current_node.prev  # List of Prev Nodes
+                        node = prev_node_list
+                        output_dict.append(current_list)
+
             #Reader Node
             self._name = node[0].node_name   #Store the name of the reader in a variable for further use     
             current_list=[node[0],0, "NULL"]
             output_dict.append(current_list)
             output_traces_list.append(output_dict)
             print(f' output_traces_list {output_traces_list}')
+
         # Excecute the rali c func call's
         for trace_list in output_traces_list: #trace_list =  [ [ Current Node , Number of Prev Nodes, PrevNode1 , PrevNode2 ...PrevNodeN ] , [ Current Node, Number of Prev Nodes, PrevNode1 , PrevNode2 ...PrevNodeN ] , .....]
             trace_list.reverse()
             for trace in trace_list: # trace = [ Current Node, Number of Prev Nodes, PrevNode1 , PrevNode2 ...PrevNodeN ] , # trace[0] = Current Node
                 if not trace[0].visited :
-                    if((trace[0].has_output_image) and (not trace[0].has_input_image)):
-                        l= (trace[0].kwargs_pybind.values())
-                        trace[0].set_output_image (trace[0].rali_c_func_call(self._handle,*l))
-                        trace[0].set_visited(True)
-                    elif((trace[0].has_output_image) and ( trace[0].has_input_image)): 
-                        for i in range(trace[1]):
-                            name = "input_image" + str(i)
-                            trace[0].kwargs_pybind[name] = trace[0].prev[i].output_image if trace[0].prev[i].visited else trace[0].prev[i].rali_c_func_call(self._handle,*(trace[0].prev[i].kwargs_pybind.values()))#Prev nodei output to current node input
+                    if trace[0].has_output_image :
+                        if trace[0].has_input_image :
+                            for i in range(trace[1]):
+                                name = "input_image" + str(i)
+                                trace[0].kwargs_pybind[name] = trace[0].prev[i].output_image if trace[0].prev[i].visited else trace[0].prev[i].rali_c_func_call(self._handle,*(trace[0].prev[i].kwargs_pybind.values()))#Prev nodei output to current node input
                         l= (trace[0].kwargs_pybind.values())
                         trace[0].set_output_image(trace[0].rali_c_func_call(self._handle,*l))
                         trace[0].set_visited(True)

@@ -247,7 +247,9 @@ def main():
             device="cpu", output_type=types.RGB)
         images1 = fn.brightness(images, brightness = 1)
         images2 = fn.brightness(images, brightness = 2)
-        pipe.set_outputs(images2, bb , labels)
+        images3 = fn.blend(images2,images1)
+        images4 = fn.blend(images2,images3)
+        pipe.set_outputs(images4, bb , labels)
 
     data_loader = RALICOCOIterator(
         pipe, multiplier=pipe._multiplier, offset=pipe._offset,display=display)
