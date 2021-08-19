@@ -27,10 +27,8 @@ THE SOFTWARE.
 class BoundingBoxGraph : public MetaDataGraph
 {
 public:
-    void process(MetaDataBatch* meta_data) override;
+    void process(MetaDataBatch* meta_data, bool segmentation) override;
     void update_meta_data(MetaDataBatch* meta_data, decoded_image_info decode_image_info, bool segmentation) override;
     void update_random_bbox_meta_data(MetaDataBatch* meta_data, decoded_image_info decoded_image_info,crop_image_info crop_image_info) override;
-    bool is_segmentation() { return _segmentation; };
 private:
-    bool _segmentation = true;
 };

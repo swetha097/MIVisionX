@@ -89,7 +89,7 @@ public:
     std::shared_ptr<MetaDataGraph> meta_data_graph() { return _meta_data_graph; }
     std::shared_ptr<MetaDataReader> meta_data_reader() { return _meta_data_reader; }
     bool is_random_bbox_crop() {return _is_random_bbox_crop; }
-    bool is_segmentation() { return _segmentation; };
+    bool is_segmentation() { return _is_segmentation; };
 private:
     Status update_node_parameters();
     Status allocate_output_tensor();
@@ -148,7 +148,7 @@ private:
     bool _output_routine_finished_processing = false;
     const RaliTensorDataType _out_data_type;
     bool _is_random_bbox_crop = false;
-    bool _segmentation = true;
+    bool _is_segmentation = false;
     std::vector<std::vector<uint32_t>> _resize_width;
     std::vector<std::vector<uint32_t>> _resize_height;
 };

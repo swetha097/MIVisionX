@@ -22,11 +22,11 @@ THE SOFTWARE.
 #include "bounding_box_graph.h"
 #define MAX_BUFFER 10000
 
-void BoundingBoxGraph::process(MetaDataBatch *meta_data)
+void BoundingBoxGraph::process(MetaDataBatch *meta_data, bool segmentation)
 {
     for (auto &meta_node : _meta_nodes)
     {
-        meta_node->update_parameters(meta_data, is_segmentation());
+        meta_node->update_parameters(meta_data, segmentation);
     }
 }
 
