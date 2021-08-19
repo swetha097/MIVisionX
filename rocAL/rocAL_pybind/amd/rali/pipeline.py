@@ -79,7 +79,7 @@ class Pipeline(object):
     def __init__(self, batch_size=-1, num_threads=-1, device_id=-1, seed=-1,
                  exec_pipelined=True, prefetch_queue_depth=2,
                  exec_async=True, bytes_per_sample=0,
-                 rali_cpu=False, max_streams=-1, default_cuda_stream_priority=0):
+                 rali_cpu=False, max_streams=-1, default_cuda_stream_priority=0, tensor_layout = types.NCHW, reverse_channels = False, multiplier = [1.0,1.0,1.0], offset = [0.0, 0.0, 0.0], tensor_dtype=types.FLOAT):
         if(rali_cpu):
             # print("comes to cpu")
             self._handle = b.raliCreate(
@@ -107,10 +107,11 @@ class Pipeline(object):
         self._rali_cpu = rali_cpu
         self._max_streams = max_streams
         self._default_cuda_stream_priority = default_cuda_stream_priority
-        self._tensor_layout = None
-        self._tensor_dtype = None
-        self._multiplier = None
-        self._offset = None
+        self._tensor_layout = tensor_layout
+        self._tensor_dtype = tensor_dtype
+        self._multiplier = multiplier
+        self._reverse_channels = reverse_channels
+        self._offset = offset
         self._img_h = None
         self._img_w = None
         self._shuffle = None

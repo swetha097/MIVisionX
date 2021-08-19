@@ -5,7 +5,7 @@ import rali_pybind as b
 
 
 def image(*inputs, user_feature_key_map = None, affine=True, bytes_per_sample_hint=0, cache_batch_copy= True, cache_debug = False, cache_size = 0, cache_threshold = 0,
-                 cache_type='', device_memory_padding=16777216, host_memory_padding=8388608, hybrid_huffman_threshold= 1000000, output_type = 0,
+                 cache_type='', device_memory_padding=16777216, host_memory_padding=8388608, hybrid_huffman_threshold= 1000000, output_type = types.RGB,
                  preserve=False, seed=-1, split_stages=False, use_chunk_allocator= False, use_fast_idct = False, device = None):
     print(f'\n inputs:{inputs} ')
 
@@ -34,7 +34,7 @@ def image(*inputs, user_feature_key_map = None, affine=True, bytes_per_sample_hi
     elif reader == "TFRecordReaderClassification" or reader == "TFRecordReaderDetection":
         current_node.rali_c_func_call = b.TF_ImageDecoder
         current_node.kwargs_pybind = {
-            "source_path": inputs[0].kwargs['file_root'],
+            "source_path": inputs[0].kwargs['path'],
             "color_format": output_type,
             "num_shards": inputs[0].kwargs['num_shards'],
             'is_output': current_node.is_output,
@@ -48,7 +48,7 @@ def image(*inputs, user_feature_key_map = None, affine=True, bytes_per_sample_hi
     elif reader == "Caffe2Reader" or reader == "Caffe2ReaderDetection":
         current_node.rali_c_func_call=b.Caffe2_ImageDecoderShard
         current_node.kwargs_pybind = {
-            "source_path": inputs[0].kwargs['file_root'],
+            "source_path": inputs[0].kwargs['path'],
             "color_format": output_type,
             "shard_id": inputs[0].kwargs['shard_id'],
             "num_shards": inputs[0].kwargs['num_shards'],
@@ -61,7 +61,7 @@ def image(*inputs, user_feature_key_map = None, affine=True, bytes_per_sample_hi
     elif reader == "CaffeReader" or reader == "CaffeReaderDetection":
         current_node.rali_c_func_call=b.Caffe_ImageDecoderShard
         current_node.kwargs_pybind = {
-            "source_path": inputs[0].kwargs['file_root'],
+            "source_path": inputs[0].kwargs['path'],
             "color_format": output_type,
             "shard_id": inputs[0].kwargs['shard_id'],
             "num_shards": inputs[0].kwargs['num_shards'],
@@ -80,7 +80,7 @@ def image(*inputs, user_feature_key_map = None, affine=True, bytes_per_sample_hi
 
 
 def image_random_crop(*inputs,user_feature_key_map=None , affine=True, bytes_per_sample_hint=0, device_memory_padding= 16777216, host_memory_padding = 8388608, hybrid_huffman_threshold = 1000000,
-                 num_attempts=10, output_type=0, preserve=False, random_area = None, random_aspect_ratio = None,
+                 num_attempts=10, output_type=types.RGB, preserve=False, random_area = None, random_aspect_ratio = None,
                  seed=1, split_stages=False, use_chunk_allocator=False, use_fast_idct= False, device = None):
 
     #Creating 2 Nodes here (Image Decoder + Random Crop Node)
@@ -110,7 +110,7 @@ def image_random_crop(*inputs,user_feature_key_map=None , affine=True, bytes_per
     elif reader == "TFRecordReaderClassification" or reader == "TFRecordReaderDetection":
         current_node.rali_c_func_call = b.TF_ImageDecoder
         current_node.kwargs_pybind = {
-            "source_path": inputs[0].kwargs['file_root'],
+            "source_path": inputs[0].kwargs['path'],
             "color_format": output_type,
             "num_shards": inputs[0].kwargs['num_shards'],
             'is_output': current_node.is_output,
@@ -124,7 +124,7 @@ def image_random_crop(*inputs,user_feature_key_map=None , affine=True, bytes_per
     elif reader == "Caffe2Reader" or reader == "Caffe2ReaderDetection":
         current_node.rali_c_func_call=b.Caffe2_ImageDecoderShard
         current_node.kwargs_pybind = {
-            "source_path": inputs[0].kwargs['file_root'],
+            "source_path": inputs[0].kwargs['path'],
             "color_format": output_type,
             "shard_id": inputs[0].kwargs['shard_id'],
             "num_shards": inputs[0].kwargs['num_shards'],
@@ -137,7 +137,7 @@ def image_random_crop(*inputs,user_feature_key_map=None , affine=True, bytes_per
     elif reader == "CaffeReader" or reader == "CaffeReaderDetection":
         current_node.rali_c_func_call=b.Caffe_ImageDecoderShard
         current_node.kwargs_pybind = {
-            "source_path": inputs[0].kwargs['file_root'],
+            "source_path": inputs[0].kwargs['path'],
             "color_format": output_type,
             "shard_id": inputs[0].kwargs['shard_id'],
             "num_shards": inputs[0].kwargs['num_shards'],
@@ -182,7 +182,7 @@ def image_random_crop(*inputs,user_feature_key_map=None , affine=True, bytes_per
 def image_slice(*inputs,affine = True, axes = None, axis_names = "WH",bytes_per_sample_hint = 0, device_memory_padding = 16777216,
                 device_memory_padding_jpeg2k = 0, host_memory_padding = 8388608,
                 host_memory_padding_jpeg2k = 0, hybrid_huffman_threshold = 1000000,
-                 memory_stats = False, normalized_anchor = True, normalized_shape = True, output_type = 'RGB',
+                 memory_stats = False, normalized_anchor = True, normalized_shape = True, output_type = types.RGB,
                 preserve = False, seed = -1, split_stages = False, use_chunk_allocator = False, use_fast_idct = False,device = None):
 
     #Node 1 Image Decoder
