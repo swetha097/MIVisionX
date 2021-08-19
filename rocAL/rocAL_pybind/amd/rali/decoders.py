@@ -156,21 +156,21 @@ def image_random_crop(*inputs,user_feature_key_map=None , affine=True, bytes_per
     next_node.node_name = "RandomCrop"
     next_node.submodule_name ="decoders"
     reader = inputs[0].node_name
-    next_node.has_input_image = False
+    next_node.has_input_image = True
     next_node.has_output_image = True
     next_node.augmentation_node = True
     next_node.kwargs ={"user_feature_key_map":user_feature_key_map} #TODO:Complete this later
     next_node.rali_c_func_call=b.Crop
     next_node.kwargs_pybind = {
-        "input": current_node.output_image,
+        "input_image0": current_node.output_image,
         'is_output': next_node.is_output,
-        "crop_width": False,
-        "crop_height": types.MAX_SIZE,
-        "crop_depth":None, 
-        "crop_pox_x":None,
-        "crop_pos_y":None,
-        "crop_pox_z":None
-        } 
+        "crop_width": None,
+        "crop_height": None,
+        "crop_depth": None,
+        "crop_pox_x": None,
+        "crop_pos_y": None,
+        "crop_pox_z": None
+    }
 
 
     #Connect the Prev Node(current node) < === > next node

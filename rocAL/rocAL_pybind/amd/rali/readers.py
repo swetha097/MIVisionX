@@ -62,13 +62,15 @@ def tfrecord(*inputs, path, user_feature_key_map, features, index_path="", reade
     #Node Object
     current_node=Node()
     current_node.prev.append("NULL")
-    current_node.node_name = "TFRecordReader"
+    
     current_node.submodule_name ="readers"
     if reader_type == 1:
+        current_node.node_name = "TFRecordReaderDetection"
         current_node.rali_c_func_call = b.TFReaderDetection
         kwargs_pybind = {"path": path, "is_output": True, "user_key_for_label": user_feature_key_map["image/class/label"], "user_key_for_text": user_feature_key_map["image/class/text"], "user_key_for_xmin": user_feature_key_map["image/object/bbox/xmin"],
                          "user_key_for_ymin": user_feature_key_map["image/object/bbox/ymin"], "user_key_for_xmax": user_feature_key_map["image/object/bbox/xmax"], "user_key_for_ymax": user_feature_key_map["image/object/bbox/ymax"], "user_key_for_filename": user_feature_key_map["image/filename"]}
     else:
+        current_node.node_name = "TFRecordReaderClassification"
         current_node.rali_c_func_call = b.TFReader
         kwargs_pybind = {"path": path, "is_output": True, "user_key_for_label": user_feature_key_map[
             "image/class/label"], "user_key_for_filename": user_feature_key_map["image/filename"]}
