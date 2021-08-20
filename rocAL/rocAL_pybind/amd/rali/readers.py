@@ -62,15 +62,27 @@ def tfrecord(*inputs, path, user_feature_key_map, features, index_path="", reade
     #Node Object
     current_node=Node()
     current_node.prev.append("NULL")
-    
+    labels=[]
     current_node.submodule_name ="readers"
     if reader_type == 1:
         current_node.node_name = "TFRecordReaderDetection"
+        for key in features.keys():
+            if key not in user_feature_key_map.keys():
+                    print(
+                        "For Object Detection, RALI TFRecordReader needs all the following keys in the featureKeyMap:")
+                    print("image/encoded\nimage/class/label\nimage/class/text\nimage/object/bbox/xmin\nimage/object/bbox/ymin\nimage/object/bbox/xmax\nimage/object/bbox/ymax\n")
+                    exit()
         current_node.rali_c_func_call = b.TFReaderDetection
         kwargs_pybind = {"path": path, "is_output": True, "user_key_for_label": user_feature_key_map["image/class/label"], "user_key_for_text": user_feature_key_map["image/class/text"], "user_key_for_xmin": user_feature_key_map["image/object/bbox/xmin"],
                          "user_key_for_ymin": user_feature_key_map["image/object/bbox/ymin"], "user_key_for_xmax": user_feature_key_map["image/object/bbox/xmax"], "user_key_for_ymax": user_feature_key_map["image/object/bbox/ymax"], "user_key_for_filename": user_feature_key_map["image/filename"]}
     else:
         current_node.node_name = "TFRecordReaderClassification"
+        for key in features.keys():
+                if key not in user_feature_key_map.keys():
+                    print(
+                        "For Image Classification, RALI TFRecordReader needs all the following keys in the featureKeyMap:")
+                    print("image/encoded\nimage/class/label\n")
+                    exit()
         current_node.rali_c_func_call = b.TFReader
         kwargs_pybind = {"path": path, "is_output": True, "user_key_for_label": user_feature_key_map[
             "image/class/label"], "user_key_for_filename": user_feature_key_map["image/filename"]}
@@ -83,7 +95,9 @@ def tfrecord(*inputs, path, user_feature_key_map, features, index_path="", reade
                            "seed": seed, "shard_id": shard_id, "skip_cached_images": skip_cached_images, "stick_to_shard": stick_to_shard, "tensor_init_bytes": tensor_init_bytes}
     current_node.has_input_image = False
     current_node.has_output_image = False
-    return (current_node)
+    features["image/encoded"] = current_node
+    features["image/class/label"] = labels
+    return features
 
 def caffe(*inputs, path, bbox=False, bytes_per_sample_hint=0, image_available=True, initial_fill=1024, label_available=True,
                  lazy_init=False,  num_shards=1,

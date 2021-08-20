@@ -42,9 +42,9 @@ def image(*inputs, user_feature_key_map = None, affine=True, bytes_per_sample_hi
             "user_key_for_filename": user_feature_key_map["image/filename"],
             "shuffle": inputs[0].kwargs['random_shuffle'],
             "loop": False,
-            "decode_size_policy": types.MAX_SIZE,
-            "max_width": 0,
-            "max_height": 0}
+            "decode_size_policy": types.USER_GIVEN_SIZE,
+            "max_width": 2000, # TODO: Needs change
+            "max_height": 2000} # TODO: Needs change
     elif reader == "Caffe2Reader" or reader == "Caffe2ReaderDetection":
         current_node.rali_c_func_call=b.Caffe2_ImageDecoderShard
         current_node.kwargs_pybind = {
