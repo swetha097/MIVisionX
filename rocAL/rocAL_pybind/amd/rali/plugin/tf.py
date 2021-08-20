@@ -34,11 +34,12 @@ class RALIGenericImageIterator(object):
         return self
 
 class RALIGenericIteratorDetection(object):
-    def __init__(self, pipeline, tensor_layout = types.NCHW, reverse_channels = False, multiplier = [1.0,1.0,1.0], offset = [0.0, 0.0, 0.0], tensor_dtype=types.FLOAT):
+    def __init__(self, pipeline, tensor_layout = types.NCHW, reverse_channels = False, multiplier = [1.0,1.0,1.0], offset = [0.0, 0.0, 0.0], tensor_dtype=types.FLOAT, display = False):
         self.loader = pipeline
         self.tensor_format =tensor_layout
         self.multiplier = multiplier
         self.offset = offset
+        self.display = display
         self.reverse_channels = reverse_channels
         self.tensor_dtype = tensor_dtype
         self.w = b.getOutputWidth(self.loader._handle)
@@ -102,6 +103,10 @@ class RALIGenericIteratorDetection(object):
                 self.label_list.append(self.label_2d_numpy)
                 self.bbox_list.append(self.bb_2d_numpy)
                 sum_count = sum_count +count
+                if self.display:
+                    import torch
+                    img = torch.from_numpy(self.out)
+                    draw_patches(img[i], i, 0)
 
             self.target = self.bbox_list
             self.target1 = self.label_list
@@ -126,6 +131,11 @@ class RALIGenericIteratorDetection(object):
             elif self.tensor_dtype == types.FLOAT16:
                 return self.out.astype(np.float16), self.res, self.l, self.num_bboxes_arr
         elif (self.loader._name == "TFRecordReaderClassification"):
+            if self.display:
+                for i in range(self.bs):
+                    import torch
+                    img = torch.from_numpy(self.out)
+                    draw_patches(img[i], i, 0)
             if(self.loader._oneHotEncoding == True):
                 self.labels = np.zeros((self.bs)*(self.loader._numOfClasses),dtype = "int32")
                 self.loader.GetOneHotEncodedLabels(self.labels)
@@ -165,10 +175,11 @@ class RALIIterator(RALIGenericIteratorDetection):
                  auto_reset=False,
                  fill_last_batch=True,
                  dynamic_shape=False,
-                 last_batch_padded=False):
+                 last_batch_padded=False,
+                 display = False):
         pipe = pipelines
         super(RALIIterator, self).__init__(pipe, tensor_layout = pipe._tensor_layout, tensor_dtype = pipe._tensor_dtype,
-                                                            multiplier=pipe._multiplier, offset=pipe._offset)
+                                                            multiplier=pipe._multiplier, offset=pipe._offset, display = display)
 
 
 
@@ -187,3 +198,15 @@ class RALI_iterator(RALIGenericImageIterator):
                  last_batch_padded=False):
         pipe = pipelines
         super(RALI_iterator, self).__init__(pipe)
+
+
+def draw_patches(img,idx, bboxes):
+    #image is expected as a tensor, bboxes as numpy
+    import cv2
+    image = img.detach().numpy()
+    image = image.transpose([1,2,0])
+    image = cv2.cvtColor(image, cv2.COLOR_RGB2BGR )
+ 
+    _,htot ,wtot = img.shape
+    image = cv2.UMat(image).get()
+    cv2.imwrite(str(idx)+"_"+"train"+".png", image)
