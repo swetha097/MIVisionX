@@ -189,29 +189,35 @@ def image_slice(*inputs,affine = True, axes = None, axis_names = "WH",bytes_per_
     current_node = Node()
     current_node.node_name = "ImageDecoderSlice"
     current_node.submodule_name ="decoders"
-    prev_node_list = inputs[0].prev
+    reader = inputs[0].node_name
     current_node.has_input_image = False
     current_node.has_output_image = True
     current_node.augmentation_node = True
     current_node.kwargs ={"affine":affine} #TODO:Complete this later
     #Reader -> Randon BBox Crop -> ImageDecoderSlice
-    if( prev_node_list[0].prev[0] == 'COCOReader'):
+    if( reader == 'COCOReader'):
         current_node.rali_c_func_call=b.COCO_ImageDecoderSliceShard
         current_node.kwargs_pybind = {
-            "source_path": prev_node_list[0].prev[0].kwargs['file_root'],
-            "json_path": prev_node_list[0].prev[0].kwargs['annotations_file'],
+            "source_path": inputs[0].kwargs['file_root'],
+            "json_path": inputs[0].kwargs['annotations_file'],
             "color_format": output_type,
-            "shard_id": prev_node_list[0].prev[0].kwargs['shard_id'],
-            "num_shards": prev_node_list[0].prev[0].kwargs['num_shards'],
+            "shard_id": inputs[0].kwargs['shard_id'],
+            "shard_count": inputs[0].kwargs['num_shards'],
             'is_output': current_node.is_output,
-            "shuffle": prev_node_list[0].prev[0].kwargs['random_shuffle'],
+            "shuffle": inputs[0].kwargs['random_shuffle'],
             "loop": False,
             "decode_size_policy": types.MAX_SIZE,
             "max_width": 0, #TODO: what happens when we give user given size = multiplier * max_decoded_width
-            "max_height":0} #TODO: what happens when we give user given size = multiplier * max_decoded_width
+            "max_height":0,
+            "area_factor": None,
+            "aspect_ratio": None,
+            "x_drift_factor": None,
+            "y_drift_factor": None} #TODO: what happens when we give user given size = multiplier * max_decoded_width
 
 
     #Connect the Prev Node(inputs[0]) < === > Current Node
-    add_node(inputs[0],current_node)
+    for i in range(len(inputs)):
+        if(isinstance(inputs[i], Node)):
+            add_node(inputs[i],current_node)
 
     return (current_node)

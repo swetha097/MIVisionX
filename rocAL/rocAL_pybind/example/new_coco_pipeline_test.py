@@ -224,9 +224,18 @@ def main():
     pipe = Pipeline(batch_size=bs, num_threads=1,device_id=0, seed=2, rali_cpu=_rali_cpu)
 
     with pipe:
-        jpegs, bb, labels = fn.readers.coco(
-            file_root=image_path, annotations_file=ann_path, random_shuffle=True, seed=1)
-        images_decoded = fn.decoders.image(jpegs, output_type=types.RGB)
+        jpegs, bboxes, labels = fn.readers.coco(
+            file_root=image_path, annotations_file=ann_path, random_shuffle=False, seed=1)
+        crop_begin, crop_size, bboxes, labels = fn.random_bbox_crop(bboxes, labels,
+                                                                device="cpu",
+                                                                aspect_ratio=[0.5, 2.0],
+                                                                thresholds=[0, 0.1, 0.3, 0.5, 0.7, 0.9],
+                                                                scaling=[0.3, 1.0],
+                                                                bbox_layout="xyXY",
+                                                                allow_no_crop=True,
+                                                                num_attempts=50)
+        images_decoded = fn.decoders.image_slice(jpegs, crop_begin, crop_size, device="mixed", output_type=types.RGB)
+        # images_decoded = fn.decoders.image(jpegs, output_type=types.RGB)
         res_images = fn.resize(images_decoded, resize_x=300, resize_y=300)
         flip_coin = fn.random.coin_flip(probability=0.5)
         if not display:
@@ -252,7 +261,7 @@ def main():
         brightness = fn.uniform(range=[0.875, 1.125])
         hue = fn.uniform(range=[-0.5, 0.5])
         images = fn.color_twist(images, saturation=saturation, contrast=contrast, brightness=brightness, hue=hue)
-        pipe.set_outputs(images, bb , labels)
+        pipe.set_outputs(images, bboxes , labels)
 
     data_loader = RALICOCOIterator(
         pipe, multiplier=pipe._multiplier, offset=pipe._offset,display=display)

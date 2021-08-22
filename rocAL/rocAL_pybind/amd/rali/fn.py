@@ -650,24 +650,6 @@ def vignette(*inputs, vignette=0.5, device=None):
     return (current_node)
 
 
-
-def random_bbox_crop(*inputs, vignette=0.5, device=None):
-    current_node = Node()
-
-    # pybind call arguments
-    kwargs_pybind = {"input_image0": inputs[0].output_image,"is_output": current_node.is_output, "sdev": None}
-    current_node.node_name = "Vignette"
-    current_node.rali_c_func_call = b.Vignette
-    current_node.kwargs_pybind = kwargs_pybind
-    current_node.kwargs = {"vignette": vignette, "device": device}  # Ones passed to this function
-    current_node.has_input_image = True
-    current_node.has_output_image = True
-    current_node.augmentation_node = True
-
-    # Connect the Prev Node < === > Current Node
-    add_node(inputs[0], current_node)
-    return (current_node)
-
 def crop_mirror_normalize(*inputs, bytes_per_sample_hint=0, crop=[0.0, 0.0], crop_d=0, crop_h=0, crop_pos_x=0.5, crop_pos_y=0.5, crop_pos_z=0.5,
                           crop_w=0, image_type=0, mean=[0.0], mirror=0, output_dtype=types.FLOAT, output_layout=types.NCHW, pad_output=False,
                           preserve=False, seed=1, std=[1.0], device=None):
@@ -743,3 +725,43 @@ def color_twist(*inputs, brightness=1.0, bytes_per_sample_hint=0, contrast=1.0, 
 def uniform(*inputs,range=[-1, 1], device=None):
     output_param = b.CreateFloatUniformRand(range[0], range[1])
     return output_param
+
+
+def random_bbox_crop(*inputs,all_boxes_above_threshold = True, allow_no_crop =True, aspect_ratio = None, bbox_layout = "", bytes_per_sample_hint = 0,
+                crop_shape = None, input_shape = None, ltrb = True, num_attempts = 1 ,scaling =  None,  preserve = False, seed = -1, shape_layout = "",
+                threshold_type ="iou", thresholds = None, total_num_attempts = 0, device = None, labels = None ):
+    current_node = Node()
+    aspect_ratio = aspect_ratio if aspect_ratio else [1.0, 1.0]
+    if crop_shape is None:
+        crop_shape = []
+    else:
+        crop_shape = crop_shape
+    if input_shape is None:
+        input_shape = []
+    else:
+        input_shape = input_shape
+    scaling = scaling if scaling else [1.0, 1.0]
+    thresholds = thresholds if thresholds else [0.0]
+    crop_begin = []
+    if(len(crop_shape) == 0):
+        has_shape = False
+        crop_width = 0
+        crop_height = 0
+    else:
+        has_shape = True
+        crop_width = crop_shape[0]
+        crop_height = crop_shape[1]
+    scaling = b.CreateFloatUniformRand(scaling[0], scaling[1])
+    aspect_ratio = b.CreateFloatUniformRand(aspect_ratio[0], aspect_ratio[1])
+
+    # pybind call arguments
+    kwargs_pybind = {"all_boxes_above_threshold":all_boxes_above_threshold, "no_crop": allow_no_crop, "p_aspect_ratio":aspect_ratio, "has_shape":has_shape, "crop_width":crop_width, "crop_height":crop_height, "num_attemps":num_attempts, "p_scaling":scaling, "total_num_attempts":total_num_attempts }
+    current_node.node_name = "RandomBBoxCrop"
+    current_node.rali_c_func_call = b.RandomBBoxCrop
+    current_node.kwargs_pybind = kwargs_pybind
+    current_node.kwargs = {"device": device}  # Ones passed to this function (Needs change)
+    current_node.has_input_image = False
+    current_node.has_output_image = False
+    current_node.augmentation_node = False
+
+    return (current_node,[],[],[])
