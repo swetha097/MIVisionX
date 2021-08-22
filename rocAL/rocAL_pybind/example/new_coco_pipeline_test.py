@@ -13,7 +13,7 @@ import sys
 import numpy as np
 
 #Testing the fn import
-print(dir(fn))
+# print(dir(fn))
 # print(fn.__dict__)
 
 image = [1,2,3]
@@ -243,13 +243,18 @@ def main():
     with pipe:
         jpegs, bb, labels = fn.readers.coco(
             file_root=image_path, annotations_file=ann_path, random_shuffle=True, seed=1)
-        images = fn.decoders.image(jpegs,
-            device="cpu", output_type=types.RGB)
-        images1 = fn.brightness(images, brightness = 1)
-        images2 = fn.brightness(images, brightness = 2)
-        images3 = fn.blend(images2,images1)
-        images4 = fn.blend(images2,images3)
-        pipe.set_outputs(images4, bb , labels)
+        images_decoded = fn.decoders.image_random_crop(jpegs, output_type=types.RGB)
+        res_images = fn.resize(images_decoded, resize_x=300, resize_y=300)
+        flip_coin = fn.random.coin_flip(probability=0.5)
+        images = fn.crop_mirror_normalize(res_images,
+                                      crop=(300, 300),
+                                      mean=[0.485 * 255, 0.456 * 255, 0.406 * 255],
+                                      std=[0.229 * 255, 0.224 * 255, 0.225 * 255],
+                                      mirror=flip_coin,
+                                      output_dtype=types.FLOAT,
+                                      output_layout=types.NCHW,
+                                      pad_output=False)
+        pipe.set_outputs(images, bb , labels)
 
     data_loader = RALICOCOIterator(
         pipe, multiplier=pipe._multiplier, offset=pipe._offset,display=display)

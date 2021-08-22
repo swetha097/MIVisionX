@@ -667,3 +667,45 @@ def random_bbox_crop(*inputs, vignette=0.5, device=None):
     # Connect the Prev Node < === > Current Node
     add_node(inputs[0], current_node)
     return (current_node)
+
+def crop_mirror_normalize(*inputs, bytes_per_sample_hint=0, crop=[0.0, 0.0], crop_d=0, crop_h=0, crop_pos_x=0.5, crop_pos_y=0.5, crop_pos_z=0.5,
+                          crop_w=0, image_type=0, mean=[0.0], mirror=0, output_dtype=types.FLOAT, output_layout=types.NCHW, pad_output=False,
+                          preserve=False, seed=1, std=[1.0], device=None):
+    current_node = Node()
+    current_node.node_name = "CropMirrorNormalize"
+    current_node.rali_c_func_call = b.CropMirrorNormalize
+    if(len(crop) == 2):
+        crop_d = crop_d
+        crop_h = crop[0]
+        crop_w = crop[1]
+    elif(len(crop) == 3):
+        crop_d = crop[0]
+        crop_h = crop[1]
+        crop_w = crop[2]
+    else:
+        crop_d = crop_d
+        crop_h = crop_h
+        crop_w = crop_w
+    #Set Seed
+    b.setSeed(seed)
+    current_node.has_input_image = True
+    current_node.has_output_image = True
+    current_node.augmentation_node = True
+    current_node.CMN = True
+    if isinstance(mirror,int):
+        if(mirror == 0):
+            mirror = b.CreateIntParameter(0)
+        else:
+            mirror = b.CreateIntParameter(1)
+    else:
+        crop_pos_x = crop_pos_y = crop_pos_z = 1
+
+    current_node.kwargs = {"bytes_per_sample_hint": bytes_per_sample_hint, "crop": crop, "crop_d": crop_d, "crop_h": crop_h, "crop_pos_x": crop_pos_x, "crop_pos_y": crop_pos_y, "crop_pos_z": crop_pos_z, "crop_w": crop_w, "image_type": image_type,
+                           "mean": mean, "mirror": mirror, "output_dtype": output_dtype, "output_layout": output_layout, "pad_output": pad_output, "preserve": preserve, "seed": seed, "std": std, "device": device}  # Ones passed to this function
+    # pybind call arguments
+    kwargs_pybind = {"input_image0": inputs[0].output_image, "crop_depth":crop_d, "crop_height":crop_h, "crop_width":crop_w, "start_x":crop_pos_x, "start_y":crop_pos_y, "start_z":crop_pos_z, "mean":mean, "std_dev":std,
+                     "is_output": current_node.is_output, "mirror": mirror}
+    current_node.kwargs_pybind = kwargs_pybind
+    # Connect the Prev Node < === > Current Node
+    add_node(inputs[0], current_node)
+    return (current_node)
