@@ -238,6 +238,7 @@ def main():
         # images_decoded = fn.decoders.image(jpegs, output_type=types.RGB)
         res_images = fn.resize(images_decoded, resize_x=300, resize_y=300)
         flip_coin = fn.random.coin_flip(probability=0.5)
+        bboxes = fn.bb_flip(bboxes, ltrb=True, horizontal=flip_coin)
         if not display:
             images = fn.crop_mirror_normalize(res_images,
                                         crop=(300, 300),

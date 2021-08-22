@@ -297,6 +297,7 @@ class Pipeline(object):
                     if current_node.submodule_name != "readers":
                         print(f'current node :: {current_node}')
                         current_list = []
+                        # non_augmentation_node = []
                         current_list.append(current_node)  # Append Node
                         number_of_prev_nodes = len(current_node.prev)
                         # Append number of Previous Node
@@ -316,9 +317,13 @@ class Pipeline(object):
                             current_list.append(prev_node)
                             if(prev_node.augmentation_node == True):
                                 prev_node_list.append(prev_node)
+                            # else:
+                            #     non_augmentation_node.append(prev_node)
                         # node = current_node.prev  # List of Prev Nodes
                         node = prev_node_list
                         output_dict.append(current_list)
+                        # for node in non_augmentation_node:
+                        #     output_dict.append([node,0,"NULL"])
 
             #Reader Node
             self._name = node[0].node_name   #Store the name of the reader in a variable for further use     
@@ -332,23 +337,34 @@ class Pipeline(object):
             trace_list.reverse()
             for trace in trace_list: # trace = [ Current Node, Number of Prev Nodes, PrevNode1 , PrevNode2 ...PrevNodeN ] , # trace[0] = Current Node
                 if not trace[0].visited :
+                    print(f' WHICH NODE :: {trace[0].node_name}')
                     if trace[0].has_output_image :
+                        print(f' NODE :: {trace[0]}')
                         if trace[0].has_input_image :
                             for i in range(trace[1]):
                                 name = "input_image" + str(i)
                                 trace[0].kwargs_pybind[name] = trace[0].prev[i].output_image if trace[0].prev[i].visited else trace[0].prev[i].rali_c_func_call(self._handle,*(trace[0].prev[i].kwargs_pybind.values()))#Prev nodei output to current node input
+                        for i in range(trace[1]):
+                            if trace[0].prev[i].visited:
+                                pass
+                            else:
+                                trace[0].prev[i].rali_c_func_call(self._handle,*(trace[0].prev[i].kwargs_pybind.values()))
+                                trace[0].prev[i].set_visited(True)
                         l= (trace[0].kwargs_pybind.values())
+                        print(f'NODE KWARGS PYBIND VALUES {l}')
                         trace[0].set_output_image(trace[0].rali_c_func_call(self._handle,*l))
                         trace[0].set_visited(True)
                     else:
                         if trace[0].submodule_name == "readers" :
                             l= (trace[0].kwargs_pybind.values())
                             trace[0].rali_c_func_call(self._handle,*l)
+                            trace[0].set_visited(True)
                         else:
                             l= (trace[0].kwargs_pybind.values())
                             trace[0].rali_c_func_call(self._handle,*l)
+                            trace[0].set_visited(True)
                             trace[0] = trace[0].prev[0]  # Need to check this !!
-                        trace[0].set_visited(True)
+                        
 
         # exit(0)
         status = b.raliVerify(self._handle)

@@ -765,3 +765,7 @@ def random_bbox_crop(*inputs,all_boxes_above_threshold = True, allow_no_crop =Tr
     current_node.augmentation_node = False
 
     return (current_node,[],[],[])
+
+def bb_flip(*inputs, bytes_per_sample_hint = 0, horizontal = 1, ltrb = False, preserve =  False,seed = -1, vertical = 0, device = None):
+    #Dummy Node
+    return []
