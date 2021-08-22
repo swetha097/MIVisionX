@@ -16,23 +16,6 @@ import numpy as np
 # print(dir(fn))
 # print(fn.__dict__)
 
-image = [1,2,3]
-# # print(fn.readers.coco(shard_id=0,num_shards=1))
-
-# data_dir = "/home/neel/sample_test/coco/coco_10_img/val_2017"
-# ann_dir = "/home/neel/sample_test/coco/coco_10_img/annotations/instances_val2017.json"
-
-
-# pipe = Pipeline(batch_size=2, num_threads=1,device_id=0, seed=2, rali_cpu=True)
-
-# with pipe:
-#     jpegs, bb, labels = fn.readers.coco(
-#         file_root=data_dir, annotations_file=ann_dir, random_shuffle=True, seed=1)
-#     images = fn.decoders.image(jpegs,
-#         device="cpu", output_type=types.RGB)
-#     images1 = fn.brightness(images, brightness = 1)
-#     images2 = fn.brightness(images, brightness = 2)
-#     pipe.set_outputs(images1,images2, bb , labels)
 
 
 
@@ -243,17 +226,32 @@ def main():
     with pipe:
         jpegs, bb, labels = fn.readers.coco(
             file_root=image_path, annotations_file=ann_path, random_shuffle=True, seed=1)
-        images_decoded = fn.decoders.image_random_crop(jpegs, output_type=types.RGB)
+        images_decoded = fn.decoders.image(jpegs, output_type=types.RGB)
         res_images = fn.resize(images_decoded, resize_x=300, resize_y=300)
         flip_coin = fn.random.coin_flip(probability=0.5)
-        images = fn.crop_mirror_normalize(res_images,
-                                      crop=(300, 300),
-                                      mean=[0.485 * 255, 0.456 * 255, 0.406 * 255],
-                                      std=[0.229 * 255, 0.224 * 255, 0.225 * 255],
-                                      mirror=flip_coin,
-                                      output_dtype=types.FLOAT,
-                                      output_layout=types.NCHW,
-                                      pad_output=False)
+        if not display:
+            images = fn.crop_mirror_normalize(res_images,
+                                        crop=(300, 300),
+                                        mean=[0.485 * 255, 0.456 * 255, 0.406 * 255],
+                                        std=[0.229 * 255, 0.224 * 255, 0.225 * 255],
+                                        mirror=flip_coin,
+                                        output_dtype=types.FLOAT,
+                                        output_layout=types.NCHW,
+                                        pad_output=False)
+        else:
+            images = fn.crop_mirror_normalize(res_images,
+                                        crop=(300, 300),
+                                        mean=[0,0,0],
+                                        std=[1,1,1],
+                                        mirror=flip_coin,
+                                        output_dtype=types.FLOAT,
+                                        output_layout=types.NCHW,
+                                        pad_output=False)
+        saturation = fn.uniform(range=[0.5, 1.5])
+        contrast = fn.uniform(range=[0.5, 1.5])
+        brightness = fn.uniform(range=[0.875, 1.125])
+        hue = fn.uniform(range=[-0.5, 0.5])
+        images = fn.color_twist(images, saturation=saturation, contrast=contrast, brightness=brightness, hue=hue)
         pipe.set_outputs(images, bb , labels)
 
     data_loader = RALICOCOIterator(

@@ -692,7 +692,7 @@ def crop_mirror_normalize(*inputs, bytes_per_sample_hint=0, crop=[0.0, 0.0], cro
     current_node.has_output_image = True
     current_node.augmentation_node = True
     current_node.CMN = True
-    if isinstance(mirror,int):
+    if isinstance(mirror,float):
         if(mirror == 0):
             mirror = b.CreateIntParameter(0)
         else:
@@ -709,3 +709,37 @@ def crop_mirror_normalize(*inputs, bytes_per_sample_hint=0, crop=[0.0, 0.0], cro
     # Connect the Prev Node < === > Current Node
     add_node(inputs[0], current_node)
     return (current_node)
+
+
+def color_twist(*inputs, brightness=1.0, bytes_per_sample_hint=0, contrast=1.0, hue=0.0, image_type=0,
+                preserve=False, saturation=1.0, seed=-1, device=None):
+    current_node = Node()
+    brightness = b.CreateFloatParameter(brightness) if isinstance(
+        brightness, float) else brightness
+    bytes_per_sample_hint = bytes_per_sample_hint
+    contrast = b.CreateFloatParameter(
+        contrast) if isinstance(contrast, float) else contrast
+    hue = b.CreateFloatParameter(hue) if isinstance(hue, float) else hue
+    saturation = b.CreateFloatParameter(saturation) if isinstance(
+        saturation, float) else saturation
+    current_node.node_name = "ColorTwist"
+    current_node.rali_c_func_call = b.ColorTwist
+    current_node.has_input_image = True
+    current_node.has_output_image = True
+    current_node.augmentation_node = True
+
+    # kwargs passed to this function
+    current_node.kwargs = {"brightness": brightness, "bytes_per_sample_hint": bytes_per_sample_hint, "contrast": contrast, "hue": hue, "image_type": image_type, "preserve": preserve, "saturation": saturation, "seed": seed,
+                           "device": device}
+    # pybind call arguments
+    kwargs_pybind = {"input_image0": inputs[0].output_image, "is_output": current_node.is_output,
+                     "alpha": brightness, "beta": contrast, "hue": hue, "sat": saturation}
+    current_node.kwargs_pybind = kwargs_pybind
+    # Connect the Prev Node < === > Current Node
+    add_node(inputs[0], current_node)
+    return (current_node)
+
+
+def uniform(*inputs,range=[-1, 1], device=None):
+    output_param = b.CreateFloatUniformRand(range[0], range[1])
+    return output_param
