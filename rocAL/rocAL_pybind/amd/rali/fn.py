@@ -7,7 +7,7 @@ from amd.rali import reductions
 from amd.rali import segmentation
 from amd.rali import transforms
 import inspect
-from amd.rali.global_cfg import Node,add_node,MetaDataNode
+from amd.rali.global_cfg import Node, add_node, MetaDataNode, add_meta_data_node
 import amd.rali.types as types
 import rali_pybind as b
 
@@ -776,4 +776,19 @@ def one_hot(*inputs, bytes_per_sample_hint=0, dtype=types.FLOAT, num_classes=0, 
     current_node.node_name = "OneHotLabel"
     current_node.kwargs = {"num_classes": num_classes,
                            "off_value": off_value, "on_value": on_value}
+    if(isinstance(inputs[0]),MetaDataNode):
+        add_meta_data_node(inputs[0], current_node)
     return current_node
+
+def box_encoder(*inputs, anchors, bytes_per_sample_hint=0, criteria=0.5, means=None, offset=False, preserve=False, scale=1.0, seed=-1, stds=None ,device = None):
+
+    means = means if means else [0.0, 0.0, 0.0, 0.0]
+    stds = stds if stds else [1.0, 1.0, 1.0, 1.0]
+    current_node = MetaDataNode()
+    current_node.node_name = "BoxEncoder"
+    current_node.has_rali_c_func_call = True
+    current_node.rali_c_func_call = b.BoxEncoder
+    current_node.kwargs_pybind ={"anchors":anchors, "criteria":criteria, "means":means, "stds":stds, "offset":offset, "scale":scale}
+    if(isinstance(inputs[0],MetaDataNode)):
+        add_meta_data_node(inputs[0], current_node)
+    return (current_node , [])

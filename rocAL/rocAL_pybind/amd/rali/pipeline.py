@@ -373,10 +373,18 @@ class Pipeline(object):
                 if(meta_node.node_name == "OneHotLabel"):
                     self._numOfClasses = meta_node.kwargs["num_classes"]
                     self._oneHotEncoding = True
+                elif(meta_node.node_name == "BoxEncoder"):
+                    l = (meta_node.kwargs_pybind.values())
+                    meta_node.rali_c_func_call(self._handle,*l)
+                    self._BoxEncoder = True
+                meta_node = meta_node.prev
             if(meta_node.node_name == "OneHotLabel"):
                 self._numOfClasses = meta_node.kwargs["num_classes"]
                 self._oneHotEncoding = True
-
+            elif(meta_node.node_name == "BoxEncoder"):
+                    l = (meta_node.kwargs_pybind.values())
+                    meta_node.rali_c_func_call(self._handle,*l)
+                    self._BoxEncoder = True
                 
         # exit(0)
         status = b.raliVerify(self._handle)

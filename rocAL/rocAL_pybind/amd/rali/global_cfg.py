@@ -32,6 +32,10 @@ def add_node(prev_node,current_node):
     prev_node.next.append(current_node)
     current_node.prev.append(prev_node)
 
+def add_meta_data_node(prev_node,current_node):
+    prev_node.next.current_node
+    current_node.prev.prev_node
+
 #special nodes <for handling meta data>
 class MetaDataNode:
     def __init__(self):
@@ -41,8 +45,10 @@ class MetaDataNode:
         self.node_name = "OneHotLabel"
         self.bool_variable = "_oneHotEncoding"
         self.kwargs = None
+        self.kwargs_pybind = None
         self.visited = False # To know if we have already visited the Node
         self.has_rali_c_func_call = False
+        self.rali_c_func_call = None
 
     def __repr__(self):
         return '{} {}'.format(self.__class__.__name__, self.node_name)
