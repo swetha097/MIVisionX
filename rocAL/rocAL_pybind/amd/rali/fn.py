@@ -7,7 +7,7 @@ from amd.rali import reductions
 from amd.rali import segmentation
 from amd.rali import transforms
 import inspect
-from amd.rali.global_cfg import Node,add_node
+from amd.rali.global_cfg import Node,add_node,MetaDataNode
 import amd.rali.types as types
 import rali_pybind as b
 
@@ -769,3 +769,11 @@ def random_bbox_crop(*inputs,all_boxes_above_threshold = True, allow_no_crop =Tr
 def bb_flip(*inputs, bytes_per_sample_hint = 0, horizontal = 1, ltrb = False, preserve =  False,seed = -1, vertical = 0, device = None):
     #Dummy Node
     return []
+
+def one_hot(*inputs, bytes_per_sample_hint=0, dtype=types.FLOAT, num_classes=0, off_value=0.0,
+            on_value=1.0, preserve=False, seed=-1,  device=None):
+    current_node = MetaDataNode()
+    current_node.node_name = "OneHotLabel"
+    current_node.kwargs = {"num_classes": num_classes,
+                           "off_value": off_value, "on_value": on_value}
+    return current_node

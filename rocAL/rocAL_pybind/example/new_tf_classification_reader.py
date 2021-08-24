@@ -41,7 +41,14 @@ def main():
         jpegs = inputs["image/encoded"]
         images = fn.decoders.image(jpegs, user_feature_key_map=featureKeyMap, output_type=types.RGB)
         resized = fn.resize(images, resize_x=300, resize_y=300)
-        pipe.set_outputs(resized)
+        if(oneHotLabel == 1):
+            labels = inputs["image/class/label"]
+            labels = fn.one_hot(labels, num_classes=1000)
+            pipe.set_outputs(resized, labels)
+        else:
+            pipe.set_outputs(resized)
+
+
         
     # pipe.build()
     

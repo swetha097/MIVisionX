@@ -16,7 +16,7 @@ class Node:
         self.CMN = False # Set True only for CMN Node
         self.output_image = None # To store the output image
         self.visited = False # To know if we have already visited the Node
-        self.augmentation_node = False
+        self.augmentation_node = False #When It has an image output <reader nodes are an exception>
         self.input_image = []
 
     def __repr__(self):
@@ -31,3 +31,21 @@ class Node:
 def add_node(prev_node,current_node):
     prev_node.next.append(current_node)
     current_node.prev.append(prev_node)
+
+#special nodes <for handling meta data>
+class MetaDataNode:
+    def __init__(self):
+        self.prev = None
+        self.next = None
+
+        self.node_name = "OneHotLabel"
+        self.bool_variable = "_oneHotEncoding"
+        self.kwargs = None
+        self.visited = False # To know if we have already visited the Node
+        self.has_rali_c_func_call = False
+
+    def __repr__(self):
+        return '{} {}'.format(self.__class__.__name__, self.node_name)
+
+    def set_visited(self, bool_value):
+        self.visited = bool_value

@@ -1,4 +1,4 @@
-from amd.rali.global_cfg import Node
+from amd.rali.global_cfg import MetaDataNode, Node
 from numpy.core.fromnumeric import trace 
 import rali_pybind as b
 import amd.rali.types as types
@@ -277,6 +277,7 @@ class Pipeline(object):
     def set_outputs(self,*output_list):
         print(f'output_list {output_list}')
         set_output_images = []
+        set_output_meta_data = []
         output_traces_list = []
         backtraced_nodes = []
         for output in output_list:
@@ -284,6 +285,9 @@ class Pipeline(object):
                 output.is_output = True
                 output.kwargs_pybind["is_output"] = True
                 set_output_images.append(output)
+            elif(isinstance(output,MetaDataNode)):
+                set_output_meta_data.append(output)
+
         # Create the Output Tracing List [ [ TraceList1 ],[ TraceList2 ],[ TraceList3 ] ..[ TraceListN ]   ]  by Backtracing the Nodes (N is the number of output Nodes set by the user)
         # TraceList1 = [ Current Node, Number of Prev Nodes, PrevNode1 , PrevNode2 ...PrevNodeN ]
         for node in set_output_images:
@@ -317,13 +321,10 @@ class Pipeline(object):
                             current_list.append(prev_node)
                             if(prev_node.augmentation_node == True):
                                 prev_node_list.append(prev_node)
-                            # else:
-                            #     non_augmentation_node.append(prev_node)
-                        # node = current_node.prev  # List of Prev Nodes
+
                         node = prev_node_list
                         output_dict.append(current_list)
-                        # for node in non_augmentation_node:
-                        #     output_dict.append([node,0,"NULL"])
+
 
             #Reader Node
             self._name = node[0].node_name   #Store the name of the reader in a variable for further use     
@@ -365,7 +366,16 @@ class Pipeline(object):
                             trace[0].set_visited(True)
                             trace[0] = trace[0].prev[0]  # Need to check this !!
                         
+        for meta_node in set_output_meta_data:
+            while(meta_node.prev is not None ):
+                if(meta_node.node_name == "OneHotLabel"):
+                    self._numOfClasses = meta_node.kwargs["num_classes"]
+                    self._oneHotEncoding = True
+            if(meta_node.node_name == "OneHotLabel"):
+                self._numOfClasses = meta_node.kwargs["num_classes"]
+                self._oneHotEncoding = True
 
+                
         # exit(0)
         status = b.raliVerify(self._handle)
         if(status != types.OK):
