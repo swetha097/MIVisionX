@@ -84,9 +84,8 @@ class RALICOCOIterator(object):
         
         #Copy output from buffer to numpy array
         self.loader.copyImage(self.out)
-        img=torch.from_numpy(self.out)
-        draw_patches(img[0], 0, 0)
-
+        
+        #draw_patches(img[1], 0, 0)
         #Image id of a batch of images
         self.image_id = np.zeros(self.bs, dtype="int32")
         self.loader.GetImageId(self.image_id)
@@ -124,7 +123,7 @@ class RALICOCOIterator(object):
     def __iter__(self):
         return self
 
-def draw_patches(img,idx, bboxes):
+def draw_patches(img,idx, bboxes,display):
     #image is expected as a tensor, bboxes as numpy
     import cv2
     image = img.detach().numpy()
@@ -134,47 +133,33 @@ def draw_patches(img,idx, bboxes):
  
     _,htot ,wtot = img.shape
     image = cv2.UMat(image).get()
+
+    if display==1:
+        cv2.imshow('Image',image)
+        cv2.waitKey(0)
+
     cv2.imwrite(str(idx)+"_"+"train"+".png", image)
 
-def main():
-    if len(sys.argv) < 5:
-        print('Please pass the folder image_folder Annotation_file cpu/gpu batch_size display(True/False)')
-        exit(0)
+def coco_anchors(): # Should be Tensor of floats in ltrb format - input - Mx4 where M="No of anchor boxes"
+    fig_size = 300
+    feat_size = [38, 19, 10, 5, 3, 1]
+    steps = [8, 16, 32, 64, 100, 300]
 
-    image_path = sys.argv[1]
-    ann_path = sys.argv[2]
-    if(sys.argv[3] == "cpu"):
-        _rali_cpu = True
-    else:
-        _rali_cpu = False
-    bs = int(sys.argv[4])
-    display = sys.argv[5]
-    nt = 1
-    di = 0
-    crop_size = 300
-    random_seed = random.SystemRandom().randint(0, 2**32 - 1)
-    def coco_anchors(): # Should be Tensor of floats in ltrb format - input - Mx4 where M="No of anchor boxes"
-        fig_size = 300
-        feat_size = [38, 19, 10, 5, 3, 1]
-        steps = [8, 16, 32, 64, 100, 300]
-        
-        # use the scales here: https://github.com/amdegroot/ssd.pytorch/blob/master/data/config.py
-        scales = [21, 45, 99, 153, 207, 261, 315]
-        aspect_ratios = [[2], [2, 3], [2, 3], [2, 3], [2], [2]]
-        default_boxes = []
-        fk = fig_size/np.array(steps)
-        # size of feature and number of feature
-        for idx, sfeat in enumerate(feat_size):
-
-            sk1 = scales[idx]/fig_size
-            sk2 = scales[idx+1]/fig_size
-            sk3 = sqrt(sk1*sk2)
-            all_sizes = [(sk1, sk1), (sk3, sk3)]
-
-            for alpha in aspect_ratios[idx]:
-                w, h = sk1*sqrt(alpha), sk1/sqrt(alpha)
-                all_sizes.append((w, h))
-                all_sizes.append((h, w))
+    # use the scales here: https://github.com/amdegroot/ssd.pytorch/blob/master/data/config.py
+    scales = [21, 45, 99, 153, 207, 261, 315]
+    aspect_ratios = [[2], [2, 3], [2, 3], [2, 3], [2], [2]]
+    default_boxes = []
+    fk = fig_size/np.array(steps)
+    # size of feature and number of feature
+    for idx, sfeat in enumerate(feat_size):
+        sk1 = scales[idx]/fig_size
+        sk2 = scales[idx+1]/fig_size
+        sk3 = sqrt(sk1*sk2)
+        all_sizes = [(sk1, sk1), (sk3, sk3)]
+        for alpha in aspect_ratios[idx]:
+            w, h = sk1*sqrt(alpha), sk1/sqrt(alpha)
+            all_sizes.append((w, h))
+            all_sizes.append((h, w))
             for w, h in all_sizes:
                 for i, j in itertools.product(range(sfeat), repeat=2):
                     cx, cy = (j+0.5)/fk[idx], (i+0.5)/fk[idx]
@@ -187,78 +172,60 @@ def main():
         dboxes_ltrb[:, 1] = dboxes[:, 1] - 0.5 * dboxes[:, 3]
         dboxes_ltrb[:, 2] = dboxes[:, 0] + 0.5 * dboxes[:, 2]
         dboxes_ltrb[:, 3] = dboxes[:, 1] + 0.5 * dboxes[:, 3]
-        
         return dboxes_ltrb
+
+def main():
+    if  len(sys.argv) < 6:
+        print ('Please pass image_folder annotation path  cpu/gpu batch_size display')
+        exit(0)
+    image_path = sys.argv[1]
+    ann_path=sys.argv[2]
+    
+    if(sys.argv[3] == "cpu"):
+        _rali_cpu = True
+    else:
+        _rali_cpu = False
+
+    bs = int(sys.argv[4])
+    nt = 1
+    di = 0
+    display=int(sys.argv[5])
+    random_seed = random.SystemRandom().randint(0, 2**32 - 1)
+    crop_size=300
+    
+    
     default_boxes = coco_anchors().numpy().flatten().tolist()
-    pipe = Pipeline(batch_size=bs, num_threads=1,device_id=0, seed=random_seed, rali_cpu=_rali_cpu)
+    pipe = Pipeline(batch_size=bs, num_threads=nt,device_id=di, seed=random_seed, rali_cpu=_rali_cpu)
+    output_set=0
 
     with pipe:
         jpegs, bboxes, labels = fn.readers.coco(
-            file_root=image_path, annotations_file=ann_path, random_shuffle=False, seed=random_seed)
-        crop_begin, crop_size, bboxes, labels = fn.random_bbox_crop(bboxes, labels,
-                                                                device="cpu",
-                                                                aspect_ratio=[0.5, 2.0],
-                                                                thresholds=[0, 0.1, 0.3, 0.5, 0.7, 0.9],
-                                                                scaling=[0.3, 1.0],
-                                                                bbox_layout="xyXY",
-                                                                allow_no_crop=True,
-                                                                num_attempts=50)
-        images_decoded = fn.decoders.image_slice(jpegs, crop_begin, crop_size, device="mixed", output_type=types.RGB)
-        # images_decoded = fn.decoders.image(jpegs, output_type=types.RGB)
-        res_images = fn.resize(images_decoded, resize_x=300, resize_y=300)
+            file_root=image_path, annotations_file=ann_path, random_shuffle=False, seed=random_seed) 
+        decoded_images = fn.decoders.image(jpegs, output_type=types.RGB)
+        images=fn.resize(decoded_images,resize_x=crop_size,resize_y=crop_size)
         flip_coin = fn.random.coin_flip(probability=0.5)
         bboxes = fn.bb_flip(bboxes, ltrb=True, horizontal=flip_coin)
-        if not display:
-            images = fn.crop_mirror_normalize(res_images,
-                                        crop=(300, 300),
-                                        mean=[0.485 * 255, 0.456 * 255, 0.406 * 255],
-                                        std=[0.229 * 255, 0.224 * 255, 0.225 * 255],
-                                        mirror=flip_coin,
-                                        output_dtype=types.FLOAT,
-                                        output_layout=types.NCHW,
-                                        pad_output=False)
-        else:
-            images = fn.crop_mirror_normalize(res_images,
-                                        crop=(300, 300),
-                                        mean=[0,0,0],
-                                        std=[1,1,1],
-                                        mirror=flip_coin,
-                                        output_dtype=types.FLOAT,
-                                        output_layout=types.NCHW,
-                                        pad_output=False)
-        saturation = fn.uniform(range=[0.5, 1.5])
-        contrast = fn.uniform(range=[0.5, 1.5])
-        brightness = fn.uniform(range=[0.875, 1.125])
-        hue = fn.uniform(range=[-0.5, 0.5])
-        images = fn.color_twist(images, saturation=saturation, contrast=contrast, brightness=brightness, hue=hue)
         bboxes, labels = fn.box_encoder(bboxes, labels,
                                     criteria=0.5,
                                     anchors=default_boxes)
-        pipe.set_outputs(images, bboxes , labels)
-
+        images=fn.snow(images,snow=0.1)
+        output=fn.jitter(images)
+        pipe.set_outputs(output,bboxes,labels)
+        
+        
+    #Create Iterator for COCO Pipeline
     data_loader = RALICOCOIterator(
         pipe, multiplier=pipe._multiplier, offset=pipe._offset,display=display)
     epochs = 1
+    cnt=0
     for epoch in range(int(epochs)):
         print("EPOCH:::::",epoch)
         for i, it in enumerate(data_loader, 0):
-            print("**************", i, "*******************")
-            print("**************starts*******************")
-            print("\n IMAGES : \n", it[0])
-            print("\nBBOXES:\n", it[1])
-            print("\nLABELS:\n", it[2])
-            print("\nIMAGE ID:\n", it[3])
-            print("\nIMAGE SIZE:\n", it[4])
-            print("**************ends*******************")
-            print("**************", i, "*******************")
+            num_images=it[5]
+            for ind in range(0,num_images):
+                cnt=cnt+1
+                draw_patches(it[0][ind],cnt,0,display)
         data_loader.reset()
-
 
 if __name__ == '__main__':
     main()
-
-
-    
-
-
-
