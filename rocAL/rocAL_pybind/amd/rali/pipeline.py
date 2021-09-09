@@ -255,12 +255,8 @@ class Pipeline(object):
                                        multiplier[0], multiplier[1], multiplier[2], offset[0], offset[1], offset[2], (1 if reverse_channels else 0))
 
     def copyToTensorNCHW(self, array,  multiplier, offset, reverse_channels, tensor_dtype):
-        print("Comes to copyToTensorNCHW")
-        print(f' multiplier {multiplier}')
-        print(f' offset {offset}')
         out = np.frombuffer(array, dtype=array.dtype)
         if tensor_dtype == types.FLOAT:
-            print(f'TYPE : float')
             b.raliCopyToOutputTensor32(self._handle, np.ascontiguousarray(out, dtype=array.dtype), types.NCHW,
                                        multiplier[0], multiplier[1], multiplier[2], offset[0], offset[1], offset[2], (1 if reverse_channels else 0))
         elif tensor_dtype == types.FLOAT16:
@@ -277,7 +273,6 @@ class Pipeline(object):
 
 
     def set_outputs(self,*output_list):
-        print(f'output_list {output_list}')
         set_output_images = []
         set_output_meta_data = []
         output_traces_list = []
@@ -296,12 +291,10 @@ class Pipeline(object):
             output_dict = []
             node = [node]
             while (len(node)!=0 and node[0].submodule_name != "readers"):
-                print(f'node : {node}')
                 current_nodes = node
                 prev_node_list =[]
                 for current_node in current_nodes:
                     if current_node.submodule_name != "readers":
-                        print(f'current node :: {current_node}')
                         current_list = []
                         # non_augmentation_node = []
                         current_list.append(current_node)  # Append Node
@@ -310,7 +303,6 @@ class Pipeline(object):
                         current_list.append(number_of_prev_nodes)
                         for prev_node in current_node.prev:
                             # Append Previous Nodes
-                            print(f'prev_node node :: {prev_node}')
                             if(prev_node.CMN == True): # Needs to be changed at later stages
                                 self._tensor_layout = prev_node.kwargs['output_layout']
                                 self._tensor_dtype = prev_node.kwargs['output_dtype']
@@ -333,16 +325,13 @@ class Pipeline(object):
             current_list=[node[0],0, "NULL"]
             output_dict.append(current_list)
             output_traces_list.append(output_dict)
-            print(f' output_traces_list {output_traces_list}')
 
         # Excecute the rali c func call's
         for trace_list in output_traces_list: #trace_list =  [ [ Current Node , Number of Prev Nodes, PrevNode1 , PrevNode2 ...PrevNodeN ] , [ Current Node, Number of Prev Nodes, PrevNode1 , PrevNode2 ...PrevNodeN ] , .....]
             trace_list.reverse()
             for trace in trace_list: # trace = [ Current Node, Number of Prev Nodes, PrevNode1 , PrevNode2 ...PrevNodeN ] , # trace[0] = Current Node
                 if not trace[0].visited :
-                    print(f' WHICH NODE :: {trace[0].node_name}')
                     if trace[0].has_output_image :
-                        print(f' NODE :: {trace[0]}')
                         if trace[0].has_input_image :
                             for i in range(trace[1]):
                                 name = "input_image" + str(i)
@@ -354,7 +343,6 @@ class Pipeline(object):
                                 trace[0].prev[i].rali_c_func_call(self._handle,*(trace[0].prev[i].kwargs_pybind.values()))
                                 trace[0].prev[i].set_visited(True)
                         l= (trace[0].kwargs_pybind.values())
-                        print(f'NODE KWARGS PYBIND VALUES {l}')
                         trace[0].set_output_image(trace[0].rali_c_func_call(self._handle,*l))
                         trace[0].set_visited(True)
                     else:

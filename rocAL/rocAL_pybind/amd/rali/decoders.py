@@ -71,6 +71,20 @@ def image(*inputs, user_feature_key_map = None, affine=True, bytes_per_sample_hi
             "decode_size_policy": types.MAX_SIZE,
             "max_width": 0, 
             "max_height":0} 
+    else:
+        current_node.rali_c_func_call=b.ImageDecoderShard
+        current_node.kwargs_pybind = {
+            "source_path": inputs[0].kwargs['file_root'],
+            "color_format": output_type,
+            "shard_id": inputs[0].kwargs['shard_id'],
+            "num_shards": inputs[0].kwargs['num_shards'],
+            'is_output': current_node.is_output,
+            "shuffle": inputs[0].kwargs['random_shuffle'],
+            "loop": False,
+            "decode_size_policy": types.MAX_SIZE,
+            "max_width": 0, 
+            "max_height":0} 
+
 
     #Connect the Prev Node(inputs[0]) < === > Current Node
     add_node(inputs[0],current_node)
@@ -138,6 +152,19 @@ def image_random_crop(*inputs,user_feature_key_map=None , affine=True, bytes_per
         current_node.rali_c_func_call=b.Caffe_ImageDecoderShard
         current_node.kwargs_pybind = {
             "source_path": inputs[0].kwargs['path'],
+            "color_format": output_type,
+            "shard_id": inputs[0].kwargs['shard_id'],
+            "num_shards": inputs[0].kwargs['num_shards'],
+            'is_output': current_node.is_output,
+            "shuffle": inputs[0].kwargs['random_shuffle'],
+            "loop": False,
+            "decode_size_policy": types.MAX_SIZE,
+            "max_width": 0, 
+            "max_height":0} 
+    else:
+        current_node.rali_c_func_call=b.ImageDecoderShard
+        current_node.kwargs_pybind = {
+            "source_path": inputs[0].kwargs['file_root'],
             "color_format": output_type,
             "shard_id": inputs[0].kwargs['shard_id'],
             "num_shards": inputs[0].kwargs['num_shards'],
