@@ -120,7 +120,7 @@ void ResizeMirrorNormalizeMetaNode::update_parameters(MetaDataBatch *input_meta_
             box.r = coords_buf[m++];
             box.b = coords_buf[m++];
             
-            if(_mirror_val[i] == 0)
+            if(_mirror_val[i] == 1)
             {
                 float l = 1 - box.r;
                 box.r = 1 - box.l;
