@@ -134,6 +134,7 @@ void COCOMetaDataReader::print_map_contents()
 void COCOMetaDataReader::read_all(const std::string &path)
 {
 
+    _coco_metadata_read_time.start();// Debug timing
     std::string annotation_file = path;
     std::ifstream fin;
     fin.open(annotation_file, std::ios::in);
@@ -246,7 +247,9 @@ void COCOMetaDataReader::read_all(const std::string &path)
         }
     }
     fin.close();
+    _coco_metadata_read_time.end();// Debug timing
     //print_map_contents();
+    //std::cout<<"coco read time in sec: " << _coco_metadata_read_time.get_timing()/1000 << std::endl;
 }
 
 void COCOMetaDataReader::release(std::string image_name)
@@ -265,6 +268,7 @@ void COCOMetaDataReader::release()
     _map_img_sizes.clear();
 }
 
-COCOMetaDataReader::COCOMetaDataReader()
+COCOMetaDataReader::COCOMetaDataReader():
+        _coco_metadata_read_time("coco meta read time", DBG_TIMING)
 {
 }

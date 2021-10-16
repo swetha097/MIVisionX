@@ -1,10 +1,13 @@
 FROM ubuntu:18.04
 
+ENV MIVISIONX_DEPS_ROOT=/opt/mivisionx-deps
+WORKDIR $MIVISIONX_DEPS_ROOT
+
 RUN apt-get update -y
 # install mivisionx base dependencies - Level 1
 RUN apt-get -y install gcc g++ cmake git
 # install ROCm for mivisionx OpenCL dependency - Level 2
-RUN apt-get -y install libnuma-dev wget sudo gnupg2 kmod &&  \
+RUN apt-get -y install libnuma-dev wget sudo gnupg2 kmod python3-dev &&  \
         wget -q -O - https://repo.radeon.com/rocm/rocm.gpg.key | sudo apt-key add - && \
         echo 'deb [arch=amd64] https://repo.radeon.com/rocm/apt/debian/ xenial main' | sudo tee /etc/apt/sources.list.d/rocm.list && \
         sudo apt-get update -y && \
@@ -45,6 +48,12 @@ RUN apt-get -y install sqlite3 libsqlite3-dev libbz2-dev libssl-dev python-dev p
 RUN apt-get -y install libgflags-dev libgoogle-glog-dev liblmdb-dev nasm yasm libjsoncpp-dev clang && \
         git clone -b 2.0.6.1 https://github.com/rrawther/libjpeg-turbo.git && cd libjpeg-turbo && mkdir build && cd build && \
         cmake -DCMAKE_INSTALL_PREFIX=/usr -DCMAKE_BUILD_TYPE=RELEASE -DENABLE_STATIC=FALSE -DCMAKE_INSTALL_DOCDIR=/usr/share/doc/libjpeg-turbo-2.0.3 \
-        -DCMAKE_INSTALL_DEFAULT_LIBDIR=lib ../ && make -j4 && sudo make install && cd && \
+        -DCMAKE_INSTALL_DEFAULT_LIBDIR=lib ../ && make -j4 && sudo make install && cd ../../ && \
         git clone -b 0.7  https://github.com/GPUOpen-ProfessionalCompute-Libraries/rpp.git && cd rpp && mkdir build && cd build && \
         cmake -DBACKEND=OCL ../ && make -j4 && sudo make install && cd
+
+WORKDIR /workspace
+
+# install MIVisionX
+RUN git clone https://github.com/GPUOpen-ProfessionalCompute-Libraries/MIVisionX.git && mkdir build && cd build && \
+        cmake ../MIVisionX && make -j8 && make install
