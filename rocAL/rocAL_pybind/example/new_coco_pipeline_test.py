@@ -50,18 +50,13 @@ class RALICOCOIterator(object):
         self.display = display
         print("____________REMAINING IMAGES____________:", self.rim)
         color_format = self.loader.getOutputColorFormat()
-        print('h:',self.h)
-        print('w:',self.w)
-        print('n:',self.n)
-        
         self.p = (1 if color_format is types.GRAY else 3)
-        print('p:',self.p)
-        #self.out = np.empty(
-                #(self.bs*self.n, self.p, int(self.h), self.w), dtype="uint8")
-        self.out = np.empty(
-                (self.bs*self.n,int(self.h/self.bs), self.w,self.p), dtype="ubyte")
-        
-
+        if self.tensor_dtype == types.FLOAT:
+            self.out = np.zeros(
+                (self.bs*self.n, self.p, int(self.h/self.bs), self.w,), dtype="float32")
+        elif self.tensor_dtype == types.FLOAT16:
+            self.out = np.zeros(
+                (self.bs*self.n, self.p, int(self.h/self.bs), self.w,), dtype="float16")
 
     def next(self):
         return self.__next__()
@@ -80,27 +75,28 @@ class RALICOCOIterator(object):
             raise StopIteration
         self.lis = []  # Empty list for bboxes
         self.lis_lab = []  # Empty list of labels
-        
-        
-        #Copy output from buffer to numpy array
-        self.loader.copyImage(self.out)
-        img=torch.from_numpy(self.out)
-        draw_patches(img[0], 0, 0)
 
-        #Image id of a batch of images
+        if(types.NCHW == self.tensor_format):
+            self.loader.copyToTensorNCHW(
+                self.out, self.multiplier, self.offset, self.reverse_channels, int(self.tensor_dtype))
+        else:
+            self.loader.copyToTensorNHWC(
+                self.out, self.multiplier, self.offset, self.reverse_channels, int(self.tensor_dtype))
+
+#Image id of a batch of images
         self.image_id = np.zeros(self.bs, dtype="int32")
         self.loader.GetImageId(self.image_id)
-        # Count of labels/ bboxes in a batch
+# Count of labels/ bboxes in a batch
         self.bboxes_label_count = np.zeros(self.bs, dtype="int32")
         self.count_batch = self.loader.GetBoundingBoxCount(
             self.bboxes_label_count)
         print("Count Batch:", self.count_batch)
-        # 1D labels & bboxes array
+# 1D labels & bboxes array
         self.encoded_bboxes = np.zeros((self.count_batch*4), dtype="float32")
         self.encoded_labels = np.zeros(self.count_batch, dtype="int32")
         self.loader.copyEncodedBoxesAndLables(
             self.encoded_bboxes, self.encoded_labels)
-        # Image sizes of a batch
+# Image sizes of a batch
         self.img_size = np.zeros((self.bs * 2), dtype="int32")
         self.loader.GetImgSizes(self.img_size)
         print("Image sizes:", self.img_size)
@@ -109,14 +105,24 @@ class RALICOCOIterator(object):
         encodded_labels_tensor=  torch.tensor(self.encoded_labels).long().view(self.bs, -1)
         image_id_tensor = torch.tensor(self.image_id)
         image_size_tensor = torch.tensor(self.img_size).view(-1, self.bs, 2)
-        num_images,_,_,_=np.shape(self.out)
-        
-        #Return images,bboxes,labels,image_id,image_size to the calling function
+        for i in range(self.bs):
+            index_list =[ ]
+            actual_bboxes=[]
+            actual_labels =[]
+            for idx, x in enumerate(encodded_labels_tensor[i]):
+                if x!=0:
+                    index_list.append(idx)
+                    actual_bboxes.append(encoded_bboxes_tensor[i][idx].tolist())
+                    actual_labels.append(encodded_labels_tensor[i][idx].tolist()) 
+              
+            if self.display:
+               img = torch.from_numpy(self.out)
+               draw_patches(img[i], i, actual_bboxes)
+
         if self.tensor_dtype == types.FLOAT:
-            return torch.from_numpy(self.out), encoded_bboxes_tensor, encodded_labels_tensor, image_id_tensor, image_size_tensor,num_images
+            return torch.from_numpy(self.out), encoded_bboxes_tensor, encodded_labels_tensor, image_id_tensor, image_size_tensor
         elif self.tensor_dtype == types.FLOAT16:
-            return torch.from_numpy(self.out.astype(np.float16)), encoded_bboxes_tensor, encodded_labels_tensor, image_id_tensor, image_size_tensor,num_images
-        
+            return torch.from_numpy(self.out.astype(np.float16)), encoded_bboxes_tensor, encodded_labels_tensor, image_id_tensor, image_size_tensor
 
     def reset(self):
         self.loader.raliResetLoaders()
@@ -128,13 +134,21 @@ def draw_patches(img,idx, bboxes):
     #image is expected as a tensor, bboxes as numpy
     import cv2
     image = img.detach().numpy()
-    print('Shape is:',img.shape)
-    image = image.transpose([0,1,2])
+    image = image.transpose([1,2,0])
     image = cv2.cvtColor(image, cv2.COLOR_RGB2BGR )
  
     _,htot ,wtot = img.shape
-    image = cv2.UMat(image).get()
-    cv2.imwrite(str(idx)+"_"+"train"+".png", image)
+    for (xc, yc ,w,h) in bboxes:
+        l = xc - 0.5*(w)
+        t = yc - 0.5*(h)
+        r = xc + 0.5*(w)
+        b = yc + 0.5*(h)
+        loc_ = [l, t ,r, b]
+        color = (255, 0, 0)
+        thickness = 2
+        image = cv2.UMat(image).get()
+        image = cv2.rectangle(image, (int(loc_[0]*wtot ),int( loc_[1] *htot)),(int((loc_[2] *wtot) ) ,int((loc_[3] *htot) )) , color, thickness)  
+        cv2.imwrite(str(idx)+"_"+"train"+".png", image*255)
 
 def main():
     if len(sys.argv) < 5:
@@ -208,24 +222,23 @@ def main():
         res_images = fn.resize(images_decoded, resize_x=300, resize_y=300)
         flip_coin = fn.random.coin_flip(probability=0.5)
         bboxes = fn.bb_flip(bboxes, ltrb=True, horizontal=flip_coin)
-        if not display:
-            images = fn.crop_mirror_normalize(res_images,
+        images = fn.crop_mirror_normalize(res_images,
                                         crop=(300, 300),
                                         mean=[0.485 * 255, 0.456 * 255, 0.406 * 255],
                                         std=[0.229 * 255, 0.224 * 255, 0.225 * 255],
-                                        mirror=flip_coin,
+                                        mirror=1,
                                         output_dtype=types.FLOAT,
                                         output_layout=types.NCHW,
                                         pad_output=False)
-        else:
-            images = fn.crop_mirror_normalize(res_images,
-                                        crop=(300, 300),
-                                        mean=[0,0,0],
-                                        std=[1,1,1],
-                                        mirror=flip_coin,
-                                        output_dtype=types.FLOAT,
-                                        output_layout=types.NCHW,
-                                        pad_output=False)
+        # else:
+        #     images = fn.crop_mirror_normalize(res_images,
+        #                                 crop=(300, 300),
+        #                                 mean=[0,0,0],
+        #                                 std=[1,1,1],
+        #                                 mirror=0,
+        #                                 output_dtype=types.FLOAT,
+        #                                 output_layout=types.NCHW,
+        #                                 pad_output=False)
         saturation = fn.uniform(range=[0.5, 1.5])
         contrast = fn.uniform(range=[0.5, 1.5])
         brightness = fn.uniform(range=[0.875, 1.125])
@@ -238,7 +251,7 @@ def main():
 
     data_loader = RALICOCOIterator(
         pipe, multiplier=pipe._multiplier, offset=pipe._offset,display=display)
-    epochs = 1
+    epochs = 2
     for epoch in range(int(epochs)):
         print("EPOCH:::::",epoch)
         for i, it in enumerate(data_loader, 0):

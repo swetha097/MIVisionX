@@ -679,8 +679,6 @@ def crop_mirror_normalize(*inputs, bytes_per_sample_hint=0, crop=[0.0, 0.0], cro
             mirror = b.CreateIntParameter(0)
         else:
             mirror = b.CreateIntParameter(1)
-    else:
-        crop_pos_x = crop_pos_y = crop_pos_z = 1.0
 
     current_node.kwargs = {"bytes_per_sample_hint": bytes_per_sample_hint, "crop": crop, "crop_d": crop_d, "crop_h": crop_h, "crop_pos_x": crop_pos_x, "crop_pos_y": crop_pos_y, "crop_pos_z": crop_pos_z, "crop_w": crop_w, "image_type": image_type,
                            "mean": mean, "mirror": mirror, "output_dtype": output_dtype, "output_layout": output_layout, "pad_output": pad_output, "preserve": preserve, "seed": seed, "std": std, "device": device}  # Ones passed to this function
