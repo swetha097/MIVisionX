@@ -148,7 +148,7 @@ def draw_patches(img,idx, bboxes):
         thickness = 2
         image = cv2.UMat(image).get()
         image = cv2.rectangle(image, (int(loc_[0]*wtot ),int( loc_[1] *htot)),(int((loc_[2] *wtot) ) ,int((loc_[3] *htot) )) , color, thickness)  
-        cv2.imwrite(str(idx)+"_"+"train"+".png", image*255)
+        cv2.imwrite(str(idx)+"_"+"train"+".png", image)
 
 def main():
     if len(sys.argv) < 5:
@@ -220,30 +220,21 @@ def main():
         images_decoded = fn.decoders.image_slice(jpegs, crop_begin, crop_size, device="mixed", output_type=types.RGB)
         # images_decoded = fn.decoders.image(jpegs, output_type=types.RGB)
         res_images = fn.resize(images_decoded, resize_x=300, resize_y=300)
-        flip_coin = fn.random.coin_flip(probability=0.5)
-        bboxes = fn.bb_flip(bboxes, ltrb=True, horizontal=flip_coin)
-        images = fn.crop_mirror_normalize(res_images,
-                                        crop=(300, 300),
-                                        mean=[0.485 * 255, 0.456 * 255, 0.406 * 255],
-                                        std=[0.229 * 255, 0.224 * 255, 0.225 * 255],
-                                        mirror=1,
-                                        output_dtype=types.FLOAT,
-                                        output_layout=types.NCHW,
-                                        pad_output=False)
-        # else:
-        #     images = fn.crop_mirror_normalize(res_images,
-        #                                 crop=(300, 300),
-        #                                 mean=[0,0,0],
-        #                                 std=[1,1,1],
-        #                                 mirror=0,
-        #                                 output_dtype=types.FLOAT,
-        #                                 output_layout=types.NCHW,
-        #                                 pad_output=False)
         saturation = fn.uniform(range=[0.5, 1.5])
         contrast = fn.uniform(range=[0.5, 1.5])
         brightness = fn.uniform(range=[0.875, 1.125])
         hue = fn.uniform(range=[-0.5, 0.5])
-        images = fn.color_twist(images, saturation=saturation, contrast=contrast, brightness=brightness, hue=hue)
+        ct_images = fn.color_twist(res_images, saturation=saturation, contrast=contrast, brightness=brightness, hue=hue)
+        flip_coin = fn.random.coin_flip(probability=0.5)
+        bboxes = fn.bb_flip(bboxes, ltrb=True, horizontal=flip_coin)
+        images = fn.crop_mirror_normalize(ct_images,
+                                        crop=(300, 300),
+                                        mean=[0.485 * 255, 0.456 * 255, 0.406 * 255],
+                                        std=[0.229 * 255, 0.224 * 255, 0.225 * 255],
+                                        mirror=flip_coin,
+                                        output_dtype=types.FLOAT,
+                                        output_layout=types.NCHW,
+                                        pad_output=False)
         bboxes, labels = fn.box_encoder(bboxes, labels,
                                     criteria=0.5,
                                     anchors=default_boxes)

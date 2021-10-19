@@ -651,7 +651,7 @@ def vignette(*inputs, vignette=0.5, device=None):
 
 
 def crop_mirror_normalize(*inputs, bytes_per_sample_hint=0, crop=[0.0, 0.0], crop_d=0, crop_h=0, crop_pos_x=0.5, crop_pos_y=0.5, crop_pos_z=0.5,
-                          crop_w=0, image_type=0, mean=[0.0], mirror=0, output_dtype=types.FLOAT, output_layout=types.NCHW, pad_output=False,
+                          crop_w=0, image_type=0, mean=[0.0], mirror=1, output_dtype=types.FLOAT, output_layout=types.NCHW, pad_output=False,
                           preserve=False, seed=1, std=[1.0], device=None):
     current_node = Node()
     current_node.node_name = "CropMirrorNormalize"
