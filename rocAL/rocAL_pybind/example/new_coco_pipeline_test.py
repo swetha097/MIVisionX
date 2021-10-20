@@ -51,12 +51,8 @@ class RALICOCOIterator(object):
         print("____________REMAINING IMAGES____________:", self.rim)
         color_format = self.loader.getOutputColorFormat()
         self.p = (1 if color_format is types.GRAY else 3)
-        if self.tensor_dtype == types.FLOAT:
-            self.out = np.zeros(
-                (self.bs*self.n, self.p, int(self.h/self.bs), self.w,), dtype="float32")
-        elif self.tensor_dtype == types.FLOAT16:
-            self.out = np.zeros(
-                (self.bs*self.n, self.p, int(self.h/self.bs), self.w,), dtype="float16")
+        self.out = np.empty(
+                (self.bs*self.n,int(self.h/self.bs), self.w,self.p), dtype="ubyte")
 
     def next(self):
         return self.__next__()
@@ -76,13 +72,8 @@ class RALICOCOIterator(object):
         self.lis = []  # Empty list for bboxes
         self.lis_lab = []  # Empty list of labels
 
-        if(types.NCHW == self.tensor_format):
-            self.loader.copyToTensorNCHW(
-                self.out, self.multiplier, self.offset, self.reverse_channels, int(self.tensor_dtype))
-        else:
-            self.loader.copyToTensorNHWC(
-                self.out, self.multiplier, self.offset, self.reverse_channels, int(self.tensor_dtype))
-
+         #Copy output from buffer to numpy array
+        self.loader.copyImage(self.out)
 #Image id of a batch of images
         self.image_id = np.zeros(self.bs, dtype="int32")
         self.loader.GetImageId(self.image_id)
@@ -116,8 +107,13 @@ class RALICOCOIterator(object):
                     actual_labels.append(encodded_labels_tensor[i][idx].tolist()) 
               
             if self.display:
-               img = torch.from_numpy(self.out)
-               draw_patches(img[i], i, actual_bboxes)
+                if self.n == 1:
+                    img = torch.from_numpy(self.out)
+                    draw_patches(img[i], self.image_id[i], actual_bboxes)
+                else:
+                    img = torch.from_numpy(self.out)
+                    for idx in range(self.n):
+                        draw_all_images(img[i],self.image_id[i],idx)
 
         if self.tensor_dtype == types.FLOAT:
             return torch.from_numpy(self.out), encoded_bboxes_tensor, encodded_labels_tensor, image_id_tensor, image_size_tensor
@@ -134,10 +130,10 @@ def draw_patches(img,idx, bboxes):
     #image is expected as a tensor, bboxes as numpy
     import cv2
     image = img.detach().numpy()
-    image = image.transpose([1,2,0])
+    image = image.transpose([0,1,2])
     image = cv2.cvtColor(image, cv2.COLOR_RGB2BGR )
  
-    _,htot ,wtot = img.shape
+    wtot,htot ,_ = img.shape
     for (xc, yc ,w,h) in bboxes:
         l = xc - 0.5*(w)
         t = yc - 0.5*(h)
@@ -150,6 +146,16 @@ def draw_patches(img,idx, bboxes):
         image = cv2.rectangle(image, (int(loc_[0]*wtot ),int( loc_[1] *htot)),(int((loc_[2] *wtot) ) ,int((loc_[3] *htot) )) , color, thickness)  
         cv2.imwrite(str(idx)+"_"+"train"+".png", image)
 
+def draw_all_images(img,id,idx):
+    #image is expected as a tensor, bboxes as numpy
+    import cv2
+    image = img.detach().numpy()
+    # image = image.transpose([0,1,2])
+    image = cv2.cvtColor(image, cv2.COLOR_RGB2BGR )
+ 
+    # wtot,htot ,_ = img.shape
+    image = cv2.UMat(image).get()
+    cv2.imwrite(str(id)+"_"+str(idx)+"_"+"train"+".png", image)
 def main():
     if len(sys.argv) < 5:
         print('Please pass the folder image_folder Annotation_file cpu/gpu batch_size display(True/False)')
