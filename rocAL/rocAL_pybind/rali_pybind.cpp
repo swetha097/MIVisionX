@@ -298,6 +298,8 @@ namespace rali{
         m.def("UpdateFloatRand", &raliUpdateFloatUniformRand);
         m.def("UpdateIntParameter", &raliUpdateIntParameter);
         m.def("UpdateFloatParameter", &raliUpdateFloatParameter);
+        m.def("GetIntValue",&raliGetIntValue);
+        m.def("GetFloatValue",&raliGetFloatValue);
         // rali_api_data_transfer.h
         m.def("raliCopyToOutput",&wrapper);
         m.def("raliCopyToOutputTensor32",&wrapper_tensor32);

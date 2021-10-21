@@ -379,19 +379,33 @@ class Pipeline(object):
         if(status != types.OK):
             print("Verify graph failed")
 
-
-
-
-
-
-            
-
     def __enter__(self):
         print("enters")
         return self
 
     def __exit__(self, exception_type, exception_value, traceback):
         pass
+
+    def set_seed(self,seed=0):
+        return b.setSeed(seed)
+
+    def create_int_param(self,value):
+        return b.CreateIntParameter(value)
+
+    def create_float_param(self,value):
+        return b.CreateFloatParameter(value)
+
+    def update_int_param(self,value,param):
+        b.UpdateIntParameter(value,param)
+
+    def update_float_param(self,value,param):
+        b.UpdateFloatParameter(value,param)
+
+    def get_int_value(self,param):
+        return b.GetIntValue(param)
+
+    def get_float_value(self,param):
+        return b.GetFloatValue(param)
 
     def GetImageNameLen(self, array):
         return b.getImageNameLen(self._handle, array)
