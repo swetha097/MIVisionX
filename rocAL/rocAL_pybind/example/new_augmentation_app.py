@@ -14,7 +14,7 @@ import numpy as np
 
 
 
-def HybridPipeline(batch_size,data_dir, random_seed,num_threads,device_id,_rali_cpu ):
+def HybridPipeline(batch_size,data_dir, crop_size,random_seed,num_threads,device_id,_rali_cpu ):
     #  Params for decoder
     decode_width = 500
     decode_height = 500
@@ -62,7 +62,13 @@ def HybridPipeline(batch_size,data_dir, random_seed,num_threads,device_id,_rali_
     #param for saturation
     pipe.saturation = pipe.create_float_param(1.5)
     #param for warp affine
-    pipe.affine_matrix = [0.35,0.25,0.75,1,1,1]
+    x0 = pipe.create_float_param(0.35)
+    x1 = pipe.create_float_param(0.25)
+    y0 = pipe.create_float_param(0.75)
+    y1 = pipe.create_float_param(1)
+    z0 = pipe.create_float_param(1)
+    z1 = pipe.create_float_param(1)
+    pipe.affine_matrix = [x0,x1,y0,y1,z0,z1]
     #param for fog
     pipe.fog = pipe.create_float_param(0.35)
     #param for vignette
@@ -77,11 +83,28 @@ def HybridPipeline(batch_size,data_dir, random_seed,num_threads,device_id,_rali_
         jpegs, labels = fn.readers.file(
             file_root=path, random_shuffle=False, seed=random_seed) 
         decoded_images = fn.decoders.image(jpegs, output_type=types.RGB)
-        images=fn.resize(decoded_images,resize_x=300,resize_y=300)
-        outputs_1 = fn.rotate(images,angle=45)
-        outputs_2 = fn.fish_eye(outputs_1)
-        outputs_3 = fn.fog(outputs_2)
-        outputs = [images, outputs_1, outputs_3]
+        contrast = fn.contrast(decoded_images, min_contrast = pipe.min_param, max_contrast = pipe.max_param)
+        # brightness = fn.brightness(contrast, alpha =pipe.alpha_param, beta= pipe.beta_param)
+        # brightness = fn.brightness(contrast, alpha= pipe.alpha_param, beta=pipe.beta_param)
+        exposure = fn.exposure(contrast, exposure=pipe.shift_param)
+        gamma_correction = fn.gamma_correction(exposure, gamma=pipe.gamma_shift_param)
+        rotate = fn.rotate(gamma_correction,angle=pipe.degree_param) 
+        resize = fn.resize(rotate,resize_x=crop_size,resize_y=crop_size)
+        flip = fn.flip(resize ,flip=pipe.flip_axis)
+        warpaffine = fn.warp_affine(flip, matrix=pipe.affine_matrix)
+        crop = fn.crop(warpaffine, crop_h=250,crop_w=250,crop_pos_x = 0,crop_pos_y=0)
+        snow = fn.snow(crop ,snow=pipe.snow)
+        rain = fn.rain(snow, rain=pipe.rain, rain_width = pipe.rain_width, rain_height = pipe.rain_height, rain_transparency =pipe.rain_transparency)
+        blur = fn.blur(rain, blur = pipe.blur)
+        jitter = fn.jitter(blur, kernel_size = pipe.kernel_size)
+        hue = fn.hue(jitter, hue = pipe.hue)
+        saturation = fn.saturation(hue, saturation = pipe.saturation)
+        fisheye = fn.fish_eye(saturation)
+        vignette = fn.vignette(fisheye, vignette = pipe.vignette)
+        fog = fn.fog(vignette ,fog=pipe.fog)
+        pixelate = fn.pixelate(fog)
+        blend = fn.blend(flip, resize)
+        outputs = [ resize, warpaffine , snow, rain, blur, hue, fisheye]
         outputs_size = len(outputs)
         pipe.set_outputs(*outputs,labels)
     return pipe
@@ -93,7 +116,7 @@ def updateAugmentationParameter(pipe, augmentation):
     max = 150 + int((1-augmentation)*100)
     pipe.update_int_param(min, pipe.min_param)
     pipe.update_int_param(max, pipe.max_param)
-
+    
     #values for brightness
     alpha = augmentation*1.95
     pipe.update_float_param(alpha, pipe.alpha_param)
@@ -137,7 +160,7 @@ def main():
     di = 0
     random_seed = random.SystemRandom().randint(0, 2**32 - 1)
     crop_size=300
-    pipe = HybridPipeline(bs,image_path,random_seed,nt,di,_rali_cpu)
+    pipe = HybridPipeline(bs,image_path,crop_size,random_seed,nt,di,_rali_cpu)
     data_loader = RALI_iterator(pipe)
     epochs = 1
     cnt=0
@@ -149,8 +172,8 @@ def main():
             cnt=cnt+1
             print("**************", i, "*******************")
             print("**************starts*******************")
-            print("\nImages:\n",it[0])
-            print(it[0].shape)
+            # print("\nImages:\n",it[0])
+            # print(it[0].shape)
             print("**************ends*******************")
             print("**************", i, "*******************")
         data_loader.reset()

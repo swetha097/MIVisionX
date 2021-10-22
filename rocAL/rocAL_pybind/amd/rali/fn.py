@@ -13,7 +13,7 @@ import rali_pybind as b
 
 
 #brightness=1.0, bytes_per_sample_hint=0, image_type=0, preserve=False, seed=-1, device=None
-def brightness(*inputs,brightness=1.0, bytes_per_sample_hint=0, image_type=0,
+def brightness(*inputs,brightness=1.0, alpha = None , beta= None, bytes_per_sample_hint=0, image_type=0,
                  preserve=False, seed=-1, device= None):
     """
 brightness (float, optional, default = 1.0) –
@@ -35,7 +35,7 @@ preserve (bool, optional, default = False) – Do not remove the Op from the gra
 seed (int, optional, default = -1) – Random seed (If not provided it will be populated based on the global seed of the pipeline)
     """
     current_node = Node()    
-    kwargs_pybind = {"input_image0":inputs[0].output_image, "is_output":current_node.is_output ,"alpha": None,"beta": None}
+    kwargs_pybind = {"input_image0":inputs[0].output_image, "is_output":current_node.is_output ,"alpha": alpha,"beta": beta}
     #Node Object
     current_node.node_name = "Brightness"
     current_node.rali_c_func_call = b.Brightness
@@ -92,7 +92,7 @@ def exposure(*inputs, exposure=0.5, device=None):
 
     # pybind call arguments
     kwargs_pybind = {"input_image0": inputs[0].output_image,
-                     "is_output": current_node.is_output, "shift": None}
+                     "is_output": current_node.is_output, "shift": exposure}
     current_node.node_name = "Exposure"
     current_node.rali_c_func_call = b.Exposure
     current_node.kwargs_pybind = kwargs_pybind
@@ -128,7 +128,7 @@ def fog(*inputs, fog=0.5, device=None):
 
     # pybind call arguments
     kwargs_pybind = {"input_image0": inputs[0].output_image,
-                     "is_output": current_node.is_output, "fog_value": None}
+                     "is_output": current_node.is_output, "fog_value": fog}
     current_node.node_name = "Fog"
     current_node.rali_c_func_call = b.Fog
     current_node.kwargs_pybind = kwargs_pybind
@@ -206,7 +206,7 @@ def blur(*inputs, blur=3, device=None):  # Init arguments
     return (current_node)
 
 
-def contrast(*inputs, bytes_per_sample_hint=0, contrast=1.0, image_type=0,
+def contrast(*inputs, bytes_per_sample_hint=0, contrast=1.0, image_type=0, min_contrast=None, max_contrast=None,
              preserve=False, seed=-1, device=None):
     """
     bytes_per_sample_hint (int, optional, default = 0) – Output size hint (bytes), per sample. The memory will be preallocated if it uses GPU or page-locked memory
@@ -232,7 +232,7 @@ def contrast(*inputs, bytes_per_sample_hint=0, contrast=1.0, image_type=0,
 
     # pybind call arguments
     kwargs_pybind = {"input_image0": inputs[0].output_image,
-                     "is_output": current_node.is_output, "min": None, "max": None}
+                     "is_output": current_node.is_output, "min": min_contrast, "max": max_contrast}
     current_node.node_name = "Contrast"
     current_node.rali_c_func_call = b.Contrast
     current_node.kwargs_pybind = kwargs_pybind
@@ -251,7 +251,7 @@ def flip(*inputs, flip=0, device=None):
 
     # pybind call arguments
     kwargs_pybind = {"input_image0": inputs[0].output_image,
-                     "is_output": current_node.is_output, "flip_axis": None}
+                     "is_output": current_node.is_output, "flip_axis": flip}
     current_node.node_name = "Flip"
     current_node.rali_c_func_call = b.Flip
     current_node.kwargs_pybind = kwargs_pybind
@@ -269,7 +269,7 @@ def gamma_correction(*inputs, gamma=0.5, device=None):
 
     # pybind call arguments
     kwargs_pybind = {"input_image0": inputs[0].output_image,
-                     "is_output": current_node.is_output, "alpha": None}
+                     "is_output": current_node.is_output, "alpha": gamma}
     current_node.node_name = "GammaCorrection"
     current_node.rali_c_func_call = b.GammaCorrection
     current_node.kwargs_pybind = kwargs_pybind
@@ -300,7 +300,7 @@ def hue(*inputs, bytes_per_sample_hint=0,  hue=0.0, image_type=0,
 
     # pybind call arguments
     kwargs_pybind = {"input_image0": inputs[0].output_image,
-                     "is_output": current_node.is_output, "hue": None}
+                     "is_output": current_node.is_output, "hue": hue}
     current_node.node_name = "Hue"
     current_node.rali_c_func_call = b.Hue
     current_node.kwargs_pybind = kwargs_pybind
@@ -315,7 +315,7 @@ def hue(*inputs, bytes_per_sample_hint=0,  hue=0.0, image_type=0,
     return (current_node)
 
 def jitter(*inputs, bytes_per_sample_hint=0, fill_value=0.0, interp_type= 0, 
-        mask = 1, nDegree = 2, preserve = False, seed = -1, device = None):
+        mask = 1, nDegree = 2, kernel_size, preserve = False, seed = -1, device = None):
     """
     bytes_per_sample_hint (int, optional, default = 0) – Output size hint (bytes), per sample. The memory will be preallocated if it uses GPU or page-locked memory
 
@@ -342,7 +342,7 @@ def jitter(*inputs, bytes_per_sample_hint=0, fill_value=0.0, interp_type= 0,
 
     # pybind call arguments
     kwargs_pybind = {"input_image0": inputs[0].output_image,
-                     "is_output": current_node.is_output, "kernel_size": None}
+                     "is_output": current_node.is_output, "kernel_size": kernel_size}
     current_node.node_name = "Jitter"
     current_node.rali_c_func_call = b.Jitter
     current_node.kwargs_pybind = kwargs_pybind
@@ -374,12 +374,11 @@ def pixelate(*inputs, device = None):
     add_node(inputs[0], current_node)
     return (current_node)
 
-def rain(*inputs, rain=0.5, device = None):
+def rain(*inputs, rain=0.5, rain_width = None, rain_height = None, rain_transparency = None, device = None):
     current_node = Node()
 
     # pybind call arguments
-    kwargs_pybind = {"input_image0": inputs[0].output_image,"is_output": current_node.is_output,
-                    "rain_value": None, "rain_width": None, "rain_height": None, "rain_transparency": None}
+    kwargs_pybind = {"input_image0": inputs[0].output_image,"is_output": current_node.is_output, "rain_value": rain, "rain_width": rain_width, "rain_height": rain_height, "rain_transparency": rain_transparency}
     current_node.node_name = "Rain"
     current_node.rali_c_func_call = b.Rain
     current_node.kwargs_pybind = kwargs_pybind
@@ -509,7 +508,7 @@ def rotate(*inputs, angle=0, axis=None, bytes_per_sample_hint= 0, fill_value = 0
 
     # pybind call arguments
     kwargs_pybind = {"input_image0": inputs[0].output_image,"is_output": current_node.is_output,
-                    "angle": None, "dest_width": 0, "dest_height": 0}
+                    "angle": angle, "dest_width": 0, "dest_height": 0}
     current_node.node_name = "Rotate"
     current_node.rali_c_func_call = b.Rotate
     current_node.kwargs_pybind = kwargs_pybind
@@ -547,7 +546,7 @@ def saturation(*inputs, bytes_per_sample_hint=0,  saturation=1.0, image_type=0, 
 
     # pybind call arguments
     kwargs_pybind = {"input_image0": inputs[0].output_image,
-                     "is_output": current_node.is_output, "sat": None}
+                     "is_output": current_node.is_output, "sat": saturation}
     current_node.node_name = "Saturation"
     current_node.rali_c_func_call = b.Saturation
     current_node.kwargs_pybind = kwargs_pybind
@@ -617,7 +616,7 @@ def warp_affine(*inputs, bytes_per_sample_hint=0, fill_value=0.0, interp_type = 
 
     # pybind call arguments
     kwargs_pybind = {"input_image0": inputs[0].output_image,"is_output": current_node.is_output,
-                    "dest_width": 0, "dest_height": 0, "x0": None, "x1": None, "y0": None, "y1": None, "o0": None, "o1": None}
+                    "dest_width": 0, "dest_height": 0, "x0": matrix[0], "x1": matrix[1], "y0": matrix[2], "y1": matrix[3], "o0": matrix[4], "o1": matrix[5]}
     current_node.node_name = "WarpAffine"
     current_node.rali_c_func_call = b.WarpAffine
     current_node.kwargs_pybind = kwargs_pybind
@@ -636,7 +635,7 @@ def vignette(*inputs, vignette=0.5, device=None):
     current_node = Node()
 
     # pybind call arguments
-    kwargs_pybind = {"input_image0": inputs[0].output_image,"is_output": current_node.is_output, "sdev": None}
+    kwargs_pybind = {"input_image0": inputs[0].output_image,"is_output": current_node.is_output, "sdev": vignette}
     current_node.node_name = "Vignette"
     current_node.rali_c_func_call = b.Vignette
     current_node.kwargs_pybind = kwargs_pybind
@@ -717,6 +716,44 @@ def centre_crop(*inputs, bytes_per_sample_hint=0, crop=[0.0, 0.0], crop_d=1, cro
     # pybind call arguments
     kwargs_pybind = {"input_image0": inputs[0].output_image, "crop_width":crop_w, "crop_height":crop_h, "crop_depth":crop_d, 
                      "is_output": current_node.is_output}
+    current_node.kwargs_pybind = kwargs_pybind
+    # Connect the Prev Node < === > Current Node
+    add_node(inputs[0], current_node)
+    return (current_node)
+
+def crop(*inputs, bytes_per_sample_hint=0, crop=[0.0, 0.0], crop_d=1, crop_h= 0, crop_pos_x = 0.5, crop_pos_y = 0.5, crop_pos_z = 0.5,
+                 crop_w=0, image_type=0, output_dtype=types.FLOAT, preserve = False, seed = 1, device = None):
+    current_node = Node()
+    current_node.node_name = "Crop"
+    
+    if(len(crop) == 2):
+        crop_d = crop_d
+        crop_h = crop[0]
+        crop_w = crop[1]
+    elif(len(crop) == 3):
+        crop_d = crop[0]
+        crop_h = crop[1]
+        crop_w = crop[2]
+    else:
+        crop_d = crop_d
+        crop_h = crop_h
+        crop_w = crop_w
+    #Set Seed
+    b.setSeed(seed)
+    current_node.has_input_image = True
+    current_node.has_output_image = True
+    current_node.augmentation_node = True
+    current_node.kwargs = {"bytes_per_sample_hint": bytes_per_sample_hint, "crop": crop, "crop_d": crop_d, "crop_h": crop_h, "crop_pos_x": crop_pos_x, "crop_pos_y": crop_pos_y, "crop_pos_z": crop_pos_z, "crop_w": crop_w, "image_type": image_type
+                           , "output_dtype": output_dtype, "preserve": preserve, "seed": seed, "device": device}  # Ones passed to this function
+    if ((crop_w == 0) and (crop_h == 0)):
+        # pybind call arguments
+        current_node.rali_c_func_call = b.Crop
+        kwargs_pybind = {"input_image0": inputs[0].output_image,"is_output": current_node.is_output, "crop_width":None, "crop_height":None, "crop_depth":None ,"crop_pos_x": None, "crop_pos_y": None, "crop_pos_z": None }
+    else:
+        # pybind call arguments
+        current_node.rali_c_func_call = b.CropFixed
+        kwargs_pybind = {"input_image0": inputs[0].output_image, "crop_width":crop_w, "crop_height":crop_h, "crop_depth":crop_d ,"is_output": current_node.is_output,"crop_pos_x": crop_pos_x, "crop_pos_y": crop_pos_y, "crop_pos_z": crop_pos_z }
+
     current_node.kwargs_pybind = kwargs_pybind
     # Connect the Prev Node < === > Current Node
     add_node(inputs[0], current_node)
