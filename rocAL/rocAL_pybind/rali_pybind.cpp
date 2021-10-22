@@ -620,6 +620,17 @@ namespace rali{
             py::arg("input"),
             py::arg("is_output"),
             py::arg("shift") = NULL);
+        m.def("ColorTemp",&raliColorTemp,
+            py::return_value_policy::reference,
+            py::arg("context"),
+            py::arg("input"),
+            py::arg("is_output"),
+            py::arg("adjustment") = NULL);
+        m.def("raliNop",&raliNop,
+            py::return_value_policy::reference,
+            py::arg("context"),
+            py::arg("input"),
+            py::arg("is_output"));
         m.def("Blur",&raliBlur,
             py::return_value_policy::reference,
             py::arg("context"),

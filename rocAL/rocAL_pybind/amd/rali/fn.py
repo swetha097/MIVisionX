@@ -12,46 +12,6 @@ import amd.rali.types as types
 import rali_pybind as b
 
 
-#brightness=1.0, bytes_per_sample_hint=0, image_type=0, preserve=False, seed=-1, device=None
-def brightness(*inputs,brightness=1.0, alpha = None , beta= None, bytes_per_sample_hint=0, image_type=0,
-                 preserve=False, seed=-1, device= None):
-    """
-brightness (float, optional, default = 1.0) –
-
-Brightness change factor. Values >= 0 are accepted. For example:
-
-0 - black image,
-
-1 - no change
-
-2 - increase brightness twice
-
-bytes_per_sample_hint (int, optional, default = 0) – Output size hint (bytes), per sample. The memory will be preallocated if it uses GPU or page-locked memory
-
-image_type (int, optional, default = 0) – The color space of input and output image
-
-preserve (bool, optional, default = False) – Do not remove the Op from the graph even if its outputs are unused.
-
-seed (int, optional, default = -1) – Random seed (If not provided it will be populated based on the global seed of the pipeline)
-    """
-    current_node = Node()    
-    kwargs_pybind = {"input_image0":inputs[0].output_image, "is_output":current_node.is_output ,"alpha": alpha,"beta": beta}
-    #Node Object
-    current_node.node_name = "Brightness"
-    current_node.rali_c_func_call = b.Brightness
-    current_node.kwargs_pybind = kwargs_pybind
-    current_node.augmentation_node = True
-    current_node.kwargs = {"brightness": brightness, "bytes_per_sample_hint": bytes_per_sample_hint, "image_type": image_type,
-                           "preserve": preserve, "seed": seed, "device": device}
-    current_node.has_input_image = True
-    current_node.has_output_image = True
-
-    #Connect the Prev Node(inputs[0]) < === > Current Node
-    add_node(inputs[0],current_node)
-
-    return (current_node)
-
-
 def blend(*inputs,**kwargs):
     current_node = Node()
  
@@ -858,3 +818,75 @@ def box_encoder(*inputs, anchors, bytes_per_sample_hint=0, criteria=0.5, means=N
     if(isinstance(inputs[0],MetaDataNode)):
         add_meta_data_node(inputs[0], current_node)
     return (current_node , [])
+
+def color_temp(*inputs, adjustment_value=50, device=None, preserve = False):
+    current_node = Node()
+
+    # pybind call arguments
+    kwargs_pybind = {"input_image0": inputs[0].output_image,"is_output": current_node.is_output, "adjustment_value": adjustment_value}
+    current_node.node_name = "ColorTemp"
+    current_node.rali_c_func_call = b.ColorTemp
+    current_node.kwargs_pybind = kwargs_pybind
+    current_node.kwargs = {"adjustment_value": adjustment_value, "device": device, "prserve":preserve}  # Ones passed to this function
+    current_node.has_input_image = True
+    current_node.has_output_image = True
+    current_node.augmentation_node = True
+
+    # Connect the Prev Node < === > Current Node
+    add_node(inputs[0], current_node)
+    return (current_node)
+
+def nop(*inputs, device=None, preserve = False):
+    current_node = Node()
+
+    # pybind call arguments
+    kwargs_pybind = {"input_image0": inputs[0].output_image,"is_output": current_node.is_output }
+    current_node.node_name = "raliNop"
+    current_node.rali_c_func_call = b.raliNop
+    current_node.kwargs_pybind = kwargs_pybind
+    current_node.kwargs = {"device": device, "preserve":preserve}  # Ones passed to this function
+    current_node.has_input_image = True
+    current_node.has_output_image = True
+    current_node.augmentation_node = True
+
+    # Connect the Prev Node < === > Current Node
+    add_node(inputs[0], current_node)
+    return (current_node)
+
+
+
+def copy(*inputs, device=None):
+    current_node = Node()
+
+    # pybind call arguments
+    kwargs_pybind = {"input_image0": inputs[0].output_image,"is_output": current_node.is_output }
+    current_node.node_name = "raliCopy"
+    current_node.rali_c_func_call = b.raliCopy
+    current_node.kwargs_pybind = kwargs_pybind
+    current_node.kwargs = {"device": device}  # Ones passed to this function
+    current_node.has_input_image = True
+    current_node.has_output_image = True
+    current_node.augmentation_node = True
+
+    # Connect the Prev Node < === > Current Node
+    add_node(inputs[0], current_node)
+    return (current_node)
+
+def brightness(*inputs, alpha_param = None , beta_param= None, brightness=1.0, bytes_per_sample_hint=0, image_type=0, preserve=False, seed=-1, device= None):
+
+    current_node = Node()    
+    kwargs_pybind = {"input_image0":inputs[0].output_image, "is_output":current_node.is_output ,"alpha_param": alpha_param,"beta_param": beta_param}
+    #Node Object
+    current_node.node_name = "Brightness"
+    current_node.rali_c_func_call = b.Brightness
+    current_node.kwargs_pybind = kwargs_pybind
+    current_node.augmentation_node = True
+    current_node.kwargs = {"brightness": brightness, "bytes_per_sample_hint": bytes_per_sample_hint, "image_type": image_type,"alpha_param": alpha_param,"beta_param": beta_param,
+                           "preserve": preserve, "seed": seed, "device": device}
+    current_node.has_input_image = True
+    current_node.has_output_image = True
+
+    #Connect the Prev Node(inputs[0]) < === > Current Node
+    add_node(inputs[0],current_node)
+
+    return (current_node)
