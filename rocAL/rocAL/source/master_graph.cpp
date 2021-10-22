@@ -1114,8 +1114,7 @@ size_t MasterGraph::compute_optimum_internal_batch_size(size_t user_batch_size, 
             ret = i;
             break;
         }
-    if(DBG_INFO)
-        INFO("User batch size "+ TOSTR(user_batch_size)+" Internal batch size set to "+ TOSTR(ret))
+    INFO("User batch size "+ TOSTR(user_batch_size)+" Internal batch size set to "+ TOSTR(ret))
     return ret;
 }
 
