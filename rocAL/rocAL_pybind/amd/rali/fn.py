@@ -890,3 +890,21 @@ def brightness(*inputs, alpha_param = None , beta_param= None, brightness=1.0, b
     add_node(inputs[0],current_node)
 
     return (current_node)
+
+def snp_noise(*inputs, snpNoise=0.5, device=None, preserve = False):
+
+    current_node = Node()    
+    kwargs_pybind = {"input_image0":inputs[0].output_image, "is_output":current_node.is_output ,"snpNoise": snpNoise}
+    #Node Object
+    current_node.node_name = "SnPNoise"
+    current_node.rali_c_func_call = b.SnPNoise
+    current_node.kwargs_pybind = kwargs_pybind
+    current_node.augmentation_node = True
+    current_node.kwargs = {"snpNoise": snpNoise, "preserve": preserve, "device": device}
+    current_node.has_input_image = True
+    current_node.has_output_image = True
+
+    #Connect the Prev Node(inputs[0]) < === > Current Node
+    add_node(inputs[0],current_node)
+
+    return (current_node)

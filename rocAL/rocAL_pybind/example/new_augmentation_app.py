@@ -83,11 +83,13 @@ def HybridPipeline(batch_size,data_dir, crop_size,random_seed,num_threads,device
         jpegs, labels = fn.readers.file(
             file_root=path, random_shuffle=False, seed=random_seed) 
         decoded_images = fn.decoders.image(jpegs, output_type=types.RGB)
-        contrast = fn.contrast(decoded_images, min_contrast = pipe.min_param, max_contrast = pipe.max_param)
-        # brightness = fn.brightness(contrast, alpha =pipe.alpha_param, beta= pipe.beta_param)
-        brightness = fn.brightness(decoded_images, alpha_param= pipe.alpha_param, beta_param=pipe.beta_param)
+        resize = fn.resize(decoded_images,resize_x=crop_size,resize_y=crop_size)
+        contrast = fn.contrast(resize, min_contrast = pipe.min_param, max_contrast = pipe.max_param)
+        brightness = fn.brightness(contrast, alpha_param= pipe.alpha_param, beta_param=pipe.beta_param)
         exposure = fn.exposure(contrast, exposure=pipe.shift_param)
-        gamma_correction = fn.gamma_correction(exposure, gamma=pipe.gamma_shift_param)
+        color_temp = fn.color_temp(exposure, adjustment_value = pipe.adjustment_param)
+        noise = fn.snp_noise(exposure,snpNoise = pipe.sdev_param)
+        gamma_correction = fn.gamma_correction(color_temp, gamma=pipe.gamma_shift_param)
         rotate = fn.rotate(gamma_correction,angle=pipe.degree_param) 
         resize = fn.resize(rotate,resize_x=crop_size,resize_y=crop_size)
         copy = fn.copy(resize)
@@ -105,7 +107,7 @@ def HybridPipeline(batch_size,data_dir, crop_size,random_seed,num_threads,device
         fog = fn.fog(vignette ,fog=pipe.fog)
         pixelate = fn.pixelate(fog)
         blend = fn.blend(flip, resize)
-        outputs = [ resize, copy, warpaffine , snow, rain, blur, hue, fisheye]
+        outputs = [ resize, copy, warpaffine , noise, snow, color_temp, rain, blur, hue, fisheye]
         outputs_size = len(outputs)
         pipe.set_outputs(*outputs,labels)
     return pipe
