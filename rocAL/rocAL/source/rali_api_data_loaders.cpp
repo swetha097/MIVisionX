@@ -655,7 +655,6 @@ raliJpegCOCOFileSourceSingleShard(
         unsigned max_width,
         unsigned max_height)
 {
-    std::cout<<"\n COMES TO COCOFILESOURCESINGLESHARD";
     Image* output = nullptr;
     auto context = static_cast<Context*>(p_context);
     try
