@@ -35,6 +35,7 @@ THE SOFTWARE.
 #include "node_lens_correction.h"
 #include "node_gamma.h"
 #include "node_flip.h"
+#include "node_ricap.h"
 #include "node_crop_resize.h"
 #include "node_brightness.h"
 #include "node_contrast.h"
@@ -62,6 +63,7 @@ THE SOFTWARE.
 #include "meta_node_ssd_random_crop.h"
 #include "meta_node_flip.h"
 #include "node_sequence_rearrange.h"
+#include "meta_node_ricap.h"
 
 #include "commons.h"
 #include "context.h"
@@ -161,7 +163,7 @@ raliRotateFixed(
         unsigned dest_width,
         unsigned dest_height)
 {
-    
+
     Image* output = nullptr;
     if ((p_context == nullptr) || (p_input == nullptr)) {
         ERR("Invalid RALI context or invalid input image")
@@ -1989,6 +1991,33 @@ raliNop(
     {
         output = context->master_graph->create_image(input->info(), is_output);
         context->master_graph->add_node<NopNode>({input}, {output});
+    }
+    catch(const std::exception& e)
+    {
+        context->capture_error(e.what());
+        ERR(e.what())
+    }
+    return output;
+}
+
+RaliImage RALI_API_CALL
+raliRicap(
+        RaliContext p_context,
+        RaliImage p_input,
+        double betaParam,
+        bool is_output)
+{
+    if(!p_input || !p_context)
+        THROW("Null values passed as input")
+    Image* output = nullptr;
+    auto context = static_cast<Context*>(p_context);
+    auto input = static_cast<Image*>(p_input);
+    try
+    {
+        output = context->master_graph->create_image(input->info(), is_output);
+        std::shared_ptr<RicapNode> ricap_node =  context->master_graph->add_node<RicapNode>({input}, {output});
+        if (context->master_graph->meta_data_graph())
+            context->master_graph->meta_add_node<RicapMetaNode,RicapNode>(ricap_node);
     }
     catch(const std::exception& e)
     {

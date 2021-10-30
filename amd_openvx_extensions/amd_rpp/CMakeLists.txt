@@ -129,6 +129,7 @@ list(APPEND SOURCES
         source/VignettebatchPD.cpp
         source/WarpAffinebatchPD.cpp
         source/WarpPerspectivebatchPD.cpp
+        source/RicapTensor.cpp
         source/kernel_rpp.cpp
         source/internal_publishKernels.cpp
     )

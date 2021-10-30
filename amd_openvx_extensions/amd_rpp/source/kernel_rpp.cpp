@@ -1782,6 +1782,35 @@ VX_API_ENTRY vx_node VX_API_CALL vxExtrppNode_Copy(vx_graph graph, vx_image pSrc
     return node;
 }
 
+VX_API_ENTRY vx_node VX_API_CALL vxExtrppNode_Ricap(vx_graph graph, vx_image pSrc, vx_array srcImgWidth, vx_array srcImgHeight, vx_image pDst, vx_array permutedIndices1, vx_array permutedIndices2, vx_array permutedIndices3, vx_array permutedIndices4, vx_array cropCoords1, vx_array cropCoords2, vx_array cropCoords3, vx_array cropCoords4,vx_uint32 nbatchSize) 
+{
+    vx_node node = NULL;
+    vx_context context = vxGetContext((vx_reference)graph);
+    if (vxGetStatus((vx_reference)context) == VX_SUCCESS)
+    {
+        vx_uint32 dev_type = getGraphAffinity(graph);
+        vx_scalar DEV_TYPE = vxCreateScalar(vxGetContext((vx_reference)graph), VX_TYPE_UINT32, &dev_type);
+        vx_scalar NBATCHSIZE = vxCreateScalar(vxGetContext((vx_reference)graph), VX_TYPE_UINT32, &nbatchSize);
+        vx_reference params[] = {
+            (vx_reference)pSrc,
+            (vx_reference)srcImgWidth,
+            (vx_reference)srcImgHeight,
+            (vx_reference)pDst,
+            (vx_reference)permutedIndices1,
+            (vx_reference)permutedIndices2,
+            (vx_reference)permutedIndices3,
+            (vx_reference)permutedIndices4,
+            (vx_reference)cropCoords1,
+            (vx_reference)cropCoords2,
+            (vx_reference)cropCoords3,
+            (vx_reference)cropCoords4,
+            (vx_reference)NBATCHSIZE,
+            (vx_reference)DEV_TYPE}; 
+        node = createNode(graph, VX_KERNEL_RPP_RICAP, params, 14);
+    }
+    return node;
+}
+
 //Creating node for Pixelate effect
 VX_API_CALL vx_node VX_API_CALL vxExtrppNode_Nop(vx_graph graph, vx_image pSrc, vx_image pDst)
 {

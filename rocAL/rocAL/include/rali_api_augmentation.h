@@ -602,4 +602,13 @@ extern "C" RaliImage RALI_API_CALL raliSSDRandomCrop(  RaliContext context, Rali
 // /// \param dest_height The output height
 // /// \return Returns a new image that keeps the result.
 
+
+///
+/// \param context
+/// \param input
+/// \param betaParam
+/// \param is_output
+/// \return
+extern "C"  RaliImage  RALI_API_CALL raliRicap(RaliContext context, RaliImage input, double betaParam, bool is_output );
+
 #endif //MIVISIONX_RALI_API_AUGMENTATION_H
