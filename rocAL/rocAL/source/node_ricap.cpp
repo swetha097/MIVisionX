@@ -58,12 +58,19 @@ void RicapNode::create_node()
     static std::uniform_real_distribution<double> unif(0,1);
     double p = unif(gen);
     double randFromDist = boost::math::ibeta_inv(_beta_param, _beta_param, p); 
+
+    std::random_device rd1;
+    std::mt19937 gen1(rd1());
+    static std::uniform_real_distribution<double> unif1(0,1);
+    double p1 = unif1(gen1);
+    double randFromDist1 = boost::math::ibeta_inv(_beta_param, _beta_param, p1);
+    
     // Assuming all the input & output images are of the same size 
     uint32_t Ix = get_dst_width();
     uint32_t Iy = get_dst_height();
     // Generating 4 Crop Regions 
     _crop_array1[2] = std::round(randFromDist * Ix); //w1
-    _crop_array1[3] = std::round(randFromDist * Iy); //h1
+    _crop_array1[3] = std::round(randFromDist1 * Iy); //h1
     _crop_array2[2] = Ix - _crop_array1[2]; //w2
     _crop_array2[3] = _crop_array1[3]; //h2
     _crop_array3[2] = _crop_array1[2]; //w3
@@ -142,12 +149,19 @@ void RicapNode::update_crop_region(float _beta_param)
     static std::uniform_real_distribution<double> unif(0,1);
     double p = unif(gen);
     double randFromDist = boost::math::ibeta_inv(_beta_param, _beta_param, p); 
+
+    std::random_device rd1;
+    std::mt19937 gen1(rd1());
+    static std::uniform_real_distribution<double> unif1(0,1);
+    double p1 = unif1(gen1);
+    double randFromDist1 = boost::math::ibeta_inv(_beta_param, _beta_param, p1);
+
     vx_status status1, status2, status3, status4;
     // Assuming all the input & output images are of the same size 
     uint32_t Ix = get_dst_width();
     uint32_t Iy = get_dst_height();
     _crop_array1[2] = std::round(randFromDist * Ix); //w1
-    _crop_array1[3] = std::round(randFromDist * Iy); //h1
+    _crop_array1[3] = std::round(randFromDist1 * Iy); //h1
     _crop_array2[2] = Ix - _crop_array1[2]; //w2
     _crop_array2[3] = _crop_array1[3]; //h2
     _crop_array3[2] = _crop_array1[2]; //w3
