@@ -77,14 +77,14 @@ void RicapNode::create_node()
     _crop_array3[3] = Iy -_crop_array1[3]; //h3
     _crop_array4[2] = Ix -_crop_array1[2]; //w4
     _crop_array4[3] = Iy -_crop_array1[3]; //h4
-    _crop_array1[0] = my_random(0, Ix - _crop_array1[2] + 1);// x1
-    _crop_array2[0] = my_random(0, Ix - _crop_array2[2] + 1);// x2
-    _crop_array3[0] = my_random(0, Ix - _crop_array3[2] + 1);// x3
-    _crop_array4[0] = my_random(0, Ix - _crop_array4[2] + 1);// x4
-    _crop_array1[1] = my_random(0, Iy - _crop_array1[3] + 1);//y1
-    _crop_array2[1] = my_random(0, Iy - _crop_array2[3] + 1);//y2
-    _crop_array3[1] = my_random(0, Iy - _crop_array3[3] + 1);//y3
-    _crop_array4[1] = my_random(0, Iy - _crop_array4[3] + 1);//y4    
+    _crop_array1[0] = my_random(0, Ix - _crop_array1[2] );// x1
+    _crop_array2[0] = my_random(0, Ix - _crop_array2[2] );// x2
+    _crop_array3[0] = my_random(0, Ix - _crop_array3[2] );// x3
+    _crop_array4[0] = my_random(0, Ix - _crop_array4[2] );// x4
+    _crop_array1[1] = my_random(0, Iy - _crop_array1[3] );//y1
+    _crop_array2[1] = my_random(0, Iy - _crop_array2[3] );//y2
+    _crop_array3[1] = my_random(0, Iy - _crop_array3[3] );//y3
+    _crop_array4[1] = my_random(0, Iy - _crop_array4[3] );//y4  
 
     for (uint i = 0; i < _batch_size; i++ )
     {
@@ -168,14 +168,14 @@ void RicapNode::update_crop_region(float _beta_param)
     _crop_array3[3] = Iy -_crop_array1[3]; //h3
     _crop_array4[2] = Ix -_crop_array1[2]; //w4
     _crop_array4[3] = Iy -_crop_array1[3]; //h4
-    _crop_array1[0] = my_random(0, Ix - _crop_array1[2] + 1);// x1
-    _crop_array2[0] = my_random(0, Ix - _crop_array2[2] + 1);// x2
-    _crop_array3[0] = my_random(0, Ix - _crop_array3[2] + 1);// x3
-    _crop_array4[0] = my_random(0, Ix - _crop_array4[2] + 1);// x4
-    _crop_array1[1] = my_random(0, Iy - _crop_array1[3] + 1);//y1
-    _crop_array2[1] = my_random(0, Iy - _crop_array2[3] + 1);//y2
-    _crop_array3[1] = my_random(0, Iy - _crop_array3[3] + 1);//y3
-    _crop_array4[1] = my_random(0, Iy - _crop_array4[3] + 1);//y4
+    _crop_array1[0] = my_random(0, Ix - _crop_array1[2] );// x1
+    _crop_array2[0] = my_random(0, Ix - _crop_array2[2] );// x2
+    _crop_array3[0] = my_random(0, Ix - _crop_array3[2] );// x3
+    _crop_array4[0] = my_random(0, Ix - _crop_array4[2] );// x4
+    _crop_array1[1] = my_random(0, Iy - _crop_array1[3] );//y1
+    _crop_array2[1] = my_random(0, Iy - _crop_array2[3] );//y2
+    _crop_array3[1] = my_random(0, Iy - _crop_array3[3] );//y3
+    _crop_array4[1] = my_random(0, Iy - _crop_array4[3] );//y4
     status1 = vxCopyArrayRange((vx_array)_crop_region1, 0, 4 , sizeof(vx_uint32), _crop_array1.data(), VX_WRITE_ONLY, VX_MEMORY_TYPE_HOST);
     status2 = vxCopyArrayRange((vx_array)_crop_region2, 0, 4 , sizeof(vx_uint32), _crop_array2.data(), VX_WRITE_ONLY, VX_MEMORY_TYPE_HOST);
     status3 = vxCopyArrayRange((vx_array)_crop_region3, 0, 4 , sizeof(vx_uint32), _crop_array3.data(), VX_WRITE_ONLY, VX_MEMORY_TYPE_HOST);
