@@ -615,7 +615,6 @@ int test(int test_case, const char *path, const char *outName, int rgb, int gpu,
         image1 = raliRicap(handle, image0, 0.3, true);
     }
     break;
-
     default:
         std::cout << "Not a valid option! Exiting!\n";
         return -1;
