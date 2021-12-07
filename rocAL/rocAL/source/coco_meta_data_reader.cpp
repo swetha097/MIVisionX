@@ -24,9 +24,8 @@ THE SOFTWARE.
 #include <iostream>
 #include <utility>
 #include <algorithm>
-#include <jsoncpp/json/value.h>
-#include <jsoncpp/json/json.h>
 #include <fstream>
+#include "lookahead_parser.h"
 
 using namespace std;
 
@@ -133,123 +132,216 @@ void COCOMetaDataReader::print_map_contents()
 
 void COCOMetaDataReader::read_all(const std::string &path)
 {
+    _coco_metadata_read_time.start(); // Debug timing
+    std::ifstream f;
+    f.open (path, std::ifstream::in|std::ios::binary);
+    if (f.fail()) THROW("ERROR: Given annotations file not present " + path);
+    f.ignore( std::numeric_limits<std::streamsize>::max() );
+    auto file_size = f.gcount();
+    f.clear();   //  Since ignore will have set eof.
+    if (file_size == 0)
+    { // If file is empty return
+        f.close();
+        THROW("ERROR: Given annotations file not valid " + path);
+    }
+    std::unique_ptr<char, std::function<void(char *)>> buff(
+        new char[file_size + 1],
+        [](char *data)
+        { delete[] data; });
+    f.seekg(0, std::ios::beg);
+    buff.get()[file_size] = '\0';
+    f.read(buff.get(), file_size);
+    f.close();
 
-    _coco_metadata_read_time.start();// Debug timing
-    std::string annotation_file = path;
-    std::ifstream fin;
-    fin.open(annotation_file, std::ios::in);
+    LookaheadParser parser(buff.get());
 
-    std::string str;
-    str.assign(std::istreambuf_iterator<char>(fin), std::istreambuf_iterator<char>());
     BoundingBoxCords bb_coords;
     BoundingBoxLabels bb_labels;
     ImgSizes img_sizes;
     MaskCords mask_cords;
 
-    Json::Reader reader;
-    Json::Value root;
-    if (reader.parse(str, root) == false)
-    {
-        WRN("Failed to parse Json: " + reader.getFormattedErrorMessages());
-    }
-
-    Json::Value annotation = root["annotations"];
-    Json::Value image = root["images"];
-
     BoundingBoxCord box;
     ImgSize img_size;
     coords mask_cord;
-    std::vector<float> mask;
-
-    for (auto iterator = image.begin(); iterator != image.end(); iterator++)
+    RAPIDJSON_ASSERT(parser.PeekType() == kObjectType);
+    parser.EnterObject();
+    while (const char *key = parser.NextObjectKey())
     {
-        // std::map<int, int,int> id_img_sizes;
-        img_size.h = (*iterator)["height"].asInt();
-        img_size.w = (*iterator)["width"].asInt();
-        img_sizes.push_back(img_size);
-        string image_name = (*iterator)["file_name"].asString();
-
-        _map_img_sizes.insert(pair<std::string, std::vector<ImgSize>>(image_name, img_sizes));
-        img_sizes.clear();
-    }
-
-    for (auto iterator = annotation.begin(); iterator != annotation.end(); iterator++)
-    {
-        int label, id;
-        float box_x, box_y, box_w, box_h;
-        int iscrowd = (*iterator)["iscrowd"].asInt();
-        if (_mask)
+        if (0 == std::strcmp(key, "images"))
         {
-            if (iscrowd == 0)
+            RAPIDJSON_ASSERT(parser.PeekType() == kArrayType);
+            parser.EnterArray();
+            while (parser.NextArrayValue())
             {
-                box_x = (*iterator)["bbox"][0].asFloat();
-                box_y = (*iterator)["bbox"][1].asFloat();
-                box_w = (*iterator)["bbox"][2].asFloat();
-                box_h = (*iterator)["bbox"][3].asFloat();
-                label = (*iterator)["category_id"].asInt();
-                id = (*iterator)["image_id"].asInt();
-
-                Json::Value segmentation = (*iterator)["segmentation"];
-                for (auto mask_iterator = segmentation.begin(); mask_iterator != segmentation.end(); mask_iterator++)
+                string image_name;
+                if (parser.PeekType() != kObjectType)
                 {
-                    int polygon_size = (*mask_iterator).size();
-                    for (int i = 0; i < polygon_size; i++)
+                    continue;
+                }
+                parser.EnterObject();
+                while (const char *internal_key = parser.NextObjectKey())
+                {
+                    if (0 == std::strcmp(internal_key, "width"))
                     {
-                        mask.push_back((*mask_iterator)[i].asFloat());
+                        img_size.w = parser.GetInt();
                     }
-                    mask_cord.push_back(mask);
-                    mask.clear();
+                    else if (0 == std::strcmp(internal_key, "height"))
+                    {
+                        img_size.h = parser.GetInt();
+                    }
+                    else if (0 == std::strcmp(internal_key, "file_name"))
+                    {
+                        image_name = parser.GetString();
+                    }
+                    else
+                    {
+                        parser.SkipValue();
+                    }
+                }
+                img_sizes.push_back(img_size);
+                _map_img_sizes.insert(pair<std::string, std::vector<ImgSize>>(image_name, img_sizes));
+                img_sizes.clear();
+            }
+        }
+        else if (0 == std::strcmp(key, "categories"))
+        {
+            RAPIDJSON_ASSERT(parser.PeekType() == kArrayType);
+            parser.EnterArray();
+            int id = 1, continuous_idx = 1;
+            while (parser.NextArrayValue())
+            {
+                if (parser.PeekType() != kObjectType)
+                {
+                    continue;
+                }
+                parser.EnterObject();
+                while (const char *internal_key = parser.NextObjectKey())
+                {
+                    if (0 == std::strcmp(internal_key, "id"))
+                    {
+                        id = parser.GetInt();
+                    }
+                    else
+                    {
+                        parser.SkipValue();
+                    }
+                }
+                _label_info.insert(std::make_pair(id, continuous_idx));
+                continuous_idx++;
+            }
+        }
+        else if (0 == std::strcmp(key, "annotations"))
+        {
+            RAPIDJSON_ASSERT(parser.PeekType() == kArrayType);
+            parser.EnterArray();
+            while (parser.NextArrayValue())
+            {
+                int id = 1, label = 0, iscrowd;
+                std::array<float, 4> bbox;
+                int polygon_size;
+                std::vector<float> mask;
+                if (parser.PeekType() != kObjectType)
+                {
+                    continue;
+                }
+                parser.EnterObject();
+                while (const char *internal_key = parser.NextObjectKey())
+                {
+                    if (0 == std::strcmp(internal_key, "image_id"))
+                    {
+                        id = parser.GetInt();
+                    }
+                    else if (0 == std::strcmp(internal_key, "category_id"))
+                    {
+                        label = parser.GetInt();
+                    }
+                    else if (0 == std::strcmp(internal_key, "iscrowd"))
+                    {
+                        iscrowd = parser.GetInt();
+                    }
+                    else if (0 == std::strcmp(internal_key, "bbox"))
+                    {
+                        RAPIDJSON_ASSERT(parser.PeekType() == kArrayType);
+                        parser.EnterArray();
+                        int i = 0;
+                        while (parser.NextArrayValue())
+                        {
+                            bbox[i] = parser.GetDouble();
+                            ++i;
+                        }
+                    }
+                    else if (_mask && iscrowd == 0 && 0 == std::strcmp(internal_key, "segmentation"))
+                    {
+                        RAPIDJSON_ASSERT(parser.PeekType() == kArrayType);
+                        parser.EnterArray();
+                        while (parser.NextArrayValue())
+                        {
+                            parser.EnterArray();
+                            while (parser.NextArrayValue())
+                            {
+                                mask.push_back(parser.GetDouble());
+                            }
+                            mask_cord.push_back(mask);
+                            mask.clear();
+                        }
+                    }
+                    else
+                    {
+                        parser.SkipValue();
+                    }
+                }
+                char buffer[13];
+                sprintf(buffer, "%012d", id);
+                string str(buffer);
+                std::string file_name = str + ".jpg";
+                auto it = _map_img_sizes.find(file_name);
+                ImgSizes image_size = it->second; //Normalizing the co-ordinates & convert to "ltrb" format
+                box.l = bbox[0] / image_size[0].w;
+                box.t = bbox[1] / image_size[0].h;
+                box.r = (bbox[0] + bbox[2]) / image_size[0].w;
+                box.b = (bbox[1] + bbox[3]) / image_size[0].h;
+                if (_mask && iscrowd == 0)
+                {
+                    bb_coords.push_back(box);
+                    bb_labels.push_back(label);
+                    mask_cords.push_back(mask_cord);
+                    add(file_name, bb_coords, bb_labels, image_size, mask_cords);
+                    mask_cord.clear();
+                    mask_cords.clear();
+                    bb_coords.clear();
+                    bb_labels.clear();
+                }
+                else if (!_mask)
+                {
+                    bb_coords.push_back(box);
+                    bb_labels.push_back(label);
+                    add(file_name, bb_coords, bb_labels, image_size);
+                    bb_coords.clear();
+                    bb_labels.clear();
                 }
             }
         }
         else
         {
-            box_x = (*iterator)["bbox"][0].asFloat();
-            box_y = (*iterator)["bbox"][1].asFloat();
-            box_w = (*iterator)["bbox"][2].asFloat();
-            box_h = (*iterator)["bbox"][3].asFloat();
-            label = (*iterator)["category_id"].asInt();
-            id = (*iterator)["image_id"].asInt();
-        }
-
-        char buffer[13];
-        sprintf(buffer, "%012d", id);
-        string str(buffer);
-        std::string file_name = str + ".jpg";
-
-        auto it = _map_img_sizes.find(file_name);
-        ImgSizes image_size = it->second;
-
-        //Normalizing the co-ordinates & convert to "ltrb" format
-        box.l = box_x / image_size[0].w;
-        box.t = box_y / image_size[0].h;
-        box.r = (box_x + box_w) / image_size[0].w;
-        box.b = (box_y + box_h) / image_size[0].h;
-
-        if (_mask && iscrowd == 0)
-        {
-            bb_coords.push_back(box);
-            bb_labels.push_back(label);
-            mask_cords.push_back(mask_cord);
-            add(file_name, bb_coords, bb_labels, image_size, mask_cords);
-            mask_cord.clear();
-            mask_cords.clear();
-            bb_coords.clear();
-            bb_labels.clear();
-        }
-        else if (!_mask)
-        {
-            bb_coords.push_back(box);
-            bb_labels.push_back(label);
-            add(file_name, bb_coords, bb_labels, image_size);
-            bb_coords.clear();
-            bb_labels.clear();
+            parser.SkipValue();
         }
     }
-    fin.close();
-    _coco_metadata_read_time.end();// Debug timing
+    for (auto &elem : _map_content)
+    {
+        bb_coords = elem.second->get_bb_cords();
+        bb_labels = elem.second->get_bb_labels();
+        BoundingBoxLabels continuous_label_id;
+        for (unsigned int i = 0; i < bb_coords.size(); i++)
+        {
+            auto _it_label = _label_info.find(bb_labels[i]);
+            int cnt_idx = _it_label->second;
+            continuous_label_id.push_back(cnt_idx);
+        }
+        elem.second->set_bb_labels(continuous_label_id);
+    }
+    _coco_metadata_read_time.end(); // Debug timing
     //print_map_contents();
-    //std::cout<<"coco read time in sec: " << _coco_metadata_read_time.get_timing()/1000 << std::endl;
+    // std::cout << "coco read time in sec: " << _coco_metadata_read_time.get_timing() / 1000 << std::endl;
 }
 
 void COCOMetaDataReader::release(std::string image_name)
@@ -268,7 +360,6 @@ void COCOMetaDataReader::release()
     _map_img_sizes.clear();
 }
 
-COCOMetaDataReader::COCOMetaDataReader():
-        _coco_metadata_read_time("coco meta read time", DBG_TIMING)
+COCOMetaDataReader::COCOMetaDataReader() : _coco_metadata_read_time("coco meta read time", DBG_TIMING)
 {
 }

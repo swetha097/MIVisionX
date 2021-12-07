@@ -157,7 +157,7 @@ int test(int test_case, const char *path, const char *outName, int rgb, int gpu,
         std::cout << "\n json_path has to be set in rali_unit test manually";
         exit(0);
     }
-    meta_data = raliCreateCOCOReader(handle, json_path, true);
+    meta_data = raliCreateCOCOReader(handle, json_path, true, true);
 #elif defined CAFFE_READER
     meta_data = raliCreateCaffeLMDBLabelReader(handle, path);
 #elif defined CAFFE_READER_DETECTION

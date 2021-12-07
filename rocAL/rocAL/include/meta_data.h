@@ -28,8 +28,17 @@ THE SOFTWARE.
 #include "commons.h"
 
 
-typedef  struct { float l; float t; float r; float b; } BoundingBoxCord;
+typedef struct BoundingBoxCord_
+{ 
+  float l; float t; float r; float b;
+  BoundingBoxCord_() {}
+  BoundingBoxCord_(float l_, float t_, float r_, float b_): l(l_), t(t_), r(r_), b(b_) {}   // constructor
+  BoundingBoxCord_(const BoundingBoxCord_& cord) : l(cord.l), t(cord.t), r(cord.r), b(cord.b) {}  //copy constructor
+} BoundingBoxCord;
+
+typedef  struct { float xc; float yc; float w; float h; } BoundingBoxCord_xcycwh;
 typedef  std::vector<BoundingBoxCord> BoundingBoxCords;
+typedef  std::vector<BoundingBoxCord_xcycwh> BoundingBoxCords_xcycwh;
 typedef  std::vector<int> BoundingBoxLabels;
 typedef  struct { int w; int h; } ImgSize;
 typedef  std::vector<ImgSize> ImgSizes;
@@ -41,11 +50,13 @@ struct MetaData
 {
     int& get_label() { return _label_id; }
     BoundingBoxCords& get_bb_cords() { return _bb_cords; }
+    BoundingBoxCords_xcycwh& get_bb_cords_xcycwh() { return _bb_cords_xcycwh; }
     BoundingBoxLabels& get_bb_labels() { return _bb_label_ids; }
     ImgSizes& get_img_sizes() {return _img_sizes; }
     MaskCords& get_mask_cords() { return _mask_cords;}
 protected:
     BoundingBoxCords _bb_cords = {}; // For bb use
+    BoundingBoxCords_xcycwh _bb_cords_xcycwh = {}; // For bb use
     BoundingBoxLabels _bb_label_ids = {};// For bb use
     ImgSizes _img_sizes = {};
     int _label_id = -1; // For label use only
@@ -80,6 +91,18 @@ struct BoundingBox : public MetaData
         _mask_cords = std::move(mask_cords);
     }
     void set_bb_cords(BoundingBoxCords bb_cords) { _bb_cords =std::move(bb_cords); }
+    BoundingBox(BoundingBoxCords_xcycwh bb_cords_xcycwh,BoundingBoxLabels bb_label_ids )
+    {
+        _bb_cords_xcycwh =std::move(bb_cords_xcycwh);
+        _bb_label_ids = std::move(bb_label_ids);
+    }
+    BoundingBox(BoundingBoxCords_xcycwh bb_cords_xcycwh,BoundingBoxLabels bb_label_ids ,ImgSizes img_sizes)
+    {
+        _bb_cords_xcycwh =std::move(bb_cords_xcycwh);
+        _bb_label_ids = std::move(bb_label_ids);
+        _img_sizes = std::move(img_sizes);
+    }
+    void set_bb_cords_xcycwh(BoundingBoxCords_xcycwh bb_cords_xcycwh) { _bb_cords_xcycwh =std::move(bb_cords_xcycwh); }
     void set_bb_labels(BoundingBoxLabels bb_label_ids) {_bb_label_ids = std::move(bb_label_ids); }
     void set_img_sizes(ImgSizes img_sizes) { _img_sizes =std::move(img_sizes); }
     void set_mask_cords(MaskCords mask_cords) { _mask_cords = std::move(mask_cords);}
@@ -101,12 +124,14 @@ struct MetaDataBatch
     virtual std::shared_ptr<MetaDataBatch> clone()  = 0;
     std::vector<int>& get_label_batch() { return _label_id; }
     std::vector<BoundingBoxCords>& get_bb_cords_batch() { return _bb_cords; }
+    std::vector<BoundingBoxCords_xcycwh>& get_bb_cords_batch_xcycxwh() { return _bb_cords_xcycwh; }
     std::vector<BoundingBoxLabels>& get_bb_labels_batch() { return _bb_label_ids; }
     std::vector<ImgSizes>& get_img_sizes_batch() { return _img_sizes; }
     std::vector<MaskCords>& get_mask_cords_batch() { return _mask_cords; }
 protected:
     std::vector<int> _label_id = {}; // For label use only
     std::vector<BoundingBoxCords> _bb_cords = {};
+    std::vector<BoundingBoxCords_xcycwh> _bb_cords_xcycwh = {};
     std::vector<BoundingBoxLabels> _bb_label_ids = {};
     std::vector<ImgSizes> _img_sizes = {};
     std::vector<MaskCords> _mask_cords = {};
