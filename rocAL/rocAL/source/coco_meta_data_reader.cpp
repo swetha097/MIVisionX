@@ -236,9 +236,8 @@ void COCOMetaDataReader::read_all(const std::string &path)
             parser.EnterArray();
             while (parser.NextArrayValue())
             {
-                int id = 1, label = 0, iscrowd;
+                int id = 1, label = 0, iscrowd = 0;
                 std::array<float, 4> bbox;
-                int polygon_size;
                 std::vector<float> mask;
                 if (parser.PeekType() != kObjectType)
                 {

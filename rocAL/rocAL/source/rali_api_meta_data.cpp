@@ -348,7 +348,7 @@ RALI_API_CALL raliGetMaskCoordinates(RaliContext p_context, int *bufcount, float
         THROW("meta data batch size is wrong " + TOSTR(meta_data_batch_size) + " != "+ TOSTR(context->user_batch_size() ))
     if(!meta_data.second)
         THROW("No mask has been loaded for this output image")
-    int size = 0, count = 0;
+    int size = 0;
     auto ptr = buf;
     for(unsigned image_idx = 0; image_idx < meta_data_batch_size; image_idx++)
     {
