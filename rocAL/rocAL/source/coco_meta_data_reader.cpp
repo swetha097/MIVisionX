@@ -269,19 +269,31 @@ void COCOMetaDataReader::read_all(const std::string &path)
                             ++i;
                         }
                     }
-                    else if (_mask && iscrowd == 0 && 0 == std::strcmp(internal_key, "segmentation"))
+                    else if (_mask && 0 == std::strcmp(internal_key, "segmentation"))
                     {
-                        RAPIDJSON_ASSERT(parser.PeekType() == kArrayType);
-                        parser.EnterArray();
-                        while (parser.NextArrayValue())
+                        if (parser.PeekType() == kObjectType)
                         {
+                            parser.EnterObject();
+                            const char *key = parser.NextObjectKey();
+                            if (0 == std::strcmp(key, "counts"))
+                            {
+                                parser.SkipArray();
+                            }
+                        }
+                        else
+                        {
+                            RAPIDJSON_ASSERT(parser.PeekType() == kArrayType);
                             parser.EnterArray();
                             while (parser.NextArrayValue())
                             {
-                                mask.push_back(parser.GetDouble());
+                                parser.EnterArray();
+                                while (parser.NextArrayValue())
+                                {
+                                    mask.push_back(parser.GetDouble());
+                                }
+                                mask_cord.push_back(mask);
+                                mask.clear();
                             }
-                            mask_cord.push_back(mask);
-                            mask.clear();
                         }
                     }
                     else
