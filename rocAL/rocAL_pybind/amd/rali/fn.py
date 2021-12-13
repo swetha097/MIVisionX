@@ -461,12 +461,12 @@ def crop(*inputs, bytes_per_sample_hint=0, crop=[0.0, 0.0], crop_d=1, crop_h= 0,
     b.setSeed(seed)
     if ((crop_w == 0) and (crop_h == 0)):
         # pybind call arguments
-        cropped_image = b.Crop(Pipeline._current_pipeline._handle ,*(kwargs_pybind.values()))
         kwargs_pybind = {"input_image0": inputs[0],"is_output": False, "crop_width":None, "crop_height":None, "crop_depth":None ,"crop_pos_x": None, "crop_pos_y": None, "crop_pos_z": None }
+        cropped_image = b.Crop(Pipeline._current_pipeline._handle ,*(kwargs_pybind.values()))
     else:
         # pybind call arguments
-        cropped_image = b.CropFixed(Pipeline._current_pipeline._handle ,*(kwargs_pybind.values()))
         kwargs_pybind = {"input_image0": inputs[0], "crop_width":crop_w, "crop_height":crop_h, "crop_depth":crop_d ,"is_output": False,"crop_pos_x": crop_pos_x, "crop_pos_y": crop_pos_y, "crop_pos_z": crop_pos_z }
+        cropped_image = b.CropFixed(Pipeline._current_pipeline._handle ,*(kwargs_pybind.values()))
     return (cropped_image)
 
 def color_twist(*inputs, brightness=1.0, bytes_per_sample_hint=0, contrast=1.0, hue=0.0, image_type=0,
