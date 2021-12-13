@@ -40,7 +40,7 @@ MIVisionX toolkit is a set of comprehensive computer vision and machine intellig
 
 <p align="center"><img width="30%" src="docs/images/OpenVX_logo.png" /></p>
 
-[AMD OpenVX](amd_openvx#amd-openvx-amd_openvx) is a highly optimized open source implementation of the <a href="https://www.khronos.org/openvx/" target="_blank">Khronos OpenVX™</a> computer vision specification. It allows for rapid prototyping as well as fast execution on a wide range of computer hardware, including small embedded x86 CPUs and large workstation discrete GPUs.
+[AMD OpenVX](amd_openvx#amd-openvx-amd_openvx) is a highly optimized open source implementation of the <a href="https://www.khronos.org/registry/OpenVX/specs/1.3/html/OpenVX_Specification_1_3.html" target="_blank">Khronos OpenVX™ 1.3</a> computer vision specification. It allows for rapid prototyping as well as fast execution on a wide range of computer hardware, including small embedded x86 CPUs and large workstation discrete GPUs.
 
 <a href="https://www.khronos.org/registry/OpenVX/specs/1.0.1/html/index.html" target="_blank">Khronos OpenVX™ 1.0.1</a> conformant implementation is available in [MIVisionX Lite](https://github.com/GPUOpen-ProfessionalCompute-Libraries/MIVisionX/tree/openvx-1.0.1)
 
@@ -113,7 +113,7 @@ MIVisionX provides you with tools for accomplishing your tasks throughout the wh
 
 * Windows 10
 * Windows SDK
-* Visual Studio 2017 or later
+* Visual Studio 2019 or later
 * Install the latest AMD [drivers](https://www.amd.com/en/support)
 * Install [OpenCL SDK](https://github.com/GPUOpen-LibrariesAndSDKs/OCL-SDK/releases/tag/1.0)
 * Install [OpenCV 3.4](https://github.com/opencv/opencv/releases/tag/3.4.0)
@@ -164,7 +164,7 @@ For the convenience of the developer, we here provide the setup script which wil
   ``` 
   python MIVisionX-setup.py --directory [setup directory - optional (default:~/)]
                             --opencv    [OpenCV Version - optional (default:3.4.0)]
-                            --miopen    [MIOpen Version - optional (default:2.11.0)]
+                            --miopen    [MIOpen Version - optional (default:2.14.0)]
                             --miopengemm[MIOpenGEMM Version - optional (default:1.1.5)]
                             --protobuf  [ProtoBuf Version - optional (default:3.12.0)]
                             --rpp       [RPP Version - optional (default:0.91)]
@@ -234,15 +234,17 @@ macOS [build instructions](https://github.com/GPUOpen-ProfessionalCompute-Librar
   cd MIVisionX
   ```
 
-  ``` 
-  python MIVisionX-setup.py
-  ```
-
   **Note:** MIVisionX has support for two GPU backends: **OPENCL** and **HIP**:
 
   + Instructions for building MIVisionX with **OPENCL** (i.e., default GPU backend):
 
-  ``` 
+    * run the setup script to install all the dependencies required by the **OPENCL** GPU backend:
+  ```
+  python MIVisionX-setup.py
+  ```
+
+    * run the below commands to build MIVisionX with the **OPENCL** GPU backend:
+  ```
   mkdir build
   cd build
   cmake ../
@@ -250,11 +252,17 @@ macOS [build instructions](https://github.com/GPUOpen-ProfessionalCompute-Librar
   sudo make install
   ```
 
-  + Instructions for building MIVisionX with **HIP** GPU backend:
+  + Instructions for building MIVisionX with the **HIP** GPU backend:
 
+    * run the setup script to install all the dependencies required by the **HIP** GPU backend:
   ```
-  mkdir build
-  cd build
+  python MIVisionX-setup.py --reinstall yes --backend HIP
+  ```
+
+    * run the below commands to build MIVisionX with the **HIP** GPU backend:
+  ```
+  mkdir build-hip
+  cd build-hip
   cmake -DBACKEND=HIP ../
   make -j8
   sudo make install
@@ -396,16 +404,16 @@ sudo docker run -it --device=/dev/kfd --device=/dev/dri --cap-add=SYS_RAWIO --de
   + Ubuntu - `18.04` / `20.04`
   + CentOS - `7` / `8`
   + SLES - `15-SP2`
-* ROCm: rocm-dkms - `4.3.1.40301-59`
+* ROCm: rocm-dkms - `4.5.0.40500-56 `
 * rocm-cmake - [rocm-4.2.0](https://github.com/RadeonOpenCompute/rocm-cmake/releases/tag/rocm-4.2.0)
 * MIOpenGEMM - [1.1.5](https://github.com/ROCmSoftwarePlatform/MIOpenGEMM/releases/tag/1.1.5)
-* MIOpen - [2.11.0](https://github.com/ROCmSoftwarePlatform/MIOpen/releases/tag/2.11.0)
+* MIOpen - [2.14.0](https://github.com/ROCmSoftwarePlatform/MIOpen/releases/tag/2.14.0)
 * Protobuf - [V3.12.0](https://github.com/protocolbuffers/protobuf/releases/tag/v3.12.0)
 * OpenCV - [3.4.0](https://github.com/opencv/opencv/releases/tag/3.4.0)
 * RPP - [0.91](https://github.com/GPUOpen-ProfessionalCompute-Libraries/rpp/releases/tag/0.91)
 * FFMPEG - [n4.0.4](https://github.com/FFmpeg/FFmpeg/releases/tag/n4.0.4)
 * Dependencies for all the above packages
-* MIVisionX Setup Script - `V1.9.94`
+* MIVisionX Setup Script - `V1.9.95`
 
 ### Latest Release
 

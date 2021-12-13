@@ -103,6 +103,7 @@ vx_status ResizeMirrorNormalizePD_Register(vx_context);
 vx_status RotatebatchPD_Register(vx_context);
 vx_status SaturationbatchPD_Register(vx_context);
 vx_status ScalebatchPD_Register(vx_context);
+vx_status SequenceRearrange_Register(vx_context);
 vx_status SnowbatchPD_Register(vx_context);
 vx_status SobelbatchPD_Register(vx_context);
 vx_status SubtractbatchPD_Register(vx_context);
@@ -197,5 +198,6 @@ vx_status WarpPerspectivebatchPD_Register(vx_context);
 #define VX_KERNEL_RPP_CROPPD_NAME   							"org.rpp.CropPD"
 #define VX_KERNEL_RPP_RESIZECROPMIRRORPD_NAME      				"org.rpp.ResizeCropMirrorPD"
 #define VX_KERNEL_RPP_RESIZEMIRRORNORMALIZEBATCHPD_NAME        	"org.rpp.ResizeMirrorNormalizebatchPD"
+#define VX_KERNEL_RPP_SEQUENCEREARRANGE_NAME                    "org.rpp.SequenceRearrange"
 
 #endif //_AMDVX_EXT__PUBLISH_KERNELS_H_

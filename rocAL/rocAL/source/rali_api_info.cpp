@@ -106,7 +106,7 @@ raliGetRemainingImages(RaliContext p_context)
     size_t count = 0;
     try
     {
-        count = context->master_graph->remaining_images_count();
+        count = context->master_graph->remaining_count();
     }
     catch(const std::exception& e)
     {
@@ -139,7 +139,11 @@ RALI_API_CALL raliGetTimingInfo(RaliContext p_context)
     auto context = static_cast<Context*>(p_context);
     auto info = context->timing();
     //INFO("shuffle time "+ TOSTR(info.shuffle_time)); to display time taken for shuffling dataset
-    return {info.image_read_time, info.image_decode_time, info.image_process_time, info.copy_to_output};
+    //INFO("bbencode time "+ TOSTR(info.bb_process_time)); //to display time taken for bbox encoder
+    if (context->master_graph->is_video_loader())
+        return {info.video_read_time, info.video_decode_time, info.video_process_time, info.copy_to_output};
+    else
+        return {info.image_read_time, info.image_decode_time, info.image_process_time, info.copy_to_output};
 }
 
 RaliMetaData
