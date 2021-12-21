@@ -254,7 +254,7 @@ static vx_status VX_CALLBACK initializeRicap(vx_node node, const vx_reference *p
 
     // Initializing tensor config parameters.
 
-    uint ip_channel = 3; // Color Twist supports only RGB
+    uint ip_channel = 3;
     data->srcDescPtr = &data->srcDesc;
     data->dstDescPtr = &data->dstDesc;
     data->srcDescPtr->layout = RpptLayout::NHWC;
