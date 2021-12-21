@@ -82,6 +82,35 @@ static vx_status VX_CALLBACK refreshRicap(vx_node node, const vx_reference *para
         data->roiTensorPtrSrc[i].xywhROI.xy.x = 0;
         data->roiTensorPtrSrc[i].xywhROI.xy.y = 0;
     }
+    // xywhROI override sample cropCoordsROI
+    data->roiPtrInputCropRegion[0].xywhROI.xy.x = data->cropCoords1[0];
+    data->roiPtrInputCropRegion[0].xywhROI.xy.y = data->cropCoords1[1];
+    data->roiPtrInputCropRegion[0].xywhROI.roiWidth = data->cropCoords1[2];
+    data->roiPtrInputCropRegion[0].xywhROI.roiHeight = data->cropCoords1[3];
+
+    data->roiPtrInputCropRegion[1].xywhROI.xy.x = data->cropCoords2[0];
+    data->roiPtrInputCropRegion[1].xywhROI.xy.y = data->cropCoords2[1];
+    data->roiPtrInputCropRegion[1].xywhROI.roiWidth = data->cropCoords2[2];
+    data->roiPtrInputCropRegion[1].xywhROI.roiHeight = data->cropCoords2[3];
+
+    data->roiPtrInputCropRegion[2].xywhROI.xy.x = data->cropCoords3[0];
+    data->roiPtrInputCropRegion[2].xywhROI.xy.y = data->cropCoords3[1];
+    data->roiPtrInputCropRegion[2].xywhROI.roiWidth = data->cropCoords3[2];
+    data->roiPtrInputCropRegion[2].xywhROI.roiHeight = data->cropCoords3[3];
+
+    data->roiPtrInputCropRegion[3].xywhROI.xy.x = data->cropCoords4[0];
+    data->roiPtrInputCropRegion[3].xywhROI.xy.y = data->cropCoords4[1];
+    data->roiPtrInputCropRegion[3].xywhROI.roiWidth = data->cropCoords4[2];
+    data->roiPtrInputCropRegion[3].xywhROI.roiHeight = data->cropCoords4[3];
+
+    // Permuted Indices Order changed
+    for (uint i = 0, j = 0; i < data->nbatchSize, j < data->nbatchSize * 4; i++, j += 4)
+    {
+        data->permutedArrayOrderChanged[j] = data->permutedIndices1[i];
+        data->permutedArrayOrderChanged[j + 1] = data->permutedIndices2[i];
+        data->permutedArrayOrderChanged[j + 2] = data->permutedIndices3[i];
+        data->permutedArrayOrderChanged[j + 3] = data->permutedIndices4[i];
+    }
     if (data->device_type == AGO_TARGET_AFFINITY_GPU)
     {
 #if ENABLE_OPENCL
@@ -270,36 +299,6 @@ static vx_status VX_CALLBACK initializeRicap(vx_node node, const vx_reference *p
     data->roiType = RpptRoiType::XYWH;
 
     data->roiPtrInputCropRegion = (RpptROI *)calloc(4, sizeof(RpptROI));
-
-    // xywhROI override sample
-    data->roiPtrInputCropRegion[0].xywhROI.xy.x = data->cropCoords1[0];
-    data->roiPtrInputCropRegion[0].xywhROI.xy.y = data->cropCoords1[1];
-    data->roiPtrInputCropRegion[0].xywhROI.roiWidth = data->cropCoords1[2];
-    data->roiPtrInputCropRegion[0].xywhROI.roiHeight = data->cropCoords1[3];
-
-    data->roiPtrInputCropRegion[1].xywhROI.xy.x = data->cropCoords2[0];
-    data->roiPtrInputCropRegion[1].xywhROI.xy.y = data->cropCoords2[1];
-    data->roiPtrInputCropRegion[1].xywhROI.roiWidth = data->cropCoords2[2];
-    data->roiPtrInputCropRegion[1].xywhROI.roiHeight = data->cropCoords2[3];
-
-    data->roiPtrInputCropRegion[2].xywhROI.xy.x = data->cropCoords3[0];
-    data->roiPtrInputCropRegion[2].xywhROI.xy.y = data->cropCoords3[1];
-    data->roiPtrInputCropRegion[2].xywhROI.roiWidth = data->cropCoords3[2];
-    data->roiPtrInputCropRegion[2].xywhROI.roiHeight = data->cropCoords3[3];
-
-    data->roiPtrInputCropRegion[3].xywhROI.xy.x = data->cropCoords4[0];
-    data->roiPtrInputCropRegion[3].xywhROI.xy.y = data->cropCoords4[1];
-    data->roiPtrInputCropRegion[3].xywhROI.roiWidth = data->cropCoords4[2];
-    data->roiPtrInputCropRegion[3].xywhROI.roiHeight = data->cropCoords4[3];
-
-    // Permuted Indices Order changed
-    for (uint i = 0, j = 0; i < data->nbatchSize, j < data->nbatchSize * 4; i++, j += 4)
-    {
-        data->permutedArrayOrderChanged[j] = data->permutedIndices1[i];
-        data->permutedArrayOrderChanged[j + 1] = data->permutedIndices2[i];
-        data->permutedArrayOrderChanged[j + 2] = data->permutedIndices3[i];
-        data->permutedArrayOrderChanged[j + 3] = data->permutedIndices4[i];
-    }
 
     refreshRicap(node, parameters, num, data);
 #if ENABLE_OPENCL
