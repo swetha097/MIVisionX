@@ -126,7 +126,7 @@ def caffe2(*inputs, path, bbox=False, additional_inputs=0, bytes_per_sample_hint
 def video(*inputs,sequence_length, additional_decode_surfaces=2, bytes_per_sample_hint=0, channels=3, dont_use_mmap=False, dtype=types.FLOAT, enable_frame_num=False,  enable_timestamps=False, file_list="", file_list_frame_num=False, file_list_include_preceding_frame=False, file_root="", filenames=[], image_type=types.RGB,
                  initial_fill=1024, labels="", lazy_init=False, normalized=False,
                  num_shards=1, pad_last_batch=False, pad_sequences=False, prefetch_queue_depth=1, preserve=False,
-                 random_shuffle=False, read_ahead=False, seed=-1, shard_id=0, skip_cached_images=False, skip_vfr_check=False,step=1,stick_to_shard=False, stride=1, tensor_init_bytes = 1048576, decoder_mode = types.SOFTWARE_DECODE, device=None, name=None):
+                 random_shuffle=False, read_ahead=False, seed=-1, shard_id=0, skip_cached_images=False, skip_vfr_check=False,step=3,stick_to_shard=False, stride=1, tensor_init_bytes = 1048576, decoder_mode = types.SOFTWARE_DECODE, device=None, name=None):
 
     Pipeline._current_pipeline._reader = "VideoDecoder"
     #Output
