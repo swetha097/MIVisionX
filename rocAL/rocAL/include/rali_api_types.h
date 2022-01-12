@@ -40,6 +40,7 @@ typedef void * RaliFloatParam;
 typedef void * RaliIntParam;
 typedef void * RaliContext;
 typedef void * RaliImage;
+typedef void * RaliTensor;
 typedef void * RaliMetaData;
 
 struct TimingInfo
