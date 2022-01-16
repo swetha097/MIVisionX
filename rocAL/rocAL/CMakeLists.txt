@@ -133,16 +133,16 @@ if(${BUILD_RALI})
     # rocAL uses C++ 17 features
     set(CMAKE_CXX_STANDARD 17)
     message("-- ${Green}ROCm Augmentation Library -- rocAL module added${ColourReset}")
-    install(FILES
-        ../python/rali.py
-        ../python/rali_lib.py
-        ../python/rali_common.py
-        ../python/rali_image.py
-        ../python/rali_parameter.py
-        ../python/rali_torch.py
-        ../python/rali_image_iterator.py
-        DESTINATION ./rali/python
-        )
+    # install(FILES
+    #     ../python/rali.py
+    #     ../python/rali_lib.py
+    #     ../python/rali_common.py
+    #     ../python/rali_image.py
+    #     ../python/rali_parameter.py
+    #     ../python/rali_torch.py
+    #     ../python/rali_image_iterator.py
+    #     DESTINATION ./rali/python
+    #     )
     install(FILES
         include/rali_api.h
         include/rali_api_info.h
@@ -152,6 +152,7 @@ if(${BUILD_RALI})
         include/rali_api_data_transfer.h
         include/rali_api_parameters.h
         include/rali_api_meta_data.h
+        include/loaders/rocal_api_data_loaders.h
         DESTINATION ./include
         )
     if(FFMPEG_FOUND)
@@ -163,9 +164,9 @@ if(${BUILD_RALI})
     include_directories(
                 ${OpenCL_INCLUDE_DIRS}
                 ${OpenCL_INCLUDE_DIRS}/Headers
-                ${AVUTIL_INCLUDE_DIR} 
-                ${AVCODEC_INCLUDE_DIR} 
-                ${SWSCALE_INCLUDE_DIR} 
+                ${AVUTIL_INCLUDE_DIR}
+                ${AVCODEC_INCLUDE_DIR}
+                ${SWSCALE_INCLUDE_DIR}
                 ${AVFORMAT_INCLUDE_DIR}
                 ${CMAKE_CURRENT_BINARY_DIR}
                 ${TurboJpeg_INCLUDE_DIRS}
@@ -175,6 +176,7 @@ if(${BUILD_RALI})
                 ../../amd_openvx_extensions/amd_rpp/include/
                 ../../amd_openvx_extensions/amd_media/include/
                 ../third_party/rapidjson/include/
+                ./include/loaders/
                 include
                 )
     protobuf_generate_cpp(TF_PROTO_SRCS TF_PROTO_HEADERS proto/example.proto proto/feature.proto)
@@ -189,7 +191,9 @@ if(${BUILD_RALI})
     endif()
 
     file(GLOB SOURCES "./source/*.cpp")
-    add_library(${PROJECT_NAME} SHARED ${SOURCES} ${TF_PROTO_SRCS} ${TF_PROTO_HEADERS} ${CAFFE_PROTO_HEADERS} ${CAFFE_PROTO_SRCS} ${CAFFE2_PROTO_SRCS} ${CAFFE2_PROTO_HEADERS})
+    file(GLOB LOADERS "./source/loaders/*.cpp")
+    list(APPEND rocAL_SOURCES ${SOURCES} ${LOADERS})
+    add_library(${PROJECT_NAME} SHARED ${rocAL_SOURCES} ${TF_PROTO_SRCS} ${TF_PROTO_HEADERS} ${CAFFE_PROTO_HEADERS} ${CAFFE_PROTO_SRCS} ${CAFFE2_PROTO_SRCS} ${CAFFE2_PROTO_HEADERS})
 
     if("${BACKEND}" STREQUAL "HIP" AND HIP_FOUND)
         include_directories(${HIP_PATH}/include ${HSA_PATH}/include rocAL_hip)

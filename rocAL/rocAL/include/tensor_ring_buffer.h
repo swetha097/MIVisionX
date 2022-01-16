@@ -24,15 +24,14 @@ THE SOFTWARE.
 #include "commons.h"
 #include <vector>
 #include <condition_variable>
-#if ENABLE_OPENCL
+#if !ENABLE_HIP
 #include <CL/cl.h>
-#include "device_manager.h"
-#else
-#include "device_manager_hip.h"
 #endif
 #include <queue>
 #include "meta_data.h"
+#include "device_manager.h"
 #include "commons.h"
+#include "device_manager_hip.h"
 
 using MetaDataNamePair = std::pair<ImageNameBatch,pMetaDataBatch>;
 class TensorRingBuffer

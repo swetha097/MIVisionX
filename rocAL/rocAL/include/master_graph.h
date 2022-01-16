@@ -38,6 +38,7 @@ THE SOFTWARE.
 #include "node_cifar10_loader.h"
 #include "meta_data_reader.h"
 #include "meta_data_graph.h"
+#include "tensor_ring_buffer.h"
 #if ENABLE_HIP
 #include "device_manager_hip.h"
 #endif
@@ -62,10 +63,15 @@ public:
     size_t output_height();
     size_t output_byte_size();
     size_t output_depth();
+    size_t tensor_output_width();
+    size_t tensor_output_height();
+    size_t tensor_output_byte_size();
+    size_t tensor_output_depth();
     void sequence_start_frame_number(std::vector<size_t> &sequence_start_framenum); // Returns the starting frame number of the sequences
     void sequence_frame_timestamps(std::vector<std::vector<float>> &sequence_frame_timestamp); // Returns the timestamps of the frames in the sequences
     size_t augmentation_branch_count();
     size_t output_sample_size();
+    size_t tensor_output_sample_size();
     RaliColorFormat output_color_format();
     Status build();
     Status run();
@@ -75,6 +81,10 @@ public:
     template <typename T>
     std::shared_ptr<T> add_node(const std::vector<Image *> &inputs, const std::vector<Image *> &outputs);
     template <typename T, typename M> std::shared_ptr<T> meta_add_node(std::shared_ptr<M> node);
+    std::shared_ptr<T> add_tensor_node(const std::vector<Tensor *> &inputs, const std::vector<Tensor *> &outputs);
+    Tensor *create_tensor(const TensorInfo &info, bool is_output);
+    Tensor *create_tensor_from_image(const TensorInfo &info);
+    Tensor *create_loader_output_tensor(const TensorInfo &info);
     Image *create_image(const ImageInfo &info, bool is_output);
     Image *create_loader_output_image(const ImageInfo &info);
     MetaDataBatch *create_label_reader(const char *source_path, MetaDataReaderType reader_type);
@@ -87,11 +97,13 @@ public:
     void box_encoder(std::vector<float> &anchors, float criteria, const std::vector<float> &means, const std::vector<float> &stds, bool offset, float scale);
     void create_randombboxcrop_reader(RandomBBoxCrop_MetaDataReaderType reader_type, RandomBBoxCrop_MetaDataType label_type, bool all_boxes_overlap, bool no_crop, FloatParam* aspect_ratio, bool has_shape, int crop_width, int crop_height, int num_attempts, FloatParam* scaling, int total_num_attempts, int64_t seed=0);
     const std::pair<ImageNameBatch,pMetaDataBatch>& meta_data();
+    const std::pair<ImageNameBatch,pMetaDataBatch>& tensor_meta_data();
     void set_loop(bool val) { _loop = val; }
     bool empty() { return (remaining_count() < (_is_sequence_reader_output ? _sequence_batch_size : _user_batch_size)); }
     size_t internal_batch_size() { return _internal_batch_size; }
     size_t sequence_batch_size() { return _sequence_batch_size; }
     std::shared_ptr<MetaDataGraph> meta_data_graph() { return _meta_data_graph; }
+    size_t max_tensor_type_size() { return _max_tensor_type_size; }
     std::shared_ptr<MetaDataReader> meta_data_reader() { return _meta_data_reader; }
     bool is_random_bbox_crop() {return _is_random_bbox_crop; }
     void set_video_loader_flag() { _is_video_loader = true; }
@@ -110,16 +122,26 @@ private:
     void output_routine();
     void output_routine_video();
     void decrease_image_count();
-    bool processing_on_device_ocl() { return _output_image_info.mem_type() == RaliMemType::OCL; };
-    bool processing_on_device_hip() { return _output_image_info.mem_type() == RaliMemType::HIP; };
+    // bool processing_on_device_ocl() { return _output_image_info.mem_type() == RaliMemType::OCL; };
+    // bool processing_on_device_hip() { return _output_image_info.mem_type() == RaliMemType::HIP; };
+    bool processing_on_device_ocl() { return _output_tensor_info.mem_type() == RaliMemType::OCL; };
+    bool processing_on_device_hip() { return _output_tensor_info.mem_type() == RaliMemType::HIP; };
     /// notify_user_thread() is called when the internal processing thread is done with processing all available images
     void notify_user_thread();
     /// no_more_processed_data() is logically linked to the notify_user_thread() and is used to tell the user they've already consumed all the processed images
     bool no_more_processed_data();
     RingBuffer _ring_buffer;//!< The queue that keeps the images that have benn processed by the internal thread (_output_thread) asynchronous to the user's thread
+    TensorRingBuffer _tensor_ring_buffer;//!< The queue that keeps the images that have benn processed by the internal thread (_output_thread) asynchronous to the user's thread
     MetaDataBatch* _augmented_meta_data = nullptr;//!< The output of the meta_data_graph,
     CropCordBatch* _random_bbox_crop_cords_data = nullptr;
     std::thread _output_thread;
+    TensorInfo _output_tensor_info;
+    std::vector<Tensor*> _output_tensors;
+    std::list<Tensor*> _internal_tensors;
+    std::list<std::shared_ptr<TensorNode>> _tensor_nodes;
+    std::list<std::shared_ptr<TensorNode>> _tensor_root_nodes;
+    std::list<std::shared_ptr<TensorNode>> _meta_data_nodes;//!< List of nodes where meta data has to be updated after augmentation
+    std::map<Tensor*, std::shared_ptr<TensorNode>> _tensor_map;
     ImageInfo _output_image_info;//!< Keeps the information about RALI's output image , it includes all images of a batch stacked on top of each other
     std::vector<Image*> _output_images;//!< Keeps the ovx images that are used to store the augmented output (there is an image per augmentation branch)
     std::list<Image*> _internal_images;//!< Keeps all the ovx images (virtual/non-virtual) either intermediate images, or input images that feed the graph
@@ -160,6 +182,7 @@ private:
     const size_t _user_to_internal_batch_ratio;
     size_t _prefetch_queue_depth;
     bool _output_routine_finished_processing = false;
+    size_t _max_tensor_type_size;
     const RaliTensorDataType _out_data_type;
     bool _is_random_bbox_crop = false;
     bool _is_video_loader = false; //!< Set to true if Video Loader is invoked.
@@ -169,7 +192,7 @@ private:
     size_t _sequence_batch_ratio; //!< Indicates the _user_to_internal_batch_ratio when sequence reader outputs are required
     bool _is_sequence_reader_output = false; //!< Set to true if Sequence Reader is invoked.
     // box encoder variables
-    bool _is_box_encoder = false; //bool variable to set the box encoder 
+    bool _is_box_encoder = false; //bool variable to set the box encoder
     std::vector<float>_anchors; // Anchors to be used for encoding, as the array of floats is in the ltrb format of size 8732x4
     float _criteria = 0.5; // Threshold IoU for matching bounding boxes with anchors. The value needs to be between 0 and 1.
     float _scale; // Rescales the box and anchor values before the offset is calculated (for example, to return to the absolute values).
@@ -209,6 +232,60 @@ std::shared_ptr<T> MasterGraph::meta_add_node(std::shared_ptr<M> node)
     return meta_node;
 }
 
+template <typename T>
+std::shared_ptr<T> MasterGraph::add_tensor_node(const std::vector<Tensor *> &inputs, const std::vector<Tensor *> &outputs)
+{
+    auto node = std::make_shared<T>(inputs, outputs);
+    _tensor_nodes.push_back(node);
+
+    for(auto& input: inputs)
+    {
+        if (_tensor_map.find(input) == _tensor_map.end())
+            THROW("Input image is invalid, cannot be found among output of previously created nodes")
+
+        auto parent_node = _tensor_map.find(input)->second;
+        parent_node->add_next(node);
+        node->add_previous(parent_node);
+    }
+
+    for(auto& output: outputs)
+        _tensor_map.insert(make_pair(output, node));
+
+    return node;
+}
+
+/*
+ * Explicit specialization for ImageLoaderNode
+ */
+template<> inline std::shared_ptr<ImageLoaderTensorNode> MasterGraph::add_tensor_node(const std::vector<Tensor*>& inputs, const std::vector<Tensor*>& outputs)
+{
+    if(_loader_module)
+        THROW("A loader already exists, cannot have more than one loader")
+    auto node = std::make_shared<ImageLoaderTensorNode>(outputs[0], _device.resources());
+    _loader_module = node->get_loader_module();
+    _tensor_root_nodes.push_back(node);
+    _loader_module->set_prefetch_queue_depth(_prefetch_queue_depth);
+    // _root_nodes.push_back(node);
+    for(auto& output: outputs)
+        _tensor_map.insert(make_pair(output, node));
+
+    return node;
+}
+
+template<> inline std::shared_ptr<ImageLoaderTensorSingleShardNode> MasterGraph::add_tensor_node(const std::vector<Tensor*>& inputs, const std::vector<Tensor*>& outputs)
+{
+    if(_loader_module)
+        THROW("A loader already exists, cannot have more than one loader")
+    auto node = std::make_shared<ImageLoaderTensorSingleShardNode>(outputs[0], _device.resources());
+    _loader_module = node->get_loader_module();
+    _tensor_root_nodes.push_back(node);
+    _loader_module->set_prefetch_queue_depth(_prefetch_queue_depth);
+    // _root_nodes.push_back(node);
+    for(auto& output: outputs)
+        _tensor_map.insert(make_pair(output, node));
+
+    return node;
+}
 
 /*
  * Explicit specialization for ImageLoaderNode

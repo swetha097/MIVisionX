@@ -26,6 +26,7 @@ THE SOFTWARE.
 #include "decoder.h"
 #include "commons.h"
 #include "image.h"
+#include "tensor.h"
 #include "circular_buffer.h"
 #include "meta_data_reader.h"
 #include "meta_data_graph.h"
