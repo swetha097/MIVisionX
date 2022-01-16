@@ -25,11 +25,12 @@ THE SOFTWARE.
 #include "parameter_factory.h"
 #include "parameter_vx.h"
 #include "graph.h"
-class BrightnessTensorNode : public TensorNode
+
+class BrightnessNode : public Node
 {
 public:
-    BrightnessTensorNode(const std::vector<Tensor *> &inputs, const std::vector<Tensor *> &outputs);
-    BrightnessTensorNode() = delete;
+    BrightnessNode(const std::vector<Image *> &inputs, const std::vector<Image *> &outputs);
+    BrightnessNode() = delete;
 
     void init( float alpha, float beta);
     void init( FloatParam* alpha_param, FloatParam* beta_param);
