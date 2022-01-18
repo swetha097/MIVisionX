@@ -176,7 +176,15 @@ if(${BUILD_RALI})
                 ../../amd_openvx_extensions/amd_rpp/include/
                 ../../amd_openvx_extensions/amd_media/include/
                 ../third_party/rapidjson/include/
+                ./include/api/
+                ./include/decoders/
+                ./include/device/
+                ./include/image/color/
+                ./include/image/crop/
                 ./include/loaders/
+                ./include/meta_data/
+                ./inlude/parameters/
+                ./include/readers/
                 include
                 )
     protobuf_generate_cpp(TF_PROTO_SRCS TF_PROTO_HEADERS proto/example.proto proto/feature.proto)
@@ -190,9 +198,13 @@ if(${BUILD_RALI})
         message("-- ${Green}rocAL library is going to be built with HIP support ${ColourReset}")
     endif()
 
-    file(GLOB SOURCES "./source/*.cpp")
-    file(GLOB LOADERS "./source/loaders/*.cpp")
-    list(APPEND rocAL_SOURCES ${SOURCES} ${LOADERS})
+    file(GLOB_RECURSE SOURCES "./source/*.cpp")
+    # file(GLOB LOADERS "./source/api/*.cpp")
+    # file(GLOB LOADERS "./source/decoders/*.cpp")
+    # file(GLOB LOADERS "./source/image/color/*.cpp")
+    # file(GLOB LOADERS "./source/image/crop/*.cpp")
+    list(APPEND rocAL_SOURCES ${SOURCES})
+    print("Source list ${SOURCES}")
     add_library(${PROJECT_NAME} SHARED ${rocAL_SOURCES} ${TF_PROTO_SRCS} ${TF_PROTO_HEADERS} ${CAFFE_PROTO_HEADERS} ${CAFFE_PROTO_SRCS} ${CAFFE2_PROTO_SRCS} ${CAFFE2_PROTO_HEADERS})
 
     if("${BACKEND}" STREQUAL "HIP" AND HIP_FOUND)

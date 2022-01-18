@@ -47,7 +47,7 @@ std::shared_ptr<MetaDataReader> create_meta_data_reader(const MetaDataConfig& co
             return ret;
         }
             break;
-#ifdef RALI_VIDEO
+#ifdef ROCAL_VIDEO
         case MetaDataReaderType::VIDEO_LABEL_READER:
         {
             if(config.type() != MetaDataType::Label)
@@ -75,7 +75,7 @@ std::shared_ptr<MetaDataReader> create_meta_data_reader(const MetaDataConfig& co
             ret->init(config);
             return ret;
         }
-            break;            
+            break;
         case MetaDataReaderType::TF_DETECTION_META_DATA_READER:
         {
             if(config.type() != MetaDataType::BoundingBox)
@@ -84,7 +84,7 @@ std::shared_ptr<MetaDataReader> create_meta_data_reader(const MetaDataConfig& co
             ret->init(config);
             return ret;
         }
-            break;          
+            break;
         case MetaDataReaderType::COCO_META_DATA_READER:
         {
             if(config.type() != MetaDataType::BoundingBox)
