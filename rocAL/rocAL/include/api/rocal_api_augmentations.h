@@ -43,4 +43,57 @@ extern "C" RocalTensor ROCAL_API_CALL rocalBrightness(RocalContext context, Roca
 /// \return
 extern "C" RocalTensor ROCAL_API_CALL rocalBrightnessFixed(RocalContext context, RocalTensor input, bool is_output,
                                                            float alpha, float beta);
+
+/// Accepts U8 and RGB24 inputs
+/// \param context
+/// \param input
+/// \param is_output
+/// \param alpha
+/// \return
+extern "C" RocalTensor ROCAL_API_CALL rocalGamma(RocalContext context, RocalTensor input,
+                                                 bool is_output,
+                                                 RocalFloatParam alpha = NULL);
+
+/// Accepts U8 and RGB24 inputs
+/// \param context
+/// \param input
+/// \param is_output
+/// \param alpha
+/// \return
+
+extern "C" RocalTensor ROCAL_API_CALL rocalGammaFixed(RocalContext context, RocalTensor input,
+                                                      bool is_output,
+                                                      float alpha);
+
+/// Accepts U8 and RGB24 inputs
+/// \param context
+/// \param input
+/// \param rocal_tensor_layout
+/// \param rocal_tensor_output_type
+/// \param crop_depth
+/// \param crop_height
+/// \param crop_width
+/// \param start_x
+/// \param start_y
+/// \param start_z
+/// \param mean
+/// \param std_dev
+/// \param is_output
+/// \param mirror
+/// \return
+
+extern "C" RocalTensor ROCAL_API_CALL rocalCropMirrorNormalize(RocalContext context, RocalTensor input,
+                                                               RocalTensorLayout rocal_tensor_layout,
+                                                               RocalTensorOutputType rocal_tensor_output_type,
+                                                               unsigned crop_depth,
+                                                               unsigned crop_height,
+                                                               unsigned crop_width,
+                                                               float start_x,
+                                                               float start_y,
+                                                               float start_z,
+                                                               std::vector<float> &mean,
+                                                               std::vector<float> &std_dev,
+                                                               bool is_output,
+                                                               RocalIntParam mirror = NULL);
+
 #endif // MIVISIONX_ROCAL_API_AUGMENTATION_H
