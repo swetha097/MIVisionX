@@ -61,7 +61,7 @@ private:
     std::shared_ptr<ImageReadAndDecode> _image_loader;
     LoaderModuleStatus update_output_image();
     LoaderModuleStatus load_routine();
-    Tensor* _output_tensor;
+    Tensor* _output_image;
     std::vector<std::string> _output_names;//!< image name/ids that are stores in the _output_image
     size_t _output_mem_size;
     MetaDataBatch* _meta_data = nullptr;//!< The output of the meta_data_graph,

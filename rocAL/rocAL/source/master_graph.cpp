@@ -33,7 +33,7 @@ THE SOFTWARE.
 #include "log.h"
 #include "meta_data_reader_factory.h"
 #include "meta_data_graph_factory.h"
-#include "randombboxcrop_meta_data_reader_factory.h"
+// #include "randombboxcrop_meta_data_reader_factory.h"
 
 using half_float::half;
 
@@ -248,14 +248,14 @@ MasterGraph::create_single_graph()
 {
     // Actual graph creating and calls into adding nodes to graph is deferred and is happening here to enable potential future optimizations
     _graph = std::make_shared<Graph>(_context, _affinity, 0, _gpu_id);
-    for(auto& node: _nodes)
+    for(auto& node: _tensor_nodes)
     {
         // Any image not yet created can be created as virtual image
         for(auto& image: node->output())
-            if(image->info().type() == ImageInfo::Type::UNKNOWN)
+            if(image->info().type() == TensorInfo::Type::UNKNOWN)
             {
                 image->create_virtual(_context, _graph->get());
-                _internal_images.push_back(image);
+                _internal_tensors.push_back(image);
             }
         node->create(_graph);
     }
@@ -265,20 +265,20 @@ MasterGraph::create_single_graph()
 MasterGraph::Status
 MasterGraph::build()
 {
-    if(_output_images.empty())
+    if(_output_tensors.empty())
         THROW("No output images are there, cannot create the pipeline")
 
     // Verify all output images have the same dimension, otherwise creating a unified tensor from them is not supported
-    _output_image_info = _output_images.front()->info();
-    for(auto&& output_image : _output_images)
-        if(!(output_image->info() == _output_image_info))
+    _output_tensor_info = _output_tensors.front()->info();
+    for(auto&& output_image : _output_tensors)
+        if(!(output_image->info() == _output_tensor_info))
             THROW("Dimension of the output images do not match")
 
     allocate_output_tensor();
 #if ENABLE_HIP
-    _ring_buffer.initHip(_mem_type, _device.resources(), output_byte_size(), _output_images.size());
+    _ring_buffer.initHip(_mem_type, _device.resources(), output_byte_size(), _output_tensors.size());
 #else
-    _ring_buffer.init(_mem_type, _device.resources(), output_byte_size(), _output_images.size());
+    _ring_buffer.init(_mem_type, _device.resources(), output_byte_size(), _output_tensors.size());
 #endif
     create_single_graph();
     start_processing();
@@ -315,48 +315,19 @@ Tensor * MasterGraph::create_tensor(const TensorInfo &info, bool is_output)
     return output;
 }
 
-Tensor * MasterGraph::create_loader_output_tensor(const TensorInfo &info)
-{
-    /*
-    *   NOTE: Output image for a source node needs to be created as a regular (non-virtual) image
-    */
-    auto output = new Tensor(info);
-    if(output->create_from_handle(_context) != 0)
-        THROW("Creating output image for loader failed");
-
-    _internal_tensors.push_back(output);
-
-    return output;
-}
-
-Tensor * MasterGraph::create_tensor(const TensorInfo &info, bool is_output)
-{
-    auto* output = new Tensor(info);
-    // if the image is not an output image, the image creation is deferred and later it'll be created as a virtual image
-    if(is_output)
-    {
-        if (output->create_from_handle(_context) != 0)
-            THROW("Cannot create the tensor from handle")
-
-        _output_tensors.push_back(output);
-    }
-
-    return output;
-}
-
 void MasterGraph::release()
 {
     LOG("MasterGraph release ...")
     stop_processing();
-    _nodes.clear();
-    _root_nodes.clear();
-    _image_map.clear();
+    _tensor_nodes.clear();
+    _tensor_root_nodes.clear();
+    _tensor_map.clear();
 
     // release all openvx resources.
     vx_status status;
-    for(auto& image: _internal_images)
+    for(auto& image: _internal_tensors)
         delete image;// It will call the vxReleaseImage internally in the destructor
-    for(auto& image: _output_images)
+    for(auto& image: _output_tensors)
         delete image;// It will call the vxReleaseImage internally in the destructor
     if(_graph != nullptr)
         _graph->release();
@@ -376,7 +347,7 @@ MasterGraph::update_node_parameters()
     ParameterFactory::instance()->renew_parameters();
 
     // Apply renewed parameters to VX parameters used in augmentation
-    for(auto& node: _nodes)
+    for(auto& node: _tensor_nodes)
         node->update_parameters();
 
     return Status::OK;
@@ -385,25 +356,25 @@ MasterGraph::update_node_parameters()
 size_t
 MasterGraph::augmentation_branch_count()
 {
-    return _output_images.size();
+    return _output_tensors.size();
 }
 
 RocalColorFormat
 MasterGraph::output_color_format()
 {
-    return _output_image_info.color_format();
+    return _output_tensor_info.color_format();
 }
 
 size_t
 MasterGraph::output_width()
 {
-    return _output_image_info.width();
+    return _output_tensor_info.width();
 }
 
 size_t
 MasterGraph::output_height()
 {
-    return _output_image_info.height_batch() * (_is_sequence_reader_output ? _sequence_batch_ratio : _user_to_internal_batch_ratio);
+    return _output_tensor_info.height_batch() * (_is_sequence_reader_output ? _sequence_batch_ratio : _user_to_internal_batch_ratio);
 }
 
 void
@@ -424,7 +395,7 @@ MasterGraph::Status
 MasterGraph::allocate_output_tensor()
 {
     // creating a float buffer that can accommodates all output images
-    size_t output_buffer_size = output_byte_size() * _output_images.size();
+    size_t output_buffer_size = output_byte_size() * _output_tensors.size();
 #if !ENABLE_HIP
     if(processing_on_device_ocl())
     {
@@ -496,8 +467,8 @@ MasterGraph::reset()
 #endif
     {
         // if random_bbox meta reader is used: read again to get different crops
-        if (_randombboxcrop_meta_data_reader != nullptr)
-            _randombboxcrop_meta_data_reader->release();
+        // if (_randombboxcrop_meta_data_reader != nullptr)
+        //     _randombboxcrop_meta_data_reader->release();
         // resetting loader module to start from the beginning of the media and clear it's internal state/buffers
         _loader_module->reset();
     }
@@ -573,12 +544,12 @@ MasterGraph::copy_out_tensor(void *out_ptr, RocalTensorFormat format, float mult
     // Copies to the output context given by the user
     unsigned int n = _user_batch_size;
     const size_t c = output_depth();
-    const size_t h = _output_image_info.height_single();
+    const size_t h = _output_tensor_info.height_single();
     const size_t w = output_width();
     const size_t single_output_image_size = output_byte_size();
 
 #if !ENABLE_HIP
-    if(_output_image_info.mem_type() == RocalMemType::OCL)
+    if(_output_tensor_info.mem_type() == RocalMemType::OCL)
     {
         if(output_data_type == RocalTensorDataType::FP16)
             THROW("FP16 tensor output for GPU affinity is not implemented")
@@ -625,7 +596,7 @@ MasterGraph::copy_out_tensor(void *out_ptr, RocalTensorFormat format, float mult
             dest_buf_offset += single_output_image_size;
         }
 
-        int read_size = single_output_image_size*_output_images.size()*sizeof(cl_float);
+        int read_size = single_output_image_size*_output_tensors.size()*sizeof(cl_float);
         if((status = clEnqueueReadBuffer(queue,
                                          (cl_mem)_output_tensor,
                                          CL_TRUE,
@@ -636,7 +607,7 @@ MasterGraph::copy_out_tensor(void *out_ptr, RocalTensorFormat format, float mult
             THROW("clEnqueueReadBuffer failed: " + TOSTR(status))
     }
 #else
-    if(_output_image_info.mem_type() == RocalMemType::HIP)
+    if(_output_tensor_info.mem_type() == RocalMemType::HIP)
     {
         unsigned int fp16 = (output_data_type == RocalTensorDataType::FP16);
 
@@ -661,7 +632,7 @@ MasterGraph::copy_out_tensor(void *out_ptr, RocalTensorFormat format, float mult
         }
     }
 #endif
-    if(_output_image_info.mem_type() == RocalMemType::HOST)
+    if(_output_tensor_info.mem_type() == RocalMemType::HOST)
     {
         float multiplier[3] = {multiplier0, multiplier1, multiplier2 };
         float offset[3] = {offset0, offset1, offset2 };
@@ -863,7 +834,7 @@ MasterGraph::copy_output(unsigned char *out_ptr)
     else
     {
         // get_host_master_read_buffer is blocking if _ring_buffer is empty, and blocks this thread till internal processing thread process a new batch and store in the _ring_buffer
-        memcpy(out_ptr, _ring_buffer.get_host_master_read_buffer(), size * _output_images.size());
+        memcpy(out_ptr, _ring_buffer.get_host_master_read_buffer(), size * _output_tensors.size());
     }
     _convert_time.end();
     return Status::OK;
@@ -934,21 +905,21 @@ void MasterGraph::output_routine()
                     break;
 
                 // Swap handles on the output images, so that new processed image will be written to the a new buffer
-                for (size_t idx = 0; idx < _output_images.size(); idx++)
+                for (size_t idx = 0; idx < _output_tensors.size(); idx++)
                 {
                     if(_affinity == RocalAffinity::GPU)
-                        _output_images[idx]->swap_handle(write_buffers[idx]);
+                        _output_tensors[idx]->swap_handle(write_buffers[idx]);
                     else
                     {
                         auto this_cycle_buffer_ptr = (unsigned char *) write_buffers[idx] + each_cycle_size * cycle_idx;
-                        _output_images[idx]->swap_handle(this_cycle_buffer_ptr);
+                        _output_tensors[idx]->swap_handle(this_cycle_buffer_ptr);
                     }
                 }
 
                 if (!_processing)
                     break;
 
-                for(auto node: _nodes)
+                for(auto node: _tensor_nodes)
                 {
                     if(node->_is_ssd)
                     {
@@ -1060,21 +1031,21 @@ void MasterGraph::output_routine_video()
                     break;
 
                 // Swap handles on the output images, so that new processed image will be written to the a new buffer
-                for (size_t idx = 0; idx < _output_images.size(); idx++)
+                for (size_t idx = 0; idx < _output_tensors.size(); idx++)
                 {
                     if(_affinity == RocalAffinity::GPU)
-                        _output_images[idx]->swap_handle(write_buffers[idx]);
+                        _output_tensors[idx]->swap_handle(write_buffers[idx]);
                     else
                     {
                         auto this_cycle_buffer_ptr = (unsigned char *) write_buffers[idx] + each_cycle_size * cycle_idx;
-                        _output_images[idx]->swap_handle(this_cycle_buffer_ptr);
+                        _output_tensors[idx]->swap_handle(this_cycle_buffer_ptr);
                     }
                 }
 
                 if (!_processing)
                     break;
 
-                for(auto node: _nodes)
+                for(auto node: _tensor_nodes)
                 {
                     if(node->_is_ssd)
                     {
@@ -1154,41 +1125,6 @@ void MasterGraph::stop_processing()
         _output_thread.join();
 }
 
-MetaDataBatch * MasterGraph::create_coco_meta_data_reader(const char *source_path, bool is_output)
-{
-    if( _meta_data_reader)
-        THROW("A metadata reader has already been created")
-    MetaDataConfig config(MetaDataType::BoundingBox, MetaDataReaderType::COCO_META_DATA_READER, source_path);
-    _meta_data_graph = create_meta_data_graph(config);
-    _meta_data_reader = create_meta_data_reader(config);
-    _meta_data_reader->init(config);
-    _meta_data_reader->read_all(source_path);
-    if(is_output)
-    {
-        if (_augmented_meta_data)
-            THROW("Metadata output already defined, there can only be a single output for metadata augmentation")
-        else
-            _augmented_meta_data = _meta_data_reader->get_output();
-    }
-    return _meta_data_reader->get_output();
-}
-
-MetaDataBatch * MasterGraph::create_tf_record_meta_data_reader(const char *source_path, MetaDataReaderType reader_type , MetaDataType label_type, std::map<std::string, std::string> feature_key_map)
-{
-    if( _meta_data_reader)
-        THROW("A metadata reader has already been created")
-    MetaDataConfig config(label_type, reader_type, source_path, feature_key_map);
-    _meta_data_graph = create_meta_data_graph(config);
-    _meta_data_reader = create_meta_data_reader(config);
-    _meta_data_reader->init(config);
-    _meta_data_reader->read_all(source_path);
-    if (_augmented_meta_data)
-        THROW("Metadata output already defined, there can only be a single output for metadata augmentation")
-    else
-        _augmented_meta_data = _meta_data_reader->get_output();
-    return _meta_data_reader->get_output();
-}
-
 MetaDataBatch * MasterGraph::create_label_reader(const char *source_path, MetaDataReaderType reader_type)
 {
     if( _meta_data_reader)
@@ -1203,98 +1139,6 @@ MetaDataBatch * MasterGraph::create_label_reader(const char *source_path, MetaDa
         _augmented_meta_data = _meta_data_reader->get_output();
     return _meta_data_reader->get_output();
 }
-
-MetaDataBatch * MasterGraph::create_video_label_reader(const char *source_path, MetaDataReaderType reader_type, unsigned sequence_length, unsigned frame_step, unsigned frame_stride, bool file_list_frame_num)
-{
-    if( _meta_data_reader)
-        THROW("A metadata reader has already been created")
-    MetaDataConfig config(MetaDataType::Label, reader_type, source_path, std::map<std::string, std::string>(), std::string(), sequence_length, frame_step, frame_stride);
-    _meta_data_reader = create_meta_data_reader(config);
-    _meta_data_reader->init(config);
-    if(!file_list_frame_num)
-    {
-        _meta_data_reader->set_timestamp_mode();
-    }
-    _meta_data_reader->read_all(source_path);
-    if (_augmented_meta_data)
-        THROW("Metadata can only have a single output")
-    else
-        _augmented_meta_data = _meta_data_reader->get_output();
-    return _meta_data_reader->get_output();
-}
-
-void MasterGraph::create_randombboxcrop_reader(RandomBBoxCrop_MetaDataReaderType reader_type, RandomBBoxCrop_MetaDataType label_type, bool all_boxes_overlap, bool no_crop, FloatParam* aspect_ratio, bool has_shape, int crop_width, int crop_height, int num_attempts, FloatParam* scaling, int total_num_attempts, int64_t seed)
-{
-    if( _randombboxcrop_meta_data_reader)
-        THROW("A metadata reader has already been created")
-    _is_random_bbox_crop = true;
-    RandomBBoxCrop_MetaDataConfig config(label_type, reader_type, all_boxes_overlap, no_crop, aspect_ratio, has_shape, crop_width, crop_height, num_attempts, scaling, total_num_attempts, seed);
-    _randombboxcrop_meta_data_reader = create_meta_data_reader(config);
-    _randombboxcrop_meta_data_reader->set_meta_data(_meta_data_reader);
-    if (_random_bbox_crop_cords_data)
-        THROW("Metadata can only have a single output")
-    else
-        _random_bbox_crop_cords_data = _randombboxcrop_meta_data_reader->get_output();
-}
-
-void MasterGraph::box_encoder(std::vector<float> &anchors, float criteria, const std::vector<float> &means, const std::vector<float> &stds, bool offset, float scale)
-{
-    _is_box_encoder = true;
-    _offset = offset;
-    _anchors = anchors;
-    _scale = scale;
-    _means = means;
-    _stds = stds;
-
-}
-
-MetaDataBatch * MasterGraph::create_caffe2_lmdb_record_meta_data_reader(const char *source_path, MetaDataReaderType reader_type , MetaDataType label_type)
-{
-    if( _meta_data_reader)
-        THROW("A metadata reader has already been created")
-    MetaDataConfig config(label_type, reader_type, source_path);
-    _meta_data_graph = create_meta_data_graph(config);
-    _meta_data_reader = create_meta_data_reader(config);
-    _meta_data_reader->init(config);
-    _meta_data_reader->read_all(source_path);
-    if (_augmented_meta_data)
-        THROW("Metadata output already defined, there can only be a single output for metadata augmentation")
-    else
-        _augmented_meta_data = _meta_data_reader->get_output();
-    return _meta_data_reader->get_output();
-}
-
-MetaDataBatch * MasterGraph::create_caffe_lmdb_record_meta_data_reader(const char *source_path, MetaDataReaderType reader_type , MetaDataType label_type)
-{
-    if( _meta_data_reader)
-        THROW("A metadata reader has already been created")
-    MetaDataConfig config(label_type, reader_type, source_path);
-    _meta_data_graph = create_meta_data_graph(config);
-    _meta_data_reader = create_meta_data_reader(config);
-    _meta_data_reader->init(config);
-    _meta_data_reader->read_all(source_path);
-    if (_augmented_meta_data)
-        THROW("Metadata output already defined, there can only be a single output for metadata augmentation")
-    else
-        _augmented_meta_data = _meta_data_reader->get_output();
-    return _meta_data_reader->get_output();
-}
-
-MetaDataBatch * MasterGraph::create_cifar10_label_reader(const char *source_path, const char *file_prefix)
-{
-    if( _meta_data_reader)
-        THROW("A metadata reader has already been created")
-    MetaDataConfig config(MetaDataType::Label, MetaDataReaderType::CIFAR10_META_DATA_READER, source_path, std::map<std::string, std::string>(), file_prefix);
-    _meta_data_reader = create_meta_data_reader(config);
-    _meta_data_reader->init(config);
-    _meta_data_reader->read_all(source_path);
-    if (_augmented_meta_data)
-        THROW("Metadata can only have a single output")
-    else
-        _augmented_meta_data = _meta_data_reader->get_output();
-    return _meta_data_reader->get_output();
-}
-
 
 const std::pair<ImageNameBatch,pMetaDataBatch>& MasterGraph::meta_data()
 {
@@ -1357,7 +1201,7 @@ size_t MasterGraph::output_byte_size()
 
 size_t MasterGraph::output_depth()
 {
-    return _output_image_info.color_plane_count();
+    return _output_tensor_info.color_plane_count();
 }
 
 void MasterGraph::notify_user_thread()
@@ -1383,18 +1227,18 @@ MasterGraph::copy_out_tensor_planar(void *out_ptr, RocalTensorFormat format, flo
     _convert_time.start();
     // Copies to the output context given by the user, each image is copied separate for planar
     const size_t w = output_width();
-    const size_t h = _output_image_info.height_single();
+    const size_t h = _output_tensor_info.height_single();
     const size_t c = output_depth();
-    const size_t n = _output_image_info.batch_size();
+    const size_t n = _output_tensor_info.batch_size();
 
     const size_t single_output_image_size = output_byte_size();
 
 
-    if(_output_image_info.mem_type() == RocalMemType::OCL)
+    if(_output_tensor_info.mem_type() == RocalMemType::OCL)
     {
         THROW("copy_out_tensor_planar for GPU affinity is not implemented")
     }
-    if(_output_image_info.mem_type() == RocalMemType::HOST)
+    if(_output_tensor_info.mem_type() == RocalMemType::HOST)
     {
         float multiplier[3] = {multiplier0, multiplier1, multiplier2 };
         float offset[3] = {offset0, offset1, offset2 };

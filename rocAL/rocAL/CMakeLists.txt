@@ -183,7 +183,7 @@ if(${BUILD_RALI})
                 ./include/image/crop/
                 ./include/loaders/
                 ./include/meta_data/
-                ./inlude/parameters/
+                ./include/parameters/
                 ./include/readers/
                 include
                 )

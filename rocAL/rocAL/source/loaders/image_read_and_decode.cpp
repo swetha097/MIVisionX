@@ -204,12 +204,12 @@ ImageReadAndDecode::load(unsigned char* buff,
             file_counter++;
         }
 
-        if (_randombboxcrop_meta_data_reader)
-        {
-            //Fetch the crop co-ordinates for a batch of images
-            _bbox_coords = _randombboxcrop_meta_data_reader->get_batch_crop_coords(_image_names);
-            set_batch_random_bbox_crop_coords(_bbox_coords);
-        }
+        // if (_randombboxcrop_meta_data_reader)
+        // {
+        //     //Fetch the crop co-ordinates for a batch of images
+        //     _bbox_coords = _randombboxcrop_meta_data_reader->get_batch_crop_coords(_image_names);
+        //     set_batch_random_bbox_crop_coords(_bbox_coords);
+        // }
     }
 
     _file_load_time.end();// Debug timing
@@ -243,7 +243,8 @@ ImageReadAndDecode::load(unsigned char* buff,
             _original_width[i] = original_width;
             // decode the image and get the actual decoded image width and height
             size_t scaledw, scaledh;
-            if(_decoder[i]->is_partial_decoder() && _randombboxcrop_meta_data_reader)
+            // if(_decoder[i]->is_partial_decoder() && _randombboxcrop_meta_data_reader)
+            if(_decoder[i]->is_partial_decoder())
             {
                 _decoder[i]->set_bbox_coords(_bbox_coords[i]);
             }

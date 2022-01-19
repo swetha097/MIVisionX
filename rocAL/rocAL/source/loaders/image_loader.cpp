@@ -192,11 +192,11 @@ ImageLoader::load_routine()
 
             if (load_status == LoaderModuleStatus::OK)
             {
-                if (_randombboxcrop_meta_data_reader)
-                {
-                    _crop_image_info._crop_image_coords = _image_loader->get_batch_random_bbox_crop_coords();
-                    _circ_buff.set_crop_image_info(_crop_image_info);
-                }
+                // if (_randombboxcrop_meta_data_reader)
+                // {
+                //     _crop_image_info._crop_image_coords = _image_loader->get_batch_random_bbox_crop_coords();
+                //     _circ_buff.set_crop_image_info(_crop_image_info);
+                // }
                 _circ_buff.set_image_info(_decoded_img_info);
                 _circ_buff.push();
                 _image_counter += _output_image->info().batch_size();
@@ -266,11 +266,11 @@ ImageLoader::update_output_image()
         return LoaderModuleStatus::OK;
 
     _output_decoded_img_info = _circ_buff.get_image_info();
-    if (_randombboxcrop_meta_data_reader) {
-      _output_cropped_img_info = _circ_buff.get_cropped_image_info();
-    }
+    // if (_randombboxcrop_meta_data_reader) {
+    //   _output_cropped_img_info = _circ_buff.get_cropped_image_info();
+    // }
     _output_names = _output_decoded_img_info._image_names;
-    _output_image->update_image_roi(_output_decoded_img_info._roi_width, _output_decoded_img_info._roi_height);
+    _output_image->update_tensor_roi(_output_decoded_img_info._roi_width, _output_decoded_img_info._roi_height);
 
     _circ_buff.pop();
     if (!_loop)
