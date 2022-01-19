@@ -22,14 +22,14 @@ THE SOFTWARE.
 
 #pragma once
 #include "node.h"
-#include "parameter_factory.h"
-#include "parameter_vx.h"
+#include "../parameters/parameter_factory.h"
+#include "../parameters/parameter_vx.h"
 
 
 class GammaNode : public Node
 {
 public:
-    GammaNode(const std::vector<Image *> &inputs, const std::vector<Image *> &outputs);
+    GammaNode(const std::vector<Tensor *> &inputs, const std::vector<Tensor *> &outputs);
     GammaNode() = delete;
     void init(float shift);
     void init(FloatParam *shift);

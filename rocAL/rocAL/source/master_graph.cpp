@@ -28,7 +28,7 @@ THE SOFTWARE.
 #include <sched.h>
 #include <half.hpp>
 #include "master_graph.h"
-#include "parameter_factory.h"
+#include "../parameters/parameter_factory.h"
 #include "ocl_setup.h"
 #include "log.h"
 #include "meta_data_reader_factory.h"
@@ -315,33 +315,30 @@ Tensor * MasterGraph::create_tensor(const TensorInfo &info, bool is_output)
     return output;
 }
 
-Image *
-MasterGraph::create_loader_output_image(const ImageInfo &info)
+Tensor * MasterGraph::create_loader_output_tensor(const TensorInfo &info)
 {
     /*
     *   NOTE: Output image for a source node needs to be created as a regular (non-virtual) image
     */
-    auto output = new Image(info);
-
+    auto output = new Tensor(info);
     if(output->create_from_handle(_context) != 0)
         THROW("Creating output image for loader failed");
 
-    _internal_images.push_back(output);
+    _internal_tensors.push_back(output);
 
     return output;
 }
 
-Image *
-MasterGraph::create_image(const ImageInfo &info, bool is_output)
+Tensor * MasterGraph::create_tensor(const TensorInfo &info, bool is_output)
 {
-    auto* output = new Image(info);
+    auto* output = new Tensor(info);
     // if the image is not an output image, the image creation is deferred and later it'll be created as a virtual image
     if(is_output)
     {
         if (output->create_from_handle(_context) != 0)
-            THROW("Cannot create the image from handle")
+            THROW("Cannot create the tensor from handle")
 
-        _output_images.push_back(output);
+        _output_tensors.push_back(output);
     }
 
     return output;

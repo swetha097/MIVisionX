@@ -103,7 +103,7 @@ ImageLoaderSharded::initialize(ReaderConfig reader_cfg, DecoderConfig decoder_cf
     for(size_t idx = 0; idx < _shard_count; idx++)
     {
         _loaders[idx]->set_output_image(_output_image);
-        _loaders[idx]->set_random_bbox_data_reader(_randombboxcrop_meta_data_reader);
+        // _loaders[idx]->set_random_bbox_data_reader(_randombboxcrop_meta_data_reader);
         reader_cfg.set_shard_count(_shard_count);
         reader_cfg.set_shard_id(idx);
         _loaders[idx]->initialize(reader_cfg, decoder_cfg, mem_type, batch_size, keep_orig_size);
@@ -134,15 +134,15 @@ void ImageLoaderSharded::start_loading()
     }
 
 }
-void ImageLoaderSharded::set_output_image (Image* output_image)
+void ImageLoaderSharded::set_output_image (Tensor* output_image)
 {
     _output_image = output_image;
 }
 
-void ImageLoaderSharded::set_random_bbox_data_reader(std::shared_ptr<RandomBBoxCrop_MetaDataReader> randombboxcrop_meta_data_reader)
-{
-    _randombboxcrop_meta_data_reader = randombboxcrop_meta_data_reader;
-}
+// void ImageLoaderSharded::set_random_bbox_data_reader(std::shared_ptr<RandomBBoxCrop_MetaDataReader> randombboxcrop_meta_data_reader)
+// {
+//     _randombboxcrop_meta_data_reader = randombboxcrop_meta_data_reader;
+// }
 
 size_t ImageLoaderSharded::remaining_count()
 {

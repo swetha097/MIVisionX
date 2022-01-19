@@ -50,7 +50,7 @@ rocalBrightness(
 
         output = context->master_graph->create_tensor(input->info(), is_output);
 
-        context->master_graph->add_tensor_node<BrightnessTensorNode>({input}, {output})->init(alpha, beta);
+        context->master_graph->add_tensor_node<BrightnessNode>({input}, {output})->init(alpha, beta);
     }
     catch (const std::exception &e)
     {
@@ -80,7 +80,7 @@ rocalBrightnessFixed(
 
         output = context->master_graph->create_tensor(input->info(), is_output);
 
-        context->master_graph->add_tensor_node<BrightnessTensorNode>({input}, {output})->init(alpha, beta);
+        context->master_graph->add_tensor_node<BrightnessNode>({input}, {output})->init(alpha, beta);
     }
     catch (const std::exception &e)
     {
@@ -107,7 +107,7 @@ rocalGamma(
     {
         output = context->master_graph->create_tensor(input->info(), is_output);
 
-        context->master_graph->add_tensor_node<GammaTensorNode>({input}, {output})->init(alpha);
+        context->master_graph->add_tensor_node<GammaNode>({input}, {output})->init(alpha);
     }
     catch (const std::exception &e)
     {
@@ -136,7 +136,7 @@ rocalGammaFixed(
 
         output = context->master_graph->create_tensor(input->info(), is_output);
 
-        context->master_graph->add_tensor_node<GammaTensorNode>({input}, {output})->init(alpha);
+        context->master_graph->add_tensor_node<GammaNode>({input}, {output})->init(alpha);
     }
     catch (const std::exception &e)
     {
@@ -218,7 +218,7 @@ rocalCropMirrorNormalize(
         // For the nodes that user provides the output size the dimension of all the images after this node will be fixed and equal to that size
         output->reset_tensor_roi();
 
-        context->master_graph->add_tensor_node<CropMirrorNormalizeTensorNode>({input}, {output})->init(crop_height, crop_width, start_x, start_y, mean_acutal, std_actual, mirror);
+        context->master_graph->add_tensor_node<CropMirrorNormalizeNode>({input}, {output})->init(crop_height, crop_width, start_x, start_y, mean_acutal, std_actual, mirror);
     }
     catch (const std::exception &e)
     {

@@ -22,14 +22,14 @@ THE SOFTWARE.
 
 #pragma once
 #include "node.h"
-#include "parameter_factory.h"
-#include "parameter_vx.h"
+#include "../parameters/parameter_factory.h"
+#include "../parameters/parameter_vx.h"
 #include "graph.h"
 
 class BrightnessNode : public Node
 {
 public:
-    BrightnessNode(const std::vector<Image *> &inputs, const std::vector<Image *> &outputs);
+    BrightnessNode(const std::vector<Tensor *> &inputs, const std::vector<Tensor *> &outputs);
     BrightnessNode() = delete;
 
     void init( float alpha, float beta);

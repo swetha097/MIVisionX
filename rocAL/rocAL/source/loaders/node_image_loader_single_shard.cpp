@@ -24,9 +24,9 @@ THE SOFTWARE.
 #include "exception.h"
 
 #if ENABLE_HIP
-ImageLoaderSingleShardNode::ImageLoaderSingleShardNode(Image *output, DeviceResourcesHip device_resources):
+ImageLoaderSingleShardNode::ImageLoaderSingleShardNode(Tensor *output, DeviceResourcesHip device_resources):
 #else
-ImageLoaderSingleShardNode::ImageLoaderSingleShardNode(Image *output, DeviceResources device_resources):
+ImageLoaderSingleShardNode::ImageLoaderSingleShardNode(Tensor *output, DeviceResources device_resources):
 #endif
         Node({}, {output})
 {

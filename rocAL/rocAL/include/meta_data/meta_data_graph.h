@@ -22,12 +22,11 @@ THE SOFTWARE.
 
 #pragma once
 #include <list>
-#include "circular_buffer.h"
+#include "../loaders/circular_buffer.h"
 #include "meta_data.h"
-#include "parameter_factory.h"
-#include "node.h"
+#include "../parameters/parameter_factory.h"
+#include "../node.h"
 #include "meta_node.h"
-#include "randombboxcrop_meta_data_reader.h"
 
 class MetaDataGraph
 {

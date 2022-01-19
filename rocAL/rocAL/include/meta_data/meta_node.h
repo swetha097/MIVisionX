@@ -23,20 +23,38 @@ THE SOFTWARE.
 #pragma once
 #include <set>
 #include <memory>
-#include "bounding_box_graph.h"
+#include "meta_data_graph.h"
 #include "meta_data.h"
-#include "node.h"
-#include "node_crop_mirror_normalize.h"
-#include "../parameters/parameter_vx.h"
-class CropMirrorNormalizeMetaNode:public MetaNode
+#include "../node.h"
+#include "../parameters/parameter_factory.h"
+
+class MetaNode
 {
-    public:
-        CropMirrorNormalizeMetaNode() {};
-        void update_parameters(MetaDataBatch* input_meta_data)override;
-        std::shared_ptr<CropMirrorNormalizeNode> _node = nullptr;
-    private:
-        void initialize();
-        std::shared_ptr<RocalCropParam> _meta_crop_param;
-        vx_array _dstImgWidth, _dstImgHeight, _x1, _y1, _mirror, _src_width, _src_height;
-        std::vector<uint> _width_val, _height_val, _x1_val, _y1_val, _mirror_val,_src_width_val,_src_height_val;
+public:
+    MetaNode() {}
+    virtual ~MetaNode() {};
+    virtual void update_parameters(MetaDataBatch* input_meta_data) = 0;
+    double BBoxIntersectionOverUnion(const BoundingBoxCord &box1, const BoundingBoxCord &box2, bool is_iou) const;
+    int _batch_size;
+    float _iou_threshold = 0.25;
 };
+
+inline double MetaNode::BBoxIntersectionOverUnion(const BoundingBoxCord &box1, const BoundingBoxCord &box2, bool is_iou = false) const
+{
+    double iou;
+    float xA = std::max(box1.l, box2.l);
+    float yA = std::max(box1.t, box2.t);
+    float xB = std::min(box1.r, box2.r);
+    float yB = std::min(box1.b, box2.b);
+
+    float intersection_area = std::max((float)0.0, xB - xA) * std::max((float)0.0, yB - yA);
+    float box1_area = (box1.b - box1.t) * (box1.r - box1.l);
+    float box2_area = (box2.b - box2.t) * (box2.r - box2.l);
+
+    if (is_iou)
+        iou = intersection_area / float(box1_area + box2_area - intersection_area);
+    else
+        iou = intersection_area / float(box1_area);
+
+    return iou;
+}

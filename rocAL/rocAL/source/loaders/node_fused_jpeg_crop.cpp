@@ -24,9 +24,9 @@ THE SOFTWARE.
 #include "exception.h"
 
 #if ENABLE_HIP
-FusedJpegCropNode::FusedJpegCropNode(Image *output, DeviceResourcesHip device_resources):
+FusedJpegCropNode::FusedJpegCropNode(Tensor *output, DeviceResourcesHip device_resources):
 #else
-FusedJpegCropNode::FusedJpegCropNode(Image *output, DeviceResources device_resources):
+FusedJpegCropNode::FusedJpegCropNode(Tensor *output, DeviceResources device_resources):
 #endif
         Node({}, {output})
 {

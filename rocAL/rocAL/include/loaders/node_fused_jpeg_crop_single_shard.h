@@ -2,15 +2,15 @@
 #include "node.h"
 #include "image_loader_sharded.h"
 #include "graph.h"
-#include "parameter_factory.h"
+#include "../parameters/parameter_factory.h"
 
 class FusedJpegCropSingleShardNode: public Node
 {
 public:
 #if ENABLE_HIP
-    FusedJpegCropSingleShardNode(Image *output, DeviceResourcesHip device_resources);
+    FusedJpegCropSingleShardNode(Tensor *output, DeviceResourcesHip device_resources);
 #else
-    FusedJpegCropSingleShardNode(Image *output, DeviceResources device_resources);
+    FusedJpegCropSingleShardNode(Tensor *output, DeviceResources device_resources);
 #endif
     ~FusedJpegCropSingleShardNode() override;
 

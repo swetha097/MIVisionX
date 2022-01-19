@@ -22,7 +22,7 @@ THE SOFTWARE.
 
 #include <cstdlib>
 #include <ctime>
-#include "parameter_factory.h"
+#include "../parameters/parameter_factory.h"
 #include "parameter_simple.h"
 ParameterFactory* ParameterFactory::_instance = nullptr;
 std::mutex ParameterFactory::_mutex;

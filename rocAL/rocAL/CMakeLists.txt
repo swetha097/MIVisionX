@@ -204,7 +204,7 @@ if(${BUILD_RALI})
     # file(GLOB LOADERS "./source/image/color/*.cpp")
     # file(GLOB LOADERS "./source/image/crop/*.cpp")
     list(APPEND rocAL_SOURCES ${SOURCES})
-    print("Source list ${SOURCES}")
+    # message("Source list ${SOURCES}")
     add_library(${PROJECT_NAME} SHARED ${rocAL_SOURCES} ${TF_PROTO_SRCS} ${TF_PROTO_HEADERS} ${CAFFE_PROTO_HEADERS} ${CAFFE_PROTO_SRCS} ${CAFFE2_PROTO_SRCS} ${CAFFE2_PROTO_HEADERS})
 
     if("${BACKEND}" STREQUAL "HIP" AND HIP_FOUND)

@@ -22,14 +22,14 @@ THE SOFTWARE.
 
 #pragma once
 #include "node.h"
-#include "parameter_factory.h"
-#include "parameter_crop_factory.h"
-#include "parameter_vx.h"
+#include "../parameters/parameter_factory.h"
+#include "../parameters/parameter_crop_factory.h"
+#include "../parameters/parameter_vx.h"
 class CropMirrorNormalizeNode : public Node
 {
 public:
-    CropMirrorNormalizeNode(const std::vector<Image *> &inputs,
-                            const std::vector<Image *> &outputs);
+    CropMirrorNormalizeNode(const std::vector<Tensor *> &inputs,
+                            const std::vector<Tensor *> &outputs);
     CropMirrorNormalizeNode() = delete;
     void init(int crop_h, int crop_w, float start_x, float start_y, float mean, float std_dev, IntParam *mirror);
     vx_array return_mirror(){ return _mirror.default_array();  }

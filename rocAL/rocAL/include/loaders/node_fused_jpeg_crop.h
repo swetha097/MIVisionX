@@ -24,7 +24,7 @@ THE SOFTWARE.
 #include "node.h"
 #include "image_loader_sharded.h"
 #include "graph.h"
-#include "parameter_factory.h"
+#include "../parameters/parameter_factory.h"
 
 class FusedJpegCropNode: public Node
 {
@@ -33,9 +33,9 @@ public:
 
     /// internal_shard_count number of loader/decoders are created and each shard is loaded and decoded using separate and independent resources increasing the parallelism and performance.
 #if ENABLE_HIP
-    FusedJpegCropNode(Image *output, DeviceResourcesHip device_resources_hip);
+    FusedJpegCropNode(Tensor *output, DeviceResourcesHip device_resources_hip);
 #else
-    FusedJpegCropNode(Image *output, DeviceResources device_resources);
+    FusedJpegCropNode(Tensor *output, DeviceResources device_resources);
 #endif
     ~FusedJpegCropNode() override;
     FusedJpegCropNode() = delete;

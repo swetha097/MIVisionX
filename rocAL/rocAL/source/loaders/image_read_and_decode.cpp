@@ -115,10 +115,10 @@ ImageReadAndDecode::count()
     return _reader->count_items();
 }
 
-void ImageReadAndDecode::set_random_bbox_data_reader(std::shared_ptr<RandomBBoxCrop_MetaDataReader> randombboxcrop_meta_data_reader)
-{
-    _randombboxcrop_meta_data_reader = randombboxcrop_meta_data_reader;
-}
+// void ImageReadAndDecode::set_random_bbox_data_reader(std::shared_ptr<RandomBBoxCrop_MetaDataReader> randombboxcrop_meta_data_reader)
+// {
+//     _randombboxcrop_meta_data_reader = randombboxcrop_meta_data_reader;
+// }
 
 std::vector<std::vector<float>>
 ImageReadAndDecode::get_batch_random_bbox_crop_coords()

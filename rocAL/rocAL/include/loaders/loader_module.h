@@ -25,7 +25,6 @@ THE SOFTWARE.
 #include "reader.h"
 #include "decoder.h"
 #include "commons.h"
-#include "image.h"
 #include "tensor.h"
 #include "circular_buffer.h"
 #include "meta_data_reader.h"
@@ -47,7 +46,7 @@ class LoaderModule
 {
 public:
     virtual void initialize(ReaderConfig reader_config, DecoderConfig decoder_config, RocalMemType mem_type, unsigned batch_size, bool keep_orig_size) = 0;
-    virtual void set_output_image(Image* output_image) = 0;
+    virtual void set_output_image(Tensor* output_image) = 0;
     virtual LoaderModuleStatus load_next() = 0; // Loads the next image data into the Image's buffer set by calling into the set_output_image
     virtual void reset() = 0; // Resets the loader to load from the beginning of the media
     virtual size_t remaining_count() = 0; // Returns the number of available images to be loaded
@@ -59,7 +58,7 @@ public:
     virtual crop_image_info get_crop_image_info() = 0;
     virtual void set_prefetch_queue_depth(size_t prefetch_queue_depth) = 0;
     // introduce meta data reader
-    virtual void set_random_bbox_data_reader(std::shared_ptr<RandomBBoxCrop_MetaDataReader> randombboxcrop_meta_data_reader) = 0;
+    // virtual void set_random_bbox_data_reader(std::shared_ptr<RandomBBoxCrop_MetaDataReader> randombboxcrop_meta_data_reader) = 0;
 };
 
 using pLoaderModule = std::shared_ptr<LoaderModule>;

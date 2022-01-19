@@ -22,7 +22,7 @@ THE SOFTWARE.
 
 #include "commons.h"
 #include "rocal_api.h"
-#include "parameter_factory.h"
+#include "../parameters/parameter_factory.h"
 
 void ROCAL_API_CALL
 rocalSetSeed(unsigned seed)

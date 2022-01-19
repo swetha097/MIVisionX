@@ -24,7 +24,7 @@ THE SOFTWARE.
 #include <VX/vx_types.h>
 #include <VX/vx_compatibility.h>
 #include <vector>
-#include "parameter_factory.h"
+#include "../parameters/parameter_factory.h"
 
 template<typename T>
 class ParameterVX

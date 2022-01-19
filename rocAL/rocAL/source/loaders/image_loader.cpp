@@ -97,17 +97,17 @@ ImageLoader::load_next()
     return update_output_image();
 }
 
-void ImageLoader::set_output_image(Image *output_image)
+void ImageLoader::set_output_image(Tensor *output_image)
 {
     _output_image = output_image;
     _output_mem_size = _output_image->info().data_size();
 }
 
-void ImageLoader::set_random_bbox_data_reader(std::shared_ptr<RandomBBoxCrop_MetaDataReader> randombboxcrop_meta_data_reader)
-{
-    _randombboxcrop_meta_data_reader = randombboxcrop_meta_data_reader;
-    _circ_buff.random_bbox_crop_flag = true;
-}
+// void ImageLoader::set_random_bbox_data_reader(std::shared_ptr<RandomBBoxCrop_MetaDataReader> randombboxcrop_meta_data_reader)
+// {
+//     _randombboxcrop_meta_data_reader = randombboxcrop_meta_data_reader;
+//     _circ_buff.random_bbox_crop_flag = true;
+// }
 
 void ImageLoader::stop_internal_thread()
 {
@@ -150,7 +150,7 @@ void ImageLoader::initialize(ReaderConfig reader_cfg, DecoderConfig decoder_cfg,
     _crop_image_info._crop_image_coords.resize(_batch_size);
     _circ_buff.init(_mem_type, _output_mem_size,_prefetch_queue_depth );
     _is_initialized = true;
-    _image_loader->set_random_bbox_data_reader(_randombboxcrop_meta_data_reader);
+    // _image_loader->set_random_bbox_data_reader(_randombboxcrop_meta_data_reader);
     LOG("Loader module initialized");
 }
 

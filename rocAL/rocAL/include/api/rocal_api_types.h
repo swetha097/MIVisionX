@@ -104,7 +104,8 @@ enum RocalTensorLayout
 enum RocalTensorOutputType
 {
     ROCAL_FP32 = 0,
-    ROCAL_FP16 = 1
+    ROCAL_FP16 = 1,
+    ROCAL_UINT8 = 2
 };
 
 enum RocalDecoderType

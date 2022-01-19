@@ -32,14 +32,12 @@ THE SOFTWARE.
 #include "context.h"
 #include "node_image_loader.h"
 #include "node_image_loader_single_shard.h"
-#include "node_cifar10_loader.h"
+// #include "node_cifar10_loader.h"
 #include "image_source_evaluator.h"
-#include "node_fisheye.h"
 #include "node_copy.h"
+#include "node_nop.h"
 #include "node_fused_jpeg_crop.h"
 #include "node_fused_jpeg_crop_single_shard.h"
-#include "node_resize.h"
-#include "meta_node_resize.h"
 
 namespace filesys = boost::filesystem;
 
@@ -162,7 +160,7 @@ rocalJpegFileSourceSingleShard(
                                 tensor_data_type,
                                 tensor_format);
         output = context->master_graph->create_loader_output_tensor(info);
-        context->master_graph->add_tensor_node<ImageLoaderTensorSingleShardNode>({}, {output})->init(shard_id, shard_count,
+        context->master_graph->add_tensor_node<ImageLoaderSingleShardNode>({}, {output})->init(shard_id, shard_count,
                                                                                         source_path, "",
                                                                                         StorageType::FILE_SYSTEM,
                                                                                         DecoderType::TURBO_JPEG,
@@ -178,7 +176,7 @@ rocalJpegFileSourceSingleShard(
         if(is_output)
         {
             auto actual_output = context->master_graph->create_tensor(info, is_output);
-            context->master_graph->add_tensor_node<CopyTensorNode>({output}, {actual_output});
+            context->master_graph->add_tensor_node<CopyNode>({output}, {actual_output});
         }
 
     }
@@ -244,7 +242,7 @@ rocalJpegFileSource(
                                 tensor_data_type,
                                 tensor_format);
         output = context->master_graph->create_loader_output_tensor(info);
-        context->master_graph->add_tensor_node<ImageLoaderTensorNode>({}, {output})->init(internal_shard_count,
+        context->master_graph->add_tensor_node<ImageLoaderNode>({}, {output})->init(internal_shard_count,
                                                                           source_path, "",
                                                                           std::map<std::string, std::string>(),
                                                                           StorageType::FILE_SYSTEM,
@@ -260,7 +258,7 @@ rocalJpegFileSource(
         if(is_output)
         {
             auto actual_output = context->master_graph->create_tensor(info, is_output);
-            context->master_graph->add_tensor_node<CopyTensorNode>({output}, {actual_output}); // Have to add copy tensor node
+            context->master_graph->add_tensor_node<CopyNode>({output}, {actual_output}); // Have to add copy tensor node
         }
 
     }

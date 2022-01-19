@@ -48,7 +48,7 @@ public:
     void reset();
     void create(ReaderConfig reader_config, DecoderConfig decoder_config, int batch_size);
     void set_bbox_vector(std::vector<std::vector <float>> bbox_coords) { _bbox_coords = bbox_coords;};
-    void set_random_bbox_data_reader(std::shared_ptr<RandomBBoxCrop_MetaDataReader> randombboxcrop_meta_data_reader);
+    // void set_random_bbox_data_reader(std::shared_ptr<RandomBBoxCrop_MetaDataReader> randombboxcrop_meta_data_reader);
     std::vector<std::vector <float>> get_batch_random_bbox_crop_coords();
     void set_batch_random_bbox_crop_coords(std::vector<std::vector <float>> batch_crop_coords);
 
@@ -94,7 +94,7 @@ private:
     DecoderConfig _decoder_config, _decoder_config_cv;
     bool decoder_keep_original;
     std::vector<std::vector <float>> _bbox_coords, _crop_coords_batch;
-    std::shared_ptr<RandomBBoxCrop_MetaDataReader> _randombboxcrop_meta_data_reader = nullptr;
-    pCropCord _CropCord;
+    // std::shared_ptr<RandomBBoxCrop_MetaDataReader> _randombboxcrop_meta_data_reader = nullptr;
+    // pCropCord _CropCord;
 };
 
