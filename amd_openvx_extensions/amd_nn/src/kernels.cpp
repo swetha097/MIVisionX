@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2017 - 2020 Advanced Micro Devices, Inc. All rights reserved.
+Copyright (c) 2017 - 2022 Advanced Micro Devices, Inc. All rights reserved.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -116,10 +116,16 @@ vx_status createGraphHandle(vx_node node, NeuralNetworkCommonHandle ** pHandle)
             handle->exhaustiveSearch = true;
 
         handle->count = 1;
+
+#if ENABLE_OPENCL
         ERROR_CHECK_STATUS(vxQueryNode(node, VX_NODE_ATTRIBUTE_AMD_OPENCL_COMMAND_QUEUE, &handle->cmdq, sizeof(handle->cmdq)));
-        
+#elif ENABLE_HIP
+        ERROR_CHECK_STATUS(vxQueryNode(node, VX_NODE_ATTRIBUTE_AMD_HIP_STREAM, &handle->cmdq, sizeof(handle->cmdq)));
+#endif
+
         //create miopen_handle from cmdq
         ERROR_CHECK_MIOPEN_STATUS(miopenCreateWithStream(&handle->miopen_handle, handle->cmdq));
+
         ERROR_CHECK_STATUS(vxSetModuleHandle(node, OPENVX_KHR_NN, handle));
     }
     *pHandle = handle;

@@ -1,4 +1,4 @@
-# Copyright (c) 2015 - 2020 Advanced Micro Devices, Inc. All rights reserved.
+# Copyright (c) 2015 - 2022 Advanced Micro Devices, Inc. All rights reserved.
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -58,11 +58,17 @@ if(GPU_SUPPORT)
         #find the MIOPEN backend type
         set(MIOPEN_BACKEND_OPENCL_FOUND 0)
         set(MIOPEN_BACKEND_HIP_FOUND 0)
-        file(READ ${ROCM_PATH}/miopen/include/miopen/config.h MIOPEN_CONFIG_FILE)
-        string(REGEX MATCH "MIOPEN_BACKEND_OPENCL ([0-9]*)" _ ${MIOPEN_CONFIG_FILE})
-        set(MIOPEN_BACKEND_OPENCL_FOUND ${CMAKE_MATCH_1})
-        string(REGEX MATCH "MIOPEN_BACKEND_HIP ([0-9]*)" _ ${MIOPEN_CONFIG_FILE})
-        set(MIOPEN_BACKEND_HIP_FOUND ${CMAKE_MATCH_1})
+
+        if(EXISTS ${ROCM_PATH}/miopen/include/miopen/config.h)
+            file(READ ${ROCM_PATH}/miopen/include/miopen/config.h MIOPEN_CONFIG_FILE)
+            string(REGEX MATCH "MIOPEN_BACKEND_OPENCL ([0-9]*)" _ ${MIOPEN_CONFIG_FILE})
+            set(MIOPEN_BACKEND_OPENCL_FOUND ${CMAKE_MATCH_1})
+            string(REGEX MATCH "MIOPEN_BACKEND_HIP ([0-9]*)" _ ${MIOPEN_CONFIG_FILE})
+            set(MIOPEN_BACKEND_HIP_FOUND ${CMAKE_MATCH_1})
+        else()
+            message("-- ${Red}WARNING: ${ROCM_PATH}/miopen/include/miopen/config.h file Not Found. please run the setup script to install the MIOpen package ${ColourReset}")
+        endif()
+
     endif()
 endif()
 
@@ -119,8 +125,36 @@ else()
 endif()
 
 if(AMDRPP_FOUND AND GPU_SUPPORT)
-    add_subdirectory(amd_rpp)
-    message("-- ${Green}AMD Radeon Performance Primitives -- amd_rpp module added with GPU Support${ColourReset}")
+    #find the RPP backend type
+    set(RPP_BACKEND_OPENCL_FOUND 0)
+    set(RPP_BACKEND_HIP_FOUND 0)
+    if(EXISTS ${ROCM_PATH}/rpp/include/rpp_backend.h)
+        file(READ ${ROCM_PATH}/rpp/include/rpp_backend.h RPP_BACKEND_FILE)
+        string(REGEX MATCH "RPP_BACKEND_OPENCL ([0-9]*)" _ ${RPP_BACKEND_FILE})
+        set(RPP_BACKEND_OPENCL_FOUND ${CMAKE_MATCH_1})
+        string(REGEX MATCH "RPP_BACKEND_HIP ([0-9]*)" _ ${RPP_BACKEND_FILE})
+        set(RPP_BACKEND_HIP_FOUND ${CMAKE_MATCH_1})
+    else()
+        message("-- ${Red}WARNING: ${ROCM_PATH}/rpp/include/rpp_backend.h file Not Found. please run the setup script to install latest RPP package ${ColourReset}")
+    endif()
+
+    if ("${BACKEND}" STREQUAL "OPENCL" AND OpenCL_FOUND)
+        if (RPP_BACKEND_OPENCL_FOUND)
+            add_subdirectory(amd_rpp)
+            message("-- ${Green}AMD Radeon Performance Primitives -- amd_rpp module added with OpenCL backend support${ColourReset}")
+        else()
+            message("-- ${Red}WARNING: RPP with OpenCL backend Not Found (HINT: run setup script with the OCL backend first!) -- amd_rpp module excluded.${ColourReset}")
+        endif()
+    elseif("${BACKEND}" STREQUAL "HIP" AND HIP_FOUND)
+        if (RPP_BACKEND_HIP_FOUND)
+            add_subdirectory(amd_rpp)
+            message("-- ${Green}AMD Radeon Performance Primitives -- amd_rpp module added with the HIP backend support${ColourReset}")
+        else()
+            message("-- ${Red}WARNING: RPP with the HIP backend Not Found (HINT: run setup script with the HIP backend first!) -- amd_rpp module excluded.${ColourReset}")
+        endif()
+    else()
+        message("-- ${Red}WARNING:GPU support with OpenCL or HIP Not Found -- amd_rpp module excluded${ColourReset}")
+    endif()
 elseif(AMDRPP_FOUND AND "${BACKEND}" STREQUAL "CPU")
     message("-- ${Red}WARNING:AMDRPP Found -- amd_rpp module excluded with CPU Only Backend${ColourReset}")
 else()

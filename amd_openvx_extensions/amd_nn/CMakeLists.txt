@@ -1,4 +1,4 @@
-# Copyright (c) 2017 - 2020 Advanced Micro Devices, Inc. All rights reserved.
+# Copyright (c) 2017 - 2022 Advanced Micro Devices, Inc. All rights reserved.
 # 
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -39,6 +39,7 @@ elseif(GPU_SUPPORT AND "${BACKEND}" STREQUAL "HIP")
         SET(HSA_PATH $ENV{HSA_PATH})
     endif()
     find_package(HIP QUIET REQUIRED)
+    find_package(rocblas PATHS ${ROCM_PATH} REQUIRED)
     if(HIP_COMPILER STREQUAL clang)
         set(HIP_LIBRARY amdhip64)
     else()
@@ -117,14 +118,14 @@ elseif (GPU_SUPPORT AND "${BACKEND}" STREQUAL "HIP" AND HIP_FOUND)
     message("-- ${Green}amd_nn -- Building with HIP${ColourReset}")
     set(ENABLE_OPENCL 0)
     set(ENABLE_HIP 1)
-    add_definitions(-DENABLE_OPENCL=${ENABLE_OPENCL} -DENABLE_HIP=${ENABLE_HIP} -D__HIP_PLATFORM_HCC__)
+    add_definitions(-DENABLE_OPENCL=${ENABLE_OPENCL} -DENABLE_HIP=${ENABLE_HIP} -D__HIP_PLATFORM_AMD__)
     include_directories(${HIP_PATH}/include  ${HSA_PATH}/include)
     link_directories(${HIP_PATH}/lib)
     add_subdirectory(nn_hip)
-    add_library(vx_nn SHARED ${SOURCES})
+    add_library(vx_nn SHARED ${SOURCES} $<TARGET_OBJECTS:nn_hip>)
     set_target_properties(openvx PROPERTIES LINKER_LANGUAGE CXX)
     set_target_properties(openvx PROPERTIES POSITION_INDEPENDENT_CODE ON)
-    target_link_libraries(vx_nn openvx openvx_hip nn_hip MIOpen ${HIP_LIBRARY})
+    target_link_libraries(vx_nn openvx MIOpen roc::rocblas ${HIP_LIBRARY})
 else()
     message("-- ${Red}WARNING:OpenCL/HIP Not Found -- amd_nn module excluded${ColourReset}")
 endif()

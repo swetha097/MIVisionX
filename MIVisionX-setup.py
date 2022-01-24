@@ -1,4 +1,4 @@
-# Copyright (c) 2018 - 2021 Advanced Micro Devices, Inc. All rights reserved.
+# Copyright (c) 2018 - 2022 Advanced Micro Devices, Inc. All rights reserved.
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -28,9 +28,9 @@ else:
     import subprocess
 
 __author__ = "Kiriti Nagesh Gowda"
-__copyright__ = "Copyright 2018 - 2021, AMD ROCm MIVisionX"
+__copyright__ = "Copyright 2018 - 2022, AMD ROCm MIVisionX"
 __license__ = "MIT"
-__version__ = "1.9.91"
+__version__ = "2.0.0"
 __maintainer__ = "Kiriti Nagesh Gowda"
 __email__ = "Kiriti.NageshGowda@amd.com"
 __status__ = "Shipping"
@@ -41,16 +41,16 @@ parser.add_argument('--directory', 	type=str, default='~/mivisionx-deps',
                     help='Setup home directory - optional (default:~/)')
 parser.add_argument('--opencv',    	type=str, default='3.4.0',
                     help='OpenCV Version - optional (default:3.4.0)')
-parser.add_argument('--miopen',    	type=str, default='2.11.0',
-                    help='MIOpen Version - optional (default:2.11.0)')
+parser.add_argument('--miopen',    	type=str, default='2.14.0',
+                    help='MIOpen Version - optional (default:2.14.0)')
 parser.add_argument('--miopengemm',	type=str, default='1.1.5',
                     help='MIOpenGEMM Version - optional (default:1.1.5)')
 parser.add_argument('--protobuf',  	type=str, default='3.12.0',
                     help='ProtoBuf Version - optional (default:3.12.0)')
-parser.add_argument('--rpp',   		type=str, default='0.7',
-                    help='RPP Version - optional (default:0.7)')
+parser.add_argument('--rpp',   		type=str, default='0.92',
+                    help='RPP Version - optional (default:0.92)')
 parser.add_argument('--ffmpeg',    	type=str, default='no',
-                    help='FFMPEG Installation - optional (default:no) [options:yes/no]')
+                    help='FFMPEG V4.0.4 Installation - optional (default:no) [options:yes/no]')
 parser.add_argument('--neural_net',	type=str, default='yes',
                     help='MIVisionX Neural Net Dependency Install - optional (default:yes) [options:yes/no]')
 parser.add_argument('--rocal',	 	type=str, default='yes',
@@ -77,19 +77,24 @@ backend = args.backend
 ROCM_PATH = args.rocm_path
 
 if ffmpegInstall not in ('no', 'yes'):
-    print("ERROR: FFMPEG Install Option Not Supported - [Supported Options: no or yes]")
+    print(
+        "ERROR: FFMPEG Install Option Not Supported - [Supported Options: no or yes]")
     exit()
 if neuralNetInstall not in ('no', 'yes'):
-    print("ERROR: Neural Net Install Option Not Supported - [Supported Options: no or yes]")
+    print(
+        "ERROR: Neural Net Install Option Not Supported - [Supported Options: no or yes]")
     exit()
 if raliInstall not in ('no', 'yes'):
-    print("ERROR: Neural Net Install Option Not Supported - [Supported Options: no or yes]")
+    print(
+        "ERROR: Neural Net Install Option Not Supported - [Supported Options: no or yes]")
     exit()
 if reinstall not in ('no', 'yes'):
-    print("ERROR: Re-Install Option Not Supported - [Supported Options: no or yes]")
+    print(
+        "ERROR: Re-Install Option Not Supported - [Supported Options: no or yes]")
     exit()
 if backend not in ('OCL', 'HIP'):
-    print("ERROR: Backend Option Not Supported - [Supported Options: OCL or HIP]")
+    print(
+        "ERROR: Backend Option Not Supported - [Supported Options: OCL or HIP]")
     exit()
 
 # check ROCm installation
@@ -128,6 +133,7 @@ else:
 
 # setup directory path
 deps_dir = os.path.expanduser(setupDir_deps)
+deps_dir = os.path.abspath(deps_dir)
 
 # setup for Linux
 linuxSystemInstall = ''
@@ -140,10 +146,12 @@ if "centos" in platfromInfo or "redhat" in platfromInfo:
     if "centos-7" in platfromInfo or "redhat-7" in platfromInfo:
         linuxCMake = 'cmake3'
         os.system(linuxSystemInstall+' install cmake3')
-elif "Ubuntu" in platfromInfo:
+elif "Ubuntu" in platfromInfo or os.path.exists('/usr/bin/apt-get'):
     linuxSystemInstall = 'apt-get -y'
     linuxSystemInstall_check = '--allow-unauthenticated'
     linuxFlag = '-S'
+    if not "Ubuntu" in platfromInfo:
+        platfromInfo = platfromInfo+'-Ubuntu'
 elif os.path.exists('/usr/bin/zypper'):
     linuxSystemInstall = 'zypper -n'
     linuxSystemInstall_check = '--no-gpg-checks'
@@ -208,9 +216,9 @@ if os.path.exists(deps_dir):
 
     if ffmpegInstall == 'yes':
         # FFMPEG
-        if os.path.exists(deps_dir+'/ffmpeg'):
+        if os.path.exists(deps_dir+'/FFmpeg-n4.0.4'):
             os.system('sudo -v')
-            os.system('(cd '+deps_dir+'/ffmpeg; sudo ' +
+            os.system('(cd '+deps_dir+'/FFmpeg-n4.0.4; sudo ' +
                       linuxFlag+' make install -j8)')
 
     print("\nMIVisionX Dependencies Re-Installed with MIVisionX-setup.py V-"+__version__+"\n")
@@ -245,7 +253,7 @@ else:
         os.system('(cd '+deps_dir+'; unzip v'+ProtoBufVersion+'.zip )')
     if ffmpegInstall == 'yes':
         os.system(
-            '(cd '+deps_dir+'; git clone --recursive -b n4.0.4 https://git.ffmpeg.org/ffmpeg.git )')
+            '(cd '+deps_dir+'; wget https://github.com/FFmpeg/FFmpeg/archive/refs/tags/n4.0.4.zip && unzip n4.0.4.zip )')
 
     # Install
     if raliInstall == 'yes' or neuralNetInstall == 'yes':
@@ -317,7 +325,8 @@ else:
             os.system('sudo '+linuxFlag+' '+linuxSystemInstall+' ' +
                       linuxSystemInstall_check+' remove miopen-opencl')
 
-        os.system('(cd '+deps_dir+'/build; mkdir rocm-cmake MIOpenGEMM MIOpen-'+backend+')')
+        os.system(
+            '(cd '+deps_dir+'/build; mkdir rocm-cmake MIOpenGEMM MIOpen-'+backend+')')
         # Install ROCm-CMake
         os.system('(cd '+deps_dir+'/build/rocm-cmake; ' +
                   linuxCMake+' ../../rocm-cmake )')
@@ -338,6 +347,9 @@ else:
             os.system('(cd '+deps_dir+'/build/MIOpen-'+backend+'; '+linuxCMake +
                       ' -DMIOPEN_BACKEND=OpenCL -DMIOPEN_USE_MIOPENGEMM=On ../../MIOpen-'+MIOpenVersion+' )')
         else:
+            os.system('sudo -v')
+            os.system('sudo '+linuxFlag+' '+linuxSystemInstall +
+                      ' '+linuxSystemInstall_check+' install rocblas')
             os.system('(cd '+deps_dir+'/build/MIOpen-'+backend+'; CXX=/opt/rocm/llvm/bin/clang++ '+linuxCMake +
                       ' -DMIOPEN_BACKEND=HIP ../../MIOpen-'+MIOpenVersion+' )')
         os.system('(cd '+deps_dir+'/build/MIOpen-'+backend+'; make -j8 )')
@@ -407,19 +419,15 @@ else:
             os.system('sudo -v')
             os.system('sudo '+linuxFlag+' '+linuxSystemInstall +
                       ' '+linuxSystemInstall_check+' install nasm yasm')
-            # json-cpp
-            os.system('sudo -v')
-            os.system('sudo '+linuxFlag+' '+linuxSystemInstall+' ' +
-                      linuxSystemInstall_check+' install libjsoncpp-dev')
             # clang
             os.system('sudo -v')
             os.system('sudo '+linuxFlag+' '+linuxSystemInstall+' ' +
                       linuxSystemInstall_check+' install clang')
-            # turbo-JPEG - https://github.com/rrawther/libjpeg-turbo.git -- 2.0.6.1
+            # turbo-JPEG - https://github.com/rrawther/libjpeg-turbo.git -- 2.0.6.2
             os.system(
-                '(cd '+deps_dir+'; git clone -b 2.0.6.1 https://github.com/rrawther/libjpeg-turbo.git )')
+                '(cd '+deps_dir+'; git clone -b 2.0.6.2 https://github.com/rrawther/libjpeg-turbo.git )')
             os.system('(cd '+deps_dir+'/libjpeg-turbo; mkdir build; cd build; '+linuxCMake +
-                      ' -DCMAKE_INSTALL_PREFIX=/usr -DCMAKE_BUILD_TYPE=RELEASE -DENABLE_STATIC=FALSE -DCMAKE_INSTALL_DOCDIR=/usr/share/doc/libjpeg-turbo-2.0.3 -DCMAKE_INSTALL_DEFAULT_LIBDIR=lib ..; make -j 4; sudo make install )')
+                      ' -DCMAKE_INSTALL_PREFIX=/usr -DCMAKE_BUILD_TYPE=RELEASE -DENABLE_STATIC=FALSE -DCMAKE_INSTALL_DEFAULT_LIBDIR=lib ..; make -j 4; sudo make install )')
             # RPP
             # Remove Previous Install - RPP
             os.system('sudo -v')
@@ -517,11 +525,12 @@ else:
         # FFMPEG 4 from source -- for Ubuntu, CentOS 7, & RedHat 7
         if "Ubuntu" in platfromInfo or "centos-7" in platfromInfo or "redhat-7" in platfromInfo:
             os.system('sudo -v')
-            os.system('(cd '+deps_dir+'/ffmpeg; sudo '+linuxFlag+' ldconfig )')
-            os.system('(cd '+deps_dir+'/ffmpeg; export PKG_CONFIG_PATH="/usr/local/lib/pkgconfig/"; ./configure --enable-shared --disable-static --enable-libx264 --enable-libx265 --enable-libfdk-aac --enable-libass --enable-gpl --enable-nonfree)')
-            os.system('(cd '+deps_dir+'/ffmpeg; make -j8 )')
+            os.system(
+                '(cd '+deps_dir+'/FFmpeg-n4.0.4; sudo '+linuxFlag+' ldconfig )')
+            os.system('(cd '+deps_dir+'/FFmpeg-n4.0.4; export PKG_CONFIG_PATH="/usr/local/lib/pkgconfig/"; ./configure --enable-shared --disable-static --enable-libx264 --enable-libx265 --enable-libfdk-aac --enable-libass --enable-gpl --enable-nonfree)')
+            os.system('(cd '+deps_dir+'/FFmpeg-n4.0.4; make -j8 )')
             os.system('sudo -v')
-            os.system('(cd '+deps_dir+'/ffmpeg; sudo ' +
+            os.system('(cd '+deps_dir+'/FFmpeg-n4.0.4; sudo ' +
                       linuxFlag+' make install )')
 
     print("\nMIVisionX Dependencies Installed with MIVisionX-setup.py V-"+__version__+"\n")
