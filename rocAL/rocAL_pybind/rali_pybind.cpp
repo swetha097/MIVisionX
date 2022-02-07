@@ -95,7 +95,7 @@ namespace rali{
         return py::cast<py::none>(Py_None);
     }
 
-        py::object reflect_hip_copy_tensor32(RaliContext context, py::object p, RaliTensorLayout tensor_format,
+    py::object reflect_hip_copy_tensor32(RaliContext context, py::object p, RaliTensorLayout tensor_format,
                                 float multiplier0, float multiplier1, float multiplier2,
                                 float offset0, float offset1, float offset2,
                                 bool reverse_channels)
@@ -116,6 +116,14 @@ namespace rali{
         raliCopyToHipOutputTensor16(context, ptr, tensor_format, multiplier0,
                                               multiplier1, multiplier2, offset0,
                                               offset1, offset2, reverse_channels);
+        return py::cast<py::none>(Py_None);
+    }
+
+    py::object wrapper_encoded_bbox_label_hip(RaliContext context, py::object bboxes_array, py::object labels_array)
+    {
+        auto bboxes_array_ptr = ctypes_void_ptr(bboxes_array);
+        auto labels_array_ptr = ctypes_void_ptr(labels_array);
+        raliCopyEncodedBoxesAndLablesHIP(context, bboxes_array_ptr, labels_array_ptr);
         return py::cast<py::none>(Py_None);
     }
 
@@ -302,8 +310,10 @@ namespace rali{
         m.def("getBBLabels",&wrapper_BB_label_copy);
         m.def("getBBCords",&wrapper_BB_cord_copy);
         m.def("raliCopyEncodedBoxesAndLables",&wrapper_encoded_bbox_label);
+        m.def("raliCopyEncodedBoxesAndLablesHIP",&wrapper_encoded_bbox_label_hip);
         m.def("getImgSizes",&wrapper_img_sizes_copy);
         m.def("getBoundingBoxCount",&wrapper_labels_BB_count_copy);
+        m.def("raliGetNumOfEncodedOutputs",&raliGetNumOfEncodedOutputs);
         m.def("getOneHotEncodedLabels",&wrapper_one_hot_label_copy );
         m.def("isEmpty",&raliIsEmpty);
         m.def("BoxEncoder",&raliBoxEncoder);

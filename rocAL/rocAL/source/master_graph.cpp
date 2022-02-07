@@ -962,7 +962,45 @@ void MasterGraph::output_routine()
             _bencode_time.start();
             if(_is_box_encoder )
             {
-                _meta_data_graph->update_box_encoder_meta_data(&_anchors, full_batch_meta_data, _criteria, _offset, _scale, _means, _stds);
+                #if ENABLE_HIP
+                    // HIP initializations, allocate device memory and
+                    //copy host data to device
+                    // Offset for bounding bboxes count
+                    unsigned int offset_host[_user_batch_size + 1];
+                    offset_host[0] = 0;
+                    unsigned int sum_bbox_count_batch =0;
+                    for (unsigned i = 0; i < _user_batch_size; i++)
+                    {
+                        unsigned bb_count = full_batch_meta_data->get_bb_cords_batch()[i].size();
+                        offset_host[i+1] = offset_host[i] + bb_count;
+                        sum_bbox_count_batch+=bb_count;
+                    }
+                    // Copy Bboxes Input of a Batch from HOST to DEVICE
+                    float* d_bbox_input;
+                    hipMalloc(&d_bbox_input,  sum_bbox_count_batch * 4 * sizeof(float));
+                    hipMemcpyHtoD(d_bbox_input, full_batch_meta_data->get_bb_cords_batch()[0].data(), sum_bbox_count_batch * sizeof(float));
+                    // Copy Labels Input of a Batch from HOST to DEVICE
+                    int* d_label_input;
+                    hipMalloc(&d_label_input,  sum_bbox_count_batch * sizeof(int));
+                    hipMemcpyHtoD(d_label_input, full_batch_meta_data->get_bb_labels_batch()[0].data(), sum_bbox_count_batch * sizeof(int));
+                    // Copy offset of a Batch from HOST to DEVICE
+                    int* d_offset_data;
+                    hipMalloc(&d_offset_data,  (_user_batch_size + 1 ) * sizeof(int));
+                    hipMemcpyHtoD(d_offset_data, offset_host, (_user_batch_size + 1 ) * sizeof(int));
+                    // Copy anchors from HOST to DEVICE
+                    float* d_anchors;
+                    hipMalloc(&d_anchors, (_anchors.size()) * sizeof(float));
+                    hipMemcpyHtoD(d_anchors, _anchors.data(), _anchors.size() * sizeof(float));
+                    // Device output ptrs
+                    _num_of_encoded_outputs = (_anchors.size()/4) * _user_batch_size;
+                    hipMalloc(&_device_encoded_bboxes,(_num_of_encoded_outputs * 4) * sizeof(float));
+                    hipMalloc(&_device_encoded_labels,(_num_of_encoded_outputs) * sizeof(float));
+
+
+                    HipExecUpdateBoxEncoderMetaData(_device.resources().hip_stream, _user_batch_size, d_bbox_input, d_label_input, d_anchors, _device_encoded_bboxes, _device_encoded_labels);
+                #else
+                    _meta_data_graph->update_box_encoder_meta_data(&_anchors, full_batch_meta_data, _criteria, _offset, _scale, _means, _stds);
+                #endif
             }
             _bencode_time.end();
             _ring_buffer.set_meta_data(full_batch_image_names, full_batch_meta_data);
@@ -1560,4 +1598,13 @@ MasterGraph::copy_hip_out_tensor(void *out_ptr, RaliTensorFormat format, float m
 #endif
     _convert_time.end();
     return Status::OK;
+}
+
+void
+MasterGraph::set_hip_out_encoded_boxes_and_labels_ptr(float* d_boxes_ptr, int* d_labels_ptr)
+{
+
+    _device_encoded_bboxes = d_boxes_ptr;
+    _device_encoded_labels = d_labels_ptr;
+
 }

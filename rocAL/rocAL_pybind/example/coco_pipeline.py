@@ -135,17 +135,17 @@ class RALICOCOIterator(object):
         color_format = self.loader.getOutputColorFormat()
         self.p = (1 if color_format is types.GRAY else 3)
         self.hip_array = None
+        self.torch_gpu_device = torch.device('cuda', self.device_id)
         if self.device == "cpu":
             if self.tensor_dtype == types.FLOAT:
                 self.out = torch.empty((self.bs*self.n, self.p, int(self.h/self.bs), self.w,), dtype=torch.float32)
             elif self.tensor_dtype == types.FLOAT16:
                 self.out = torch.empty((self.bs*self.n, self.p, int(self.h/self.bs), self.w,), dtype=torch.float16)
         else:
-            torch_gpu_device = torch.device('cuda', self.device_id)
             if self.tensor_dtype == types.FLOAT:
-                self.out = torch.empty((self.bs*self.n, self.p, int(self.h/self.bs), self.w,), dtype=torch.float32, device=torch_gpu_device)
+                self.out = torch.empty((self.bs*self.n, self.p, int(self.h/self.bs), self.w,), dtype=torch.float32, device=self.torch_gpu_device)
             elif self.tensor_dtype == types.FLOAT16:
-                self.out = torch.empty((self.bs*self.n, self.p, int(self.h/self.bs), self.w,), dtype=torch.float16, device=torch_gpu_device)
+                self.out = torch.empty((self.bs*self.n, self.p, int(self.h/self.bs), self.w,), dtype=torch.float16, device=self.torch_gpu_device)
 
         #Image id of a batch of images
         self.image_id = np.zeros(self.bs, dtype="int32")
@@ -189,13 +189,21 @@ class RALICOCOIterator(object):
 
 #Image id of a batch of images
         self.loader.GetImageId(self.image_id)
-# Count of labels/ bboxes in a batch
+# Count of labels/ bboxes in a batch (Later to be used only by CPU)
         self.count_batch = self.loader.GetBoundingBoxCount(self.bboxes_label_count)
         print("Count Batch:", self.count_batch)
 # 1D labels & bboxes array
-        self.encoded_bboxes = np.zeros((self.count_batch*4), dtype="float32")
-        self.encoded_labels = np.zeros(self.count_batch, dtype="int32")
-        self.loader.copyEncodedBoxesAndLables(self.encoded_bboxes, self.encoded_labels)
+        if self.device == "cpu":
+            self.encoded_bboxes = np.zeros((self.count_batch*4), dtype="float32")
+            self.encoded_labels = np.zeros(self.count_batch, dtype="int32")
+            self.loader.copyEncodedBoxesAndLables(self.encoded_bboxes, self.encoded_labels)
+        else:
+            #remove hardcode count_batch to 8732 * batch_size
+            self.encoded_outputs_count = self.loader.GetNumOfEncodedOutputs()
+            self.encoded_bboxes = torch.empty((self.encoded_outputs_count*4), dtype=torch.float32, device=self.torch_gpu_device)
+            self.encoded_labels = torch.empty((self.encoded_outputs_count), dtype=torch.int32, device=self.torch_gpu_device)
+            self.loader.copyEncodedBoxesAndLablesHIP(self.encoded_bboxes, self.encoded_labels)
+
 # Image sizes of a batch
         self.loader.GetImgSizes(self.img_size)
         print("Image sizes:", self.img_size)

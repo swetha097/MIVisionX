@@ -60,6 +60,8 @@ public:
                     float offset0, float offset1, float offset2, bool reverse_channels, RaliTensorDataType output_data_type);
     Status copy_hip_out_tensor(void *out_ptr, RaliTensorFormat format, float multiplier0, float multiplier1, float multiplier2,
                     float offset0, float offset1, float offset2, bool reverse_channels, RaliTensorDataType output_data_type);
+    void set_hip_out_encoded_boxes_and_labels_ptr(float* d_boxes_ptr, int* d_labels_ptr);
+    int get_num_of_encoded_outputs() { return _num_of_encoded_outputs; }
     size_t output_width();
     size_t output_height();
     size_t output_byte_size();
@@ -131,6 +133,8 @@ private:
     std::map<Image*, std::shared_ptr<Node>> _image_map;//!< key: image, value : Parent node
 #if ENABLE_HIP
     void * _output_tensor;//!< In the GPU processing case , is used to convert the U8 samples to float32 before they are being transfered back to host
+    float* _device_encoded_bboxes;
+    int* _device_encoded_labels;
     DeviceManagerHip   _device;//!< Keeps the device related constructs needed for running on GPU
 #else
     void* _output_tensor;//!< In the GPU processing case , is used to convert the U8 samples to float32 before they are being transfered back to host
@@ -171,6 +175,7 @@ private:
     size_t _sequence_batch_ratio; //!< Indicates the _user_to_internal_batch_ratio when sequence reader outputs are required
     bool _is_sequence_reader_output = false; //!< Set to true if Sequence Reader is invoked.
     // box encoder variables
+    int _num_of_encoded_outputs;
     bool _is_box_encoder = false; //bool variable to set the box encoder
     std::vector<float>_anchors; // Anchors to be used for encoding, as the array of floats is in the ltrb format of size 8732x4
     float _criteria = 0.5; // Threshold IoU for matching bounding boxes with anchors. The value needs to be between 0 and 1.

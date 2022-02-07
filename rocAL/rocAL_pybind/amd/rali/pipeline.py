@@ -241,6 +241,12 @@ class Pipeline(object):
         b.raliCopyToOutput(
             self._handle, np.ascontiguousarray(out, dtype=array.dtype))
 
+    def GetNumOfEncodedOutputs(self):
+        return b.raliGetNumOfEncodedOutputs(self._handle)
+
+    def copyEncodedBoxesAndLablesHIP(self, bbox_array, label_array):
+        b.raliCopyEncodedBoxesAndLablesHIP(self._handle, ctypes.c_void_p(bbox_array.data_ptr()), ctypes.c_void_p(label_array.data_ptr()))
+
     def copyToHipTensorNHWC(self, array, multiplier, offset, reverse_channels, tensor_dtype):
         if tensor_dtype == types.FLOAT:
             b.raliCopyToHipOutputTensor32(self._handle, ctypes.c_void_p(array.data_ptr()), types.NHWC,

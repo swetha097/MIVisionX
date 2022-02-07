@@ -267,3 +267,45 @@ int HipExecCopyInt8ToNCHW
     return 0;
 }
 
+__global__ void __attribute__((visibility("default")))
+HipUpdateBoxEncoderMetaData(
+    float *bboxes_in,
+    int *labels_in,
+    float *anchors,
+    float *bboxes_out,
+    int *labels_out)
+{
+    const int img = blockIdx.x;
+}
+
+int HipExecUpdateBoxEncoderMetaData
+(
+        hipStream_t stream,
+        unsigned int user_batch_size,
+        float* bboxes_in,
+        int* labels_in,
+        float* anchors,
+        float* bboxes_out,
+        int* labels_out
+)
+{
+    // auto anchors_data = reinterpret_cast<const float4 *>(anchors->data());
+    // auto bboxes_in_data = reinterpret_cast<const float4 *>(bboxes_in.data());
+    // auto bboxes_out_data = reinterpret_cast<const float4 *>(bboxes_out.data());
+
+    std::cerr<<"In HIPExecUpdateBoxEncoderMetaData";
+    int block_size = 256;
+    hipLaunchKernelGGL(HipUpdateBoxEncoderMetaData,
+                        dim3(user_batch_size),
+                        dim3(block_size),
+                        0, stream,
+                        bboxes_in,
+                        labels_in,
+                        anchors,
+                        bboxes_out,
+                        labels_out
+                        );
+
+    return 0;
+
+}

@@ -21,6 +21,7 @@ THE SOFTWARE.
 */
 // kernel definitions for HIP
 
+
 #define ENABLE_EVENT_BASED_SYNC     0
 int HipExecCopyInt8ToNHWC
 (
@@ -60,4 +61,16 @@ int HipExecCopyInt8ToNCHW
     float     offset2,
     unsigned int reverse_channels,
     unsigned int fp16
+);
+
+
+int HipExecUpdateBoxEncoderMetaData
+(
+        hipStream_t stream,
+        unsigned int user_batch_size,
+        float* bboxes_in,
+        int* labels_in,
+        float* anchors,
+        float* bboxes_out,
+        int* labels_out
 );
