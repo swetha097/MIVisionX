@@ -115,6 +115,7 @@ static vx_status VX_CALLBACK processBrightness(vx_node node, const vx_reference 
     RppStatus rpp_status = RPP_SUCCESS;
     vx_status return_status = VX_SUCCESS;
     BrightnessLocalData *data = NULL;
+    STATUS_ERROR_CHECK(vxQueryNode(node, VX_NODE_LOCAL_DATA_PTR, &data, sizeof(data)));
     if (data->device_type == AGO_TARGET_AFFINITY_GPU)
     {
 #if ENABLE_OPENCL

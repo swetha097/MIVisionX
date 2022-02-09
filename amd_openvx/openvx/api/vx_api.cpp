@@ -9792,6 +9792,43 @@ VX_API_ENTRY vx_status VX_API_CALL vxQueryTensor(vx_tensor tensor, vx_enum attri
 
 #endif
 #endif
+			case VX_TENSOR_BUFFER_HOST:
+			{
+				vx_enum tensor_data_type = data->u.tensor.data_type;
+				if(tensor_data_type == VX_TYPE_UINT8)
+				{
+					if (size == sizeof(vx_uint8)) {
+						if (data->buffer) {
+							vx_uint8** temp  = static_cast< vx_uint8 **>(ptr);
+							*temp = data->buffer;
+							status = VX_SUCCESS;
+						}
+					}
+				}
+				else if (tensor_data_type == VX_TYPE_FLOAT32)
+				{
+					if (size == sizeof(vx_float32)) {
+						if (data->buffer) {
+							vx_float32** temp  = static_cast< vx_float32 **>(ptr);
+							*temp = (vx_float32 *)data->buffer;
+							status = VX_SUCCESS;
+						}
+					}
+				}
+#if defined(EXPERIMENTAL_PLATFORM_SUPPORTS_16_FLOAT)
+				else if (data_type == VX_TYPE_FLOAT16)
+				{
+					if (size == sizeof(vx_float16)) {
+						if (data->buffer) {
+							vx_float16** temp  = static_cast< vx_float16 **>(ptr);
+							*temp = (vx_float16 *)data->buffer;
+							status = VX_SUCCESS;
+						}
+					}
+				}
+#endif
+			}
+            break;
             default:
                 status = VX_ERROR_NOT_SUPPORTED;
                 break;
