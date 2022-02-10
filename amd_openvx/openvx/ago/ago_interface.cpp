@@ -2152,10 +2152,9 @@ int agoUpdateDelaySlots(AgoNode * node)
     }
     return 0;
 }
-#include <iostream>
+
 int agoExecuteGraph(AgoGraph * graph)
 {
-    std::cerr<<"\n agoExecuteGraph";
     if (graph->detectedInvalidNode) {
         agoAddLogEntry(&graph->ref, VX_FAILURE, "ERROR: agoExecuteGraph: detected invalid node\n");
         return VX_FAILURE;
@@ -2166,7 +2165,6 @@ int agoExecuteGraph(AgoGraph * graph)
     graph->state = VX_GRAPH_STATE_RUNNING;
     agoPerfProfileEntry(graph, ago_profile_type_exec_begin, &graph->ref);
     agoPerfCaptureStart(&graph->perf);
-    std::cerr<<"\n CP1";
     // update delay slots
     for (AgoNode * node = graph->nodeList.head; node; node = node->next) {
         status = agoUpdateDelaySlots(node);

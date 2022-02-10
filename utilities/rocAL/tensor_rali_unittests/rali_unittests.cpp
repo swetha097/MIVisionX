@@ -37,11 +37,6 @@ using namespace cv;
 
 #define DISPLAY
 
-//  #define PARTIAL_DECODE
-//#define COCO_READER
-// #define LABEL_READER
-//#define TF_READER
-#define TENSOR_SUPPORT
 using namespace std::chrono;
 
 int test(int test_case, const char *path, const char *outName, int rgb, int gpu, int display, int width, int height);
@@ -124,22 +119,11 @@ int test(int test_case, const char *path, const char *outName, int rgb, int gpu,
     RaliIntParam rand_mirror = raliCreateIntRand(new_values, new_freq, 2);
 
     /*>>>>>>>>>>>>>>>>>>> Graph description <<<<<<<<<<<<<<<<<<<*/
-#ifdef COCO_READER
-    char *json_path = "";
-    RaliMetaData meta_data_coco = raliCreateCOCOReader(handle, json_path, true);
-#elif defined TF_READER
-    RaliMetaData meta_data_tf = raliCreateTFReader(handle, path, true);
-#else
     RaliMetaData meta_data = raliCreateLabelReader(handle, path);
-#endif
 
-#ifdef TENSOR_SUPPORT
     RaliTensor input1;
     RaliTensorLayout tensorLayout = RaliTensorLayout::RALI_NHWC;
     RaliTensorOutputType tensorOutputType = RaliTensorOutputType::RALI_UINT8;
-#else
-    RaliImage input1;
-#endif
 
     // The jpeg file loader can automatically select the best size to decode all images to that size
     // User can alternatively set the size or change the policy that is used to automatically find the size
@@ -147,18 +131,13 @@ int test(int test_case, const char *path, const char *outName, int rgb, int gpu,
     {
         input1 = raliFusedJpegCrop(handle, path, color_format, num_threads, false, false);
     }
-#elif defined TF_READER
-    input1 = raliJpegTFRecordSource(handle, path, color_format, num_threads, false, false, false,
-                                    RALI_USE_USER_GIVEN_SIZE, decode_max_width, decode_max_height);
 #else
     if (decode_max_height <= 0 || decode_max_width <= 0)
     {
-        // std::cerr<<"\n Comes to rali jpeg file source";
         input1 = raliJpegFileSource(handle, path, color_format, num_threads, false, true, false);
     }
     else
     {
-        // std::cerr<<"\n Comes to rali jpeg file source with max decoded";
         input1 = raliJpegFileSource(handle, path, color_format, num_threads, false, true, false,
                                     RALI_USE_USER_GIVEN_SIZE, decode_max_width, decode_max_height);
     }
@@ -170,21 +149,14 @@ int test(int test_case, const char *path, const char *outName, int rgb, int gpu,
         return -1;
     }
 
-    // int resize_w = 400, resize_h = 400; // height and width
     int resize_w = width;
     int resize_h = height;
-    // RaliTensor image0 = raliResizeTensor(handle, input1, resize_w, resize_h, false);// input1;
-    // RaliImage image0 = raliResize(handle, input1, resize_w, resize_h, false);// input1;
-    // RaliImage image0_b = raliRotate(handle, input1,false);
     RaliTensor image1, image2;
 
     switch (test_case)
     {
     case 0:
     {
-        // std::cout << ">>>>>>> Running " << "raliResizeTensor" << std::endl;
-        // auto image_int = raliResizeTensor(handle, image0, resize_w / 3, resize_h / 3, false);
-        // image1 = raliResizeTensor(handle, image_int, resize_w, resize_h, true);
         std::vector<float> mean{0, 0, 0};
         std::vector<float> sdev{1, 1, 1};
         std::cout << ">>>>>>> Running "
@@ -196,7 +168,6 @@ int test(int test_case, const char *path, const char *outName, int rgb, int gpu,
     {
         std::cout << ">>>>>>> Running "
                   << "raliBrightness" << std::endl;
-        // image1 = raliResizeTensor(handle, input1, tensorLayout, tensorOutputType, resize_w, resize_h, false);
         image1 = raliBrightness(handle, input1, true);
     }
     break;
@@ -204,7 +175,6 @@ int test(int test_case, const char *path, const char *outName, int rgb, int gpu,
     {
         std::cout << ">>>>>>> Running "
                   << "raliGamma" << std::endl;
-        // image1 = raliResizeTensor(handle, input1, tensorLayout, tensorOutputType, resize_w, resize_h, false);
         image1 = raliGamma(handle, input1, true);
     }
     break;
@@ -276,57 +246,11 @@ int test(int test_case, const char *path, const char *outName, int rgb, int gpu,
         }
         int label_id[inputBatchSize];
         int image_name_length[inputBatchSize];
-#ifdef COCO_READER
-        for (int i = 0; i < inputBatchSize; i++)
-        {
-            int img_size = raliGetImageNameLen(handle, image_name_length);
-            char img_name[img_size];
-            raliGetImageName(handle, img_name);
-            std::cerr << "\nPrinting image names of batch: " << img_name;
-            raliGetImageName(handle, img_name, i);
-            int size = raliGetBoundingBoxCount(handle, i);
-            int bb_labels[size];
-            float bb_coords[size * 4];
-            raliGetBoundingBoxLabel(handle, bb_labels, i);
-            raliGetBoundingBoxCords(handle, bb_coords, i);
-            std::cerr << "\nPrinting image Name : " << img_name << "\t number of bbox : " << size << std::endl;
-            std::cerr << "\nLabel Id " << std::endl;
-            for (int id = 0, j = id; id < size; id++)
-            {
-                std::cerr << "\n Label_id : " << bb_labels[id] << std::endl;
-                for (int idx = 0; idx < 4; idx++, j++)
-                    std::cerr << "\tbbox: [" << idx << "] :" << bb_coords[j] << std::endl;
-            }
-        }
-#else
         raliGetImageLabels(handle, label_id);
         int img_size = raliGetImageNameLen(handle, image_name_length);
         char img_name[img_size];
         raliGetImageName(handle, img_name);
         std::cerr << "\nPrinting image names of batch: " << img_name;
-
-        int numOfClasses = 1000;
-        int label_one_hot_encoded[inputBatchSize * numOfClasses];
-        // raliGetOneHotImageLabels(handle, label_one_hot_encoded, numOfClasses);
-
-        // for (int i = 0; i < inputBatchSize; i++)
-        // {
-        //     std::cout << "One Hot Encoded labels:"<<"\t";
-        //     for (int j = 0; j < numOfClasses; j++)
-        //     {
-        //         int idx_value = label_one_hot_encoded[(i*numOfClasses)+j];
-        //         if(idx_value == 0)
-        //         std::cout << idx_value;
-        //         else
-        //         {
-        //             std::cout << idx_value;
-        //         }
-
-        //     }
-        //     std::cout << "\n";
-        // }
-#endif
-
         if (!display)
             continue;
 
@@ -342,12 +266,10 @@ int test(int test_case, const char *path, const char *outName, int rgb, int gpu,
             cv::imwrite(std::to_string(index) + outName, mat_color, compression_params);
             // cv::waitKey(0);
         }
-        // else {
-        //     //cv::imshow("output", mat_output);
-        //     cv::imwrite(outName, mat_output, compression_params);
-
-        // }
-        // // cv::waitKey(100);
+        else {
+            //cv::imshow("output", mat_output);
+            cv::imwrite(std::to_string(index) + outName, mat_output, compression_params);
+        }
         col_counter = (col_counter + 1) % number_of_cols;
     }
 
