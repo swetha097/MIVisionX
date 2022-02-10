@@ -126,13 +126,6 @@ void VideoLoaderSharded::start_loading()
     }
 }
 
-void VideoLoaderSharded::shut_down()
-{
-    for (auto &loader : _loaders)
-      loader->shut_down();
-
-}
-
 void VideoLoaderSharded::set_output_image(Image *output_image)
 {
     _output_image = output_image;

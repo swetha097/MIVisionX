@@ -50,7 +50,6 @@ public:
 #else
     void init(RaliMemType mem_type, DeviceResources dev, unsigned sub_buffer_size, unsigned sub_buffer_count);
 #endif
-    void release_gpu_res();
     std::vector<void*> get_read_buffers() ;
     void* get_host_master_read_buffer();
     std::vector<void*> get_write_buffers();

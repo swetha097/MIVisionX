@@ -158,12 +158,6 @@ void CIFAR10DataLoader::set_random_bbox_data_reader(std::shared_ptr<RandomBBoxCr
 }
 
 void
-CIFAR10DataLoader::shut_down()
-{
-    _circ_buff.release();
-}
-
-void
 CIFAR10DataLoader::start_loading()
 {
     if(!_is_initialized)

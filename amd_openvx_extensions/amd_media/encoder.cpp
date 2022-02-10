@@ -418,7 +418,7 @@ vx_status CLoomIoMediaEncoder::ProcessFrame(vx_image input_image, vx_array input
         return VX_ERROR_GRAPH_ABANDONED;
     }
 
-    if (m_enableUserBufferGPU) {        
+    if (m_enableUserBufferGPU) {
         UpdateBufferGPU(input_image, input_aux);
        // just submit GPU buffer for encoding
         PushCommand(cmd_encode);
@@ -576,6 +576,20 @@ void CLoomIoMediaEncoder::EncodeLoop()
     threadTerminated = true;
     PushAck(-1);
 }
+
+#if ENCODE_ENABLE_OPENCL
+//! \brief The kernel execution.
+static vx_status VX_CALLBACK amd_media_encode_gpu_buffer_update_callback(vx_node node, const vx_reference parameters[], vx_uint32 num)
+{
+    // get encoder and input image
+    CLoomIoMediaEncoder * encoder = nullptr;
+    ERROR_CHECK_STATUS(vxQueryNode(node, VX_NODE_LOCAL_DATA_PTR, &encoder, sizeof(encoder)));
+    if (!encoder) return VX_FAILURE;
+
+    return encoder->UpdateBufferOpenCL((vx_image)parameters[1], (vx_array)parameters[2]);
+    return VX_SUCCESS;
+}
+#endif
 
 //! \brief The kernel execution.
 static vx_status VX_CALLBACK amd_media_encode_kernel(vx_node node, const vx_reference * parameters, vx_uint32 num)
