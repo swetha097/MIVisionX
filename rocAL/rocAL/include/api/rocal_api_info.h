@@ -22,7 +22,7 @@ THE SOFTWARE.
 
 #ifndef MIVISIONX_RALI_API_INFO_H
 #define MIVISIONX_RALI_API_INFO_H
-#include "rali_api_types.h"
+#include "rocal_api_types.h"
 ///
 /// \param image
 /// \return The width of the RALI's output image in pixels

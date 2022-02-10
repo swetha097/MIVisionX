@@ -21,7 +21,7 @@ THE SOFTWARE.
 */
 
 #include "commons.h"
-#include "rali_api.h"
+#include "rocal_api.h"
 #include "parameter_factory.h"
 
 void RALI_API_CALL

@@ -31,7 +31,7 @@ THE SOFTWARE.
 #include <opencv2/opencv.hpp>
 #include <opencv/highgui.h>
 
-#include "rali_api.h"
+#include "rocal_api.h"
 
 using namespace cv;
 

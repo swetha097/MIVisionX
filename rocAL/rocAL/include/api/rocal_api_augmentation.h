@@ -22,7 +22,7 @@ THE SOFTWARE.
 
 #ifndef MIVISIONX_RALI_API_AUGMENTATION_H
 #define MIVISIONX_RALI_API_AUGMENTATION_H
-#include "rali_api_types.h"
+#include "rocal_api_types.h"
 
 /// Accepts U8 and RGB24 inputs
 /// \param context

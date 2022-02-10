@@ -22,7 +22,7 @@ THE SOFTWARE.
 
 #ifndef MIVISIONX_RALI_API_PARAMETERS_H
 #define MIVISIONX_RALI_API_PARAMETERS_H
-#include "rali_api_types.h"
+#include "rocal_api_types.h"
 
 ///
 /// \param seed

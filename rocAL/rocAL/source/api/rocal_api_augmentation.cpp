@@ -30,7 +30,7 @@ THE SOFTWARE.
 
 #include "commons.h"
 #include "context.h"
-#include "rali_api.h"
+#include "rocal_api.h"
 
 RaliTensor RALI_API_CALL
 raliGamma(

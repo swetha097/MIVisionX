@@ -24,7 +24,7 @@ THE SOFTWARE.
 #include <exception>
 #include "commons.h"
 #include "context.h"
-#include "rali_api.h"
+#include "rocal_api.h"
 
 RaliStatus RALI_API_CALL
 raliRelease(RaliContext p_context)

@@ -26,7 +26,7 @@ THE SOFTWARE.
 
 #include "commons.h"
 #include "context.h"
-#include "rali_api.h"
+#include "rocal_api.h"
 #define MAX_BUFFER 10000
 
 RaliMetaData

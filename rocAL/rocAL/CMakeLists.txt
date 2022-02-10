@@ -144,15 +144,15 @@ if(${BUILD_RALI})
     #     DESTINATION ./rali/python
     #     )
     install(FILES
-        include/api/rali_api.h
-        include/api/rali_api_info.h
-        include/api/rali_api_augmentation.h
-        include/api/rali_api_data_loaders.h
-        include/api/rali_api_types.h
-        include/api/rali_api_data_transfer.h
-        include/api/rali_api_parameters.h
-        include/api/rali_api_meta_data.h
-        include/api/rali_api_data_loaders.h
+        include/api/rocal_api.h
+        include/api/rocal_api_info.h
+        include/api/rocal_api_augmentation.h
+        include/api/rocal_api_data_loaders.h
+        include/api/rocal_api_types.h
+        include/api/rocal_api_data_transfer.h
+        include/api/rocal_api_parameters.h
+        include/api/rocal_api_meta_data.h
+        include/api/rocal_api_data_loaders.h
         DESTINATION ./include
         )
     if(FFMPEG_FOUND)

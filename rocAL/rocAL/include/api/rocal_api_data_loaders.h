@@ -22,7 +22,7 @@ THE SOFTWARE.
 
 #ifndef MIVISIONX_RALI_API_DATA_LOADERS_H
 #define MIVISIONX_RALI_API_DATA_LOADERS_H
-#include "rali_api_types.h"
+#include "rocal_api_types.h"
 
 
 /// Creates JPEG image reader and decoder. It allocates the resources and objects required to read and decode Jpeg images stored on the file systems. It has internal sharding capability to load/decode in parallel is user wants.

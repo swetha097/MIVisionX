@@ -24,7 +24,7 @@ THE SOFTWARE.
 #include <VX/vx.h>
 #include <VX/vx_compatibility.h>
 #include <graph.h>
-#include "parameter_rali_crop.h"
+#include "parameter_rocal_crop.h"
 #include "commons.h"
 
 void RaliCropParam::set_crop_height_factor(Parameter<float>* crop_h_factor)

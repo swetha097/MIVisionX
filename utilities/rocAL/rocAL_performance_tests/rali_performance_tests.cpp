@@ -32,7 +32,7 @@ THE SOFTWARE.
 #include <opencv/highgui.h>
 #include <vector>
 
-#include "rali_api.h"
+#include "rocal_api.h"
 
 using namespace cv;
 
@@ -317,15 +317,15 @@ int test(int test_case, const char* path, int rgb, int processing_device, int wi
     high_resolution_clock::time_point t1 = high_resolution_clock::now();
 
     int i = 0;
-    while (i++ < 100 && !raliIsEmpty(handle)){  
-        
+    while (i++ < 100 && !raliIsEmpty(handle)){
+
         if (raliRun(handle) != 0)
             break;
 
         //auto last_colot_temp = raliGetIntValue(color_temp_adj);
         //raliUpdateIntParameter(last_colot_temp + 1, color_temp_adj);
 
-        
+
         //raliCopyToOutput(handle, mat_input.data, h * w * p);
 
     }
@@ -338,9 +338,9 @@ int test(int test_case, const char* path, int rgb, int processing_device, int wi
     std::cout << "Transfer time " << rali_timing.transfer_time << std::endl;
     std::cout << "Total time " << dur << std::endl;
     std::cout << ">>>>> Total Elapsed Time " << dur / 1000000 << " sec " << dur % 1000000 << " us " << std::endl;
-    
+
     raliRelease(handle);
- 
+
 
     return 0;
 }

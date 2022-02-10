@@ -22,7 +22,7 @@ THE SOFTWARE.
 
 #include "commons.h"
 #include "context.h"
-#include "rali_api.h"
+#include "rocal_api.h"
 #if !ENABLE_HIP
 #include "CL/cl.h"
 #endif

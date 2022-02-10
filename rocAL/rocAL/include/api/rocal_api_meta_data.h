@@ -22,7 +22,7 @@ THE SOFTWARE.
 
 #ifndef MIVISIONX_RALI_API_META_DATA_H
 #define MIVISIONX_RALI_API_META_DATA_H
-#include "rali_api_types.h"
+#include "rocal_api_types.h"
 ///
 /// \param rali_context
 /// \param source_path path to the folder that contains the dataset or metadata file

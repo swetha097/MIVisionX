@@ -25,7 +25,7 @@ THE SOFTWARE.
 #include "parameter_factory.h"
 #include "parameter_crop_factory.h"
 #include "parameter_vx.h"
-#include "rali_api_types.h"
+#include "rocal_api_types.h"
 class CropMirrorNormalizeTensorNode : public TensorNode
 {
 public:

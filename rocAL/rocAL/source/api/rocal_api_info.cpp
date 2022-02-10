@@ -22,7 +22,7 @@ THE SOFTWARE.
 
 #include "commons.h"
 #include "context.h"
-#include "rali_api.h"
+#include "rocal_api.h"
 size_t RALI_API_CALL raliGetImageWidth(RaliImage p_tensor)
 {
     auto tensor = static_cast<Tensor*>(p_tensor);

@@ -24,13 +24,13 @@ THE SOFTWARE.
 #ifndef RALI_H
 #define RALI_H
 
-#include "rali_api_types.h"
-#include "rali_api_parameters.h"
-#include "rali_api_data_loaders.h"
-#include "rali_api_augmentation.h"
-#include "rali_api_data_transfer.h"
-#include "rali_api_meta_data.h"
-#include "rali_api_info.h"
+#include "rocal_api_types.h"
+#include "rocal_api_parameters.h"
+#include "rocal_api_data_loaders.h"
+#include "rocal_api_augmentation.h"
+#include "rocal_api_data_transfer.h"
+#include "rocal_api_meta_data.h"
+#include "rocal_api_info.h"
 
 /// Creates the context for a new augmentation pipeline. Initializes all the required internals for the pipeline
 /// \param batch_size

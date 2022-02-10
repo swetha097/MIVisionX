@@ -21,7 +21,7 @@ THE SOFTWARE.
 */
 
 #include <tuple>
-#include "rali_api.h"
+#include "rocal_api.h"
 #include "commons.h"
 #include "context.h"
 #include "node_image_loader.h"

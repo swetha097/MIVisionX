@@ -34,7 +34,7 @@ THE SOFTWARE.
 #include <opencv2/opencv.hpp>
 #include <opencv/highgui.h>
 
-#include "rali_api.h"
+#include "rocal_api.h"
 
 using namespace cv;
 
@@ -111,7 +111,7 @@ int thread_func(const char *path, int gpu_mode, RaliImageColor color_format, int
     int n = raliGetAugmentationBranchCount(handle);
     int h = n * raliGetOutputHeight(handle);
     int w = raliGetOutputWidth(handle);
-    int p = (((color_format ==  RaliImageColor::RALI_COLOR_RGB24 ) || 
+    int p = (((color_format ==  RaliImageColor::RALI_COLOR_RGB24 ) ||
               (color_format ==  RaliImageColor::RALI_COLOR_RGB_PLANAR )) ? 3 : 1);
     std::cout << "output width "<< w << " output height "<< h << " color planes "<< p << " n "<< n << std::endl;
     const unsigned number_of_cols = 1;    // no augmented case

@@ -31,7 +31,7 @@ THE SOFTWARE.
 #include <opencv2/opencv.hpp>
 #include <opencv/highgui.h>
 
-#include "rali_api.h"
+#include "rocal_api.h"
 
 using namespace cv;
 
@@ -78,7 +78,7 @@ int main(int argc, const char ** argv)
 
     std::cout << ">>> Running on " << (processing_device?"GPU":"CPU") << std::endl;
     RaliImageColor color_format = RaliImageColor::RALI_COLOR_RGB_PLANAR;
-    if (rgb == 0) 
+    if (rgb == 0)
       color_format = RaliImageColor::RALI_COLOR_U8;
     else if (rgb == 1)
       color_format = RaliImageColor::RALI_COLOR_RGB24;
@@ -181,7 +181,7 @@ int main(int argc, const char ** argv)
     int n = raliGetAugmentationBranchCount(handle);
     int h = n * raliGetOutputHeight(handle);
     int w = raliGetOutputWidth(handle);
-    int p = (((color_format ==  RaliImageColor::RALI_COLOR_RGB24 ) || 
+    int p = (((color_format ==  RaliImageColor::RALI_COLOR_RGB24 ) ||
               (color_format ==  RaliImageColor::RALI_COLOR_RGB_PLANAR )) ? 3 : 1);
     std::cout << "output width "<< w << " output height "<< h << " color planes "<< p << std::endl;
     const unsigned number_of_cols = 1;    // no augmented case
@@ -192,7 +192,7 @@ int main(int argc, const char ** argv)
     cv::Mat mat_color;
     int col_counter = 0;
     cv::namedWindow( "output", CV_WINDOW_AUTOSIZE );
- 
+
     high_resolution_clock::time_point t1 = high_resolution_clock::now();
     int counter = 0;
     std::vector<std::string> names;
@@ -215,7 +215,7 @@ int main(int argc, const char ** argv)
         counter += inputBatchSize;
         raliGetImageLabels(handle, labels.data());
         unsigned imagename_size = raliGetImageNameLen(handle,ImageNameLen);
-        char imageNames[imagename_size]; 
+        char imageNames[imagename_size];
         raliGetImageName(handle,imageNames);
         std::string imageNamesStr(imageNames);
 
