@@ -32,12 +32,12 @@ THE SOFTWARE.
 #include "context.h"
 #include "rocal_api.h"
 
-RaliTensor RALI_API_CALL
-raliGamma(
-        RaliContext p_context,
-        RaliTensor p_input,
+RocalTensor ROCAL_API_CALL
+rocalGamma(
+        RocalContext p_context,
+        RocalTensor p_input,
         bool is_output,
-        RaliFloatParam p_alpha)
+        RocalFloatParam p_alpha)
 {
     if(!p_context || !p_input)
         THROW("Null values passed as input")
@@ -59,10 +59,10 @@ raliGamma(
     return output;
 }
 
-RaliTensor RALI_API_CALL
-raliGammaFixed(
-        RaliContext p_context,
-        RaliTensor p_input,
+RocalTensor ROCAL_API_CALL
+rocalGammaFixed(
+        RocalContext p_context,
+        RocalTensor p_input,
         float alpha,
         bool is_output)
 {
@@ -88,13 +88,13 @@ raliGammaFixed(
     return output;
 }
 
-RaliTensor RALI_API_CALL
-raliBrightness(
-        RaliContext p_context,
-        RaliTensor p_input,
+RocalTensor ROCAL_API_CALL
+rocalBrightness(
+        RocalContext p_context,
+        RocalTensor p_input,
         bool is_output,
-        RaliFloatParam p_alpha,
-        RaliFloatParam p_beta)
+        RocalFloatParam p_alpha,
+        RocalFloatParam p_beta)
 {
     if(!p_input || !p_context)
         THROW("Null values passed as input")
@@ -118,10 +118,10 @@ raliBrightness(
     return output;
 }
 
-RaliTensor RALI_API_CALL
-raliBrightnessFixed(
-        RaliContext p_context,
-        RaliTensor p_input,
+RocalTensor ROCAL_API_CALL
+rocalBrightnessFixed(
+        RocalContext p_context,
+        RocalTensor p_input,
         float alpha,
         float beta,
         bool is_output)
@@ -148,11 +148,11 @@ raliBrightnessFixed(
     return output;
 }
 
-RaliTensor
-RALI_API_CALL raliCropMirrorNormalizeTensor(RaliContext p_context, RaliTensor p_input, RaliTensorLayout rali_tensor_layout,
-                                    RaliTensorOutputType rali_tensor_output_type, unsigned crop_depth, unsigned crop_height,
+RocalTensor
+ROCAL_API_CALL rocalCropMirrorNormalizeTensor(RocalContext p_context, RocalTensor p_input, RocalTensorLayout rocal_tensor_layout,
+                                    RocalTensorOutputType rocal_tensor_output_type, unsigned crop_depth, unsigned crop_height,
                                     unsigned crop_width, float start_x, float start_y, float start_z, std::vector<float> &mean,
-                                    std::vector<float> &std_dev, bool is_output, RaliIntParam p_mirror)
+                                    std::vector<float> &std_dev, bool is_output, RocalIntParam p_mirror)
 {
     Tensor* output = nullptr;
     auto context = static_cast<Context*>(p_context);
@@ -166,38 +166,38 @@ RALI_API_CALL raliCropMirrorNormalizeTensor(RaliContext p_context, RaliTensor p_
     }
     mean_acutal /= mean.size();
     std_actual /= std_dev.size();
-    RaliTensorFormat op_tensorFormat;
-    RaliTensorDataType op_tensorDataType;
+    RocalTensorFormat op_tensorFormat;
+    RocalTensorDataType op_tensorDataType;
     try
     {
         if(!input || !context || crop_width == 0 || crop_height == 0)
             THROW("Null values passed as input")
-        switch(rali_tensor_layout)
+        switch(rocal_tensor_layout)
         {
             case 0:
-                op_tensorFormat = RaliTensorFormat::NHWC;
+                op_tensorFormat = RocalTensorFormat::NHWC;
                 break;
             case 1:
-                op_tensorFormat = RaliTensorFormat::NCHW;
+                op_tensorFormat = RocalTensorFormat::NCHW;
                 break;
             default:
-                THROW("Unsupported Tensor layout" + TOSTR(rali_tensor_layout))
+                THROW("Unsupported Tensor layout" + TOSTR(rocal_tensor_layout))
         }
 
-        switch(rali_tensor_output_type)
+        switch(rocal_tensor_output_type)
         {
-            case RALI_FP32:
+            case ROCAL_FP32:
                 // std::cerr<<"\n Setting output type to FP32";
-                op_tensorDataType = RaliTensorDataType::FP32;
+                op_tensorDataType = RocalTensorDataType::FP32;
                 break;
-            case RALI_FP16:
-                op_tensorDataType = RaliTensorDataType::FP16;
+            case ROCAL_FP16:
+                op_tensorDataType = RocalTensorDataType::FP16;
                 break;
-            case RALI_UINT8:
-                op_tensorDataType = RaliTensorDataType::UINT8;
+            case ROCAL_UINT8:
+                op_tensorDataType = RocalTensorDataType::UINT8;
                 break;
             default:
-                THROW("Unsupported Tensor output type" + TOSTR(rali_tensor_output_type))
+                THROW("Unsupported Tensor output type" + TOSTR(rocal_tensor_output_type))
         }
         // For the crop mirror normalize resize node, user can create an image with a different width and height
         TensorInfo output_info = input->info();
@@ -222,10 +222,10 @@ RALI_API_CALL raliCropMirrorNormalizeTensor(RaliContext p_context, RaliTensor p_
 }
 
 
-RaliTensor  RALI_API_CALL
-raliCopyTensor(
-        RaliContext p_context,
-        RaliTensor p_input,
+RocalTensor  ROCAL_API_CALL
+rocalCopyTensor(
+        RocalContext p_context,
+        RocalTensor p_input,
         bool is_output)
 {
     if(!p_context || !p_input)
@@ -247,10 +247,10 @@ raliCopyTensor(
 }
 
 
-RaliTensor  RALI_API_CALL
-raliNopTensor(
-        RaliContext p_context,
-        RaliTensor p_input,
+RocalTensor  ROCAL_API_CALL
+rocalNopTensor(
+        RocalContext p_context,
+        RocalTensor p_input,
         bool is_output)
 {
     if(!p_context || !p_input)

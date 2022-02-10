@@ -47,7 +47,7 @@ using half_float::half;
 #endif
 
 #if ENABLE_HIP
-#include <rali_hip_kernels.h>
+#include <rocal_hip_kernels.h>
 #endif
 
 static void VX_CALLBACK log_callback(vx_context context, vx_reference ref, vx_status status, const vx_char* string)
@@ -63,17 +63,17 @@ static void VX_CALLBACK log_callback(vx_context context, vx_reference ref, vx_st
 
 
 auto get_ago_affinity_info = []
-    (RaliAffinity rali_affinity,
+    (RocalAffinity rocal_affinity,
      int cpu_id,
      int gpu_id)
 {
     AgoTargetAffinityInfo affinity;
-    switch(rali_affinity) {
-        case RaliAffinity::GPU:
+    switch(rocal_affinity) {
+        case RocalAffinity::GPU:
             affinity.device_type =  AGO_TARGET_AFFINITY_GPU;
             affinity.device_info = (gpu_id >=0 && gpu_id <=9)? gpu_id : 0;
             break;
-        case RaliAffinity::CPU:
+        case RocalAffinity::CPU:
             affinity.device_type = AGO_TARGET_AFFINITY_CPU;
             affinity.device_info = (cpu_id >=0 && cpu_id <=9)? cpu_id : 0;
             break;
@@ -88,7 +88,7 @@ MasterGraph::~MasterGraph()
     release();
 }
 
-MasterGraph::MasterGraph(size_t batch_size, RaliAffinity affinity, int gpu_id, size_t cpu_threads,  size_t prefetch_queue_depth, RaliTensorDataType output_tensor_data_type):
+MasterGraph::MasterGraph(size_t batch_size, RocalAffinity affinity, int gpu_id, size_t cpu_threads,  size_t prefetch_queue_depth, RocalTensorDataType output_tensor_data_type):
         _ring_buffer(OUTPUT_RING_BUFFER_DEPTH),
         _tensor_ring_buffer(OUTPUT_RING_BUFFER_DEPTH),
         _output_tensor(nullptr),
@@ -99,9 +99,9 @@ MasterGraph::MasterGraph(size_t batch_size, RaliAffinity affinity, int gpu_id, s
         _user_batch_size(batch_size),
         _cpu_threads(cpu_threads),
 #if ENABLE_HIP
-        _mem_type ((_affinity == RaliAffinity::GPU) ? RaliMemType::HIP : RaliMemType::HOST),
+        _mem_type ((_affinity == RocalAffinity::GPU) ? RocalMemType::HIP : RocalMemType::HOST),
 #else
-        _mem_type ((_affinity == RaliAffinity::GPU) ? RaliMemType::OCL : RaliMemType::HOST),
+        _mem_type ((_affinity == RocalAffinity::GPU) ? RocalMemType::OCL : RocalMemType::HOST),
 #endif
         _process_time("Process Time", DBG_TIMING),
         _first_run(true),
@@ -120,10 +120,10 @@ MasterGraph::MasterGraph(size_t batch_size, RaliAffinity affinity, int gpu_id, s
         if ((status = vxGetStatus((vx_reference) _context)) != VX_SUCCESS)
             THROW("vxCreateContext failed" + TOSTR(status))
 
-        if(affinity == RaliAffinity::GPU)
+        if(affinity == RocalAffinity::GPU)
         {
 #if !ENABLE_HIP
-            if (_mem_type == RaliMemType::OCL){
+            if (_mem_type == RocalMemType::OCL){
                 cl_context _cl_context = nullptr;
                 cl_device_id _cl_device_id = nullptr;
                 get_device_and_context(gpu_id, &_cl_context, &_cl_device_id, CL_DEVICE_TYPE_GPU);
@@ -133,7 +133,7 @@ MasterGraph::MasterGraph(size_t batch_size, RaliAffinity affinity, int gpu_id, s
                     THROW("vxSetContextAttribute for CL_CONTEXT failed " + TOSTR(status))
             }
 #else
-            if (_mem_type == RaliMemType::HIP) {
+            if (_mem_type == RocalMemType::HIP) {
                 hipError_t err = hipInit(0);
                 if (err != hipSuccess) {
                     THROW("ERROR: hipInit(0) => %d (failed)" + TOSTR(err));
@@ -167,14 +167,14 @@ MasterGraph::MasterGraph(size_t batch_size, RaliAffinity affinity, int gpu_id, s
             THROW("Cannot load vx_rpp extension (vx_rpp), vxLoadKernels failed " + TOSTR(status))
         else
             LOG("vx_rpp module loaded successfully")
-#ifdef RALI_VIDEO
+#ifdef ROCAL_VIDEO
         // loading video decoder modules
         if ((status = vxLoadKernels(_context, "vx_amd_media")) != VX_SUCCESS)
             WRN("Cannot load vx_amd_media extension, video decode functionality will not be available")
         else
             LOG("vx_amd_media module loaded")
 #endif
-        if(_affinity == RaliAffinity::GPU) {
+        if(_affinity == RocalAffinity::GPU) {
 #if ENABLE_HIP
             _device.init_hip(_context);
 #else
@@ -365,7 +365,7 @@ MasterGraph::augmentation_branch_count()
 }
 
 // This is being used only in copy out tensor which will be changed.
-RaliColorFormat
+RocalColorFormat
 MasterGraph::output_color_format()
 {
     return _output_tensor_info.color_format();
@@ -414,10 +414,10 @@ MasterGraph::allocate_output_tensor()
     if (processing_on_device_hip())
     {
         void *hipMemory = nullptr;
-        size_t size = (_out_data_type==RaliTensorDataType::FP32)? output_float_buffer_size*sizeof(float): output_float_buffer_size*sizeof(half);
+        size_t size = (_out_data_type==RocalTensorDataType::FP32)? output_float_buffer_size*sizeof(float): output_float_buffer_size*sizeof(half);
         hipError_t status = hipMalloc( &hipMemory, size);
         if (status != hipSuccess)
-            THROW("RALI::hipMalloc of size " + TOSTR(size) + " failed " + TOSTR(status))
+            THROW("ROCAL::hipMalloc of size " + TOSTR(size) + " failed " + TOSTR(status))
 
         _output_tensor = hipMemory;
     }
@@ -474,7 +474,7 @@ MasterGraph::remaining_images_count()
     return (_remaining_images_count >= 0) ? _remaining_images_count:0;
 }
 
-RaliMemType
+RocalMemType
 MasterGraph::mem_type()
 {
     return _mem_type;
@@ -507,13 +507,13 @@ MasterGraph::copy_output(
 #define CHECK_CL_CALL_RET(x) { cl_int ret; ret = x; if( ret != CL_SUCCESS) THROW("ocl call failed "+STR(#x)+" error "+TOSTR(ret)) }
 
 MasterGraph::Status
-MasterGraph::copy_out_tensor(void *out_ptr, RaliTensorFormat format, float multiplier0, float multiplier1,
-                             float multiplier2, float offset0, float offset1, float offset2, bool reverse_channels, RaliTensorDataType output_data_type)
+MasterGraph::copy_out_tensor(void *out_ptr, RocalTensorFormat format, float multiplier0, float multiplier1,
+                             float multiplier2, float offset0, float offset1, float offset2, bool reverse_channels, RocalTensorDataType output_data_type)
 {
     if(no_more_processed_data())
         return MasterGraph::Status::NO_MORE_DATA;
 
-    if (output_color_format() == RaliColorFormat::RGB_PLANAR)
+    if (output_color_format() == RocalColorFormat::RGB_PLANAR)
         return MasterGraph::copy_out_tensor_planar(out_ptr,format,multiplier0, multiplier1, multiplier2, offset0, offset1, offset2, reverse_channels, output_data_type);
 
     _convert_time.start();
@@ -524,9 +524,9 @@ MasterGraph::copy_out_tensor(void *out_ptr, RaliTensorFormat format, float multi
     const size_t w = tensor_output_width();
     const size_t single_output_image_size = tensor_output_byte_size();
 #if !ENABLE_HIP
-    if(_output_tensor_info.mem_type() == RaliMemType::OCL)
+    if(_output_tensor_info.mem_type() == RocalMemType::OCL)
     {
-        if(output_data_type == RaliTensorDataType::FP16)
+        if(output_data_type == RocalTensorDataType::FP16)
             THROW("FP16 tensor output for GPU affinity is not implemented")
         // OCL device memory
         cl_int status;
@@ -536,7 +536,7 @@ MasterGraph::copy_out_tensor(void *out_ptr, RaliTensorFormat format, float multi
 
         // TODO: Use the runKernel function instead
 
-        auto kernel_name = (format == RaliTensorFormat::NHWC)? "copyInt8ToNHWC" : "copyInt8ToNCHW";
+        auto kernel_name = (format == RocalTensorFormat::NHWC)? "copyInt8ToNHWC" : "copyInt8ToNCHW";
         cl_kernel kernel = _device["utility"][kernel_name];
         auto queue = _device.resources().cmd_queue;
         unsigned dest_buf_offset = 0;
@@ -582,9 +582,9 @@ MasterGraph::copy_out_tensor(void *out_ptr, RaliTensorFormat format, float multi
             THROW("clEnqueueReadBuffer failed: " + TOSTR(status))
     }
 #else
-    if(_output_tensor_info.mem_type() == RaliMemType::HIP)
+    if(_output_tensor_info.mem_type() == RocalMemType::HIP)
     {
-        unsigned int fp16 = (output_data_type == RaliTensorDataType::FP16);
+        unsigned int fp16 = (output_data_type == RocalTensorDataType::FP16);
 
         auto output_buffers =_ring_buffer.get_read_buffers();
         unsigned dest_buf_offset = 0;
@@ -593,7 +593,7 @@ MasterGraph::copy_out_tensor(void *out_ptr, RaliTensorFormat format, float multi
         for( auto&& out_image: output_buffers)
         {
             auto img_buffer = out_image;
-            if (format == RaliTensorFormat::NHWC)
+            if (format == RocalTensorFormat::NHWC)
             {
                 HipExecCopyInt8ToNHWC(_device.resources().hip_stream, (const void *)img_buffer, _output_tensor, dest_buf_offset, n, c, h, w,
                                         multiplier0, multiplier1, multiplier2, offset0, offset1, offset2, reverse_channels, fp16);
@@ -607,7 +607,7 @@ MasterGraph::copy_out_tensor(void *out_ptr, RaliTensorFormat format, float multi
         }
     }
 #endif
-    if(_output_tensor_info.mem_type() == RaliMemType::HOST)
+    if(_output_tensor_info.mem_type() == RocalMemType::HOST)
     {
         float multiplier[3] = {multiplier0, multiplier1, multiplier2 };
         float offset[3] = {offset0, offset1, offset2 };
@@ -617,9 +617,9 @@ MasterGraph::copy_out_tensor(void *out_ptr, RaliTensorFormat format, float multi
         for( auto&& out_image: output_buffers)
         {
             auto in_buffer = (unsigned char*)out_image;
-            if(format == RaliTensorFormat::NHWC)
+            if(format == RocalTensorFormat::NHWC)
             {
-                if(output_data_type == RaliTensorDataType::FP32)
+                if(output_data_type == RocalTensorDataType::FP32)
                 {
                     for (unsigned int nCount = 0; nCount < n; nCount++) {
                         float *output_tensor_32 = static_cast<float *>(out_ptr);
@@ -635,7 +635,7 @@ MasterGraph::copy_out_tensor(void *out_ptr, RaliTensorFormat format, float multi
                         dest_buf_offset += (w * c * h);
                     }
                 }
-                else if(output_data_type == RaliTensorDataType::FP16)
+                else if(output_data_type == RocalTensorDataType::FP16)
                 {
                     for (unsigned int nCount = 0; nCount < n; nCount++) {
                         half *output_tensor_16 = static_cast<half *>(out_ptr);
@@ -652,9 +652,9 @@ MasterGraph::copy_out_tensor(void *out_ptr, RaliTensorFormat format, float multi
                     }
                 }
             }
-            if(format == RaliTensorFormat::NCHW)
+            if(format == RocalTensorFormat::NCHW)
             {
-                if(output_data_type == RaliTensorDataType::FP32)
+                if(output_data_type == RocalTensorDataType::FP32)
                 {
                     float *output_tensor_32 = static_cast<float *>(out_ptr);
                     auto channel_size  = w * h;
@@ -744,7 +744,7 @@ MasterGraph::copy_out_tensor(void *out_ptr, RaliTensorFormat format, float multi
 #endif
                     }
                 }
-                else if(output_data_type == RaliTensorDataType::FP16)
+                else if(output_data_type == RocalTensorDataType::FP16)
                 {
                     for (unsigned int nCount = 0; nCount < n; nCount++) {
                         half *output_tensor_16 = static_cast<half *>(out_ptr);
@@ -904,7 +904,7 @@ void MasterGraph::output_routine()
                 {
                     // if(_output_tensors.size() != 0)
                     auto tensor_write_buffer = _tensor_ring_buffer.get_write_buffers();
-                    if(_affinity == RaliAffinity::GPU)
+                    if(_affinity == RocalAffinity::GPU)
                     {
                         _output_tensors[idx]->swap_handle(tensor_write_buffer[idx]);
                     }
@@ -912,17 +912,17 @@ void MasterGraph::output_routine()
                     {
                         // std::cerr<<"\n idx::"<<idx<<"\t tensor_each_cycle_size::"<<tensor_each_cycle_size<<"\t cycle_idx"<<cycle_idx;
                         // Have to change float to the equivalent of max size data type
-                        if(_output_tensors[idx]->info().data_type() == RaliTensorDataType::FP32)
+                        if(_output_tensors[idx]->info().data_type() == RocalTensorDataType::FP32)
                         {
                             auto this_cycle_buffer_ptr = (vx_float32 *) tensor_write_buffer[idx] + tensor_each_cycle_size * cycle_idx;
                             _output_tensors[idx]->swap_handle(this_cycle_buffer_ptr);
                         }
-                        else if (_output_tensors[idx]->info().data_type() == RaliTensorDataType::FP16)
+                        else if (_output_tensors[idx]->info().data_type() == RocalTensorDataType::FP16)
                         {
                             auto this_cycle_buffer_ptr = (half *) tensor_write_buffer[idx] + tensor_each_cycle_size * cycle_idx;
                             _output_tensors[idx]->swap_handle(this_cycle_buffer_ptr);
                         }
-                        else if(_output_tensors[idx]->info().data_type() == RaliTensorDataType::UINT8)
+                        else if(_output_tensors[idx]->info().data_type() == RocalTensorDataType::UINT8)
                         {
                             auto this_cycle_buffer_ptr = (vx_uint8 *) tensor_write_buffer[idx] + tensor_each_cycle_size * cycle_idx;
                             _output_tensors[idx]->swap_handle(this_cycle_buffer_ptr);
@@ -1042,13 +1042,13 @@ const std::pair<ImageNameBatch,pMetaDataBatch>& MasterGraph::tensor_meta_data()
     return _tensor_ring_buffer.get_meta_data();
 }
 
-size_t MasterGraph::compute_optimum_internal_batch_size(size_t user_batch_size, RaliAffinity affinity)
+size_t MasterGraph::compute_optimum_internal_batch_size(size_t user_batch_size, RocalAffinity affinity)
 {
     const unsigned MINIMUM_CPU_THREAD_COUNT = 2;
     const unsigned DEFAULT_SMT_COUNT = 2;
 
 
-    if(affinity == RaliAffinity::GPU)
+    if(affinity == RocalAffinity::GPU)
         return user_batch_size;
 
     unsigned THREAD_COUNT = std::thread::hardware_concurrency();
@@ -1118,8 +1118,8 @@ bool MasterGraph::no_more_processed_data()
 }
 
 MasterGraph::Status
-MasterGraph::copy_out_tensor_planar(void *out_ptr, RaliTensorFormat format, float multiplier0, float multiplier1,
-                             float multiplier2, float offset0, float offset1, float offset2, bool reverse_channels, RaliTensorDataType output_data_type)
+MasterGraph::copy_out_tensor_planar(void *out_ptr, RocalTensorFormat format, float multiplier0, float multiplier1,
+                             float multiplier2, float offset0, float offset1, float offset2, bool reverse_channels, RocalTensorDataType output_data_type)
 {
     if(no_more_processed_data())
         return MasterGraph::Status::NO_MORE_DATA;
@@ -1134,11 +1134,11 @@ MasterGraph::copy_out_tensor_planar(void *out_ptr, RaliTensorFormat format, floa
     const size_t single_output_image_size = tensor_output_byte_size();
 
 
-    if(_output_tensor_info.mem_type() == RaliMemType::OCL)
+    if(_output_tensor_info.mem_type() == RocalMemType::OCL)
     {
         THROW("copy_out_tensor_planar for GPU affinity is not implemented")
     }
-    if(_output_tensor_info.mem_type() == RaliMemType::HOST)
+    if(_output_tensor_info.mem_type() == RocalMemType::HOST)
     {
         float multiplier[3] = {multiplier0, multiplier1, multiplier2 };
         float offset[3] = {offset0, offset1, offset2 };
@@ -1151,8 +1151,8 @@ MasterGraph::copy_out_tensor_planar(void *out_ptr, RaliTensorFormat format, floa
             for (unsigned batch = 0; batch < n ; batch++) {
                 const size_t batch_offset = w*h*c*batch;
                 auto in_buffer = (unsigned char *) out_image + batch_offset;
-                if (format == RaliTensorFormat::NHWC) {
-                    if (output_data_type == RaliTensorDataType::FP32) {
+                if (format == RocalTensorFormat::NHWC) {
+                    if (output_data_type == RocalTensorDataType::FP32) {
                         float *output_tensor_32 = static_cast<float *>(out_ptr) + batch_offset;
                         auto channel_size = w * h;
                         for (unsigned channel_idx = 0; channel_idx < c; channel_idx++)
@@ -1165,7 +1165,7 @@ MasterGraph::copy_out_tensor_planar(void *out_ptr, RaliTensorFormat format, floa
                                                                                                      channel_size])
                                                                                 : (float) (in_buffer[i + channel_idx *
                                                                                                          channel_size]));
-                    } else if (output_data_type == RaliTensorDataType::FP16) {
+                    } else if (output_data_type == RocalTensorDataType::FP16) {
                         half *output_tensor_16 = static_cast<half *>(out_ptr) + batch_offset;
                         auto channel_size = w * h;
                         for (unsigned channel_idx = 0; channel_idx < c; channel_idx++)
@@ -1178,8 +1178,8 @@ MasterGraph::copy_out_tensor_planar(void *out_ptr, RaliTensorFormat format, floa
                                                                               channel_idx * channel_size + i]));
                     }
                 }
-                if (format == RaliTensorFormat::NCHW) {
-                    if (output_data_type == RaliTensorDataType::FP32) {
+                if (format == RocalTensorFormat::NCHW) {
+                    if (output_data_type == RocalTensorDataType::FP32) {
                         float *output_tensor_32 = static_cast<float *>(out_ptr) + batch_offset;
                         //output_tensor_32 += batch_offset;
                         auto channel_size = w * h;
@@ -1253,7 +1253,7 @@ MasterGraph::copy_out_tensor_planar(void *out_ptr, RaliTensorFormat format, floa
                                             offset[channel_idx] + multiplier[channel_idx]*(reverse_channels ? (float)(in_buffer[i+(c-channel_idx-1)*channel_size]) : (float)(in_buffer[i+channel_idx*channel_size]));
 #endif
                         }
-                    } else if (output_data_type == RaliTensorDataType::FP16) {
+                    } else if (output_data_type == RocalTensorDataType::FP16) {
                         half *output_tensor_16 = static_cast<half *>(out_ptr) + batch_offset;
                         auto channel_size = w * h;
                         for (unsigned channel_idx = 0; channel_idx < c; channel_idx++)

@@ -26,49 +26,49 @@ THE SOFTWARE.
 #include "context.h"
 #include "rocal_api.h"
 
-RaliStatus RALI_API_CALL
-raliRelease(RaliContext p_context)
+RocalStatus ROCAL_API_CALL
+rocalRelease(RocalContext p_context)
 {
     // Deleting context is required to call the destructor of all the member objects
     auto context = static_cast<Context*>(p_context);
     delete context;
-    return RALI_OK;
+    return ROCAL_OK;
 }
 
-RaliContext RALI_API_CALL
-raliCreate(
+RocalContext ROCAL_API_CALL
+rocalCreate(
         size_t batch_size,
-        RaliProcessMode affinity,
+        RocalProcessMode affinity,
         int gpu_id,
         size_t cpu_thread_count,
         size_t prefetch_queue_depth,
-        RaliTensorOutputType output_tensor_data_type)
+        RocalTensorOutputType output_tensor_data_type)
 {
-    RaliContext context = nullptr;
+    RocalContext context = nullptr;
     try
     {
-        auto translate_process_mode = [](RaliProcessMode process_mode)
+        auto translate_process_mode = [](RocalProcessMode process_mode)
         {
             switch(process_mode)
             {
-                case RALI_PROCESS_GPU:
-                    return RaliAffinity::GPU;
-                case RALI_PROCESS_CPU:
-                    return RaliAffinity::CPU;
+                case ROCAL_PROCESS_GPU:
+                    return RocalAffinity::GPU;
+                case ROCAL_PROCESS_CPU:
+                    return RocalAffinity::CPU;
                 default:
-                    THROW("Unkown Rali data type")
+                    THROW("Unkown Rocal data type")
             }
         };
-        auto translate_output_data_type = [](RaliTensorOutputType data_type)
+        auto translate_output_data_type = [](RocalTensorOutputType data_type)
         {
             switch(data_type)
             {
-                case RALI_FP32:
-                    return RaliTensorDataType::FP32;
-                case RALI_FP16:
-                    return RaliTensorDataType::FP16;
+                case ROCAL_FP32:
+                    return RocalTensorDataType::FP32;
+                case ROCAL_FP16:
+                    return RocalTensorDataType::FP16;
                 default:
-                    THROW("Unkown Rali data type")
+                    THROW("Unkown Rocal data type")
             }
         };
         context = new Context(batch_size, translate_process_mode(affinity), gpu_id, cpu_thread_count, prefetch_queue_depth, translate_output_data_type(output_tensor_data_type));
@@ -76,32 +76,32 @@ raliCreate(
     }
     catch(const std::exception& e)
     {
-        ERR( STR("Failed to init the Rali context, ") + STR(e.what()))
+        ERR( STR("Failed to init the Rocal context, ") + STR(e.what()))
     }
     return context;
 }
 
-RaliStatus RALI_API_CALL
-raliRun(RaliContext p_context)
+RocalStatus ROCAL_API_CALL
+rocalRun(RocalContext p_context)
 {
     auto context = static_cast<Context*>(p_context);
     try
     {
         auto ret = context->master_graph->run();
         if(ret != MasterGraph::Status::OK)
-            return RALI_RUNTIME_ERROR;
+            return ROCAL_RUNTIME_ERROR;
     }
     catch(const std::exception& e)
     {
         context->capture_error(e.what());
         ERR(e.what())
-        return RALI_RUNTIME_ERROR;
+        return ROCAL_RUNTIME_ERROR;
     }
-    return RALI_OK;
+    return ROCAL_OK;
 }
 
-RaliStatus RALI_API_CALL
-raliVerify(RaliContext p_context)
+RocalStatus ROCAL_API_CALL
+rocalVerify(RocalContext p_context)
 {
     auto context = static_cast<Context*>(p_context);
     try
@@ -112,9 +112,9 @@ raliVerify(RaliContext p_context)
     {
         context->capture_error(e.what());
         ERR(e.what())
-        return RALI_RUNTIME_ERROR;
+        return ROCAL_RUNTIME_ERROR;
     }
-    return RALI_OK;
+    return ROCAL_OK;
 }
 
 

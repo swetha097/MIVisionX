@@ -27,16 +27,16 @@ THE SOFTWARE.
 #include "image_read_and_decode.h"
 
 std::tuple<Decoder::ColorFormat, unsigned >
-interpret_color_format(RaliColorFormat color_format )
+interpret_color_format(RocalColorFormat color_format )
 {
     switch (color_format) {
-        case RaliColorFormat::RGB24:
+        case RocalColorFormat::RGB24:
             return  std::make_tuple(Decoder::ColorFormat::RGB, 3);
 
-        case RaliColorFormat::BGR24:
+        case RocalColorFormat::BGR24:
             return  std::make_tuple(Decoder::ColorFormat::BGR, 3);
 
-        case RaliColorFormat::U8:
+        case RocalColorFormat::U8:
             return  std::make_tuple(Decoder::ColorFormat::GRAY, 1);
 
         default:
@@ -137,7 +137,7 @@ ImageReadAndDecode::load(unsigned char* buff,
                          std::vector<uint32_t> &roi_height,
                          std::vector<uint32_t> &actual_width,
                          std::vector<uint32_t> &actual_height,
-                         RaliColorFormat output_color_format,
+                         RocalColorFormat output_color_format,
                          bool decoder_keep_original )
 {
     if(max_decoded_width == 0 || max_decoded_height == 0 )

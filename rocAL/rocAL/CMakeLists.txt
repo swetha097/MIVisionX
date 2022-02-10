@@ -133,16 +133,6 @@ if(${BUILD_RALI})
     # rocAL uses C++ 17 features
     set(CMAKE_CXX_STANDARD 17)
     message("-- ${Green}ROCm Augmentation Library -- rocAL module added${ColourReset}")
-    # install(FILES
-    #     ../python/rali.py
-    #     ../python/rali_lib.py
-    #     ../python/rali_common.py
-    #     ../python/rali_image.py
-    #     ../python/rali_parameter.py
-    #     ../python/rali_torch.py
-    #     ../python/rali_image_iterator.py
-    #     DESTINATION ./rali/python
-    #     )
     install(FILES
         include/api/rocal_api.h
         include/api/rocal_api_info.h

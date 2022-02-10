@@ -23,11 +23,11 @@ THE SOFTWARE.
 #pragma once
 #include "parameter_crop.h"
 
-class RaliCropParam : public CropParam
+class RocalCropParam : public CropParam
 {
 public:
-    RaliCropParam() = delete;
-    RaliCropParam(unsigned int batch_size): CropParam(batch_size)
+    RocalCropParam() = delete;
+    RocalCropParam(unsigned int batch_size): CropParam(batch_size)
     {
         crop_height_factor = default_crop_height_factor();
         crop_width_factor  = default_crop_width_factor();

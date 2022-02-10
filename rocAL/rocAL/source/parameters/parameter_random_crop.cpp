@@ -27,7 +27,7 @@ THE SOFTWARE.
 #include "parameter_random_crop.h"
 #include "commons.h"
 
-void RaliRandomCropParam::set_area_factor(Parameter<float>* crop_area_factor)
+void RocalRandomCropParam::set_area_factor(Parameter<float>* crop_area_factor)
 {
     if(!crop_area_factor)
         return ;
@@ -35,7 +35,7 @@ void RaliRandomCropParam::set_area_factor(Parameter<float>* crop_area_factor)
     area_factor = crop_area_factor;
 }
 
-void RaliRandomCropParam::set_aspect_ratio(Parameter<float>* crop_aspect_ratio)
+void RocalRandomCropParam::set_aspect_ratio(Parameter<float>* crop_aspect_ratio)
 {
     if(!crop_aspect_ratio)
         return ;
@@ -43,13 +43,13 @@ void RaliRandomCropParam::set_aspect_ratio(Parameter<float>* crop_aspect_ratio)
     aspect_ratio = crop_aspect_ratio;
 }
 
-void RaliRandomCropParam::update_array()
+void RocalRandomCropParam::update_array()
 {
     fill_crop_dims();
     update_crop_array();
 }
 
-void RaliRandomCropParam::fill_crop_dims()
+void RocalRandomCropParam::fill_crop_dims()
 {
     float crop_area_factor  = 1.0;
     float crop_aspect_ratio = 1.0;
@@ -112,13 +112,13 @@ void RaliRandomCropParam::fill_crop_dims()
     }
 }
 
-Parameter<float> *RaliRandomCropParam::default_area_factor()
+Parameter<float> *RocalRandomCropParam::default_area_factor()
 {
     return ParameterFactory::instance()->create_uniform_float_rand_param(AREA_FACTOR_RANGE[0],
                                                                          AREA_FACTOR_RANGE[1])->core;
 }
 
-Parameter<float> *RaliRandomCropParam::default_aspect_ratio()
+Parameter<float> *RocalRandomCropParam::default_aspect_ratio()
 {
     return ParameterFactory::instance()->create_uniform_float_rand_param(ASPECT_RATIO_RANGE[0],
                                                                          ASPECT_RATIO_RANGE[1])->core;

@@ -20,16 +20,16 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-#ifndef MIVISIONX_RALI_API_DATA_LOADERS_H
-#define MIVISIONX_RALI_API_DATA_LOADERS_H
+#ifndef MIVISIONX_ROCAL_API_DATA_LOADERS_H
+#define MIVISIONX_ROCAL_API_DATA_LOADERS_H
 #include "rocal_api_types.h"
 
 
 /// Creates JPEG image reader and decoder. It allocates the resources and objects required to read and decode Jpeg images stored on the file systems. It has internal sharding capability to load/decode in parallel is user wants.
 /// If images are not Jpeg compressed they will be ignored.
-/// \param context Rali context
+/// \param context Rocal context
 /// \param source_path A NULL terminated char string pointing to the location on the disk
-/// \param rali_color_format The color format the images will be decoded to.
+/// \param rocal_color_format The color format the images will be decoded to.
 /// \param shard_count Defines the parallelism level by internally sharding the input dataset and load/decode using multiple decoder/loader instances. Using shard counts bigger than 1 improves the load/decode performance if compute resources (CPU cores) are available.
 /// \param is_output Determines if the user wants the loaded images to be part of the output or not.
 /// \param shuffle Determines if the user wants to shuffle the dataset or not.
@@ -39,21 +39,21 @@ THE SOFTWARE.
 /// \param max_height The maximum height of the decoded images, larger or smaller will be resized to closest
 /// \return Reference to the output image
 
-extern "C"  RaliTensor  RALI_API_CALL raliJpegFileSource(RaliContext context,
+extern "C"  RocalTensor  ROCAL_API_CALL rocalJpegFileSource(RocalContext context,
                                                         const char* source_path,
-                                                        RaliImageColor rali_color_format,
+                                                        RocalImageColor rocal_color_format,
                                                         unsigned internal_shard_count,
                                                         bool is_output,
                                                         bool shuffle = false,
                                                         bool loop = false,
-                                                        RaliImageSizeEvaluationPolicy decode_size_policy = RALI_USE_MOST_FREQUENT_SIZE,
-                                                        unsigned max_width = 0, unsigned max_height = 0, RaliDecoderType rali_decoder_type=RaliDecoderType::RALI_DECODER_TJPEG);
+                                                        RocalImageSizeEvaluationPolicy decode_size_policy = ROCAL_USE_MOST_FREQUENT_SIZE,
+                                                        unsigned max_width = 0, unsigned max_height = 0, RocalDecoderType rocal_decoder_type=RocalDecoderType::ROCAL_DECODER_TJPEG);
 
 
 /// Creates JPEG image reader and decoder. It allocates the resources and objects required to read and decode Jpeg images stored on the file systems. It accepts external sharding information to load a singe shard. only
-/// \param context Rali context
+/// \param context Rocal context
 /// \param source_path A NULL terminated char string pointing to the location on the disk
-/// \param rali_color_format The color format the images will be decoded to.
+/// \param rocal_color_format The color format the images will be decoded to.
 /// \param shard_id Shard id for this loader
 /// \param shard_count Total shard count
 /// \param is_output Determines if the user wants the loaded images to be part of the output or not.
@@ -64,47 +64,47 @@ extern "C"  RaliTensor  RALI_API_CALL raliJpegFileSource(RaliContext context,
 /// \param max_height The maximum height of the decoded images, larger or smaller will be resized to closest
 /// \return Reference to the output image
 
-extern "C"  RaliTensor  RALI_API_CALL raliJpegFileSourceSingleShard(RaliContext context,
+extern "C"  RocalTensor  ROCAL_API_CALL rocalJpegFileSourceSingleShard(RocalContext context,
                                                                    const char* source_path,
-                                                                   RaliImageColor rali_color_format,
+                                                                   RocalImageColor rocal_color_format,
                                                                    unsigned shard_id,
                                                                    unsigned shard_count,
                                                                    bool is_output ,
                                                                    bool shuffle = false,
                                                                    bool loop = false,
-                                                                   RaliImageSizeEvaluationPolicy decode_size_policy = RALI_USE_MOST_FREQUENT_SIZE,
+                                                                   RocalImageSizeEvaluationPolicy decode_size_policy = ROCAL_USE_MOST_FREQUENT_SIZE,
                                                                    unsigned max_width = 0, unsigned max_height = 0);
 
 
 /// Creates JPEG image reader and decoder. It allocates the resources and objects required to read and decode COCO Jpeg images stored on the file systems. It has internal sharding capability to load/decode in parallel is user wants.
 /// If images are not Jpeg compressed they will be ignored.
-/// \param rali_context Rali context
+/// \param rocal_context Rocal context
 /// \param source_path A NULL terminated char string pointing to the location on the disk
 /// \param json_path Path to the COCO Json File
-/// \param rali_color_format The color format the images will be decoded to.
+/// \param rocal_color_format The color format the images will be decoded to.
 /// \param shard_count Defines the parallelism level by internally sharding the input dataset and load/decode using multiple decoder/loader instances. Using shard counts bigger than 1 improves the load/decode performance if compute resources (CPU cores) are available.
 /// \param is_output Determines if the user wants the loaded images to be part of the output or not.
 /// \param decode_size_policy
 /// \param max_width The maximum width of the decoded images, larger or smaller will be resized to closest
 /// \param max_height The maximum height of the decoded images, larger or smaller will be resized to closest
 /// \return Reference to the output image
-extern "C"  RaliTensor  RALI_API_CALL raliJpegCOCOFileSource(RaliContext context,
+extern "C"  RocalTensor  ROCAL_API_CALL rocalJpegCOCOFileSource(RocalContext context,
                                                         const char* source_path,
                                                         const char* json_path,
-                                                        RaliImageColor color_format,
+                                                        RocalImageColor color_format,
                                                         unsigned internal_shard_count,
                                                         bool is_output,
                                                         bool shuffle = false,
                                                         bool loop = false,
-                                                        RaliImageSizeEvaluationPolicy decode_size_policy = RALI_USE_MOST_FREQUENT_SIZE,
+                                                        RocalImageSizeEvaluationPolicy decode_size_policy = ROCAL_USE_MOST_FREQUENT_SIZE,
                                                         unsigned max_width = 0, unsigned max_height = 0);
 
 /// Creates JPEG image reader and partial decoder. It allocates the resources and objects required to read and decode COCO Jpeg images stored on the file systems. It has internal sharding capability to load/decode in parallel is user wants.
 /// If images are not Jpeg compressed they will be ignored.
-/// \param rali_context Rali context
+/// \param rocal_context Rocal context
 /// \param source_path A NULL terminated char string pointing to the location on the disk
 /// \param json_path Path to the COCO Json File
-/// \param rali_color_format The color format the images will be decoded to.
+/// \param rocal_color_format The color format the images will be decoded to.
 /// \param shard_count Defines the parallelism level by internally sharding the input dataset and load/decode using multiple decoder/loader instances. Using shard counts bigger than 1 improves the load/decode performance if compute resources (CPU cores) are available.
 /// \param is_output Determines if the user wants the loaded images to be part of the output or not.
 /// \param decode_size_policy
@@ -115,25 +115,25 @@ extern "C"  RaliTensor  RALI_API_CALL raliJpegCOCOFileSource(RaliContext context
 /// \param y_drift_factor - Determines from top left corder to height (crop_height), where to start cropping other wise try for a central crop or take image dims. Ranges from 0 to 1.
 /// \param x_drift_factor - Determines from top left corder to width (crop_width), where to start cropping other wise try for a central crop or take image dims. Ranges from 0 to 1.
 /// \return Reference to the output image
-extern "C"  RaliTensor  RALI_API_CALL raliJpegCOCOFileSourcePartial(RaliContext p_context,
+extern "C"  RocalTensor  ROCAL_API_CALL rocalJpegCOCOFileSourcePartial(RocalContext p_context,
                                                             const char* source_path,
                                                             const char* json_path,
-                                                            RaliImageColor rali_color_format,
+                                                            RocalImageColor rocal_color_format,
                                                             unsigned internal_shard_count,
                                                             bool is_output,
                                                             bool shuffle = false,
                                                             bool loop = false,
-                                                            RaliImageSizeEvaluationPolicy decode_size_policy = RALI_USE_MAX_SIZE,
+                                                            RocalImageSizeEvaluationPolicy decode_size_policy = ROCAL_USE_MAX_SIZE,
                                                             unsigned max_width = 0, unsigned max_height = 0,
-                                                            RaliFloatParam area_factor = NULL, RaliFloatParam aspect_ratio = NULL,
-                                                            RaliFloatParam y_drift_factor = NULL, RaliFloatParam x_drift_factor = NULL );
+                                                            RocalFloatParam area_factor = NULL, RocalFloatParam aspect_ratio = NULL,
+                                                            RocalFloatParam y_drift_factor = NULL, RocalFloatParam x_drift_factor = NULL );
 
 /// Creates JPEG image reader and partial decoder. It allocates the resources and objects required to read and decode COCO Jpeg images stored on the file systems. It has internal sharding capability to load/decode in parallel is user wants.
 /// If images are not Jpeg compressed they will be ignored.
-/// \param rali_context Rali context
+/// \param rocal_context Rocal context
 /// \param source_path A NULL terminated char string pointing to the location on the disk
 /// \param json_path Path to the COCO Json File
-/// \param rali_color_format The color format the images will be decoded to.
+/// \param rocal_color_format The color format the images will be decoded to.
 /// \param shard_id Shard id for this loader
 /// \param shard_count Defines the parallelism level by internally sharding the input dataset and load/decode using multiple decoder/loader instances. Using shard counts bigger than 1 improves the load/decode performance if compute resources (CPU cores) are available.
 /// \param is_output Determines if the user wants the loaded images to be part of the output or not.
@@ -145,25 +145,25 @@ extern "C"  RaliTensor  RALI_API_CALL raliJpegCOCOFileSourcePartial(RaliContext 
 /// \param y_drift_factor - Determines from top left corder to height (crop_height), where to start cropping other wise try for a central crop or take image dims. Ranges from 0 to 1.
 /// \param x_drift_factor - Determines from top left corder to width (crop_width), where to start cropping other wise try for a central crop or take image dims. Ranges from 0 to 1.
 /// \return Reference to the output image
-extern "C"  RaliTensor  RALI_API_CALL raliJpegCOCOFileSourcePartialSingleShard(RaliContext p_context,
+extern "C"  RocalTensor  ROCAL_API_CALL rocalJpegCOCOFileSourcePartialSingleShard(RocalContext p_context,
                                                             const char* source_path,
                                                             const char* json_path,
-                                                            RaliImageColor rali_color_format,
+                                                            RocalImageColor rocal_color_format,
                                                             unsigned shard_id,
                                                             unsigned shard_count,
                                                             bool is_output,
                                                             bool shuffle = false,
                                                             bool loop = false,
-                                                            RaliImageSizeEvaluationPolicy decode_size_policy = RALI_USE_MAX_SIZE,
+                                                            RocalImageSizeEvaluationPolicy decode_size_policy = ROCAL_USE_MAX_SIZE,
                                                             unsigned max_width = 0, unsigned max_height = 0,
-                                                            RaliFloatParam area_factor = NULL, RaliFloatParam aspect_ratio = NULL,
-                                                            RaliFloatParam y_drift_factor = NULL, RaliFloatParam x_drift_factor = NULL );
+                                                            RocalFloatParam area_factor = NULL, RocalFloatParam aspect_ratio = NULL,
+                                                            RocalFloatParam y_drift_factor = NULL, RocalFloatParam x_drift_factor = NULL );
 
 /// Creates JPEG image reader and decoder. It allocates the resources and objects required to read and decode COCO Jpeg images stored on the file systems. It accepts external sharding information to load a singe shard. only
-/// \param rali_context Rali context
+/// \param rocal_context Rocal context
 /// \param source_path A NULL terminated char string pointing to the location on the disk
 /// \param json_path Path to the COCO Json File
-/// \param rali_color_format The color format the images will be decoded to.
+/// \param rocal_color_format The color format the images will be decoded to.
 /// \param shard_id Shard id for this loader
 /// \param shard_count Total shard count
 /// \param is_output Determines if the user wants the loaded images to be part of the output or not.
@@ -171,23 +171,23 @@ extern "C"  RaliTensor  RALI_API_CALL raliJpegCOCOFileSourcePartialSingleShard(R
 /// \param max_width The maximum width of the decoded images, larger or smaller will be resized to closest
 /// \param max_height The maximum height of the decoded images, larger or smaller will be resized to closest
 /// \return
-extern "C"  RaliTensor  RALI_API_CALL raliJpegCOCOFileSourceSingleShard(RaliContext context,
+extern "C"  RocalTensor  ROCAL_API_CALL rocalJpegCOCOFileSourceSingleShard(RocalContext context,
                                                                    const char* source_path,
                                                                    const char* json_path,
-                                                                   RaliImageColor color_format,
+                                                                   RocalImageColor color_format,
                                                                    unsigned shard_id,
                                                                    unsigned shard_count,
                                                                    bool is_output ,
                                                                    bool shuffle = false,
                                                                    bool loop = false,
-                                                                   RaliImageSizeEvaluationPolicy decode_size_policy = RALI_USE_MOST_FREQUENT_SIZE,
+                                                                   RocalImageSizeEvaluationPolicy decode_size_policy = ROCAL_USE_MOST_FREQUENT_SIZE,
                                                                    unsigned max_width = 0, unsigned max_height = 0);
 
 /// Creates JPEG image reader and decoder for Caffe LMDB records. It allocates the resources and objects required to read and decode Jpeg images stored in Caffe LMDB Records. It has internal sharding capability to load/decode in parallel is user wants.
 /// If images are not Jpeg compressed they will be ignored.
-/// \param context Rali context
+/// \param context Rocal context
 /// \param source_path A NULL terminated char string pointing to the location on the disk
-/// \param rali_color_format The color format the images will be decoded to.
+/// \param rocal_color_format The color format the images will be decoded to.
 /// \param internal_shard_count Defines the parallelism level by internally sharding the input dataset and load/decode using multiple decoder/loader instances. Using shard counts bigger than 1 improves the load/decode performance if compute resources (CPU cores) are available.
 /// \param is_output Determines if the user wants the loaded images to be part of the output or not.
 /// \param shuffle Determines if the user wants to shuffle the dataset or not.
@@ -196,20 +196,20 @@ extern "C"  RaliTensor  RALI_API_CALL raliJpegCOCOFileSourceSingleShard(RaliCont
 /// \param max_width The maximum width of the decoded images, larger or smaller will be resized to closest
 /// \param max_height The maximum height of the decoded images, larger or smaller will be resized to closest
 /// \return Reference to the output image
-extern "C"  RaliTensor  RALI_API_CALL raliJpegCaffeLMDBRecordSource(RaliContext context,
+extern "C"  RocalTensor  ROCAL_API_CALL rocalJpegCaffeLMDBRecordSource(RocalContext context,
                                                             const char* source_path,
-                                                            RaliImageColor rali_color_format,
+                                                            RocalImageColor rocal_color_format,
                                                             unsigned internal_shard_count,
                                                             bool is_output,
                                                             bool shuffle = false,
                                                             bool loop = false,
-                                                            RaliImageSizeEvaluationPolicy decode_size_policy = RALI_USE_MOST_FREQUENT_SIZE,
+                                                            RocalImageSizeEvaluationPolicy decode_size_policy = ROCAL_USE_MOST_FREQUENT_SIZE,
                                                             unsigned max_width = 0, unsigned max_height = 0);
 
 /// Creates JPEG image reader and decoder for Caffe LMDB records. It allocates the resources and objects required to read and decode Jpeg images stored in Caffe2 LMDB Records. It has internal sharding capability to load/decode in parallel is user wants.
-/// \param rali_context Rali context
+/// \param rocal_context Rocal context
 /// \param source_path A NULL terminated char string pointing to the location on the disk
-/// \param rali_color_format The color format the images will be decoded to.
+/// \param rocal_color_format The color format the images will be decoded to.
 /// \param shard_id Shard id for this loader
 /// \param shard_count Total shard count
 /// \param is_output Determines if the user wants the loaded images to be part of the output or not.
@@ -219,22 +219,22 @@ extern "C"  RaliTensor  RALI_API_CALL raliJpegCaffeLMDBRecordSource(RaliContext 
 /// \param max_width The maximum width of the decoded images, larger or smaller will be resized to closest
 /// \param max_height The maximum height of the decoded images, larger or smaller will be resized to closest
 /// \return Reference to the output image
-extern "C"  RaliTensor  RALI_API_CALL raliJpegCaffeLMDBRecordSourceSingleShard(RaliContext p_context,
+extern "C"  RocalTensor  ROCAL_API_CALL rocalJpegCaffeLMDBRecordSourceSingleShard(RocalContext p_context,
                                                             const char* source_path,
-                                                            RaliImageColor rali_color_format,
+                                                            RocalImageColor rocal_color_format,
                                                             unsigned shard_id,
                                                             unsigned shard_count,
                                                             bool is_output,
                                                             bool shuffle = false,
                                                             bool loop = false,
-                                                            RaliImageSizeEvaluationPolicy decode_size_policy = RALI_USE_MOST_FREQUENT_SIZE,
+                                                            RocalImageSizeEvaluationPolicy decode_size_policy = ROCAL_USE_MOST_FREQUENT_SIZE,
                                                             unsigned max_width = 0, unsigned max_height = 0);
 
 /// Creates JPEG image reader and decoder for Caffe2 LMDB records. It allocates the resources and objects required to read and decode Jpeg images stored in Caffe2 LMDB Records. It has internal sharding capability to load/decode in parallel is user wants.
 /// If images are not Jpeg compressed they will be ignored.
-/// \param context Rali context
+/// \param context Rocal context
 /// \param source_path A NULL terminated char string pointing to the location on the disk
-/// \param rali_color_format The color format the images will be decoded to.
+/// \param rocal_color_format The color format the images will be decoded to.
 /// \param internal_shard_count Defines the parallelism level by internally sharding the input dataset and load/decode using multiple decoder/loader instances. Using shard counts bigger than 1 improves the load/decode performance if compute resources (CPU cores) are available.
 /// \param is_output Determines if the user wants the loaded images to be part of the output or not.
 /// \param shuffle Determines if the user wants to shuffle the dataset or not.
@@ -243,20 +243,20 @@ extern "C"  RaliTensor  RALI_API_CALL raliJpegCaffeLMDBRecordSourceSingleShard(R
 /// \param max_width The maximum width of the decoded images, larger or smaller will be resized to closest
 /// \param max_height The maximum height of the decoded images, larger or smaller will be resized to closest
 /// \return Reference to the output image
-extern "C"  RaliTensor  RALI_API_CALL raliJpegCaffe2LMDBRecordSource(RaliContext context,
+extern "C"  RocalTensor  ROCAL_API_CALL rocalJpegCaffe2LMDBRecordSource(RocalContext context,
                                                             const char* source_path,
-                                                            RaliImageColor rali_color_format,
+                                                            RocalImageColor rocal_color_format,
                                                             unsigned internal_shard_count,
                                                             bool is_output,
                                                             bool shuffle = false,
                                                             bool loop = false,
-                                                            RaliImageSizeEvaluationPolicy decode_size_policy = RALI_USE_MOST_FREQUENT_SIZE,
+                                                            RocalImageSizeEvaluationPolicy decode_size_policy = ROCAL_USE_MOST_FREQUENT_SIZE,
                                                             unsigned max_width = 0, unsigned max_height = 0);
 
 /// Creates JPEG image reader and decoder for Caffe2 LMDB records. It allocates the resources and objects required to read and decode Jpeg images stored on the Caffe2 LMDB Records. It accepts external sharding information to load a singe shard. only
-/// \param p_context Rali context
+/// \param p_context Rocal context
 /// \param source_path A NULL terminated char string pointing to the location on the disk
-/// \param rali_color_format The color format the images will be decoded to.
+/// \param rocal_color_format The color format the images will be decoded to.
 /// \param shard_id Shard id for this loader
 /// \param shard_count Total shard count
 /// \param is_output Determines if the user wants the loaded images to be part of the output or not.
@@ -266,22 +266,22 @@ extern "C"  RaliTensor  RALI_API_CALL raliJpegCaffe2LMDBRecordSource(RaliContext
 /// \param max_width The maximum width of the decoded images, larger or smaller will be resized to closest
 /// \param max_height The maximum height of the decoded images, larger or smaller will be resized to closest
 /// \return Reference to the output image
-extern "C"  RaliTensor  RALI_API_CALL raliJpegCaffe2LMDBRecordSourceSingleShard(RaliContext p_context,
+extern "C"  RocalTensor  ROCAL_API_CALL rocalJpegCaffe2LMDBRecordSourceSingleShard(RocalContext p_context,
                                                                         const char* source_path,
-                                                                        RaliImageColor rali_color_format,
+                                                                        RocalImageColor rocal_color_format,
                                                                         unsigned shard_id,
                                                                         unsigned shard_count,
                                                                         bool is_output,
                                                                         bool shuffle = false,
                                                                         bool loop = false,
-                                                                        RaliImageSizeEvaluationPolicy decode_size_policy = RALI_USE_MOST_FREQUENT_SIZE,
+                                                                        RocalImageSizeEvaluationPolicy decode_size_policy = ROCAL_USE_MOST_FREQUENT_SIZE,
                                                                         unsigned max_width = 0, unsigned max_height = 0);
 
 /// Creates JPEG image reader and partial decoder. It allocates the resources and objects required to read and decode Jpeg images stored on the file systems. It has internal sharding capability to load/decode in parallel is user wants.
 /// If images are not Jpeg compressed they will be ignored and Crops t
-/// \param context Rali context
+/// \param context Rocal context
 /// \param source_path A NULL terminated char string pointing to the location on the disk
-/// \param rali_color_format The color format the images will be decoded to.
+/// \param rocal_color_format The color format the images will be decoded to.
 /// \param num_threads Defines the parallelism level by internally sharding the input dataset and load/decode using multiple decoder/loader instances. Using shard counts bigger than 1 improves the load/decode performance if compute resources (CPU cores) are available.
 /// \param is_output Determines if the user wants the loaded images to be part of the output or not.
 /// \param shuffle Determines if the user wants to shuffle the dataset or not.
@@ -294,23 +294,23 @@ extern "C"  RaliTensor  RALI_API_CALL raliJpegCaffe2LMDBRecordSourceSingleShard(
 /// \param y_drift_factor - Determines from top left corder to height (crop_height), where to start cropping other wise try for a central crop or take image dims. Ranges from 0 to 1.
 /// \param x_drift_factor - Determines from top left corder to width (crop_width), where to start cropping other wise try for a central crop or take image dims. Ranges from 0 to 1.
 /// \return Reference to the output image
-extern "C"  RaliTensor  RALI_API_CALL raliFusedJpegCrop(RaliContext context,
+extern "C"  RocalTensor  ROCAL_API_CALL rocalFusedJpegCrop(RocalContext context,
                                                         const char* source_path,
-                                                        RaliImageColor rali_color_format,
+                                                        RocalImageColor rocal_color_format,
                                                         unsigned num_threads,
                                                         bool is_output ,
                                                         bool shuffle = false,
                                                         bool loop = false,
-                                                        RaliImageSizeEvaluationPolicy decode_size_policy = RALI_USE_MAX_SIZE,
+                                                        RocalImageSizeEvaluationPolicy decode_size_policy = ROCAL_USE_MAX_SIZE,
                                                         unsigned max_width = 0, unsigned max_height = 0,
-                                                        RaliFloatParam area_factor = NULL, RaliFloatParam aspect_ratio = NULL,
-                                                        RaliFloatParam y_drift_factor = NULL, RaliFloatParam x_drift_factor = NULL);
+                                                        RocalFloatParam area_factor = NULL, RocalFloatParam aspect_ratio = NULL,
+                                                        RocalFloatParam y_drift_factor = NULL, RocalFloatParam x_drift_factor = NULL);
 
 
 /// Creates JPEG image reader and partial decoder. It allocates the resources and objects required to read and decode Jpeg images stored on the file systems. It accepts external sharding information to load a singe shard. only
-/// \param context Rali context
+/// \param context Rocal context
 /// \param source_path A NULL terminated char string pointing to the location on the disk
-/// \param rali_color_format The color format the images will be decoded to.
+/// \param rocal_color_format The color format the images will be decoded to.
 /// \param shard_id Shard id for this loader
 /// \param shard_count Total shard count
 /// \param is_output Determines if the user wants the loaded images to be part of the output or not.
@@ -318,25 +318,25 @@ extern "C"  RaliTensor  RALI_API_CALL raliFusedJpegCrop(RaliContext context,
 /// \param max_width The maximum width of the decoded images, larger or smaller will be resized to closest
 /// \param max_height The maximum height of the decoded images, larger or smaller will be resized to closest
 /// \return
-extern "C"  RaliTensor  RALI_API_CALL raliFusedJpegCropSingleShard(RaliContext context,
+extern "C"  RocalTensor  ROCAL_API_CALL rocalFusedJpegCropSingleShard(RocalContext context,
                                                         const char* source_path,
-                                                        RaliImageColor color_format,
+                                                        RocalImageColor color_format,
                                                         unsigned shard_id,
                                                         unsigned shard_count,
                                                         bool is_output ,
                                                         bool shuffle = false,
                                                         bool loop = false,
-                                                        RaliImageSizeEvaluationPolicy decode_size_policy = RALI_USE_MAX_SIZE,
+                                                        RocalImageSizeEvaluationPolicy decode_size_policy = ROCAL_USE_MAX_SIZE,
                                                         unsigned max_width = 0, unsigned max_height = 0,
-                                                        RaliFloatParam area_factor = NULL, RaliFloatParam aspect_ratio = NULL,
-                                                        RaliFloatParam y_drift_factor = NULL, RaliFloatParam x_drift_factor = NULL);
+                                                        RocalFloatParam area_factor = NULL, RocalFloatParam aspect_ratio = NULL,
+                                                        RocalFloatParam y_drift_factor = NULL, RocalFloatParam x_drift_factor = NULL);
 
 
 /// Creates TensorFlow records JPEG image reader and decoder. It allocates the resources and objects required to read and decode Jpeg images stored on the file systems. It has internal sharding capability to load/decode in parallel is user wants.
 /// If images are not Jpeg compressed they will be ignored.
-/// \param context Rali context
+/// \param context Rocal context
 /// \param source_path A NULL terminated char string pointing to the location of the TF records on the disk
-/// \param rali_color_format The color format the images will be decoded to.
+/// \param rocal_color_format The color format the images will be decoded to.
 /// \param internal_shard_count Defines the parallelism level by internally sharding the input dataset and load/decode using multiple decoder/loader instances. Using shard counts bigger than 1 improves the load/decode performance if compute resources (CPU cores) are available.
 /// \param is_output Determines if the user wants the loaded images to be part of the output or not.
 /// \param shuffle Determines if the user wants to shuffle the dataset or not.
@@ -345,22 +345,22 @@ extern "C"  RaliTensor  RALI_API_CALL raliFusedJpegCropSingleShard(RaliContext c
 /// \param max_width The maximum width of the decoded images, larger or smaller will be resized to closest
 /// \param max_height The maximum height of the decoded images, larger or smaller will be resized to closest
 /// \return Reference to the output image
-extern "C"  RaliTensor  RALI_API_CALL raliJpegTFRecordSource(RaliContext context,
+extern "C"  RocalTensor  ROCAL_API_CALL rocalJpegTFRecordSource(RocalContext context,
                                                             const char* source_path,
-                                                            RaliImageColor rali_color_format,
+                                                            RocalImageColor rocal_color_format,
                                                             unsigned internal_shard_count,
                                                             bool is_output,
                                                             const char* user_key_for_encoded,
                                                             const char* user_key_for_filename,
                                                             bool shuffle = false,
                                                             bool loop = false,
-                                                            RaliImageSizeEvaluationPolicy decode_size_policy = RALI_USE_MOST_FREQUENT_SIZE,
+                                                            RocalImageSizeEvaluationPolicy decode_size_policy = ROCAL_USE_MOST_FREQUENT_SIZE,
                                                             unsigned max_width = 0, unsigned max_height = 0);
 
 /// Creates TensorFlow records JPEG image reader and decoder. It allocates the resources and objects required to read and decode Jpeg images stored on the file systems. It accepts external sharding information to load a singe shard. only
-/// \param context Rali context
+/// \param context Rocal context
 /// \param source_path A NULL terminated char string pointing to the location of the TF records on the disk
-/// \param rali_color_format The color format the images will be decoded to.
+/// \param rocal_color_format The color format the images will be decoded to.
 /// \param shard_id Shard id for this loader
 /// \param shard_count Total shard count
 /// \param is_output Determines if the user wants the loaded images to be part of the output or not.
@@ -370,20 +370,20 @@ extern "C"  RaliTensor  RALI_API_CALL raliJpegTFRecordSource(RaliContext context
 /// \param max_width The maximum width of the decoded images, larger or smaller will be resized to closest
 /// \param max_height The maximum height of the decoded images, larger or smaller will be resized to closest
 /// \return
-extern "C"  RaliTensor  RALI_API_CALL raliJpegTFRecordSourceSingleShard(RaliContext context,
+extern "C"  RocalTensor  ROCAL_API_CALL rocalJpegTFRecordSourceSingleShard(RocalContext context,
                                                                         const char* source_path,
-                                                                        RaliImageColor rali_color_format,
+                                                                        RocalImageColor rocal_color_format,
                                                                         unsigned shard_id,
                                                                         unsigned shard_count,
                                                                         bool is_output,
                                                                         bool shuffle = false,
                                                                         bool loop = false,
-                                                                        RaliImageSizeEvaluationPolicy decode_size_policy = RALI_USE_MOST_FREQUENT_SIZE,
+                                                                        RocalImageSizeEvaluationPolicy decode_size_policy = ROCAL_USE_MOST_FREQUENT_SIZE,
                                                                         unsigned max_width = 0, unsigned max_height = 0);
 /// Creates Raw image loader. It allocates the resources and objects required to load images stored on the file systems.
-/// \param rali_context Rali context
+/// \param rocal_context Rocal context
 /// \param source_path A NULL terminated char string pointing to the location on the disk
-/// \param rali_color_format The color format the images will be decoded to.
+/// \param rocal_color_format The color format the images will be decoded to.
 /// \param is_output Determines if the user wants the loaded images to be part of the output or not.
 /// \param shuffle: to shuffle dataset
 /// \param loop: repeat data loading
@@ -391,11 +391,11 @@ extern "C"  RaliTensor  RALI_API_CALL raliJpegTFRecordSourceSingleShard(RaliCont
 /// \param out_height The output height of raw image
 /// \return
 
-extern "C"  RaliTensor  RALI_API_CALL raliRawTFRecordSource(RaliContext p_context,
+extern "C"  RocalTensor  ROCAL_API_CALL rocalRawTFRecordSource(RocalContext p_context,
                                                            const char* source_path,
                                                            const char* user_key_for_raw,
                                                            const char* user_key_for_filename,
-                                                           RaliImageColor rali_color_format,
+                                                           RocalImageColor rocal_color_format,
                                                            bool is_output,
                                                            bool shuffle = false,
                                                            bool loop = false,
@@ -403,9 +403,9 @@ extern "C"  RaliTensor  RALI_API_CALL raliRawTFRecordSource(RaliContext p_contex
                                                            const char* record_name_prefix = "");
 
 /// Creates Raw image loader. It allocates the resources and objects required to load images stored on the file systems.
-/// \param rali_context Rali context
+/// \param rocal_context Rocal context
 /// \param source_path A NULL terminated char string pointing to the location on the disk
-/// \param rali_color_format The color format the images will be decoded to.
+/// \param rocal_color_format The color format the images will be decoded to.
 /// \param shard_id Shard id for this loader
 /// \param shard_count Total shard count
 /// \param shuffle: to shuffle dataset
@@ -414,9 +414,9 @@ extern "C"  RaliTensor  RALI_API_CALL raliRawTFRecordSource(RaliContext p_contex
 /// \param out_height The output height of raw image
 /// \param record_name_prefix : if nonempty reader will only read records with certain prefix
 /// \return
-extern "C"  RaliTensor  RALI_API_CALL raliRawTFRecordSourceSingleShard(RaliContext p_context,
+extern "C"  RocalTensor  ROCAL_API_CALL rocalRawTFRecordSourceSingleShard(RocalContext p_context,
                                                                       const char* source_path,
-                                                                      RaliImageColor rali_color_format,
+                                                                      RocalImageColor rocal_color_format,
                                                                       unsigned shard_id,
                                                                       unsigned shard_count,
                                                                       bool is_output,
@@ -425,17 +425,17 @@ extern "C"  RaliTensor  RALI_API_CALL raliRawTFRecordSourceSingleShard(RaliConte
                                                                       unsigned out_width=0, unsigned out_height=0,
                                                                       const char* record_name_prefix = "");
 /// Creates CIFAR10 raw data reader and loader. It allocates the resources and objects required to read raw data stored on the file systems.
-/// \param context Rali context
+/// \param context Rocal context
 /// \param source_path A NULL terminated char string pointing to the location on the disk
-/// \param rali_color_format The color format the images will be decoded to.
+/// \param rocal_color_format The color format the images will be decoded to.
 /// \param is_output Determines if the user wants the loaded images to be part of the output or not.
 /// \param out_width ; output width
 /// \param out_height ; output_height
 /// \param filename_prefix ; if set loader will only load files with the given prefix name
 /// \return Reference to the output image
-extern "C"  RaliTensor  RALI_API_CALL raliRawCIFAR10Source(RaliContext context,
+extern "C"  RocalTensor  ROCAL_API_CALL rocalRawCIFAR10Source(RocalContext context,
                                                         const char* source_path,
-                                                        RaliImageColor color_format,
+                                                        RocalImageColor color_format,
                                                         bool is_output ,
                                                         unsigned out_width, unsigned out_height, const char* filename_prefix = "",
                                                         bool loop = false);
@@ -443,6 +443,6 @@ extern "C"  RaliTensor  RALI_API_CALL raliRawCIFAR10Source(RaliContext context,
 ///
 /// \param context
 /// \return
-extern "C"  RaliStatus  RALI_API_CALL raliResetLoaders(RaliContext context);
+extern "C"  RocalStatus  ROCAL_API_CALL rocalResetLoaders(RocalContext context);
 
-#endif //MIVISIONX_RALI_API_DATA_LOADERS_H
+#endif //MIVISIONX_ROCAL_API_DATA_LOADERS_H

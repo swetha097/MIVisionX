@@ -29,10 +29,10 @@ THE SOFTWARE.
 #include "rocal_api.h"
 #define MAX_BUFFER 10000
 
-RaliMetaData
-RALI_API_CALL raliCreateLabelReader(RaliContext p_context, const char* source_path) {
+RocalMetaData
+ROCAL_API_CALL rocalCreateLabelReader(RocalContext p_context, const char* source_path) {
     if (!p_context)
-        THROW("Invalid rali context passed to raliCreateLabelReader")
+        THROW("Invalid rocal context passed to rocalCreateLabelReader")
     auto context = static_cast<Context*>(p_context);
 
     return context->master_graph->create_label_reader(source_path, MetaDataReaderType::FOLDER_BASED_LABEL_READER);
@@ -40,10 +40,10 @@ RALI_API_CALL raliCreateLabelReader(RaliContext p_context, const char* source_pa
 }
 
 void
-RALI_API_CALL raliGetImageName(RaliContext p_context,  char* buf)
+ROCAL_API_CALL rocalGetImageName(RocalContext p_context,  char* buf)
 {
     if (!p_context)
-        THROW("Invalid rali context passed to raliGetImageName")
+        THROW("Invalid rocal context passed to rocalGetImageName")
     auto context = static_cast<Context*>(p_context);
     auto meta_data = context->master_graph->meta_data();
     size_t meta_data_batch_size = meta_data.first.size();
@@ -57,11 +57,11 @@ RALI_API_CALL raliGetImageName(RaliContext p_context,  char* buf)
 }
 
 unsigned
-RALI_API_CALL raliGetImageNameLen(RaliContext p_context, int* buf)
+ROCAL_API_CALL rocalGetImageNameLen(RocalContext p_context, int* buf)
 {
     unsigned size = 0;
     if (!p_context)
-        THROW("Invalid rali context passed to raliGetImageNameLen")
+        THROW("Invalid rocal context passed to rocalGetImageNameLen")
     auto context = static_cast<Context*>(p_context);
     auto meta_data = context->master_graph->meta_data();
     size_t meta_data_batch_size = meta_data.first.size();
@@ -76,11 +76,11 @@ RALI_API_CALL raliGetImageNameLen(RaliContext p_context, int* buf)
 }
 
 void
-RALI_API_CALL raliGetImageLabels(RaliContext p_context, int* buf)
+ROCAL_API_CALL rocalGetImageLabels(RocalContext p_context, int* buf)
 {
 
     if (!p_context)
-        THROW("Invalid rali context passed to raliGetImageLabels")
+        THROW("Invalid rocal context passed to rocalGetImageLabels")
     auto context = static_cast<Context*>(p_context);
     auto meta_data = context->master_graph->meta_data();
     if(!meta_data.second) {
@@ -94,11 +94,11 @@ RALI_API_CALL raliGetImageLabels(RaliContext p_context, int* buf)
 }
 
 unsigned
-RALI_API_CALL raliGetBoundingBoxCount(RaliContext p_context, int* buf)
+ROCAL_API_CALL rocalGetBoundingBoxCount(RocalContext p_context, int* buf)
 {
     unsigned size = 0;
     if (!p_context)
-        THROW("Invalid rali context passed to raliGetBoundingBoxCount")
+        THROW("Invalid rocal context passed to rocalGetBoundingBoxCount")
     auto context = static_cast<Context*>(p_context);
     auto meta_data = context->master_graph->meta_data();
     size_t meta_data_batch_size = meta_data.second->get_bb_labels_batch().size();
@@ -115,10 +115,10 @@ RALI_API_CALL raliGetBoundingBoxCount(RaliContext p_context, int* buf)
 }
 
 void
-RALI_API_CALL raliGetBoundingBoxLabel(RaliContext p_context, int* buf)
+ROCAL_API_CALL rocalGetBoundingBoxLabel(RocalContext p_context, int* buf)
 {
     if (!p_context)
-        THROW("Invalid rali context passed to raliGetBoundingBoxLabel")
+        THROW("Invalid rocal context passed to rocalGetBoundingBoxLabel")
     auto context = static_cast<Context*>(p_context);
     auto meta_data = context->master_graph->meta_data();
     size_t meta_data_batch_size = meta_data.second->get_bb_labels_batch().size();
@@ -140,10 +140,10 @@ RALI_API_CALL raliGetBoundingBoxLabel(RaliContext p_context, int* buf)
 
 
 void
-RALI_API_CALL raliGetOneHotImageLabels(RaliContext p_context, int* buf, int numOfClasses)
+ROCAL_API_CALL rocalGetOneHotImageLabels(RocalContext p_context, int* buf, int numOfClasses)
 {
     if (!p_context)
-        THROW("Invalid rali context passed to raliGetOneHotImageLabels")
+        THROW("Invalid rocal context passed to rocalGetOneHotImageLabels")
     auto context = static_cast<Context*>(p_context);
     auto meta_data = context->master_graph->meta_data();
     if(!meta_data.second) {
@@ -179,10 +179,10 @@ RALI_API_CALL raliGetOneHotImageLabels(RaliContext p_context, int* buf, int numO
 
 
 void
-RALI_API_CALL raliGetBoundingBoxCords(RaliContext p_context, float* buf)
+ROCAL_API_CALL rocalGetBoundingBoxCords(RocalContext p_context, float* buf)
 {
     if (!p_context)
-        THROW("Invalid rali context passed to raliGetBoundingBoxCords")
+        THROW("Invalid rocal context passed to rocalGetBoundingBoxCords")
     auto context = static_cast<Context*>(p_context);
     auto meta_data = context->master_graph->meta_data();
     size_t meta_data_batch_size = meta_data.second->get_bb_cords_batch().size();
@@ -202,10 +202,10 @@ RALI_API_CALL raliGetBoundingBoxCords(RaliContext p_context, float* buf)
 }
 
 void
-RALI_API_CALL raliGetImageSizes(RaliContext p_context, int* buf)
+ROCAL_API_CALL rocalGetImageSizes(RocalContext p_context, int* buf)
 {
     if (!p_context)
-        THROW("Invalid rali context passed to raliGetImageSizes")
+        THROW("Invalid rocal context passed to rocalGetImageSizes")
     auto context = static_cast<Context*>(p_context);
     auto meta_data = context->master_graph->meta_data();
     size_t meta_data_batch_size = meta_data.second->get_img_sizes_batch().size();

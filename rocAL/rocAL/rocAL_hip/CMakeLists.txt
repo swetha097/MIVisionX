@@ -21,8 +21,8 @@
 cmake_minimum_required(VERSION 3.5)
 project(rocAL_hip CXX)
 
-set(RALIHIP_SOURCES
-    rali_hip_kernels.cpp
+set(ROCALHIP_SOURCES
+    rocal_hip_kernels.cpp
     )
 
 if(HIP_COMPILER STREQUAL clang)
@@ -30,9 +30,9 @@ if(HIP_COMPILER STREQUAL clang)
 endif()
 #message("HIP library name: ${hip_library_name}")
 
-set_source_files_properties(${RALIHIP_SOURCES} PROPERTIES HIP_SOURCE_PROPERTY_FORMAT 1)
+set_source_files_properties(${ROCALHIP_SOURCES} PROPERTIES HIP_SOURCE_PROPERTY_FORMAT 1)
 set(HIP_HCC_FLAGS -std=c++14)
-hip_add_library(${PROJECT_NAME} ${RALIHIP_SOURCES} HIPCC_OPTIONS "${HIP_HCC_FLAGS}"  SHARED)
+hip_add_library(${PROJECT_NAME} ${ROCALHIP_SOURCES} HIPCC_OPTIONS "${HIP_HCC_FLAGS}"  SHARED)
 target_compile_definitions(${PROJECT_NAME} PRIVATE)
 message("-- CMake CXX Compiler " ${CMAKE_CXX_COMPILER})
 install(TARGETS ${PROJECT_NAME} DESTINATION lib)

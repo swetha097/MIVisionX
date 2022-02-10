@@ -21,8 +21,8 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-#ifndef RALI_H
-#define RALI_H
+#ifndef ROCAL_H
+#define ROCAL_H
 
 #include "rocal_api_types.h"
 #include "rocal_api_parameters.h"
@@ -38,22 +38,22 @@ THE SOFTWARE.
 /// \param gpu_id
 /// \param cpu_thread_count
 /// \return
-extern "C"  RaliContext  RALI_API_CALL raliCreate(size_t batch_size, RaliProcessMode affinity, int gpu_id = 0, size_t cpu_thread_count = 1, size_t prefetch_queue_depth = 3, RaliTensorOutputType output_tensor_data_type = RaliTensorOutputType::RALI_FP32);
-//extern "C"  RaliContext  RALI_API_CALL raliCreate(size_t batch_size, RaliProcessMode affinity, int gpu_id = 0, size_t cpu_thread_count = 1);
+extern "C"  RocalContext  ROCAL_API_CALL rocalCreate(size_t batch_size, RocalProcessMode affinity, int gpu_id = 0, size_t cpu_thread_count = 1, size_t prefetch_queue_depth = 3, RocalTensorOutputType output_tensor_data_type = RocalTensorOutputType::ROCAL_FP32);
+//extern "C"  RocalContext  ROCAL_API_CALL rocalCreate(size_t batch_size, RocalProcessMode affinity, int gpu_id = 0, size_t cpu_thread_count = 1);
 
 ///
 /// \param context
 /// \return
-extern "C"  RaliStatus RALI_API_CALL raliVerify(RaliContext context);
+extern "C"  RocalStatus ROCAL_API_CALL rocalVerify(RocalContext context);
 
 ///
 /// \param context
 /// \return
-extern "C"  RaliStatus  RALI_API_CALL raliRun(RaliContext context);
+extern "C"  RocalStatus  ROCAL_API_CALL rocalRun(RocalContext context);
 
 ///
-/// \param rali_context
+/// \param rocal_context
 /// \return
-extern "C"  RaliStatus  RALI_API_CALL raliRelease(RaliContext rali_context);
+extern "C"  RocalStatus  ROCAL_API_CALL rocalRelease(RocalContext rocal_context);
 
 #endif

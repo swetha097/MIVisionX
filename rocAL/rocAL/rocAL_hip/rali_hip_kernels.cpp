@@ -24,7 +24,7 @@ THE SOFTWARE.
 #include "hip/hip_runtime_api.h"
 #include "hip/hip_runtime.h"
 #include "hip/hip_fp16.h"
-#include "rali_hip_kernels.h"
+#include "rocal_hip_kernels.h"
 
 __global__ void __attribute__((visibility("default")))
 Hip_CopyInt8ToNHWC_fp32

@@ -27,7 +27,7 @@ THE SOFTWARE.
 #include "parameter_rocal_crop.h"
 #include "commons.h"
 
-void RaliCropParam::set_crop_height_factor(Parameter<float>* crop_h_factor)
+void RocalCropParam::set_crop_height_factor(Parameter<float>* crop_h_factor)
 {
     if(!crop_h_factor)
         return ;
@@ -35,7 +35,7 @@ void RaliCropParam::set_crop_height_factor(Parameter<float>* crop_h_factor)
     crop_height_factor = crop_h_factor;
 }
 
-void RaliCropParam::set_crop_width_factor(Parameter<float>* crop_w_factor)
+void RocalCropParam::set_crop_width_factor(Parameter<float>* crop_w_factor)
 {
     if(!crop_w_factor)
         return ;
@@ -43,13 +43,13 @@ void RaliCropParam::set_crop_width_factor(Parameter<float>* crop_w_factor)
     crop_width_factor = crop_w_factor;
 }
 
-void RaliCropParam::update_array()
+void RocalCropParam::update_array()
 {
     fill_crop_dims();
     update_crop_array();
 }
 
-void RaliCropParam::fill_crop_dims()
+void RocalCropParam::fill_crop_dims()
 {
     for(uint img_idx =0; img_idx < batch_size; img_idx++)
     {
@@ -86,13 +86,13 @@ void RaliCropParam::fill_crop_dims()
     }
 }
 
-Parameter<float> *RaliCropParam::default_crop_height_factor()
+Parameter<float> *RocalCropParam::default_crop_height_factor()
 {
     return ParameterFactory::instance()->create_uniform_float_rand_param(CROP_HEIGHT_FACTOR_RANGE[0],
                                                                          CROP_HEIGHT_FACTOR_RANGE[1])->core;
 }
 
-Parameter<float> *RaliCropParam::default_crop_width_factor()
+Parameter<float> *RocalCropParam::default_crop_width_factor()
 {
     return ParameterFactory::instance()->create_uniform_float_rand_param(CROP_WIDTH_FACTOR_RANGE[0],
                                                                          CROP_WIDTH_FACTOR_RANGE[1])->core;

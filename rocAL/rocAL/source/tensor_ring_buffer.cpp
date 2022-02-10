@@ -55,7 +55,7 @@ void TensorRingBuffer:: block_if_full()
 std::vector<void*> TensorRingBuffer::get_read_buffers()
 {
     block_if_empty();
-    if((_mem_type == RaliMemType::OCL) || (_mem_type == RaliMemType::HIP))
+    if((_mem_type == RocalMemType::OCL) || (_mem_type == RocalMemType::HIP))
         return _dev_sub_buffer[_read_ptr];
 
     return _host_sub_buffers[_read_ptr];
@@ -63,7 +63,7 @@ std::vector<void*> TensorRingBuffer::get_read_buffers()
 
 void *TensorRingBuffer::get_host_master_read_buffer() {
     block_if_empty();
-    if((_mem_type == RaliMemType::OCL) || (_mem_type == RaliMemType::HIP))
+    if((_mem_type == RocalMemType::OCL) || (_mem_type == RocalMemType::HIP))
         return nullptr;
 
     return _host_master_buffers[_read_ptr];
@@ -73,7 +73,7 @@ void *TensorRingBuffer::get_host_master_read_buffer() {
 std::vector<void*> TensorRingBuffer::get_write_buffers()
 {
     block_if_full();
-    if((_mem_type == RaliMemType::OCL) || (_mem_type == RaliMemType::HIP))
+    if((_mem_type == RocalMemType::OCL) || (_mem_type == RocalMemType::HIP))
         return _dev_sub_buffer[_write_ptr];
 
     return _host_sub_buffers[_write_ptr];
@@ -105,7 +105,7 @@ void TensorRingBuffer::unblock_writer()
 }
 
 #if !ENABLE_HIP
-void TensorRingBuffer::init(RaliMemType mem_type, DeviceResources dev, unsigned sub_buffer_size, unsigned sub_buffer_count)
+void TensorRingBuffer::init(RocalMemType mem_type, DeviceResources dev, unsigned sub_buffer_size, unsigned sub_buffer_count)
 {
     _mem_type = mem_type;
     _dev = dev;
@@ -115,7 +115,7 @@ void TensorRingBuffer::init(RaliMemType mem_type, DeviceResources dev, unsigned 
         THROW ("Error internal buffer size for the ring buffer should be greater than one")
 
     // Allocating buffers
-    if(mem_type== RaliMemType::OCL)
+    if(mem_type== RocalMemType::OCL)
     {
         if(_dev.cmd_queue == nullptr || _dev.device_id == nullptr || _dev.context == nullptr)
             THROW("Error ocl structure needed since memory type is OCL");
@@ -159,7 +159,7 @@ void TensorRingBuffer::init(RaliMemType mem_type, DeviceResources dev, unsigned 
 }
 
 #else
-void TensorRingBuffer::initHip(RaliMemType mem_type, DeviceResourcesHip dev, unsigned sub_buffer_size, unsigned sub_buffer_count)
+void TensorRingBuffer::initHip(RocalMemType mem_type, DeviceResourcesHip dev, unsigned sub_buffer_size, unsigned sub_buffer_count)
 {
     _mem_type = mem_type;
     _devhip = dev;
@@ -169,7 +169,7 @@ void TensorRingBuffer::initHip(RaliMemType mem_type, DeviceResourcesHip dev, uns
         THROW ("Error internal buffer size for the ring buffer should be greater than one")
 
     // Allocating buffers
-    if(_mem_type == RaliMemType::HIP)
+    if(_mem_type == RocalMemType::HIP)
     {
         if(_devhip.hip_stream == nullptr || _devhip.device_id == -1 )
             THROW("Error Hip Device is not initialzed");
@@ -238,9 +238,9 @@ void TensorRingBuffer::reset()
 
 TensorRingBuffer::~TensorRingBuffer()
 {
-     //  if(_mem_type!= RaliMemType::OCL)
+     //  if(_mem_type!= RocalMemType::OCL)
     //      return;
-    if (_mem_type == RaliMemType::HOST) {
+    if (_mem_type == RocalMemType::HOST) {
         for (unsigned idx = 0; idx < _host_master_buffers.size(); idx++)
             if (_host_master_buffers[idx]) {
                 free(_host_master_buffers[idx]);
@@ -250,7 +250,7 @@ TensorRingBuffer::~TensorRingBuffer()
         _host_sub_buffers.clear();
     }
 #if ENABLE_HIP
-    else if (_mem_type == RaliMemType::HIP) {
+    else if (_mem_type == RocalMemType::HIP) {
         for (size_t buffIdx = 0; buffIdx < _dev_sub_buffer.size(); buffIdx++)
             for (unsigned sub_buf_idx = 0; sub_buf_idx < _dev_sub_buffer[buffIdx].size(); sub_buf_idx++)
                 if (_dev_sub_buffer[buffIdx][sub_buf_idx])
@@ -259,7 +259,7 @@ TensorRingBuffer::~TensorRingBuffer()
         _dev_sub_buffer.clear();
     }
 #else
-    else if (_mem_type == RaliMemType::OCL) {
+    else if (_mem_type == RocalMemType::OCL) {
         for (size_t buffIdx = 0; buffIdx < _dev_sub_buffer.size(); buffIdx++)
             for (unsigned sub_buf_idx = 0; sub_buf_idx < _dev_sub_buffer[buffIdx].size(); sub_buf_idx++)
                 if (_dev_sub_buffer[buffIdx][sub_buf_idx])

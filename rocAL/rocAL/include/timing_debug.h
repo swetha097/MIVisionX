@@ -29,9 +29,9 @@ THE SOFTWARE.
 
 
 #define DEFAULT_DBG_TIMING 1
-/*! \brief Debugging RaliDbgTiming class
+/*! \brief Debugging RocalDbgTiming class
 *
-* Can be used anywhere in the code for adding RaliDbgTiming for debugging and profiling
+* Can be used anywhere in the code for adding RocalDbgTiming for debugging and profiling
 */
 class TimingDBG {
 public:

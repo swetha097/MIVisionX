@@ -1,4 +1,4 @@
-# rali_dataloader_mt application
+# rocal_dataloader_mt application
 This application demonstrates a basic usage of rocAL's C API to use sharded data_loader  in a multithreaded application.
 <p align="center"><img width="90%" src="../../docs/images/image_augmentation.png" /></p>
 
@@ -17,9 +17,9 @@ This application demonstrates a basic usage of rocAL's C API to use sharded data
   mkdir build
   cd build
   cmake ../
-  make 
+  make
   ````
-### running the application  
+### running the application
   ````
-  rali_dataloader_mt <image_dataset_folder> <num_gpus(gpu:>=1)/(cpu:0)>  <num_shards> <decode_width> <decode_height> <batch_size> <shuffle> <display>
+  rocal_dataloader_mt <image_dataset_folder> <num_gpus(gpu:>=1)/(cpu:0)>  <num_shards> <decode_width> <decode_height> <batch_size> <shuffle> <display>
   ````

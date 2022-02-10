@@ -23,11 +23,11 @@ THE SOFTWARE.
 #pragma once
 #include "parameter_crop.h"
 
-class RaliRandomCropParam : public CropParam
+class RocalRandomCropParam : public CropParam
 {
 public:
-    RaliRandomCropParam() = delete;
-    RaliRandomCropParam(unsigned int batch_size): CropParam(batch_size)
+    RocalRandomCropParam() = delete;
+    RocalRandomCropParam(unsigned int batch_size): CropParam(batch_size)
     {
         area_factor   = default_area_factor();
         aspect_ratio  = default_aspect_ratio();

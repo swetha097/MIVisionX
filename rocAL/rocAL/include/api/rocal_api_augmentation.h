@@ -20,8 +20,8 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-#ifndef MIVISIONX_RALI_API_AUGMENTATION_H
-#define MIVISIONX_RALI_API_AUGMENTATION_H
+#ifndef MIVISIONX_ROCAL_API_AUGMENTATION_H
+#define MIVISIONX_ROCAL_API_AUGMENTATION_H
 #include "rocal_api_types.h"
 
 /// Accepts U8 and RGB24 inputs
@@ -31,8 +31,8 @@ THE SOFTWARE.
 /// \param alpha
 /// \param beta
 /// \return
-extern "C" RaliTensor RALI_API_CALL raliBrightness(RaliContext context, RaliTensor input, bool is_output,
-                                                   RaliFloatParam alpha = NULL, RaliFloatParam beta = NULL);
+extern "C" RocalTensor ROCAL_API_CALL rocalBrightness(RocalContext context, RocalTensor input, bool is_output,
+                                                   RocalFloatParam alpha = NULL, RocalFloatParam beta = NULL);
 
 /// Accepts U8 and RGB24 inputs
 /// \param context
@@ -40,7 +40,7 @@ extern "C" RaliTensor RALI_API_CALL raliBrightness(RaliContext context, RaliTens
 /// \param shift
 /// \param is_output
 /// \return
-extern "C" RaliTensor RALI_API_CALL raliBrightnessFixed(RaliContext context, RaliTensor input,
+extern "C" RocalTensor ROCAL_API_CALL rocalBrightnessFixed(RocalContext context, RocalTensor input,
                                                         float alpha, float beta,
                                                         bool is_output);
 
@@ -50,9 +50,9 @@ extern "C" RaliTensor RALI_API_CALL raliBrightnessFixed(RaliContext context, Ral
 /// \param is_output
 /// \param alpha
 /// \return
-extern "C" RaliTensor RALI_API_CALL raliGamma(RaliContext context, RaliTensor input,
+extern "C" RocalTensor ROCAL_API_CALL rocalGamma(RocalContext context, RocalTensor input,
                                               bool is_output,
-                                              RaliFloatParam alpha = NULL);
+                                              RocalFloatParam alpha = NULL);
 
 /// Accepts U8 and RGB24 inputs
 /// \param context
@@ -61,9 +61,9 @@ extern "C" RaliTensor RALI_API_CALL raliGamma(RaliContext context, RaliTensor in
 /// \param is_output
 /// \return
 
-extern "C" RaliTensor RALI_API_CALL raliGammaFixed(RaliContext context, RaliTensor input, float alpha, bool is_output);
+extern "C" RocalTensor ROCAL_API_CALL rocalGammaFixed(RocalContext context, RocalTensor input, float alpha, bool is_output);
 
-extern "C" RaliTensor RALI_API_CALL raliCopyTensor(RaliContext context, RaliTensor input, bool is_output);
+extern "C" RocalTensor ROCAL_API_CALL rocalCopyTensor(RocalContext context, RocalTensor input, bool is_output);
 
 ///
 /// \param context
@@ -71,12 +71,12 @@ extern "C" RaliTensor RALI_API_CALL raliCopyTensor(RaliContext context, RaliTens
 /// \param is_output
 /// \return
 
-extern "C" RaliTensor RALI_API_CALL raliNopTensor(RaliContext context, RaliTensor input, bool is_output);
+extern "C" RocalTensor ROCAL_API_CALL rocalNopTensor(RocalContext context, RocalTensor input, bool is_output);
 
 
-extern "C" RaliTensor RALI_API_CALL raliCropMirrorNormalizeTensor(RaliContext context, RaliTensor input,
-                                                                  RaliTensorLayout rali_tensor_layout,
-                                                                  RaliTensorOutputType rali_tensor_output_type,
+extern "C" RocalTensor ROCAL_API_CALL rocalCropMirrorNormalizeTensor(RocalContext context, RocalTensor input,
+                                                                  RocalTensorLayout rocal_tensor_layout,
+                                                                  RocalTensorOutputType rocal_tensor_output_type,
                                                                   unsigned crop_depth,
                                                                   unsigned crop_height,
                                                                   unsigned crop_width,
@@ -86,7 +86,7 @@ extern "C" RaliTensor RALI_API_CALL raliCropMirrorNormalizeTensor(RaliContext co
                                                                   std::vector<float> &mean,
                                                                   std::vector<float> &std_dev,
                                                                   bool is_output,
-                                                                  RaliIntParam mirror = NULL);
+                                                                  RocalIntParam mirror = NULL);
 
 
-#endif //MIVISIONX_RALI_API_AUGMENTATION_H
+#endif //MIVISIONX_ROCAL_API_AUGMENTATION_H

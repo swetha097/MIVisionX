@@ -45,17 +45,17 @@ class MasterGraph
 {
 public:
     enum class Status { OK = 0,  NOT_RUNNING = 1, NO_MORE_DATA = 2, NOT_IMPLEMENTED };
-    MasterGraph(size_t batch_size, RaliAffinity affinity, int gpu_id, size_t cpu_threads, size_t prefetch_queue_depth, RaliTensorDataType output_tensor_data_type);
+    MasterGraph(size_t batch_size, RocalAffinity affinity, int gpu_id, size_t cpu_threads, size_t prefetch_queue_depth, RocalTensorDataType output_tensor_data_type);
     ~MasterGraph();
     Status reset();
     size_t remaining_images_count();
     MasterGraph::Status copy_output(void *out_ptr);
     MasterGraph::Status
-    copy_out_tensor(void *out_ptr, RaliTensorFormat format, float multiplier0, float multiplier1, float multiplier2,
-                    float offset0, float offset1, float offset2, bool reverse_channels, RaliTensorDataType output_data_type);
+    copy_out_tensor(void *out_ptr, RocalTensorFormat format, float multiplier0, float multiplier1, float multiplier2,
+                    float offset0, float offset1, float offset2, bool reverse_channels, RocalTensorDataType output_data_type);
     Status copy_output(void* out_ptr, size_t out_size);
-    Status copy_out_tensor_planar(void *out_ptr, RaliTensorFormat format, float multiplier0, float multiplier1, float multiplier2,
-                    float offset0, float offset1, float offset2, bool reverse_channels, RaliTensorDataType output_data_type);
+    Status copy_out_tensor_planar(void *out_ptr, RocalTensorFormat format, float multiplier0, float multiplier1, float multiplier2,
+                    float offset0, float offset1, float offset2, bool reverse_channels, RocalTensorDataType output_data_type);
     size_t tensor_output_width();
     size_t tensor_output_height();
     size_t tensor_output_byte_size();
@@ -63,11 +63,11 @@ public:
     size_t augmentation_branch_count();
     size_t output_sample_size();
     size_t tensor_output_sample_size();
-    RaliColorFormat output_color_format();
+    RocalColorFormat output_color_format();
     Status build();
     Status run();
     Timing timing();
-    RaliMemType mem_type();
+    RocalMemType mem_type();
     void release();
     template <typename T, typename M> std::shared_ptr<T> meta_add_node(std::shared_ptr<M> node);
     template <typename T>
@@ -100,8 +100,8 @@ private:
     void stop_processing();
     void output_routine();
     void decrease_image_count();
-    bool processing_on_device_ocl() { return _output_tensor_info.mem_type() == RaliMemType::OCL; };
-    bool processing_on_device_hip() { return _output_tensor_info.mem_type() == RaliMemType::HIP; };
+    bool processing_on_device_ocl() { return _output_tensor_info.mem_type() == RocalMemType::OCL; };
+    bool processing_on_device_hip() { return _output_tensor_info.mem_type() == RocalMemType::HIP; };
     /// notify_user_thread() is called when the internal processing thread is done with processing all available images
     void notify_user_thread();
     /// no_more_processed_data() is logically linked to the notify_user_thread() and is used to tell the user they've already consumed all the processed images
@@ -118,7 +118,7 @@ private:
     std::list<std::shared_ptr<TensorNode>> _tensor_root_nodes;
     std::map<Tensor*, std::shared_ptr<TensorNode>> _tensor_map;
     // cl_mem _output_tensor;//!< In the GPU processing case , is used to convert the U8 samples to float32 before they are being transfered back to host
-    // ImageInfo _output_image_info;//!< Keeps the information about RALI's output image , it includes all images of a batch stacked on top of each other
+    // ImageInfo _output_image_info;//!< Keeps the information about ROCAL's output image , it includes all images of a batch stacked on top of each other
     // std::vector<Image*> _output_images;//!< Keeps the ovx images that are used to store the augmented output (there is an image per augmentation branch)
     // std::list<Image*> _internal_images;//!< Keeps all the ovx images (virtual/non-virtual) either intermediate images, or input images that feed the graph
     // std::list<std::shared_ptr<Node>> _nodes;//!< List of all the nodes
@@ -133,14 +133,14 @@ private:
     DeviceManager   _device;//!< Keeps the device related constructs needed for running on GPU
 #endif
     std::shared_ptr<Graph> _graph = nullptr;
-    RaliAffinity _affinity;
+    RocalAffinity _affinity;
     const int _gpu_id;//!< Defines the device id used for processing
     pLoaderModule _loader_module; //!< Keeps the loader module used to feed the input the images of the graph
     TimingDBG _convert_time;
     const size_t _user_batch_size;//!< Batch size provided by the user
     const size_t _cpu_threads;//!< Not in use
     vx_context _context;
-    const RaliMemType _mem_type;//!< Is set according to the _affinity, if GPU, is set to CL, otherwise host
+    const RocalMemType _mem_type;//!< Is set according to the _affinity, if GPU, is set to CL, otherwise host
     TimingDBG _process_time;
     std::shared_ptr<MetaDataReader> _meta_data_reader = nullptr;
     std::shared_ptr<MetaDataGraph> _meta_data_graph = nullptr;
@@ -151,13 +151,13 @@ private:
     const static unsigned SAMPLE_SIZE = sizeof(vx_float32);
     int _remaining_images_count;//!< Keeps the count of remaining images yet to be processed for the user,
     bool _loop;//!< Indicates if user wants to indefinitely loops through images or not
-    static size_t compute_optimum_internal_batch_size(size_t user_batch_size, RaliAffinity affinity);
+    static size_t compute_optimum_internal_batch_size(size_t user_batch_size, RocalAffinity affinity);
     const size_t _internal_batch_size;//!< In the host processing case , internal batch size can be different than _user_batch_size. This batch size used internally throughout.
     const size_t _user_to_internal_batch_ratio;
     size_t _prefetch_queue_depth;
     bool _output_routine_finished_processing = false;
     size_t _max_tensor_type_size;
-    const RaliTensorDataType _out_data_type;
+    const RocalTensorDataType _out_data_type;
     bool _is_random_bbox_crop = false;
 };
 

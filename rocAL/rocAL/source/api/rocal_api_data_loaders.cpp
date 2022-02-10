@@ -32,17 +32,17 @@ THE SOFTWARE.
 #include "node_fused_jpeg_crop_single_shard.h"
 
 std::tuple<unsigned, unsigned>
-evaluate_image_data_set(RaliImageSizeEvaluationPolicy decode_size_policy, StorageType storage_type,
+evaluate_image_data_set(RocalImageSizeEvaluationPolicy decode_size_policy, StorageType storage_type,
                         DecoderType decoder_type, const std::string &source_path, const std::string &json_path)
 {
-    auto translate_image_size_policy = [](RaliImageSizeEvaluationPolicy decode_size_policy)
+    auto translate_image_size_policy = [](RocalImageSizeEvaluationPolicy decode_size_policy)
     {
         switch(decode_size_policy)
         {
-            case RALI_USE_MAX_SIZE:
-            case RALI_USE_MAX_SIZE_RESTRICTED:
+            case ROCAL_USE_MAX_SIZE:
+            case ROCAL_USE_MAX_SIZE_RESTRICTED:
                 return MaxSizeEvaluationPolicy::MAXIMUM_FOUND_SIZE;
-            case RALI_USE_MOST_FREQUENT_SIZE:
+            case ROCAL_USE_MOST_FREQUENT_SIZE:
                 return MaxSizeEvaluationPolicy::MOST_FREQUENT_SIZE;
             default:
                 return MaxSizeEvaluationPolicy::MAXIMUM_FOUND_SIZE;
@@ -62,37 +62,37 @@ evaluate_image_data_set(RaliImageSizeEvaluationPolicy decode_size_policy, Storag
     return std::make_tuple(max_width, max_height);
 };
 
-auto convert_color_format = [](RaliImageColor color_format)
+auto convert_color_format = [](RocalImageColor color_format)
 {
     switch(color_format){
-        case RALI_COLOR_RGB24:
-            return std::make_tuple(RaliColorFormat::RGB24, 3);
+        case ROCAL_COLOR_RGB24:
+            return std::make_tuple(RocalColorFormat::RGB24, 3);
 
-        case RALI_COLOR_BGR24:
-            return std::make_tuple(RaliColorFormat::BGR24, 3);
+        case ROCAL_COLOR_BGR24:
+            return std::make_tuple(RocalColorFormat::BGR24, 3);
 
-        case RALI_COLOR_U8:
-            return std::make_tuple(RaliColorFormat::U8, 1);
+        case ROCAL_COLOR_U8:
+            return std::make_tuple(RocalColorFormat::U8, 1);
 
-        case RALI_COLOR_RGB_PLANAR:
-            return std::make_tuple(RaliColorFormat::RGB_PLANAR, 3);
+        case ROCAL_COLOR_RGB_PLANAR:
+            return std::make_tuple(RocalColorFormat::RGB_PLANAR, 3);
 
         default:
             THROW("Unsupported Image type" + TOSTR(color_format))
     }
 };
 
-RaliTensor  RALI_API_CALL
-raliJpegFileSourceSingleShard(
-        RaliContext p_context,
+RocalTensor  ROCAL_API_CALL
+rocalJpegFileSourceSingleShard(
+        RocalContext p_context,
         const char* source_path,
-        RaliImageColor rali_color_format,
+        RocalImageColor rocal_color_format,
         unsigned shard_id,
         unsigned shard_count,
         bool is_output,
         bool shuffle,
         bool loop,
-        RaliImageSizeEvaluationPolicy decode_size_policy,
+        RocalImageSizeEvaluationPolicy decode_size_policy,
         unsigned max_width,
         unsigned max_height)
 {
@@ -100,8 +100,8 @@ raliJpegFileSourceSingleShard(
     auto context = static_cast<Context*>(p_context);
     try
     {
-        bool use_input_dimension = (decode_size_policy == RALI_USE_USER_GIVEN_SIZE) || (decode_size_policy == RALI_USE_USER_GIVEN_SIZE_RESTRICTED);
-        bool decoder_keep_original = (decode_size_policy == RALI_USE_USER_GIVEN_SIZE_RESTRICTED) || (decode_size_policy == RALI_USE_MAX_SIZE_RESTRICTED);
+        bool use_input_dimension = (decode_size_policy == ROCAL_USE_USER_GIVEN_SIZE) || (decode_size_policy == ROCAL_USE_USER_GIVEN_SIZE_RESTRICTED);
+        bool decoder_keep_original = (decode_size_policy == ROCAL_USE_USER_GIVEN_SIZE_RESTRICTED) || (decode_size_policy == ROCAL_USE_MAX_SIZE_RESTRICTED);
 
         if(shard_count < 1 )
             THROW("Shard count should be bigger than 0")
@@ -121,12 +121,12 @@ raliJpegFileSourceSingleShard(
         auto [width, height] = use_input_dimension? std::make_tuple(max_width, max_height):
                                evaluate_image_data_set(decode_size_policy, StorageType::FILE_SYSTEM, DecoderType::TURBO_JPEG,
                                                        source_path, "");
-        auto [color_format, num_of_planes] = convert_color_format(rali_color_format);
+        auto [color_format, num_of_planes] = convert_color_format(rocal_color_format);
 
         INFO("Internal buffer size width = "+ TOSTR(width)+ " height = "+ TOSTR(height) + " depth = "+ TOSTR(num_of_planes))
 
-        RaliTensorFormat tensor_format = RaliTensorFormat::NHWC;
-        RaliTensorDataType tensor_data_type = RaliTensorDataType::UINT8;
+        RocalTensorFormat tensor_format = RocalTensorFormat::NHWC;
+        RocalTensorDataType tensor_data_type = RocalTensorDataType::UINT8;
         auto info  = TensorInfo(width,
                                 height,
                                 context->internal_batch_size(),
@@ -165,28 +165,28 @@ raliJpegFileSourceSingleShard(
 }
 
 
-RaliTensor  RALI_API_CALL
-raliJpegFileSource(
-        RaliContext p_context,
+RocalTensor  ROCAL_API_CALL
+rocalJpegFileSource(
+        RocalContext p_context,
         const char* source_path,
-        RaliImageColor rali_color_format,
+        RocalImageColor rocal_color_format,
         unsigned internal_shard_count,
         bool is_output,
         bool shuffle,
         bool loop,
-        RaliImageSizeEvaluationPolicy decode_size_policy,
+        RocalImageSizeEvaluationPolicy decode_size_policy,
         unsigned max_width,
         unsigned max_height,
-        RaliDecoderType dec_type)
+        RocalDecoderType dec_type)
 {
     Tensor* output = nullptr;
     auto context = static_cast<Context*>(p_context);
     try
     {
-        bool use_input_dimension = (decode_size_policy == RALI_USE_USER_GIVEN_SIZE) || (decode_size_policy == RALI_USE_USER_GIVEN_SIZE_RESTRICTED);
-        bool decoder_keep_original = (decode_size_policy == RALI_USE_USER_GIVEN_SIZE_RESTRICTED) || (decode_size_policy == RALI_USE_MAX_SIZE_RESTRICTED);
+        bool use_input_dimension = (decode_size_policy == ROCAL_USE_USER_GIVEN_SIZE) || (decode_size_policy == ROCAL_USE_USER_GIVEN_SIZE_RESTRICTED);
+        bool decoder_keep_original = (decode_size_policy == ROCAL_USE_USER_GIVEN_SIZE_RESTRICTED) || (decode_size_policy == ROCAL_USE_MAX_SIZE_RESTRICTED);
         DecoderType decType = DecoderType::TURBO_JPEG; // default
-        if (dec_type == RALI_DECODER_OPENCV) decType = DecoderType::OPENCV_DEC;
+        if (dec_type == ROCAL_DECODER_OPENCV) decType = DecoderType::OPENCV_DEC;
 
         if(internal_shard_count < 1 )
             THROW("Shard count should be bigger than 0")
@@ -203,12 +203,12 @@ raliJpegFileSource(
         auto [width, height] = use_input_dimension? std::make_tuple(max_width, max_height):
                                evaluate_image_data_set(decode_size_policy, StorageType::FILE_SYSTEM, DecoderType::TURBO_JPEG, source_path, "");
 
-        auto [color_format, num_of_planes] = convert_color_format(rali_color_format);
+        auto [color_format, num_of_planes] = convert_color_format(rocal_color_format);
 
         INFO("Internal buffer size width = "+ TOSTR(width)+ " height = "+ TOSTR(height) + " depth = "+ TOSTR(num_of_planes))
 
-        RaliTensorFormat tensor_format = RaliTensorFormat::NHWC;
-        RaliTensorDataType tensor_data_type = RaliTensorDataType::UINT8;
+        RocalTensorFormat tensor_format = RocalTensorFormat::NHWC;
+        RocalTensorDataType tensor_data_type = RocalTensorDataType::UINT8;
         auto info  = TensorInfo(width,
                                 height,
                                 context->internal_batch_size(),
@@ -247,16 +247,16 @@ raliJpegFileSource(
 }
 
 
-RaliTensor  RALI_API_CALL
-raliJpegCaffe2LMDBRecordSource(
-        RaliContext p_context,
+RocalTensor  ROCAL_API_CALL
+rocalJpegCaffe2LMDBRecordSource(
+        RocalContext p_context,
         const char* source_path,
-        RaliImageColor rali_color_format,
+        RocalImageColor rocal_color_format,
         unsigned internal_shard_count,
         bool is_output,
         bool shuffle,
         bool loop,
-        RaliImageSizeEvaluationPolicy decode_size_policy,
+        RocalImageSizeEvaluationPolicy decode_size_policy,
         unsigned max_width,
         unsigned max_height)
 {
@@ -264,8 +264,8 @@ raliJpegCaffe2LMDBRecordSource(
     auto context = static_cast<Context*>(p_context);
     try
     {
-        bool use_input_dimension = (decode_size_policy == RALI_USE_USER_GIVEN_SIZE);
-        bool decoder_keep_original = (decode_size_policy == RALI_USE_USER_GIVEN_SIZE_RESTRICTED) || (decode_size_policy == RALI_USE_MAX_SIZE_RESTRICTED);
+        bool use_input_dimension = (decode_size_policy == ROCAL_USE_USER_GIVEN_SIZE);
+        bool decoder_keep_original = (decode_size_policy == ROCAL_USE_USER_GIVEN_SIZE_RESTRICTED) || (decode_size_policy == ROCAL_USE_MAX_SIZE_RESTRICTED);
 
         if(internal_shard_count < 1 )
             THROW("internal shard count should be bigger than 0")
@@ -282,12 +282,12 @@ raliJpegCaffe2LMDBRecordSource(
         auto [width, height] = use_input_dimension? std::make_tuple(max_width, max_height):
                                evaluate_image_data_set(decode_size_policy, StorageType::CAFFE2_LMDB_RECORD, DecoderType::TURBO_JPEG,
                                                        source_path, "");
-        auto [color_format, num_of_planes] = convert_color_format(rali_color_format);
+        auto [color_format, num_of_planes] = convert_color_format(rocal_color_format);
 
         INFO("Internal buffer size width = "+ TOSTR(width)+ " height = "+ TOSTR(height) + " depth = "+ TOSTR(num_of_planes))
 
-        RaliTensorFormat tensor_format = RaliTensorFormat::NHWC;
-        RaliTensorDataType tensor_data_type = RaliTensorDataType::UINT8;
+        RocalTensorFormat tensor_format = RocalTensorFormat::NHWC;
+        RocalTensorDataType tensor_data_type = RocalTensorDataType::UINT8;
         auto info  = TensorInfo(width,
                                 height,
                                 context->internal_batch_size(),
@@ -326,17 +326,17 @@ raliJpegCaffe2LMDBRecordSource(
     return output;
 }
 
-RaliTensor  RALI_API_CALL
-raliJpegCaffe2LMDBRecordSourceSingleShard(
-        RaliContext p_context,
+RocalTensor  ROCAL_API_CALL
+rocalJpegCaffe2LMDBRecordSourceSingleShard(
+        RocalContext p_context,
         const char* source_path,
-        RaliImageColor rali_color_format,
+        RocalImageColor rocal_color_format,
         unsigned shard_id,
         unsigned shard_count,
         bool is_output,
         bool shuffle,
         bool loop,
-        RaliImageSizeEvaluationPolicy decode_size_policy,
+        RocalImageSizeEvaluationPolicy decode_size_policy,
         unsigned max_width,
         unsigned max_height)
 {
@@ -344,8 +344,8 @@ raliJpegCaffe2LMDBRecordSourceSingleShard(
     auto context = static_cast<Context*>(p_context);
     try
     {
-        bool use_input_dimension = (decode_size_policy == RALI_USE_USER_GIVEN_SIZE);
-        bool decoder_keep_original = (decode_size_policy == RALI_USE_USER_GIVEN_SIZE_RESTRICTED) || (decode_size_policy == RALI_USE_MAX_SIZE_RESTRICTED);
+        bool use_input_dimension = (decode_size_policy == ROCAL_USE_USER_GIVEN_SIZE);
+        bool decoder_keep_original = (decode_size_policy == ROCAL_USE_USER_GIVEN_SIZE_RESTRICTED) || (decode_size_policy == ROCAL_USE_MAX_SIZE_RESTRICTED);
 
         if(shard_count < 1 )
             THROW("Shard count should be bigger than 0")
@@ -365,12 +365,12 @@ raliJpegCaffe2LMDBRecordSourceSingleShard(
         auto [width, height] = use_input_dimension? std::make_tuple(max_width, max_height):
                                evaluate_image_data_set(decode_size_policy, StorageType::CAFFE2_LMDB_RECORD, DecoderType::TURBO_JPEG,
                                                        source_path, "");
-        auto [color_format, num_of_planes] = convert_color_format(rali_color_format);
+        auto [color_format, num_of_planes] = convert_color_format(rocal_color_format);
 
         INFO("Internal buffer size width = "+ TOSTR(width)+ " height = "+ TOSTR(height) + " depth = "+ TOSTR(num_of_planes))
 
-        RaliTensorFormat tensor_format = RaliTensorFormat::NHWC;
-        RaliTensorDataType tensor_data_type = RaliTensorDataType::UINT8;
+        RocalTensorFormat tensor_format = RocalTensorFormat::NHWC;
+        RocalTensorDataType tensor_data_type = RocalTensorDataType::UINT8;
         auto info  = TensorInfo(width,
                                 height,
                                 context->internal_batch_size(),
@@ -409,16 +409,16 @@ raliJpegCaffe2LMDBRecordSourceSingleShard(
 }
 
 
-RaliTensor  RALI_API_CALL
-raliJpegCaffeLMDBRecordSource(
-        RaliContext p_context,
+RocalTensor  ROCAL_API_CALL
+rocalJpegCaffeLMDBRecordSource(
+        RocalContext p_context,
         const char* source_path,
-        RaliImageColor rali_color_format,
+        RocalImageColor rocal_color_format,
         unsigned internal_shard_count,
         bool is_output,
         bool shuffle,
         bool loop,
-        RaliImageSizeEvaluationPolicy decode_size_policy,
+        RocalImageSizeEvaluationPolicy decode_size_policy,
         unsigned max_width,
         unsigned max_height)
 {
@@ -426,8 +426,8 @@ raliJpegCaffeLMDBRecordSource(
     auto context = static_cast<Context*>(p_context);
     try
     {
-        bool use_input_dimension = (decode_size_policy == RALI_USE_USER_GIVEN_SIZE);
-        bool decoder_keep_original = (decode_size_policy == RALI_USE_USER_GIVEN_SIZE_RESTRICTED) || (decode_size_policy == RALI_USE_MAX_SIZE_RESTRICTED);
+        bool use_input_dimension = (decode_size_policy == ROCAL_USE_USER_GIVEN_SIZE);
+        bool decoder_keep_original = (decode_size_policy == ROCAL_USE_USER_GIVEN_SIZE_RESTRICTED) || (decode_size_policy == ROCAL_USE_MAX_SIZE_RESTRICTED);
 
         if(internal_shard_count < 1 )
             THROW("internal shard count should be bigger than 0")
@@ -444,12 +444,12 @@ raliJpegCaffeLMDBRecordSource(
         auto [width, height] = use_input_dimension? std::make_tuple(max_width, max_height):
                                evaluate_image_data_set(decode_size_policy, StorageType::CAFFE_LMDB_RECORD, DecoderType::TURBO_JPEG,
                                                        source_path, "");
-        auto [color_format, num_of_planes] = convert_color_format(rali_color_format);
+        auto [color_format, num_of_planes] = convert_color_format(rocal_color_format);
 
         INFO("Internal buffer size width = "+ TOSTR(width)+ " height = "+ TOSTR(height) + " depth = "+ TOSTR(num_of_planes))
 
-        RaliTensorFormat tensor_format = RaliTensorFormat::NHWC;
-        RaliTensorDataType tensor_data_type = RaliTensorDataType::UINT8;
+        RocalTensorFormat tensor_format = RocalTensorFormat::NHWC;
+        RocalTensorDataType tensor_data_type = RocalTensorDataType::UINT8;
         auto info  = TensorInfo(width,
                                 height,
                                 context->internal_batch_size(),
@@ -489,17 +489,17 @@ raliJpegCaffeLMDBRecordSource(
     return output;
 }
 
-RaliTensor  RALI_API_CALL
-raliJpegCaffeLMDBRecordSourceSingleShard(
-        RaliContext p_context,
+RocalTensor  ROCAL_API_CALL
+rocalJpegCaffeLMDBRecordSourceSingleShard(
+        RocalContext p_context,
         const char* source_path,
-        RaliImageColor rali_color_format,
+        RocalImageColor rocal_color_format,
         unsigned shard_id,
         unsigned shard_count,
         bool is_output,
         bool shuffle,
         bool loop,
-        RaliImageSizeEvaluationPolicy decode_size_policy,
+        RocalImageSizeEvaluationPolicy decode_size_policy,
         unsigned max_width,
         unsigned max_height)
 {
@@ -507,8 +507,8 @@ raliJpegCaffeLMDBRecordSourceSingleShard(
     auto context = static_cast<Context*>(p_context);
     try
     {
-        bool use_input_dimension = (decode_size_policy == RALI_USE_USER_GIVEN_SIZE);
-        bool decoder_keep_original = (decode_size_policy == RALI_USE_USER_GIVEN_SIZE_RESTRICTED) || (decode_size_policy == RALI_USE_MAX_SIZE_RESTRICTED);
+        bool use_input_dimension = (decode_size_policy == ROCAL_USE_USER_GIVEN_SIZE);
+        bool decoder_keep_original = (decode_size_policy == ROCAL_USE_USER_GIVEN_SIZE_RESTRICTED) || (decode_size_policy == ROCAL_USE_MAX_SIZE_RESTRICTED);
 
         if(shard_count < 1 )
             THROW("Shard count should be bigger than 0")
@@ -528,12 +528,12 @@ raliJpegCaffeLMDBRecordSourceSingleShard(
         auto [width, height] = use_input_dimension? std::make_tuple(max_width, max_height):
                                evaluate_image_data_set(decode_size_policy, StorageType::CAFFE_LMDB_RECORD, DecoderType::TURBO_JPEG,
                                                        source_path, "");
-        auto [color_format, num_of_planes] = convert_color_format(rali_color_format);
+        auto [color_format, num_of_planes] = convert_color_format(rocal_color_format);
 
         INFO("Internal buffer size width = "+ TOSTR(width)+ " height = "+ TOSTR(height) + " depth = "+ TOSTR(num_of_planes))
 
-        RaliTensorFormat tensor_format = RaliTensorFormat::NHWC;
-        RaliTensorDataType tensor_data_type = RaliTensorDataType::UINT8;
+        RocalTensorFormat tensor_format = RocalTensorFormat::NHWC;
+        RocalTensorDataType tensor_data_type = RocalTensorDataType::UINT8;
         auto info  = TensorInfo(width,
                                 height,
                                 context->internal_batch_size(),
@@ -572,17 +572,17 @@ raliJpegCaffeLMDBRecordSourceSingleShard(
 }
 
 
-RaliTensor  RALI_API_CALL
-raliJpegCOCOFileSource(
-        RaliContext p_context,
+RocalTensor  ROCAL_API_CALL
+rocalJpegCOCOFileSource(
+        RocalContext p_context,
         const char* source_path,
 	    const char* json_path,
-        RaliImageColor rali_color_format,
+        RocalImageColor rocal_color_format,
         unsigned internal_shard_count,
         bool is_output,
         bool shuffle,
         bool loop,
-        RaliImageSizeEvaluationPolicy decode_size_policy,
+        RocalImageSizeEvaluationPolicy decode_size_policy,
         unsigned max_width,
         unsigned max_height)
 {
@@ -590,8 +590,8 @@ raliJpegCOCOFileSource(
     auto context = static_cast<Context*>(p_context);
     try
     {
-        bool use_input_dimension = (decode_size_policy == RALI_USE_USER_GIVEN_SIZE) || (decode_size_policy == RALI_USE_USER_GIVEN_SIZE_RESTRICTED);
-        bool decoder_keep_original = (decode_size_policy == RALI_USE_USER_GIVEN_SIZE_RESTRICTED) || (decode_size_policy == RALI_USE_MAX_SIZE_RESTRICTED);
+        bool use_input_dimension = (decode_size_policy == ROCAL_USE_USER_GIVEN_SIZE) || (decode_size_policy == ROCAL_USE_USER_GIVEN_SIZE_RESTRICTED);
+        bool decoder_keep_original = (decode_size_policy == ROCAL_USE_USER_GIVEN_SIZE_RESTRICTED) || (decode_size_policy == ROCAL_USE_MAX_SIZE_RESTRICTED);
 
         if(internal_shard_count < 1 )
             THROW("Shard count should be bigger than 0")
@@ -608,12 +608,12 @@ raliJpegCOCOFileSource(
         auto [width, height] = use_input_dimension? std::make_tuple(max_width, max_height):
                                evaluate_image_data_set(decode_size_policy, StorageType::COCO_FILE_SYSTEM, DecoderType::TURBO_JPEG, source_path, json_path);
 
-        auto [color_format, num_of_planes] = convert_color_format(rali_color_format);
+        auto [color_format, num_of_planes] = convert_color_format(rocal_color_format);
 
         INFO("Internal buffer size width = "+ TOSTR(width)+ " height = "+ TOSTR(height) + " depth = "+ TOSTR(num_of_planes))
 
-        RaliTensorFormat tensor_format = RaliTensorFormat::NHWC;
-        RaliTensorDataType tensor_data_type = RaliTensorDataType::UINT8;
+        RocalTensorFormat tensor_format = RocalTensorFormat::NHWC;
+        RocalTensorDataType tensor_data_type = RocalTensorDataType::UINT8;
         auto info  = TensorInfo(width,
                                 height,
                                 context->internal_batch_size(),
@@ -653,18 +653,18 @@ raliJpegCOCOFileSource(
     return output;
 }
 
-RaliTensor  RALI_API_CALL
-raliJpegCOCOFileSourceSingleShard(
-        RaliContext p_context,
+RocalTensor  ROCAL_API_CALL
+rocalJpegCOCOFileSourceSingleShard(
+        RocalContext p_context,
         const char* source_path,
         const char* json_path,
-        RaliImageColor rali_color_format,
+        RocalImageColor rocal_color_format,
         unsigned shard_id,
         unsigned shard_count,
         bool is_output,
         bool shuffle,
         bool loop,
-        RaliImageSizeEvaluationPolicy decode_size_policy,
+        RocalImageSizeEvaluationPolicy decode_size_policy,
         unsigned max_width,
         unsigned max_height)
 {
@@ -672,8 +672,8 @@ raliJpegCOCOFileSourceSingleShard(
     auto context = static_cast<Context*>(p_context);
     try
     {
-        bool use_input_dimension = (decode_size_policy == RALI_USE_USER_GIVEN_SIZE) || (decode_size_policy == RALI_USE_USER_GIVEN_SIZE_RESTRICTED);
-        bool decoder_keep_original = (decode_size_policy == RALI_USE_USER_GIVEN_SIZE_RESTRICTED) || (decode_size_policy == RALI_USE_MAX_SIZE_RESTRICTED);
+        bool use_input_dimension = (decode_size_policy == ROCAL_USE_USER_GIVEN_SIZE) || (decode_size_policy == ROCAL_USE_USER_GIVEN_SIZE_RESTRICTED);
+        bool decoder_keep_original = (decode_size_policy == ROCAL_USE_USER_GIVEN_SIZE_RESTRICTED) || (decode_size_policy == ROCAL_USE_MAX_SIZE_RESTRICTED);
 
         if(shard_count < 1 )
             THROW("Shard count should be bigger than 0")
@@ -693,12 +693,12 @@ raliJpegCOCOFileSourceSingleShard(
         auto [width, height] = use_input_dimension? std::make_tuple(max_width, max_height):
                                evaluate_image_data_set(decode_size_policy, StorageType::COCO_FILE_SYSTEM, DecoderType::TURBO_JPEG,
                                                        source_path, json_path);
-        auto [color_format, num_of_planes] = convert_color_format(rali_color_format);
+        auto [color_format, num_of_planes] = convert_color_format(rocal_color_format);
 
         INFO("Internal buffer size width = "+ TOSTR(width)+ " height = "+ TOSTR(height) + " depth = "+ TOSTR(num_of_planes))
 
-        RaliTensorFormat tensor_format = RaliTensorFormat::NHWC;
-        RaliTensorDataType tensor_data_type = RaliTensorDataType::UINT8;
+        RocalTensorFormat tensor_format = RocalTensorFormat::NHWC;
+        RocalTensorDataType tensor_data_type = RocalTensorDataType::UINT8;
         auto info  = TensorInfo(width,
                                 height,
                                 context->internal_batch_size(),
@@ -737,18 +737,18 @@ raliJpegCOCOFileSourceSingleShard(
 }
 
 
-RaliTensor  RALI_API_CALL
-raliJpegTFRecordSource(
-        RaliContext p_context,
+RocalTensor  ROCAL_API_CALL
+rocalJpegTFRecordSource(
+        RocalContext p_context,
         const char* source_path,
-        RaliImageColor rali_color_format,
+        RocalImageColor rocal_color_format,
         unsigned internal_shard_count,
         bool is_output,
         const char* user_key_for_encoded,
         const char* user_key_for_filename,
         bool shuffle,
         bool loop,
-        RaliImageSizeEvaluationPolicy decode_size_policy,
+        RocalImageSizeEvaluationPolicy decode_size_policy,
         unsigned max_width,
         unsigned max_height)
 {
@@ -765,7 +765,7 @@ raliJpegTFRecordSource(
         };
 
 
-        bool use_input_dimension = (decode_size_policy == RALI_USE_USER_GIVEN_SIZE);
+        bool use_input_dimension = (decode_size_policy == ROCAL_USE_USER_GIVEN_SIZE);
 
         if(internal_shard_count < 1 )
             THROW("internal shard count should be bigger than 0")
@@ -782,12 +782,12 @@ raliJpegTFRecordSource(
         auto [width, height] = use_input_dimension? std::make_tuple(max_width, max_height):
                                evaluate_image_data_set(decode_size_policy, StorageType::TF_RECORD, DecoderType::TURBO_JPEG,
                                                        source_path, "");
-        auto [color_format, num_of_planes] = convert_color_format(rali_color_format);
+        auto [color_format, num_of_planes] = convert_color_format(rocal_color_format);
 
         INFO("Internal buffer size width = "+ TOSTR(width)+ " height = "+ TOSTR(height) + " depth = "+ TOSTR(num_of_planes))
 
-        RaliTensorFormat tensor_format = RaliTensorFormat::NHWC;
-        RaliTensorDataType tensor_data_type = RaliTensorDataType::UINT8;
+        RocalTensorFormat tensor_format = RocalTensorFormat::NHWC;
+        RocalTensorDataType tensor_data_type = RocalTensorDataType::UINT8;
         auto info  = TensorInfo(width,
                                 height,
                                 context->internal_batch_size(),
@@ -825,23 +825,23 @@ raliJpegTFRecordSource(
     return output;
 }
 
-RaliTensor  RALI_API_CALL
-raliJpegCOCOFileSourcePartial(
-        RaliContext p_context,
+RocalTensor  ROCAL_API_CALL
+rocalJpegCOCOFileSourcePartial(
+        RocalContext p_context,
         const char* source_path,
         const char* json_path,
-        RaliImageColor rali_color_format,
+        RocalImageColor rocal_color_format,
         unsigned internal_shard_count,
         bool is_output,
         bool shuffle,
         bool loop,
-        RaliImageSizeEvaluationPolicy decode_size_policy,
+        RocalImageSizeEvaluationPolicy decode_size_policy,
         unsigned max_width,
         unsigned max_height,
-        RaliFloatParam p_area_factor,
-        RaliFloatParam p_aspect_ratio,
-        RaliFloatParam p_x_drift_factor,
-        RaliFloatParam p_y_drift_factor )
+        RocalFloatParam p_area_factor,
+        RocalFloatParam p_aspect_ratio,
+        RocalFloatParam p_x_drift_factor,
+        RocalFloatParam p_y_drift_factor )
 {
     Tensor* output = nullptr;
     auto area_factor  = static_cast<FloatParam*>(p_area_factor);
@@ -851,8 +851,8 @@ raliJpegCOCOFileSourcePartial(
     auto context = static_cast<Context*>(p_context);
     try
     {
-        bool use_input_dimension = (decode_size_policy == RALI_USE_USER_GIVEN_SIZE) || (decode_size_policy == RALI_USE_USER_GIVEN_SIZE_RESTRICTED);
-        //bool decoder_keep_original = (decode_size_policy == RALI_USE_USER_GIVEN_SIZE_RESTRICTED) || (decode_size_policy == RALI_USE_MAX_SIZE_RESTRICTED);
+        bool use_input_dimension = (decode_size_policy == ROCAL_USE_USER_GIVEN_SIZE) || (decode_size_policy == ROCAL_USE_USER_GIVEN_SIZE_RESTRICTED);
+        //bool decoder_keep_original = (decode_size_policy == ROCAL_USE_USER_GIVEN_SIZE_RESTRICTED) || (decode_size_policy == ROCAL_USE_MAX_SIZE_RESTRICTED);
 
         if(internal_shard_count < 1 )
             THROW("Shard count should be bigger than 0")
@@ -869,12 +869,12 @@ raliJpegCOCOFileSourcePartial(
         auto [width, height] = use_input_dimension? std::make_tuple(max_width, max_height):
                                evaluate_image_data_set(decode_size_policy, StorageType::COCO_FILE_SYSTEM, DecoderType::FUSED_TURBO_JPEG, source_path, json_path);
 
-        auto [color_format, num_of_planes] = convert_color_format(rali_color_format);
+        auto [color_format, num_of_planes] = convert_color_format(rocal_color_format);
 
         INFO("Internal buffer size width = "+ TOSTR(width)+ " height = "+ TOSTR(height) + " depth = "+ TOSTR(num_of_planes))
 
-        RaliTensorFormat tensor_format = RaliTensorFormat::NHWC;
-        RaliTensorDataType tensor_data_type = RaliTensorDataType::UINT8;
+        RocalTensorFormat tensor_format = RocalTensorFormat::NHWC;
+        RocalTensorDataType tensor_data_type = RocalTensorDataType::UINT8;
         auto info = TensorInfo(width, height,
                               context->internal_batch_size(),
                               num_of_planes,
@@ -913,24 +913,24 @@ raliJpegCOCOFileSourcePartial(
 }
 
 
-RaliTensor  RALI_API_CALL
-raliJpegCOCOFileSourcePartialSingleShard(
-        RaliContext p_context,
+RocalTensor  ROCAL_API_CALL
+rocalJpegCOCOFileSourcePartialSingleShard(
+        RocalContext p_context,
         const char* source_path,
         const char* json_path,
-        RaliImageColor rali_color_format,
+        RocalImageColor rocal_color_format,
         unsigned shard_id,
         unsigned shard_count,
         bool is_output,
         bool shuffle,
         bool loop,
-        RaliImageSizeEvaluationPolicy decode_size_policy,
+        RocalImageSizeEvaluationPolicy decode_size_policy,
         unsigned max_width,
         unsigned max_height,
-        RaliFloatParam p_area_factor,
-        RaliFloatParam p_aspect_ratio,
-        RaliFloatParam p_x_drift_factor,
-        RaliFloatParam p_y_drift_factor )
+        RocalFloatParam p_area_factor,
+        RocalFloatParam p_aspect_ratio,
+        RocalFloatParam p_x_drift_factor,
+        RocalFloatParam p_y_drift_factor )
 {
     Tensor* output = nullptr;
     auto area_factor  = static_cast<FloatParam*>(p_area_factor);
@@ -940,8 +940,8 @@ raliJpegCOCOFileSourcePartialSingleShard(
     auto context = static_cast<Context*>(p_context);
     try
     {
-        bool use_input_dimension = (decode_size_policy == RALI_USE_USER_GIVEN_SIZE) || (decode_size_policy == RALI_USE_USER_GIVEN_SIZE_RESTRICTED);
-        //bool decoder_keep_original = (decode_size_policy == RALI_USE_USER_GIVEN_SIZE_RESTRICTED) || (decode_size_policy == RALI_USE_MAX_SIZE_RESTRICTED);
+        bool use_input_dimension = (decode_size_policy == ROCAL_USE_USER_GIVEN_SIZE) || (decode_size_policy == ROCAL_USE_USER_GIVEN_SIZE_RESTRICTED);
+        //bool decoder_keep_original = (decode_size_policy == ROCAL_USE_USER_GIVEN_SIZE_RESTRICTED) || (decode_size_policy == ROCAL_USE_MAX_SIZE_RESTRICTED);
 
         if(shard_count < 1 )
             THROW("Shard count should be bigger than 0")
@@ -961,12 +961,12 @@ raliJpegCOCOFileSourcePartialSingleShard(
         auto [width, height] = use_input_dimension? std::make_tuple(max_width, max_height):
                                evaluate_image_data_set(decode_size_policy, StorageType::COCO_FILE_SYSTEM, DecoderType::FUSED_TURBO_JPEG, source_path, json_path);
 
-        auto [color_format, num_of_planes] = convert_color_format(rali_color_format);
+        auto [color_format, num_of_planes] = convert_color_format(rocal_color_format);
 
         INFO("Internal buffer size width = "+ TOSTR(width)+ " height = "+ TOSTR(height) + " depth = "+ TOSTR(num_of_planes))
 
-        RaliTensorFormat tensor_format = RaliTensorFormat::NHWC;
-        RaliTensorDataType tensor_data_type = RaliTensorDataType::UINT8;
+        RocalTensorFormat tensor_format = RocalTensorFormat::NHWC;
+        RocalTensorDataType tensor_data_type = RocalTensorDataType::UINT8;
         auto info = TensorInfo(width, height,
                               context->internal_batch_size(),
                               num_of_planes,
@@ -1004,17 +1004,17 @@ raliJpegCOCOFileSourcePartialSingleShard(
     return output;
 }
 
-RaliTensor  RALI_API_CALL
-raliJpegTFRecordSourceSingleShard(
-        RaliContext p_context,
+RocalTensor  ROCAL_API_CALL
+rocalJpegTFRecordSourceSingleShard(
+        RocalContext p_context,
         const char* source_path,
-        RaliImageColor rali_color_format,
+        RocalImageColor rocal_color_format,
         unsigned shard_id,
         unsigned shard_count,
         bool is_output,
         bool shuffle,
         bool loop,
-        RaliImageSizeEvaluationPolicy decode_size_policy,
+        RocalImageSizeEvaluationPolicy decode_size_policy,
         unsigned max_width,
         unsigned max_height)
 {
@@ -1022,7 +1022,7 @@ raliJpegTFRecordSourceSingleShard(
     auto context = static_cast<Context*>(p_context);
     try
     {
-        bool use_input_dimension = (decode_size_policy == RALI_USE_USER_GIVEN_SIZE);
+        bool use_input_dimension = (decode_size_policy == ROCAL_USE_USER_GIVEN_SIZE);
 
         if(shard_count < 1 )
             THROW("Shard count should be bigger than 0")
@@ -1042,12 +1042,12 @@ raliJpegTFRecordSourceSingleShard(
         auto [width, height] = use_input_dimension? std::make_tuple(max_width, max_height):
                                evaluate_image_data_set(decode_size_policy, StorageType::TF_RECORD, DecoderType::TURBO_JPEG,
                                                        source_path, "");
-        auto [color_format, num_of_planes] = convert_color_format(rali_color_format);
+        auto [color_format, num_of_planes] = convert_color_format(rocal_color_format);
 
         INFO("Internal buffer size width = "+ TOSTR(width)+ " height = "+ TOSTR(height) + " depth = "+ TOSTR(num_of_planes))
 
-        RaliTensorFormat tensor_format = RaliTensorFormat::NHWC;
-        RaliTensorDataType tensor_data_type = RaliTensorDataType::UINT8;
+        RocalTensorFormat tensor_format = RocalTensorFormat::NHWC;
+        RocalTensorDataType tensor_data_type = RocalTensorDataType::UINT8;
         auto info  = TensorInfo(width,
                                 height,
                                 context->internal_batch_size(),
@@ -1085,22 +1085,22 @@ raliJpegTFRecordSourceSingleShard(
 }
 
 
-RaliTensor  RALI_API_CALL
-raliFusedJpegCrop(
-        RaliContext p_context,
+RocalTensor  ROCAL_API_CALL
+rocalFusedJpegCrop(
+        RocalContext p_context,
         const char* source_path,
-        RaliImageColor rali_color_format,
+        RocalImageColor rocal_color_format,
         unsigned internal_shard_count,
         bool is_output,
         bool shuffle,
         bool loop,
-        RaliImageSizeEvaluationPolicy decode_size_policy,
+        RocalImageSizeEvaluationPolicy decode_size_policy,
         unsigned max_width,
         unsigned max_height,
-        RaliFloatParam p_area_factor,
-        RaliFloatParam p_aspect_ratio,
-        RaliFloatParam p_x_drift_factor,
-        RaliFloatParam p_y_drift_factor
+        RocalFloatParam p_area_factor,
+        RocalFloatParam p_aspect_ratio,
+        RocalFloatParam p_x_drift_factor,
+        RocalFloatParam p_y_drift_factor
         )
 {
     Tensor* output = nullptr;
@@ -1111,7 +1111,7 @@ raliFusedJpegCrop(
     auto context = static_cast<Context*>(p_context);
     try
     {
-        bool use_input_dimension = (decode_size_policy == RALI_USE_USER_GIVEN_SIZE) ;
+        bool use_input_dimension = (decode_size_policy == ROCAL_USE_USER_GIVEN_SIZE) ;
 
         if(internal_shard_count < 1 )
             THROW("Shard count should be bigger than 0")
@@ -1128,12 +1128,12 @@ raliFusedJpegCrop(
         auto [width, height] = use_input_dimension? std::make_tuple(max_width, max_height):
                                evaluate_image_data_set(decode_size_policy, StorageType::FILE_SYSTEM, DecoderType::FUSED_TURBO_JPEG, source_path, "");
 
-        auto [color_format, num_of_planes] = convert_color_format(rali_color_format);
+        auto [color_format, num_of_planes] = convert_color_format(rocal_color_format);
 
         INFO("Internal buffer size width = "+ TOSTR(width)+ " height = "+ TOSTR(height) + " depth = "+ TOSTR(num_of_planes))
 
-        RaliTensorFormat tensor_format = RaliTensorFormat::NHWC;
-        RaliTensorDataType tensor_data_type = RaliTensorDataType::UINT8;
+        RocalTensorFormat tensor_format = RocalTensorFormat::NHWC;
+        RocalTensorDataType tensor_data_type = RocalTensorDataType::UINT8;
         auto info  = TensorInfo(width,
                                 height,
                                 context->internal_batch_size(),
@@ -1170,13 +1170,13 @@ raliFusedJpegCrop(
     return output;
 }
 
-RaliTensor  RALI_API_CALL
-raliRawTFRecordSource(
-        RaliContext p_context,
+RocalTensor  ROCAL_API_CALL
+rocalRawTFRecordSource(
+        RocalContext p_context,
         const char* source_path,
         const char* user_key_for_encoded_str,
         const char* user_key_for_filename_str,
-        RaliImageColor rali_color_format,
+        RocalImageColor rocal_color_format,
         bool is_output,
         bool shuffle,
         bool loop,
@@ -1206,10 +1206,10 @@ raliRawTFRecordSource(
             LOG("User input size " + TOSTR(out_width) + " x " + TOSTR(out_height))
         }
 
-        auto [color_format, num_of_planes] = convert_color_format(rali_color_format);
+        auto [color_format, num_of_planes] = convert_color_format(rocal_color_format);
 
-        RaliTensorFormat tensor_format = RaliTensorFormat::NHWC;
-        RaliTensorDataType tensor_data_type = RaliTensorDataType::UINT8;
+        RocalTensorFormat tensor_format = RocalTensorFormat::NHWC;
+        RocalTensorDataType tensor_data_type = RocalTensorDataType::UINT8;
         auto info = TensorInfo(out_width, out_height,
                               context->internal_batch_size(),
                               num_of_planes,
@@ -1247,11 +1247,11 @@ raliRawTFRecordSource(
     return output;
 }
 
-RaliTensor  RALI_API_CALL
-raliRawTFRecordSourceSingleShard(
-        RaliContext p_context,
+RocalTensor  ROCAL_API_CALL
+rocalRawTFRecordSourceSingleShard(
+        RocalContext p_context,
         const char* source_path,
-        RaliImageColor rali_color_format,
+        RocalImageColor rocal_color_format,
         unsigned shard_id,
         unsigned shard_count,
         bool is_output,
@@ -1280,12 +1280,12 @@ raliRawTFRecordSourceSingleShard(
             LOG("User input size " + TOSTR(out_width) + " x " + TOSTR(out_height))
         }
 
-        auto [color_format, num_of_planes] = convert_color_format(rali_color_format);
+        auto [color_format, num_of_planes] = convert_color_format(rocal_color_format);
 
         INFO("Internal buffer size width = "+ TOSTR(out_width)+ " height = "+ TOSTR(out_height) + " depth = "+ TOSTR(num_of_planes))
 
-        RaliTensorFormat tensor_format = RaliTensorFormat::NHWC;
-        RaliTensorDataType tensor_data_type = RaliTensorDataType::UINT8;
+        RocalTensorFormat tensor_format = RocalTensorFormat::NHWC;
+        RocalTensorDataType tensor_data_type = RocalTensorDataType::UINT8;
         auto info = TensorInfo(out_width, out_height,
                               context->internal_batch_size(),
                               num_of_planes,
@@ -1321,23 +1321,23 @@ raliRawTFRecordSourceSingleShard(
     return output;
 }
 
-RaliTensor  RALI_API_CALL
-raliFusedJpegCropSingleShard(
-        RaliContext p_context,
+RocalTensor  ROCAL_API_CALL
+rocalFusedJpegCropSingleShard(
+        RocalContext p_context,
         const char* source_path,
-        RaliImageColor rali_color_format,
+        RocalImageColor rocal_color_format,
         unsigned shard_id,
         unsigned shard_count,
         bool is_output,
         bool shuffle,
         bool loop,
-        RaliImageSizeEvaluationPolicy decode_size_policy,
+        RocalImageSizeEvaluationPolicy decode_size_policy,
         unsigned max_width,
         unsigned max_height,
-        RaliFloatParam p_area_factor,
-        RaliFloatParam p_aspect_ratio,
-        RaliFloatParam p_x_drift_factor,
-        RaliFloatParam p_y_drift_factor
+        RocalFloatParam p_area_factor,
+        RocalFloatParam p_aspect_ratio,
+        RocalFloatParam p_x_drift_factor,
+        RocalFloatParam p_y_drift_factor
         )
 {
     Tensor* output = nullptr;
@@ -1348,7 +1348,7 @@ raliFusedJpegCropSingleShard(
     auto context = static_cast<Context*>(p_context);
     try
     {
-        bool use_input_dimension = (decode_size_policy == RALI_USE_USER_GIVEN_SIZE) ;
+        bool use_input_dimension = (decode_size_policy == ROCAL_USE_USER_GIVEN_SIZE) ;
 
         if(shard_count < 1 )
             THROW("Shard count should be bigger than 0")
@@ -1368,12 +1368,12 @@ raliFusedJpegCropSingleShard(
         auto [width, height] = use_input_dimension? std::make_tuple(max_width, max_height):
                                evaluate_image_data_set(decode_size_policy, StorageType::FILE_SYSTEM, DecoderType::FUSED_TURBO_JPEG, source_path, "");
 
-        auto [color_format, num_of_planes] = convert_color_format(rali_color_format);
+        auto [color_format, num_of_planes] = convert_color_format(rocal_color_format);
 
         INFO("Internal buffer size width = "+ TOSTR(width)+ " height = "+ TOSTR(height) + " depth = "+ TOSTR(num_of_planes))
 
-        RaliTensorFormat tensor_format = RaliTensorFormat::NHWC;
-        RaliTensorDataType tensor_data_type = RaliTensorDataType::UINT8;
+        RocalTensorFormat tensor_format = RocalTensorFormat::NHWC;
+        RocalTensorDataType tensor_data_type = RocalTensorDataType::UINT8;
         auto info  = TensorInfo(width,
                                 height,
                                 context->internal_batch_size(),
@@ -1411,8 +1411,8 @@ raliFusedJpegCropSingleShard(
 }
 
 
-RaliStatus RALI_API_CALL
-raliResetLoaders(RaliContext p_context)
+RocalStatus ROCAL_API_CALL
+rocalResetLoaders(RocalContext p_context)
 {
     auto context = static_cast<Context*>(p_context);
     try
@@ -1423,7 +1423,7 @@ raliResetLoaders(RaliContext p_context)
     {
         context->capture_error(e.what());
         ERR(e.what())
-        return RALI_RUNTIME_ERROR;
+        return ROCAL_RUNTIME_ERROR;
     }
-    return RALI_OK;
+    return ROCAL_OK;
 }

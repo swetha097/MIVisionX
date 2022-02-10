@@ -29,7 +29,7 @@ CropMirrorNormalizeTensorNode::CropMirrorNormalizeTensorNode(const std::vector<T
         TensorNode(inputs, outputs),
         _mirror(MIRROR_RANGE[0], MIRROR_RANGE[1])
 {
-    _crop_param = std::make_shared<RaliCropParam>(_batch_size);
+    _crop_param = std::make_shared<RocalCropParam>(_batch_size);
 }
 
 void CropMirrorNormalizeTensorNode::create_node()
@@ -61,7 +61,7 @@ void CropMirrorNormalizeTensorNode::create_node()
         chnShift = 1;
     vx_scalar  chnToggle = vxCreateScalar(vxGetContext((vx_reference)_graph->get()),VX_TYPE_UINT32,&chnShift);
     bool packed;
-    if(_inputs[0]->info().color_format() != RaliColorFormat::RGB_PLANAR)
+    if(_inputs[0]->info().color_format() != RocalColorFormat::RGB_PLANAR)
     {
         packed = true;
     }

@@ -1,7 +1,7 @@
 /*
 MIT License
 
-Copyright (c) 2018 - 2022 Advanced Micro Devices, Inc. All rights reserved.
+Copyright (c) 2018 Advanced Micro Devices, Inc. All rights reserved.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -30,39 +30,40 @@ THE SOFTWARE.
 #include <opencv2/opencv.hpp>
 #include <opencv/highgui.h>
 #include <vector>
-#include<string>
 
 #include "rocal_api.h"
 
 using namespace cv;
 
+#define DISPLAY
+
 using namespace std::chrono;
 
-int test(int test_case, const char *path, const char *outName, int rgb, int gpu, int width, int height,int num_of_classes, int display_all);
+int test(int test_case, const char *path, const char *outName, int rgb, int gpu, int display, int width, int height);
 int main(int argc, const char **argv)
 {
     // check command-line usage
     const int MIN_ARG_COUNT = 2;
+    printf("Usage: image_augmentation <image-dataset-folder> output_image_name <width> <height> test_case display-on-off gpu=1/cpu=0 rgb=1/grayscale =0  \n");
     if (argc < MIN_ARG_COUNT)
-    {
-        printf("Usage: rocal_unittests <image-dataset-folder> output_image_name <width> <height> test_case gpu=1/cpu=0 rgb=1/grayscale=0 one_hot_labels=num_of_classes/0  display_all=0(display_last_only)1(display_all)\n");
         return -1;
-    }
 
     int argIdx = 0;
     const char *path = argv[++argIdx];
     const char *outName = argv[++argIdx];
     int width = atoi(argv[++argIdx]);
     int height = atoi(argv[++argIdx]);
-    int display_all = 0;
 
-    int rgb = 1; // process color images
+    bool display = 1; // Display the images
+    int rgb = 1;      // process color images
     bool gpu = 1;
     int test_case = 3; // For Rotate
-    int num_of_classes = 0;
 
     if (argc >= argIdx + MIN_ARG_COUNT)
         test_case = atoi(argv[++argIdx]);
+
+    if (argc >= argIdx + MIN_ARG_COUNT)
+        display = atoi(argv[++argIdx]);
 
     if (argc >= argIdx + MIN_ARG_COUNT)
         gpu = atoi(argv[++argIdx]);
@@ -70,23 +71,17 @@ int main(int argc, const char **argv)
     if (argc >= argIdx + MIN_ARG_COUNT)
         rgb = atoi(argv[++argIdx]);
 
-    if (argc >= argIdx + MIN_ARG_COUNT)
-         num_of_classes = atoi(argv[++argIdx]);
-
-    if (argc >= argIdx + MIN_ARG_COUNT)
-         display_all = atoi(argv[++argIdx]);
-
-    test(test_case, path, outName, rgb, gpu, width, height, num_of_classes, display_all);
+    test(test_case, path, outName, rgb, gpu, display, width, height);
 
     return 0;
 }
 
-int test(int test_case, const char *path, const char *outName, int rgb, int gpu, int width, int height, int num_of_classes, int display_all)
+int test(int test_case, const char *path, const char *outName, int rgb, int gpu, int display, int width, int height)
 {
     size_t num_threads = 1;
-    unsigned int inputBatchSize = 2;
-    int decode_max_width = width;
-    int decode_max_height = height;
+    int inputBatchSize = 2;
+    int decode_max_width = width * 2;
+    int decode_max_height = height * 2;
     std::cout << ">>> test case " << test_case << std::endl;
     std::cout << ">>> Running on " << (gpu ? "GPU" : "CPU") << " , " << (rgb ? " Color " : " Grayscale ") << std::endl;
 
@@ -108,14 +103,23 @@ int test(int test_case, const char *path, const char *outName, int rgb, int gpu,
     rocalSetSeed(0);
 
     // Creating uniformly distributed random objects to override some of the default augmentation parameters
+    RocalFloatParam rand_crop_area = rocalCreateFloatUniformRand(0.3, 0.5);
     RocalIntParam color_temp_adj = rocalCreateIntParameter(-50);
 
+    // Creating a custom random object to set a limited number of values to randomize the rotation angle
+    const size_t num_values = 3;
+    float values[num_values] = {0, 10, 135};
+    double frequencies[num_values] = {1, 5, 5};
+    RocalFloatParam rand_angle = rocalCreateFloatRand(values, frequencies,
+                                                    sizeof(values) / sizeof(values[0]));
+
+    //num_values = 2;
+    int new_values[2] = {0, 1};
+    double new_freq[2] = {40, 60};
+    RocalIntParam rand_mirror = rocalCreateIntRand(new_values, new_freq, 2);
 
     /*>>>>>>>>>>>>>>>>>>> Graph description <<<<<<<<<<<<<<<<<<<*/
-
-    RocalMetaData meta_data;
-
-    meta_data = rocalCreateLabelReader(handle, path);
+    RocalMetaData meta_data = rocalCreateLabelReader(handle, path);
 
     RocalTensor input1;
     RocalTensorLayout tensorLayout = RocalTensorLayout::ROCAL_NHWC;
@@ -123,11 +127,21 @@ int test(int test_case, const char *path, const char *outName, int rgb, int gpu,
 
     // The jpeg file loader can automatically select the best size to decode all images to that size
     // User can alternatively set the size or change the policy that is used to automatically find the size
+#ifdef PARTIAL_DECODE
+    {
+        input1 = rocalFusedJpegCrop(handle, path, color_format, num_threads, false, false);
+    }
+#else
     if (decode_max_height <= 0 || decode_max_width <= 0)
-        input1 = rocalJpegFileSource(handle, path, color_format, num_threads, false, true);
+    {
+        input1 = rocalJpegFileSource(handle, path, color_format, num_threads, false, true, false);
+    }
     else
-        input1 = rocalJpegFileSource(handle, path, color_format, num_threads, false, false, false,
+    {
+        input1 = rocalJpegFileSource(handle, path, color_format, num_threads, false, true, false,
                                     ROCAL_USE_USER_GIVEN_SIZE, decode_max_width, decode_max_height);
+    }
+#endif
 
     if (rocalGetStatus(handle) != ROCAL_OK)
     {
@@ -135,126 +149,126 @@ int test(int test_case, const char *path, const char *outName, int rgb, int gpu,
         return -1;
     }
 
-    int resize_w = width, resize_h = height; // height and width
-
-    RocalTensor image1;
+    int resize_w = width;
+    int resize_h = height;
+    RocalTensor image1, image2;
 
     switch (test_case)
     {
     case 0:
+    {
+        std::vector<float> mean{0, 0, 0};
+        std::vector<float> sdev{1, 1, 1};
+        std::cout << ">>>>>>> Running "
+                  << " Crop Mirror Normalize Tensor" << std::endl;
+        image1 = rocalCropMirrorNormalizeTensor(handle, input1, tensorLayout, tensorOutputType, 3, resize_w, resize_h, 0, 0, 0, mean, sdev, true);
+    }
+    break;
+    case 1:
     {
         std::cout << ">>>>>>> Running "
                   << "rocalBrightness" << std::endl;
         image1 = rocalBrightness(handle, input1, true);
     }
     break;
-    case 1:
+    case 2:
     {
         std::cout << ">>>>>>> Running "
                   << "rocalGamma" << std::endl;
         image1 = rocalGamma(handle, input1, true);
     }
     break;
-    case 2:
-    {
-        std::vector<float> mean{0, 0, 0};
-        std::vector<float> sdev{1, 1, 1};
-        std::cout << ">>>>>>> Running "
-                  << " Crop Mirror Normalize Tensor" << std::endl;
-        image1 = rocalCropMirrorNormalize(handle, input1, tensorLayout, tensorOutputType, 3, resize_w, resize_h, 0, 0, 0, mean, sdev, true);
-    }
-    break;
     default:
         std::cout << "Not a valid option! Exiting!\n";
         return -1;
     }
-
     // Calling the API to verify and build the augmentation graph
     rocalVerify(handle);
+
     if (rocalGetStatus(handle) != ROCAL_OK)
     {
         std::cout << "Could not verify the augmentation graph " << rocalGetErrorMessage(handle);
         return -1;
     }
 
-    printf("\n\nAugmented copies count %lu \n", rocalGetAugmentationBranchCount(handle));
+    std::cout << "\n\nAugmented copies count " << rocalGetAugmentationBranchCount(handle) << std::endl;
 
     /*>>>>>>>>>>>>>>>>>>> Diplay using OpenCV <<<<<<<<<<<<<<<<<*/
     int h = rocalGetAugmentationBranchCount(handle) * rocalGetOutputHeight(handle);
     int w = rocalGetOutputWidth(handle);
     int p = ((color_format == RocalImageColor::ROCAL_COLOR_RGB24) ? 3 : 1);
     const unsigned number_of_cols = 1; //1920 / w;
-    auto cv_color_format = ((color_format == RocalImageColor::ROCAL_COLOR_RGB24) ? CV_8UC3 : CV_8UC1);
-    cv::Mat mat_output(h, w, cv_color_format);
-    cv::Mat mat_input(h, w, cv_color_format);
+    cv::Mat mat_output, mat_input;
+    switch (tensorOutputType)
+    {
+    case ROCAL_FP32:
+    {
+        auto cv_color_format = ((color_format == RocalImageColor::ROCAL_COLOR_RGB24) ? CV_32FC3 : CV_8UC1);
+        mat_output = cv::Mat(h, w, cv_color_format);
+        mat_input = cv::Mat(h, w, cv_color_format);
+    }
+    break;
+    case ROCAL_UINT8:
+    {
+        auto cv_color_format = ((color_format == RocalImageColor::ROCAL_COLOR_RGB24) ? CV_8UC3 : CV_8UC1);
+        mat_output = cv::Mat(h, w, cv_color_format);
+        mat_input = cv::Mat(h, w, cv_color_format);
+    }
+    break;
+    }
+
     cv::Mat mat_color;
     int col_counter = 0;
     //cv::namedWindow("output", CV_WINDOW_AUTOSIZE);
-    printf("Going to process images\n");
-    printf("Remaining images %lu \n", rocalGetRemainingImages(handle));
     high_resolution_clock::time_point t1 = high_resolution_clock::now();
     int index = 0;
-
     while (rocalGetRemainingImages(handle) >= inputBatchSize)
     {
+        // std::cerr<<"\n rocalGetRemainingImages:: "<<rocalGetRemainingImages(handle)<<"\t inputBatchsize:: "<<inputBatchSize  ;
+        // std::cerr<<"\n index "<<index;
         index++;
         if (rocalRun(handle) != 0)
+        {
+            // sleep(2);
             break;
+        }
+
+        auto last_colot_temp = rocalGetIntValue(color_temp_adj);
+        rocalUpdateIntParameter(last_colot_temp + 1, color_temp_adj);
+        switch (tensorOutputType)
+        {
+        case ROCAL_FP32:
+            rocalCopyToTensorOutput(handle, (float *)mat_input.data, h * w * p);
+            break;
+        case ROCAL_UINT8:
+            rocalCopyToTensorOutput(handle, (unsigned char *)mat_input.data, h * w * p);
+            break;
+        }
         int label_id[inputBatchSize];
-        int numOfClasses = 0;
         int image_name_length[inputBatchSize];
         rocalGetImageLabels(handle, label_id);
         int img_size = rocalGetImageNameLen(handle, image_name_length);
         char img_name[img_size];
-        numOfClasses = num_of_classes;
-        int label_one_hot_encoded[inputBatchSize * numOfClasses];
         rocalGetImageName(handle, img_name);
-        // if (num_of_classes != 0)
-        // {
-        //     rocalGetOneHotImageLabels(handle, label_one_hot_encoded, numOfClasses);
-        // }
-        std::cerr << "\nPrinting image names of batch: " << img_name<<"\n";
-        for (unsigned int i = 0; i < inputBatchSize; i++)
-        {
-            std::cerr<<"\t Printing label_id : " << label_id[i] << std::endl;
-            if(num_of_classes != 0)
-            {
-            std::cout << "One Hot Encoded labels:"<<"\t";
-            for (int j = 0; j < numOfClasses; j++)
-            {
-                int idx_value = label_one_hot_encoded[(i*numOfClasses)+j];
-                if(idx_value == 0)
-                std::cout << idx_value;
-                else
-                {
-                    std::cout << idx_value;
-                }
-            }
-            }
-            std::cout << "\n";
-        }
-        auto last_colot_temp = rocalGetIntValue(color_temp_adj);
-        rocalUpdateIntParameter(last_colot_temp + 1, color_temp_adj);
-
-        rocalCopyToOutput(handle, mat_input.data, h * w * p);
+        std::cerr << "\nPrinting image names of batch: " << img_name;
+        if (!display)
+            continue;
 
         std::vector<int> compression_params;
         compression_params.push_back(IMWRITE_PNG_COMPRESSION);
         compression_params.push_back(9);
 
         mat_input.copyTo(mat_output(cv::Rect(col_counter * w, 0, w, h)));
-        std::string out_filename = std::string(outName) + ".png";   // in case the user specifies non png filename
-        if (display_all)
-          out_filename = std::string(outName) + std::to_string(index) + ".png";   // in case the user specifies non png filename
-
         if (color_format == RocalImageColor::ROCAL_COLOR_RGB24)
         {
             cv::cvtColor(mat_output, mat_color, CV_RGB2BGR);
-            cv::imwrite(out_filename, mat_color, compression_params);
+            //cv::imshow("output", mat_color);
+            cv::imwrite(std::to_string(index) + outName, mat_color, compression_params);
+            // cv::waitKey(0);
         }
-        else
-        {
-            cv::imwrite(out_filename, mat_output, compression_params);
+        else {
+            //cv::imshow("output", mat_output);
+            cv::imwrite(std::to_string(index) + outName, mat_output, compression_params);
         }
         col_counter = (col_counter + 1) % number_of_cols;
     }
@@ -270,7 +284,6 @@ int test(int test_case, const char *path, const char *outName, int rgb, int gpu,
     rocalRelease(handle);
     mat_input.release();
     mat_output.release();
-    if (!image1)
-        return -1;
+
     return 0;
 }

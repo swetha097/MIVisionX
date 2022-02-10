@@ -14,10 +14,10 @@ This application can be used to verify the functionality of the API offered by r
   mkdir build
   cd build
   cmake ../
-  make 
+  make
   ````
-### running the application  
+### running the application
   ````
-Go to MIVisionX-tests/rali-unittests
-sh run-rali-unittests.sh
+Go to MIVisionX-tests/rocal-unittests
+sh run-rocal-unittests.sh
   ````

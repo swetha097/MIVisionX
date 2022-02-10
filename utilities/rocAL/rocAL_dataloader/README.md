@@ -1,4 +1,4 @@
-# rali_dataloader application
+# rocal_dataloader application
 This application demonstrates a basic usage of rocAL's C API to load RAW images from the disk and modify them in different possible ways and displays the output images.
 <p align="center"><img width="90%" src="../../docs/images/image_augmentation.png" /></p>
 
@@ -17,9 +17,9 @@ This application demonstrates a basic usage of rocAL's C API to load RAW images 
   mkdir build
   cd build
   cmake ../
-  make 
+  make
   ````
-### running the application  
+### running the application
   ````
-  rali_dataloader <path-to-image-dataset>
+  rocal_dataloader <path-to-image-dataset>
   ````

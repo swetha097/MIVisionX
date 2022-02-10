@@ -42,7 +42,7 @@ add_executable(${PROJECT_NAME} ./rocAL_dataloader.cpp)
 target_compile_definitions(${PROJECT_NAME} PUBLIC ENABLE_OPENCV=1)
 include_directories(${OpenCV_INCLUDE_DIRS})
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3 -mf16c -Wall ")
-target_link_libraries(${PROJECT_NAME} rali ${OpenCV_LIBRARIES})
+target_link_libraries(${PROJECT_NAME} rocal ${OpenCV_LIBRARIES})
 
 
 

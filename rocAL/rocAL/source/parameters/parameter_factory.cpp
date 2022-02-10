@@ -33,7 +33,7 @@ bool validate_simple_rand_param(pParam arg)
     std::visit(
             [&ret](auto&& arg)
             {
-                if(arg == nullptr || arg->type != RaliParameterType::DETERMINISTIC)
+                if(arg == nullptr || arg->type != RocalParameterType::DETERMINISTIC)
                     ret = false;
 
             },
@@ -48,7 +48,7 @@ bool validate_custom_rand_param(pParam arg)
     std::visit(
         [&ret](auto&& arg)
         {
-            if(arg == nullptr || arg->type != RaliParameterType::RANDOM_CUSTOM)
+            if(arg == nullptr || arg->type != RocalParameterType::RANDOM_CUSTOM)
                 ret = false;
 
         },
@@ -62,7 +62,7 @@ bool validate_uniform_rand_param(pParam  rand_obj)
     std::visit(
         [&ret](auto&& arg)
         {
-            if(arg == nullptr || arg->type != RaliParameterType::RANDOM_UNIFORM)
+            if(arg == nullptr || arg->type != RocalParameterType::RANDOM_UNIFORM)
                 ret = false;
 
         },
@@ -76,7 +76,7 @@ bool validate_normal_rand_param(pParam  rand_obj)
     std::visit(
         [&ret](auto&& arg)
         {
-            if(arg == nullptr || arg->type != RaliParameterType::RANDOM_NORMAL)
+            if(arg == nullptr || arg->type != RocalParameterType::RANDOM_NORMAL)
                 ret = false;
         },
         rand_obj);
@@ -138,7 +138,7 @@ ParameterFactory::set_seed(unsigned seed)
 IntParam* ParameterFactory::create_uniform_int_rand_param(int start, int end)
 {
     auto gen = new UniformRand<int>(start, end, _seed);
-    auto ret = new IntParam(gen, RaliParameterType::RANDOM_UNIFORM);
+    auto ret = new IntParam(gen, RocalParameterType::RANDOM_UNIFORM);
     _parameters.insert(gen);
     return ret;
 }
@@ -146,7 +146,7 @@ IntParam* ParameterFactory::create_uniform_int_rand_param(int start, int end)
 FloatParam* ParameterFactory::create_uniform_float_rand_param(float start, float end)
 {
     auto gen = new UniformRand<float>(start, end, _seed);
-    auto ret = new FloatParam(gen, RaliParameterType::RANDOM_UNIFORM);
+    auto ret = new FloatParam(gen, RocalParameterType::RANDOM_UNIFORM);
     _parameters.insert(gen);
     return ret;
 }
@@ -155,7 +155,7 @@ FloatParam* ParameterFactory::create_uniform_float_rand_param(float start, float
 IntParam* ParameterFactory::create_custom_int_rand_param(const int *value, const double *frequencies, size_t size)
 {
     auto gen = new CustomRand<int>(value, frequencies, size, _seed);
-    auto ret = new IntParam(gen, RaliParameterType::RANDOM_CUSTOM);
+    auto ret = new IntParam(gen, RocalParameterType::RANDOM_CUSTOM);
     _parameters.insert(gen);
     return ret;
 }
@@ -163,7 +163,7 @@ IntParam* ParameterFactory::create_custom_int_rand_param(const int *value, const
 FloatParam* ParameterFactory::create_custom_float_rand_param(const float *value, const double *frequencies, size_t size)
 {
     auto gen = new CustomRand<float>(value, frequencies, size, _seed);
-    auto ret = new FloatParam(gen, RaliParameterType::RANDOM_CUSTOM);
+    auto ret = new FloatParam(gen, RocalParameterType::RANDOM_CUSTOM);
     _parameters.insert(gen);
     return ret;
 }
@@ -172,7 +172,7 @@ FloatParam* ParameterFactory::create_custom_float_rand_param(const float *value,
 IntParam* ParameterFactory::create_single_value_int_param(int value)
 {
     auto gen = new SimpleParameter<int>(value);
-    auto ret = new IntParam(gen, RaliParameterType::DETERMINISTIC);
+    auto ret = new IntParam(gen, RocalParameterType::DETERMINISTIC);
     _parameters.insert(gen);
     return ret;
 }
@@ -180,7 +180,7 @@ IntParam* ParameterFactory::create_single_value_int_param(int value)
 FloatParam* ParameterFactory::create_single_value_float_param(float value)
 {
     auto gen = new SimpleParameter<float>(value);
-    auto ret = new FloatParam(gen, RaliParameterType::DETERMINISTIC);
+    auto ret = new FloatParam(gen, RocalParameterType::DETERMINISTIC);
     _parameters.insert(gen);
     return ret;
 }
@@ -188,7 +188,7 @@ FloatParam* ParameterFactory::create_single_value_float_param(float value)
 FloatParam* ParameterFactory::create_normal_float_rand_param(float mu, float sigma)
 {
     auto gen = new NormalRand<float>(mu, sigma, _seed);
-    auto ret = new FloatParam(gen, RaliParameterType::RANDOM_NORMAL);
+    auto ret = new FloatParam(gen, RocalParameterType::RANDOM_NORMAL);
     _parameters.insert(gen);
     return ret;
 }

@@ -15,9 +15,9 @@ This application is used to run performance tests on the rocAL API for graphs of
   mkdir build
   cd build
   cmake ../
-  make 
+  make
   ````
-### running the application  
+### running the application
   ````
-rali_performance_tests [test image folder] [image width] [image height] [test case] [batch size] [0 for CPU, 1 for GPU] [0 for grayscale, 1 for RGB]
+rocal_performance_tests [test image folder] [image width] [image height] [test case] [batch size] [0 for CPU, 1 for GPU] [0 for grayscale, 1 for RGB]
   ````

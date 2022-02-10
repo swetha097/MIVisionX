@@ -53,6 +53,6 @@ private:
 
 };
 
-using pRaliHip = std::shared_ptr<DeviceManagerHip>;
+using pRocalHip = std::shared_ptr<DeviceManagerHip>;
 
 #endif

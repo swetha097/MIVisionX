@@ -24,89 +24,89 @@ THE SOFTWARE.
 #include "rocal_api.h"
 #include "parameter_factory.h"
 
-void RALI_API_CALL
-raliSetSeed(unsigned seed)
+void ROCAL_API_CALL
+rocalSetSeed(unsigned seed)
 {
     ParameterFactory::instance()->set_seed(seed);
 }
 
-unsigned RALI_API_CALL
-raliGetSeed()
+unsigned ROCAL_API_CALL
+rocalGetSeed()
 {
     return ParameterFactory::instance()->get_seed();
 }
 
-int RALI_API_CALL
-raliGetIntValue(RaliIntParam p_obj)
+int ROCAL_API_CALL
+rocalGetIntValue(RocalIntParam p_obj)
 {
     auto obj = static_cast<IntParam*>(p_obj);
     return obj->core->get();
 }
 
-float RALI_API_CALL
-raliGetFloatValue(RaliFloatParam p_obj)
+float ROCAL_API_CALL
+rocalGetFloatValue(RocalFloatParam p_obj)
 {
     auto obj = static_cast<FloatParam*>(p_obj);
     return obj->core->get();
 }
 
-RaliIntParam  RALI_API_CALL
-raliCreateIntUniformRand(
+RocalIntParam  ROCAL_API_CALL
+rocalCreateIntUniformRand(
     int start,
     int end)
 {
     return ParameterFactory::instance()->create_uniform_int_rand_param(start, end);
 }
 
-RaliStatus  RALI_API_CALL
-raliUpdateIntUniformRand(
+RocalStatus  ROCAL_API_CALL
+rocalUpdateIntUniformRand(
         int start,
         int end,
-        RaliIntParam p_input_obj)
+        RocalIntParam p_input_obj)
 {
     auto input_obj = static_cast<IntParam*>(p_input_obj);
     if(!validate_uniform_rand_param(input_obj))  {
-        ERR("raliUpdateIntUniformRand : not a UniformRand object!");
-        return RALI_INVALID_PARAMETER_TYPE;
+        ERR("rocalUpdateIntUniformRand : not a UniformRand object!");
+        return ROCAL_INVALID_PARAMETER_TYPE;
     }
 
     UniformRand<int>* obj;
     if((obj = dynamic_cast<UniformRand<int>*>(input_obj->core)) == nullptr)
-        return RALI_INVALID_PARAMETER_TYPE;
+        return ROCAL_INVALID_PARAMETER_TYPE;
 
-    return (obj->update(start, end) == 0) ? RALI_OK : RALI_UPDATE_PARAMETER_FAILED ;
+    return (obj->update(start, end) == 0) ? ROCAL_OK : ROCAL_UPDATE_PARAMETER_FAILED ;
 }
 
-RaliFloatParam  RALI_API_CALL
-raliCreateFloatUniformRand(
+RocalFloatParam  ROCAL_API_CALL
+rocalCreateFloatUniformRand(
     float start,
     float end)
 {
     return ParameterFactory::instance()->create_uniform_float_rand_param(start, end);
 }
 
-RaliStatus  RALI_API_CALL
-raliUpdateFloatUniformRand(
+RocalStatus  ROCAL_API_CALL
+rocalUpdateFloatUniformRand(
         float start,
         float end,
-        RaliFloatParam p_input_obj)
+        RocalFloatParam p_input_obj)
 {
     auto input_obj = static_cast<FloatParam*>(p_input_obj);
     if(!validate_uniform_rand_param(input_obj)) {
-        ERR("raliUpdateFloatUniformRand : not a uniform random object!");
-        return RALI_INVALID_PARAMETER_TYPE;
+        ERR("rocalUpdateFloatUniformRand : not a uniform random object!");
+        return ROCAL_INVALID_PARAMETER_TYPE;
     }
 
     UniformRand<float>* obj;
     if((obj = dynamic_cast<UniformRand<float>*>(input_obj->core)) == nullptr)
-        return RALI_INVALID_PARAMETER_TYPE;
+        return ROCAL_INVALID_PARAMETER_TYPE;
 
-    return (obj->update(start, end) == 0) ? RALI_OK : RALI_UPDATE_PARAMETER_FAILED ;
+    return (obj->update(start, end) == 0) ? ROCAL_OK : ROCAL_UPDATE_PARAMETER_FAILED ;
 
 }
 
-RaliFloatParam  RALI_API_CALL
-raliCreateFloatRand(
+RocalFloatParam  ROCAL_API_CALL
+rocalCreateFloatRand(
         const float *values,
         const double *frequencies,
         unsigned size)
@@ -116,70 +116,70 @@ raliCreateFloatRand(
                                                                         size);
 }
 
-RaliFloatParam  RALI_API_CALL
-raliCreateFloatParameter(float val)
+RocalFloatParam  ROCAL_API_CALL
+rocalCreateFloatParameter(float val)
 {
     return ParameterFactory::instance()->create_single_value_float_param(val);
 }
 
-RaliIntParam  RALI_API_CALL
-raliCreateIntParameter(int val)
+RocalIntParam  ROCAL_API_CALL
+rocalCreateIntParameter(int val)
 {
     return ParameterFactory::instance()->create_single_value_int_param(val);
 }
 
-RaliStatus  RALI_API_CALL
-raliUpdateIntParameter(int new_val, RaliIntParam p_input_obj)
+RocalStatus  ROCAL_API_CALL
+rocalUpdateIntParameter(int new_val, RocalIntParam p_input_obj)
 {
     auto input_obj = static_cast<IntParam*>(p_input_obj);
     if(!validate_simple_rand_param(input_obj)) {
-        ERR("raliUpdateIntParameter : not a custom random object!");
-        return RALI_INVALID_PARAMETER_TYPE;
+        ERR("rocalUpdateIntParameter : not a custom random object!");
+        return ROCAL_INVALID_PARAMETER_TYPE;
     }
 
     SimpleParameter<int>* obj;
     if((obj = dynamic_cast<SimpleParameter<int>*>(input_obj->core)) == nullptr)
-        return RALI_INVALID_PARAMETER_TYPE;
-    return (obj->update(new_val) == 0) ? RALI_OK : RALI_UPDATE_PARAMETER_FAILED;
+        return ROCAL_INVALID_PARAMETER_TYPE;
+    return (obj->update(new_val) == 0) ? ROCAL_OK : ROCAL_UPDATE_PARAMETER_FAILED;
 }
 
-RaliStatus  RALI_API_CALL
-raliUpdateFloatParameter(float new_val, RaliFloatParam p_input_obj)
+RocalStatus  ROCAL_API_CALL
+rocalUpdateFloatParameter(float new_val, RocalFloatParam p_input_obj)
 {
     auto input_obj = static_cast<FloatParam*>(p_input_obj);
     if(!validate_simple_rand_param(input_obj)) {
-        ERR("raliUpdateFloatParameter : not a custom random object!");
-        return RALI_INVALID_PARAMETER_TYPE;
+        ERR("rocalUpdateFloatParameter : not a custom random object!");
+        return ROCAL_INVALID_PARAMETER_TYPE;
     }
 
     SimpleParameter<float>* obj;
     if((obj = dynamic_cast<SimpleParameter<float>*>(input_obj->core)) == nullptr)
-        return RALI_INVALID_PARAMETER_TYPE;
-    return (obj->update(new_val) == 0) ? RALI_OK : RALI_UPDATE_PARAMETER_FAILED;
+        return ROCAL_INVALID_PARAMETER_TYPE;
+    return (obj->update(new_val) == 0) ? ROCAL_OK : ROCAL_UPDATE_PARAMETER_FAILED;
 }
 
-RaliStatus  RALI_API_CALL
-raliUpdateFloatRand(
+RocalStatus  ROCAL_API_CALL
+rocalUpdateFloatRand(
         const float *values,
         const double *frequencies,
         unsigned size,
-        RaliFloatParam p_updating_obj)
+        RocalFloatParam p_updating_obj)
 {
     auto updating_obj = static_cast<FloatParam*>(p_updating_obj);
     if(!validate_custom_rand_param(updating_obj)) {
-        ERR("raliUpdateFloatRand : not a custom random object!");
-        return RALI_INVALID_PARAMETER_TYPE;
+        ERR("rocalUpdateFloatRand : not a custom random object!");
+        return ROCAL_INVALID_PARAMETER_TYPE;
     }
 
     CustomRand<float>* obj;
     if((obj = dynamic_cast<CustomRand<float>*>(updating_obj->core)) == nullptr)
-        return RALI_INVALID_PARAMETER_TYPE;
+        return ROCAL_INVALID_PARAMETER_TYPE;
 
-    return (obj->update(values, frequencies, size) == 0) ? RALI_OK : RALI_UPDATE_PARAMETER_FAILED ;
+    return (obj->update(values, frequencies, size) == 0) ? ROCAL_OK : ROCAL_UPDATE_PARAMETER_FAILED ;
 }
 
-RaliIntParam  RALI_API_CALL
-raliCreateIntRand(
+RocalIntParam  ROCAL_API_CALL
+rocalCreateIntRand(
         const int *values,
         const double *frequencies,
         unsigned size)
@@ -189,50 +189,50 @@ raliCreateIntRand(
                                                                       size);
 }
 
-RaliStatus  RALI_API_CALL
-raliUpdateIntRand(
+RocalStatus  ROCAL_API_CALL
+rocalUpdateIntRand(
         const int *values,
         const double *frequencies,
         unsigned size,
-        RaliIntParam p_updating_obj)
+        RocalIntParam p_updating_obj)
 {
     auto updating_obj = static_cast<IntParam*>(p_updating_obj);
     if(!validate_custom_rand_param(updating_obj)) {
-        ERR("raliUpdateIntRand : not a CustomRand object!");
-        return RALI_INVALID_PARAMETER_TYPE;
+        ERR("rocalUpdateIntRand : not a CustomRand object!");
+        return ROCAL_INVALID_PARAMETER_TYPE;
     }
 
     CustomRand<int>* obj;
     if((obj = dynamic_cast<CustomRand<int>*>(updating_obj->core)) == nullptr)
-        return RALI_INVALID_PARAMETER_TYPE;
+        return ROCAL_INVALID_PARAMETER_TYPE;
 
-    return (obj->update( values, frequencies, size) == 0) ? RALI_OK : RALI_UPDATE_PARAMETER_FAILED ;
+    return (obj->update( values, frequencies, size) == 0) ? ROCAL_OK : ROCAL_UPDATE_PARAMETER_FAILED ;
 }
 
-RaliFloatParam  RALI_API_CALL
-raliCreateFloatNormalRand(
+RocalFloatParam  ROCAL_API_CALL
+rocalCreateFloatNormalRand(
     float mu,
     float sigma)
 {
     return ParameterFactory::instance()->create_normal_float_rand_param(mu, sigma);
 }
 
-RaliStatus  RALI_API_CALL
-raliUpdateFloatNormalRand(
+RocalStatus  ROCAL_API_CALL
+rocalUpdateFloatNormalRand(
         float mu,
         float sigma,
-        RaliFloatParam p_input_obj)
+        RocalFloatParam p_input_obj)
 {
     auto input_obj = static_cast<FloatParam*>(p_input_obj);
     if(!validate_normal_rand_param(input_obj)) {
-        ERR("raliUpdateFloatNormalRand : not a normal random object!");
-        return RALI_INVALID_PARAMETER_TYPE;
+        ERR("rocalUpdateFloatNormalRand : not a normal random object!");
+        return ROCAL_INVALID_PARAMETER_TYPE;
     }
 
     NormalRand<float>* obj;
     if((obj = dynamic_cast<NormalRand<float>*>(input_obj->core)) == nullptr)
-        return RALI_INVALID_PARAMETER_TYPE;
+        return ROCAL_INVALID_PARAMETER_TYPE;
 
-    return (obj->update(mu, sigma) == 0) ? RALI_OK : RALI_UPDATE_PARAMETER_FAILED ;
+    return (obj->update(mu, sigma) == 0) ? ROCAL_OK : ROCAL_UPDATE_PARAMETER_FAILED ;
 
 }

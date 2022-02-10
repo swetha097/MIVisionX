@@ -23,48 +23,48 @@ THE SOFTWARE.
 #include "commons.h"
 #include "context.h"
 #include "rocal_api.h"
-size_t RALI_API_CALL raliGetImageWidth(RaliImage p_tensor)
+size_t ROCAL_API_CALL rocalGetImageWidth(RocalImage p_tensor)
 {
     auto tensor = static_cast<Tensor*>(p_tensor);
     return tensor->info().width();
 }
-size_t RALI_API_CALL raliGetImageHeight(RaliImage p_tensor)
+size_t ROCAL_API_CALL rocalGetImageHeight(RocalImage p_tensor)
 {
     auto tensor = static_cast<Tensor*>(p_tensor);
     return tensor->info().height_batch();
 }
 
-size_t RALI_API_CALL raliGetImagePlanes(RaliImage p_tensor)
+size_t ROCAL_API_CALL rocalGetImagePlanes(RocalImage p_tensor)
 {
     auto tensor = static_cast<Tensor*>(p_tensor);
     return tensor->info().color_plane_count();
 }
 
-int RALI_API_CALL raliGetOutputWidth(RaliContext p_context)
+int ROCAL_API_CALL rocalGetOutputWidth(RocalContext p_context)
 {
     auto context = static_cast<Context*>(p_context);
     return context->master_graph->tensor_output_width();
 }
 
-int RALI_API_CALL raliGetOutputHeight(RaliContext p_context)
+int ROCAL_API_CALL rocalGetOutputHeight(RocalContext p_context)
 {
     auto context = static_cast<Context*>(p_context);
     return context->master_graph->tensor_output_height();
 }
 
-int RALI_API_CALL raliGetOutputColorFormat(RaliContext p_context)
+int ROCAL_API_CALL rocalGetOutputColorFormat(RocalContext p_context)
 {
     auto context = static_cast<Context*>(p_context);
-    auto translate_color_format = [](RaliColorFormat color_format)
+    auto translate_color_format = [](RocalColorFormat color_format)
     {
         switch(color_format){
-            case RaliColorFormat::RGB24:
+            case RocalColorFormat::RGB24:
                 return 0;
-            case RaliColorFormat::BGR24:
+            case RocalColorFormat::BGR24:
                 return 1;
-            case RaliColorFormat::U8:
+            case RocalColorFormat::U8:
                 return 2;
-            case RaliColorFormat::RGB_PLANAR:
+            case RocalColorFormat::RGB_PLANAR:
                 return 3;
             default:
                 THROW("Unsupported Tensor type" + TOSTR(color_format))
@@ -73,14 +73,14 @@ int RALI_API_CALL raliGetOutputColorFormat(RaliContext p_context)
 
     return translate_color_format(context->master_graph->output_color_format());
 }
-size_t RALI_API_CALL raliGetAugmentationBranchCount(RaliContext p_context)
+size_t ROCAL_API_CALL rocalGetAugmentationBranchCount(RocalContext p_context)
 {
     auto context = static_cast<Context*>(p_context);
     return context->master_graph->augmentation_branch_count();
 }
 
-size_t  RALI_API_CALL
-raliGetRemainingImages(RaliContext p_context)
+size_t  ROCAL_API_CALL
+rocalGetRemainingImages(RocalContext p_context)
 {
     auto context = static_cast<Context*>(p_context);
     size_t count = 0;
@@ -96,25 +96,25 @@ raliGetRemainingImages(RaliContext p_context)
     return count;
 }
 
-RaliStatus RALI_API_CALL raliGetStatus(RaliContext p_context)
+RocalStatus ROCAL_API_CALL rocalGetStatus(RocalContext p_context)
 {
     if(!p_context)
-        return RALI_CONTEXT_INVALID;
+        return ROCAL_CONTEXT_INVALID;
     auto context = static_cast<Context*>(p_context);
 
     if(context->no_error())
-        return RALI_OK;
+        return ROCAL_OK;
 
-    return RALI_RUNTIME_ERROR;
+    return ROCAL_RUNTIME_ERROR;
 }
 
-const char* RALI_API_CALL raliGetErrorMessage(RaliContext p_context)
+const char* ROCAL_API_CALL rocalGetErrorMessage(RocalContext p_context)
 {
     auto context = static_cast<Context*>(p_context);
     return context->error_msg();
 }
 TimingInfo
-RALI_API_CALL raliGetTimingInfo(RaliContext p_context)
+ROCAL_API_CALL rocalGetTimingInfo(RocalContext p_context)
 {
     auto context = static_cast<Context*>(p_context);
     auto info = context->timing();
@@ -122,10 +122,10 @@ RALI_API_CALL raliGetTimingInfo(RaliContext p_context)
     return {info.image_read_time, info.image_decode_time, info.image_process_time, info.copy_to_output};
 }
 
-size_t RALI_API_CALL raliIsEmpty(RaliContext p_context)
+size_t ROCAL_API_CALL rocalIsEmpty(RocalContext p_context)
 {
     if (!p_context)
-        THROW("Invalid rali context passed to raliIsEmpty")
+        THROW("Invalid rocal context passed to rocalIsEmpty")
     auto context = static_cast<Context*>(p_context);
     size_t ret = 0;
     try

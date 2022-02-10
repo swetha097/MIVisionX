@@ -20,28 +20,28 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-#ifndef MIVISIONX_RALI_API_TYPES_H
-#define MIVISIONX_RALI_API_TYPES_H
+#ifndef MIVISIONX_ROCAL_API_TYPES_H
+#define MIVISIONX_ROCAL_API_TYPES_H
 
 #include <cstdlib>
 
-#ifndef RALI_API_CALL
+#ifndef ROCAL_API_CALL
 #if defined(_WIN32)
-#define RALI_API_CALL __stdcall
+#define ROCAL_API_CALL __stdcall
 #else
-#define RALI_API_CALL
+#define ROCAL_API_CALL
 #endif
 #endif
 
 #include <half.hpp>
 using half_float::half;
 
-typedef void * RaliFloatParam;
-typedef void * RaliIntParam;
-typedef void * RaliContext;
-typedef void * RaliImage;
-typedef void * RaliTensor;
-typedef void * RaliMetaData;
+typedef void * RocalFloatParam;
+typedef void * RocalIntParam;
+typedef void * RocalContext;
+typedef void * RocalImage;
+typedef void * RocalTensor;
+typedef void * RocalMetaData;
 
 struct TimingInfo
 {
@@ -50,71 +50,71 @@ struct TimingInfo
     long long unsigned process_time;
     long long unsigned transfer_time;
 };
-enum RaliStatus
+enum RocalStatus
 {
-    RALI_OK = 0,
-    RALI_CONTEXT_INVALID,
-    RALI_RUNTIME_ERROR,
-    RALI_UPDATE_PARAMETER_FAILED,
-    RALI_INVALID_PARAMETER_TYPE
+    ROCAL_OK = 0,
+    ROCAL_CONTEXT_INVALID,
+    ROCAL_RUNTIME_ERROR,
+    ROCAL_UPDATE_PARAMETER_FAILED,
+    ROCAL_INVALID_PARAMETER_TYPE
 };
 
 
-enum RaliImageColor
+enum RocalImageColor
 {
-    RALI_COLOR_RGB24 = 0,
-    RALI_COLOR_BGR24 = 1,
-    RALI_COLOR_U8  = 2,
-    RALI_COLOR_RGB_PLANAR = 3,
+    ROCAL_COLOR_RGB24 = 0,
+    ROCAL_COLOR_BGR24 = 1,
+    ROCAL_COLOR_U8  = 2,
+    ROCAL_COLOR_RGB_PLANAR = 3,
 };
 
-enum RaliProcessMode
+enum RocalProcessMode
 {
-    RALI_PROCESS_GPU = 0,
-    RALI_PROCESS_CPU = 1
+    ROCAL_PROCESS_GPU = 0,
+    ROCAL_PROCESS_CPU = 1
 };
 
-enum RaliFlipAxis
+enum RocalFlipAxis
 {
-    RALI_FLIP_HORIZONTAL = 0,
-    RALI_FLIP_VERTICAL = 1
+    ROCAL_FLIP_HORIZONTAL = 0,
+    ROCAL_FLIP_VERTICAL = 1
 };
 
-enum RaliImageSizeEvaluationPolicy
+enum RocalImageSizeEvaluationPolicy
 {
-    RALI_USE_MAX_SIZE = 0,
-    RALI_USE_USER_GIVEN_SIZE = 1,
-    RALI_USE_MOST_FREQUENT_SIZE = 2,
-    RALI_USE_USER_GIVEN_SIZE_RESTRICTED = 3,    // use the given size only if the actual decoded size is greater than the given size
-    RALI_USE_MAX_SIZE_RESTRICTED = 4,       // use max size if the actual decoded size is greater than max
+    ROCAL_USE_MAX_SIZE = 0,
+    ROCAL_USE_USER_GIVEN_SIZE = 1,
+    ROCAL_USE_MOST_FREQUENT_SIZE = 2,
+    ROCAL_USE_USER_GIVEN_SIZE_RESTRICTED = 3,    // use the given size only if the actual decoded size is greater than the given size
+    ROCAL_USE_MAX_SIZE_RESTRICTED = 4,       // use max size if the actual decoded size is greater than max
 };
 
-enum RaliDecodeDevice
+enum RocalDecodeDevice
 {
-    RALI_HW_DECODE = 0,
-    RALI_SW_DECODE = 1
+    ROCAL_HW_DECODE = 0,
+    ROCAL_SW_DECODE = 1
 };
 
-enum RaliTensorLayout
+enum RocalTensorLayout
 {
-    RALI_NHWC = 0,
-    RALI_NCHW = 1
+    ROCAL_NHWC = 0,
+    ROCAL_NCHW = 1
 };
 
-enum RaliTensorOutputType
+enum RocalTensorOutputType
 {
-    RALI_FP32 = 0,
-    RALI_FP16 = 1,
-    RALI_UINT8 = 2
+    ROCAL_FP32 = 0,
+    ROCAL_FP16 = 1,
+    ROCAL_UINT8 = 2
 };
 
-enum RaliDecoderType
+enum RocalDecoderType
 {
-    RALI_DECODER_TJPEG = 0,
-    RALI_DECODER_OPENCV = 1,
-    RALI_DECODER_VIDEO_FFMPEG_SW = 2,
-    RALI_DECODER_VIDEO_FFMPEG_HW = 3
+    ROCAL_DECODER_TJPEG = 0,
+    ROCAL_DECODER_OPENCV = 1,
+    ROCAL_DECODER_VIDEO_FFMPEG_SW = 2,
+    ROCAL_DECODER_VIDEO_FFMPEG_HW = 3
 };
 
 
-#endif //MIVISIONX_RALI_API_TYPES_H
+#endif //MIVISIONX_ROCAL_API_TYPES_H
