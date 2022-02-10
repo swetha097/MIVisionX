@@ -20,7 +20,6 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-
 #pragma once
 #include <set>
 #include <memory>
@@ -29,20 +28,20 @@ THE SOFTWARE.
 #include "tensor.h"
 
 
-class Node
+class TensorNode
 {
 public:
-    Node(const std::vector<Tensor *> &inputs, const std::vector<Tensor *> &outputs) :
+    TensorNode(const std::vector<Tensor *> &inputs, const std::vector<Tensor *> &outputs) :
         _inputs(inputs),
         _outputs(outputs),
         _batch_size(outputs[0]->info().batch_size()) {}
-    virtual ~Node();
+    virtual ~TensorNode();
     void create(std::shared_ptr<Graph> graph);
     void update_parameters();
     std::vector<Tensor*> input() { return _inputs; };
     std::vector<Tensor*> output() { return _outputs; };
-    void add_next(const std::shared_ptr<Node>& node) {} // To be implemented
-    void add_previous(const std::shared_ptr<Node>& node) {} //To be implemented
+    void add_next(const std::shared_ptr<TensorNode>& node) {} // To be implemented
+    void add_previous(const std::shared_ptr<TensorNode>& node) {} //To be implemented
     std::shared_ptr<Graph> graph() { return _graph; }
     bool _is_ssd = false;
     void set_meta_data(MetaDataBatch* meta_data_info){_meta_data_info = meta_data_info;}

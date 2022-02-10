@@ -1,4 +1,4 @@
-# Copyright (c) 2015 - 2022 Advanced Micro Devices, Inc. All rights reserved.
+# Copyright (c) 2022 Advanced Micro Devices, Inc. All rights reserved.
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -21,15 +21,18 @@
 cmake_minimum_required(VERSION 3.5)
 project(rocAL_hip CXX)
 
-set(rocAL_HIP_SOURCES
+set(RALIHIP_SOURCES
     rali_hip_kernels.cpp
     )
 
-set_source_files_properties(${rocAL_HIP_SOURCES} PROPERTIES HIP_SOURCE_PROPERTY_FORMAT 1)
-set(HIP_CXX_FLAGS -std=gnu++14)
-set(COMPILER_FOR_HIP ${ROCM_PATH}/bin/hipcc)
-set(CMAKE_CXX_COMPILER ${COMPILER_FOR_HIP})
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${HIP_CXX_FLAGS}")
-add_library(${PROJECT_NAME} OBJECT ${rocAL_HIP_SOURCES})
-set_target_properties(${PROJECT_NAME} PROPERTIES POSITION_INDEPENDENT_CODE ON)
-target_compile_definitions(${PROJECT_NAME} PRIVATE __HIP_PLATFORM_AMD__)
+if(HIP_COMPILER STREQUAL clang)
+    set(hip_library_name amdhip64)
+endif()
+#message("HIP library name: ${hip_library_name}")
+
+set_source_files_properties(${RALIHIP_SOURCES} PROPERTIES HIP_SOURCE_PROPERTY_FORMAT 1)
+set(HIP_HCC_FLAGS -std=c++14)
+hip_add_library(${PROJECT_NAME} ${RALIHIP_SOURCES} HIPCC_OPTIONS "${HIP_HCC_FLAGS}"  SHARED)
+target_compile_definitions(${PROJECT_NAME} PRIVATE)
+message("-- CMake CXX Compiler " ${CMAKE_CXX_COMPILER})
+install(TARGETS ${PROJECT_NAME} DESTINATION lib)

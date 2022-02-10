@@ -39,12 +39,12 @@ THE SOFTWARE.
 // to align tensor width
 #define TENSOR_WIDTH_ALIGNMENT   0 // todo:: check to see if we need this
 
-/*! \brief Converts Rocal Memory type to OpenVX memory type
+/*! \brief Converts Rali Memory type to OpenVX memory type
  *
- * @param mem input Rocal type
+ * @param mem input Rali type
  * @return the OpenVX type associated with input argument
  */
-extern vx_enum vx_mem_type(RocalMemType mem);
+extern vx_enum vx_mem_type(RaliMemType mem);
 
 
 /*! \brief Holds the information about an OpenVX Tensor */
@@ -69,10 +69,10 @@ struct TensorInfo
         unsigned height_,
         unsigned batches_,
         unsigned channels_,
-        RocalMemType mem_type_,
-        RocalColorFormat color_format,
-        RocalTensorDataType data_type,
-        RocalTensorFormat   tensor_format);
+        RaliMemType mem_type_,
+        RaliColorFormat color_format,
+        RaliTensorDataType data_type,
+        RaliTensorFormat   tensor_format);
 
     unsigned width() const { return _width; }
     unsigned height_batch() const {return _height * _batch_size; }
@@ -84,16 +84,16 @@ struct TensorInfo
     void height(unsigned height) { _height = height; }
     void batch_size(unsigned batch_size) { _batch_size = batch_size; }
     void channels(unsigned channels) { _channels = channels; }
-    void format(RocalTensorFormat format) { _format = format; }
-    void color_format(RocalColorFormat color_fmt)  { _color_fmt = color_fmt; }
-    void data_type(RocalTensorDataType data_type)  { _data_type = data_type; }
+    void format(RaliTensorFormat format) { _format = format; }
+    void color_format(RaliColorFormat color_fmt)  { _color_fmt = color_fmt; }
+    void data_type(RaliTensorDataType data_type)  { _data_type = data_type; }
     Type type() const { return _type; }
-    RocalTensorDataType data_type() const { return _data_type;}
+    RaliTensorDataType data_type() const { return _data_type;}
     unsigned batch_size() const {return _batch_size;}
-    RocalMemType mem_type() const { return _mem_type; }
-    RocalTensorFormat format() const { return _format; }
+    RaliMemType mem_type() const { return _mem_type; }
+    RaliTensorFormat format() const { return _format; }
     unsigned data_size() const { return _data_size; }
-    RocalColorFormat color_format() const {return _color_fmt; }
+    RaliColorFormat color_format() const {return _color_fmt; }
     unsigned color_plane_count() const { return _color_planes; }
     unsigned get_roi_width(int batch_idx) const;
     unsigned get_roi_height(int batch_idx) const;
@@ -104,15 +104,15 @@ struct TensorInfo
     bool is_image() const { return _is_image; }
     size_t data_type_size()
     {
-        if(_data_type == RocalTensorDataType::FP32)
+        if(_data_type == RaliTensorDataType::FP32)
         {
             _data_type_size = sizeof(vx_float32);
         }
-        else if(_data_type == RocalTensorDataType::FP16)
+        else if(_data_type == RaliTensorDataType::FP16)
         {
             _data_type_size = sizeof(vx_int16); // have to change this to float 16
         }
-        else if(_data_type == RocalTensorDataType::UINT8)
+        else if(_data_type == RaliTensorDataType::UINT8)
         {
             _data_type_size = sizeof(vx_uint8);
         }
@@ -125,10 +125,10 @@ private:
     unsigned _batch_size;//!< the batch size (images in the batch are stacked on top of each other)
     unsigned _channels;//!< number of channels
     unsigned _data_size;//!< total size of the memory needed to keep the image's data in bytes including all planes
-    RocalMemType _mem_type;//!< memory type, currently either OpenCL or Host
-    RocalTensorDataType _data_type = RocalTensorDataType::FP32;
-    RocalTensorFormat _format = RocalTensorFormat::NCHW;
-    RocalColorFormat _color_fmt;//!< color format of the image
+    RaliMemType _mem_type;//!< memory type, currently either OpenCL or Host
+    RaliTensorDataType _data_type = RaliTensorDataType::FP32;
+    RaliTensorFormat _format = RaliTensorFormat::NCHW;
+    RaliColorFormat _color_fmt;//!< color format of the image
     unsigned _color_planes;//!< number of color planes
     unsigned _stride;//!< if different from width
     std::shared_ptr<std::vector<uint32_t>> _roi_width;//!< The actual image width stored in the buffer, it's always smaller than _width/_batch_size. It's created as a vector of pointers to integers, so that if it's passed from one image to another and get updated by one and observed for all.
@@ -142,7 +142,7 @@ bool operator==(const TensorInfo& rhs, const TensorInfo& lhs);
 
 /*! \brief Holds an OpenVX tensor and it's info
 *
-* Keeps the information about the ROCAL tensor that can be queried using OVX API as well,
+* Keeps the information about the RALI tensor that can be queried using OVX API as well,
 * but for simplicity and ease of use, they are kept in separate fields
 */
 struct Tensor
@@ -182,3 +182,6 @@ private:
     TensorInfo _info;//!< The structure holding the info related to the stored OpenVX image
     vx_context _context = nullptr;
 };
+
+
+

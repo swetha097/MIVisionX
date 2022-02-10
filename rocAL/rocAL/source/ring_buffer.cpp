@@ -55,14 +55,14 @@ void RingBuffer:: block_if_full()
 std::vector<void*> RingBuffer::get_read_buffers()
 {
     block_if_empty();
-    if((_mem_type == RocalMemType::OCL) || (_mem_type == RocalMemType::HIP))
+    if((_mem_type == RaliMemType::OCL) || (_mem_type == RaliMemType::HIP))
         return _dev_sub_buffer[_read_ptr];
     return _host_sub_buffers[_read_ptr];
 }
 
 void *RingBuffer::get_host_master_read_buffer() {
     block_if_empty();
-    if((_mem_type == RocalMemType::OCL) || (_mem_type == RocalMemType::HIP))
+    if((_mem_type == RaliMemType::OCL) || (_mem_type == RaliMemType::HIP))
         return nullptr;
 
     return _host_master_buffers[_read_ptr];
@@ -72,7 +72,7 @@ void *RingBuffer::get_host_master_read_buffer() {
 std::vector<void*> RingBuffer::get_write_buffers()
 {
     block_if_full();
-    if((_mem_type == RocalMemType::OCL) || (_mem_type == RocalMemType::HIP))
+    if((_mem_type == RaliMemType::OCL) || (_mem_type == RaliMemType::HIP))
         return _dev_sub_buffer[_write_ptr];
 
     return _host_sub_buffers[_write_ptr];
@@ -104,7 +104,7 @@ void RingBuffer::unblock_writer()
 }
 
 #if !ENABLE_HIP
-void RingBuffer::init(RocalMemType mem_type, DeviceResources dev, unsigned sub_buffer_size, unsigned sub_buffer_count)
+void RingBuffer::init(RaliMemType mem_type, DeviceResources dev, unsigned sub_buffer_size, unsigned sub_buffer_count)
 {
     _mem_type = mem_type;
     _dev = dev;
@@ -114,7 +114,7 @@ void RingBuffer::init(RocalMemType mem_type, DeviceResources dev, unsigned sub_b
         THROW ("Error internal buffer size for the ring buffer should be greater than one")
 
     // Allocating buffers
-    if(mem_type== RocalMemType::OCL)
+    if(mem_type== RaliMemType::OCL)
     {
         if(_dev.cmd_queue == nullptr || _dev.device_id == nullptr || _dev.context == nullptr)
             THROW("Error ocl structure needed since memory type is OCL");
@@ -158,7 +158,7 @@ void RingBuffer::init(RocalMemType mem_type, DeviceResources dev, unsigned sub_b
 }
 
 #else
-void RingBuffer::initHip(RocalMemType mem_type, DeviceResourcesHip dev, unsigned sub_buffer_size, unsigned sub_buffer_count)
+void RingBuffer::initHip(RaliMemType mem_type, DeviceResourcesHip dev, unsigned sub_buffer_size, unsigned sub_buffer_count)
 {
     _mem_type = mem_type;
     _devhip = dev;
@@ -168,7 +168,7 @@ void RingBuffer::initHip(RocalMemType mem_type, DeviceResourcesHip dev, unsigned
         THROW ("Error internal buffer size for the ring buffer should be greater than one")
 
     // Allocating buffers
-    if(_mem_type == RocalMemType::HIP)
+    if(_mem_type == RaliMemType::HIP)
     {
         if(_devhip.hip_stream == nullptr || _devhip.device_id == -1 )
             THROW("Error Hip Device is not initialzed");
@@ -196,6 +196,7 @@ void RingBuffer::initHip(RocalMemType mem_type, DeviceResourcesHip dev, unsigned
         for(size_t buffIdx = 0; buffIdx < BUFF_DEPTH; buffIdx++)
         {
             const size_t master_buffer_size = sub_buffer_size * sub_buffer_count;
+            // std::cerr<<"\n sub_buffer_size:: "<<sub_buffer_size<<"\t sub_buffer_count:: "<<sub_buffer_count;
             // a minimum of extra MEM_ALIGNMENT is allocated
             _host_master_buffers[buffIdx] = aligned_alloc(MEM_ALIGNMENT, MEM_ALIGNMENT * (master_buffer_size / MEM_ALIGNMENT + 1));
             _host_sub_buffers[buffIdx].resize(_sub_buffer_count);
@@ -236,9 +237,9 @@ void RingBuffer::reset()
 
 RingBuffer::~RingBuffer()
 {
-    //  if(_mem_type!= RocalMemType::OCL)
+    //  if(_mem_type!= RaliMemType::OCL)
     //      return;
-    if (_mem_type == RocalMemType::HOST) {
+    if (_mem_type == RaliMemType::HOST) {
         for (unsigned idx = 0; idx < _host_master_buffers.size(); idx++)
             if (_host_master_buffers[idx]) {
                 free(_host_master_buffers[idx]);
@@ -248,7 +249,7 @@ RingBuffer::~RingBuffer()
         _host_sub_buffers.clear();
     }
 #if ENABLE_HIP
-    else if (_mem_type == RocalMemType::HIP) {
+    else if (_mem_type == RaliMemType::HIP) {
         for (size_t buffIdx = 0; buffIdx < _dev_sub_buffer.size(); buffIdx++)
             for (unsigned sub_buf_idx = 0; sub_buf_idx < _dev_sub_buffer[buffIdx].size(); sub_buf_idx++)
                 if (_dev_sub_buffer[buffIdx][sub_buf_idx])
@@ -257,7 +258,7 @@ RingBuffer::~RingBuffer()
         _dev_sub_buffer.clear();
     }
 #else
-    else if (_mem_type == RocalMemType::OCL) {
+    else if (_mem_type == RaliMemType::OCL) {
         for (size_t buffIdx = 0; buffIdx < _dev_sub_buffer.size(); buffIdx++)
             for (unsigned sub_buf_idx = 0; sub_buf_idx < _dev_sub_buffer[buffIdx].size(); sub_buf_idx++)
                 if (_dev_sub_buffer[buffIdx][sub_buf_idx])

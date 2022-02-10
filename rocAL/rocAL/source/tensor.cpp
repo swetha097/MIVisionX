@@ -30,21 +30,21 @@ THE SOFTWARE.
 #include "commons.h"
 #include "tensor.h"
 
-vx_enum vx_mem_type(RocalMemType mem)
+vx_enum vx_mem_type(RaliMemType mem)
 {
     switch(mem)
     {
-        case RocalMemType::OCL:
+        case RaliMemType::OCL:
         {
             return VX_MEMORY_TYPE_OPENCL;
         }
         break;
-        case RocalMemType::HOST:
+        case RaliMemType::HOST:
         {
             return VX_MEMORY_TYPE_HOST;
         }
         break;
-        case RocalMemType::HIP:
+        case RaliMemType::HIP:
         {
             return VX_MEMORY_TYPE_HIP;
         }
@@ -54,21 +54,21 @@ vx_enum vx_mem_type(RocalMemType mem)
     }
 }
 
-vx_size tensor_data_size(RocalTensorDataType data_type)
+vx_size tensor_data_size(RaliTensorDataType data_type)
 {
     switch(data_type)
     {
-        case RocalTensorDataType::FP32:
+        case RaliTensorDataType::FP32:
         {
             return sizeof(vx_float32);
         }
         break;
-        case RocalTensorDataType::FP16:
+        case RaliTensorDataType::FP16:
         {
             return sizeof(vx_int16);
         }
         break;
-        case RocalTensorDataType::UINT8:
+        case RaliTensorDataType::UINT8:
         {
             return sizeof(vx_uint8);
         }
@@ -141,20 +141,20 @@ TensorInfo::TensorInfo() : _type(Type::UNKNOWN),
                            _batch_size(1),
                            _channels(1),
                            _data_size(0),
-                           _mem_type(RocalMemType::HOST),
-                           _color_fmt(RocalColorFormat::U8),
-                           _data_type(RocalTensorDataType::FP32),
-                           _format(RocalTensorFormat::NHWC){}
+                           _mem_type(RaliMemType::HOST),
+                           _color_fmt(RaliColorFormat::U8),
+                           _data_type(RaliTensorDataType::FP32),
+                           _format(RaliTensorFormat::NHWC){}
 
 TensorInfo::TensorInfo(
     unsigned width_,
     unsigned height_,
     unsigned batches_,
     unsigned channels_,
-    RocalMemType mem_type_,
-    RocalColorFormat col_fmt_,
-    RocalTensorDataType data_type,
-    RocalTensorFormat tensor_format) : _type(Type::UNKNOWN),
+    RaliMemType mem_type_,
+    RaliColorFormat col_fmt_,
+    RaliTensorDataType data_type,
+    RaliTensorFormat tensor_format) : _type(Type::UNKNOWN),
                                       _width(width_),
                                       _height(height_),
                                       _batch_size(batches_),
@@ -215,16 +215,16 @@ Tensor::~Tensor()
     vxReleaseTensor(&_vx_handle);
 }
 
-//! Converts the Rocal data_type to OpenVX
-vx_enum interpret_tensor_data_type(RocalTensorDataType data_type)
+//! Converts the Rali data_type to OpenVX
+vx_enum interpret_tensor_data_type(RaliTensorDataType data_type)
 {
     switch (data_type)
     {
-        case RocalTensorDataType::FP32:
+        case RaliTensorDataType::FP32:
             return VX_TYPE_FLOAT32;
-        case RocalTensorDataType::FP16:
+        case RaliTensorDataType::FP16:
             return VX_TYPE_FLOAT16;
-        case RocalTensorDataType::UINT8:
+        case RaliTensorDataType::UINT8:
             return VX_TYPE_UINT8;
         default:
             THROW("Unsupported Tensor type " + TOSTR(data_type))
@@ -350,7 +350,7 @@ unsigned Tensor::copy_data(cl_command_queue queue, unsigned char *user_buffer, b
 
     unsigned size = _info.stride() * _info.height() * _info.channels() * _info.batch_size();
 
-    if (_info._mem_type == RocalMemType::OCL)
+    if (_info._mem_type == RaliMemType::OCL)
     {
 
         cl_int status;
@@ -384,7 +384,7 @@ unsigned Tensor::copy_data(hipStream_t stream, unsigned char* user_buffer, bool 
                     _info.height_batch() *
                     _info.color_plane_count();
 
-    if (_info._mem_type == RocalMemType::HIP)
+    if (_info._mem_type == RaliMemType::HIP)
     {
         // copy from device to host
         hipError_t status;

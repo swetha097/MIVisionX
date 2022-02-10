@@ -33,6 +33,7 @@ if(GPU_SUPPORT)
     find_package(AMDRPP QUIET)
     find_package(TurboJpeg QUIET)
     find_package(Protobuf QUIET)
+    # If FFMPEG is found, vx_amd_media is expected to be built as well
     find_package(FFmpeg QUIET)
     find_package(OpenCV QUIET)
 else()
@@ -82,34 +83,6 @@ if(GPU_SUPPORT)
     if(NOT AMDRPP_FOUND)
         set(BUILD_RALI false)
         message("-- ${Yellow}rocAL library requires AMD's rpp library, Not Found ${ColourReset}")
-    else()
-        #find the RPP backend type
-        set(RPP_BACKEND_OPENCL_FOUND 0)
-        set(RPP_BACKEND_HIP_FOUND 0)
-        if(EXISTS ${ROCM_PATH}/rpp/include/rpp_backend.h)
-            file(READ ${ROCM_PATH}/rpp/include/rpp_backend.h RPP_BACKEND_FILE)
-            string(REGEX MATCH "RPP_BACKEND_OPENCL ([0-9]*)" _ ${RPP_BACKEND_FILE})
-            set(RPP_BACKEND_OPENCL_FOUND ${CMAKE_MATCH_1})
-            string(REGEX MATCH "RPP_BACKEND_HIP ([0-9]*)" _ ${RPP_BACKEND_FILE})
-            set(RPP_BACKEND_HIP_FOUND ${CMAKE_MATCH_1})
-        else()
-            message("-- ${Red}WARNING: ${ROCM_PATH}/rpp/include/rpp_backend.h file Not Found. please run the setup script to install latest RPP package ${ColourReset}")
-        endif()
-
-        if ("${BACKEND}" STREQUAL "OPENCL" AND OpenCL_FOUND)
-            if (NOT RPP_BACKEND_OPENCL_FOUND)
-                set(BUILD_RALI false)
-                message("-- ${Red}WARNING: RPP with OpenCL backend Not Found (HINT: run setup script with the OCL backend first!) -- rocAL module excluded.${ColourReset}")
-            endif()
-        elseif("${BACKEND}" STREQUAL "HIP" AND HIP_FOUND)
-            if (NOT RPP_BACKEND_HIP_FOUND)
-                set(BUILD_RALI false)
-                message("-- ${Red}WARNING: RPP with the HIP backend Not Found (HINT: run setup script with the HIP backend first!) -- rocAL_rpp module excluded.${ColourReset}")
-            endif()
-        else()
-            set(BUILD_RALI false)
-            message("-- ${Red}WARNING:GPU support with OpenCL or HIP Not Found -- rocAL module excluded${ColourReset}")
-        endif()
     endif()
     if(NOT TurboJpeg_FOUND)
         set(BUILD_RALI false)
@@ -133,41 +106,28 @@ if(${BUILD_RALI})
     # rocAL uses C++ 17 features
     set(CMAKE_CXX_STANDARD 17)
     message("-- ${Green}ROCm Augmentation Library -- rocAL module added${ColourReset}")
-    # install(FILES
-    #     ../python/rali.py
-    #     ../python/rali_lib.py
-    #     ../python/rali_common.py
-    #     ../python/rali_image.py
-    #     ../python/rali_parameter.py
-    #     ../python/rali_torch.py
-    #     ../python/rali_image_iterator.py
-    #     DESTINATION ./rali/python
-    #     )
     install(FILES
-        include/api/rocal_api.h
-        include/api/rocal_api_info.h
-        include/api/rocal_api_augmentations.h
-        include/api/rocal_api_data_loaders.h
-        include/api/rocal_api_types.h
-        include/api/rocal_api_data_transfers.h
-        include/api/rocal_api_parameters.h
-        include/api/rocal_api_meta_data.h
-        include/api/rocal_api_data_loaders.h
+        ../python/rali.py
+        ../python/rali_lib.py
+        ../python/rali_common.py
+        ../python/rali_image.py
+        ../python/rali_parameter.py
+        ../python/rali_torch.py
+        ../python/rali_image_iterator.py
+        DESTINATION ./rali/python
+        )
+    install(FILES
+        include/rali_api.h
+        include/rali_api_info.h
+        include/rali_api_augmentation.h
+        include/rali_api_data_loaders.h
+        include/rali_api_types.h
+        include/rali_api_data_transfer.h
+        include/rali_api_parameters.h
+        include/rali_api_meta_data.h
         DESTINATION ./include
         )
-    if(FFMPEG_FOUND)
-        find_path(AVUTIL_INCLUDE_DIR libavutil/avutil.h)
-        find_path(AVCODEC_INCLUDE_DIR libavcodec/avcodec.h)
-        find_path(SWSCALE_INCLUDE_DIR libswscale/swscale.h)
-        find_path(AVFORMAT_INCLUDE_DIR libavformat/avformat.h)
-    endif()
     include_directories(
-                ${OpenCL_INCLUDE_DIRS}
-                ${OpenCL_INCLUDE_DIRS}/Headers
-                ${AVUTIL_INCLUDE_DIR}
-                ${AVCODEC_INCLUDE_DIR}
-                ${SWSCALE_INCLUDE_DIR}
-                ${AVFORMAT_INCLUDE_DIR}
                 ${CMAKE_CURRENT_BINARY_DIR}
                 ${TurboJpeg_INCLUDE_DIRS}
                 ${PROTOBUF_INCLUDE_DIRS}
@@ -175,16 +135,6 @@ if(${BUILD_RALI})
                 ../../amd_openvx/openvx/include/
                 ../../amd_openvx_extensions/amd_rpp/include/
                 ../../amd_openvx_extensions/amd_media/include/
-                ../third_party/rapidjson/include/
-                ./include/api/
-                ./include/decoders/
-                ./include/device/
-                ./include/image/color/
-                ./include/image/crop/
-                ./include/loaders/
-                ./include/meta_data/
-                ./include/parameters/
-                ./include/readers/
                 include
                 )
     protobuf_generate_cpp(TF_PROTO_SRCS TF_PROTO_HEADERS proto/example.proto proto/feature.proto)
@@ -198,18 +148,12 @@ if(${BUILD_RALI})
         message("-- ${Green}rocAL library is going to be built with HIP support ${ColourReset}")
     endif()
 
-    file(GLOB_RECURSE SOURCES "./source/*.cpp")
-    # file(GLOB LOADERS "./source/api/*.cpp")
-    # file(GLOB LOADERS "./source/decoders/*.cpp")
-    # file(GLOB LOADERS "./source/image/color/*.cpp")
-    # file(GLOB LOADERS "./source/image/crop/*.cpp")
-    list(APPEND rocAL_SOURCES ${SOURCES})
-    # message("Source list ${SOURCES}")
-    add_library(${PROJECT_NAME} SHARED ${rocAL_SOURCES} ${TF_PROTO_SRCS} ${TF_PROTO_HEADERS} ${CAFFE_PROTO_HEADERS} ${CAFFE_PROTO_SRCS} ${CAFFE2_PROTO_SRCS} ${CAFFE2_PROTO_HEADERS})
+    file(GLOB SOURCES "./source/*.cpp")
+    add_library(${PROJECT_NAME} SHARED ${SOURCES} ${TF_PROTO_SRCS} ${TF_PROTO_HEADERS} ${CAFFE_PROTO_HEADERS} ${CAFFE_PROTO_SRCS} ${CAFFE2_PROTO_SRCS} ${CAFFE2_PROTO_HEADERS})
 
     if("${BACKEND}" STREQUAL "HIP" AND HIP_FOUND)
         include_directories(${HIP_PATH}/include ${HSA_PATH}/include rocAL_hip)
-        target_compile_definitions(${PROJECT_NAME} PRIVATE __HIP_PLATFORM_AMD__)
+        target_compile_definitions(${PROJECT_NAME} PRIVATE __HIP_PLATFORM_HCC__)
         target_compile_definitions(${PROJECT_NAME} PUBLIC ENABLE_HIP=1)
     else()
         include_directories(${OpenCL_INCLUDE_DIRS} ${OpenCL_INCLUDE_DIRS}/Headers)
@@ -219,7 +163,6 @@ if(${BUILD_RALI})
 
     target_compile_definitions(${PROJECT_NAME} PUBLIC ENABLE_SIMD=1)
     target_compile_definitions(${PROJECT_NAME} PUBLIC DBG_TIMING=1)
-    target_compile_definitions(${PROJECT_NAME} PUBLIC DBGINFO=0)
     target_compile_definitions(${PROJECT_NAME} PUBLIC DBGLOG=0 WRNLOG=0)
     target_compile_definitions(${PROJECT_NAME} PUBLIC TFRECORD_ENABLE=0)
     message("-- ${Green}rocAL built with ENABLE_SIMD")
@@ -230,19 +173,20 @@ if(${BUILD_RALI})
     else()
         target_compile_definitions(${PROJECT_NAME} PUBLIC ENABLE_OPENCV=0)
     endif()
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3 -fopenmp -msse4.2 -mavx2 -Wall  -fPIC -pg -pthread -std=gnu++14 -Wno-deprecated-declarations")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3 -fopenmp -msse4.2 -mavx2 -Wall -ljsoncpp -fPIC -pg -pthread -std=c++14")
+    add_definitions(-ljsoncpp)
     message("-- ${Green}rocAL - CMAKE_CXX_FLAGS:${CMAKE_CXX_FLAGS}")
 
     if(NOT FFMPEG_FOUND)
         message("-- ${Yellow}rocAL library is going to be built without video decode functionality ${ColourReset}")
-        target_link_libraries(${PROJECT_NAME} -fPIC ${PROTOBUF_LIBRARIES} lmdb boost_system boost_filesystem turbojpeg openvx vx_rpp)
+        target_link_libraries(${PROJECT_NAME} -fPIC ${PROTOBUF_LIBRARIES} lmdb boost_system boost_filesystem turbojpeg openvx vx_rpp jsoncpp)
     else()
         message("-- ${Green}rocAL library is going to be built with video decode functionality ${ColourReset}")
-        target_compile_definitions(${PROJECT_NAME} PUBLIC -DRALI_VIDEO)
-        target_link_libraries(${PROJECT_NAME} -fPIC ${PROTOBUF_LIBRARIES} ${FFMPEG_LIBRARIES} lmdb turbojpeg openvx vx_rpp)
+        target_link_libraries(${PROJECT_NAME} -DRALI_VIDEO -fPIC ${PROTOBUF_LIBRARIES} lmdb turbojpeg openvx vx_rpp  jsoncpp)
     endif()
+
     if("${BACKEND}" STREQUAL "HIP" AND HIP_FOUND)
-        target_link_libraries(${PROJECT_NAME} $<TARGET_OBJECTS:rocAL_hip>)
+        target_link_libraries(${PROJECT_NAME} openvx_hip rocAL_hip)
     endif()
 
     install(TARGETS rali DESTINATION lib)

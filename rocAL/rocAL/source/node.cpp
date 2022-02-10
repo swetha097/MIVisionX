@@ -21,7 +21,9 @@ THE SOFTWARE.
 */
 
 #include "node.h"
-Node::~Node()
+
+
+TensorNode::~TensorNode()
 {
 
     if(!_node)
@@ -30,7 +32,7 @@ Node::~Node()
 }
 
 void
-Node::create(std::shared_ptr<Graph> graph)
+TensorNode::create(std::shared_ptr<Graph> graph)
 {
     if(_outputs.empty() || _inputs.empty())
         THROW("Uninitialized input/output images to the node")
@@ -54,14 +56,14 @@ Node::create(std::shared_ptr<Graph> graph)
 }
 
 void
-Node::update_parameters()
+TensorNode::update_parameters()
 {
-    update_src_roi();
     update_node();
+    update_src_roi();
 }
 
 void
-Node::update_src_roi()
+TensorNode::update_src_roi()
 {
     vx_status width_status, height_status;
     width_status = vxCopyArrayRange((vx_array)_src_roi_width, 0, _batch_size, sizeof(vx_uint32), _inputs[0]->info().get_roi_width(), VX_WRITE_ONLY, VX_MEMORY_TYPE_HOST);

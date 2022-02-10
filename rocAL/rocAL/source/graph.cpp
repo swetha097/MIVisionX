@@ -28,17 +28,17 @@ THE SOFTWARE.
 
 AgoTargetAffinityInfo
 get_ago_affinity_info(
-        RocalAffinity rocal_affinity,
+        RaliAffinity rali_affinity,
         int cpu_id,
         int gpu_id)
 {
     AgoTargetAffinityInfo affinity;
-    switch(rocal_affinity) {
-        case RocalAffinity::GPU:
+    switch(rali_affinity) {
+        case RaliAffinity::GPU:
             affinity.device_type =  AGO_TARGET_AFFINITY_GPU;
             affinity.device_info = (gpu_id >=0 && gpu_id <=9)? gpu_id : 0;
             break;
-        case RocalAffinity::CPU:
+        case RaliAffinity::CPU:
             affinity.device_type = AGO_TARGET_AFFINITY_CPU;
             affinity.device_info = (cpu_id >=0 && cpu_id <=9)? cpu_id : 0;
             break;
@@ -48,8 +48,8 @@ get_ago_affinity_info(
     return affinity;
 }
 
-Graph::Graph(vx_context context, RocalAffinity affinity, int cpu_id, int gpu_id):
-_mem_type(((affinity == RocalAffinity::GPU) ? RocalMemType::OCL : RocalMemType::HOST)),
+Graph::Graph(vx_context context, RaliAffinity affinity, int cpu_id, int gpu_id):
+_mem_type(((affinity == RaliAffinity::GPU) ? RaliMemType::OCL : RaliMemType::HOST)),
 _context(context),
 _graph(nullptr),
 _affinity(affinity),

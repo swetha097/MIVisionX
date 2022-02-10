@@ -24,15 +24,16 @@ THE SOFTWARE.
 #include "node_nop.h"
 #include "exception.h"
 
-NopNode::NopNode(const std::vector<Tensor *> &inputs, const std::vector<Tensor *> &outputs) :
-        Node(inputs, outputs)
+NopTensorNode::NopTensorNode(const std::vector<Tensor *> &inputs, const std::vector<Tensor *> &outputs) :
+        TensorNode(inputs, outputs)
 {
 }
 
-void NopNode::create_node()
+void NopTensorNode::create_node()
 {
     if(_node)
         return;
+
 
     _node = vxExtrppNode_NopTensor(_graph->get(), _inputs[0]->handle(), _outputs[0]->handle());
 
@@ -42,6 +43,6 @@ void NopNode::create_node()
 
 }
 
-void NopNode::update_node()
+void NopTensorNode::update_node()
 {
 }

@@ -30,7 +30,7 @@ THE SOFTWARE.
 enum class ImageSourceEvaluatorStatus
 {
     OK = 0,
-    UNSUPPORTED_DECODER_TYPE, 
+    UNSUPPORTED_DECODER_TYPE,
     UNSUPPORTED_STORAGE_TYPE,
 };
 enum class MaxSizeEvaluationPolicy
@@ -60,8 +60,8 @@ private:
         std::map<unsigned,unsigned> _hist;
         unsigned _max = 0;
         unsigned _max_count = 0;
-    }; 
-    FindMaxSize _width_max; 
+    };
+    FindMaxSize _width_max;
     FindMaxSize _height_max;
     DecoderConfig _decoder_cfg_cv;
     std::shared_ptr<Decoder> _decoder;
