@@ -26,7 +26,6 @@ THE SOFTWARE.
 #include <variant>
 #include <map>
 #include "graph.h"
-#include "ring_buffer.h"
 #include "timing_debug.h"
 #include "node.h"
 #include "node_image_loader.h"
@@ -106,7 +105,6 @@ private:
     void notify_user_thread();
     /// no_more_processed_data() is logically linked to the notify_user_thread() and is used to tell the user they've already consumed all the processed images
     bool no_more_processed_data();
-    RingBuffer _ring_buffer;//!< The queue that keeps the images that have benn processed by the internal thread (_output_thread) asynchronous to the user's thread
     TensorRingBuffer _tensor_ring_buffer;//!< The queue that keeps the images that have benn processed by the internal thread (_output_thread) asynchronous to the user's thread
     MetaDataBatch* _augmented_meta_data = nullptr;//!< The output of the meta_data_graph,
     // CropCordBatch* _random_bbox_crop_cords_data = nullptr;

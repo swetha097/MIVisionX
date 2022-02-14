@@ -122,7 +122,6 @@ rocalCopyToTensorOutput(
     try
     {
         context->master_graph->copy_output(out_ptr);
-        // std::cerr<<"\n commented  context->master_graph->copy_output(out_ptr";
     }
     catch(const std::exception& e)
     {
