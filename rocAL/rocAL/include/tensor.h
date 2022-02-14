@@ -126,9 +126,9 @@ private:
     unsigned _channels;//!< number of channels
     unsigned _data_size;//!< total size of the memory needed to keep the image's data in bytes including all planes
     RocalMemType _mem_type;//!< memory type, currently either OpenCL or Host
+    RocalColorFormat _color_fmt;//!< color format of the image
     RocalTensorDataType _data_type = RocalTensorDataType::FP32;
     RocalTensorFormat _format = RocalTensorFormat::NCHW;
-    RocalColorFormat _color_fmt;//!< color format of the image
     unsigned _color_planes;//!< number of color planes
     unsigned _stride;//!< if different from width
     std::shared_ptr<std::vector<uint32_t>> _roi_width;//!< The actual image width stored in the buffer, it's always smaller than _width/_batch_size. It's created as a vector of pointers to integers, so that if it's passed from one image to another and get updated by one and observed for all.

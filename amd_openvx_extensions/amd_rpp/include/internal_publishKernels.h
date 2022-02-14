@@ -26,7 +26,7 @@ THE SOFTWARE.
 #if _WIN32
 #define SHARED_PUBLIC __declspec(dllexport)
 #else
-#define SHARED_PUBLIC __attribute__((visibility("default")))
+#define SHARED_PUBLIC __attribute__ ((visibility ("default")))
 #endif
 
 #include "internal_rpp.h"

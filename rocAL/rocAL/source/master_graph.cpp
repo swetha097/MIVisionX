@@ -209,7 +209,9 @@ MasterGraph::run()
         // calling run pops the processed images that have been used by user, when user calls run() for the first time
         // they've not used anything yet, so we don't pop a batch from the _ring_buffer
         _first_run = false;
-    } else {
+    }
+    else
+    {
         if(_output_tensors.size() != 0)
         {
             _tensor_ring_buffer.pop();
@@ -360,7 +362,7 @@ MasterGraph::update_node_parameters()
 size_t
 MasterGraph::augmentation_branch_count()
 {
-        return _output_tensors.size();
+    return _output_tensors.size();
 
 }
 
@@ -798,7 +800,7 @@ MasterGraph::copy_output(void *out_ptr)
                                              sync_flag?(CL_TRUE):CL_FALSE,
                                              0,
                                              size,
-                                             out_ptr+dest_buf_offset,
+                                             (((unsigned char *)out_ptr) + dest_buf_offset),
                                              0 , nullptr, nullptr)) != CL_SUCCESS)
                 THROW("clEnqueueReadBuffer failed: " + TOSTR(status))
             dest_buf_offset += size;
@@ -1028,10 +1030,9 @@ MetaDataBatch * MasterGraph::create_label_reader(const char *source_path, MetaDa
 
 const std::pair<ImageNameBatch,pMetaDataBatch>& MasterGraph::meta_data()
 {
-    if(_output_tensors.size() != 0)
-        if(_tensor_ring_buffer.level() == 0)
-            THROW("No meta data has been loaded")
-        return _tensor_ring_buffer.get_meta_data();
+    if(_tensor_ring_buffer.level() == 0)
+        THROW("No meta data has been loaded")
+    return _tensor_ring_buffer.get_meta_data();
 
 }
 
