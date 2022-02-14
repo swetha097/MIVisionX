@@ -19,16 +19,24 @@ class HybridTrainPipe(Pipeline):
                 device_memory_padding = 211025920 if decoder_device == 'mixed' else 0
                 host_memory_padding = 140544512 if decoder_device == 'mixed' else 0
                 self.decode = ops.ImageDecoderRandomCrop(device=decoder_device, output_type=types.RGB,
-                                                                                                        device_memory_padding=device_memory_padding,
-                                                                                                        host_memory_padding=host_memory_padding,
-                                                                                                        random_aspect_ratio=[0.8, 1.25],
-                                                                                                        random_area=[0.1, 1.0],
-                                                                                                        num_attempts=100)
+                                                            device_memory_padding=device_memory_padding,
+                                                            host_memory_padding=host_memory_padding,
+                                                            random_aspect_ratio=[0.8, 1.25],
+                                                            random_area=[0.1, 1.0],
+                                                            num_attempts=100)
                 self.resize = ops.Resize(device=rali_device, resize_x=crop, resize_y=crop)
+                self.cmnp = ops.CropMirrorNormalize(device="gpu",
+                                                    output_dtype=types.FLOAT,
+                                                    output_layout=types.NCHW,
+                                                    crop=(crop, crop),
+                                                    image_type=types.RGB,
+                                                    mean=[0.485 * 255,0.456 * 255,0.406 * 255],
+                                                    std=[0.229 * 255,0.224 * 255,0.225 * 255])
+                self.coin = ops.CoinFlip(probability=0.5)
                 #self.resizeCrop = ops.CropResize(crop, crop)
                 self.exposure = ops.Exposure(exposure = 0.2)
                 self.rotate = ops.Rotate()
-                self.brightness = ops.Brightness()                
+                self.brightness = ops.Brightness()
                 self.gamma = ops.GammaCorrection()
                 self.contrast = ops.Contrast()
                 self.flip = ops.Flip()
@@ -42,7 +50,7 @@ class HybridTrainPipe(Pipeline):
                 self.snow = ops.Snow(snow=0.5)
                 self.rain = ops.Rain(rain=0.5)
                 self.fog = ops.Fog()
-                
+
                 self.pixelate = ops.Pixelate()
                 self.exposure = ops.Exposure()
                 self.hue = ops.Hue()
@@ -66,11 +74,11 @@ class HybridTrainPipe(Pipeline):
                 images = self.decode(self.jpegs)
                 if self.aug_num != 0:
                     images = self.resize(images)
-                
-                
+
+
                 if self.aug_num == 0:
                     output = self.resize(images)
-                elif self.aug_num == 1:        
+                elif self.aug_num == 1:
                     output = self.resize(images)
                 elif self.aug_num == 2:
                     output = self.rotate(images)
@@ -122,9 +130,9 @@ class HybridTrainPipe(Pipeline):
                     output = self.colortwist(images)
                 elif self.aug_num == 25:
                     output = self.cropMirrorNormalize(images)
-                
-                
-                
+
+
+
                 return [output, self.labels]
 
 def main():
@@ -144,12 +152,32 @@ def main():
         crop_size = 224
         pipe = HybridTrainPipe(batch_size=bs, num_threads=nt, device_id=di, data_dir=_image_path, augmentation=augmentation_num, crop=crop_size, rali_cpu=_rali_cpu)
         pipe.build()
+        data_loader = RALIClassificationIterator(pipe)
+
         world_size=1
-        imageIterator = RALI_iterator(pipe)
+        epochs = 2
+        cnt=0
+        import timeit
+
+        start = timeit.default_timer()
+        for epoch in range(int(epochs)):
+            print("EPOCH:::::",epoch)
+            for i, it in enumerate(data_loader, 0):
+                cnt=cnt+1
+                print("**************", i, "*******************")
+                print("**************starts*******************")
+                print("\nImages:\n",it[0])
+                print("\nLABELS:\n", it[1])
+                print("**************ends*******************")
+                print("**************", i, "*******************")
+            data_loader.reset()
 
 
-        for i, (image_batch, image_tensor) in enumerate(imageIterator, 0):
-                cv2.imwrite(output_img, cv2.cvtColor(image_batch, cv2.COLOR_RGB2BGR))
+        #Your statements here
+        stop = timeit.default_timer()
+
+        print('\n Time: ', stop - start)
+        print('Number of times loop iterates is:',cnt)
 
 if __name__ == '__main__':
-    main() 
+    main()

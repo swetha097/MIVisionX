@@ -117,7 +117,6 @@ void BoundingBoxGraph::update_meta_data(MetaDataBatch *input_meta_data, decoded_
         }
     }
 }
-
 inline float ssd_BBoxIntersectionOverUnion(const BoundingBoxCord &box1, const float &box1_area, const BoundingBoxCord &box2)
 {
     float xA = std::max(box1.l, box2.l);
@@ -220,7 +219,7 @@ inline int find_best_box_for_anchor(unsigned anchor_idx, const std::vector<float
 
 void BoundingBoxGraph::update_box_encoder_meta_data(std::vector<float> *anchors, pMetaDataBatch full_batch_meta_data, float criteria, bool offset, float scale, std::vector<float>& means, std::vector<float>& stds)
 {
-    #pragma omp parallel for 
+    #pragma omp parallel for
     for (int i = 0; i < full_batch_meta_data->size(); i++)
     {
         BoundingBoxCord *bbox_anchors = reinterpret_cast<BoundingBoxCord *>(anchors->data());
