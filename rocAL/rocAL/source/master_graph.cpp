@@ -1184,6 +1184,7 @@ MetaDataBatch * MasterGraph::create_coco_meta_data_reader(const char *source_pat
     if(mask)
         _is_segmentation = true;
     MetaDataConfig config(MetaDataType::BoundingBox, MetaDataReaderType::COCO_META_DATA_READER, source_path, std::map<std::string, std::string>(), std::string(), mask);
+    _reader_config = config.reader_type();
     _meta_data_graph = create_meta_data_graph(config);
     _meta_data_reader = create_meta_data_reader(config);
     _meta_data_reader->init(config);
