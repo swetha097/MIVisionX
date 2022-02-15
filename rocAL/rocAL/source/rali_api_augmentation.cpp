@@ -590,7 +590,7 @@ raliResizeMirrorNormalize(
         context->capture_error(e.what());
         ERR(e.what())
     }
-    return input; // Changed to input
+    return output; 
 }
 
 RaliImage RALI_API_CALL
