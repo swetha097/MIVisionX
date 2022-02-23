@@ -24,12 +24,12 @@ THE SOFTWARE.
 #include "node_copy.h"
 #include "exception.h"
 
-CopyTensorNode::CopyTensorNode(const std::vector<Tensor *> &inputs, const std::vector<Tensor *> &outputs) :
-        TensorNode(inputs, outputs)
+CopyNode::CopyNode(const std::vector<Tensor *> &inputs, const std::vector<Tensor *> &outputs) :
+        Node(inputs, outputs)
 {
 }
 
-void CopyTensorNode::create_node()
+void CopyNode::create_node()
 {
     if(_node)
         return;

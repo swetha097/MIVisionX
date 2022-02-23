@@ -28,7 +28,7 @@ ImageLoaderTensorSingleShardNode::ImageLoaderTensorSingleShardNode(Tensor *outpu
 #else
 ImageLoaderTensorSingleShardNode::ImageLoaderTensorSingleShardNode(Tensor *output, DeviceResources device_resources):
 #endif
-        TensorNode({}, {output})
+        Node({}, {output})
 {
     _loader_module = std::make_shared<ImageLoader>(device_resources);
 }

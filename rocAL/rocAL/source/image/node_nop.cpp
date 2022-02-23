@@ -24,12 +24,12 @@ THE SOFTWARE.
 #include "node_nop.h"
 #include "exception.h"
 
-NopTensorNode::NopTensorNode(const std::vector<Tensor *> &inputs, const std::vector<Tensor *> &outputs) :
-        TensorNode(inputs, outputs)
+NopNode::NopNode(const std::vector<Tensor *> &inputs, const std::vector<Tensor *> &outputs) :
+        Node(inputs, outputs)
 {
 }
 
-void NopTensorNode::create_node()
+void NopNode::create_node()
 {
     if(_node)
         return;
@@ -43,6 +43,6 @@ void NopTensorNode::create_node()
 
 }
 
-void NopTensorNode::update_node()
+void NopNode::update_node()
 {
 }

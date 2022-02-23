@@ -24,25 +24,25 @@ THE SOFTWARE.
 #include "exception.h"
 
 #if ENABLE_HIP
-FusedJpegCropTensorNode::FusedJpegCropTensorNode(Tensor *output, DeviceResourcesHip device_resources):
+FusedJpegCropNode::FusedJpegCropNode(Tensor *output, DeviceResourcesHip device_resources):
 #else
-FusedJpegCropTensorNode::FusedJpegCropTensorNode(Tensor *output, DeviceResources device_resources):
+FusedJpegCropNode::FusedJpegCropNode(Tensor *output, DeviceResources device_resources):
 #endif
-        TensorNode({}, {output})
+        Node({}, {output})
 {
     _loader_module = std::make_shared<ImageLoaderSharded>(device_resources);
 }
 
-void FusedJpegCropTensorNode::init(unsigned internal_shard_count, const std::string &source_path, const std::string &json_path, StorageType storage_type,
+void FusedJpegCropNode::init(unsigned internal_shard_count, const std::string &source_path, const std::string &json_path, StorageType storage_type,
                            DecoderType decoder_type, bool shuffle, bool loop, size_t load_batch_count, RocalMemType mem_type, std::shared_ptr<MetaDataReader> meta_data_reader,
                            FloatParam *area_factor, FloatParam *aspect_ratio, FloatParam *x_drift, FloatParam *y_drift)
 {
     if(!_loader_module)
-        THROW("ERROR: loader module is not set for FusedJpegCropTensorNode, cannot initialize")
+        THROW("ERROR: loader module is not set for FusedJpegCropNode, cannot initialize")
     if(internal_shard_count < 1)
         THROW("Shard count should be greater than or equal to one")
     _loader_module->set_output_image(_outputs[0]);
-    // Set reader and decoder config accordingly for the FusedJpegCropTensorNode
+    // Set reader and decoder config accordingly for the FusedJpegCropNode
     auto reader_cfg = ReaderConfig(storage_type, source_path, json_path, std::map<std::string, std::string>(), shuffle, loop);
     reader_cfg.set_shard_count(internal_shard_count);
     reader_cfg.set_batch_count(load_batch_count);
@@ -65,14 +65,14 @@ void FusedJpegCropTensorNode::init(unsigned internal_shard_count, const std::str
     _loader_module->start_loading();
 }
 
-std::shared_ptr<LoaderModule> FusedJpegCropTensorNode::get_loader_module()
+std::shared_ptr<LoaderModule> FusedJpegCropNode::get_loader_module()
 {
     if(!_loader_module)
-        WRN("FusedJpegCropTensorNode's loader module is null, not initialized")
+        WRN("FusedJpegCropNode's loader module is null, not initialized")
     return _loader_module;
 }
 
-FusedJpegCropTensorNode::~FusedJpegCropTensorNode()
+FusedJpegCropNode::~FusedJpegCropNode()
 {
     _loader_module = nullptr;
 }

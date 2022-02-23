@@ -26,19 +26,19 @@ THE SOFTWARE.
 #include "graph.h"
 #include "parameter_factory.h"
 
-class FusedJpegCropTensorNode: public TensorNode
+class FusedJpegCropNode: public Node
 {
 public:
     /// \param device_resources shard count from user
 
     /// internal_shard_count number of loader/decoders are created and each shard is loaded and decoded using separate and independent resources increasing the parallelism and performance.
 #if ENABLE_HIP
-    FusedJpegCropTensorNode(Tensor *output, DeviceResourcesHip device_resources_hip);
+    FusedJpegCropNode(Tensor *output, DeviceResourcesHip device_resources_hip);
 #else
-    FusedJpegCropTensorNode(Tensor *output, DeviceResources device_resources);
+    FusedJpegCropNode(Tensor *output, DeviceResources device_resources);
 #endif
-    ~FusedJpegCropTensorNode() override;
-    FusedJpegCropTensorNode() = delete;
+    ~FusedJpegCropNode() override;
+    FusedJpegCropNode() = delete;
     ///
     /// \param internal_shard_count Defines the amount of parallelism user wants for the load and decode process to be handled internally.
     /// \param source_path Defines the path that includes the image dataset

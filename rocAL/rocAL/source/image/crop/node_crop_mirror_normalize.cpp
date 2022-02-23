@@ -25,14 +25,14 @@ THE SOFTWARE.
 #include "node_crop_mirror_normalize.h"
 #include "exception.h"
 
-CropMirrorNormalizeTensorNode::CropMirrorNormalizeTensorNode(const std::vector<Tensor *> &inputs, const std::vector<Tensor *> &outputs) :
-        TensorNode(inputs, outputs),
+CropMirrorNormalizeNode::CropMirrorNormalizeNode(const std::vector<Tensor *> &inputs, const std::vector<Tensor *> &outputs) :
+        Node(inputs, outputs),
         _mirror(MIRROR_RANGE[0], MIRROR_RANGE[1])
 {
     _crop_param = std::make_shared<RocalCropParam>(_batch_size);
 }
 
-void CropMirrorNormalizeTensorNode::create_node()
+void CropMirrorNormalizeNode::create_node()
 {
     if(_node)
         return;
@@ -75,7 +75,7 @@ void CropMirrorNormalizeTensorNode::create_node()
 }
 
 
-void CropMirrorNormalizeTensorNode::update_node()
+void CropMirrorNormalizeNode::update_node()
 {
     _crop_param->set_image_dimensions(_inputs[0]->info().get_roi_width_vec(), _inputs[0]->info().get_roi_height_vec());
     _crop_param->update_array();
@@ -85,7 +85,7 @@ void CropMirrorNormalizeTensorNode::update_node()
     _mirror.update_array();
 }
 
-void CropMirrorNormalizeTensorNode::init(int crop_h, int crop_w, float start_x, float start_y, float mean, float std_dev, IntParam *mirror)
+void CropMirrorNormalizeNode::init(int crop_h, int crop_w, float start_x, float start_y, float mean, float std_dev, IntParam *mirror)
 {
     _crop_param->crop_h = crop_h;
     _crop_param->crop_w = crop_w;

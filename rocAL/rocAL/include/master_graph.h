@@ -34,7 +34,7 @@ THE SOFTWARE.
 #include "node_fused_jpeg_crop_single_shard.h"
 #include "meta_data_reader.h"
 #include "meta_data_graph.h"
-#include "tensor_ring_buffer.h"
+#include "ring_buffer.h"
 #if ENABLE_HIP
 #include "device_manager_hip.h"
 #endif
@@ -49,12 +49,7 @@ public:
     Status reset();
     size_t remaining_images_count();
     MasterGraph::Status copy_output(void *out_ptr);
-    MasterGraph::Status
-    copy_out_tensor(void *out_ptr, RocalTensorFormat format, float multiplier0, float multiplier1, float multiplier2,
-                    float offset0, float offset1, float offset2, bool reverse_channels, RocalTensorDataType output_data_type);
     Status copy_output(void* out_ptr, size_t out_size);
-    Status copy_out_tensor_planar(void *out_ptr, RocalTensorFormat format, float multiplier0, float multiplier1, float multiplier2,
-                    float offset0, float offset1, float offset2, bool reverse_channels, RocalTensorDataType output_data_type);
     size_t tensor_output_width();
     size_t tensor_output_height();
     size_t tensor_output_byte_size();
@@ -105,16 +100,16 @@ private:
     void notify_user_thread();
     /// no_more_processed_data() is logically linked to the notify_user_thread() and is used to tell the user they've already consumed all the processed images
     bool no_more_processed_data();
-    TensorRingBuffer _tensor_ring_buffer;//!< The queue that keeps the images that have benn processed by the internal thread (_output_thread) asynchronous to the user's thread
+    TensorRingBuffer _ring_buffer;//!< The queue that keeps the images that have benn processed by the internal thread (_output_thread) asynchronous to the user's thread
     MetaDataBatch* _augmented_meta_data = nullptr;//!< The output of the meta_data_graph,
     // CropCordBatch* _random_bbox_crop_cords_data = nullptr;
     std::thread _output_thread;
     TensorInfo _output_tensor_info;
     std::vector<Tensor*> _output_tensors;
     std::list<Tensor*> _internal_tensors;
-    std::list<std::shared_ptr<TensorNode>> _tensor_nodes;
-    std::list<std::shared_ptr<TensorNode>> _tensor_root_nodes;
-    std::map<Tensor*, std::shared_ptr<TensorNode>> _tensor_map;
+    std::list<std::shared_ptr<Node>> _tensor_nodes;
+    std::list<std::shared_ptr<Node>> _tensor_root_nodes;
+    std::map<Tensor*, std::shared_ptr<Node>> _tensor_map;
     // cl_mem _output_tensor;//!< In the GPU processing case , is used to convert the U8 samples to float32 before they are being transfered back to host
     // ImageInfo _output_image_info;//!< Keeps the information about ROCAL's output image , it includes all images of a batch stacked on top of each other
     // std::vector<Image*> _output_images;//!< Keeps the ovx images that are used to store the augmented output (there is an image per augmentation branch)
@@ -196,11 +191,11 @@ std::shared_ptr<T> MasterGraph::add_tensor_node(const std::vector<Tensor *> &inp
 /*
  * Explicit specialization for ImageLoaderNode
  */
-template<> inline std::shared_ptr<ImageLoaderTensorNode> MasterGraph::add_tensor_node(const std::vector<Tensor*>& inputs, const std::vector<Tensor*>& outputs)
+template<> inline std::shared_ptr<ImageLoaderNode> MasterGraph::add_tensor_node(const std::vector<Tensor*>& inputs, const std::vector<Tensor*>& outputs)
 {
     if(_loader_module)
         THROW("A loader already exists, cannot have more than one loader")
-    auto node = std::make_shared<ImageLoaderTensorNode>(outputs[0], _device.resources());
+    auto node = std::make_shared<ImageLoaderNode>(outputs[0], _device.resources());
     _loader_module = node->get_loader_module();
     _tensor_root_nodes.push_back(node);
     _loader_module->set_prefetch_queue_depth(_prefetch_queue_depth);
@@ -224,11 +219,11 @@ template<> inline std::shared_ptr<ImageLoaderTensorSingleShardNode> MasterGraph:
 
     return node;
 }
-template<> inline std::shared_ptr<FusedJpegCropTensorNode> MasterGraph::add_tensor_node(const std::vector<Tensor*>& inputs, const std::vector<Tensor*>& outputs)
+template<> inline std::shared_ptr<FusedJpegCropNode> MasterGraph::add_tensor_node(const std::vector<Tensor*>& inputs, const std::vector<Tensor*>& outputs)
 {
     if(_loader_module)
         THROW("A loader already exists, cannot have more than one loader")
-    auto node = std::make_shared<FusedJpegCropTensorNode>(outputs[0], _device.resources());
+    auto node = std::make_shared<FusedJpegCropNode>(outputs[0], _device.resources());
     _loader_module = node->get_loader_module();
     _tensor_root_nodes.push_back(node);
     _loader_module->set_prefetch_queue_depth(_prefetch_queue_depth);

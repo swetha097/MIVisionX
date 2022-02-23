@@ -25,7 +25,7 @@ THE SOFTWARE.
 #include "image_loader_sharded.h"
 #include "graph.h"
 
-class ImageLoaderTensorSingleShardNode: public TensorNode
+class ImageLoaderTensorSingleShardNode: public Node
 {
 public:
 #if ENABLE_HIP

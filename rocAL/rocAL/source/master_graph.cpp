@@ -89,7 +89,7 @@ MasterGraph::~MasterGraph()
 }
 
 MasterGraph::MasterGraph(size_t batch_size, RocalAffinity affinity, int gpu_id, size_t cpu_threads,  size_t prefetch_queue_depth, RocalTensorDataType output_tensor_data_type):
-        _tensor_ring_buffer(OUTPUT_RING_BUFFER_DEPTH),
+        _ring_buffer(OUTPUT_RING_BUFFER_DEPTH),
         _output_tensor(nullptr),
         _graph(nullptr),
         _affinity(affinity),
@@ -200,7 +200,7 @@ MasterGraph::run()
 
     if(_output_tensors.size() != 0)
     {
-        _tensor_ring_buffer.block_if_empty();// wait here if the user thread (caller of this function) is faster in consuming the processed images compare to th output routine in producing them
+        _ring_buffer.block_if_empty();// wait here if the user thread (caller of this function) is faster in consuming the processed images compare to th output routine in producing them
     }
 
     if(_first_run)
@@ -213,7 +213,7 @@ MasterGraph::run()
     {
         if(_output_tensors.size() != 0)
         {
-            _tensor_ring_buffer.pop();
+            _ring_buffer.pop();
         }
     }
 
@@ -280,9 +280,9 @@ MasterGraph::build()
     allocate_output_tensor();
     if(_output_tensors.size() != 0)
 #if ENABLE_HIP
-    _tensor_ring_buffer.initHip(_mem_type, _device.resources(), tensor_output_byte_size(), _output_tensors.size());
+    _ring_buffer.initHip(_mem_type, _device.resources(), tensor_output_byte_size(), _output_tensors.size());
 #else
-    _tensor_ring_buffer.init(_mem_type, _device.resources(), tensor_output_byte_size(), _output_tensors.size());
+    _ring_buffer.init(_mem_type, _device.resources(), tensor_output_byte_size(), _output_tensors.size());
 #endif
     create_single_graph();
     start_processing();
@@ -450,10 +450,10 @@ MasterGraph::reset()
 {
     // stop the internal processing thread so that the
     _processing = false;
-    _tensor_ring_buffer.unblock_writer();
+    _ring_buffer.unblock_writer();
     if(_output_thread.joinable())
         _output_thread.join();
-    _tensor_ring_buffer.reset();
+    _ring_buffer.reset();
     // clearing meta ring buffer
     // if random_bbox meta reader is used: read again to get different crops
     // if (_randombboxcrop_meta_data_reader != nullptr)
@@ -524,7 +524,7 @@ MasterGraph::copy_output(void *out_ptr)
         // to avoid unnecessary sequence of synchronizations
 
         // get_read_buffers() calls block_if_empty() internally and blocks if buffers are empty until a new batch is processed
-        auto output_buffers =_tensor_ring_buffer.get_read_buffers();
+        auto output_buffers =_ring_buffer.get_read_buffers();
         auto out_image_idx = output_buffers.size();
         for( auto&& output_handle: output_buffers)
         {
@@ -548,7 +548,7 @@ MasterGraph::copy_output(void *out_ptr)
         // to avoid unnecessary sequence of synchronizations
 
         // get_read_buffers() calls block_if_empty() internally and blocks if buffers are empty until a new batch is processed
-        auto output_buffers =_tensor_ring_buffer.get_read_buffers();
+        auto output_buffers =_ring_buffer.get_read_buffers();
         for( auto&& output_handle: output_buffers)
         {
             hipError_t err = hipMemcpyDtoHAsync((void *)(out_ptr+dest_buf_offset), output_handle, size, _device.resources().hip_stream);
@@ -566,7 +566,7 @@ MasterGraph::copy_output(void *out_ptr)
     else
     {
         // get_host_master_read_buffer is blocking if _ring_buffer is empty, and blocks this thread till internal processing thread process a new batch and store in the _ring_buffer
-        memcpy(out_ptr, _tensor_ring_buffer.get_host_master_read_buffer(), size * _output_tensors.size());
+        memcpy(out_ptr, _ring_buffer.get_host_master_read_buffer(), size * _output_tensors.size());
     }
     _convert_time.end();
     return Status::OK;
@@ -602,7 +602,7 @@ void MasterGraph::output_routine()
                 notify_user_thread();
                 // the following call is required in case the ring buffer is waiting for more data to be loaded and there is no more data to process.
                 if(_output_tensors.size() != 0)
-                    _tensor_ring_buffer.release_if_empty();
+                    _ring_buffer.release_if_empty();
                 std::this_thread::sleep_for(std::chrono::milliseconds(100));
                 continue;
             }
@@ -635,7 +635,7 @@ void MasterGraph::output_routine()
                 for (size_t idx = 0; idx < _output_tensors.size(); idx++)
                 {
                     // if(_output_tensors.size() != 0)
-                    auto tensor_write_buffer = _tensor_ring_buffer.get_write_buffers();
+                    auto tensor_write_buffer = _ring_buffer.get_write_buffers();
                     if(_affinity == RocalAffinity::GPU)
                     {
                         _output_tensors[idx]->swap_handle(tensor_write_buffer[idx]);
@@ -698,8 +698,8 @@ void MasterGraph::output_routine()
             }
             if(_output_tensors.size() != 0)
             {
-                _tensor_ring_buffer.set_meta_data(full_batch_image_names, full_batch_meta_data);
-                _tensor_ring_buffer.push();
+                _ring_buffer.set_meta_data(full_batch_image_names, full_batch_meta_data);
+                _ring_buffer.push();
             }
         }
     }
@@ -708,7 +708,7 @@ void MasterGraph::output_routine()
         ERR("Exception thrown in the process routine: " + STR(e.what()) + STR("\n"));
         _processing = false;
         // _ring_buffer.release_all_blocked_calls();
-        _tensor_ring_buffer.release_all_blocked_calls();
+        _ring_buffer.release_all_blocked_calls();
     }
 }
 
@@ -735,8 +735,8 @@ void MasterGraph::start_processing()
 void MasterGraph::stop_processing()
 {
     _processing = false;
-    _tensor_ring_buffer.unblock_reader();
-    _tensor_ring_buffer.unblock_writer();
+    _ring_buffer.unblock_reader();
+    _ring_buffer.unblock_writer();
     if(_output_thread.joinable())
         _output_thread.join();
 }
@@ -758,17 +758,17 @@ MetaDataBatch * MasterGraph::create_label_reader(const char *source_path, MetaDa
 
 const std::pair<ImageNameBatch,pMetaDataBatch>& MasterGraph::meta_data()
 {
-    if(_tensor_ring_buffer.level() == 0)
+    if(_ring_buffer.level() == 0)
         THROW("No meta data has been loaded")
-    return _tensor_ring_buffer.get_meta_data();
+    return _ring_buffer.get_meta_data();
 
 }
 
 const std::pair<ImageNameBatch,pMetaDataBatch>& MasterGraph::tensor_meta_data()
 {
-    if(_tensor_ring_buffer.level() == 0)
+    if(_ring_buffer.level() == 0)
         THROW("No meta data has been loaded")
-    return _tensor_ring_buffer.get_meta_data();
+    return _ring_buffer.get_meta_data();
 }
 
 size_t MasterGraph::compute_optimum_internal_batch_size(size_t user_batch_size, RocalAffinity affinity)
@@ -843,5 +843,5 @@ void MasterGraph::notify_user_thread()
 
 bool MasterGraph::no_more_processed_data()
 {
-    return (_output_routine_finished_processing && _tensor_ring_buffer.empty());
+    return (_output_routine_finished_processing && _ring_buffer.empty());
 }

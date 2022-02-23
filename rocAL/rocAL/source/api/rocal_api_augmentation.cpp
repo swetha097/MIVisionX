@@ -49,7 +49,7 @@ rocalGamma(
     {
         output = context->master_graph->create_tensor(input->info(), is_output);
 
-        context->master_graph->add_tensor_node<GammaTensorNode>({input}, {output})->init(alpha);
+        context->master_graph->add_tensor_node<GammaNode>({input}, {output})->init(alpha);
     }
     catch(const std::exception& e)
     {
@@ -78,7 +78,7 @@ rocalGammaFixed(
 
         output = context->master_graph->create_tensor(input->info(), is_output);
 
-        context->master_graph->add_tensor_node<GammaTensorNode>({input}, {output})->init(alpha);
+        context->master_graph->add_tensor_node<GammaNode>({input}, {output})->init(alpha);
     }
     catch(const std::exception& e)
     {
@@ -108,7 +108,7 @@ rocalBrightness(
 
         output = context->master_graph->create_tensor(input->info(), is_output);
 
-        context->master_graph->add_tensor_node<BrightnessTensorNode>({input}, {output})->init(alpha, beta);
+        context->master_graph->add_tensor_node<BrightnessNode>({input}, {output})->init(alpha, beta);
     }
     catch(const std::exception& e)
     {
@@ -138,7 +138,7 @@ rocalBrightnessFixed(
 
         output = context->master_graph->create_tensor(input->info(), is_output);
 
-        context->master_graph->add_tensor_node<BrightnessTensorNode>({input}, {output})->init(alpha, beta);
+        context->master_graph->add_tensor_node<BrightnessNode>({input}, {output})->init(alpha, beta);
     }
     catch(const std::exception& e)
     {
@@ -149,7 +149,7 @@ rocalBrightnessFixed(
 }
 
 RocalTensor
-ROCAL_API_CALL rocalCropMirrorNormalizeTensor(RocalContext p_context, RocalTensor p_input, RocalTensorLayout rocal_tensor_layout,
+ROCAL_API_CALL rocalCropMirrorNormalize(RocalContext p_context, RocalTensor p_input, RocalTensorLayout rocal_tensor_layout,
                                     RocalTensorOutputType rocal_tensor_output_type, unsigned crop_depth, unsigned crop_height,
                                     unsigned crop_width, float start_x, float start_y, float start_z, std::vector<float> &mean,
                                     std::vector<float> &std_dev, bool is_output, RocalIntParam p_mirror)
@@ -209,7 +209,7 @@ ROCAL_API_CALL rocalCropMirrorNormalizeTensor(RocalContext p_context, RocalTenso
         // For the nodes that user provides the output size the dimension of all the images after this node will be fixed and equal to that size
         output->reset_tensor_roi();
 
-        context->master_graph->add_tensor_node<CropMirrorNormalizeTensorNode>({input}, {output})->init(crop_height, crop_width, start_x, start_y, mean_acutal,
+        context->master_graph->add_tensor_node<CropMirrorNormalizeNode>({input}, {output})->init(crop_height, crop_width, start_x, start_y, mean_acutal,
                                                                                         std_actual , mirror );
     }
     catch(const std::exception& e)
@@ -236,7 +236,7 @@ rocalCopyTensor(
     try
     {
         output = context->master_graph->create_tensor(input->info(), is_output);
-        context->master_graph->add_tensor_node<CopyTensorNode>({input}, {output});
+        context->master_graph->add_tensor_node<CopyNode>({input}, {output});
     }
     catch(const std::exception& e)
     {
@@ -261,7 +261,7 @@ rocalNopTensor(
     try
     {
         output = context->master_graph->create_tensor(input->info(), is_output);
-        context->master_graph->add_tensor_node<NopTensorNode>({input}, {output});
+        context->master_graph->add_tensor_node<NopNode>({input}, {output});
     }
     catch(const std::exception& e)
     {

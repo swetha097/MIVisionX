@@ -26,13 +26,13 @@ THE SOFTWARE.
 #include "node_gamma.h"
 #include "exception.h"
 
-GammaTensorNode::GammaTensorNode(const std::vector<Tensor *> &inputs, const std::vector<Tensor *> &outputs) :
-        TensorNode(inputs, outputs),
+GammaNode::GammaNode(const std::vector<Tensor *> &inputs, const std::vector<Tensor *> &outputs) :
+        Node(inputs, outputs),
         _shift(SHIFT_RANGE[0], SHIFT_RANGE[1])
 {
 }
 
-void GammaTensorNode::create_node()
+void GammaNode::create_node()
 {
     if(_node)
         return;
@@ -49,17 +49,17 @@ void GammaTensorNode::create_node()
 
 }
 
-void GammaTensorNode::init(float shfit)
+void GammaNode::init(float shfit)
 {
     _shift.set_param(shfit);
 }
 
-void GammaTensorNode::init(FloatParam* shfit)
+void GammaNode::init(FloatParam* shfit)
 {
     _shift.set_param(core(shfit));
 }
 
-void GammaTensorNode::update_node()
+void GammaNode::update_node()
 {
      _shift.update_array();
 }

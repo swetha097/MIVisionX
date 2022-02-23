@@ -152,7 +152,7 @@ rocalJpegFileSourceSingleShard(
         if(is_output)
         {
             auto actual_output = context->master_graph->create_tensor(info, is_output);
-            context->master_graph->add_tensor_node<CopyTensorNode>({output}, {actual_output});
+            context->master_graph->add_tensor_node<CopyNode>({output}, {actual_output});
         }
 
     }
@@ -218,7 +218,7 @@ rocalJpegFileSource(
                                 tensor_data_type,
                                 tensor_format);
         output = context->master_graph->create_loader_output_tensor(info);
-        context->master_graph->add_tensor_node<ImageLoaderTensorNode>({}, {output})->init(internal_shard_count,
+        context->master_graph->add_tensor_node<ImageLoaderNode>({}, {output})->init(internal_shard_count,
                                                                           source_path, "",
                                                                           std::map<std::string, std::string>(),
                                                                           StorageType::FILE_SYSTEM,
@@ -234,7 +234,7 @@ rocalJpegFileSource(
         if(is_output)
         {
             auto actual_output = context->master_graph->create_tensor(info, is_output);
-            context->master_graph->add_tensor_node<CopyTensorNode>({output}, {actual_output}); // Have to add copy tensor node
+            context->master_graph->add_tensor_node<CopyNode>({output}, {actual_output}); // Have to add copy tensor node
         }
 
     }
@@ -298,7 +298,7 @@ rocalJpegCaffe2LMDBRecordSource(
                                 tensor_format);
         output = context->master_graph->create_loader_output_tensor(info);
 
-        context->master_graph->add_tensor_node<ImageLoaderTensorNode>({}, {output})->init(internal_shard_count,
+        context->master_graph->add_tensor_node<ImageLoaderNode>({}, {output})->init(internal_shard_count,
                                                                              source_path, "",
                                                                              std::map<std::string, std::string>(),
                                                                              StorageType::CAFFE2_LMDB_RECORD,
@@ -314,7 +314,7 @@ rocalJpegCaffe2LMDBRecordSource(
         if(is_output)
         {
             auto actual_output = context->master_graph->create_tensor(info, is_output);
-            context->master_graph->add_tensor_node<CopyTensorNode>({output}, {actual_output});
+            context->master_graph->add_tensor_node<CopyNode>({output}, {actual_output});
         }
 
     }
@@ -396,7 +396,7 @@ rocalJpegCaffe2LMDBRecordSourceSingleShard(
         if(is_output)
         {
             auto actual_output = context->master_graph->create_tensor(info, is_output);
-            context->master_graph->add_tensor_node<CopyTensorNode>({output}, {actual_output});
+            context->master_graph->add_tensor_node<CopyNode>({output}, {actual_output});
         }
 
     }
@@ -460,7 +460,7 @@ rocalJpegCaffeLMDBRecordSource(
                                 tensor_format);
         output = context->master_graph->create_loader_output_tensor(info);
 
-        context->master_graph->add_tensor_node<ImageLoaderTensorNode>({}, {output})->init(internal_shard_count,
+        context->master_graph->add_tensor_node<ImageLoaderNode>({}, {output})->init(internal_shard_count,
                                                                              source_path, "",
                                                                              std::map<std::string, std::string>(),
                                                                              StorageType::CAFFE_LMDB_RECORD,
@@ -477,7 +477,7 @@ rocalJpegCaffeLMDBRecordSource(
         if(is_output)
         {
             auto actual_output = context->master_graph->create_tensor(info, is_output);
-            context->master_graph->add_tensor_node<CopyTensorNode>({output}, {actual_output});
+            context->master_graph->add_tensor_node<CopyNode>({output}, {actual_output});
         }
 
     }
@@ -559,7 +559,7 @@ rocalJpegCaffeLMDBRecordSourceSingleShard(
         if(is_output)
         {
             auto actual_output = context->master_graph->create_tensor(info, is_output);
-            context->master_graph->add_tensor_node<CopyTensorNode>({output}, {actual_output});
+            context->master_graph->add_tensor_node<CopyNode>({output}, {actual_output});
         }
 
     }
@@ -624,7 +624,7 @@ rocalJpegCOCOFileSource(
                                 tensor_format);
         output = context->master_graph->create_loader_output_tensor(info);
 
-        context->master_graph->add_tensor_node<ImageLoaderTensorNode>({}, {output})->init(internal_shard_count,
+        context->master_graph->add_tensor_node<ImageLoaderNode>({}, {output})->init(internal_shard_count,
                                                                             source_path, json_path,
                                                                             std::map<std::string, std::string>(),
                                                                             StorageType::COCO_FILE_SYSTEM,
@@ -641,7 +641,7 @@ rocalJpegCOCOFileSource(
         if(is_output)
         {
             auto actual_output = context->master_graph->create_tensor(info, is_output);
-            context->master_graph->add_tensor_node<CopyTensorNode>({output}, {actual_output});
+            context->master_graph->add_tensor_node<CopyNode>({output}, {actual_output});
         }
 
     }
@@ -724,7 +724,7 @@ rocalJpegCOCOFileSourceSingleShard(
         if(is_output)
         {
             auto actual_output = context->master_graph->create_tensor(info, is_output);
-            context->master_graph->add_tensor_node<CopyTensorNode>({output}, {actual_output});
+            context->master_graph->add_tensor_node<CopyNode>({output}, {actual_output});
         }
 
     }
@@ -798,7 +798,7 @@ rocalJpegTFRecordSource(
                                 tensor_format);
         output = context->master_graph->create_loader_output_tensor(info);
 
-        context->master_graph->add_tensor_node<ImageLoaderTensorNode>({}, {output})->init(internal_shard_count,
+        context->master_graph->add_tensor_node<ImageLoaderNode>({}, {output})->init(internal_shard_count,
                                                                              source_path, "",
                                                                              feature_key_map,
                                                                              StorageType::TF_RECORD,
@@ -813,7 +813,7 @@ rocalJpegTFRecordSource(
         if(is_output)
         {
             auto actual_output = context->master_graph->create_tensor(info, is_output);
-            context->master_graph->add_tensor_node<CopyTensorNode>({output}, {actual_output});
+            context->master_graph->add_tensor_node<CopyNode>({output}, {actual_output});
         }
 
     }
@@ -884,7 +884,7 @@ rocalJpegCOCOFileSourcePartial(
                               tensor_format );
         output = context->master_graph->create_loader_output_tensor(info);
 
-        context->master_graph->add_tensor_node<FusedJpegCropTensorNode>({}, {output})->init(internal_shard_count,
+        context->master_graph->add_tensor_node<FusedJpegCropNode>({}, {output})->init(internal_shard_count,
                                                                             source_path, json_path,
                                                                             StorageType::COCO_FILE_SYSTEM,
                                                                             DecoderType::FUSED_TURBO_JPEG,
@@ -900,7 +900,7 @@ rocalJpegCOCOFileSourcePartial(
         if(is_output)
         {
             auto actual_output = context->master_graph->create_tensor(info, is_output);
-            context->master_graph->add_tensor_node<CopyTensorNode>({output}, {actual_output});
+            context->master_graph->add_tensor_node<CopyNode>({output}, {actual_output});
         }
 
     }
@@ -992,7 +992,7 @@ rocalJpegCOCOFileSourcePartialSingleShard(
         if(is_output)
         {
             auto actual_output = context->master_graph->create_tensor(info, is_output);
-            context->master_graph->add_tensor_node<CopyTensorNode>({output}, {actual_output});
+            context->master_graph->add_tensor_node<CopyNode>({output}, {actual_output});
         }
 
     }
@@ -1072,7 +1072,7 @@ rocalJpegTFRecordSourceSingleShard(
         if(is_output)
         {
             auto actual_output = context->master_graph->create_tensor(info, is_output);
-            context->master_graph->add_tensor_node<CopyTensorNode>({output}, {actual_output});
+            context->master_graph->add_tensor_node<CopyNode>({output}, {actual_output});
         }
 
     }
@@ -1143,7 +1143,7 @@ rocalFusedJpegCrop(
                                 tensor_data_type,
                                 tensor_format);
         output = context->master_graph->create_loader_output_tensor(info);
-        context->master_graph->add_tensor_node<FusedJpegCropTensorNode>({}, {output})->init(internal_shard_count,
+        context->master_graph->add_tensor_node<FusedJpegCropNode>({}, {output})->init(internal_shard_count,
                                                                           source_path, "",
                                                                           StorageType::FILE_SYSTEM,
                                                                           DecoderType::FUSED_TURBO_JPEG,
@@ -1158,7 +1158,7 @@ rocalFusedJpegCrop(
         if(is_output)
         {
             auto actual_output = context->master_graph->create_tensor(info, is_output);
-            context->master_graph->add_tensor_node<CopyTensorNode>({output}, {actual_output});
+            context->master_graph->add_tensor_node<CopyNode>({output}, {actual_output});
         }
 
     }
@@ -1219,7 +1219,7 @@ rocalRawTFRecordSource(
                               tensor_format );
         output = context->master_graph->create_loader_output_tensor(info);
 
-        context->master_graph->add_tensor_node<ImageLoaderTensorNode>({}, {output})->init(internal_shard_count,
+        context->master_graph->add_tensor_node<ImageLoaderNode>({}, {output})->init(internal_shard_count,
                                                                              source_path, "",
                                                                              feature_key_map,
                                                                              StorageType::TF_RECORD,
@@ -1235,7 +1235,7 @@ rocalRawTFRecordSource(
         if(is_output)
         {
             auto actual_output = context->master_graph->create_tensor(info, is_output);
-            context->master_graph->add_tensor_node<CopyTensorNode>({output}, {actual_output});
+            context->master_graph->add_tensor_node<CopyNode>({output}, {actual_output});
         }
 
     }
@@ -1309,7 +1309,7 @@ rocalRawTFRecordSourceSingleShard(
         if(is_output)
         {
             auto actual_output = context->master_graph->create_tensor(info, is_output);
-            context->master_graph->add_tensor_node<CopyTensorNode>({output}, {actual_output});
+            context->master_graph->add_tensor_node<CopyNode>({output}, {actual_output});
         }
 
     }
@@ -1398,7 +1398,7 @@ rocalFusedJpegCropSingleShard(
         if(is_output)
         {
             auto actual_output = context->master_graph->create_tensor(info, is_output);
-            context->master_graph->add_tensor_node<CopyTensorNode>({output}, {actual_output});
+            context->master_graph->add_tensor_node<CopyNode>({output}, {actual_output});
         }
 
     }

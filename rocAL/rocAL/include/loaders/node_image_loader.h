@@ -25,19 +25,19 @@ THE SOFTWARE.
 #include "image_loader_sharded.h"
 #include "graph.h"
 
-class ImageLoaderTensorNode: public TensorNode
+class ImageLoaderNode: public Node
 {
 public:
     /// \param device_resources shard count from user
 
     /// internal_shard_count number of loader/decoders are created and each shard is loaded and decoded using separate and independent resources increasing the parallelism and performance.
 #if ENABLE_HIP
-    ImageLoaderTensorNode(Tensor *output, DeviceResourcesHip device_resources);
+    ImageLoaderNode(Tensor *output, DeviceResourcesHip device_resources);
 #else
-    ImageLoaderTensorNode(Tensor *output, DeviceResources device_resources);
+    ImageLoaderNode(Tensor *output, DeviceResources device_resources);
 #endif
-    ~ImageLoaderTensorNode() override;
-    ImageLoaderTensorNode() = delete;
+    ~ImageLoaderNode() override;
+    ImageLoaderNode() = delete;
     ///
     /// \param internal_shard_count Defines the amount of parallelism user wants for the load and decode process to be handled internally.
     /// \param source_path Defines the path that includes the image dataset

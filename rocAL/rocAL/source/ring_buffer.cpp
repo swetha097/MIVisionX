@@ -21,7 +21,7 @@ THE SOFTWARE.
 */
 
 #include <device_manager.h>
-#include "tensor_ring_buffer.h"
+#include "ring_buffer.h"
 
 TensorRingBuffer::TensorRingBuffer(unsigned buffer_depth):
         BUFF_DEPTH(buffer_depth),

@@ -33,7 +33,7 @@ class CropMirrorNormalizeMetaNode:public MetaNode
     public:
         CropMirrorNormalizeMetaNode() {};
         void update_parameters(MetaDataBatch* input_meta_data)override;
-        std::shared_ptr<CropMirrorNormalizeTensorNode> _node = nullptr;
+        std::shared_ptr<CropMirrorNormalizeNode> _node = nullptr;
     private:
         void initialize();
         std::shared_ptr<RocalCropParam> _meta_crop_param;

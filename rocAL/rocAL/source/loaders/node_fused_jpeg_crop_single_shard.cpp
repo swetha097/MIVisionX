@@ -7,7 +7,7 @@ FusedJpegCropTensorSingleShardNode::FusedJpegCropTensorSingleShardNode(Tensor *o
 #else
 FusedJpegCropTensorSingleShardNode::FusedJpegCropTensorSingleShardNode(Tensor *output, DeviceResources device_resources):
 #endif
-        TensorNode({}, {output})
+        Node({}, {output})
 {
     _loader_module = std::make_shared<ImageLoader>(device_resources);
 }
