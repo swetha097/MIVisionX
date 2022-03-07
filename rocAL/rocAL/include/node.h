@@ -27,6 +27,36 @@ THE SOFTWARE.
 #include "meta_data_graph.h"
 #include "tensor.h"
 
+class TensorNode
+{
+public:
+    TensorNode(const std::vector<rocALTensor *> &inputs,const std::vector<rocALTensor *> &outputs) :
+        _inputs(inputs),
+        _outputs(outputs),
+        _batch_size(outputs[0]->info().batch_size()) {}
+    virtual ~TensorNode();
+    void create(std::shared_ptr<Graph> graph);
+    void update_parameters();
+    std::vector<rocALTensor *> input() { return _inputs; };
+    std::vector<rocALTensor *> output() { return _outputs; };
+    void add_next(const std::shared_ptr<rocALTensor>& node) {} // To be implemented
+    void add_previous(const std::shared_ptr<rocALTensor>& node) {} //To be implemented
+    std::shared_ptr<Graph> graph() { return _graph; }
+    bool _is_ssd = false;
+    void set_meta_data(MetaDataBatch* meta_data_info){_meta_data_info = meta_data_info;}
+
+    protected:
+    virtual void create_node() = 0;
+    virtual void update_node() = 0;
+    virtual void update_src_roi();
+    const std::vector<rocALTensor *> _inputs;
+    const std::vector<rocALTensor *> _outputs;
+    std::shared_ptr<Graph> _graph = nullptr;
+    vx_array _src_tensor_roi = nullptr;
+    vx_node _node = nullptr;
+    size_t _batch_size;
+    MetaDataBatch* _meta_data_info;
+};
 
 class Node
 {

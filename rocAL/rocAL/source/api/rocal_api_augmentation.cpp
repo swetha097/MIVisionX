@@ -33,6 +33,36 @@ THE SOFTWARE.
 #include "rocal_api.h"
 
 RocalTensor ROCAL_API_CALL
+rocalBrightnessTensor(
+        RocalContext p_context,
+        RocalTensor p_input,
+        bool is_output,
+        RocalFloatParam p_alpha,
+        RocalFloatParam p_beta)
+{
+    if(!p_input || !p_context)
+        THROW("Null values passed as input")
+    rocALTensor* output = nullptr;
+    auto context = static_cast<Context*>(p_context);
+    auto input = static_cast<rocALTensor*>(p_input);
+    auto alpha = static_cast<FloatParam*>(p_alpha);
+    auto beta = static_cast<FloatParam*>(p_beta);
+    try
+    {
+
+        output = context->master_graph->create_rocal_tensor(input->info(), is_output);
+
+        context->master_graph->add_node<BrightnessTensorNode>({input}, {output})->init(alpha, beta);
+    }
+    catch(const std::exception& e)
+    {
+        context->capture_error(e.what());
+        ERR(e.what())
+    }
+    return output;
+}
+
+RocalTensor ROCAL_API_CALL
 rocalGamma(
         RocalContext p_context,
         RocalTensor p_input,
@@ -166,7 +196,7 @@ ROCAL_API_CALL rocalCropMirrorNormalize(RocalContext p_context, RocalTensor p_in
     }
     mean_acutal /= mean.size();
     std_actual /= std_dev.size();
-    RocalTensorFormat op_tensorFormat;
+    RocalTensorlayout op_tensorFormat;
     RocalTensorDataType op_tensorDataType;
     try
     {
@@ -175,10 +205,10 @@ ROCAL_API_CALL rocalCropMirrorNormalize(RocalContext p_context, RocalTensor p_in
         switch(rocal_tensor_layout)
         {
             case 0:
-                op_tensorFormat = RocalTensorFormat::NHWC;
+                op_tensorFormat = RocalTensorlayout::NHWC;
                 break;
             case 1:
-                op_tensorFormat = RocalTensorFormat::NCHW;
+                op_tensorFormat = RocalTensorlayout::NCHW;
                 break;
             default:
                 THROW("Unsupported Tensor layout" + TOSTR(rocal_tensor_layout))

@@ -125,7 +125,7 @@ rocalJpegFileSourceSingleShard(
 
         INFO("Internal buffer size width = "+ TOSTR(width)+ " height = "+ TOSTR(height) + " depth = "+ TOSTR(num_of_planes))
 
-        RocalTensorFormat tensor_format = RocalTensorFormat::NHWC;
+        RocalTensorlayout tensor_format = RocalTensorlayout::NHWC;
         RocalTensorDataType tensor_data_type = RocalTensorDataType::UINT8;
         auto info  = TensorInfo(width,
                                 height,
@@ -207,7 +207,7 @@ rocalJpegFileSource(
 
         INFO("Internal buffer size width = "+ TOSTR(width)+ " height = "+ TOSTR(height) + " depth = "+ TOSTR(num_of_planes))
 
-        RocalTensorFormat tensor_format = RocalTensorFormat::NHWC;
+        RocalTensorlayout tensor_format = RocalTensorlayout::NHWC;
         RocalTensorDataType tensor_data_type = RocalTensorDataType::UINT8;
         auto info  = TensorInfo(width,
                                 height,
@@ -286,7 +286,7 @@ rocalJpegCaffe2LMDBRecordSource(
 
         INFO("Internal buffer size width = "+ TOSTR(width)+ " height = "+ TOSTR(height) + " depth = "+ TOSTR(num_of_planes))
 
-        RocalTensorFormat tensor_format = RocalTensorFormat::NHWC;
+        RocalTensorlayout tensor_format = RocalTensorlayout::NHWC;
         RocalTensorDataType tensor_data_type = RocalTensorDataType::UINT8;
         auto info  = TensorInfo(width,
                                 height,
@@ -369,7 +369,7 @@ rocalJpegCaffe2LMDBRecordSourceSingleShard(
 
         INFO("Internal buffer size width = "+ TOSTR(width)+ " height = "+ TOSTR(height) + " depth = "+ TOSTR(num_of_planes))
 
-        RocalTensorFormat tensor_format = RocalTensorFormat::NHWC;
+        RocalTensorlayout tensor_format = RocalTensorlayout::NHWC;
         RocalTensorDataType tensor_data_type = RocalTensorDataType::UINT8;
         auto info  = TensorInfo(width,
                                 height,
@@ -448,7 +448,7 @@ rocalJpegCaffeLMDBRecordSource(
 
         INFO("Internal buffer size width = "+ TOSTR(width)+ " height = "+ TOSTR(height) + " depth = "+ TOSTR(num_of_planes))
 
-        RocalTensorFormat tensor_format = RocalTensorFormat::NHWC;
+        RocalTensorlayout tensor_format = RocalTensorlayout::NHWC;
         RocalTensorDataType tensor_data_type = RocalTensorDataType::UINT8;
         auto info  = TensorInfo(width,
                                 height,
@@ -532,7 +532,7 @@ rocalJpegCaffeLMDBRecordSourceSingleShard(
 
         INFO("Internal buffer size width = "+ TOSTR(width)+ " height = "+ TOSTR(height) + " depth = "+ TOSTR(num_of_planes))
 
-        RocalTensorFormat tensor_format = RocalTensorFormat::NHWC;
+        RocalTensorlayout tensor_format = RocalTensorlayout::NHWC;
         RocalTensorDataType tensor_data_type = RocalTensorDataType::UINT8;
         auto info  = TensorInfo(width,
                                 height,
@@ -612,7 +612,7 @@ rocalJpegCOCOFileSource(
 
         INFO("Internal buffer size width = "+ TOSTR(width)+ " height = "+ TOSTR(height) + " depth = "+ TOSTR(num_of_planes))
 
-        RocalTensorFormat tensor_format = RocalTensorFormat::NHWC;
+        RocalTensorlayout tensor_format = RocalTensorlayout::NHWC;
         RocalTensorDataType tensor_data_type = RocalTensorDataType::UINT8;
         auto info  = TensorInfo(width,
                                 height,
@@ -697,7 +697,7 @@ rocalJpegCOCOFileSourceSingleShard(
 
         INFO("Internal buffer size width = "+ TOSTR(width)+ " height = "+ TOSTR(height) + " depth = "+ TOSTR(num_of_planes))
 
-        RocalTensorFormat tensor_format = RocalTensorFormat::NHWC;
+        RocalTensorlayout tensor_format = RocalTensorlayout::NHWC;
         RocalTensorDataType tensor_data_type = RocalTensorDataType::UINT8;
         auto info  = TensorInfo(width,
                                 height,
@@ -786,7 +786,7 @@ rocalJpegTFRecordSource(
 
         INFO("Internal buffer size width = "+ TOSTR(width)+ " height = "+ TOSTR(height) + " depth = "+ TOSTR(num_of_planes))
 
-        RocalTensorFormat tensor_format = RocalTensorFormat::NHWC;
+        RocalTensorlayout tensor_format = RocalTensorlayout::NHWC;
         RocalTensorDataType tensor_data_type = RocalTensorDataType::UINT8;
         auto info  = TensorInfo(width,
                                 height,
@@ -873,7 +873,7 @@ rocalJpegCOCOFileSourcePartial(
 
         INFO("Internal buffer size width = "+ TOSTR(width)+ " height = "+ TOSTR(height) + " depth = "+ TOSTR(num_of_planes))
 
-        RocalTensorFormat tensor_format = RocalTensorFormat::NHWC;
+        RocalTensorlayout tensor_format = RocalTensorlayout::NHWC;
         RocalTensorDataType tensor_data_type = RocalTensorDataType::UINT8;
         auto info = TensorInfo(width, height,
                               context->internal_batch_size(),
@@ -965,7 +965,7 @@ rocalJpegCOCOFileSourcePartialSingleShard(
 
         INFO("Internal buffer size width = "+ TOSTR(width)+ " height = "+ TOSTR(height) + " depth = "+ TOSTR(num_of_planes))
 
-        RocalTensorFormat tensor_format = RocalTensorFormat::NHWC;
+        RocalTensorlayout tensor_format = RocalTensorlayout::NHWC;
         RocalTensorDataType tensor_data_type = RocalTensorDataType::UINT8;
         auto info = TensorInfo(width, height,
                               context->internal_batch_size(),
@@ -1046,7 +1046,7 @@ rocalJpegTFRecordSourceSingleShard(
 
         INFO("Internal buffer size width = "+ TOSTR(width)+ " height = "+ TOSTR(height) + " depth = "+ TOSTR(num_of_planes))
 
-        RocalTensorFormat tensor_format = RocalTensorFormat::NHWC;
+        RocalTensorlayout tensor_format = RocalTensorlayout::NHWC;
         RocalTensorDataType tensor_data_type = RocalTensorDataType::UINT8;
         auto info  = TensorInfo(width,
                                 height,
@@ -1132,7 +1132,7 @@ rocalFusedJpegCrop(
 
         INFO("Internal buffer size width = "+ TOSTR(width)+ " height = "+ TOSTR(height) + " depth = "+ TOSTR(num_of_planes))
 
-        RocalTensorFormat tensor_format = RocalTensorFormat::NHWC;
+        RocalTensorlayout tensor_format = RocalTensorlayout::NHWC;
         RocalTensorDataType tensor_data_type = RocalTensorDataType::UINT8;
         auto info  = TensorInfo(width,
                                 height,
@@ -1208,7 +1208,7 @@ rocalRawTFRecordSource(
 
         auto [color_format, num_of_planes] = convert_color_format(rocal_color_format);
 
-        RocalTensorFormat tensor_format = RocalTensorFormat::NHWC;
+        RocalTensorlayout tensor_format = RocalTensorlayout::NHWC;
         RocalTensorDataType tensor_data_type = RocalTensorDataType::UINT8;
         auto info = TensorInfo(out_width, out_height,
                               context->internal_batch_size(),
@@ -1284,7 +1284,7 @@ rocalRawTFRecordSourceSingleShard(
 
         INFO("Internal buffer size width = "+ TOSTR(out_width)+ " height = "+ TOSTR(out_height) + " depth = "+ TOSTR(num_of_planes))
 
-        RocalTensorFormat tensor_format = RocalTensorFormat::NHWC;
+        RocalTensorlayout tensor_format = RocalTensorlayout::NHWC;
         RocalTensorDataType tensor_data_type = RocalTensorDataType::UINT8;
         auto info = TensorInfo(out_width, out_height,
                               context->internal_batch_size(),
@@ -1372,7 +1372,7 @@ rocalFusedJpegCropSingleShard(
 
         INFO("Internal buffer size width = "+ TOSTR(width)+ " height = "+ TOSTR(height) + " depth = "+ TOSTR(num_of_planes))
 
-        RocalTensorFormat tensor_format = RocalTensorFormat::NHWC;
+        RocalTensorlayout tensor_format = RocalTensorlayout::NHWC;
         RocalTensorDataType tensor_data_type = RocalTensorDataType::UINT8;
         auto info  = TensorInfo(width,
                                 height,

@@ -66,8 +66,11 @@ public:
     template <typename T, typename M> std::shared_ptr<T> meta_add_node(std::shared_ptr<M> node);
     template <typename T>
     std::shared_ptr<T> add_tensor_node(const std::vector<Tensor *> &inputs, const std::vector<Tensor *> &outputs);
+    template <typename T>
+    std::shared_ptr<T> add_node(const std::vector<rocALTensor *> &input, const std::vector<rocALTensor *> &output);
     Tensor *create_tensor(const TensorInfo &info, bool is_output);
     Tensor *create_tensor_from_image(const TensorInfo &info);
+    rocALTensor *create_rocal_tensor(const rocALTensorInfo &info, bool is_output);
     Tensor *create_loader_output_tensor(const TensorInfo &info);
     MetaDataBatch *create_label_reader(const char *source_path, MetaDataReaderType reader_type);
     // MetaDataBatch *create_coco_meta_data_reader(const char *source_path, bool is_output);
@@ -110,6 +113,13 @@ private:
     std::list<std::shared_ptr<Node>> _tensor_nodes;
     std::list<std::shared_ptr<Node>> _tensor_root_nodes;
     std::map<Tensor*, std::shared_ptr<Node>> _tensor_map;
+
+    std::vector<rocALTensor*> _output_rocal_tensors;
+    std::list<rocALTensor*> _internal_rocal_tensors;
+    std::list<std::shared_ptr<TensorNode>> _rocal_tensor_nodes;
+    std::list<std::shared_ptr<TensorNode>> _rocal_tensor_root_nodes;
+    std::map<rocALTensor*, std::shared_ptr<TensorNode>> _rocal_tensor_map;
+
     // cl_mem _output_tensor;//!< In the GPU processing case , is used to convert the U8 samples to float32 before they are being transfered back to host
     // ImageInfo _output_image_info;//!< Keeps the information about ROCAL's output image , it includes all images of a batch stacked on top of each other
     // std::vector<Image*> _output_images;//!< Keeps the ovx images that are used to store the augmented output (there is an image per augmentation branch)
@@ -164,6 +174,29 @@ std::shared_ptr<T> MasterGraph::meta_add_node(std::shared_ptr<M> node)
     meta_node->_batch_size = _user_batch_size;
     return meta_node;
 }
+
+template <typename T>
+std::shared_ptr<T> MasterGraph::add_node(const std::vector<rocALTensor *> &inputs, const std::vector<rocALTensor *> &outputs)
+{
+    auto node = std::make_shared<T>(inputs, outputs);
+    _rocal_tensor_nodes.push_back(node);
+
+    for(auto& input: inputs)
+    {
+        if (_rocal_tensor_map.find(input) == _rocal_tensor_map.end())
+            THROW("Input image is invalid, cannot be found among output of previously created nodes")
+
+        auto parent_node = _rocal_tensor_map.find(input)->second;
+        // parent_node->add_next(node);
+        // node->add_previous(parent_node);
+    }
+
+    for(auto& output: outputs)
+        _rocal_tensor_map.insert(make_pair(output, node));
+
+    return node;
+}
+
 
 template <typename T>
 std::shared_ptr<T> MasterGraph::add_tensor_node(const std::vector<Tensor *> &inputs, const std::vector<Tensor *> &outputs)

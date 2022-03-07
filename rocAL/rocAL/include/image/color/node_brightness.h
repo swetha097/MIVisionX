@@ -25,6 +25,27 @@ THE SOFTWARE.
 #include "parameter_factory.h"
 #include "parameter_vx.h"
 #include "graph.h"
+
+class BrightnessTensorNode : public TensorNode
+{
+public:
+    BrightnessTensorNode(const std::vector<rocALTensor *> &inputs, const std::vector<rocALTensor *> &outputs);
+    BrightnessTensorNode() = delete;
+
+    void init( float alpha, float beta);
+    void init( FloatParam* alpha_param, FloatParam* beta_param);
+
+protected:
+    void create_node() override ;
+    void update_node() override;
+private:
+
+    ParameterVX<float> _alpha;
+    ParameterVX<float> _beta;
+    unsigned _layout, _roi_type;
+    constexpr static float ALPHA_RANGE [2] = {0.1, 1.95};
+    constexpr static float   BETA_RANGE [2] = {0, 25};
+};
 class BrightnessNode : public Node
 {
 public:
