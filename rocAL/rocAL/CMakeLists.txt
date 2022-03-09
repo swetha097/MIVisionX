@@ -35,6 +35,11 @@ if(GPU_SUPPORT)
     find_package(Protobuf QUIET)
     find_package(FFmpeg QUIET)
     find_package(OpenCV QUIET)
+    #find_package(SndFile)
+    find_library(libsnd_LIBS
+    NAMES sndfile libsndfile
+    PATHS ${CMAKE_SYSTEM_PREFIX_PATH} ${LIBSND_ROOT_DIR} "/usr/local"
+    PATH_SUFFIXES lib lib64)
 else()
     SET(BUILD_RALI false)
     message("-- ${Yellow}rocAL library requires GPU_SUPPORT=ON and BACKEND=OPENCL/HIP ${ColourReset}")
@@ -115,6 +120,11 @@ if(GPU_SUPPORT)
         set(BUILD_RALI false)
         message("-- ${Yellow}rocAL library requires TurboJpeg, Not Found ${ColourReset}")
     endif()
+    if(${libsnd_LIBS} STREQUAL libsnd_LIBS-NOTFOUND)
+        message(FATAL_ERROR "libsnd (sndfile) could not be found. Try to specify it's location with `-DLIBSND_ROOT_DIR`.")
+    endif()
+    message(STATUS "Found libsnd: ${libsnd_LIBS}")
+    #list(APPEND DALI_LIBS ${libsnd_LIBS})
     if(NOT Protobuf_FOUND)
         set(BUILD_RALI false)
         message("-- ${Yellow}rocAL library requires Protobuf, Not Found ${ColourReset}")
@@ -160,6 +170,7 @@ if(${BUILD_RALI})
                 ${AVFORMAT_INCLUDE_DIR}
                 ${CMAKE_CURRENT_BINARY_DIR}
                 ${TurboJpeg_INCLUDE_DIRS}
+                ${SndFile_INCLUDE_DIRS}
                 ${PROTOBUF_INCLUDE_DIRS}
                 ${AMDRPP_INCLUDE_DIRS}
                 ../../amd_openvx/openvx/include/
@@ -181,7 +192,7 @@ if(${BUILD_RALI})
     protobuf_generate_cpp(TF_PROTO_SRCS TF_PROTO_HEADERS proto/example.proto proto/feature.proto)
     protobuf_generate_cpp(CAFFE2_PROTO_SRCS CAFFE2_PROTO_HEADERS proto/caffe2_protos.proto)
     protobuf_generate_cpp(CAFFE_PROTO_SRCS CAFFE_PROTO_HEADERS proto/caffe_protos.proto)
-    link_directories(${AMDRPP_LIBRARIES_DIR} ${TurboJpeg_LIBRARIES_DIR} ${PROTOBUF_LIBRARY_DIRS} /usr/local/lib/)
+    link_directories(${AMDRPP_LIBRARIES_DIR} ${TurboJpeg_LIBRARIES_DIR} ${SndFile_LIBRARIES_DIR} ${PROTOBUF_LIBRARY_DIRS} /usr/local/lib/)
 
     if("${BACKEND}" STREQUAL "HIP" AND HIP_FOUND)
         add_subdirectory(rocAL_hip)
@@ -222,11 +233,11 @@ if(${BUILD_RALI})
 
     if(NOT FFMPEG_FOUND)
         message("-- ${Yellow}rocAL library is going to be built without video decode functionality ${ColourReset}")
-        target_link_libraries(${PROJECT_NAME} -fPIC ${PROTOBUF_LIBRARIES} lmdb boost_system boost_filesystem turbojpeg openvx vx_rpp)
+        target_link_libraries(${PROJECT_NAME} -fPIC ${PROTOBUF_LIBRARIES} lmdb boost_system boost_filesystem turbojpeg openvx vx_rpp sndfile)
     else()
         message("-- ${Green}rocAL library is going to be built with video decode functionality ${ColourReset}")
         target_compile_definitions(${PROJECT_NAME} PUBLIC -DRALI_VIDEO)
-        target_link_libraries(${PROJECT_NAME} -fPIC ${PROTOBUF_LIBRARIES} ${FFMPEG_LIBRARIES} lmdb turbojpeg openvx vx_rpp)
+        target_link_libraries(${PROJECT_NAME} -fPIC ${PROTOBUF_LIBRARIES} ${FFMPEG_LIBRARIES} lmdb turbojpeg openvx vx_rpp sndfile)
     endif()
     if("${BACKEND}" STREQUAL "HIP" AND HIP_FOUND)
         target_link_libraries(${PROJECT_NAME} $<TARGET_OBJECTS:rocAL_hip>)
