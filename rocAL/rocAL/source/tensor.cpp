@@ -118,16 +118,15 @@ void rocALTensorInfo::reallocate_tensor_roi_buffers()
     }
 }
 
-// TensorInfo::rocALTensorInfo() : _type(Type::UNKNOWN),
-//                            _width(0),
-//                            _height(0),
-//                            _batch_size(1),
-//                            _channels(1),
-//                            _data_size(0),
-//                            _mem_type(RocalMemType::HOST),
-//                            _color_fmt(RocalColorFormat::U8),
-//                            _data_type(RocalTensorDataType::FP32),
-//                            _format(RocalTensorlayout::NHWC){}
+rocALTensorInfo::rocALTensorInfo() : _type(Type::UNKNOWN),
+                                _num_of_dims(0),
+                                _dims(nullptr),
+                                _batch_size(1),
+                                _mem_type(RocalMemType::HOST),
+                                _roi_type(RocalROIType::XYWH),
+                                _data_type(RocalTensorDataType::FP32),
+                                _layout(RocalTensorlayout::NHWC),
+                                _color_format(RocalColorFormat::RGB24){}
 
 rocALTensorInfo::rocALTensorInfo(
     unsigned num_of_dims,
@@ -135,14 +134,16 @@ rocALTensorInfo::rocALTensorInfo(
     RocalMemType mem_type,
     RocalROIType roi_type,
     RocalTensorDataType data_type,
-    RocalTensorlayout layout) : _type(Type::UNKNOWN),
+    RocalTensorlayout layout,
+    RocalColorFormat color_format) : _type(Type::UNKNOWN),
                                 _num_of_dims(num_of_dims),
                                 _dims(dims),
                                 _batch_size(dims->at(0)),
                                 _mem_type(mem_type),
                                 _roi_type(roi_type),
                                 _data_type(data_type),
-                                _layout(layout)
+                                _layout(layout),
+                                _color_format(color_format)
 {
     vx_size data_size = tensor_data_size(data_type);
     unsigned alignpixels = TENSOR_WIDTH_ALIGNMENT; // Check if needed

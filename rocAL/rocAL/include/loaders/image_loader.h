@@ -42,7 +42,8 @@ public:
     ~ImageLoader() override;
     LoaderModuleStatus load_next() override;
     void initialize(ReaderConfig reader_cfg, DecoderConfig decoder_cfg, RocalMemType mem_type, unsigned batch_size, bool keep_orig_size=false) override;
-    void set_output_image (Tensor* output_image) override;
+    void set_output_image (rocALTensor* output_image) override;
+    // void set_output_image_tensor(rocALTensor* output_image) override;
     // void set_random_bbox_data_reader(std::shared_ptr<RandomBBoxCrop_MetaDataReader> randombboxcrop_meta_data_reader) override;
     size_t remaining_count() override; // returns number of remaining items to be loaded
     void reset() override; // Resets the loader to load from the beginning of the media
@@ -61,7 +62,7 @@ private:
     std::shared_ptr<ImageReadAndDecode> _image_loader;
     LoaderModuleStatus update_output_image();
     LoaderModuleStatus load_routine();
-    Tensor* _output_tensor;
+    rocALTensor* _output_tensor;
     std::vector<std::string> _output_names;//!< image name/ids that are stores in the _output_image
     size_t _output_mem_size;
     MetaDataBatch* _meta_data = nullptr;//!< The output of the meta_data_graph,

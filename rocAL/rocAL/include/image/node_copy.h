@@ -24,10 +24,10 @@ THE SOFTWARE.
 #include "node.h"
 #include "graph.h"
 
-class CopyNode : public Node
+class CopyNode : public TensorNode
 {
 public:
-    CopyNode(const std::vector<Tensor *> &inputs, const std::vector<Tensor *> &outputs);
+    CopyNode(const std::vector<rocALTensor *> &inputs, const std::vector<rocALTensor *> &outputs);
     CopyNode() = delete;
 
 protected:

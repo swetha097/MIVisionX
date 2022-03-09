@@ -24,8 +24,8 @@ THE SOFTWARE.
 #include "node_copy.h"
 #include "exception.h"
 
-CopyNode::CopyNode(const std::vector<Tensor *> &inputs, const std::vector<Tensor *> &outputs) :
-        Node(inputs, outputs)
+CopyNode::CopyNode(const std::vector<rocALTensor *> &inputs, const std::vector<rocALTensor *> &outputs) :
+        TensorNode(inputs, outputs)
 {
 }
 

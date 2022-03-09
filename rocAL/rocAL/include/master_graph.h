@@ -65,13 +65,17 @@ public:
     void release();
     template <typename T, typename M> std::shared_ptr<T> meta_add_node(std::shared_ptr<M> node);
     template <typename T>
-    std::shared_ptr<T> add_tensor_node(const std::vector<Tensor *> &inputs, const std::vector<Tensor *> &outputs);
+    std::shared_ptr<T> add_tensor_node(const std::vector<rocALTensor *> &inputs, const std::vector<rocALTensor *> &outputs);
     template <typename T>
     std::shared_ptr<T> add_node(const std::vector<rocALTensor *> &input, const std::vector<rocALTensor *> &output);
-    Tensor *create_tensor(const TensorInfo &info, bool is_output);
-    Tensor *create_tensor_from_image(const TensorInfo &info);
-    rocALTensor *create_rocal_tensor(const rocALTensorInfo &info, bool is_output);
-    Tensor *create_loader_output_tensor(const TensorInfo &info);
+    rocALTensor *create_tensor(const rocALTensorInfo &info, bool is_output);
+    rocALTensor *create_tensor_from_image(const rocALTensorInfo &info);
+    rocALTensor *create_loader_output_tensor(const rocALTensorInfo &info);
+
+    // rocALTensor *create_rocal_tensor(const rocALTensorInfo &info, bool is_output);
+    // rocALTensor *create_rocal_tensor_from_image(const rocALTensorInfo &info);
+    // rocALTensor *create_rocal_loader_output_tensor(const rocALTensorInfo &info);
+
     MetaDataBatch *create_label_reader(const char *source_path, MetaDataReaderType reader_type);
     // MetaDataBatch *create_coco_meta_data_reader(const char *source_path, bool is_output);
     // MetaDataBatch *create_tf_record_meta_data_reader(const char *source_path, MetaDataReaderType reader_type,  MetaDataType label_type, const std::map<std::string, std::string> feature_key_map);
@@ -107,18 +111,18 @@ private:
     MetaDataBatch* _augmented_meta_data = nullptr;//!< The output of the meta_data_graph,
     // CropCordBatch* _random_bbox_crop_cords_data = nullptr;
     std::thread _output_thread;
-    TensorInfo _output_tensor_info;
-    std::vector<Tensor*> _output_tensors;
-    std::list<Tensor*> _internal_tensors;
-    std::list<std::shared_ptr<Node>> _tensor_nodes;
-    std::list<std::shared_ptr<Node>> _tensor_root_nodes;
-    std::map<Tensor*, std::shared_ptr<Node>> _tensor_map;
+    rocALTensorInfo _output_tensor_info;
+    // std::vector<rocALTensor*> _output_tensors;
+    // std::list<rocALTensor*> _internal_tensors;
+    // std::list<std::shared_ptr<Node>> _tensor_nodes;
+    // std::list<std::shared_ptr<Node>> _tensor_root_nodes;
+    // std::map<rocALTensor*, std::shared_ptr<Node>> _tensor_map;
 
-    std::vector<rocALTensor*> _output_rocal_tensors;
-    std::list<rocALTensor*> _internal_rocal_tensors;
-    std::list<std::shared_ptr<TensorNode>> _rocal_tensor_nodes;
-    std::list<std::shared_ptr<TensorNode>> _rocal_tensor_root_nodes;
-    std::map<rocALTensor*, std::shared_ptr<TensorNode>> _rocal_tensor_map;
+    std::vector<rocALTensor*> _output_tensors;
+    std::list<rocALTensor*> _internal_tensors;
+    std::list<std::shared_ptr<TensorNode>> _tensor_nodes;
+    std::list<std::shared_ptr<TensorNode>> _tensor_root_nodes;
+    std::map<rocALTensor*, std::shared_ptr<TensorNode>> _tensor_map;
 
     // cl_mem _output_tensor;//!< In the GPU processing case , is used to convert the U8 samples to float32 before they are being transfered back to host
     // ImageInfo _output_image_info;//!< Keeps the information about ROCAL's output image , it includes all images of a batch stacked on top of each other
@@ -179,29 +183,6 @@ template <typename T>
 std::shared_ptr<T> MasterGraph::add_node(const std::vector<rocALTensor *> &inputs, const std::vector<rocALTensor *> &outputs)
 {
     auto node = std::make_shared<T>(inputs, outputs);
-    _rocal_tensor_nodes.push_back(node);
-
-    for(auto& input: inputs)
-    {
-        if (_rocal_tensor_map.find(input) == _rocal_tensor_map.end())
-            THROW("Input image is invalid, cannot be found among output of previously created nodes")
-
-        auto parent_node = _rocal_tensor_map.find(input)->second;
-        // parent_node->add_next(node);
-        // node->add_previous(parent_node);
-    }
-
-    for(auto& output: outputs)
-        _rocal_tensor_map.insert(make_pair(output, node));
-
-    return node;
-}
-
-
-template <typename T>
-std::shared_ptr<T> MasterGraph::add_tensor_node(const std::vector<Tensor *> &inputs, const std::vector<Tensor *> &outputs)
-{
-    auto node = std::make_shared<T>(inputs, outputs);
     _tensor_nodes.push_back(node);
 
     for(auto& input: inputs)
@@ -210,8 +191,8 @@ std::shared_ptr<T> MasterGraph::add_tensor_node(const std::vector<Tensor *> &inp
             THROW("Input image is invalid, cannot be found among output of previously created nodes")
 
         auto parent_node = _tensor_map.find(input)->second;
-        parent_node->add_next(node);
-        node->add_previous(parent_node);
+        // parent_node->add_next(node);
+        // node->add_previous(parent_node);
     }
 
     for(auto& output: outputs)
@@ -221,10 +202,30 @@ std::shared_ptr<T> MasterGraph::add_tensor_node(const std::vector<Tensor *> &inp
 }
 
 
-/*
- * Explicit specialization for ImageLoaderNode
- */
-template<> inline std::shared_ptr<ImageLoaderNode> MasterGraph::add_tensor_node(const std::vector<Tensor*>& inputs, const std::vector<Tensor*>& outputs)
+    // template <typename T>
+    // std::shared_ptr<T> MasterGraph::add_tensor_node(const std::vector<rocALTensor *> &inputs, const std::vector<rocALTensor *> &outputs)
+    // {
+    //     auto node = std::make_shared<T>(inputs, outputs);
+    //     _tensor_nodes.push_back(node);
+
+    //     for(auto& input: inputs)
+    //     {
+    //         if (_tensor_map.find(input) == _tensor_map.end())
+    //             THROW("Input image is invalid, cannot be found among output of previously created nodes")
+
+    //         auto parent_node = _tensor_map.find(input)->second;
+    //         parent_node->add_next(node);
+    //         node->add_previous(parent_node);
+    //     }
+
+    //     for(auto& output: outputs)
+    //         _tensor_map.insert(make_pair(output, node));
+
+    //     return node;
+    // }
+
+//************************************************************************************************
+template<> inline std::shared_ptr<ImageLoaderNode> MasterGraph::add_node(const std::vector<rocALTensor*>& inputs, const std::vector<rocALTensor*>& outputs)
 {
     if(_loader_module)
         THROW("A loader already exists, cannot have more than one loader")
@@ -238,11 +239,11 @@ template<> inline std::shared_ptr<ImageLoaderNode> MasterGraph::add_tensor_node(
 
     return node;
 }
-template<> inline std::shared_ptr<ImageLoaderTensorSingleShardNode> MasterGraph::add_tensor_node(const std::vector<Tensor*>& inputs, const std::vector<Tensor*>& outputs)
+template<> inline std::shared_ptr<ImageLoaderSingleShardNode> MasterGraph::add_node(const std::vector<rocALTensor*>& inputs, const std::vector<rocALTensor*>& outputs)
 {
     if(_loader_module)
         THROW("A loader already exists, cannot have more than one loader")
-    auto node = std::make_shared<ImageLoaderTensorSingleShardNode>(outputs[0], _device.resources());
+    auto node = std::make_shared<ImageLoaderSingleShardNode>(outputs[0], _device.resources());
     _loader_module = node->get_loader_module();
     _tensor_root_nodes.push_back(node);
     _loader_module->set_prefetch_queue_depth(_prefetch_queue_depth);
@@ -252,32 +253,66 @@ template<> inline std::shared_ptr<ImageLoaderTensorSingleShardNode> MasterGraph:
 
     return node;
 }
-template<> inline std::shared_ptr<FusedJpegCropNode> MasterGraph::add_tensor_node(const std::vector<Tensor*>& inputs, const std::vector<Tensor*>& outputs)
-{
-    if(_loader_module)
-        THROW("A loader already exists, cannot have more than one loader")
-    auto node = std::make_shared<FusedJpegCropNode>(outputs[0], _device.resources());
-    _loader_module = node->get_loader_module();
-    _tensor_root_nodes.push_back(node);
-    _loader_module->set_prefetch_queue_depth(_prefetch_queue_depth);
-    // _loader_module->set_random_bbox_data_reader(_randombboxcrop_meta_data_reader);
-    // _root_nodes.push_back(node);
-    for(auto& output: outputs)
-        _tensor_map.insert(make_pair(output, node));
-    return node;
-}
 
-template<> inline std::shared_ptr<FusedJpegCropTensorSingleShardNode> MasterGraph::add_tensor_node(const std::vector<Tensor*>& inputs, const std::vector<Tensor*>& outputs)
-{
-    if(_loader_module)
-        THROW("A loader already exists, cannot have more than one loader")
-    auto node = std::make_shared<FusedJpegCropTensorSingleShardNode>(outputs[0], _device.resources());
-    _loader_module = node->get_loader_module();
-    _tensor_root_nodes.push_back(node);
-    _loader_module->set_prefetch_queue_depth(_prefetch_queue_depth);
-    // _loader_module->set_random_bbox_data_reader(_randombboxcrop_meta_data_reader);
-    // _root_nodes.push_back(node);
-    for(auto& output: outputs)
-        _tensor_map.insert(make_pair(output, node));
-    return node;
-}
+//************************************************************************************************
+
+/*
+ * Explicit specialization for ImageLoaderNode
+ */
+// template<> inline std::shared_ptr<ImageLoaderNode> MasterGraph::add_tensor_node(const std::vector<rocALTensor*>& inputs, const std::vector<rocALTensor*>& outputs)
+// {
+//     if(_loader_module)
+//         THROW("A loader already exists, cannot have more than one loader")
+//     auto node = std::make_shared<ImageLoaderNode>(outputs[0], _device.resources());
+//     _loader_module = node->get_loader_module();
+//     _tensor_nodes.push_back(node);
+//     _loader_module->set_prefetch_queue_depth(_prefetch_queue_depth);
+//     // _root_nodes.push_back(node);
+//     for(auto& output: outputs)
+//         _tensor_map.insert(make_pair(output, node));
+
+//     return node;
+// }
+// template<> inline std::shared_ptr<ImageLoaderTensorSingleShardTensorNode> MasterGraph::add_tensor_node(const std::vector<rocALTensor*>& inputs, const std::vector<rocALTensor*>& outputs)
+// {
+//     if(_loader_module)
+//         THROW("A loader already exists, cannot have more than one loader")
+//     auto node = std::make_shared<ImageLoaderTensorSingleShardTensorNode>(outputs[0], _device.resources());
+//     _loader_module = node->get_loader_module();
+//     _tensor_nodes.push_back(node);
+//     _loader_module->set_prefetch_queue_depth(_prefetch_queue_depth);
+//     // _root_nodes.push_back(node);
+//     for(auto& output: outputs)
+//         _tensor_map.insert(make_pair(output, node));
+
+//     return node;
+// }
+// template<> inline std::shared_ptr<FusedJpegCropNode> MasterGraph::add_tensor_node(const std::vector<rocALTensor*>& inputs, const std::vector<rocALTensor*>& outputs)
+// {
+//     if(_loader_module)
+//         THROW("A loader already exists, cannot have more than one loader")
+//     auto node = std::make_shared<FusedJpegCropNode>(outputs[0], _device.resources());
+//     _loader_module = node->get_loader_module();
+//     _tensor_root_nodes.push_back(node);
+//     _loader_module->set_prefetch_queue_depth(_prefetch_queue_depth);
+//     // _loader_module->set_random_bbox_data_reader(_randombboxcrop_meta_data_reader);
+//     // _root_nodes.push_back(node);
+//     for(auto& output: outputs)
+//         _tensor_map.insert(make_pair(output, node));
+//     return node;
+// }
+
+// template<> inline std::shared_ptr<FusedJpegCropTensorSingleShardNode> MasterGraph::add_tensor_node(const std::vector<rocALTensor*>& inputs, const std::vector<rocALTensor*>& outputs)
+// {
+//     if(_loader_module)
+//         THROW("A loader already exists, cannot have more than one loader")
+//     auto node = std::make_shared<FusedJpegCropTensorSingleShardNode>(outputs[0], _device.resources());
+//     _loader_module = node->get_loader_module();
+//     _tensor_root_nodes.push_back(node);
+//     _loader_module->set_prefetch_queue_depth(_prefetch_queue_depth);
+//     // _loader_module->set_random_bbox_data_reader(_randombboxcrop_meta_data_reader);
+//     // _root_nodes.push_back(node);
+//     for(auto& output: outputs)
+//         _tensor_map.insert(make_pair(output, node));
+//     return node;
+// }

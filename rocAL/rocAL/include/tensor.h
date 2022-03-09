@@ -65,19 +65,21 @@ struct rocALTensorInfo
                     RocalMemType mem_type,
                     RocalROIType roi_type,
                     RocalTensorDataType data_type,
-                    RocalTensorlayout layout);
+                    RocalTensorlayout layout,
+                    RocalColorFormat color_format);
 
-    unsigned num_of_dims() { return _num_of_dims; }
+    unsigned num_of_dims() const { return _num_of_dims; }
     unsigned batch_size() const { return _batch_size; }
-    unsigned data_size() { return _data_size; }
-    unsigned max_width() { return _max_width; }
-    unsigned max_height() { return _max_height; }
-    std::shared_ptr<std::vector<unsigned>> dims() { return _dims; }
+    unsigned data_size() const { return _data_size; }
+    unsigned max_width() const { return _max_width; }
+    unsigned max_height() const { return _max_height; }
+    std::shared_ptr<std::vector<unsigned>> dims() const { return _dims; }
     RocalMemType mem_type() const { return _mem_type; }
     RocalROIType roi_type() const { return _roi_type; }
     RocalTensorDataType data_type() const { return _data_type; }
     RocalTensorlayout layout() const { return _layout; }
     std::shared_ptr<std::vector<RocalROI>> get_roi() const { return _roi; }
+    RocalColorFormat color_format() const {return _color_format; }
     Type type() const { return _type; }
     unsigned data_type_size()
     {
@@ -105,6 +107,7 @@ private:
     RocalROIType _roi_type;
     RocalTensorDataType _data_type = RocalTensorDataType::FP32;
     RocalTensorlayout _layout = RocalTensorlayout::NCHW;
+    RocalColorFormat _color_format;
     std::shared_ptr<std::vector<RocalROI>> _roi;
     unsigned _data_type_size;
     unsigned _batch_size;
@@ -114,6 +117,7 @@ private:
     void reallocate_tensor_roi_buffers();
 };
 
+bool operator==(const rocALTensorInfo& rhs, const rocALTensorInfo& lhs);
 struct rocALTensor
 {
     int swap_handle(void* handle);
