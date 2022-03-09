@@ -24,11 +24,11 @@ THE SOFTWARE.
 #include "exception.h"
 
 #if ENABLE_HIP
-FusedJpegCropNode::FusedJpegCropNode(Tensor *output, DeviceResourcesHip device_resources):
+FusedJpegCropNode::FusedJpegCropNode(rocALTensor *output, DeviceResourcesHip device_resources):
 #else
-FusedJpegCropNode::FusedJpegCropNode(Tensor *output, DeviceResources device_resources):
+FusedJpegCropNode::FusedJpegCropNode(rocALTensor *output, DeviceResources device_resources):
 #endif
-        Node({}, {output})
+        TensorNode({}, {output})
 {
     _loader_module = std::make_shared<ImageLoaderSharded>(device_resources);
 }

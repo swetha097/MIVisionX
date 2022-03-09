@@ -29,6 +29,7 @@ struct CopyTensorLocalData
     RppPtr_t pSrc;
     RppPtr_t pDst;                      // if true NHWC else NCHW
     size_t in_tensor_dims[NUM_OF_DIMS]; // will have NHWC info
+    size_t tensor_size;
 #if ENABLE_OPENCL
     cl_mem cl_pSrc;
     cl_mem cl_pDst;
@@ -146,38 +147,38 @@ static vx_status VX_CALLBACK processCopyTensor(vx_node node, const vx_reference 
         refreshcopy(node, parameters, num, data);
         cl_command_queue handle = data->handle.cmdq;
         vxstatus = refreshCopyTensor(node, parameters, num, data);
-        size_t size = data->in_tensor_dims[1] * data->in_tensor_dims[2] * data->in_tensor_dims[3];
+        // size_t size = data->in_tensor_dims[1] * data->in_tensor_dims[2] * data->in_tensor_dims[3];
         if (vxstatus != VX_SUCCESS)
         {
             return vxstatus;
         }
-        clEnqueueCopyBuffer(handle, data->cl_pSrc, data->cl_pDst, 0, 0, size, 0, NULL, NULL);
+        clEnqueueCopyBuffer(handle, data->cl_pSrc, data->cl_pDst, 0, 0, data->tensor_size, 0, NULL, NULL);
         return status;
 #elif ENABLE_HIP
         refreshcopy(node, parameters, num, data);
-        size_t size = data->in_tensor_dims[1] * data->in_tensor_dims[2] * data->in_tensor_dims[3];
+        // size_t size = data->in_tensor_dims[1] * data->in_tensor_dims[2] * data->in_tensor_dims[3];
         if (vxstatus != VX_SUCCESS)
         {
             return vxstatus;
         }
-        hipMemcpy(data->hip_pDst, data->hip_pSrc, size, hipMemcpyDeviceToDevice);
+        hipMemcpy(data->hip_pDst, data->hip_pSrc, data->tensor_size, hipMemcpyDeviceToDevice);
         return status;
 #endif
     }
     if (data->device_type == AGO_TARGET_AFFINITY_CPU)
     {
         vxstatus = refreshCopyTensor(node, parameters, num, data);
-        size_t size = data->in_tensor_dims[1] * data->in_tensor_dims[2] * data->in_tensor_dims[3];
+        // size_t size = data->in_tensor_dims[1] * data->in_tensor_dims[2] * data->in_tensor_dims[3];
         if (vxstatus != VX_SUCCESS)
             return vxstatus;
 
         if (in_tensor_type == vx_type_e::VX_TYPE_UINT8)
         {
-            memcpy(data->pDst, data->pSrc, size);
+            memcpy(data->pDst, data->pSrc, data->tensor_size);
         }
         else if (in_tensor_type == vx_type_e::VX_TYPE_FLOAT32)
         {
-            memcpy(data->pDst, data->pSrc, size * sizeof(float));
+            memcpy(data->pDst, data->pSrc, data->tensor_size * sizeof(float));
         }
         else if (in_tensor_type == vx_type_e::VX_TYPE_FLOAT16)
         {
@@ -201,8 +202,23 @@ static vx_status VX_CALLBACK initializeCopyTensor(vx_node node, const vx_referen
 #endif
     STATUS_ERROR_CHECK(vxCopyScalar((vx_scalar)parameters[2], &data->device_type, VX_READ_ONLY, VX_MEMORY_TYPE_HOST));
     vx_size num_of_dims;
+    vx_enum tensor_type;
+    vx_size data_type_size;
     STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[0], VX_TENSOR_NUMBER_OF_DIMS, &num_of_dims, sizeof(vx_size)));
     STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[0], VX_TENSOR_DIMS, data->in_tensor_dims, sizeof(vx_size) * num_of_dims));
+    STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[0], VX_TENSOR_DATA_TYPE, &tensor_type, sizeof(tensor_type)));
+    data->tensor_size = 0;
+    for(int i = 0; i < num_of_dims; i++)
+    {
+        data->tensor_size *= data->in_tensor_dims[i];
+    }
+    // if(tensor_type == vx_type_e::VX_TYPE_UINT8)
+    //     data_type_size = sizeof(uint8_t);
+    // else if(tensor_type == vx_type_e::VX_TYPE_FLOAT32)
+    //     data_type_size = sizeof(vx_float32)
+    // // else if(tensor_type == vx_type_e::VX_TYPE_FLOAT16)
+    // //     data_type_size = sizeof(vx_float16)
+    // data->tensor_size *= data_type_size;
     refreshCopyTensor(node, parameters, num, data);
 
     STATUS_ERROR_CHECK(vxSetNodeAttribute(node, VX_NODE_LOCAL_DATA_PTR, &data, sizeof(data)));

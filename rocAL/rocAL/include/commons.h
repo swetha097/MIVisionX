@@ -33,10 +33,11 @@ THE SOFTWARE.
 #include "log.h"
 
 
-enum class RocalTensorFormat
+enum class RocalTensorlayout
 {
     NHWC = 0,
-    NCHW
+    NCHW,
+    NONE
 };
 enum class RocalTensorDataType
 {
@@ -48,6 +49,12 @@ enum class RocalAffinity
 {
     GPU = 0,
     CPU
+};
+
+enum class RocalROIType
+{
+    XYWH = 0,
+    LTRB
 };
 
 /*! \brief Color formats currently supported by Rocal SDK as input/output
@@ -71,6 +78,12 @@ enum class RocalMemType
     OCL,
     HIP
 };
+
+typedef struct
+{
+    unsigned x1, y1, x2, y2;
+} RocalROI;
+
 
 struct Timing
 {

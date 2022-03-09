@@ -97,7 +97,7 @@ ImageLoader::load_next()
     return update_output_image();
 }
 
-void ImageLoader::set_output_image (Tensor* output_tensor)
+void ImageLoader::set_output_image (rocALTensor* output_tensor)
 {
     _output_tensor = output_tensor;
     _output_mem_size = _output_tensor->info().data_size();
@@ -177,8 +177,8 @@ ImageLoader::load_routine()
             {
                 load_status = _image_loader->load(data,
                                                 _decoded_img_info._image_names,
-                                                _output_tensor->info().width(),
-                                                _output_tensor->info().height_single(),
+                                                _output_tensor->info().max_width(),
+                                                _output_tensor->info().max_height(),
                                                 _decoded_img_info._roi_width,
                                                 _decoded_img_info._roi_height,
                                                 _decoded_img_info._original_width,
@@ -201,8 +201,8 @@ ImageLoader::load_routine()
             {
                 load_status = _image_loader->load(data,
                                                 _decoded_img_info._image_names,
-                                                _output_tensor->info().width(),
-                                                _output_tensor->info().height_single(),
+                                                _output_tensor->info().max_width(),
+                                                _output_tensor->info().max_height(),
                                                 _decoded_img_info._roi_width,
                                                 _decoded_img_info._roi_height,
                                                 _decoded_img_info._original_width,

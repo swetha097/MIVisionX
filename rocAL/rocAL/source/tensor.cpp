@@ -88,6 +88,343 @@ bool operator==(const TensorInfo &rhs, const TensorInfo &lhs)
             rhs.format() == lhs.format());
 }
 
+//******************************************NEW ROCAL TENSOR******************************************************
+void rocALTensorInfo::reallocate_tensor_roi_buffers()
+{
+    _roi = std::make_shared<std::vector<RocalROI>>(_batch_size);
+    // _roi_height = std::make_shared<std::vector<uint32_t>>(_batch_size);
+    // _roi_width = std::make_shared<std::vector<uint32_t>>(_batch_size);
+    _roi->resize(_batch_size);
+    if(layout() == RocalTensorlayout::NCHW)
+    {
+        for (unsigned i = 0; i < _batch_size; i++)
+        {
+            _roi->at(i).x1 = 0;
+            _roi->at(i).y1 = 0;
+            _roi->at(i).x2 = _dims->at(3);
+            _roi->at(i).y2= _dims->at(2);
+        }
+    }
+    else if(layout() == RocalTensorlayout::NHWC)
+    {
+        for (unsigned i = 0; i < _batch_size; i++)
+        {
+            _roi->at(i).x1 = 0;
+            _roi->at(i).y1 = 0;
+            _roi->at(i).x2 = _dims->at(2);
+            _roi->at(i).y2= _dims->at(1);
+        }
+
+    }
+}
+
+rocALTensorInfo::rocALTensorInfo() : _type(Type::UNKNOWN),
+                                _num_of_dims(0),
+                                _dims(nullptr),
+                                _batch_size(1),
+                                _mem_type(RocalMemType::HOST),
+                                _roi_type(RocalROIType::XYWH),
+                                _data_type(RocalTensorDataType::FP32),
+                                _layout(RocalTensorlayout::NHWC),
+                                _color_format(RocalColorFormat::RGB24){}
+
+rocALTensorInfo::rocALTensorInfo(
+    unsigned num_of_dims,
+    std::shared_ptr<std::vector<unsigned>> dims,
+    RocalMemType mem_type,
+    RocalROIType roi_type,
+    RocalTensorDataType data_type,
+    RocalTensorlayout layout,
+    RocalColorFormat color_format) : _type(Type::UNKNOWN),
+                                _num_of_dims(num_of_dims),
+                                _dims(dims),
+                                _batch_size(dims->at(0)),
+                                _mem_type(mem_type),
+                                _roi_type(roi_type),
+                                _data_type(data_type),
+                                _layout(layout),
+                                _color_format(color_format)
+{
+    vx_size data_size = tensor_data_size(data_type);
+    unsigned alignpixels = TENSOR_WIDTH_ALIGNMENT; // Check if needed
+    _data_size = data_size;
+    for(unsigned i = 0; i < _num_of_dims; i++)
+    {
+        _data_size *= dims->at(i);
+    }
+    // initializing each Tensor dimension in the batch with the maximum Tensor size, they'll get updated later during the runtime
+    // Update this only if the tensor is image
+    if(layout != RocalTensorlayout::NONE)
+    {
+        _is_image = true;
+        if(layout == RocalTensorlayout::NHWC)
+        {
+            _max_width = dims->at(2);
+            _max_height = dims->at(1);
+        }
+        else if(layout == RocalTensorlayout::NCHW)
+        {
+            _max_width = dims->at(3);
+            _max_height = dims->at(2);
+        }
+        reallocate_tensor_roi_buffers();
+    }
+}
+
+void rocALTensor::update_tensor_roi(const std::vector<uint32_t> &width, const std::vector<uint32_t> &height)
+{
+    if (width.size() != height.size())
+        THROW("Batch size of Tensor height and width info does not match")
+
+    if (width.size() != info().batch_size())
+        THROW("The batch size of actual Tensor height and width different from Tensor batch size " + TOSTR(width.size()) + " != " + TOSTR(info().batch_size()))
+    for (unsigned i = 0; i < info().batch_size(); i++)
+    {
+        if (width[i] > _info.max_width())
+        {
+            ERR("Given ROI width is larger than buffer width for tensor[" + TOSTR(i) + "] " + TOSTR(width[i]) + " > " + TOSTR(_info.max_width()))
+            _info.get_roi()->at(i).x2 = _info.max_width();
+        }
+        else
+        {
+            _info.get_roi()->at(i).x2 = width[i];
+        }
+
+        if (height[i] > _info.max_height())
+        {
+            ERR("Given ROI height is larger than buffer with for tensor[" + TOSTR(i) + "] " + TOSTR(height[i]) + " > " + TOSTR(_info.max_height()))
+            _info.get_roi()->at(i).y2 = _info.max_height();
+        }
+        else
+        {
+            _info.get_roi()->at(i).y2 = height[i];
+        }
+    }
+}
+
+rocALTensor::~rocALTensor()
+{
+    vxReleaseTensor(&_vx_handle);
+}
+
+//! Converts the Rocal data_type to OpenVX
+vx_enum interpret_tensor_data_type(RocalTensorDataType data_type)
+{
+    switch (data_type)
+    {
+        case RocalTensorDataType::FP32:
+            return VX_TYPE_FLOAT32;
+        case RocalTensorDataType::FP16:
+            return VX_TYPE_FLOAT16;
+        case RocalTensorDataType::UINT8:
+            return VX_TYPE_UINT8;
+        default:
+            THROW("Unsupported Tensor type " + TOSTR(data_type))
+    }
+}
+
+rocALTensor::rocALTensor(const rocALTensorInfo &tensor_info) : _info(tensor_info)
+{
+    _info._type = rocALTensorInfo::Type::UNKNOWN;
+    _mem_handle = nullptr;
+}
+
+int rocALTensor::create_virtual(vx_context context, vx_graph graph)
+{
+    if (_vx_handle)
+        return -1;
+
+    _context = context;
+
+    // create a virtual Tensor as the output Tensor for this node
+    // vx_size dims[4];
+    // dims[0] = (vx_size)_info.batch_size();
+    // dims[1] = (vx_size)_info.height();
+    // dims[2] = (vx_size)_info.width();
+    // dims[3] = (vx_size)_info.channels();
+    _vx_handle = vxCreateVirtualTensor(graph, _info.num_of_dims(), (vx_size*)_info.dims()->data(), interpret_tensor_data_type(_info.data_type()), 0);
+    vx_status status;
+    if ((status = vxGetStatus((vx_reference)_vx_handle)) != VX_SUCCESS)
+        THROW("Error: vxCreateVirtualTensor(input:[" + TOSTR(_info.max_width()) + "W" + TOSTR(_info.max_height()) + "H" + "]): failed " + TOSTR(status))
+
+    _info._type = rocALTensorInfo::Type::VIRTUAL;
+    return 0;
+}
+
+int rocALTensor::create_from_handle(vx_context context)
+{
+    if (_vx_handle)
+    {
+        WRN("Tensor object create method is already called ")
+        return -1;
+    }
+    // if (_info.height() == 0 || _info.width() == 0 || _info.channels() == 0 || _info.batch_size() == 0)
+    //     THROW("Invalid tensor dimension" + TOSTR(_info.width()) + " x " + TOSTR(_info.height()) + " x " + TOSTR(_info.channels()) + " x " + TOSTR(_info.batch_size()));
+
+    _context = context;
+    // bool nhwc = true;
+    vx_enum tens_data_type = interpret_tensor_data_type(_info.data_type());
+    // vx_size dims[4];
+    // if (nhwc)
+    // {
+    //     dims[0] = (vx_size)_info.batch_size();
+    //     dims[1] = (vx_size)_info.height();
+    //     dims[2] = (vx_size)_info.width();
+    //     dims[3] = (vx_size)_info.channels();
+    // }
+    // else
+    // {
+    //     dims[0] = (vx_size)_info.width();
+    //     dims[1] = (vx_size)_info.height();
+    //     dims[2] = (vx_size)_info.channels();
+    //     dims[3] = (vx_size)_info.batch_size();
+    // }
+
+    vx_size stride[_info.num_of_dims()];
+    void *ptr[1] = {nullptr};
+    bool nhwc = ((_info.layout() == RocalTensorlayout::NHWC) ? true: false);
+
+    stride[0] = tensor_data_size(_info.data_type());
+    for(unsigned i = 1; i < _info.num_of_dims(); i++)
+    {
+        stride[i] = stride[i - 1] * _info.dims()->at(i - 1);
+    }
+
+    // vx_uint32 alignpixels = TENSOR_WIDTH_ALIGNMENT;
+    // if (nhwc)
+    // {
+    //     if (alignpixels == 0)
+    //         stride[1] = _info.batch_size() * stride[0];
+    //     else
+    //         stride[1] = ((_info.batch_size() + alignpixels - 1) & ~(alignpixels - 1)) * stride[0];
+    //     stride[2] = _info.max_height() * stride[1];
+    //     stride[3] = _info.max_width() * stride[2];
+    // }
+    // else
+    // {
+    //     if (alignpixels == 0)
+    //         stride[1] = _info.max_width() * stride[0];
+    //     else
+    //         stride[1] = ((_info.max_width() + alignpixels - 1) & ~(alignpixels - 1)) * stride[0];
+    //     stride[2] = _info.max_height() * stride[1];
+    //     stride[3] = _info.channels() * stride[2];
+    // }
+
+    vx_status status;
+    _vx_handle = vxCreateTensorFromHandle(_context, _info.num_of_dims(), (vx_size*)_info.dims()->data(), tens_data_type, 0, stride, ptr, vx_mem_type(_info._mem_type));
+    if ((status = vxGetStatus((vx_reference)_vx_handle)) != VX_SUCCESS)
+        THROW("Error: vxCreateTensorFromHandle(input: failed " + TOSTR(status))
+    _info._type = rocALTensorInfo::Type::HANDLE;
+    // shobi to be checked
+    // if(_info._data_size == 0)
+    //     _info._data_size = stride[3] * _info.channels(); // since data size is set while initializing info
+    return 0;
+}
+
+int rocALTensor::create(vx_context context)
+{
+    if (_vx_handle)
+        return -1;
+
+    _context = context;
+
+    vx_status status;
+    // vx_size dims[4]; // = {(vx_size)_info.width(), (vx_size)_info.height(), (vx_size)_info.channels(), (vx_size)_info.batch_size()};
+    // dims[0] = (vx_size)_info.batch_size();
+    // dims[1] = (vx_size)_info.max_height();
+    // dims[2] = (vx_size)_info.max_width();
+    // dims[3] = (vx_size)_info.channels();
+    vx_enum tens_data_type = interpret_tensor_data_type(_info.data_type());
+    _vx_handle = vxCreateTensor(context, _info.num_of_dims(),(vx_size*) _info.dims()->data(), tens_data_type, 0);
+    if ((status = vxGetStatus((vx_reference)_vx_handle)) != VX_SUCCESS)
+        THROW("Error: vxCreateTensor(input: failed " + TOSTR(status))
+    _info._type = rocALTensorInfo::Type::REGULAR;
+    return 0;
+}
+#if !ENABLE_HIP
+unsigned rocALTensor::copy_data(cl_command_queue queue, unsigned char *user_buffer, bool sync)
+{
+    if (_info._type != rocALTensorInfo::Type::HANDLE)
+        return 0;
+
+    // unsigned size = _info.stride() * _info.height() * _info.channels() * _info.batch_size();
+
+    if (_info._mem_type == RocalMemType::OCL)
+    {
+
+        cl_int status;
+        if ((status = clEnqueueReadBuffer(queue,
+                                          (cl_mem)_mem_handle,
+                                          sync ? (CL_TRUE) : CL_FALSE,
+                                          0,
+                                          _info.data_size(),
+                                          user_buffer,
+                                          0, nullptr, nullptr)) != CL_SUCCESS)
+            THROW("clEnqueueReadBuffer failed: " + TOSTR(status))
+    }
+    else
+    {
+        memcpy(user_buffer, _mem_handle, _info.data_size());
+    }
+    return _info.data_size();
+}
+unsigned rocALTensor::copy_data(cl_command_queue queue, cl_mem user_buffer, bool sync)
+{
+    return 0;
+}
+
+#else
+unsigned rocALTensor::copy_data(hipStream_t stream, unsigned char* user_buffer, bool sync)
+{
+    if(_info._type != rocALTensorInfo::Type::HANDLE)
+        return 0;
+
+    // unsigned size = _info.width() *
+    //                 _info.height_batch() *
+    //                 _info.color_plane_count();
+
+    if (_info._mem_type == RocalMemType::HIP)
+    {
+        // copy from device to host
+        hipError_t status;
+        if ((status = hipMemcpyDtoHAsync((void *)user_buffer, _mem_handle, _info.data_size(), stream)))
+            THROW("copy_data::hipMemcpyDtoHAsync failed: " + TOSTR(status))
+        if (sync) {
+            if ((status =hipStreamSynchronize(stream)))
+                THROW("copy_data::hipStreamSynchronize failed: " + TOSTR(status))
+        }
+
+    }
+    else
+    {
+        memcpy(user_buffer, _mem_handle, size);
+    }
+    return size;
+}
+unsigned rocALTensor::copy_data(hipStream_t stream, void* hip_memory, bool sync)
+{
+    // todo:: copy from host to device
+    return 0;
+}
+#endif
+
+int rocALTensor::swap_handle(void *handle)
+{
+    vx_status status;
+    if ((status = vxSwapTensorHandle(_vx_handle, handle, nullptr)) != VX_SUCCESS)
+    {
+        ERR("Swap handles failed for tensor" + TOSTR(status));
+        return -1;
+    }
+
+    // Updating the buffer pointer as well,
+    // user might want to copy directly using it
+    _mem_handle = handle;
+    return 0;
+}
+
+//******************************************OLD ROCAL TENSOR******************************************************
+
 uint32_t *TensorInfo::get_roi_width() const
 {
     return _roi_width->data();
@@ -144,7 +481,7 @@ TensorInfo::TensorInfo() : _type(Type::UNKNOWN),
                            _mem_type(RocalMemType::HOST),
                            _color_fmt(RocalColorFormat::U8),
                            _data_type(RocalTensorDataType::FP32),
-                           _format(RocalTensorFormat::NHWC){}
+                           _format(RocalTensorlayout::NHWC){}
 
 TensorInfo::TensorInfo(
     unsigned width_,
@@ -154,7 +491,7 @@ TensorInfo::TensorInfo(
     RocalMemType mem_type_,
     RocalColorFormat col_fmt_,
     RocalTensorDataType data_type,
-    RocalTensorFormat tensor_format) : _type(Type::UNKNOWN),
+    RocalTensorlayout tensor_format) : _type(Type::UNKNOWN),
                                       _width(width_),
                                       _height(height_),
                                       _batch_size(batches_),
@@ -216,20 +553,20 @@ Tensor::~Tensor()
 }
 
 //! Converts the Rocal data_type to OpenVX
-vx_enum interpret_tensor_data_type(RocalTensorDataType data_type)
-{
-    switch (data_type)
-    {
-        case RocalTensorDataType::FP32:
-            return VX_TYPE_FLOAT32;
-        case RocalTensorDataType::FP16:
-            return VX_TYPE_FLOAT16;
-        case RocalTensorDataType::UINT8:
-            return VX_TYPE_UINT8;
-        default:
-            THROW("Unsupported Tensor type " + TOSTR(data_type))
-    }
-}
+// vx_enum interpret_tensor_data_type(RocalTensorDataType data_type)
+// {
+//     switch (data_type)
+//     {
+//         case RocalTensorDataType::FP32:
+//             return VX_TYPE_FLOAT32;
+//         case RocalTensorDataType::FP16:
+//             return VX_TYPE_FLOAT16;
+//         case RocalTensorDataType::UINT8:
+//             return VX_TYPE_UINT8;
+//         default:
+//             THROW("Unsupported Tensor type " + TOSTR(data_type))
+//     }
+// }
 
 Tensor::Tensor(const TensorInfo &tensor_info) : _info(tensor_info)
 {

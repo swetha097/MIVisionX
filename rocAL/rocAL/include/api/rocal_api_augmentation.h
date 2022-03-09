@@ -24,6 +24,11 @@ THE SOFTWARE.
 #define MIVISIONX_ROCAL_API_AUGMENTATION_H
 #include "rocal_api_types.h"
 
+extern "C" RocalTensor ROCAL_API_CALL rocalBrightnessTensor(RocalContext context, RocalTensor input, bool is_output,
+                                                   RocalFloatParam alpha = NULL, RocalFloatParam beta = NULL);
+
+
+
 /// Accepts U8 and RGB24 inputs
 /// \param context
 /// \param input

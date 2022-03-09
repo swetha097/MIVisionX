@@ -135,7 +135,7 @@ void ImageLoaderSharded::start_loading()
 
 }
 
-void ImageLoaderSharded::set_output_image (Tensor* output_tensor)
+void ImageLoaderSharded::set_output_image (rocALTensor* output_tensor)
 {
     _output_tensor = output_tensor;
 }

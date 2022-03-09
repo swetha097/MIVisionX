@@ -4,13 +4,13 @@
 #include "graph.h"
 #include "parameter_factory.h"
 
-class FusedJpegCropTensorSingleShardNode: public Node
+class FusedJpegCropTensorSingleShardNode: public TensorNode
 {
 public:
 #if ENABLE_HIP
-    FusedJpegCropTensorSingleShardNode(Tensor *output, DeviceResourcesHip device_resources);
+    FusedJpegCropTensorSingleShardNode(rocALTensor *output, DeviceResourcesHip device_resources);
 #else
-    FusedJpegCropTensorSingleShardNode(Tensor *output, DeviceResources device_resources);
+    FusedJpegCropTensorSingleShardNode(rocALTensor *output, DeviceResources device_resources);
 #endif
     ~FusedJpegCropTensorSingleShardNode() override;
 

@@ -166,21 +166,21 @@ int test(int test_case, const char *path, const char *outName, int rgb, int gpu,
         std::vector<float> sdev{1, 1, 1};
         std::cout << ">>>>>>> Running "
                   << " Crop Mirror Normalize Tensor" << std::endl;
-        image1 = rocalCropMirrorNormalize(handle, input1, tensorLayout, tensorOutputType, 3, resize_w, resize_h, 0, 0, 0, mean, sdev, true);
+        // image1 = rocalCropMirrorNormalize(handle, input1, tensorLayout, tensorOutputType, 3, resize_w, resize_h, 0, 0, 0, mean, sdev, true);
     }
     break;
     case 1:
     {
         std::cout << ">>>>>>> Running "
                   << "rocalBrightness" << std::endl;
-        image1 = rocalBrightness(handle, input1, true);
+        image1 = rocalBrightnessTensor(handle, input1, true);
     }
     break;
     case 2:
     {
         std::cout << ">>>>>>> Running "
                   << "rocalGamma" << std::endl;
-        image1 = rocalGamma(handle, input1, true);
+        // image1 = rocalGamma(handle, input1, true);
     }
     break;
     default:
