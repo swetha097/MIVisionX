@@ -32,7 +32,8 @@ enum class DecoderType
     FUSED_TURBO_JPEG = 1, //!< FOR PARTIAL DECODING
     OPENCV_DEC = 2, //!< for back_up decoding
     SKIP_DECODE  = 3, //!< For skipping decoding in case of uncompressed data from reader
-    OVX_FFMPEG,//!< Uses FFMPEG to decode video streams, can decode up to 4 video streams simultaneously
+    OVX_FFMPEG = 4,//!< Uses FFMPEG to decode video streams, can decode up to 4 video streams simultaneously
+    SNDFILE = 5,//!< Uses sndfile to decode audio files
 };
 
 

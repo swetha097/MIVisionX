@@ -263,75 +263,83 @@ rocalJpegFileSource(
 }
 
 RocalTensor  ROCAL_API_CALL
-rocalAudioFileSource(
+rocalAudioFileSourceSingleShard(
         RocalContext p_context,
         const char* source_path,
         RocalImageColor rocal_color_format,
-        unsigned internal_shard_count,
+        unsigned shard_id,
+        unsigned shard_count,
         bool is_output,
         bool shuffle,
         bool loop,
         RocalImageSizeEvaluationPolicy decode_size_policy,
-        unsigned max_width,
-        unsigned max_height,
-        RocalDecoderType dec_type)
+        unsigned max_frames,
+        unsigned max_channels)
 {
-    Tensor* output = nullptr;
+    rocALTensor* output = nullptr;
     auto context = static_cast<Context*>(p_context);
     try
     {
-        bool use_input_dimension = (decode_size_policy == ROCAL_USE_USER_GIVEN_SIZE) || (decode_size_policy == ROCAL_USE_USER_GIVEN_SIZE_RESTRICTED);
-        bool decoder_keep_original = (decode_size_policy == ROCAL_USE_USER_GIVEN_SIZE_RESTRICTED) || (decode_size_policy == ROCAL_USE_MAX_SIZE_RESTRICTED);
-        DecoderType decType = DecoderType::TURBO_JPEG; // default
-        if (dec_type == ROCAL_DECODER_OPENCV) decType = DecoderType::OPENCV_DEC;
+        // Audio tensor length is dependent on the longest audio sample present in a batch so following variables are not needed (to be removed)
+        // bool use_input_dimension = (decode_size_policy == ROCAL_USE_USER_GIVEN_SIZE) || (decode_size_policy == ROCAL_USE_USER_GIVEN_SIZE_RESTRICTED);
+        // bool decoder_keep_original = (decode_size_policy == ROCAL_USE_USER_GIVEN_SIZE_RESTRICTED) || (decode_size_policy == ROCAL_USE_MAX_SIZE_RESTRICTED);
 
-        if(internal_shard_count < 1 )
+        if(shard_count < 1 )
             THROW("Shard count should be bigger than 0")
 
-        if(use_input_dimension && (max_width == 0 || max_height == 0))
-        {
-            THROW("Invalid input max width and height");
-        }
-        else
-        {
-            LOG("User input size " + TOSTR(max_width) + " x " + TOSTR(max_height))
-        }
+        if(shard_id >= shard_count)
+            THROW("Shard id should be smaller than shard count")
 
-        auto [width, height] = use_input_dimension? std::make_tuple(max_width, max_height):
-                               evaluate_image_data_set(decode_size_policy, StorageType::FILE_SYSTEM, DecoderType::TURBO_JPEG, source_path, "");
+        // if(use_input_dimension && (max_width == 0 || max_height == 0))
+        // {
+        //     THROW("Invalid input max width and height");
+        // }
+        // else
+        // {
+        //     LOG("User input size " + TOSTR(max_width) + " x " + TOSTR(max_height))
+        // }
 
-        auto [color_format, num_of_planes] = convert_color_format(rocal_color_format);
+        // TODO: Add evaluate_audio_data_set function to get the largest audio sample length in a batch
+        auto [max_frames, max_channels] = evaluate_audio_data_set(decode_size_policy, StorageType::FILE_SYSTEM, DecoderType::SNDFILE,
+                                                       source_path, "");
 
-        INFO("Internal buffer size width = "+ TOSTR(width)+ " height = "+ TOSTR(height) + " depth = "+ TOSTR(num_of_planes))
+        INFO("Internal buffer size for audio frames = "+ TOSTR(max_frames))
 
-        RocalTensorFormat tensor_format = RocalTensorFormat::NHWC;
-        RocalTensorDataType tensor_data_type = RocalTensorDataType::UINT8;
-        auto info  = TensorInfo(width,
-                                height,
-                                context->internal_batch_size(),
-                                num_of_planes,
+        RocalTensorlayout tensor_format = RocalTensorlayout::NONE;
+        RocalTensorDataType tensor_data_type = RocalTensorDataType::FP32;
+        RocalROIType roi_type = RocalROIType::XYWH;  // Letting the roi_type be default value since it isn't required for audio decoder
+        unsigned num_of_dims = 2;
+        std::shared_ptr<std::vector<unsigned>> dims;
+        dims->resize(num_of_dims);
+        dims->at(0) = context->internal_batch_size();
+        dims->at(1) = max_frames;
+        dims->at(2) = max_channels;
+        auto info  = rocALTensorInfo(num_of_dims,
+                                dims,
                                 context->master_graph->mem_type(),
-                                color_format,
+                                roi_type,
                                 tensor_data_type,
-                                tensor_format);
+                                tensor_format,
+                                rocal_color_format); // To be removed since there's no color format for audio frames
         output = context->master_graph->create_loader_output_tensor(info);
-        context->master_graph->add_tensor_node<ImageLoaderNode>({}, {output})->init(internal_shard_count,
-                                                                          source_path, "",
-                                                                          std::map<std::string, std::string>(),
-                                                                          StorageType::FILE_SYSTEM,
-                                                                          decType,
-                                                                          shuffle,
-                                                                          loop,
-                                                                          context->user_batch_size(),
-                                                                          context->master_graph->mem_type(),
-                                                                          context->master_graph->meta_data_reader(),
-                                                                          decoder_keep_original);
+        // TODO: Add a loader module for loading audio files from filesystem
+        context->master_graph->add_node<AudioLoaderSingleShardNode>({}, {output})->init(shard_id, shard_count,
+                                                                                        source_path, "",
+                                                                                        StorageType::FILE_SYSTEM,
+                                                                                        DecoderType::SNDFILE,
+                                                                                        shuffle,
+                                                                                        loop,
+                                                                                        context->user_batch_size(),
+                                                                                        context->master_graph->mem_type(),
+                                                                                        context->master_graph->meta_data_reader(),
+                                                                                        decoder_keep_original  // Can remove this since not needed
+                                                                                        );
         context->master_graph->set_loop(loop);
 
         if(is_output)
         {
             auto actual_output = context->master_graph->create_tensor(info, is_output);
-            context->master_graph->add_tensor_node<CopyNode>({output}, {actual_output}); // Have to add copy tensor node
+            // context->master_graph->add_tensor_node<CopyNode>({output}, {actual_output});
         }
 
     }
