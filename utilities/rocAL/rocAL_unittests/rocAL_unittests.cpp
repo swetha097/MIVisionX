@@ -36,6 +36,7 @@ THE SOFTWARE.
 using namespace cv;
 
 #define DISPLAY
+#define AUDIO 
 
 using namespace std::chrono;
 
@@ -129,6 +130,10 @@ int test(int test_case, const char *path, const char *outName, int rgb, int gpu,
 #ifdef PARTIAL_DECODE
     {
         input1 = rocalFusedJpegCrop(handle, path, color_format, num_threads, false, false);
+    }
+#elif defined AUDIO
+    {
+        input1 = rocalAudioFileSource(handle, path, num_threads, false, true, false);
     }
 #else
     if (decode_max_height <= 0 || decode_max_width <= 0)

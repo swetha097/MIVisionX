@@ -89,6 +89,7 @@ void FileSourceReader::incremenet_read_ptr()
 size_t FileSourceReader::open()
 {
     auto file_path = _file_names[_curr_file_idx];// Get next file name
+    std::cerr << "\nFile path : "<< file_path << std::endl;
     incremenet_read_ptr();
     _last_id= file_path;
     auto last_slash_idx = _last_id.find_last_of("\\/");
