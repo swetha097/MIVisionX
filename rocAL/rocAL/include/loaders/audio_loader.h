@@ -27,23 +27,23 @@ THE SOFTWARE.
 #include <vector>
 #include "commons.h"
 #include "circular_buffer.h"
-#include "image_read_and_decode.h"
+#include "audio_read_and_decode.h"
 #include "meta_data_reader.h"
 //
-// ImageLoader runs an internal thread for loading an decoding of images asynchronously
-// it uses a circular buffer to store decoded frames and images for the user
-class ImageLoader : public LoaderModule {
+// AudioLoader runs an internal thread for loading an decoding of audios asynchronously
+// it uses a circular buffer to store decoded frames and audios for the user
+class AudioLoader : public LoaderModule {
 public:
 #if ENABLE_HIP
-    explicit ImageLoader(DeviceResourcesHip dev_resources);
+    explicit AudioLoader(DeviceResourcesHip dev_resources);
 #else
-    explicit ImageLoader(DeviceResources dev_resources);
+    explicit AudioLoader(DeviceResources dev_resources);
 #endif
-    ~ImageLoader() override;
+    ~AudioLoader() override;
     LoaderModuleStatus load_next() override;
     void initialize(ReaderConfig reader_cfg, DecoderConfig decoder_cfg, RocalMemType mem_type, unsigned batch_size, bool keep_orig_size=false) override;
-    void set_output (rocALTensor* output_image) override;
-    // void set_output_tensor(rocALTensor* output_image) override;
+    void set_output (rocALTensor* output_audio) override;
+    // void set_output_tensor(rocALTensor* output_audio) override;
     // void set_random_bbox_data_reader(std::shared_ptr<RandomBBoxCrop_MetaDataReader> randombboxcrop_meta_data_reader) override;
     size_t remaining_count() override; // returns number of remaining items to be loaded
     void reset() override; // Resets the loader to load from the beginning of the media
@@ -59,11 +59,11 @@ private:
     bool is_out_of_data();
     void de_init();
     void stop_internal_thread();
-    std::shared_ptr<ImageReadAndDecode> _image_loader;
-    LoaderModuleStatus update_output_image();
+    std::shared_ptr<AudioReadAndDecode> _audio_loader;
+    LoaderModuleStatus update_output_audio();
     LoaderModuleStatus load_routine();
     rocALTensor* _output_tensor;
-    std::vector<std::string> _output_names;//!< image name/ids that are stores in the _output_image
+    std::vector<std::string> _output_names;//!< audio name/ids that are stores in the _output_audio
     size_t _output_mem_size;
     MetaDataBatch* _meta_data = nullptr;//!< The output of the meta_data_graph,
     std::vector<std::vector <float>> _bbox_coords;
@@ -72,19 +72,18 @@ private:
     std::thread _load_thread;
     RocalMemType _mem_type;
     decoded_image_info _decoded_img_info;
-    crop_image_info _crop_image_info;
+    // crop_audio_info _crop_audio_info;
     decoded_image_info _output_decoded_img_info;
-    crop_image_info _output_cropped_img_info;
+    // crop_audio_info _output_cropped_img_info;
     CircularBuffer _circ_buff;
     TimingDBG _swap_handle_time;
     bool _is_initialized;
     bool _stopped = false;
-    bool _loop;//<! If true the reader will wrap around at the end of the media (files/images/...) and wouldn't stop
+    bool _loop;//<! If true the reader will wrap around at the end of the media (files/audios/...) and wouldn't stop
     size_t _prefetch_queue_depth; // Used for circular buffer's internal buffer
-    size_t _image_counter = 0;//!< How many images have been loaded already
-    size_t _remaining_image_count;//!< How many images are there yet to be loaded
+    size_t _audio_counter = 0;//!< How many audios have been loaded already
+    size_t _remaining_audio_count;//!< How many audios are there yet to be loaded
     bool _decoder_keep_original = false;
     bool tensor = true; // for debugging should be removed
     // std::shared_ptr<RandomBBoxCrop_MetaDataReader> _randombboxcrop_meta_data_reader = nullptr;
 };
-

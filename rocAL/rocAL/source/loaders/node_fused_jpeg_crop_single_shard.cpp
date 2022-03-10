@@ -22,7 +22,7 @@ void FusedJpegCropTensorSingleShardNode::init(unsigned shard_id, unsigned shard_
         THROW("Shard count should be greater than or equal to one")
     if(shard_id >= shard_count)
         THROW("Shard is should be smaller than shard count")
-    _loader_module->set_output_image(_outputs[0]);
+    _loader_module->set_output(_outputs[0]);
     // Set reader and decoder config accordingly for the FusedJpegCropTensorSingleShardNode
     auto reader_cfg = ReaderConfig(storage_type, source_path, json_path, std::map<std::string, std::string>(), shuffle, loop);
     reader_cfg.set_shard_count(shard_count);

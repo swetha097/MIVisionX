@@ -29,9 +29,9 @@ class SndFileDecoder : public AudioDecoder
 public:
     //! Default constructor
     SndFileDecoder();
-    AudioDecoder::Status Initialize(const char *src_filename) override;
-    AudioDecoder::Status Decode() override;
-    AudioDecoder::Status DecodeInfo(int* samples, int* channels) override;
+    AudioDecoder::Status initialize(const char *src_filename) override;
+    AudioDecoder::Status decode() override;
+    AudioDecoder::Status decode_info(int* samples, int* channels) override;
     void release() override;
     ~SndFileDecoder() override;
 private:

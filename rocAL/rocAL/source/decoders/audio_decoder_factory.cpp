@@ -20,15 +20,16 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 #include "audio_decoder_factory.h"
+#include "decoder_factory.h"
 #include <audio_decoder.h>
 #include <sndfile_decoder.h>
 #include "commons.h"
 
-std::shared_ptr<AudioDecoder> create_audio_decoder(AudioDecoderConfig config)
+std::shared_ptr<AudioDecoder> create_audio_decoder(DecoderConfig config)
 {
     switch (config.type())
     {
-        case AudioDecoderType::SOFTWARE_DECODE:
+        case DecoderType::SNDFILE:
             return std::make_shared<SndFileDecoder>();
         default:
             THROW("Unsupported decoder type " + TOSTR(config.type()));

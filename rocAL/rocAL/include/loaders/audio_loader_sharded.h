@@ -22,23 +22,23 @@ THE SOFTWARE.
 
 #pragma once
 #include <vector>
-#include "image_loader.h"
+#include "audio_loader.h"
 //
-// ImageLoaderSharded Can be used to run load and decode in multiple shards, each shard by a single loader instance,
-// It improves load and decode performance since each loader loads the images in parallel using an internal thread
+// AudioLoaderSharded Can be used to run load and decode in multiple shards, each shard by a single loader instance,
+// It improves load and decode performance since each loader loads the audios in parallel using an internal thread
 //
-class ImageLoaderSharded : public LoaderModule
+class AudioLoaderSharded : public LoaderModule
 {
 public:
 #if ENABLE_HIP
-    explicit ImageLoaderSharded(DeviceResourcesHip dev_resources);
+    explicit AudioLoaderSharded(DeviceResourcesHip dev_resources);
 #else
-    explicit ImageLoaderSharded(DeviceResources dev_resources);
+    explicit AudioLoaderSharded(DeviceResources dev_resources);
 #endif
-    ~ImageLoaderSharded() override;
+    ~AudioLoaderSharded() override;
     LoaderModuleStatus load_next() override;
     void initialize(ReaderConfig reader_cfg, DecoderConfig decoder_cfg, RocalMemType mem_type, unsigned batch_size, bool keep_orig_size=false) override;
-    void set_output (rocALTensor* output_image) override;
+    void set_output (rocALTensor* output_audio) override;
     // void set_random_bbox_data_reader(std::shared_ptr<RandomBBoxCrop_MetaDataReader> randombboxcrop_meta_data_reader) override;
     size_t remaining_count() override;
     void reset() override;
@@ -56,7 +56,7 @@ private:
     const DeviceResources _dev_resources;
 #endif
     bool _initialized = false;
-    std::vector<std::shared_ptr<ImageLoader>> _loaders;
+    std::vector<std::shared_ptr<AudioLoader>> _loaders;
     size_t _loader_idx;
     size_t _shard_count = 1;
     void fast_forward_through_empty_loaders();

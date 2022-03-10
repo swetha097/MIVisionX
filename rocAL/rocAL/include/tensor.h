@@ -66,9 +66,27 @@ struct rocALTensorInfo
                     RocalTensorDataType data_type);
 
     // Setting properties required for Image / Video
-    void set_roi_type(RocalROIType roi_type) const { _roi_type = roi_type; }
-    void set_tensor_layout(RocalTensorlayout layout) const { _layout = layout; }
-    void set_color_format(RocalColorFormat color_format) const { _color_format = color_format; }
+    void set_roi_type(RocalROIType roi_type) { _roi_type = roi_type; }
+    void set_tensor_layout(RocalTensorlayout layout)
+    {
+        if(layout != RocalTensorlayout::NONE)
+        {
+            _is_image = true;
+            if(layout == RocalTensorlayout::NHWC)
+            {
+                _max_width = _dims->at(2);
+                _max_height = _dims->at(1);
+            }
+            else if(layout == RocalTensorlayout::NCHW)
+            {
+                _max_width = _dims->at(3);
+                _max_height = _dims->at(2);
+            }
+            reallocate_tensor_roi_buffers();
+        }
+        _layout = layout;
+    }
+    void set_color_format(RocalColorFormat color_format) { _color_format = color_format; }
 
     unsigned num_of_dims() const { return _num_of_dims; }
     unsigned batch_size() const { return _batch_size; }

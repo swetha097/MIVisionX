@@ -26,14 +26,14 @@ THE SOFTWARE.
 
 SndFileDecoder::SndFileDecoder(){};
 
-AudioDecoder::Status SndFileDecoder::Decode()
+AudioDecoder::Status SndFileDecoder::decode()
 {
     AudioDecoder::Status status = Status::OK;
 
     return status;
 }
 
-AudioDecoder::Status SndFileDecoder::DecodeInfo(int* samples, int* channels)
+AudioDecoder::Status SndFileDecoder::decode_info(int* samples, int* channels)
 {
     AudioDecoder::Status status = Status::OK;
     // Set the samples and channels using the struct variables SFINFO.frames and SFINFO.channels
@@ -41,7 +41,7 @@ AudioDecoder::Status SndFileDecoder::DecodeInfo(int* samples, int* channels)
 }
 
 // Initialize will open a new decoder and initialize the context
-AudioDecoder::Status SndFileDecoder::Initialize(const char *src_filename)
+AudioDecoder::Status SndFileDecoder::initialize(const char *src_filename)
 {
     AudioDecoder::Status status = Status::OK;
 

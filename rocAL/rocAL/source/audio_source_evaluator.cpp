@@ -21,13 +21,13 @@ THE SOFTWARE.
 */
 
 #include "audio_source_evaluator.h"
-#include "decoder_factory.h"
+#include "audio_decoder_factory.h"
 #include "reader_factory.h"
-void AudioSourceEvaluator::set_size_evaluation_policy(MaxSizeEvaluationPolicy arg)
-{
-    _samples_max.set_policy (arg);
-    _channels_max.set_policy (arg);
-}
+// void AudioSourceEvaluator::set_size_evaluation_policy(MaxSizeEvaluationPolicy arg)
+// {
+//     _samples_max.set_policy (arg);
+//     _channels_max.set_policy (arg);
+// }
 
 size_t AudioSourceEvaluator::max_samples()
 {
@@ -48,7 +48,7 @@ AudioSourceEvaluator::create(ReaderConfig reader_cfg, DecoderConfig decoder_cfg)
 
 
     // _header_buff.resize(COMPRESSED_SIZE);
-    _decoder = create_decoder(std::move(decoder_cfg));
+    _decoder = create_audio_decoder(std::move(decoder_cfg));
     _reader = create_reader(std::move(reader_cfg));
     find_max_dimension();
     return status;
@@ -69,7 +69,7 @@ AudioSourceEvaluator::find_max_dimension()
         auto actual_read_size = _reader->read(_header_buff.data(), fsize);
         _reader->close();
 
-        if(_decoder->Initialize(file_name) != Decoder::Status::OK)
+        if(_decoder->initialize(file_name) != AudioDecoder::Status::OK)
         {
             WRN("Could not initialize audio decoder for file : "+ _reader->id())
             continue;
@@ -77,7 +77,7 @@ AudioSourceEvaluator::find_max_dimension()
 
         int samples, channels;
 
-        if(_decoder->decode_info(&samples, &channels) != Decoder::Status::OK)
+        if(_decoder->decode_info(&samples, &channels) != AudioDecoder::Status::OK)
         {
             WRN("Could not decode the header of the: "+ _reader->id())
             continue;
@@ -97,27 +97,27 @@ AudioSourceEvaluator::find_max_dimension()
 void
 AudioSourceEvaluator::FindMaxSize::process_sample(unsigned val)
 {
-    if(_policy == MaxSizeEvaluationPolicy::MAXIMUM_FOUND_SIZE)
-    {
+    // if(_policy == MaxSizeEvaluationPolicy::MAXIMUM_FOUND_SIZE)
+    // {
         _max = (val > _max) ? val : _max;
-    }
-    if(_policy == MaxSizeEvaluationPolicy::MOST_FREQUENT_SIZE)
-    {
-        auto it = _hist.find(val);
-        size_t count = 1;
-        if( it != _hist.end())
-        {
-            it->second =+ 1;
-            count = it->second;
-        } else {
-            _hist.insert(std::make_pair(val, 1));
-        }
+    // }
+    // if(_policy == MaxSizeEvaluationPolicy::MOST_FREQUENT_SIZE)
+    // {
+    //     auto it = _hist.find(val);
+    //     size_t count = 1;
+    //     if( it != _hist.end())
+    //     {
+    //         it->second =+ 1;
+    //         count = it->second;
+    //     } else {
+    //         _hist.insert(std::make_pair(val, 1));
+    //     }
 
-        unsigned new_count = count;
-        if(new_count > _max_count)
-        {
-            _max = val;
-            _max_count = new_count;
-        }
-    }
+    //     unsigned new_count = count;
+    //     if(new_count > _max_count)
+    //     {
+    //         _max = val;
+    //         _max_count = new_count;
+    //     }
+    // }
 }

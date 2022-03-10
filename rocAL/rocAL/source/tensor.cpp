@@ -121,29 +121,19 @@ void rocALTensorInfo::reallocate_tensor_roi_buffers()
 rocALTensorInfo::rocALTensorInfo() : _type(Type::UNKNOWN),
                                 _num_of_dims(0),
                                 _dims(nullptr),
-                                _batch_size(1),
                                 _mem_type(RocalMemType::HOST),
-                                _roi_type(RocalROIType::XYWH),
-                                _data_type(RocalTensorDataType::FP32),
-                                _layout(RocalTensorlayout::NHWC),
-                                _color_format(RocalColorFormat::RGB24){}
+                                _data_type(RocalTensorDataType::FP32){}
 
 rocALTensorInfo::rocALTensorInfo(
     unsigned num_of_dims,
     std::shared_ptr<std::vector<unsigned>> dims,
     RocalMemType mem_type,
-    RocalROIType roi_type,
-    RocalTensorDataType data_type,
-    RocalTensorlayout layout,
-    RocalColorFormat color_format) : _type(Type::UNKNOWN),
+    RocalTensorDataType data_type) : _type(Type::UNKNOWN),
                                 _num_of_dims(num_of_dims),
                                 _dims(dims),
                                 _batch_size(dims->at(0)),
                                 _mem_type(mem_type),
-                                _roi_type(roi_type),
-                                _data_type(data_type),
-                                _layout(layout),
-                                _color_format(color_format)
+                                _data_type(data_type)
 {
     vx_size data_size = tensor_data_size(data_type);
     unsigned alignpixels = TENSOR_WIDTH_ALIGNMENT; // Check if needed
@@ -154,21 +144,6 @@ rocALTensorInfo::rocALTensorInfo(
     }
     // initializing each Tensor dimension in the batch with the maximum Tensor size, they'll get updated later during the runtime
     // Update this only if the tensor is image
-    if(layout != RocalTensorlayout::NONE)
-    {
-        _is_image = true;
-        if(layout == RocalTensorlayout::NHWC)
-        {
-            _max_width = dims->at(2);
-            _max_height = dims->at(1);
-        }
-        else if(layout == RocalTensorlayout::NCHW)
-        {
-            _max_width = dims->at(3);
-            _max_height = dims->at(2);
-        }
-        reallocate_tensor_roi_buffers();
-    }
 }
 
 void rocALTensor::update_tensor_roi(const std::vector<uint32_t> &width, const std::vector<uint32_t> &height)

@@ -46,8 +46,8 @@ class LoaderModule
 {
 public:
     virtual void initialize(ReaderConfig reader_config, DecoderConfig decoder_config, RocalMemType mem_type, unsigned batch_size, bool keep_orig_size) = 0;
-    virtual void set_output_image(rocALTensor* output_image) = 0;
-    virtual LoaderModuleStatus load_next() = 0; // Loads the next image data into the Image's buffer set by calling into the set_output_image
+    virtual void set_output(rocALTensor* output_image) = 0;
+    virtual LoaderModuleStatus load_next() = 0; // Loads the next image data into the Image's buffer set by calling into the set_output
     virtual void reset() = 0; // Resets the loader to load from the beginning of the media
     virtual size_t remaining_count() = 0; // Returns the number of available images to be loaded
     virtual ~LoaderModule()= default;
