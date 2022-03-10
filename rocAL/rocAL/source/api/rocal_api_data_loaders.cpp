@@ -32,6 +32,57 @@ THE SOFTWARE.
 #include "node_fused_jpeg_crop_single_shard.h"
 
 std::tuple<unsigned, unsigned>
+evaluate_audio_data_set(RocalImageSizeEvaluationPolicy decode_size_policy, StorageType storage_type,
+                        DecoderType decoder_type, const std::string &source_path, const std::string &json_path)
+{
+    // auto translate_image_size_policy = [](RocalImageSizeEvaluationPolicy decode_size_policy)
+    // {
+    //     switch(decode_size_policy)
+    //     {
+    //         case ROCAL_USE_MAX_SIZE:
+    //         case ROCAL_USE_MAX_SIZE_RESTRICTED:
+    //             return MaxSizeEvaluationPolicy::MAXIMUM_FOUND_SIZE;
+    //         case ROCAL_USE_MOST_FREQUENT_SIZE:
+    //             return MaxSizeEvaluationPolicy::MOST_FREQUENT_SIZE;
+    //         default:
+    //             return MaxSizeEvaluationPolicy::MAXIMUM_FOUND_SIZE;
+    //     }
+    // };
+
+    AudioSourceEvaluator source_evaluator;
+    source_evaluator.set_size_evaluation_policy(MaxSizeEvaluationPolicy::MAXIMUM_FOUND_SIZE);
+    if(source_evaluator.create(ReaderConfig(storage_type, source_path, json_path), DecoderConfig(decoder_type)) != ImageSourceEvaluatorStatus::OK)
+        THROW("Initializing file source input evaluator failed ")
+    auto max_samples = source_evaluator.max_samples();
+    auto max_channels = source_evaluator.max_channels();
+    if(max_samples == 0 ||max_channels  == 0)
+        THROW("Cannot find size of the audio files or files cannot be accessed")
+
+    LOG("Maximum input image dimension [ "+ TOSTR(max_samples) + " x " + TOSTR(max_channels)+" ] for images in "+source_path)
+    return std::make_tuple(max_samples, max_channels);
+};
+
+auto convert_color_format = [](RocalImageColor color_format)
+{
+    switch(color_format){
+        case ROCAL_COLOR_RGB24:
+            return std::make_tuple(RocalColorFormat::RGB24, 3);
+
+        case ROCAL_COLOR_BGR24:
+            return std::make_tuple(RocalColorFormat::BGR24, 3);
+
+        case ROCAL_COLOR_U8:
+            return std::make_tuple(RocalColorFormat::U8, 1);
+
+        case ROCAL_COLOR_RGB_PLANAR:
+            return std::make_tuple(RocalColorFormat::RGB_PLANAR, 3);
+
+        default:
+            THROW("Unsupported Image type" + TOSTR(color_format))
+    }
+};
+
+std::tuple<unsigned, unsigned>
 evaluate_image_data_set(RocalImageSizeEvaluationPolicy decode_size_policy, StorageType storage_type,
                         DecoderType decoder_type, const std::string &source_path, const std::string &json_path)
 {
@@ -267,13 +318,13 @@ RocalTensor  ROCAL_API_CALL
 rocalAudioFileSourceSingleShard(
         RocalContext p_context,
         const char* source_path,
-        RocalImageColor rocal_color_format,
         unsigned shard_id,
         unsigned shard_count,
         bool is_output,
         bool shuffle,
         bool loop,
-        RocalImageSizeEvaluationPolicy decode_size_policy,
+        float sample_rate,
+        bool downmix, 
         unsigned max_frames,
         unsigned max_channels)
 {
