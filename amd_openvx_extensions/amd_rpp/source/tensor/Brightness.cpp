@@ -130,7 +130,11 @@ static vx_status VX_CALLBACK processBrightness(vx_node node, const vx_reference 
     if (data->device_type == AGO_TARGET_AFFINITY_CPU)
     {
         refreshBrightness(node, parameters, num, data);
-        rpp_status = rppt_brightness_host(data->pSrc, data->src_desc_ptr, data->pDst, data->src_desc_ptr, data->alpha, data->beta, data->roi_tensor_Ptr, data->roiType, data->rppHandle);
+        for(int i = 0; i < data->nbatchSize; i++)
+        {
+            std::cerr<<"\n bbox values :: "<<data->roi_tensor_Ptr[i].xywhROI.xy.x<<" "<<data->roi_tensor_Ptr[i].xywhROI.xy.y<<" "<<data->roi_tensor_Ptr[i].xywhROI.roiWidth<<" "<<data->roi_tensor_Ptr[i].xywhROI.roiHeight;
+        }
+        // rpp_status = rppt_brightness_host(data->pSrc, data->src_desc_ptr, data->pDst, data->src_desc_ptr, data->alpha, data->beta, data->roi_tensor_Ptr, data->roiType, data->rppHandle);
         return_status = (rpp_status == RPP_SUCCESS) ? VX_SUCCESS : VX_FAILURE;
     }
     return return_status;
@@ -149,6 +153,7 @@ static vx_status VX_CALLBACK initializeBrightness(vx_node node, const vx_referen
     STATUS_ERROR_CHECK(vxCopyScalar((vx_scalar)parameters[8], &data->device_type, VX_READ_ONLY, VX_MEMORY_TYPE_HOST));
     STATUS_ERROR_CHECK(vxReadScalarValue((vx_scalar)parameters[7], &data->nbatchSize));
     STATUS_ERROR_CHECK(vxCopyScalar((vx_scalar)parameters[5], &layout, VX_READ_ONLY, VX_MEMORY_TYPE_HOST));
+    std::cerr<<"\n layout "<<layout;
     STATUS_ERROR_CHECK(vxCopyScalar((vx_scalar)parameters[6], &roiType, VX_READ_ONLY, VX_MEMORY_TYPE_HOST));
     if(roiType == 1)
         data->roiType = RpptRoiType::XYWH;
@@ -166,10 +171,12 @@ static vx_status VX_CALLBACK initializeBrightness(vx_node node, const vx_referen
         data->src_desc_ptr->h = data->in_tensor_dims[1];
         data->src_desc_ptr->w = data->in_tensor_dims[2];
         data->src_desc_ptr->c = data->in_tensor_dims[3];
+        std::cerr<<"\n n h w c "<<data->src_desc_ptr->n<<" "<<data->src_desc_ptr->h<<" "<<data->src_desc_ptr->w<<" "<<data->src_desc_ptr->c;
         data->src_desc_ptr->strides.nStride = data->src_desc_ptr->c * data->src_desc_ptr->w * data->src_desc_ptr->h;
         data->src_desc_ptr->strides.hStride = data->src_desc_ptr->c * data->src_desc_ptr->w;
         data->src_desc_ptr->strides.wStride = data->src_desc_ptr->c;
         data->src_desc_ptr->strides.cStride = 1;
+        data->src_desc_ptr->layout == RpptLayout::NHWC;
     }
     else // NCHW
     {
@@ -181,6 +188,7 @@ static vx_status VX_CALLBACK initializeBrightness(vx_node node, const vx_referen
         data->src_desc_ptr->strides.cStride = data->src_desc_ptr->w * data->src_desc_ptr->h;
         data->src_desc_ptr->strides.hStride = data->src_desc_ptr->w;
         data->src_desc_ptr->strides.wStride = 1;
+        data->src_desc_ptr->layout == RpptLayout::NCHW;
     }
     data->roi_tensor_Ptr = (RpptROI *) calloc(data->nbatchSize, sizeof(RpptROI));
     data->alpha = (vx_float32 *)malloc(sizeof(vx_float32) * data->nbatchSize);
