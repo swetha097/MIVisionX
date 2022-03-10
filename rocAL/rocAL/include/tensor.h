@@ -59,14 +59,16 @@ struct rocALTensorInfo
     // Default constructor
     rocALTensorInfo();
 
-    //! Initializer constructor
+    //! Initializer constructor with only fields common to all types (Image/ Video / Audio)
     rocALTensorInfo(unsigned num_of_dims,
                     std::shared_ptr<std::vector<unsigned>> dims,
                     RocalMemType mem_type,
-                    RocalROIType roi_type,
-                    RocalTensorDataType data_type,
-                    RocalTensorlayout layout,
-                    RocalColorFormat color_format);
+                    RocalTensorDataType data_type);
+
+    // Setting properties required for Image / Video
+    void set_roi_type(RocalROIType roi_type) const { _roi_type = roi_type; }
+    void set_tensor_layout(RocalTensorlayout layout) const { _layout = layout; }
+    void set_color_format(RocalColorFormat color_format) const { _color_format = color_format; }
 
     unsigned num_of_dims() const { return _num_of_dims; }
     unsigned batch_size() const { return _batch_size; }

@@ -140,10 +140,10 @@ rocalJpegFileSourceSingleShard(
         auto info  = rocALTensorInfo(num_of_dims,
                                 std::make_shared<std::vector<unsigned> >(std::move(dims)),
                                 context->master_graph->mem_type(),
-                                roi_type,
-                                tensor_data_type,
-                                tensor_format,
-                                color_format);
+                                tensor_data_type);
+        info.set_roi_type(roi_type);
+        info.set_color_format(color_format);
+        info.set_tensor_layout(tensor_format);
         output = context->master_graph->create_loader_output_tensor(info);
         context->master_graph->add_node<ImageLoaderSingleShardNode>({}, {output})->init(shard_id, shard_count,
                                                                                         source_path, "",
@@ -228,12 +228,12 @@ rocalJpegFileSource(
         dims[3] = num_of_planes;
         std::cerr<<"\n dims"<<dims[0]<<dims[1]<<dims[2]<<dims[3];
         auto info  = rocALTensorInfo(num_of_dims,
-                                std::make_shared<std::vector<unsigned>>(std::move(dims)),
+                                std::make_shared<std::vector<unsigned> >(std::move(dims)),
                                 context->master_graph->mem_type(),
-                                roi_type,
-                                tensor_data_type,
-                                tensor_format,
-                                color_format);
+                                tensor_data_type);
+        info.set_roi_type(roi_type);
+        info.set_color_format(color_format);
+        info.set_tensor_layout(tensor_format);
         output = context->master_graph->create_loader_output_tensor(info);
         context->master_graph->add_node<ImageLoaderNode>({}, {output})->init(internal_shard_count,
                                                                           source_path, "",
