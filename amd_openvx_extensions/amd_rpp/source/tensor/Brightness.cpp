@@ -154,7 +154,9 @@ static vx_status VX_CALLBACK initializeBrightness(vx_node node, const vx_referen
         data->roiType = RpptRoiType::XYWH;
     else
         data->roiType = RpptRoiType::LTRB;
-    STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[0], VX_TENSOR_NUMBER_OF_DIMS, &data->src_desc_ptr->numDims, sizeof(vx_size) * NUM_OF_DIMS));
+    RpptDesc srcDesc;
+    data->src_desc_ptr = &srcDesc;
+    STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[0], VX_TENSOR_NUMBER_OF_DIMS, &data->src_desc_ptr->numDims, sizeof(data->src_desc_ptr->numDims)));
     STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[0], VX_TENSOR_DIMS, &data->in_tensor_dims, sizeof(vx_size) * data->src_desc_ptr->numDims));
     STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[0],VX_TENSOR_DATA_TYPE, &data->src_desc_ptr->dataType, sizeof(data->src_desc_ptr->dataType)));
      data->src_desc_ptr->offsetInBytes = 0;

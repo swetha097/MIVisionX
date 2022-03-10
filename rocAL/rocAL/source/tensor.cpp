@@ -289,29 +289,14 @@ int rocALTensor::create_from_handle(vx_context context)
     {
         stride[i] = stride[i - 1] * _info.dims()->at(i - 1);
     }
-
-    // vx_uint32 alignpixels = TENSOR_WIDTH_ALIGNMENT;
-    // if (nhwc)
-    // {
-    //     if (alignpixels == 0)
-    //         stride[1] = _info.batch_size() * stride[0];
-    //     else
-    //         stride[1] = ((_info.batch_size() + alignpixels - 1) & ~(alignpixels - 1)) * stride[0];
-    //     stride[2] = _info.max_height() * stride[1];
-    //     stride[3] = _info.max_width() * stride[2];
-    // }
-    // else
-    // {
-    //     if (alignpixels == 0)
-    //         stride[1] = _info.max_width() * stride[0];
-    //     else
-    //         stride[1] = ((_info.max_width() + alignpixels - 1) & ~(alignpixels - 1)) * stride[0];
-    //     stride[2] = _info.max_height() * stride[1];
-    //     stride[3] = _info.channels() * stride[2];
-    // }
-
     vx_status status;
-    _vx_handle = vxCreateTensorFromHandle(_context, _info.num_of_dims(), (vx_size*)_info.dims()->data(), tens_data_type, 0, stride, ptr, vx_mem_type(_info._mem_type));
+    vx_size dims[4];
+    dims[0] = _info.dims()->at(0);
+    dims[1] = _info.dims()->at(1);
+    dims[2] = _info.dims()->at(2);
+    dims[3] = _info.dims()->at(3);
+    // std::cerr<<"\n dims in local "<<dims[0]<<" "<<dims[1]<<" "<<dims[2]<<" "<<dims[3];
+    _vx_handle = vxCreateTensorFromHandle(_context, _info.num_of_dims(), dims, tens_data_type, 0, stride, ptr, vx_mem_type(_info._mem_type));
     if ((status = vxGetStatus((vx_reference)_vx_handle)) != VX_SUCCESS)
         THROW("Error: vxCreateTensorFromHandle(input: failed " + TOSTR(status))
     _info._type = rocALTensorInfo::Type::HANDLE;

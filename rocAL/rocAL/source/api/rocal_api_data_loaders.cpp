@@ -131,14 +131,14 @@ rocalJpegFileSourceSingleShard(
         RocalTensorDataType tensor_data_type = RocalTensorDataType::UINT8;
         RocalROIType roi_type = RocalROIType::XYWH;
         unsigned num_of_dims = 4;
-        std::shared_ptr<std::vector<unsigned>> dims;
-        dims->resize(num_of_dims);
-        dims->at(0) = context->internal_batch_size();
-        dims->at(1) = height;
-        dims->at(2) = width;
-        dims->at(3) = num_of_planes;
+        std::vector<unsigned> dims;
+        dims.resize(num_of_dims);
+        dims.at(0) = context->internal_batch_size();
+        dims.at(1) = height;
+        dims.at(2) = width;
+        dims.at(3) = num_of_planes;
         auto info  = rocALTensorInfo(num_of_dims,
-                                dims,
+                                std::make_shared<std::vector<unsigned> >(std::move(dims)),
                                 context->master_graph->mem_type(),
                                 roi_type,
                                 tensor_data_type,
@@ -220,14 +220,15 @@ rocalJpegFileSource(
         RocalTensorDataType tensor_data_type = RocalTensorDataType::UINT8;
         RocalROIType roi_type = RocalROIType::XYWH;
         unsigned num_of_dims = 4;
-        std::shared_ptr<std::vector<unsigned>> dims;
-        dims->resize(num_of_dims);
-        dims->at(0) = context->internal_batch_size();
-        dims->at(1) = height;
-        dims->at(2) = width;
-        dims->at(3) = num_of_planes;
+        std::vector<unsigned> dims;
+        dims.resize(4);
+        dims[0] = context->internal_batch_size();
+        dims[1] = height;
+        dims[2] = width;
+        dims[3] = num_of_planes;
+        std::cerr<<"\n dims"<<dims[0]<<dims[1]<<dims[2]<<dims[3];
         auto info  = rocALTensorInfo(num_of_dims,
-                                dims,
+                                std::make_shared<std::vector<unsigned>>(std::move(dims)),
                                 context->master_graph->mem_type(),
                                 roi_type,
                                 tensor_data_type,

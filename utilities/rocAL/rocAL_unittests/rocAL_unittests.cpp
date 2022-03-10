@@ -71,8 +71,7 @@ int main(int argc, const char **argv)
     if (argc >= argIdx + MIN_ARG_COUNT)
         rgb = atoi(argv[++argIdx]);
 
-    test(test_case, path, outName, rgb, gpu, display, width, height);
-
+    int return_val = test(test_case, path, outName, rgb, gpu, display, width, height);
     return 0;
 }
 
@@ -224,7 +223,7 @@ int test(int test_case, const char *path, const char *outName, int rgb, int gpu,
     int index = 0;
     while (rocalGetRemainingImages(handle) >= inputBatchSize)
     {
-        // std::cerr<<"\n rocalGetRemainingImages:: "<<rocalGetRemainingImages(handle)<<"\t inputBatchsize:: "<<inputBatchSize  ;
+        std::cerr<<"\n rocalGetRemainingImages:: "<<rocalGetRemainingImages(handle)<<"\t inputBatchsize:: "<<inputBatchSize  ;
         // std::cerr<<"\n index "<<index;
         index++;
         if (rocalRun(handle) != 0)
@@ -281,9 +280,9 @@ int test(int test_case, const char *path, const char *outName, int rgb, int gpu,
     std::cout << "Process  time " << rocal_timing.process_time << std::endl;
     std::cout << "Transfer time " << rocal_timing.transfer_time << std::endl;
     std::cout << ">>>>> Total Elapsed Time " << dur / 1000000 << " sec " << dur % 1000000 << " us " << std::endl;
-    rocalRelease(handle);
-    mat_input.release();
-    mat_output.release();
-
+    // rocalRelease(handle);
+    // mat_input.release();
+    // mat_output.release();
+    exit(0);
     return 0;
 }
