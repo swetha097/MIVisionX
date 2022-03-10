@@ -31,6 +31,7 @@ public:
     SndFileDecoder();
     AudioDecoder::Status Initialize(const char *src_filename) override;
     AudioDecoder::Status Decode() override;
+    AudioDecoder::Status DecodeInfo(int* samples, int* channels) override;
     void release() override;
     ~SndFileDecoder() override;
 private:
