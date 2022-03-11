@@ -24,6 +24,7 @@ THE SOFTWARE.
 #include <iterator>
 #include <cstring>
 #include "decoder_factory.h"
+#include "audio_decoder_factory.h"
 #include "audio_read_and_decode.h"
 
 // std::tuple<Decoder::ColorFormat, unsigned >
@@ -78,10 +79,10 @@ AudioReadAndDecode::create(ReaderConfig reader_config, DecoderConfig decoder_con
     _audio_names.resize(batch_size);
     _compressed_audio_size.resize(batch_size);
     _decompressed_buff_ptrs.resize(_batch_size);
-    _actual_decoded_width.resize(_batch_size);
-    _actual_decoded_height.resize(_batch_size);
-    _original_height.resize(_batch_size);
-    _original_width.resize(_batch_size);
+    _actual_decoded_samples.resize(_batch_size);
+    _actual_decoded_channels.resize(_batch_size);
+    _original_channels.resize(_batch_size);
+    _original_samples.resize(_batch_size);
     _decoder_config = decoder_config;
     if ((_decoder_config._type != DecoderType::SKIP_DECODE)) {
         for (int i = 0; i < batch_size; i++) {
@@ -106,32 +107,17 @@ AudioReadAndDecode::count()
     return _reader->count();
 }
 
-std::vector<std::vector<float>>
-AudioReadAndDecode::get_batch_random_bbox_crop_coords()
-{
-    // Return the crop co-ordinates for a batch of audios
-    return _crop_coords_batch;
-}
-
-void
-AudioReadAndDecode::set_batch_random_bbox_crop_coords(std::vector<std::vector<float>> crop_coords)
-{
-    _crop_coords_batch = crop_coords;
-}
-
 LoaderModuleStatus
-AudioReadAndDecode::load(unsigned char* buff,
+AudioReadAndDecode::load(float* buff,
                          std::vector<std::string>& names,
-                         const size_t max_decoded_width,
-                         const size_t max_decoded_height,
-                         std::vector<uint32_t> &roi_width,
-                         std::vector<uint32_t> &roi_height,
-                         std::vector<uint32_t> &actual_width,
-                         std::vector<uint32_t> &actual_height,
-                         RocalColorFormat output_color_format,
-                         bool decoder_keep_original )
+                         const size_t max_decoded_samples,
+                         const size_t max_decoded_channels,
+                         std::vector<uint32_t> &roi_samples,
+                         std::vector<uint32_t> &roi_channels,
+                         std::vector<uint32_t> &actual_samples,
+                         std::vector<uint32_t> &actual_channels)
 {
-    if(max_decoded_width == 0 || max_decoded_height == 0 )
+    if(max_decoded_samples == 0 || max_decoded_channels == 0 )
         THROW("Zero audio dimension is not valid")
     if(!buff)
         THROW("Null pointer passed as output buffer")
@@ -141,64 +127,25 @@ AudioReadAndDecode::load(unsigned char* buff,
     unsigned file_counter = 0;
     // const auto ret = interpret_color_format(output_color_format);
     // const Decoder::ColorFormat decoder_color_format = std::get<0>(ret);
-    const unsigned output_planes = std::get<1>(ret);
-    const bool keep_original = decoder_keep_original;
-    const size_t audio_size = max_decoded_width * max_decoded_height * output_planes * sizeof(unsigned char);
+    const size_t audio_size = max_decoded_samples * max_decoded_channels * sizeof(float);
 
-    // Decode with the height and size equal to a single audio
+    // Decode with the channels and size equal to a single audio
     // File read is done serially since I/O parallelization does not work very well.
     _file_load_time.start();// Debug timing
-    if (_decoder_config._type == DecoderType::SKIP_DECODE) {
-        while ((file_counter != _batch_size) && _reader->count() > 0)
-        {
-            auto read_ptr = buff + audio_size * file_counter;
-            size_t fsize = _reader->open();
-            if (fsize == 0) {
-                WRN("Opened file " + _reader->id() + " of size 0");
-                continue;
-            }
+    while ((file_counter != _batch_size) && _reader->count() > 0) {
 
-            _actual_read_size[file_counter] = _reader->read(read_ptr, fsize);
-            if(_actual_read_size[file_counter] < fsize)
-                LOG("Reader read less than requested bytes of size: " + _actual_read_size[file_counter]);
-
-            _audio_names[file_counter] = _reader->id();
-            _reader->close();
-           // _compressed_audio_size[file_counter] = fsize;
-            names[file_counter] = _audio_names[file_counter];
-            roi_width[file_counter] = max_decoded_width;
-            roi_height[file_counter] = max_decoded_height;
-            actual_width[file_counter] = max_decoded_width;
-            actual_height[file_counter] = max_decoded_height;
-            file_counter++;
-        }
-        //_file_load_time.end();// Debug timing
-        //return LoaderModuleStatus::OK;
-    }else {
-        while ((file_counter != _batch_size) && _reader->count() > 0) {
-
-            size_t fsize = _reader->open();
-            if (fsize == 0) {
-                WRN("Opened file " + _reader->id() + " of size 0");
-                continue;
-            }
-
-            _compressed_buff[file_counter].reserve(fsize);
-            _actual_read_size[file_counter] = _reader->read(_compressed_buff[file_counter].data(), fsize);
-            _audio_names[file_counter] = _reader->id();
-            _reader->close();
-            _compressed_audio_size[file_counter] = fsize;
-            file_counter++;
+        size_t fsize = _reader->open();
+        if (fsize == 0) {
+            WRN("Opened file " + _reader->id() + " of size 0");
+            continue;
         }
 
-        // if (_randombboxcrop_meta_data_reader)
-        // {
-        //     //Fetch the crop co-ordinates for a batch of audios
-        //     _bbox_coords = _randombboxcrop_meta_data_reader->get_batch_crop_coords(_audio_names);
-        //     set_batch_random_bbox_crop_coords(_bbox_coords);
-        // }
-
-
+        // _compressed_buff[file_counter].reserve(fsize);
+        // _actual_read_size[file_counter] = _reader->read(_compressed_buff[file_counter].data(), fsize);
+        _audio_names[file_counter] = _reader->id();
+        _reader->close();
+        // _compressed_audio_size[file_counter] = fsize;
+        file_counter++;
     }
 
     _file_load_time.end();// Debug timing
@@ -211,38 +158,35 @@ AudioReadAndDecode::load(unsigned char* buff,
 #pragma omp parallel for num_threads(_batch_size)  // default(none) TBD: option disabled in Ubuntu 20.04
         for (size_t i = 0; i < _batch_size; i++)
         {
-            // initialize the actual decoded height and width with the maximum
-            _actual_decoded_width[i] = max_decoded_width;
-            _actual_decoded_height[i] = max_decoded_height;
+            // initialize the actual decoded channels and samples with the maximum
+            _actual_decoded_samples[i] = max_decoded_samples;
+            _actual_decoded_channels[i] = max_decoded_channels;
 
-            int original_width, original_height, jpeg_sub_samp;
-            if (_decoder[i]->decode_info(_compressed_buff[i].data(), _actual_read_size[i], &original_width, &original_height,
-                                         &jpeg_sub_samp) != Decoder::Status::OK) {
+            int original_samples, original_channels;
+            if (_decoder[i]->initialize(_audio_names[i].c_str()) != AudioDecoder::Status::OK) {
             }
-            _original_height[i] = original_height;
-            _original_width[i] = original_width;
+            if (_decoder[i]->decode_info(&original_samples, &original_channels) != AudioDecoder::Status::OK) {
+            }
+            _original_channels[i] = original_channels;
+            _original_samples[i] = original_samples;
 #if 0
-            if((unsigned)original_width != max_decoded_width || (unsigned)original_height != max_decoded_height)
+            if((unsigned)original_samples != max_decoded_samples || (unsigned)original_channels != max_decoded_channels)
                 // Seeting the whole buffer to zero in case resizing to exact output dimension is not possible.
                 memset(_decompressed_buff_ptrs[i],0 , audio_size);
 #endif
 
-            if (_decoder[i]->decode() != Decoder::Status::OK) {
-                // try decoding with OpenCV decoder:: seems like opencv also failing in those audios
+            if (_decoder[i]->decode(_decompressed_buff_ptrs[i]) != AudioDecoder::Status::OK) {
             }
-            _actual_decoded_width[i] = scaledw;
-            _actual_decoded_height[i] = scaledh;
         }
         for (size_t i = 0; i < _batch_size; i++) {
             names[i] = _audio_names[i];
 
-            roi_width[i] = _actual_decoded_width[i];
-            roi_height[i] = _actual_decoded_height[i];
-            actual_width[i] = _original_width[i];
-            actual_height[i] = _original_height[i];
+            roi_samples[i] = _actual_decoded_samples[i];
+            roi_channels[i] = _actual_decoded_channels[i];
+            actual_samples[i] = _original_samples[i];
+            actual_channels[i] = _original_channels[i];
         }
     }
-    _bbox_coords.clear();
     _decode_time.end();// Debug timing
     return LoaderModuleStatus::OK;
 }

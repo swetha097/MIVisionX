@@ -55,8 +55,12 @@ public:
         NO_MEMORY
     };
     virtual AudioDecoder::Status initialize(const char *src_filename) = 0;
-    virtual AudioDecoder::Status decode() = 0; //to pass buffer & number of frames/samples to decode
+    virtual AudioDecoder::Status decode(float* buffer) = 0; //to pass buffer & number of frames/samples to decode
     virtual AudioDecoder::Status decode_info(int* samples, int* channels) = 0; //to decode info about the audio samples
     virtual void release() = 0;
     virtual ~AudioDecoder() = default;
+protected:
+    const char *_src_filename = NULL;
+    SF_INFO _sfinfo;
+    SNDFILE* _sf_ptr;
 };

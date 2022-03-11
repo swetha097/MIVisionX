@@ -167,7 +167,7 @@ AudioLoader::load_routine()
 
     while (_internal_thread_running)
     {
-        auto data = _circ_buff.get_write_buffer();
+        auto data = (float*)_circ_buff.get_write_buffer();
         if (!_internal_thread_running)
             break;
 
@@ -182,8 +182,7 @@ AudioLoader::load_routine()
                                                 _decoded_img_info._roi_width,
                                                 _decoded_img_info._roi_height,
                                                 _decoded_img_info._original_width,
-                                                _decoded_img_info._original_height,
-                                                _output_tensor->info().color_format(), _decoder_keep_original );
+                                                _decoded_img_info._original_height);
 
                 if(load_status == LoaderModuleStatus::OK)
                 {
@@ -206,8 +205,7 @@ AudioLoader::load_routine()
                                                 _decoded_img_info._roi_width,
                                                 _decoded_img_info._roi_height,
                                                 _decoded_img_info._original_width,
-                                                _decoded_img_info._original_height,
-                                                _output_tensor->info().color_format(), _decoder_keep_original );
+                                                _decoded_img_info._original_height);
 
                 if(load_status == LoaderModuleStatus::OK)
                 {
