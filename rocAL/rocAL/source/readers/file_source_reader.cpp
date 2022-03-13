@@ -97,7 +97,7 @@ size_t FileSourceReader::open()
     {
         _last_id.erase(0, last_slash_idx + 1);
     }
-
+    _last_path = file_path; // shobi: have to change this to subtract path - last_id
     _current_fPtr = fopen(file_path.c_str(), "rb");// Open the file,
 
     if(!_current_fPtr) // Check if it is ready for reading
@@ -115,7 +115,6 @@ size_t FileSourceReader::open()
     }
 
     fseek(_current_fPtr, 0 , SEEK_SET);// Take the file pointer back to the start
-
     return _current_file_size;
 }
 

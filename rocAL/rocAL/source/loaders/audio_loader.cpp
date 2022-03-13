@@ -336,7 +336,7 @@ decoded_image_info AudioLoader::get_decode_image_info()
     return _output_decoded_img_info;
 }
 
-// crop_audio_info AudioLoader::get_crop_audio_info()
-// {
-//     return _output_cropped_img_info;
-// }
+crop_image_info AudioLoader::get_crop_image_info()
+{
+    return _output_cropped_img_info;
+}

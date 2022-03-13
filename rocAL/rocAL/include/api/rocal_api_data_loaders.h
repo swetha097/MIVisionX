@@ -61,13 +61,14 @@ extern "C"  RocalTensor  ROCAL_API_CALL rocalJpegFileSource(RocalContext context
 /// \return Reference to the output image
 extern "C"  RocalTensor  ROCAL_API_CALL rocalAudioFileSource(RocalContext context,
                                                         const char* source_path,
-                                                        //RocalImageColor rocal_color_format,
                                                         unsigned internal_shard_count,
                                                         bool is_output,
                                                         bool shuffle = false,
                                                         bool loop = false,
-                                                        //RocalImageSizeEvaluationPolicy decode_size_policy = ROCAL_USE_MOST_FREQUENT_SIZE,
-                                                        unsigned max_width = 0, unsigned max_height = 0, RocalDecoderType rocal_decoder_type=RocalDecoderType::ROCAL_DECODER_AUDIO_SNDFILE);
+                                                        float sample_rate = 0.0,
+                                                        bool downmix = false,
+                                                        unsigned max_frames = 1,
+                                                        unsigned max_channels = 1);
 
 extern "C"  RocalTensor  ROCAL_API_CALL rocalAudioFileSourceSingleShard(RocalContext p_context,
                                                         const char* source_path,
@@ -77,7 +78,7 @@ extern "C"  RocalTensor  ROCAL_API_CALL rocalAudioFileSourceSingleShard(RocalCon
                                                         bool shuffle,
                                                         bool loop,
                                                         float sample_rate,
-                                                        bool downmix, 
+                                                        bool downmix,
                                                         unsigned max_frames,
                                                         unsigned max_channels);
 

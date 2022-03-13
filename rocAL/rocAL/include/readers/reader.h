@@ -116,6 +116,7 @@ public:
 
     //! Returns the name/identifier of the last item opened in this resource
     virtual std::string id() = 0;
+    virtual std::string path() = 0;
     //! Returns the number of items remained in this resource
     virtual unsigned count() = 0;
     //! return shuffle_time if applicable

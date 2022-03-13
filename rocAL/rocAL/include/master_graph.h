@@ -66,8 +66,8 @@ public:
     RocalMemType mem_type();
     void release();
     template <typename T, typename M> std::shared_ptr<T> meta_add_node(std::shared_ptr<M> node);
-    template <typename T>
-    std::shared_ptr<T> add_tensor_node(const std::vector<rocALTensor *> &inputs, const std::vector<rocALTensor *> &outputs);
+    // template <typename T>
+    // std::shared_ptr<T> add_tensor_node(const std::vector<rocALTensor *> &inputs, const std::vector<rocALTensor *> &outputs);
     template <typename T>
     std::shared_ptr<T> add_node(const std::vector<rocALTensor *> &input, const std::vector<rocALTensor *> &output);
     rocALTensor *create_tensor(const rocALTensorInfo &info, bool is_output);

@@ -51,10 +51,10 @@ decoded_image_info AudioLoaderSharded::get_decode_image_info()
     return _loaders[_loader_idx]->get_decode_image_info();
 }
 
-// crop_audio_info AudioLoaderSharded::get_crop_audio_info()
-// {
-//     return _loaders[_loader_idx]->get_crop_audio_info();
-// }
+crop_image_info AudioLoaderSharded::get_crop_image_info()
+{
+    return _loaders[_loader_idx]->get_crop_image_info();
+}
 
 AudioLoaderSharded::~AudioLoaderSharded()
 {

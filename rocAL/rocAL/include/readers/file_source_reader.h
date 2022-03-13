@@ -55,6 +55,9 @@ public:
     //! Returns the name of the latest file opened
     std::string id() override { return _last_id;};
 
+    //Returns the path of the latest file opened
+    std::string path() override { return _last_path; };
+
     unsigned count() override;
 
     ~FileSourceReader() override;
@@ -77,6 +80,7 @@ private:
     FILE* _current_fPtr;
     unsigned _current_file_size;
     std::string _last_id;
+    std::string _last_path;
     std::string _last_file_name;
     size_t _shard_id = 0;
     size_t _shard_count = 1;// equivalent of batch size

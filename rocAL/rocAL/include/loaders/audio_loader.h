@@ -72,9 +72,9 @@ private:
     std::thread _load_thread;
     RocalMemType _mem_type;
     decoded_image_info _decoded_img_info;
-    // crop_audio_info _crop_audio_info;
+    crop_image_info _crop_image_info;
     decoded_image_info _output_decoded_img_info;
-    // crop_audio_info _output_cropped_img_info;
+    crop_image_info _output_cropped_img_info;
     CircularBuffer _circ_buff;
     TimingDBG _swap_handle_time;
     bool _is_initialized;

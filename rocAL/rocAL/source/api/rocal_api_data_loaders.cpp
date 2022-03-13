@@ -51,7 +51,6 @@ evaluate_audio_data_set(StorageType storage_type,
     //             return MaxSizeEvaluationPolicy::MAXIMUM_FOUND_SIZE;
     //     }
     // };
-
     AudioSourceEvaluator source_evaluator;
     // source_evaluator.set_size_evaluation_policy(MaxSizeEvaluationPolicy::MAXIMUM_FOUND_SIZE);
     if(source_evaluator.create(ReaderConfig(storage_type, source_path, json_path), DecoderConfig(decoder_type)) != AudioSourceEvaluatorStatus::OK)
@@ -60,7 +59,7 @@ evaluate_audio_data_set(StorageType storage_type,
     auto max_channels = source_evaluator.max_channels();
     if(max_samples == 0 ||max_channels  == 0)
         THROW("Cannot find size of the audio files or files cannot be accessed")
-
+    std::cerr<<"\n******************** Max samples :: "<<max_samples<<"\t max_channels :: "<<max_channels<<"************************************";
     LOG("Maximum input image dimension [ "+ TOSTR(max_samples) + " x " + TOSTR(max_channels)+" ] for images in "+source_path)
     return std::make_tuple(max_samples, max_channels);
 };
@@ -195,7 +194,7 @@ rocalJpegFileSourceSingleShard(
         if(is_output)
         {
             auto actual_output = context->master_graph->create_tensor(info, is_output);
-            // context->master_graph->add_tensor_node<CopyNode>({output}, {actual_output});
+            // context->master_graph->add_node<CopyNode>({output}, {actual_output});
         }
 
     }
@@ -285,7 +284,7 @@ rocalJpegFileSource(
         if(is_output)
         {
             auto actual_output = context->master_graph->create_tensor(info, is_output);
-            context->master_graph->add_tensor_node<CopyNode>({output}, {actual_output}); // Have to add copy tensor node
+            context->master_graph->add_node<CopyNode>({output}, {actual_output}); // Have to add copy tensor node
         }
 
     }
@@ -369,7 +368,7 @@ rocalAudioFileSourceSingleShard(
         if(is_output)
         {
             auto actual_output = context->master_graph->create_tensor(info, is_output);
-            context->master_graph->add_tensor_node<CopyNode>({output}, {actual_output}); // Have to add copy tensor node
+            context->master_graph->add_node<CopyNode>({output}, {actual_output}); // Have to add copy tensor node
         }
 
     }
@@ -414,7 +413,7 @@ rocalAudioFileSource(
         // TODO: Add evaluate_audio_data_set function to get the largest audio sample length in a batch
         auto [max_frames, max_channels] = evaluate_audio_data_set(StorageType::FILE_SYSTEM, DecoderType::SNDFILE,
                                                        source_path, "");
-
+        std::cerr<<"\n Completed the evaluation of audio data set max_frame:: "<<max_frames<<"\t max_channels ::"<<max_channels;
         INFO("Internal buffer size for audio frames = "+ TOSTR(max_frames))
 
         RocalTensorlayout tensor_format = RocalTensorlayout::NONE;
@@ -443,11 +442,11 @@ rocalAudioFileSource(
                                                                             context->master_graph->meta_data_reader()
                                                                             );
         context->master_graph->set_loop(loop);
-
+        std::cerr<<"\n add node of audio reader";   
         if(is_output)
         {
             auto actual_output = context->master_graph->create_tensor(info, is_output);
-            context->master_graph->add_tensor_node<CopyNode>({output}, {actual_output}); // Have to add copy tensor node
+            context->master_graph->add_node<CopyNode>({output}, {actual_output}); // Have to add copy tensor node
         }
 
     }
