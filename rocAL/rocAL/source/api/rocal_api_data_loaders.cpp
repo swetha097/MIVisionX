@@ -342,7 +342,7 @@ rocalAudioFileSourceSingleShard(
         RocalTensorlayout tensor_format = RocalTensorlayout::NONE;
         RocalTensorDataType tensor_data_type = RocalTensorDataType::FP32;
         RocalROIType roi_type = RocalROIType::XYWH;  // Letting the roi_type be default value since it isn't required for audio decoder
-        unsigned num_of_dims = 2;
+        unsigned num_of_dims = 3;
         std::vector<unsigned> dims;
         dims.resize(num_of_dims);
         dims.at(0) = context->internal_batch_size();
@@ -419,7 +419,7 @@ rocalAudioFileSource(
         RocalTensorlayout tensor_format = RocalTensorlayout::NONE;
         RocalTensorDataType tensor_data_type = RocalTensorDataType::FP32;
         RocalROIType roi_type = RocalROIType::XYWH;  // Letting the roi_type be default value since it isn't required for audio decoder
-        unsigned num_of_dims = 2;
+        unsigned num_of_dims = 3;
         std::vector<unsigned> dims;
         dims.resize(num_of_dims);
         dims.at(0) = context->internal_batch_size();
@@ -429,7 +429,9 @@ rocalAudioFileSource(
                                 std::make_shared<std::vector<unsigned> >(std::move(dims)),
                                 context->master_graph->mem_type(),
                                 tensor_data_type);
+        std::cerr<<"\n Created tensor info with max samples and max channels:: "<<max_frames<<"\t max_channels ::"<<max_channels;                        
         output = context->master_graph->create_loader_output_tensor(info);
+        std::cerr<<"\n Created output tensor with max samples and max channels:: "<<max_frames<<"\t max_channels ::"<<max_channels;
         // TODO: Add a loader module for loading audio files from filesystem
         context->master_graph->add_node<AudioLoaderNode>({}, {output})->init(internal_shard_count,
                                                                             source_path,

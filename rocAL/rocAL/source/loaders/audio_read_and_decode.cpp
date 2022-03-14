@@ -142,7 +142,7 @@ AudioReadAndDecode::load(float* buff,
 
         // _compressed_buff[file_counter].reserve(fsize);
         // _actual_read_size[file_counter] = _reader->read(_compressed_buff[file_counter].data(), fsize);
-        _audio_names[file_counter] = _reader->id();
+        _audio_names[file_counter] = _reader->path();
         _reader->close();
         // _compressed_audio_size[file_counter] = fsize;
         file_counter++;

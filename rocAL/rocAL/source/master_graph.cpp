@@ -634,13 +634,16 @@ void MasterGraph::output_routine()
                 continue;
             }
 
+            std::cerr << "\nAfter thread initiation in output routine \n";
             // When executing on CPU the internal batch count can be smaller than the user batch count
             // In that case the user_batch_size will be an integer multiple of the _internal_batch_size
             // Multiple cycles worth of internal_batch_size images should be processed to complete a full _user_batch_size
             for(unsigned cycle_idx = 0; cycle_idx< _user_to_internal_batch_ratio; cycle_idx++)
             {
                 // Swap handles on the input image, so that new image is loaded to be processed
+                std::cerr << "\nBefore load next\n";
                 auto load_ret = _loader_module->load_next();
+                std::cerr << "\nAfter load next\n";
                 if (load_ret != LoaderModuleStatus::OK)
                     THROW("Loader module failed to load next batch of images, status " + TOSTR(load_ret))
                 if (!_processing)
@@ -649,6 +652,7 @@ void MasterGraph::output_routine()
                 auto decode_image_info = _loader_module->get_decode_image_info();
                 auto crop_image_info = _loader_module->get_crop_image_info();
 
+                std::cerr << "\nThis cycle names: " << this_cycle_names.at(0) << "\n";
                 if(this_cycle_names.size() != _internal_batch_size)
                     WRN("Internal problem: names count "+ TOSTR(this_cycle_names.size()))
                 // meta_data lookup is done before _meta_data_graph->process() is called to have the new meta_data ready for processing

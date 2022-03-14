@@ -87,7 +87,6 @@ void SndFileDecoder::release()
     if(_sf_ptr != NULL) {
       sf_close(_sf_ptr);  
     }
-    free(&_sfinfo);
 }
 
 SndFileDecoder::~SndFileDecoder()

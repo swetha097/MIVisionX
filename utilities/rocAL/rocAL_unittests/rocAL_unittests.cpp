@@ -133,7 +133,7 @@ int test(int test_case, const char *path, const char *outName, int rgb, int gpu,
     }
 #elif defined AUDIO
     {
-        input1 = rocalAudioFileSource(handle, path, num_threads, false, true, false);
+        input1 = rocalAudioFileSource(handle, path, num_threads, true, true, false);
     }
 #else
     if (decode_max_height <= 0 || decode_max_width <= 0)
@@ -149,7 +149,7 @@ int test(int test_case, const char *path, const char *outName, int rgb, int gpu,
 
     if (rocalGetStatus(handle) != ROCAL_OK)
     {
-        std::cout << "JPEG source could not initialize : " << rocalGetErrorMessage(handle) << std::endl;
+        std::cout << "Audio source could not initialize : " << rocalGetErrorMessage(handle) << std::endl;
         return -1;
     }
 
@@ -172,7 +172,7 @@ int test(int test_case, const char *path, const char *outName, int rgb, int gpu,
     {
         std::cout << ">>>>>>> Running "
                   << "rocalBrightness" << std::endl;
-        image1 = rocalBrightnessTensor(handle, input1, true);
+        // image1 = rocalBrightnessTensor(handle, input1, true);
     }
     break;
     case 2:
@@ -203,23 +203,23 @@ int test(int test_case, const char *path, const char *outName, int rgb, int gpu,
     int p = ((color_format == RocalImageColor::ROCAL_COLOR_RGB24) ? 3 : 1);
     const unsigned number_of_cols = 1; //1920 / w;
     cv::Mat mat_output, mat_input;
-    switch (tensorOutputType)
-    {
-    case ROCAL_FP32:
-    {
-        auto cv_color_format = ((color_format == RocalImageColor::ROCAL_COLOR_RGB24) ? CV_32FC3 : CV_8UC1);
-        mat_output = cv::Mat(h, w, cv_color_format);
-        mat_input = cv::Mat(h, w, cv_color_format);
-    }
-    break;
-    case ROCAL_UINT8:
-    {
-        auto cv_color_format = ((color_format == RocalImageColor::ROCAL_COLOR_RGB24) ? CV_8UC3 : CV_8UC1);
-        mat_output = cv::Mat(h, w, cv_color_format);
-        mat_input = cv::Mat(h, w, cv_color_format);
-    }
-    break;
-    }
+    // switch (tensorOutputType)
+    // {
+    // case ROCAL_FP32:
+    // {
+    //     auto cv_color_format = ((color_format == RocalImageColor::ROCAL_COLOR_RGB24) ? CV_32FC3 : CV_8UC1);
+    //     mat_output = cv::Mat(h, w, cv_color_format);
+    //     mat_input = cv::Mat(h, w, cv_color_format);
+    // }
+    // break;
+    // case ROCAL_UINT8:
+    // {
+    //     auto cv_color_format = ((color_format == RocalImageColor::ROCAL_COLOR_RGB24) ? CV_8UC3 : CV_8UC1);
+    //     mat_output = cv::Mat(h, w, cv_color_format);
+    //     mat_input = cv::Mat(h, w, cv_color_format);
+    // }
+    // break;
+    // }
 
     cv::Mat mat_color;
     int col_counter = 0;
@@ -234,6 +234,7 @@ int test(int test_case, const char *path, const char *outName, int rgb, int gpu,
         if (rocalRun(handle) != 0)
         {
             // sleep(2);
+            std::cerr<<"\n Inside rocAl run\n";
             break;
         }
 

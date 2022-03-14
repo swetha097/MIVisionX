@@ -266,10 +266,14 @@ int rocALTensor::create_from_handle(vx_context context)
     }
     vx_status status;
     vx_size dims[4];
-    dims[0] = _info.dims()->at(0);
-    dims[1] = _info.dims()->at(1);
-    dims[2] = _info.dims()->at(2);
-    dims[3] = _info.dims()->at(3);
+    for(unsigned i = 0; i < _info.num_of_dims(); i++)
+    {
+        dims[i] = _info.dims()->at(i);
+    }
+    // dims[0] = _info.dims()->at(0);
+    // dims[1] = _info.dims()->at(1);
+    // dims[2] = _info.dims()->at(2);
+    // dims[3] = _info.dims()->at(3);
     // std::cerr<<"\n dims in local "<<dims[0]<<" "<<dims[1]<<" "<<dims[2]<<" "<<dims[3];
     _vx_handle = vxCreateTensorFromHandle(_context, _info.num_of_dims(), dims, tens_data_type, 0, stride, ptr, vx_mem_type(_info._mem_type));
     if ((status = vxGetStatus((vx_reference)_vx_handle)) != VX_SUCCESS)

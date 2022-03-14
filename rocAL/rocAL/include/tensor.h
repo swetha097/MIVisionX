@@ -84,6 +84,12 @@ struct rocALTensorInfo
             }
             reallocate_tensor_roi_buffers();
         }
+        else
+        {
+            _max_width = _dims->at(1);
+            _max_height = _dims->at(2);
+            
+        }
         _layout = layout;
     }
     void set_color_format(RocalColorFormat color_format) { _color_format = color_format; }
