@@ -36,7 +36,6 @@ THE SOFTWARE.
 using namespace cv;
 
 #define DISPLAY
-#define AUDIO 
 
 using namespace std::chrono;
 
@@ -82,6 +81,8 @@ int test(int test_case, const char *path, const char *outName, int rgb, int gpu,
     int inputBatchSize = 2;
     int decode_max_width = width * 2;
     int decode_max_height = height * 2;
+    // int decode_max_width = 0;
+    // int decode_max_height = 0;
     std::cout << ">>> test case " << test_case << std::endl;
     std::cout << ">>> Running on " << (gpu ? "GPU" : "CPU") << " , " << (rgb ? " Color " : " Grayscale ") << std::endl;
 
@@ -131,10 +132,6 @@ int test(int test_case, const char *path, const char *outName, int rgb, int gpu,
     {
         input1 = rocalFusedJpegCrop(handle, path, color_format, num_threads, false, false);
     }
-#elif defined AUDIO
-    {
-        input1 = rocalAudioFileSource(handle, path, num_threads, true, true, false);
-    }
 #else
     if (decode_max_height <= 0 || decode_max_width <= 0)
     {
@@ -142,14 +139,14 @@ int test(int test_case, const char *path, const char *outName, int rgb, int gpu,
     }
     else
     {
-        input1 = rocalJpegFileSource(handle, path, color_format, num_threads, false, true, false,
+        input1 = rocalJpegFileSource(handle, path, color_format, num_threads, true, true, false,
                                     ROCAL_USE_USER_GIVEN_SIZE, decode_max_width, decode_max_height);
     }
 #endif
 
     if (rocalGetStatus(handle) != ROCAL_OK)
-    {
-        std::cout << "Audio source could not initialize : " << rocalGetErrorMessage(handle) << std::endl;
+    { // shobi check error message
+        std::cout << " source could not initialize : " << rocalGetErrorMessage(handle) << std::endl;
         return -1;
     }
 
@@ -172,7 +169,7 @@ int test(int test_case, const char *path, const char *outName, int rgb, int gpu,
     {
         std::cout << ">>>>>>> Running "
                   << "rocalBrightness" << std::endl;
-        // image1 = rocalBrightnessTensor(handle, input1, true);
+        image1 = rocalBrightnessTensor(handle, input1, true);
     }
     break;
     case 2:
@@ -201,25 +198,26 @@ int test(int test_case, const char *path, const char *outName, int rgb, int gpu,
     int h = rocalGetAugmentationBranchCount(handle) * rocalGetOutputHeight(handle);
     int w = rocalGetOutputWidth(handle);
     int p = ((color_format == RocalImageColor::ROCAL_COLOR_RGB24) ? 3 : 1);
+    std::cerr<<"\n h :: "<<h<<"\t w :: "<<w<<"\t p :: "<<p;
     const unsigned number_of_cols = 1; //1920 / w;
     cv::Mat mat_output, mat_input;
-    // switch (tensorOutputType)
-    // {
-    // case ROCAL_FP32:
-    // {
-    //     auto cv_color_format = ((color_format == RocalImageColor::ROCAL_COLOR_RGB24) ? CV_32FC3 : CV_8UC1);
-    //     mat_output = cv::Mat(h, w, cv_color_format);
-    //     mat_input = cv::Mat(h, w, cv_color_format);
-    // }
-    // break;
-    // case ROCAL_UINT8:
-    // {
-    //     auto cv_color_format = ((color_format == RocalImageColor::ROCAL_COLOR_RGB24) ? CV_8UC3 : CV_8UC1);
-    //     mat_output = cv::Mat(h, w, cv_color_format);
-    //     mat_input = cv::Mat(h, w, cv_color_format);
-    // }
-    // break;
-    // }
+    switch (tensorOutputType)
+    {
+    case ROCAL_FP32:
+    {
+        auto cv_color_format = ((color_format == RocalImageColor::ROCAL_COLOR_RGB24) ? CV_32FC3 : CV_8UC1);
+        mat_output = cv::Mat(h, w, cv_color_format);
+        mat_input = cv::Mat(h, w, cv_color_format);
+    }
+    break;
+    case ROCAL_UINT8:
+    {
+        auto cv_color_format = ((color_format == RocalImageColor::ROCAL_COLOR_RGB24) ? CV_8UC3 : CV_8UC1);
+        mat_output = cv::Mat(h, w, cv_color_format);
+        mat_input = cv::Mat(h, w, cv_color_format);
+    }
+    break;
+    }
 
     cv::Mat mat_color;
     int col_counter = 0;
@@ -229,7 +227,7 @@ int test(int test_case, const char *path, const char *outName, int rgb, int gpu,
     while (rocalGetRemainingImages(handle) >= inputBatchSize)
     {
         std::cerr<<"\n rocalGetRemainingImages:: "<<rocalGetRemainingImages(handle)<<"\t inputBatchsize:: "<<inputBatchSize  ;
-        // std::cerr<<"\n index "<<index;
+        std::cerr<<"\n index "<<index;
         index++;
         if (rocalRun(handle) != 0)
         {
@@ -264,16 +262,18 @@ int test(int test_case, const char *path, const char *outName, int rgb, int gpu,
         compression_params.push_back(9);
 
         mat_input.copyTo(mat_output(cv::Rect(col_counter * w, 0, w, h)));
+        std::string out_filename = std::string(outName) + ".png";   // in case the user specifies non png filename
+        if (display)
+            out_filename = std::string(outName) + std::to_string(index) + ".png";   // in case the user specifies non png filename
+
         if (color_format == RocalImageColor::ROCAL_COLOR_RGB24)
         {
             cv::cvtColor(mat_output, mat_color, CV_RGB2BGR);
-            //cv::imshow("output", mat_color);
-            cv::imwrite(std::to_string(index) + outName, mat_color, compression_params);
-            // cv::waitKey(0);
+            cv::imwrite(out_filename, mat_color, compression_params);
         }
-        else {
-            //cv::imshow("output", mat_output);
-            cv::imwrite(std::to_string(index) + outName, mat_output, compression_params);
+        else
+        {
+            cv::imwrite(out_filename, mat_output, compression_params);
         }
         col_counter = (col_counter + 1) % number_of_cols;
     }
@@ -286,9 +286,9 @@ int test(int test_case, const char *path, const char *outName, int rgb, int gpu,
     std::cout << "Process  time " << rocal_timing.process_time << std::endl;
     std::cout << "Transfer time " << rocal_timing.transfer_time << std::endl;
     std::cout << ">>>>> Total Elapsed Time " << dur / 1000000 << " sec " << dur % 1000000 << " us " << std::endl;
-    // rocalRelease(handle);
+    rocalRelease(handle);
     // mat_input.release();
     // mat_output.release();
-    exit(0);
+    // exit(0);
     return 0;
 }

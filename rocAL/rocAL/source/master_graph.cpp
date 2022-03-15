@@ -197,11 +197,12 @@ MasterGraph::run()
     if(no_more_processed_data()) {
         return MasterGraph::Status::NO_MORE_DATA;
     }
-
-    if(_output_tensors.size() != 0)
-    {
+    std::cerr<<"\n _output_tensors.size() :: "<<_output_tensors.size();
+    // if(_output_tensors.size() != 0)
+    // {
+        std::cerr<<"\n Comes to output tensor size check";
         _ring_buffer.block_if_empty();// wait here if the user thread (caller of this function) is faster in consuming the processed images compare to th output routine in producing them
-    }
+    // }
 
     if(_first_run)
     {
@@ -211,10 +212,10 @@ MasterGraph::run()
     }
     else
     {
-        if(_output_tensors.size() != 0)
-        {
+        // if(_output_tensors.size() != 0)
+        // {
             _ring_buffer.pop();
-        }
+        // }
     }
 
     // If the last batch of processed imaged has been just popped from the ring_buffer it means user has previously consumed all the processed images.
@@ -278,12 +279,13 @@ MasterGraph::build()
     }
 
     allocate_output_tensor();
-    if(_output_tensors.size() != 0)
+    // if(_output_tensors.size() != 0)
 #if ENABLE_HIP
     _ring_buffer.initHip(_mem_type, _device.resources(), tensor_output_byte_size(), _output_tensors.size());
 #else
     _ring_buffer.init(_mem_type, _device.resources(), tensor_output_byte_size(), _output_tensors.size());
 #endif
+    std::cerr<<"\n Initializing Ring buffer with tensor_output_byte_size "<<tensor_output_byte_size();
     create_single_graph();
     start_processing();
     return Status::OK;
@@ -543,6 +545,7 @@ MasterGraph::copy_output(void *out_ptr)
     // Copies to the output context given by the user
     size_t size;
     size = tensor_output_byte_size();
+    std::cerr<<"\n tensor output byte size :: "<<size;
     size_t dest_buf_offset = 0;
 #if !ENABLE_HIP
     if(processing_on_device_ocl())
@@ -593,7 +596,8 @@ MasterGraph::copy_output(void *out_ptr)
     else
     {
         // get_host_master_read_buffer is blocking if _ring_buffer is empty, and blocks this thread till internal processing thread process a new batch and store in the _ring_buffer
-        memcpy(out_ptr, _ring_buffer.get_host_master_read_buffer(), size * _output_tensors.size());
+        std::cerr<<"\n Gonna copy buffer of size "<<size * _output_tensors.size()<<" in host";
+        memcpy(out_ptr, _ring_buffer.get_host_master_read_buffer(), 300 * 300 * 3 ); //size * _output_tensors.size());
     }
     _convert_time.end();
     return Status::OK;
@@ -634,11 +638,10 @@ void MasterGraph::output_routine()
                 continue;
             }
 
-            std::cerr << "\nAfter thread initiation in output routine \n";
             // When executing on CPU the internal batch count can be smaller than the user batch count
             // In that case the user_batch_size will be an integer multiple of the _internal_batch_size
             // Multiple cycles worth of internal_batch_size images should be processed to complete a full _user_batch_size
-            for(unsigned cycle_idx = 0; cycle_idx< _user_to_internal_batch_ratio; cycle_idx++)
+            for(unsigned cycle_idx = 0; cycle_idx < _user_to_internal_batch_ratio; cycle_idx++)
             {
                 // Swap handles on the input image, so that new image is loaded to be processed
                 std::cerr << "\nBefore load next\n";
