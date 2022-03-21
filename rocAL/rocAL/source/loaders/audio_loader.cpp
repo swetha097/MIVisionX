@@ -154,6 +154,7 @@ void AudioLoader::start_loading()
         THROW("start_loading() should be called after initialize() function is called")
 
     _remaining_audio_count = _audio_loader->count();
+    std::cerr<<"\n Remaining audio count ::"<<_remaining_audio_count;
     _internal_thread_running = true;
     _load_thread = std::thread(&AudioLoader::load_routine, this);
 }
@@ -286,7 +287,7 @@ AudioLoader::update_output_audio()
     //   _output_cropped_img_info = _circ_buff.get_cropped_audio_info();
     // }
     _output_names = _output_decoded_img_info._image_names;
-    _output_tensor->update_tensor_roi(_output_decoded_img_info._roi_width, _output_decoded_img_info._roi_height);
+    // _output_tensor->update_tensor_roi(_output_decoded_img_info._roi_width, _output_decoded_img_info._roi_height);
     _circ_buff.pop();
     if (!_loop)
         _remaining_audio_count -= _batch_size;

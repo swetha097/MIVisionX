@@ -127,8 +127,10 @@ AudioReadAndDecode::load(float* buff,
     unsigned file_counter = 0;
     // const auto ret = interpret_color_format(output_color_format);
     // const Decoder::ColorFormat decoder_color_format = std::get<0>(ret);
-    const size_t audio_size = max_decoded_samples * max_decoded_channels * sizeof(float);
-
+    const size_t audio_size = max_decoded_samples * max_decoded_channels;
+    std::cerr<<"\n max_decoded_samples * max_decoded_channels * sizeof(float) :: "<<max_decoded_samples<<"\t "<<max_decoded_channels<<"\t "<<sizeof(float);
+    std::cerr<<"\n audio size :: "<<audio_size;
+    // exit(0);
     // Decode with the channels and size equal to a single audio
     // File read is done serially since I/O parallelization does not work very well.
     _file_load_time.start();// Debug timing
@@ -152,9 +154,9 @@ AudioReadAndDecode::load(float* buff,
 
     _decode_time.start();// Debug timing
     if (_decoder_config._type != DecoderType::SKIP_DECODE) {
-        for (size_t i = 0; i < _batch_size; i++)
-            _decompressed_buff_ptrs[i] = buff + audio_size * i;
-
+        for (size_t i = 0; i < _batch_size; i++){
+            _decompressed_buff_ptrs[i] = buff + (audio_size * i);
+        }
 #pragma omp parallel for num_threads(_batch_size)  // default(none) TBD: option disabled in Ubuntu 20.04
         for (size_t i = 0; i < _batch_size; i++)
         {
@@ -169,11 +171,6 @@ AudioReadAndDecode::load(float* buff,
             }
             _original_channels[i] = original_channels;
             _original_samples[i] = original_samples;
-#if 0
-            if((unsigned)original_samples != max_decoded_samples || (unsigned)original_channels != max_decoded_channels)
-                // Seeting the whole buffer to zero in case resizing to exact output dimension is not possible.
-                memset(_decompressed_buff_ptrs[i],0 , audio_size);
-#endif
 
             if (_decoder[i]->decode(_decompressed_buff_ptrs[i]) != AudioDecoder::Status::OK) {
             }

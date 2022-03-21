@@ -83,7 +83,7 @@ void* CircularBuffer::get_read_buffer_dev()
     return _dev_buffer[_read_ptr];
 }
 
-unsigned char* CircularBuffer::get_read_buffer_host()
+void* CircularBuffer::get_read_buffer_host()
 {
     if(!_initialized)
         THROW("Circular buffer not initialized")
@@ -91,7 +91,7 @@ unsigned char* CircularBuffer::get_read_buffer_host()
     return _host_buffer_ptrs[_read_ptr];
 }
 
-unsigned char*  CircularBuffer::get_write_buffer()
+void*  CircularBuffer::get_write_buffer()
 {
     if(!_initialized)
         THROW("Circular buffer not initialized")
@@ -177,6 +177,7 @@ void CircularBuffer::pop()
 }
 void CircularBuffer::init(RocalMemType output_mem_type, size_t output_mem_size, size_t buffer_depth)
 {
+    std::cerr<<"\n Coming to initialize circular buffer output_mem_size :: "<<output_mem_size*10<<"\t buffer_depth :: "<<buffer_depth;
     _buff_depth = buffer_depth;
     _dev_buffer.reserve(_buff_depth);
     _host_buffer_ptrs.reserve(_buff_depth);
@@ -259,7 +260,7 @@ void CircularBuffer::init(RocalMemType output_mem_type, size_t output_mem_size, 
         for(size_t buffIdx = 0; buffIdx < _buff_depth; buffIdx++)
         {
             // a minimum of extra MEM_ALIGNMENT is allocated
-            _host_buffer_ptrs[buffIdx] = (unsigned char*)aligned_alloc(MEM_ALIGNMENT, MEM_ALIGNMENT * (_output_mem_size / MEM_ALIGNMENT + 1));
+            _host_buffer_ptrs[buffIdx] = aligned_alloc(MEM_ALIGNMENT, MEM_ALIGNMENT * (_output_mem_size / MEM_ALIGNMENT + 1));
         }
     }
     _initialized = true;

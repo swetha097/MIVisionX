@@ -88,7 +88,7 @@ struct rocALTensorInfo
         {
             _max_width = _dims->at(1);
             _max_height = _dims->at(2);
-            
+            std::cerr<<"\n Setting _max_width :: "<<_max_width<<"\t _max_height :: "<<_max_height;
         }
         _layout = layout;
     }
@@ -107,6 +107,7 @@ struct rocALTensorInfo
     std::shared_ptr<std::vector<RocalROI>> get_roi() const { return _roi; }
     RocalColorFormat color_format() const {return _color_format; }
     Type type() const { return _type; }
+    bool is_image() const { return _is_image; }
     unsigned data_type_size()
     {
         if(_data_type == RocalTensorDataType::FP32)

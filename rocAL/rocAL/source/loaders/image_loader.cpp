@@ -175,7 +175,7 @@ ImageLoader::load_routine()
         {
             if(tensor)
             {
-                load_status = _image_loader->load(data,
+                load_status = _image_loader->load((unsigned char *)data,
                                                 _decoded_img_info._image_names,
                                                 _output_tensor->info().max_width(),
                                                 _output_tensor->info().max_height(),
@@ -199,7 +199,7 @@ ImageLoader::load_routine()
             }
             else
             {
-                load_status = _image_loader->load(data,
+                load_status = _image_loader->load((unsigned char *)data,
                                                 _decoded_img_info._image_names,
                                                 _output_tensor->info().max_width(),
                                                 _output_tensor->info().max_height(),

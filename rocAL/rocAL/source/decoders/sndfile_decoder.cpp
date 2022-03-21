@@ -67,7 +67,7 @@ AudioDecoder::Status SndFileDecoder::decode_info(int* samples, int* channels)
 AudioDecoder::Status SndFileDecoder::initialize(const char *src_filename)
 {
     _src_filename = src_filename;
-    memset(&_sfinfo, 0, sizeof(_sfinfo)) ;    
+    memset(&_sfinfo, 0, sizeof(_sfinfo)) ;
     if (!(_sf_ptr = sf_open(src_filename, SFM_READ, &_sfinfo)))
 	{	/* Open failed so print an error message. */
 		printf("Not able to open input file %s.\n", src_filename);
@@ -77,7 +77,7 @@ AudioDecoder::Status SndFileDecoder::initialize(const char *src_filename)
         AudioDecoder::Status status = Status::HEADER_DECODE_FAILED;
 		return status;
 	};
-    
+
     AudioDecoder::Status status = Status::OK;
     return status;
 }
@@ -85,7 +85,7 @@ AudioDecoder::Status SndFileDecoder::initialize(const char *src_filename)
 void SndFileDecoder::release()
 {
     if(_sf_ptr != NULL) {
-      sf_close(_sf_ptr);  
+      sf_close(_sf_ptr);
     }
 }
 

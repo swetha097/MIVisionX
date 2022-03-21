@@ -66,7 +66,7 @@ AudioSourceEvaluator::find_max_dimension()
         if( (fsize) == 0 )
             continue;
         auto file_name = _reader->path(); // shobi: have to change this to path + id
-        std::cerr<<"\n file name inside find max dimensions:: "<<file_name;
+        // std::cerr<<"\n file name inside find max dimensions:: "<<file_name;
         // _header_buff.resize(fsize);
         // auto actual_read_size = _reader->read(_header_buff.data(), fsize);
         // _reader->close();

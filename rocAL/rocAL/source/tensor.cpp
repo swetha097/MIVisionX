@@ -142,37 +142,42 @@ rocALTensorInfo::rocALTensorInfo(
     {
         _data_size *= dims->at(i);
     }
+    if(_num_of_dims <= 3)
+        _is_image = false;
     // initializing each Tensor dimension in the batch with the maximum Tensor size, they'll get updated later during the runtime
     // Update this only if the tensor is image
 }
 
 void rocALTensor::update_tensor_roi(const std::vector<uint32_t> &width, const std::vector<uint32_t> &height)
 {
-    if (width.size() != height.size())
-        THROW("Batch size of Tensor height and width info does not match")
-
-    if (width.size() != info().batch_size())
-        THROW("The batch size of actual Tensor height and width different from Tensor batch size " + TOSTR(width.size()) + " != " + TOSTR(info().batch_size()))
-    for (unsigned i = 0; i < info().batch_size(); i++)
+    if(_info.is_image())
     {
-        if (width[i] > _info.max_width())
-        {
-            ERR("Given ROI width is larger than buffer width for tensor[" + TOSTR(i) + "] " + TOSTR(width[i]) + " > " + TOSTR(_info.max_width()))
-            _info.get_roi()->at(i).x2 = _info.max_width();
-        }
-        else
-        {
-            _info.get_roi()->at(i).x2 = width[i];
-        }
+        if (width.size() != height.size())
+            THROW("Batch size of Tensor height and width info does not match")
 
-        if (height[i] > _info.max_height())
+        if (width.size() != info().batch_size())
+            THROW("The batch size of actual Tensor height and width different from Tensor batch size " + TOSTR(width.size()) + " != " + TOSTR(info().batch_size()))
+
+        for (unsigned i = 0; i < info().batch_size(); i++)
         {
-            ERR("Given ROI height is larger than buffer with for tensor[" + TOSTR(i) + "] " + TOSTR(height[i]) + " > " + TOSTR(_info.max_height()))
-            _info.get_roi()->at(i).y2 = _info.max_height();
-        }
-        else
-        {
-            _info.get_roi()->at(i).y2 = height[i];
+            if (width[i] > _info.max_width())
+            {
+                ERR("Given ROI width is larger than buffer width for tensor[" + TOSTR(i) + "] " + TOSTR(width[i]) + " > " + TOSTR(_info.max_width()))
+                _info.get_roi()->at(i).x2 = _info.max_width();
+            }
+            else
+            {
+                _info.get_roi()->at(i).x2 = width[i];
+            }
+            if (height[i] > _info.max_height())
+            {
+                ERR("Given ROI height is larger than buffer with for tensor[" + TOSTR(i) + "] " + TOSTR(height[i]) + " > " + TOSTR(_info.max_height()))
+                _info.get_roi()->at(i).y2 = _info.max_height();
+            }
+            else
+            {
+                _info.get_roi()->at(i).y2 = height[i];
+            }
         }
     }
 }

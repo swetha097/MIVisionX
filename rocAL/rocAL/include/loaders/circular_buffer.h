@@ -65,8 +65,8 @@ public:
     crop_image_info& get_cropped_image_info();
     bool random_bbox_crop_flag = false;
     void* get_read_buffer_dev();
-    unsigned char* get_read_buffer_host();// blocks the caller if the buffer is empty
-    unsigned char*  get_write_buffer(); // blocks the caller if the buffer is full
+    void* get_read_buffer_host();// blocks the caller if the buffer is empty
+    void*  get_write_buffer(); // blocks the caller if the buffer is full
     size_t level();// Returns the number of elements stored
     void reset();// sets the buffer level to 0
     void block_if_empty();// blocks the caller if the buffer is empty
@@ -97,8 +97,8 @@ private:
     hipDeviceProp_t *_dev_prop;
 #endif
     std::vector<void *> _dev_buffer;// Actual memory allocated on the device (in the case of GPU affinity)
-    std::vector<unsigned char*> _host_buffer_ptrs;
-    std::vector<std::vector<unsigned char>> _actual_host_buffers;
+    std::vector<void*> _host_buffer_ptrs;
+    // std::vector<std::vector<void>> _actual_host_buffers;
     std::condition_variable _wait_for_load;
     std::condition_variable _wait_for_unload;
     std::mutex _lock;

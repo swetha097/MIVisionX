@@ -597,7 +597,7 @@ MasterGraph::copy_output(void *out_ptr)
     {
         // get_host_master_read_buffer is blocking if _ring_buffer is empty, and blocks this thread till internal processing thread process a new batch and store in the _ring_buffer
         std::cerr<<"\n Gonna copy buffer of size "<<size * _output_tensors.size()<<" in host";
-        memcpy(out_ptr, _ring_buffer.get_host_master_read_buffer(), 300 * 300 * 3 ); //size * _output_tensors.size());
+        memcpy(out_ptr, _ring_buffer.get_host_master_read_buffer(), size * _output_tensors.size());
     }
     _convert_time.end();
     return Status::OK;
@@ -858,6 +858,7 @@ size_t MasterGraph::tensor_output_sample_size()
 
 size_t MasterGraph::tensor_output_byte_size()
 {
+    std::cerr<<"\n _output_tensor_info.data_size():: "<<_output_tensor_info.data_size()<<"\t _max_tensor_type_size:: "<<_max_tensor_type_size;
     return _output_tensor_info.data_size() * _max_tensor_type_size;
 }
 

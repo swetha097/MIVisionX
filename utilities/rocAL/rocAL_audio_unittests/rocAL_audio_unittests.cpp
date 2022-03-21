@@ -158,7 +158,9 @@ int test(int test_case, const char *path, float sample_rate, int downmix, unsign
             std::cerr<<"\n Inside rocAl run\n";
             break;
         }
-
+        std::vector<float> audio_op;
+        // audio_op.resize(1569280*3);
+        // rocalCopyToTensorOutput(handle, audio_op.data(), 1);
         // switch (tensorOutputType)
         // {
         // case ROCAL_FP32:
