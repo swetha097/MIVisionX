@@ -38,28 +38,13 @@ std::tuple<unsigned, unsigned>
 evaluate_audio_data_set(StorageType storage_type,
                         DecoderType decoder_type, const std::string &source_path, const std::string &json_path)
 {
-    // auto translate_image_size_policy = [](RocalImageSizeEvaluationPolicy decode_size_policy)
-    // {
-    //     switch(decode_size_policy)
-    //     {
-    //         case ROCAL_USE_MAX_SIZE:
-    //         case ROCAL_USE_MAX_SIZE_RESTRICTED:
-    //             return MaxSizeEvaluationPolicy::MAXIMUM_FOUND_SIZE;
-    //         case ROCAL_USE_MOST_FREQUENT_SIZE:
-    //             return MaxSizeEvaluationPolicy::MOST_FREQUENT_SIZE;
-    //         default:
-    //             return MaxSizeEvaluationPolicy::MAXIMUM_FOUND_SIZE;
-    //     }
-    // };
     AudioSourceEvaluator source_evaluator;
-    // source_evaluator.set_size_evaluation_policy(MaxSizeEvaluationPolicy::MAXIMUM_FOUND_SIZE);
     if(source_evaluator.create(ReaderConfig(storage_type, source_path, json_path), DecoderConfig(decoder_type)) != AudioSourceEvaluatorStatus::OK)
         THROW("Initializing file source input evaluator failed ")
     auto max_samples = source_evaluator.max_samples();
     auto max_channels = source_evaluator.max_channels();
     if(max_samples == 0 ||max_channels  == 0)
         THROW("Cannot find size of the audio files or files cannot be accessed")
-    std::cerr<<"\n******************** Max samples :: "<<max_samples<<"\t max_channels :: "<<max_channels<<"************************************";
     LOG("Maximum input image dimension [ "+ TOSTR(max_samples) + " x " + TOSTR(max_channels)+" ] for images in "+source_path)
     return std::make_tuple(max_samples, max_channels);
 };
@@ -315,25 +300,12 @@ rocalAudioFileSourceSingleShard(
     try
     {
         // Audio tensor length is dependent on the longest audio sample present in a batch so following variables are not needed (to be removed)
-        // bool use_input_dimension = (decode_size_policy == ROCAL_USE_USER_GIVEN_SIZE) || (decode_size_policy == ROCAL_USE_USER_GIVEN_SIZE_RESTRICTED);
-        // bool decoder_keep_original = (decode_size_policy == ROCAL_USE_USER_GIVEN_SIZE_RESTRICTED) || (decode_size_policy == ROCAL_USE_MAX_SIZE_RESTRICTED);
-
         if(shard_count < 1 )
             THROW("Shard count should be bigger than 0")
 
         if(shard_id >= shard_count)
             THROW("Shard id should be smaller than shard count")
 
-        // if(use_input_dimension && (max_width == 0 || max_height == 0))
-        // {
-        //     THROW("Invalid input max width and height");
-        // }
-        // else
-        // {
-        //     LOG("User input size " + TOSTR(max_width) + " x " + TOSTR(max_height))
-        // }
-
-        // TODO: Add evaluate_audio_data_set function to get the largest audio sample length in a batch
         auto [max_frames, max_channels] = evaluate_audio_data_set(StorageType::FILE_SYSTEM, DecoderType::SNDFILE,
                                                        source_path, "");
 

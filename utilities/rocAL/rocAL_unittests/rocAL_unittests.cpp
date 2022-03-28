@@ -78,7 +78,7 @@ int main(int argc, const char **argv)
 int test(int test_case, const char *path, const char *outName, int rgb, int gpu, int display, int width, int height)
 {
     size_t num_threads = 1;
-    int inputBatchSize = 1;
+    int inputBatchSize = 2;
     int decode_max_width = width * 2;
     int decode_max_height = height * 2;
     // int decode_max_width = 0;
@@ -198,7 +198,6 @@ int test(int test_case, const char *path, const char *outName, int rgb, int gpu,
     int h = rocalGetAugmentationBranchCount(handle) * rocalGetOutputHeight(handle);
     int w = rocalGetOutputWidth(handle);
     int p = ((color_format == RocalImageColor::ROCAL_COLOR_RGB24) ? 3 : 1);
-    std::cerr<<"\n h :: "<<h<<"\t w :: "<<w<<"\t p :: "<<p;
     const unsigned number_of_cols = 1; //1920 / w;
     cv::Mat mat_output, mat_input;
     switch (tensorOutputType)
@@ -287,8 +286,7 @@ int test(int test_case, const char *path, const char *outName, int rgb, int gpu,
     std::cout << "Transfer time " << rocal_timing.transfer_time << std::endl;
     std::cout << ">>>>> Total Elapsed Time " << dur / 1000000 << " sec " << dur % 1000000 << " us " << std::endl;
     rocalRelease(handle);
-    // mat_input.release();
-    // mat_output.release();
-    // exit(0);
+    mat_input.release();
+    mat_output.release();
     return 0;
 }

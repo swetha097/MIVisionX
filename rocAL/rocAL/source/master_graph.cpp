@@ -261,21 +261,16 @@ MasterGraph::build()
         THROW("No output images or tensors are there, cannot create the pipeline")
 
     // Verify all output images have the same dimension, otherwise creating a unified tensor from them is not supported
-    if(!_output_tensors.empty())
+    _output_tensor_info = _output_tensors.front()->info();
+    _max_tensor_type_size = _output_tensor_info.data_type_size();
+    for(auto&& output_tensor : _output_tensors)
     {
-        _output_tensor_info = _output_tensors.front()->info();
-        _max_tensor_type_size = _output_tensor_info.data_type_size();
-        for(auto&& output_tensor : _output_tensors)
+        rocALTensorInfo tensor_info  = output_tensor->info();
+        if(tensor_info.data_type_size() > _max_tensor_type_size)
         {
-            rocALTensorInfo tensor_info  = output_tensor->info();
-            if(tensor_info.data_type_size() > _max_tensor_type_size)
-            {
-                _max_tensor_type_size = tensor_info.data_type_size();
-                _output_tensor_info = output_tensor->info();
-            }
-
+            _max_tensor_type_size = tensor_info.data_type_size();
+            _output_tensor_info = output_tensor->info();
         }
-
     }
 
     allocate_output_tensor();
@@ -411,7 +406,7 @@ MasterGraph::tensor_output_width()
 size_t
 MasterGraph::tensor_output_height()
 {
-    return (_output_tensor_info.max_height() * _user_to_internal_batch_ratio);
+    return (_output_tensor_info.max_height() * _internal_batch_size * _user_to_internal_batch_ratio);
 }
 
 
