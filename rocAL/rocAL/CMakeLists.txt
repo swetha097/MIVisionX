@@ -48,7 +48,7 @@ if( GPU_SUPPORT AND "${BACKEND}" STREQUAL "HIP")
             set(HIP_PATH $ENV{HIP_PATH} CACHE PATH "Path to which HIP has been installed")
         endif()
     endif()
-    list(APPEND CMAKE_MODULE_PATH ${HIP_PATH}/cmake)
+    list(APPEND CMAKE_MODULE_PATH ${ROCM_PATH}/lib/cmake/hip ${HIP_PATH}/cmake)
     # HSA_PATH
     IF(NOT DEFINED ENV{HSA_PATH})
         SET(HSA_PATH ${ROCM_PATH}/hsa)
@@ -163,9 +163,9 @@ if(${BUILD_RALI})
     include_directories(
                 ${OpenCL_INCLUDE_DIRS}
                 ${OpenCL_INCLUDE_DIRS}/Headers
-                ${AVUTIL_INCLUDE_DIR} 
-                ${AVCODEC_INCLUDE_DIR} 
-                ${SWSCALE_INCLUDE_DIR} 
+                ${AVUTIL_INCLUDE_DIR}
+                ${AVCODEC_INCLUDE_DIR}
+                ${SWSCALE_INCLUDE_DIR}
                 ${AVFORMAT_INCLUDE_DIR}
                 ${CMAKE_CURRENT_BINARY_DIR}
                 ${TurboJpeg_INCLUDE_DIRS}

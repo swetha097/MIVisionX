@@ -410,12 +410,11 @@ VX_API_ENTRY vx_status VX_API_CALL vxSetContextAttribute(vx_context context, vx_
 #elif ENABLE_HIP
         case VX_CONTEXT_ATTRIBUTE_AMD_HIP_DEVICE:
             if (size == sizeof(hipDevice_t)) {
-                if (context->hip_device < 0 && agoGpuHipCreateContext(context, context->hip_device) != VX_SUCCESS) {
-                    status = VX_FAILURE;
+                if (*(int *)ptr >= 0 && agoGpuHipCreateContext(context, *(int *)ptr) == VX_SUCCESS) {
+                    status = VX_SUCCESS;
                 }
                 else {
-                    *(int *)ptr = context->hip_device_id;
-                    status = VX_SUCCESS;
+                    status = VX_FAILURE;
                 }
             }
             break;
@@ -4113,6 +4112,16 @@ VX_API_ENTRY vx_status VX_API_CALL vxQueryScalar(vx_scalar scalar, vx_enum attri
             case VX_SCALAR_ATTRIBUTE_TYPE:
                 if (size == sizeof(vx_enum)) {
                     *(vx_enum *)ptr = data->u.scalar.type;
+                    status = VX_SUCCESS;
+                }
+                break;
+            case VX_SCALAR_BUFFER:
+                if (size == sizeof(vx_uint8 *)) {
+                    if (data->buffer) {
+                        *(vx_uint8 **)ptr = data->buffer;
+                    } else {
+                        *(vx_uint8 **)ptr = NULL;
+                    }
                     status = VX_SUCCESS;
                 }
                 break;
