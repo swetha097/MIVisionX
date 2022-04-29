@@ -176,9 +176,9 @@ def image_random_crop(*inputs,user_feature_key_map=None ,path = '', file_root= '
             'is_output': False,
             "shuffle": random_shuffle,
             "loop": False,
-            "decode_size_policy": types.MAX_SIZE,
-            "max_width": 0,
-            "max_height":0}
+            "decode_size_policy": types.USER_GIVEN_SIZE,
+            "max_width": 2000,
+            "max_height":2000}
         image_decoder_output_image = b.ImageDecoderShard(Pipeline._current_pipeline._handle ,*(kwargs_pybind.values()))
 
 
@@ -261,4 +261,21 @@ def image_slice(*inputs,file_root='',path='',annotations_file='',shard_id = 0, n
             "x_drift_factor": None,
             "y_drift_factor": None}
         image_decoder_slice = b.Caffe2_ImageDecoderPartialShard(Pipeline._current_pipeline._handle ,*(kwargs_pybind.values()))
+    else:
+        kwargs_pybind = {
+                "source_path": file_root,
+                "color_format": output_type,
+                "shard_id": shard_id,
+                "shard_count": num_shards,
+                'is_output': False,
+                "shuffle": random_shuffle,
+                "loop": False,
+                "decode_size_policy": types.MAX_SIZE,
+                "max_width": 2000, #TODO: what happens when we give user given size = multiplier * max_decoded_width
+                "max_height":2000, #TODO: what happens when we give user given size = multiplier * max_decoded_width
+                "area_factor": None,
+                "aspect_ratio": None,
+                "x_drift_factor": None,
+                "y_drift_factor": None}
+        image_decoder_slice = b.FusedDecoderCropShard(Pipeline._current_pipeline._handle ,*(kwargs_pybind.values()))
     return (image_decoder_slice)
