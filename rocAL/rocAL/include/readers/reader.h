@@ -24,6 +24,7 @@ THE SOFTWARE.
 #include <string>
 #include <map>
 #include "meta_data_reader.h"
+#include "video_properties.h"
 
 enum class StorageType
 {
@@ -32,8 +33,18 @@ enum class StorageType
     UNCOMPRESSED_BINARY_DATA = 2,        // experimental: added for supporting cifar10 data set
     CAFFE_LMDB_RECORD = 3,
     CAFFE2_LMDB_RECORD = 4,
-    COCO_FILE_SYSTEM = 5
+    COCO_FILE_SYSTEM = 5,
+    VIDEO_FILE_SYSTEM = 6
 };
+
+#ifdef RALI_VIDEO
+struct SequenceInfo
+{
+    size_t start_frame_number;
+    std::string video_file_name;
+};
+
+#endif
 
 struct ReaderConfig
 {
@@ -58,6 +69,18 @@ struct ReaderConfig
     size_t get_shard_id() { return _shard_id; }
     size_t get_batch_size() { return _batch_count; }
     std::string path() { return _path; }
+#ifdef RALI_VIDEO
+    void set_sequence_length(unsigned sequence_length) { _sequence_length = sequence_length; }
+    void set_frame_step(unsigned step) { _video_frame_step = step; }
+    void set_frame_stride(unsigned stride) { _video_frame_stride = stride; }
+    void set_total_frames_count(size_t total) { _total_frames_count = total; }
+    void set_video_properties(VideoProperties video_prop) { _video_prop = video_prop;}
+    size_t get_sequence_length() { return _sequence_length; }
+    size_t get_frame_step() { return _video_frame_step; }
+    size_t get_frame_stride() { return _video_frame_stride; }
+    size_t get_total_frames_count() { return _total_frames_count; }
+    VideoProperties get_video_properties() { return _video_prop; }
+#endif
     std::string json_path() { return _json_path;}
     std::map<std::string, std::string> feature_key_map() {return _feature_key_map; }
     void set_file_prefix(const std::string &prefix) {_file_prefix = prefix;}
@@ -75,6 +98,13 @@ private:
     bool _loop = false;
     std::string _file_prefix = ""; //!< to read only files with prefix. supported only for cifar10_data_reader and tf_record_reader
     std::shared_ptr<MetaDataReader> _meta_data_reader = nullptr;
+#ifdef RALI_VIDEO
+    size_t _sequence_length = 1; // Video reader module sequence length
+    size_t _video_frame_step;
+    size_t _video_frame_stride = 1;
+    VideoProperties _video_prop;
+    size_t _total_frames_count;
+#endif
 };
 
 class Reader {

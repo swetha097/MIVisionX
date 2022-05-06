@@ -82,6 +82,16 @@ enum class RocalMemType
     HIP
 };
 
+/*! \brief Decoder mode for Video decoding
+ *
+ *  Currently supports Software decoding, will support Hardware decoding in future
+ */
+enum class DecodeMode
+{
+    HW_VAAPI = 0,
+    CPU = 1
+};
+
 typedef struct
 {
     unsigned x1, y1, x2, y2;
@@ -93,13 +103,16 @@ struct Timing
     // The following timings are accumulated timing not just the most recent activity
     long long unsigned image_read_time= 0;
     long long unsigned audio_read_time = 0;
+    long long unsigned video_read_time = 0;
     long long unsigned image_decode_time = 0;
     long long unsigned audio_decode_time = 0;
+    long long unsigned video_decode_time = 0;
     long long unsigned to_device_xfer_time = 0;
     long long unsigned from_device_xfer_time = 0;
     long long unsigned copy_to_output = 0;
     long long unsigned image_process_time= 0;
     long long unsigned audio_process_time = 0;
+    long long unsigned video_process_time = 0;
     long long unsigned bb_process_time= 0;
     long long unsigned mask_process_time= 0;
     long long unsigned label_load_time= 0;

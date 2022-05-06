@@ -34,6 +34,8 @@ enum class DecoderType
     SKIP_DECODE  = 3, //!< For skipping decoding in case of uncompressed data from reader
     OVX_FFMPEG = 4,//!< Uses FFMPEG to decode video streams, can decode up to 4 video streams simultaneously
     SNDFILE = 5,//!< Uses sndfile to decode audio files
+    FFMPEG_SOFTWARE_DECODE = 6,
+    FFMPEG_HARDWARE_DECODE = 7,
 };
 
 

@@ -266,19 +266,20 @@ int rocALTensor::create_from_handle(vx_context context)
     //     dims[3] = (vx_size)_info.batch_size();
     // }
 
-    vx_size stride[_info.num_of_dims()];
+    int num_of_dims = _info.num_of_dims();
+    vx_size stride[num_of_dims];
     void *ptr[1] = {nullptr};
-    bool nhwc = ((_info.layout() == RocalTensorlayout::NHWC) ? true: false);
+    bool nhwc = ((_info.layout() == RocalTensorlayout::NHWC) ? true: false); // TODO : Fiona
 
     stride[0] = tensor_data_size(_info.data_type());
-    for(unsigned i = 1; i < _info.num_of_dims(); i++)
+    for(unsigned i = 1; i < num_of_dims; i++)
     {
         stride[i] = stride[i - 1] * _info.dims()->at(i - 1);
     }
     vx_status status;
     // shobi find a better way to convert from unsigned to size_t
-    vx_size dims[4];
-    for(unsigned i = 0; i < _info.num_of_dims(); i++)
+    vx_size dims[num_of_dims];
+    for(unsigned i = 0; i < num_of_dims; i++)
     {
         dims[i] = _info.dims()->at(i);
     }
@@ -287,7 +288,7 @@ int rocALTensor::create_from_handle(vx_context context)
     // dims[2] = _info.dims()->at(2);
     // dims[3] = _info.dims()->at(3);
     // std::cerr<<"\n dims in local "<<dims[0]<<" "<<dims[1]<<" "<<dims[2]<<" "<<dims[3];
-    _vx_handle = vxCreateTensorFromHandle(_context, _info.num_of_dims(), dims, tens_data_type, 0, stride, ptr, vx_mem_type(_info._mem_type));
+    _vx_handle = vxCreateTensorFromHandle(_context, num_of_dims, dims, tens_data_type, 0, stride, ptr, vx_mem_type(_info._mem_type));
     if ((status = vxGetStatus((vx_reference)_vx_handle)) != VX_SUCCESS)
         THROW("Error: vxCreateTensorFromHandle(input: failed " + TOSTR(status))
     _info._type = rocALTensorInfo::Type::HANDLE;

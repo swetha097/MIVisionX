@@ -100,6 +100,20 @@ auto convert_color_format = [](RocalImageColor color_format)
     }
 };
 
+auto convert_decoder_mode= [](RocalDecodeDevice decode_mode)
+{
+    switch(decode_mode){
+        case ROCAL_HW_DECODE:
+            return DecodeMode::HW_VAAPI;
+
+        case ROCAL_SW_DECODE:
+            return DecodeMode::CPU;
+        default:
+
+            THROW("Unsupported decoder mode" + TOSTR(decode_mode))
+    }
+};
+
 //********************************************************************************************************************
 
 RocalTensor  ROCAL_API_CALL
@@ -433,6 +447,200 @@ rocalAudioFileSource(
     return output;
 }
 
+
+RocalTensor  ROCAL_API_CALL
+rocalVideoFileSourceSingleShard(
+        RocalContext p_context,
+        const char* source_path,
+        RocalImageColor rocal_color_format,
+        RocalDecodeDevice rocal_decode_device,
+        unsigned shard_id,
+        unsigned shard_count,
+        unsigned sequence_length,
+        bool is_output,
+        bool shuffle,
+        bool loop,
+        unsigned step,
+        unsigned stride,
+        bool file_list_frame_num)
+{
+    rocALTensor* output = nullptr;
+    auto context = static_cast<Context*>(p_context);
+    try
+    {
+#ifdef RALI_VIDEO
+        if(sequence_length == 0)
+            THROW("Sequence length passed should be bigger than 0")
+        // Set video loader flag in master_graph
+        // context->master_graph->set_video_loader_flag();
+
+        if(shard_count < 1 )
+            THROW("Shard count should be bigger than 0")
+
+        if(shard_id >= shard_count)
+            THROW("Shard id should be smaller than shard count")
+
+        // Set default step and stride values if 0 is passed
+        step = (step == 0)? sequence_length : step;
+        stride = (stride == 0)? 1 : stride;
+
+        VideoProperties video_prop;
+        DecoderType decoder_type; // TODO : Fiona can we have it as VideoDecoderType ???
+        find_video_properties(video_prop, source_path, file_list_frame_num);
+        if(rocal_decode_device == RocalDecodeDevice::ROCAL_HW_DECODE)
+            decoder_type = DecoderType::FFMPEG_HARDWARE_DECODE;
+        else
+            decoder_type = DecoderType::FFMPEG_SOFTWARE_DECODE;
+        auto [color_format, num_of_planes] = convert_color_format(rocal_color_format);
+        auto decoder_mode = convert_decoder_mode(rocal_decode_device);
+
+        // INFO("Internal buffer size width = "+ TOSTR(width)+ " height = "+ TOSTR(height) + " depth = "+ TOSTR(num_of_planes))
+
+        RocalTensorlayout tensor_format = RocalTensorlayout::NFHWC;
+        RocalTensorDataType tensor_data_type = RocalTensorDataType::UINT8;
+        RocalROIType roi_type = RocalROIType::XYWH;
+        unsigned num_of_dims = 5;
+        std::vector<unsigned> dims;
+        dims.resize(num_of_dims);
+        dims.at(0) = context->internal_batch_size();
+        dims.at(1) = sequence_length;
+        dims.at(2) = video_prop.height;
+        dims.at(3) = video_prop.width;
+        dims.at(4) = num_of_planes;
+
+        auto info  = rocALTensorInfo(num_of_dims,
+                                     std::make_shared<std::vector<unsigned> >(std::move(dims)),
+                                     context->master_graph->mem_type(),
+                                     tensor_data_type);
+        info.set_roi_type(roi_type);
+        info.set_color_format(color_format);
+        info.set_tensor_layout(tensor_format);
+        output = context->master_graph->create_loader_output_tensor(info);
+        context->master_graph->add_node<VideoLoaderSingleShardNode>({}, {output})->init(shard_id, shard_count,
+                                                                                        source_path,
+                                                                                        StorageType::VIDEO_FILE_SYSTEM,
+                                                                                        decoder_type,
+                                                                                        decoder_mode,
+                                                                                        sequence_length,
+                                                                                        step,
+                                                                                        stride,
+                                                                                        video_prop,
+                                                                                        shuffle,
+                                                                                        loop,
+                                                                                        context->user_batch_size(),
+                                                                                        context->master_graph->mem_type());
+        context->master_graph->set_loop(loop);
+
+        if(is_output)
+        {
+            auto actual_output = context->master_graph->create_tensor(info, is_output);
+            // context->master_graph->add_node<CopyNode>({output}, {actual_output});
+        }
+#else
+        THROW("Video decoder is not enabled since ffmpeg is not present")
+#endif
+    }
+    catch(const std::exception& e)
+    {
+        context->capture_error(e.what());
+        std::cerr << e.what() << '\n';
+    }
+    return output;
+
+}
+
+RocalTensor  ROCAL_API_CALL
+rocalVideoFileSource(
+        RocalContext p_context,
+        const char* source_path,
+        RocalImageColor rocal_color_format,
+        RocalDecodeDevice rocal_decode_device,
+        unsigned internal_shard_count,
+        unsigned sequence_length,
+        bool is_output,
+        bool shuffle,
+        bool loop,
+        unsigned step,
+        unsigned stride,
+        bool file_list_frame_num)
+{
+    rocALTensor* output = nullptr;
+    auto context = static_cast<Context*>(p_context);
+    try
+    {
+#ifdef RALI_VIDEO
+        if(sequence_length == 0)
+            THROW("Sequence length passed should be bigger than 0")
+        // Set video loader flag in master_graph
+        // context->master_graph->set_video_loader_flag();
+
+        // Set default step and stride values if 0 is passed
+        step = (step == 0)? sequence_length : step;
+        stride = (stride == 0)? 1 : stride;
+
+        VideoProperties video_prop;
+        DecoderType decoder_type;
+        find_video_properties(video_prop, source_path, file_list_frame_num);
+        if(rocal_decode_device == RocalDecodeDevice::ROCAL_HW_DECODE)
+            decoder_type = DecoderType::FFMPEG_HARDWARE_DECODE;
+        else
+            decoder_type = DecoderType::FFMPEG_SOFTWARE_DECODE;
+        auto [color_format, num_of_planes] = convert_color_format(rocal_color_format);
+        auto decoder_mode = convert_decoder_mode(rocal_decode_device);
+
+        RocalTensorlayout tensor_format = RocalTensorlayout::NFHWC;
+        RocalTensorDataType tensor_data_type = RocalTensorDataType::UINT8;
+        RocalROIType roi_type = RocalROIType::XYWH;
+        unsigned num_of_dims = 5;
+        std::vector<unsigned> dims;
+        dims.resize(num_of_dims);
+        dims.at(0) = context->internal_batch_size();
+        dims.at(1) = sequence_length;
+        dims.at(2) = video_prop.height;
+        dims.at(3) = video_prop.width;
+        dims.at(4) = num_of_planes;
+
+        auto info  = rocALTensorInfo(num_of_dims,
+                                     std::make_shared<std::vector<unsigned> >(std::move(dims)),
+                                     context->master_graph->mem_type(),
+                                     tensor_data_type);
+
+        info.set_roi_type(roi_type);
+        info.set_color_format(color_format);
+        info.set_tensor_layout(tensor_format);
+        output = context->master_graph->create_loader_output_tensor(info);
+        context->master_graph->add_node<VideoLoaderNode>({}, {output})->init(internal_shard_count,
+                                                                            source_path,
+                                                                            StorageType::VIDEO_FILE_SYSTEM,
+                                                                            decoder_type,
+                                                                            decoder_mode,
+                                                                            sequence_length,
+                                                                            step,
+                                                                            stride,
+                                                                            video_prop,
+                                                                            shuffle,
+                                                                            loop,
+                                                                            context->user_batch_size(),
+                                                                            context->master_graph->mem_type());
+        context->master_graph->set_loop(loop);
+
+        if(is_output)
+        {
+            auto actual_output = context->master_graph->create_tensor(info, is_output);
+            // context->master_graph->add_node<CopyNode>({output}, {actual_output});
+        }
+#else
+        THROW("Video decoder is not enabled since ffmpeg is not present")
+#endif
+    }
+    catch(const std::exception& e)
+    {
+        context->capture_error(e.what());
+        std::cerr << e.what() << '\n';
+    }
+    return output;
+
+}
 
 RocalStatus ROCAL_API_CALL
 rocalResetLoaders(RocalContext p_context)
