@@ -21,7 +21,7 @@ THE SOFTWARE.
 */
 
 #include "internal_publishKernels.h"
-#define NUM_OF_DIMS 4
+#define NUM_OF_DIMS 5
 
 struct BrightnessLocalData
 {
@@ -93,7 +93,7 @@ static vx_status VX_CALLBACK validateBrightness(vx_node node, const vx_reference
     vx_parameter output_param;
     size_t num_tensor_dims;
     vx_uint8 tensor_fixed_point_position;
-    size_t tensor_dims[4];
+    size_t tensor_dims[NUM_OF_DIMS];
     vx_enum tensor_type;
     output_param = vxGetParameterByIndex(node, 2);
     STATUS_ERROR_CHECK(vxQueryParameter(output_param, VX_PARAMETER_ATTRIBUTE_REF, &output, sizeof(vx_tensor)));
@@ -165,7 +165,7 @@ static vx_status VX_CALLBACK initializeBrightness(vx_node node, const vx_referen
     STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[0], VX_TENSOR_NUMBER_OF_DIMS, &data->src_desc_ptr->numDims, sizeof(data->src_desc_ptr->numDims)));
     STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[0], VX_TENSOR_DIMS, &data->in_tensor_dims, sizeof(vx_size) * data->src_desc_ptr->numDims));
     STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[0],VX_TENSOR_DATA_TYPE, &data->src_desc_ptr->dataType, sizeof(data->src_desc_ptr->dataType)));
-    if(data->src_desc_ptr->dataType == vx_type_e::VX_TYPE_UINT8)
+    if(data->src_desc_ptr->dataType == vx_type_e::VX_TYPE_UINT8) // TODO - Resolve warning
         data->src_desc_ptr->dataType = RpptDataType::U8;
      data->src_desc_ptr->offsetInBytes = 0;
     if(layout == 0) // NHWC

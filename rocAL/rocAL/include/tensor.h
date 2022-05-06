@@ -46,9 +46,10 @@ THE SOFTWARE.
  */
 extern vx_enum vx_mem_type(RocalMemType mem);
 
-struct rocALTensorInfo
+class rocALTensorInfo
 {
-    friend struct rocALTensor;
+public:
+    friend class rocALTensor;
     enum class Type
     {
         UNKNOWN = -1,
@@ -81,6 +82,16 @@ struct rocALTensorInfo
             {
                 _max_width = _dims->at(3);
                 _max_height = _dims->at(2);
+            }
+            else if(layout == RocalTensorlayout::NFHWC)
+            {
+                _max_width = _dims->at(3);
+                _max_height = _dims->at(2);
+            }
+            else if(layout == RocalTensorlayout::NFCHW)
+            {
+                _max_width = _dims->at(4);
+                _max_height = _dims->at(3);
             }
             reallocate_tensor_roi_buffers();
         }
@@ -145,8 +156,9 @@ private:
 };
 
 bool operator==(const rocALTensorInfo& rhs, const rocALTensorInfo& lhs);
-struct rocALTensor
+class rocALTensor
 {
+public:
     int swap_handle(void* handle);
 
     const rocALTensorInfo& info() { return _info; }

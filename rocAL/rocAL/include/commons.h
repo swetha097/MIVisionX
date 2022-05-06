@@ -37,8 +37,11 @@ enum class RocalTensorlayout
 {
     NHWC = 0,
     NCHW,
+    NFHWC,
+    NFCHW,
     NONE
 };
+
 enum class RocalTensorDataType
 {
     FP32 = 0,

@@ -21,7 +21,7 @@ THE SOFTWARE.
 */
 
 #include "internal_publishKernels.h"
-#define NUM_OF_DIMS 4
+#define NUM_OF_DIMS 5
 struct NopTensorLocalData
 {
     RPPCommonHandle handle;
@@ -85,7 +85,7 @@ static vx_status VX_CALLBACK validateNopTensor(vx_node node, const vx_reference 
     vx_parameter output_param;
     size_t num_tensor_dims;
     vx_uint8 tensor_fixed_point_position;
-    size_t tensor_dims[4];
+    size_t tensor_dims[NUM_OF_DIMS];
     vx_enum tensor_type;
     output_param = vxGetParameterByIndex(node, 1);
     STATUS_ERROR_CHECK(vxQueryParameter(output_param, VX_PARAMETER_ATTRIBUTE_REF, &output, sizeof(vx_tensor)));
