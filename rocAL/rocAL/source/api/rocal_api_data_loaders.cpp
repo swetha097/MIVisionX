@@ -627,7 +627,7 @@ rocalVideoFileSource(
         if(is_output)
         {
             auto actual_output = context->master_graph->create_tensor(info, is_output);
-            // context->master_graph->add_node<CopyNode>({output}, {actual_output});
+            context->master_graph->add_node<CopyNode>({output}, {actual_output});
         }
 #else
         THROW("Video decoder is not enabled since ffmpeg is not present")

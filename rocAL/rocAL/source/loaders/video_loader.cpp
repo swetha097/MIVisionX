@@ -134,7 +134,6 @@ void VideoLoader::initialize(ReaderConfig reader_cfg, DecoderConfig decoder_cfg,
     _batch_size = batch_size;
     _loop = reader_cfg.loop();
     _sequence_length = reader_cfg.get_sequence_length();
-    _sequence_count = _batch_size / _sequence_length;
     _decoder_keep_original = decoder_keep_original;
     _video_loader = std::make_shared<VideoReadAndDecode>();
     try
@@ -146,7 +145,8 @@ void VideoLoader::initialize(ReaderConfig reader_cfg, DecoderConfig decoder_cfg,
         de_init();
         throw;
     }
-    _decoded_img_info._image_names.resize(_sequence_count);
+    _decoded_img_info._image_names.resize(_batch_size);
+    // TODO -the below 4 lines need change?
     _decoded_img_info._roi_height.resize(_batch_size);
     _decoded_img_info._roi_width.resize(_batch_size);
     _decoded_img_info._original_height.resize(_batch_size);
@@ -231,7 +231,7 @@ VideoLoader::load_routine()
 
 bool VideoLoader::is_out_of_data()
 {
-    return (remaining_count() < _sequence_count);
+    return (remaining_count() < _batch_size);
 }
 
 LoaderModuleStatus
@@ -268,7 +268,7 @@ VideoLoader::update_output_image()
     _output_tensor->update_tensor_roi(_output_decoded_img_info._roi_width, _output_decoded_img_info._roi_height);
     _circ_buff.pop();
     if (!_loop)
-        _remaining_sequences_count -= _sequence_count;
+        _remaining_sequences_count -= _batch_size;
     return status;
 }
 

@@ -104,7 +104,6 @@ private:
     std::vector<int> _sequence_video_idx;
     TimingDBG _file_load_time, _decode_time;
     size_t _batch_size;
-    size_t _sequence_count;
     size_t _sequence_length;
     size_t _stride;
     size_t _video_count;

@@ -78,10 +78,9 @@ void VideoReadAndDecode::create(ReaderConfig reader_config, DecoderConfig decode
     set_video_process_count(_video_count);
     _video_decoder.resize(_video_process_count);
     _video_names = _video_prop.video_file_names;
-    _sequence_count = _batch_size / _sequence_length;
-    _decompressed_buff_ptrs.resize(_sequence_count);
-    _actual_decoded_width.resize(_sequence_count);
-    _actual_decoded_height.resize(_sequence_count);
+    _decompressed_buff_ptrs.resize(_batch_size);
+    _actual_decoded_width.resize(_batch_size);
+    _actual_decoded_height.resize(_batch_size);
     _video_decoder_config = decoder_config;
 
     // Initialize the ffmpeg context once for the video files.
@@ -161,13 +160,13 @@ VideoReadAndDecode::load(unsigned char *buff,
         THROW("Zero image dimension is not valid")
     if (!buff)
         THROW("Null pointer passed as output buffer")
-    if (_video_reader->count_items() < _sequence_count)
+    if (_video_reader->count_items() < _batch_size)
         return LoaderModuleStatus::NO_MORE_DATA_TO_READ;
     std::vector<size_t> sequence_start_framenum;
     std::vector<std::vector<float>> sequence_frame_timestamps;
-    sequence_start_framenum.resize(_sequence_count);
-    sequence_frame_timestamps.resize(_sequence_count);
-    for (size_t it = 0; it < (_sequence_count); it++)
+    sequence_start_framenum.resize(_batch_size);
+    sequence_frame_timestamps.resize(_batch_size);
+    for (size_t it = 0; it < _batch_size; it++)
         sequence_frame_timestamps[it].resize(_sequence_length);
     const auto ret = video_interpret_color_format(output_color_format);
     const unsigned output_planes = std::get<1>(ret);
@@ -183,9 +182,9 @@ VideoReadAndDecode::load(unsigned char *buff,
     std::vector<size_t> parallel_decode_sequences;
     std::vector<int> video_index;
     size_t parallel_sequence_count = 0;
-    _sequence_start_frame_num.resize(_sequence_count);
-    _sequence_video_path.resize(_sequence_count);
-    for (size_t i = 0; i < _sequence_count; i++)
+    _sequence_start_frame_num.resize(_batch_size);
+    _sequence_video_path.resize(_batch_size);
+    for (size_t i = 0; i < _batch_size; i++)
     {
         auto sequence_info = _video_reader->get_sequence_info();
         _sequence_start_frame_num[i] = sequence_info.start_frame_number;
@@ -257,7 +256,7 @@ VideoReadAndDecode::load(unsigned char *buff,
 
     _decode_time.end(); // Debug timing
 
-    for (size_t i = 0; i < _sequence_count; i++)
+    for (size_t i = 0; i < _batch_size; i++)
     {
         std::vector<std::string> substrings1, substrings2;
         char delim = '/';
@@ -270,9 +269,11 @@ VideoReadAndDecode::load(unsigned char *buff,
         for (size_t s = 0; s < _sequence_length; s++)
         {
             sequence_frame_timestamps[i][s] = convert_framenum_to_timestamp(_sequence_start_frame_num[i] + (s * _stride));
-            roi_width[(i * _sequence_length) + s] = _actual_decoded_width[i];
-            roi_height[(i * _sequence_length) + s] = _actual_decoded_height[i];
+            // roi_width[(i * _sequence_length) + s] = _actual_decoded_width[i];
+            // roi_height[(i * _sequence_length) + s] = _actual_decoded_height[i];
         }
+        roi_width[i] = _actual_decoded_width[i];
+        roi_height[i] = _actual_decoded_height[i];
         names[i] = video_idx + "#" + file_name + "_" + std::to_string(_sequence_start_frame_num[i]);
     }
     sequence_start_framenum_vec.insert(sequence_start_framenum_vec.begin(), sequence_start_framenum);

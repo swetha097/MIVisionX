@@ -166,7 +166,7 @@ MasterGraph::MasterGraph(size_t batch_size, RocalAffinity affinity, int gpu_id, 
             THROW("Cannot load vx_rpp extension (vx_rpp), vxLoadKernels failed " + TOSTR(status))
         else
             LOG("vx_rpp module loaded successfully")
-#ifdef ROCAL_VIDEO
+#ifdef RALI_VIDEO
         // loading video decoder modules
         if ((status = vxLoadKernels(_context, "vx_amd_media")) != VX_SUCCESS)
             WRN("Cannot load vx_amd_media extension, video decode functionality will not be available")
