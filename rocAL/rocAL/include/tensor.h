@@ -87,11 +87,13 @@ public:
             {
                 _max_width = _dims->at(3);
                 _max_height = _dims->at(2);
+                _frames = _dims->at(1);
             }
             else if(layout == RocalTensorlayout::NFCHW)
             {
                 _max_width = _dims->at(4);
                 _max_height = _dims->at(3);
+                _frames = _dims->at(1);
             }
             reallocate_tensor_roi_buffers();
         }
@@ -135,6 +137,13 @@ public:
         }
         return _data_type_size;
     }
+    unsigned num_of_frames() const
+    {
+        if(_num_of_dims == 5)
+            return _frames;
+        else
+            ERR("The frames dimension 'F' is applicable only for 5D NFCHW or NFHWC tensors")
+    }
 
 
 private:
@@ -151,6 +160,7 @@ private:
     unsigned _batch_size;
     unsigned _data_size = 0;
     unsigned _max_width, _max_height;
+    unsigned _frames; // denotes the F dimension in the tensor
     bool _is_image = false;
     void reallocate_tensor_roi_buffers();
 };

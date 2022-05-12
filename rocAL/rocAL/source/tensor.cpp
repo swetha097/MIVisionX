@@ -102,7 +102,7 @@ void rocALTensorInfo::reallocate_tensor_roi_buffers()
             _roi->at(i).x1 = 0;
             _roi->at(i).y1 = 0;
             _roi->at(i).x2 = _dims->at(3);
-            _roi->at(i).y2= _dims->at(2);
+            _roi->at(i).y2 = _dims->at(2);
         }
     }
     else if(layout() == RocalTensorlayout::NHWC)
@@ -112,9 +112,28 @@ void rocALTensorInfo::reallocate_tensor_roi_buffers()
             _roi->at(i).x1 = 0;
             _roi->at(i).y1 = 0;
             _roi->at(i).x2 = _dims->at(2);
-            _roi->at(i).y2= _dims->at(1);
+            _roi->at(i).y2 = _dims->at(1);
         }
-
+    }
+    else if(layout() == RocalTensorlayout::NFCHW)
+    {
+        for (unsigned i = 0; i < _batch_size; i++)
+        {
+            _roi->at(i).x1 = 0;
+            _roi->at(i).y1 = 0;
+            _roi->at(i).x2 = _dims->at(4);
+            _roi->at(i).y2 = _dims->at(3);
+        }
+    }
+    else if(layout() == RocalTensorlayout::NFHWC)
+    {
+        for (unsigned i = 0; i < _batch_size; i++)
+        {
+            _roi->at(i).x1 = 0;
+            _roi->at(i).y1 = 0;
+            _roi->at(i).x2 = _dims->at(3);
+            _roi->at(i).y2 = _dims->at(2);
+        }
     }
 }
 
@@ -223,12 +242,13 @@ int rocALTensor::create_virtual(vx_context context, vx_graph graph)
     // dims[2] = (vx_size)_info.width();
     // dims[3] = (vx_size)_info.channels();
     // shobi find a better way to convert from unsigned to size_t
-    vx_size dims[4];
-    for(unsigned i = 0; i < _info.num_of_dims(); i++)
+    int num_of_dims = _info.num_of_dims();
+    vx_size dims[num_of_dims];
+    for(unsigned i = 0; i < num_of_dims; i++)
     {
         dims[i] = _info.dims()->at(i);
     }
-    _vx_handle = vxCreateVirtualTensor(graph, _info.num_of_dims(), dims, interpret_tensor_data_type(_info.data_type()), 0);
+    _vx_handle = vxCreateVirtualTensor(graph, num_of_dims, dims, interpret_tensor_data_type(_info.data_type()), 0);
     vx_status status;
     if ((status = vxGetStatus((vx_reference)_vx_handle)) != VX_SUCCESS)
         THROW("Error: vxCreateVirtualTensor(input:[" + TOSTR(_info.max_width()) + "W" + TOSTR(_info.max_height()) + "H" + "]): failed " + TOSTR(status))
