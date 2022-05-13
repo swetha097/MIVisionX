@@ -232,7 +232,7 @@ int main(int argc, const char **argv)
     int h = rocalGetAugmentationBranchCount(handle) * rocalGetOutputHeight(handle) * sequence_length;
     int w = rocalGetOutputWidth(handle);
     int p = ((color_format == RocalImageColor::ROCAL_COLOR_RGB24) ? 3 : 1);
-    int single_image_height = rocalGetOutputHeight(handle) / input_batch_size;
+    int single_image_height = (rocalGetAugmentationBranchCount(handle) * rocalGetOutputHeight(handle)) / input_batch_size;
     std::cout << "output width " << w << " output height " << h << " color planes " << p << std::endl;
     auto cv_color_format = ((color_format == RocalImageColor::ROCAL_COLOR_RGB24) ? CV_8UC3 : CV_8UC1);
     cv::Mat mat_input(h, w, cv_color_format);

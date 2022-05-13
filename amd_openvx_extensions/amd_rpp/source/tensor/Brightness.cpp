@@ -60,30 +60,24 @@ static vx_status VX_CALLBACK refreshBrightness(vx_node node, const vx_reference 
     }
     else if(data->layout == 2 || data->layout == 3)
     {
-        RpptROI * temp_roi_ptr = (RpptROI *) calloc(data->nbatchSize * 4, sizeof(RpptROI));
-        vx_float32 * temp_alpha = (vx_float32 *)malloc(sizeof(vx_float32) * data->nbatchSize);
-        vx_float32 * temp_beta = (vx_float32 *)malloc(sizeof(vx_float32) * data->nbatchSize);
-        STATUS_ERROR_CHECK(vxCopyArrayRange((vx_array)parameters[1], 0, data->nbatchSize * 4, sizeof(unsigned), temp_roi_ptr, VX_READ_ONLY, VX_MEMORY_TYPE_HOST));
-        STATUS_ERROR_CHECK(vxCopyArrayRange((vx_array)parameters[3], 0, data->nbatchSize, sizeof(vx_float32), temp_alpha, VX_READ_ONLY, VX_MEMORY_TYPE_HOST));
-        STATUS_ERROR_CHECK(vxCopyArrayRange((vx_array)parameters[4], 0, data->nbatchSize, sizeof(vx_float32), temp_beta, VX_READ_ONLY, VX_MEMORY_TYPE_HOST));
-        for(int n = 0; n < data->nbatchSize; n++)
+        STATUS_ERROR_CHECK(vxCopyArrayRange((vx_array)parameters[1], 0, data->nbatchSize * 4, sizeof(unsigned), data->roi_tensor_Ptr, VX_READ_ONLY, VX_MEMORY_TYPE_HOST));
+        STATUS_ERROR_CHECK(vxCopyArrayRange((vx_array)parameters[3], 0, data->nbatchSize, sizeof(vx_float32), data->alpha, VX_READ_ONLY, VX_MEMORY_TYPE_HOST));
+        STATUS_ERROR_CHECK(vxCopyArrayRange((vx_array)parameters[4], 0, data->nbatchSize, sizeof(vx_float32), data->beta, VX_READ_ONLY, VX_MEMORY_TYPE_HOST));
+        unsigned num_of_frames = data->in_tensor_dims[1]; // Num of frames 'F'
+        for(int n = data->nbatchSize - 1; n >= 0; n--)
         {
-            for(int s = 0; s < 3; s++)
+            unsigned index = n * num_of_frames;
+            for(int f = 0; f < num_of_frames; f++)
             {
-                data->alpha[n * 3 + s] = temp_alpha[n];
-                data->beta[n * 3 + s] = temp_beta[n];
-                data->roi_tensor_Ptr[n * 4 * 3 + s] = temp_roi_ptr[n * 4];
-                data->roi_tensor_Ptr[n * 4 * 3 + s + 1] = temp_roi_ptr[n * 4 + 1];
-                data->roi_tensor_Ptr[n * 4 * 3 + s + 2] = temp_roi_ptr[n * 4 + 2];
-                data->roi_tensor_Ptr[n * 4 * 3 + s + 3] = temp_roi_ptr[n * 4 + 3];
+                data->alpha[index + f] = data->alpha[n];
+                data->beta[index + f] = data->beta[n];
+                data->roi_tensor_Ptr[index + f].xywhROI.xy.x = data->roi_tensor_Ptr[n].xywhROI.xy.x;
+                data->roi_tensor_Ptr[index + f].xywhROI.xy.y = data->roi_tensor_Ptr[n].xywhROI.xy.y;
+                data->roi_tensor_Ptr[index + f].xywhROI.roiWidth = data->roi_tensor_Ptr[n].xywhROI.roiWidth;
+                data->roi_tensor_Ptr[index + f].xywhROI.roiHeight = data->roi_tensor_Ptr[n].xywhROI.roiHeight;
+
             }
         }
-        temp_roi_ptr = NULL;
-        temp_alpha = NULL;
-        temp_beta = NULL;
-        free(temp_roi_ptr);
-        free(temp_alpha);
-        free(temp_beta);
     }
     if (data->device_type == AGO_TARGET_AFFINITY_GPU)
     {
@@ -253,7 +247,7 @@ static vx_status VX_CALLBACK initializeBrightness(vx_node node, const vx_referen
         data->src_desc_ptr->strides.wStride = 1;
         data->src_desc_ptr->layout = RpptLayout::NCHW;
     }
-    data->roi_tensor_Ptr = (RpptROI *) calloc(data->src_desc_ptr->n * 4, sizeof(RpptROI));
+    data->roi_tensor_Ptr = (RpptROI *) calloc(data->src_desc_ptr->n, sizeof(RpptROI));
     data->alpha = (vx_float32 *)malloc(sizeof(vx_float32) * data->src_desc_ptr->n);
     data->beta = (vx_float32 *)malloc(sizeof(vx_float32) * data->src_desc_ptr->n);
     refreshBrightness(node, parameters, num, data);
