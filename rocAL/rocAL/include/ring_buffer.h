@@ -47,9 +47,9 @@ public:
     ///\param sub_buffer_size
     ///\param sub_buffer_count
 #if ENABLE_HIP
-    void initHip(RocalMemType mem_type, DeviceResourcesHip dev, unsigned sub_buffer_size, unsigned sub_buffer_count);
+    void initHip(RocalMemType mem_type, DeviceResourcesHip dev, std::vector<size_t> sub_buffer_size, unsigned sub_buffer_count);
 #else
-    void init(RocalMemType mem_type, DeviceResources dev, unsigned sub_buffer_size, unsigned sub_buffer_count);
+    void init(RocalMemType mem_type, DeviceResources dev, std::vector<size_t> sub_buffer_size, unsigned sub_buffer_count);
 #endif
     std::vector<void*> get_read_buffers() ;
     void* get_host_master_read_buffer();
@@ -73,7 +73,7 @@ private:
     void increment_write_ptr();
     bool full();
     const unsigned BUFF_DEPTH;
-    unsigned _sub_buffer_size;
+    std::vector<size_t> _sub_buffer_size;
     unsigned _sub_buffer_count;
     std::mutex _lock;
     std::condition_variable _wait_for_load;

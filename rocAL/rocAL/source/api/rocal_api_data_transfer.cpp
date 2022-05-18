@@ -56,7 +56,7 @@ rocalCopyToOutput(
     auto context = static_cast<Context*>(p_context);
     try
     {
-        context->master_graph->copy_output(out_ptr);
+        context->master_graph->copy_output(out_ptr, out_size);
         // std::cerr<<"\n commented  context->master_graph->copy_output(out_ptr";
     }
     catch(const std::exception& e)
@@ -71,8 +71,7 @@ rocalCopyToOutput(
 RocalStatus ROCAL_API_CALL
 rocalCopyToTensorOutput(
         RocalContext p_context,
-        void * out_ptr,
-        size_t out_size)
+        std::vector<void *> &out_ptr)
 {
     auto context = static_cast<Context*>(p_context);
     try

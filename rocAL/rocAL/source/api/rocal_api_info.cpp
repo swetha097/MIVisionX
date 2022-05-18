@@ -40,39 +40,40 @@ size_t ROCAL_API_CALL rocalGetImagePlanes(RocalImage p_tensor)
     return tensor->info().color_plane_count();
 }
 
-int ROCAL_API_CALL rocalGetOutputWidth(RocalContext p_context)
+std::vector<size_t> ROCAL_API_CALL rocalGetOutputWidth(RocalContext p_context)
 {
     auto context = static_cast<Context*>(p_context);
     return context->master_graph->tensor_output_width();
 }
 
-int ROCAL_API_CALL rocalGetOutputHeight(RocalContext p_context)
+std::vector<size_t> ROCAL_API_CALL rocalGetOutputHeight(RocalContext p_context)
 {
     auto context = static_cast<Context*>(p_context);
     return context->master_graph->tensor_output_height();
 }
 
-int ROCAL_API_CALL rocalGetOutputColorFormat(RocalContext p_context)
-{
-    auto context = static_cast<Context*>(p_context);
-    auto translate_color_format = [](RocalColorFormat color_format)
-    {
-        switch(color_format){
-            case RocalColorFormat::RGB24:
-                return 0;
-            case RocalColorFormat::BGR24:
-                return 1;
-            case RocalColorFormat::U8:
-                return 2;
-            case RocalColorFormat::RGB_PLANAR:
-                return 3;
-            default:
-                THROW("Unsupported Tensor type" + TOSTR(color_format))
-        }
-    };
+// int ROCAL_API_CALL rocalGetOutputColorFormat(RocalContext p_context)
+// {
+//     auto context = static_cast<Context*>(p_context);
+//     auto translate_color_format = [](RocalColorFormat color_format)
+//     {
+//         switch(color_format){
+//             case RocalColorFormat::RGB24:
+//                 return 0;
+//             case RocalColorFormat::BGR24:
+//                 return 1;
+//             case RocalColorFormat::U8:
+//                 return 2;
+//             case RocalColorFormat::RGB_PLANAR:
+//                 return 3;
+//             default:
+//                 THROW("Unsupported Tensor type" + TOSTR(color_format))
+//         }
+//     };
 
-    return translate_color_format(context->master_graph->output_color_format());
-}
+//     return translate_color_format(context->master_graph->output_color_format());
+// }
+
 size_t ROCAL_API_CALL rocalGetAugmentationBranchCount(RocalContext p_context)
 {
     auto context = static_cast<Context*>(p_context);

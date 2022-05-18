@@ -52,16 +52,16 @@ public:
     ~MasterGraph();
     Status reset();
     size_t remaining_images_count();
-    MasterGraph::Status copy_output(void *out_ptr);
+    MasterGraph::Status copy_output(std::vector<void *> &out_ptr);
     Status copy_output(void* out_ptr, size_t out_size);
-    size_t tensor_output_width();
-    size_t tensor_output_height();
-    size_t tensor_output_byte_size();
+    std::vector<size_t> tensor_output_width();
+    std::vector<size_t> tensor_output_height();
+    std::vector<size_t> tensor_output_byte_size();
     size_t tensor_output_depth();
     size_t augmentation_branch_count();
     size_t output_sample_size();
     size_t tensor_output_sample_size();
-    RocalColorFormat output_color_format();
+    std::vector<RocalColorFormat> output_color_format();
     Status build();
     Status run();
     Timing timing();
@@ -122,7 +122,8 @@ private:
     // std::list<std::shared_ptr<Node>> _tensor_root_nodes;
     // std::map<rocALTensor*, std::shared_ptr<Node>> _tensor_map;
 
-    std::vector<rocALTensor*> _output_tensors;
+    // std::vector<rocALTensor*> _output_tensors;
+    rocALTensorList _output_tensors;
     std::list<rocALTensor*> _internal_tensors;
     std::list<std::shared_ptr<TensorNode>> _tensor_nodes;
     std::list<std::shared_ptr<TensorNode>> _tensor_root_nodes;

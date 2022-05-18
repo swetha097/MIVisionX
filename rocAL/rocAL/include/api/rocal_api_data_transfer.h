@@ -29,7 +29,7 @@ THE SOFTWARE.
 */
 extern "C"  RocalStatus   ROCAL_API_CALL rocalCopyToOutput(RocalContext context, unsigned char * out_ptr, size_t out_size);
 
-extern "C"  RocalStatus   ROCAL_API_CALL rocalCopyToTensorOutput(RocalContext context, void * out_ptr, size_t out_size);
+extern "C"  RocalStatus   ROCAL_API_CALL rocalCopyToTensorOutput(RocalContext context, std::vector<void *> &out_ptr);
 /*! \brief
  *
 */

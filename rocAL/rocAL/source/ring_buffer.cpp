@@ -105,7 +105,7 @@ void TensorRingBuffer::unblock_writer()
 }
 
 #if !ENABLE_HIP
-void TensorRingBuffer::init(RocalMemType mem_type, DeviceResources dev, unsigned sub_buffer_size, unsigned sub_buffer_count)
+void TensorRingBuffer::init(RocalMemType mem_type, DeviceResources dev, std::vector<size_t> sub_buffer_size, unsigned sub_buffer_count)
 {
     _mem_type = mem_type;
     _dev = dev;
@@ -129,12 +129,12 @@ void TensorRingBuffer::init(RocalMemType mem_type, DeviceResources dev, unsigned
             _dev_sub_buffer[buffIdx].resize(_sub_buffer_count);
             for(unsigned sub_idx = 0; sub_idx < _sub_buffer_count; sub_idx++)
             {
-                _dev_sub_buffer[buffIdx][sub_idx] =  clCreateBuffer(_dev.context, flags, sub_buffer_size, NULL, &err);
+                _dev_sub_buffer[buffIdx][sub_idx] =  clCreateBuffer(_dev.context, flags, _sub_buffer_size[sub_idx], NULL, &err);
 
                 if(err)
                 {
                     _dev_sub_buffer.clear();
-                    THROW("clCreateBuffer of size " + TOSTR(sub_buffer_size) + " index " + TOSTR(sub_idx) +
+                    THROW("clCreateBuffer of size " + TOSTR(_sub_buffer_size[sub_idx]) + " index " + TOSTR(sub_idx) +
                           " failed " + TOSTR(err));
                 }
 
@@ -148,18 +148,18 @@ void TensorRingBuffer::init(RocalMemType mem_type, DeviceResources dev, unsigned
         _host_sub_buffers.resize(BUFF_DEPTH);
         for(size_t buffIdx = 0; buffIdx < BUFF_DEPTH; buffIdx++)
         {
-            const size_t master_buffer_size = sub_buffer_size * sub_buffer_count;
+            // const size_t master_buffer_size = sub_buffer_size * sub_buffer_count;
             // a minimum of extra MEM_ALIGNMENT is allocated
-            _host_master_buffers[buffIdx] = aligned_alloc(MEM_ALIGNMENT, MEM_ALIGNMENT * (master_buffer_size / MEM_ALIGNMENT + 1));
+            // _host_master_buffers[buffIdx] = aligned_alloc(MEM_ALIGNMENT, MEM_ALIGNMENT * (master_buffer_size / MEM_ALIGNMENT + 1));
             _host_sub_buffers[buffIdx].resize(_sub_buffer_count);
             for(size_t sub_buff_idx = 0; sub_buff_idx < _sub_buffer_count; sub_buff_idx++)
-                _host_sub_buffers[buffIdx][sub_buff_idx] = (unsigned char*)_host_master_buffers[buffIdx] + _sub_buffer_size * sub_buff_idx;
+                _host_sub_buffers[buffIdx][sub_buff_idx] = aligned_alloc(MEM_ALIGNMENT, MEM_ALIGNMENT * (_sub_buffer_size[sub_buff_idx] / MEM_ALIGNMENT + 1));
         }
     }
 }
 
 #else
-void TensorRingBuffer::initHip(RocalMemType mem_type, DeviceResourcesHip dev, unsigned sub_buffer_size, unsigned sub_buffer_count)
+void TensorRingBuffer::initHip(RocalMemType mem_type, DeviceResourcesHip dev, std::vector<size_t> sub_buffer_size, unsigned sub_buffer_count)
 {
     _mem_type = mem_type;
     _devhip = dev;
@@ -181,11 +181,11 @@ void TensorRingBuffer::initHip(RocalMemType mem_type, DeviceResourcesHip dev, un
             for(unsigned sub_idx = 0; sub_idx < _sub_buffer_count; sub_idx++)
             {
 
-                hipError_t err =  hipMalloc(&_dev_sub_buffer[buffIdx][sub_idx], sub_buffer_size);
+                hipError_t err =  hipMalloc(&_dev_sub_buffer[buffIdx][sub_idx], _sub_buffer_size[sub_idx]);
                 if(err != hipSuccess)
                 {
                     _dev_sub_buffer.clear();
-                    THROW("hipMalloc of size " + TOSTR(sub_buffer_size) + " index " + TOSTR(sub_idx) +
+                    THROW("hipMalloc of size " + TOSTR(_sub_buffer_size[sub_idx]) + " index " + TOSTR(sub_idx) +
                           " failed " + TOSTR(err));
                 }
             }
@@ -199,10 +199,10 @@ void TensorRingBuffer::initHip(RocalMemType mem_type, DeviceResourcesHip dev, un
             const size_t master_buffer_size = sub_buffer_size * sub_buffer_count;
             // std::cerr<<"\n sub_buffer_size:: "<<sub_buffer_size<<"\t sub_buffer_count:: "<<sub_buffer_count;
             // a minimum of extra MEM_ALIGNMENT is allocated
-            _host_master_buffers[buffIdx] = aligned_alloc(MEM_ALIGNMENT, MEM_ALIGNMENT * (master_buffer_size / MEM_ALIGNMENT + 1));
+            // _host_master_buffers[buffIdx] = aligned_alloc(MEM_ALIGNMENT, MEM_ALIGNMENT * (master_buffer_size / MEM_ALIGNMENT + 1));
             _host_sub_buffers[buffIdx].resize(_sub_buffer_count);
             for(size_t sub_buff_idx = 0; sub_buff_idx < _sub_buffer_count; sub_buff_idx++)
-                _host_sub_buffers[buffIdx][sub_buff_idx] = (unsigned char*)_host_master_buffers[buffIdx] + _sub_buffer_size * sub_buff_idx;
+                _host_sub_buffers[buffIdx][sub_buff_idx] = aligned_alloc(MEM_ALIGNMENT, MEM_ALIGNMENT * (_sub_buffer_size[sub_buff_idx] / MEM_ALIGNMENT + 1));
         }
     }
 }

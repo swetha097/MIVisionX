@@ -261,26 +261,26 @@ MasterGraph::build()
         THROW("No output images or tensors are there, cannot create the pipeline")
 
     // Verify all output images have the same dimension, otherwise creating a unified tensor from them is not supported
-    _output_tensor_info = _output_tensors.front()->info();
-    _max_tensor_type_size = _output_tensor_info.data_type_size();
-    for(auto&& output_tensor : _output_tensors)
-    {
-        rocALTensorInfo tensor_info  = output_tensor->info();
-        if(tensor_info.data_type_size() > _max_tensor_type_size)
-        {
-            _max_tensor_type_size = tensor_info.data_type_size();
-            _output_tensor_info = output_tensor->info();
-        }
-    }
+    // _output_tensor_info = _output_tensors.front()->info();
+    // _max_tensor_type_size = _output_tensor_info.data_type_size();
+    // for(auto&& output_tensor : _output_tensors)
+    // {
+        // rocALTensorInfo tensor_info  = output_tensor->info();
+        // if(tensor_info.data_type_size() > _max_tensor_type_size)
+        // {
+            // _max_tensor_type_size = tensor_info.data_type_size();
+            // _output_tensor_info = output_tensor->info();
+        // }
+    // }
 
-    allocate_output_tensor();
+    // allocate_output_tensor();
     // if(_output_tensors.size() != 0)
 #if ENABLE_HIP
-    _ring_buffer.initHip(_mem_type, _device.resources(), tensor_output_byte_size(), _output_tensors.size());
+    _ring_buffer.initHip(_mem_type, _device.resources(), _output_tensors.data_size(), _output_tensors.size());
 #else
-    _ring_buffer.init(_mem_type, _device.resources(), tensor_output_byte_size(), _output_tensors.size());
+    _ring_buffer.init(_mem_type, _device.resources(), _output_tensors.data_size(), _output_tensors.size()); // TODO - Tensorlist change here
 #endif
-    std::cerr<<"\n Initializing Ring buffer with tensor_output_byte_size "<<tensor_output_byte_size();
+    // std::cerr<<"\n Initializing Ring buffer with tensor_output_byte_size "<<tensor_output_byte_size();
     create_single_graph();
     start_processing();
     return Status::OK;
@@ -353,8 +353,7 @@ void MasterGraph::release()
 
     // release all openvx resources.
     vx_status status;
-    for(auto& tensor: _output_tensors)
-        delete tensor;
+    _output_tensors.release();
     for(auto& tensor: _internal_tensors)
         delete tensor;
 
@@ -390,63 +389,63 @@ MasterGraph::augmentation_branch_count()
 }
 
 // This is being used only in copy out tensor which will be changed.
-RocalColorFormat
+std::vector<RocalColorFormat>
 MasterGraph::output_color_format()
 {
-    return _output_tensor_info.color_format();
+    return _output_tensors.get_color_format();
 }
 
-size_t
+std::vector<size_t>
 MasterGraph::tensor_output_width()
 {
-    return _output_tensor_info.max_width();
+    return _output_tensors.get_width();
 }
 
 
-size_t
+std::vector<size_t>
 MasterGraph::tensor_output_height()
 {
-    return (_output_tensor_info.max_height() * _internal_batch_size * _user_to_internal_batch_ratio);
+    return _output_tensors.get_height();
 }
 
 
 MasterGraph::Status
 MasterGraph::allocate_output_tensor()
 {
-    // creating a float buffer that can accommodates all output images
-    size_t total_size =  _output_tensors.size();
-    size_t output_size;
-    output_size = tensor_output_byte_size();
+//     // creating a float buffer that can accommodates all output images
+//     // size_t total_size =  _output_tensors.size();
+//     // size_t output_size;
+//     // output_size = tensor_output_byte_size();
 
-    size_t output_float_buffer_size = output_size * total_size;
-#if !ENABLE_HIP
-    if(processing_on_device_ocl())
-    {
-        cl_int ret = CL_SUCCESS;
-        _output_tensor = nullptr;
-        size_t size = output_float_buffer_size*sizeof(cl_float);
-        cl_mem clImgFloat  = clCreateBuffer(_device.resources().context,
-                                            CL_MEM_READ_WRITE,
-                                            size,
-                                            nullptr, &ret);
+//     // size_t output_float_buffer_size = output_size * total_size;
+// #if !ENABLE_HIP
+//     if(processing_on_device_ocl())
+//     {
+//         cl_int ret = CL_SUCCESS;
+//         _output_tensor = nullptr;
+//         size_t size = output_float_buffer_size*sizeof(cl_float);
+//         cl_mem clImgFloat  = clCreateBuffer(_device.resources().context,
+//                                             CL_MEM_READ_WRITE,
+//                                             size,
+//                                             nullptr, &ret);
 
-        if (!clImgFloat || ret != CL_SUCCESS)
-            THROW("clCreateBuffer of size " + TOSTR(size) + " failed " + TOSTR(ret))
+//         if (!clImgFloat || ret != CL_SUCCESS)
+//             THROW("clCreateBuffer of size " + TOSTR(size) + " failed " + TOSTR(ret))
 
-        _output_tensor = clImgFloat;
-    }
-#else
-    if (processing_on_device_hip())
-    {
-        void *hipMemory = nullptr;
-        size_t size = (_out_data_type==RocalTensorDataType::FP32)? output_float_buffer_size*sizeof(float): output_float_buffer_size*sizeof(half);
-        hipError_t status = hipMalloc( &hipMemory, size);
-        if (status != hipSuccess)
-            THROW("ROCAL::hipMalloc of size " + TOSTR(size) + " failed " + TOSTR(status))
+//         _output_tensor = clImgFloat;
+//     }
+// #else
+//     if (processing_on_device_hip())
+//     {
+//         void *hipMemory = nullptr;
+//         size_t size = (_out_data_type==RocalTensorDataType::FP32)? output_float_buffer_size*sizeof(float): output_float_buffer_size*sizeof(half);
+//         hipError_t status = hipMalloc( &hipMemory, size);
+//         if (status != hipSuccess)
+//             THROW("ROCAL::hipMalloc of size " + TOSTR(size) + " failed " + TOSTR(status))
 
-        _output_tensor = hipMemory;
-    }
-#endif
+//         _output_tensor = hipMemory;
+//     }
+// #endif
     return Status::OK;
 }
 
@@ -531,68 +530,69 @@ MasterGraph::copy_output(
 
 
 MasterGraph::Status
-MasterGraph::copy_output(void *out_ptr)
+MasterGraph::copy_output(std::vector<void *> &out_ptr)
 {
     if(no_more_processed_data())
         return MasterGraph::Status::NO_MORE_DATA;
 
     _convert_time.start();
     // Copies to the output context given by the user
-    size_t size;
+    std::vector<size_t> size;
     size = tensor_output_byte_size();
-    std::cerr<<"\n tensor output byte size :: "<<size;
     size_t dest_buf_offset = 0;
-#if !ENABLE_HIP
-    if(processing_on_device_ocl())
-    {
-        //NOTE: the CL_TRUE flag is only used on the last buffer read call,
-        // to avoid unnecessary sequence of synchronizations
+// #if !ENABLE_HIP
+//     if(processing_on_device_ocl())
+//     {
+//         //NOTE: the CL_TRUE flag is only used on the last buffer read call,
+//         // to avoid unnecessary sequence of synchronizations
 
-        // get_read_buffers() calls block_if_empty() internally and blocks if buffers are empty until a new batch is processed
-        auto output_buffers =_ring_buffer.get_read_buffers();
-        auto out_image_idx = output_buffers.size();
-        for( auto&& output_handle: output_buffers)
-        {
-            bool sync_flag = (--out_image_idx == 0) ? CL_TRUE : CL_FALSE;
-            cl_int status;
-            if((status = clEnqueueReadBuffer(_device.resources().cmd_queue,
-                                             (cl_mem) output_handle,
-                                             sync_flag?(CL_TRUE):CL_FALSE,
-                                             0,
-                                             size,
-                                             (((unsigned char *)out_ptr) + dest_buf_offset),
-                                             0 , nullptr, nullptr)) != CL_SUCCESS)
-                THROW("clEnqueueReadBuffer failed: " + TOSTR(status))
-            dest_buf_offset += size;
-        }
-    }
-#else
-    if(processing_on_device_hip())
-    {
-        //NOTE: the CL_TRUE flag is only used on the last buffer read call,
-        // to avoid unnecessary sequence of synchronizations
+//         // get_read_buffers() calls block_if_empty() internally and blocks if buffers are empty until a new batch is processed
+//         auto output_buffers =_ring_buffer.get_read_buffers();
+//         auto out_image_idx = output_buffers.size();
+//         for( auto&& output_handle: output_buffers)
+//         {
+//             bool sync_flag = (--out_image_idx == 0) ? CL_TRUE : CL_FALSE;
+//             cl_int status;
+//             if((status = clEnqueueReadBuffer(_device.resources().cmd_queue,
+//                                              (cl_mem) output_handle,
+//                                              sync_flag?(CL_TRUE):CL_FALSE,
+//                                              0,
+//                                              size,
+//                                              (((unsigned char *)out_ptr) + dest_buf_offset),
+//                                              0 , nullptr, nullptr)) != CL_SUCCESS)
+//                 THROW("clEnqueueReadBuffer failed: " + TOSTR(status))
+//             dest_buf_offset += size;
+//         }
+//     }
+// #else
+//     if(processing_on_device_hip())
+//     {
+//         //NOTE: the CL_TRUE flag is only used on the last buffer read call,
+//         // to avoid unnecessary sequence of synchronizations
 
-        // get_read_buffers() calls block_if_empty() internally and blocks if buffers are empty until a new batch is processed
-        auto output_buffers =_ring_buffer.get_read_buffers();
-        for( auto&& output_handle: output_buffers)
-        {
-            hipError_t err = hipMemcpyDtoHAsync((void *)(out_ptr+dest_buf_offset), output_handle, size, _device.resources().hip_stream);
-            if (err) {
-                THROW("hipMemcpyDtoHAsync failed: " + TOSTR(err))
-            }
-            dest_buf_offset += size;
-        }
-        // sync to finish copy
-        if (hipStreamSynchronize(_device.resources().hip_stream) != hipSuccess)
-            THROW("hipStreamSynchronize failed for hipMemcpy ")
+//         // get_read_buffers() calls block_if_empty() internally and blocks if buffers are empty until a new batch is processed
+//         auto output_buffers =_ring_buffer.get_read_buffers();
+//         for( auto&& output_handle: output_buffers)
+//         {
+//             hipError_t err = hipMemcpyDtoHAsync((void *)(out_ptr+dest_buf_offset), output_handle, size, _device.resources().hip_stream);
+//             if (err) {
+//                 THROW("hipMemcpyDtoHAsync failed: " + TOSTR(err))
+//             }
+//             dest_buf_offset += size;
+//         }
+//         // sync to finish copy
+//         if (hipStreamSynchronize(_device.resources().hip_stream) != hipSuccess)
+//             THROW("hipStreamSynchronize failed for hipMemcpy ")
 
-    }
-#endif
-    else
+//     }
+// #endif
+    // else
     {
         // get_host_master_read_buffer is blocking if _ring_buffer is empty, and blocks this thread till internal processing thread process a new batch and store in the _ring_buffer
-        std::cerr<<"\n Gonna copy buffer of size "<<size * _output_tensors.size()<<" in host";
-        memcpy(out_ptr, _ring_buffer.get_host_master_read_buffer(), size * _output_tensors.size());
+        std::cerr<<"\n Gonna not copy buffer of size "<<size[0] * _output_tensors.size()<<" in host";
+        std::vector<void*> ptr = _ring_buffer.get_read_buffers();
+        for(int i = 0; i < _output_tensors.size(); i++)
+            memcpy(out_ptr[i], ptr[i], size[i]);
     }
     _convert_time.end();
     return Status::OK;
@@ -617,7 +617,7 @@ void MasterGraph::output_routine()
     try {
         while (_processing)
         {
-            const size_t tensor_each_cycle_size = tensor_output_byte_size()/_user_to_internal_batch_ratio;
+            std::vector<size_t> tensor_each_cycle_size_vec = tensor_output_byte_size(); // /_user_to_internal_batch_ratio;
             ImageNameBatch full_batch_image_names = {};
             pMetaDataBatch full_batch_meta_data = nullptr;
             pMetaDataBatch augmented_batch_meta_data = nullptr;
@@ -664,6 +664,7 @@ void MasterGraph::output_routine()
                 for (size_t idx = 0; idx < _output_tensors.size(); idx++)
                 {
                     // if(_output_tensors.size() != 0)
+                    size_t tensor_each_cycle_size = tensor_each_cycle_size_vec[idx] / _user_to_internal_batch_ratio; // TODO - Batch ratio calculation TO be removed
                     auto tensor_write_buffer = _ring_buffer.get_write_buffers();
                     if(_affinity == RocalAffinity::GPU)
                     {
@@ -851,10 +852,10 @@ size_t MasterGraph::tensor_output_sample_size()
 //     return tensor_output_height() * tensor_output_width() * tensor_output_depth();
 // }
 
-size_t MasterGraph::tensor_output_byte_size()
+std::vector<size_t> MasterGraph::tensor_output_byte_size()
 {
-    std::cerr<<"\n _output_tensor_info.data_size():: "<<_output_tensor_info.data_size()<<"\t _max_tensor_type_size:: "<<_max_tensor_type_size;
-    return _output_tensor_info.data_size() * _max_tensor_type_size;
+    // std::cerr<<"\n _output_tensor_info.data_size():: "<<_output_tensor_info.data_size()<<"\t _max_tensor_type_size:: "<<_max_tensor_type_size;
+    return _output_tensors.data_size();
 }
 
 

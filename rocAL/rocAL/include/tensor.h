@@ -205,6 +205,43 @@ private:
     vx_context _context = nullptr;
 };
 
+class rocALTensorList
+{
+public:
+    unsigned size() { return _tensor_list.size(); }
+    bool empty() { return _tensor_list.empty(); }
+    void push_back(rocALTensor * tensor)
+    {
+        _tensor_list.emplace_back(tensor);
+        _tensor_data_size.emplace_back(tensor->info().data_size());
+        _tensor_list_height.emplace_back(tensor->info().max_height());
+        _tensor_list_width.emplace_back(tensor->info().max_width());
+        _tensor_list_color_format.emplace_back(tensor->info().color_format());
+    }
+    std::vector<size_t> data_size()
+    {
+        return _tensor_data_size;
+    }
+    void release()
+    {
+        for(auto& tensor: _tensor_list)
+            delete tensor;
+    }
+    rocALTensor * operator[](size_t index)
+    {
+        return _tensor_list[index];
+    }
+    std::vector<size_t> get_height() { return _tensor_list_height; }
+    std::vector<size_t> get_width() { return _tensor_list_width; }
+    std::vector<RocalColorFormat> get_color_format() { return _tensor_list_color_format; }
+
+private:
+    std::vector<rocALTensor*> _tensor_list;
+    std::vector<size_t> _tensor_data_size;
+    std::vector<size_t> _tensor_list_height;
+    std::vector<size_t> _tensor_list_width;
+    std::vector<RocalColorFormat> _tensor_list_color_format;
+};
 
 /*! \brief Holds the information about an OpenVX Tensor */
 
