@@ -214,7 +214,7 @@ public:
     {
         _tensor_list.emplace_back(tensor);
         _tensor_data_size.emplace_back(tensor->info().data_size());
-        _tensor_list_height.emplace_back(tensor->info().max_height());
+        _tensor_list_height.emplace_back(tensor->info().max_height() * tensor->info().batch_size());
         _tensor_list_width.emplace_back(tensor->info().max_width());
         _tensor_list_color_format.emplace_back(tensor->info().color_format());
     }
