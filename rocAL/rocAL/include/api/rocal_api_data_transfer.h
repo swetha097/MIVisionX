@@ -44,4 +44,6 @@ extern "C"  RocalStatus   ROCAL_API_CALL rocalCopyToOutputTensor16(RocalContext 
                                                               float multiplier1, float multiplier2, float offset0,
                                                               float offset1, float offset2,
                                                               bool reverse_channels);
+
+extern "C"  RocalTensorList ROCAL_API_CALL rocalGetOutputTensors(RocalContext p_context);
 #endif //MIVISIONX_ROCAL_API_DATA_TRANSFER_H

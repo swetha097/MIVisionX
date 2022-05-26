@@ -528,6 +528,11 @@ MasterGraph::copy_output(
 
 #define CHECK_CL_CALL_RET(x) { cl_int ret; ret = x; if( ret != CL_SUCCESS) THROW("ocl call failed "+STR(#x)+" error "+TOSTR(ret)) }
 
+rocALTensorList *
+MasterGraph::get_output_tensors()
+{
+    return &_output_tensors;
+}
 
 MasterGraph::Status
 MasterGraph::copy_output(std::vector<void *> &out_ptr)

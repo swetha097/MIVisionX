@@ -75,6 +75,7 @@ public:
     rocALTensor *create_tensor(const rocALTensorInfo &info, bool is_output);
     rocALTensor *create_tensor_from_image(const rocALTensorInfo &info);
     rocALTensor *create_loader_output_tensor(const rocALTensorInfo &info);
+    rocALTensorList * get_output_tensors();
 
     // rocALTensor *create_rocal_tensor(const rocALTensorInfo &info, bool is_output);
     // rocALTensor *create_rocal_tensor_from_image(const rocALTensorInfo &info);

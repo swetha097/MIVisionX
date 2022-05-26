@@ -35,13 +35,15 @@ THE SOFTWARE.
 
 #include <half.hpp>
 using half_float::half;
+#include "tensor.h"
 
 typedef void * RocalFloatParam;
 typedef void * RocalIntParam;
 typedef void * RocalContext;
 typedef void * RocalImage;
-typedef void * RocalTensor;
 typedef void * RocalMetaData;
+typedef rocALTensor * RocalTensor;
+typedef rocALTensorList * RocalTensorList;
 
 struct TimingInfo
 {

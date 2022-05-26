@@ -231,6 +231,10 @@ public:
     {
         return _tensor_list[index];
     }
+    rocALTensor * at(size_t index)
+    {
+        return _tensor_list[index];
+    }
     std::vector<size_t> get_height() { return _tensor_list_height; }
     std::vector<size_t> get_width() { return _tensor_list_width; }
     std::vector<RocalColorFormat> get_color_format() { return _tensor_list_color_format; }
