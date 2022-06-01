@@ -142,6 +142,7 @@ private:
     Type _type = Type::UNKNOWN;//!< tensor type, whether is virtual tensor, created from handle or is a regular tensor
     unsigned _num_of_dims;
     std::shared_ptr<std::vector<unsigned>> _dims;
+    unsigned _batch_size;
     RocalMemType _mem_type;
     RocalROIType _roi_type;
     RocalTensorDataType _data_type = RocalTensorDataType::FP32;
@@ -149,7 +150,6 @@ private:
     RocalColorFormat _color_format;
     std::shared_ptr<std::vector<RocalROI>> _roi;
     unsigned _data_type_size;
-    unsigned _batch_size;
     unsigned _data_size = 0;
     unsigned _max_width, _max_height;
     unsigned _frames; // denotes the F dimension in the tensor

@@ -55,7 +55,7 @@ public:
     std::vector<std::string> get_id() override;
     decoded_image_info get_decode_image_info() override;
     void set_prefetch_queue_depth(size_t prefetch_queue_depth) override;
-    crop_image_info get_crop_image_info() {}
+    crop_image_info get_crop_image_info() override;
     // std::vector<size_t> get_sequence_start_frame_number();
     // std::vector<std::vector<float>> get_sequence_frame_timestamps();
 

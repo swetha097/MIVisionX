@@ -197,10 +197,8 @@ MasterGraph::run()
     if(no_more_processed_data()) {
         return MasterGraph::Status::NO_MORE_DATA;
     }
-    std::cerr<<"\n _output_tensors.size() :: "<<_output_tensors.size();
     // if(_output_tensors.size() != 0)
     // {
-        std::cerr<<"\n Comes to output tensor size check";
         _ring_buffer.block_if_empty();// wait here if the user thread (caller of this function) is faster in consuming the processed images compare to th output routine in producing them
     // }
 
@@ -517,7 +515,6 @@ MasterGraph::copy_output(std::vector<void *> &out_ptr)
     // Copies to the output context given by the user
     std::vector<size_t> size;
     size = tensor_output_byte_size();
-    size_t dest_buf_offset = 0;
 // #if !ENABLE_HIP
 //     if(processing_on_device_ocl())
 //     {
@@ -567,9 +564,8 @@ MasterGraph::copy_output(std::vector<void *> &out_ptr)
     // else
     {
         // get_host_master_read_buffer is blocking if _ring_buffer is empty, and blocks this thread till internal processing thread process a new batch and store in the _ring_buffer
-        std::cerr<<"\n Gonna not copy buffer of size "<<size[0] * _output_tensors.size()<<" in host";
         std::vector<void*> ptr = _ring_buffer.get_read_buffers();
-        for(int i = 0; i < _output_tensors.size(); i++)
+        for(unsigned i = 0; i < _output_tensors.size(); i++)
             memcpy(out_ptr[i], ptr[i], size[i]);
     }
     _convert_time.end();

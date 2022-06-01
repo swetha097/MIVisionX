@@ -154,7 +154,7 @@ rocALTensorInfo::rocALTensorInfo(
                                 _data_type(data_type)
 {
     vx_size data_size = tensor_data_size(data_type);
-    unsigned alignpixels = TENSOR_WIDTH_ALIGNMENT; // Check if needed
+    // unsigned alignpixels = TENSOR_WIDTH_ALIGNMENT; // Check if needed
     _data_size = data_size;
     for(unsigned i = 0; i < _num_of_dims; i++)
     {
@@ -241,7 +241,7 @@ int rocALTensor::create_virtual(vx_context context, vx_graph graph)
     // dims[2] = (vx_size)_info.width();
     // dims[3] = (vx_size)_info.channels();
     // TODO - shobi find a better way to convert from unsigned to size_t
-    int num_of_dims = _info.num_of_dims();
+    unsigned num_of_dims = _info.num_of_dims();
     vx_size dims[num_of_dims];
     for(unsigned i = 0; i < num_of_dims; i++)
     {
@@ -285,10 +285,10 @@ int rocALTensor::create_from_handle(vx_context context)
     //     dims[3] = (vx_size)_info.batch_size();
     // }
 
-    int num_of_dims = _info.num_of_dims();
+    unsigned num_of_dims = _info.num_of_dims();
     vx_size stride[num_of_dims];
     void *ptr[1] = {nullptr};
-    bool nhwc = ((_info.layout() == RocalTensorlayout::NHWC) ? true: false); // TODO : Fiona
+    // bool nhwc = ((_info.layout() == RocalTensorlayout::NHWC) ? true: false); // TODO : Fiona
 
     stride[0] = tensor_data_size(_info.data_type());
     for(unsigned i = 1; i < num_of_dims; i++)

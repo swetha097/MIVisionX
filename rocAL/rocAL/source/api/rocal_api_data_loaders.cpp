@@ -193,7 +193,7 @@ rocalJpegFileSourceSingleShard(
         if(is_output)
         {
             auto actual_output = context->master_graph->create_tensor(info, is_output);
-            // context->master_graph->add_node<CopyNode>({output}, {actual_output});
+            context->master_graph->add_node<CopyNode>({output}, {actual_output});
         }
 
     }
@@ -325,9 +325,9 @@ rocalAudioFileSourceSingleShard(
 
         INFO("Internal buffer size for audio frames = "+ TOSTR(max_frames))
 
-        RocalTensorlayout tensor_format = RocalTensorlayout::NONE;
+        // RocalTensorlayout tensor_format = RocalTensorlayout::NONE;
         RocalTensorDataType tensor_data_type = RocalTensorDataType::FP32;
-        RocalROIType roi_type = RocalROIType::XYWH;  // Letting the roi_type be default value since it isn't required for audio decoder
+        // RocalROIType roi_type = RocalROIType::XYWH;  // Letting the roi_type be default value since it isn't required for audio decoder
         unsigned num_of_dims = 3;
         std::vector<unsigned> dims;
         dims.resize(num_of_dims);
@@ -402,9 +402,9 @@ rocalAudioFileSource(
         std::cerr<<"\n Completed the evaluation of audio data set max_frame:: "<<max_frames<<"\t max_channels ::"<<max_channels;
         INFO("Internal buffer size for audio frames = "+ TOSTR(max_frames))
 
-        RocalTensorlayout tensor_format = RocalTensorlayout::NONE;
+        // RocalTensorlayout tensor_format = RocalTensorlayout::NONE;
         RocalTensorDataType tensor_data_type = RocalTensorDataType::FP32;
-        RocalROIType roi_type = RocalROIType::XYWH;  // Letting the roi_type be default value since it isn't required for audio decoder
+        // RocalROIType roi_type = RocalROIType::XYWH;  // Letting the roi_type be default value since it isn't required for audio decoder
         unsigned num_of_dims = 3;
         std::vector<unsigned> dims;
         dims.resize(num_of_dims);
@@ -534,7 +534,7 @@ rocalVideoFileSourceSingleShard(
         if(is_output)
         {
             auto actual_output = context->master_graph->create_tensor(info, is_output);
-            // context->master_graph->add_node<CopyNode>({output}, {actual_output});
+            context->master_graph->add_node<CopyNode>({output}, {actual_output});
         }
 #else
         THROW("Video decoder is not enabled since ffmpeg is not present")

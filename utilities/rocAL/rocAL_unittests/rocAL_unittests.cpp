@@ -202,8 +202,7 @@ int test(int test_case, const char *path, const char *outName, int rgb, int gpu,
     int index = 0;
     while (rocalGetRemainingImages(handle) >= inputBatchSize)
     {
-        std::cerr<<"\n rocalGetRemainingImages:: "<<rocalGetRemainingImages(handle)<<"\t inputBatchsize:: "<<inputBatchSize  ;
-        std::cerr<<"\n index "<<index;
+        // std::cerr<<"\n rocalGetRemainingImages:: "<<rocalGetRemainingImages(handle)<<"\t inputBatchsize:: "<<inputBatchSize  ;
         index++;
         if (rocalRun(handle) != 0)
         {
