@@ -24,7 +24,7 @@ THE SOFTWARE.
 #include "node.h"
 #include "graph.h"
 
-class CopyNode : public TensorNode
+class CopyNode : public Node
 {
 public:
     CopyNode(const std::vector<rocALTensor *> &inputs, const std::vector<rocALTensor *> &outputs);

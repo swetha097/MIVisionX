@@ -26,7 +26,7 @@ THE SOFTWARE.
 #include "parameter_crop_factory.h"
 #include "parameter_vx.h"
 #include "rocal_api_types.h"
-class CropMirrorNormalizeNode : public TensorNode
+class CropMirrorNormalizeNode : public Node
 {
 public:
     CropMirrorNormalizeNode(const std::vector<rocALTensor *> &inputs, const std::vector<rocALTensor *> &outputs);

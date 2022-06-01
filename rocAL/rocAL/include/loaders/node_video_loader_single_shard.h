@@ -27,7 +27,7 @@ THE SOFTWARE.
 #include <tuple>
 
 #ifdef RALI_VIDEO
-class VideoLoaderSingleShardNode : public TensorNode
+class VideoLoaderSingleShardNode : public Node
 {
 public:
 #if ENABLE_HIP

@@ -26,7 +26,7 @@ THE SOFTWARE.
 #include "parameter_vx.h"
 #include "graph.h"
 
-class BrightnessTensorNode : public TensorNode
+class BrightnessTensorNode : public Node
 {
 public:
     BrightnessTensorNode(const std::vector<rocALTensor *> &inputs, const std::vector<rocALTensor *> &outputs);

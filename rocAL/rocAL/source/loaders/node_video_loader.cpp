@@ -30,7 +30,7 @@ VideoLoaderNode::VideoLoaderNode(rocALTensor *output, DeviceResourcesHip device_
 #else
 VideoLoaderNode::VideoLoaderNode(rocALTensor *output, DeviceResources device_resources):
 #endif
-	TensorNode({}, {output})
+	Node({}, {output})
 {
     _loader_module = std::make_shared<VideoLoaderSharded>(device_resources);
 }

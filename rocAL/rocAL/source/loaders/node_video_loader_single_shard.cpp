@@ -28,7 +28,7 @@ VideoLoaderSingleShardNode::VideoLoaderSingleShardNode(rocALTensor *output, Devi
 #else
 VideoLoaderSingleShardNode::VideoLoaderSingleShardNode(rocALTensor *output, DeviceResources device_resources):
 #endif
-	TensorNode({}, {output})
+	Node({}, {output})
 {
     _loader_module = std::make_shared<VideoLoader>(device_resources);
 }

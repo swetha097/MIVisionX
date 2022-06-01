@@ -25,7 +25,7 @@ THE SOFTWARE.
 #include "parameter_factory.h"
 #include "parameter_vx.h"
 
-class GammaNode : public TensorNode
+class GammaNode : public Node
 {
 public:
     GammaNode(const std::vector<rocALTensor *> &inputs, const std::vector<rocALTensor *> &outputs);

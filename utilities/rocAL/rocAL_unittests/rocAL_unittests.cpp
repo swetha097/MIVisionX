@@ -192,8 +192,6 @@ int test(int test_case, const char *path, const char *outName, int rgb, int gpu,
         return -1;
     }
 
-    std::cout << "\n\nAugmented copies count " << rocalGetAugmentationBranchCount(handle) << std::endl;
-
     /*>>>>>>>>>>>>>>>>>>> Diplay using OpenCV <<<<<<<<<<<<<<<<<*/
     cv::Mat mat_color;
     int col_counter = 0;

@@ -25,7 +25,7 @@ THE SOFTWARE.
 #include "audio_loader_sharded.h"
 #include "graph.h"
 
-class AudioLoaderNode: public TensorNode
+class AudioLoaderNode: public Node
 {
 public:
     /// \param device_resources shard count from user

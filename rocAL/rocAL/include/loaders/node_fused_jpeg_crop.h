@@ -26,7 +26,7 @@ THE SOFTWARE.
 #include "graph.h"
 #include "parameter_factory.h"
 
-class FusedJpegCropNode: public TensorNode
+class FusedJpegCropNode: public Node
 {
 public:
     /// \param device_resources shard count from user

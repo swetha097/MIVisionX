@@ -25,7 +25,7 @@ THE SOFTWARE.
 #include "image_loader_sharded.h"
 #include "graph.h"
 
-class ImageLoaderNode: public TensorNode
+class ImageLoaderNode: public Node
 {
 public:
     /// \param device_resources shard count from user

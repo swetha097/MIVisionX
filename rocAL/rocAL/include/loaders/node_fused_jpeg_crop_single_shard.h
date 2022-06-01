@@ -4,7 +4,7 @@
 #include "graph.h"
 #include "parameter_factory.h"
 
-class FusedJpegCropTensorSingleShardNode: public TensorNode
+class FusedJpegCropTensorSingleShardNode: public Node
 {
 public:
 #if ENABLE_HIP

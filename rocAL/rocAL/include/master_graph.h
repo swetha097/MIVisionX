@@ -118,9 +118,9 @@ private:
     // std::vector<rocALTensor*> _output_tensors;
     rocALTensorList _output_tensors;
     std::list<rocALTensor*> _internal_tensors;
-    std::list<std::shared_ptr<TensorNode>> _tensor_nodes;
-    std::list<std::shared_ptr<TensorNode>> _tensor_root_nodes;
-    std::map<rocALTensor*, std::shared_ptr<TensorNode>> _tensor_map;
+    std::list<std::shared_ptr<Node>> _tensor_nodes;
+    std::list<std::shared_ptr<Node>> _tensor_root_nodes;
+    std::map<rocALTensor*, std::shared_ptr<Node>> _tensor_map;
 
     // cl_mem _output_tensor;//!< In the GPU processing case , is used to convert the U8 samples to float32 before they are being transfered back to host
     // ImageInfo _output_image_info;//!< Keeps the information about ROCAL's output image , it includes all images of a batch stacked on top of each other

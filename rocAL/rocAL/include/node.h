@@ -27,14 +27,14 @@ THE SOFTWARE.
 #include "meta_data_graph.h"
 #include "tensor.h"
 
-class TensorNode
+class Node
 {
 public:
-    TensorNode(const std::vector<rocALTensor *> &inputs,const std::vector<rocALTensor *> &outputs) :
+    Node(const std::vector<rocALTensor *> &inputs,const std::vector<rocALTensor *> &outputs) :
         _inputs(inputs),
         _outputs(outputs),
         _batch_size(outputs[0]->info().batch_size()) {}
-    virtual ~TensorNode();
+    virtual ~Node();
     void create(std::shared_ptr<Graph> graph);
     void update_parameters();
     std::vector<rocALTensor *> input() { return _inputs; };

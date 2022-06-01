@@ -28,7 +28,7 @@ ImageLoaderNode::ImageLoaderNode(rocALTensor *output, DeviceResourcesHip device_
 #else
 ImageLoaderNode::ImageLoaderNode(rocALTensor *output, DeviceResources device_resources):
 #endif
-        TensorNode({}, {output})
+        Node({}, {output})
 {
     _loader_module = std::make_shared<ImageLoaderSharded>(device_resources);
 }

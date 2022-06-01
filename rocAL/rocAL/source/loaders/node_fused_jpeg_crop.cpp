@@ -28,7 +28,7 @@ FusedJpegCropNode::FusedJpegCropNode(rocALTensor *output, DeviceResourcesHip dev
 #else
 FusedJpegCropNode::FusedJpegCropNode(rocALTensor *output, DeviceResources device_resources):
 #endif
-        TensorNode({}, {output})
+        Node({}, {output})
 {
     _loader_module = std::make_shared<ImageLoaderSharded>(device_resources);
 }

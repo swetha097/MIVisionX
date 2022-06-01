@@ -24,7 +24,7 @@ THE SOFTWARE.
 #include "node.h"
 #include "graph.h"
 
-class NopNode : public TensorNode
+class NopNode : public Node
 {
 public:
     NopNode(const std::vector<rocALTensor *> &inputs, const std::vector<rocALTensor *> &outputs);

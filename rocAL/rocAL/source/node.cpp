@@ -22,7 +22,7 @@ THE SOFTWARE.
 
 #include "node.h"
 
-TensorNode::~TensorNode()
+Node::~Node()
 {
 
     if(!_node)
@@ -31,7 +31,7 @@ TensorNode::~TensorNode()
 }
 
 void
-TensorNode::create(std::shared_ptr<Graph> graph)
+Node::create(std::shared_ptr<Graph> graph)
 {
     // if(_outputs.empty() || _inputs.empty())
     //     THROW("Uninitialized input/output images to the node")
@@ -53,14 +53,14 @@ TensorNode::create(std::shared_ptr<Graph> graph)
 }
 
 void
-TensorNode::update_parameters()
+Node::update_parameters()
 {
     update_node();
     update_src_roi();
 }
 
 void
-TensorNode::update_src_roi()
+Node::update_src_roi()
 {
     if(_inputs[0]->info().is_image())
     {

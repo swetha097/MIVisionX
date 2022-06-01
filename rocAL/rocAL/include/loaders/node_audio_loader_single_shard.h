@@ -26,7 +26,7 @@ THE SOFTWARE.
 #include "graph.h"
 
 
-class AudioLoaderSingleShardNode: public TensorNode
+class AudioLoaderSingleShardNode: public Node
 {
 public:
 #if ENABLE_HIP
