@@ -381,13 +381,6 @@ MasterGraph::update_node_parameters()
     return Status::OK;
 }
 
-// size_t
-// MasterGraph::augmentation_branch_count()
-// {
-//     return _output_tensors.size();
-
-// }
-
 
 MasterGraph::Status
 MasterGraph::allocate_output_tensor()

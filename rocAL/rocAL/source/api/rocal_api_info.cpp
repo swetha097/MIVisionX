@@ -24,52 +24,6 @@ THE SOFTWARE.
 #include "context.h"
 #include "rocal_api.h"
 
-// TODO - Remove image related calls
-// size_t ROCAL_API_CALL rocalGetImageWidth(RocalImage p_tensor)
-// {
-//     auto tensor = static_cast<Tensor*>(p_tensor);
-//     return tensor->info().width();
-// }
-// size_t ROCAL_API_CALL rocalGetImageHeight(RocalImage p_tensor)
-// {
-//     auto tensor = static_cast<Tensor*>(p_tensor);
-//     return tensor->info().height_batch();
-// }
-
-// size_t ROCAL_API_CALL rocalGetImagePlanes(RocalImage p_tensor)
-// {
-//     auto tensor = static_cast<Tensor*>(p_tensor);
-//     return tensor->info().color_plane_count();
-// }
-
-// int ROCAL_API_CALL rocalGetOutputColorFormat(RocalContext p_context)
-// {
-//     auto context = static_cast<Context*>(p_context);
-//     auto translate_color_format = [](RocalColorFormat color_format)
-//     {
-//         switch(color_format){
-//             case RocalColorFormat::RGB24:
-//                 return 0;
-//             case RocalColorFormat::BGR24:
-//                 return 1;
-//             case RocalColorFormat::U8:
-//                 return 2;
-//             case RocalColorFormat::RGB_PLANAR:
-//                 return 3;
-//             default:
-//                 THROW("Unsupported Tensor type" + TOSTR(color_format))
-//         }
-//     };
-
-//     return translate_color_format(context->master_graph->output_color_format());
-// }
-
-// size_t ROCAL_API_CALL rocalGetAugmentationBranchCount(RocalContext p_context)
-// {
-//     auto context = static_cast<Context*>(p_context);
-//     return context->master_graph->augmentation_branch_count();
-// }
-
 size_t  ROCAL_API_CALL
 rocalGetRemainingImages(RocalContext p_context)
 {

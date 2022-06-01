@@ -56,7 +56,6 @@ public:
     Status copy_output(void* out_ptr, size_t out_size);
     std::vector<size_t> tensor_output_byte_size();
     size_t tensor_output_depth();
-    // size_t augmentation_branch_count();
     size_t output_sample_size();
     size_t tensor_output_sample_size();
     Status build();
