@@ -26,8 +26,8 @@ THE SOFTWARE.
 #include "node_gamma.h"
 #include "exception.h"
 
-GammaNode::GammaNode(const std::vector<Tensor *> &inputs, const std::vector<Tensor *> &outputs) :
-        Node(inputs, outputs),
+GammaNode::GammaNode(const std::vector<rocALTensor *> &inputs, const std::vector<rocALTensor *> &outputs) :
+        TensorNode(inputs, outputs),
         _shift(SHIFT_RANGE[0], SHIFT_RANGE[1])
 {
 }

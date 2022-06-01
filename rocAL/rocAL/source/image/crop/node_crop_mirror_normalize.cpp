@@ -25,8 +25,8 @@ THE SOFTWARE.
 #include "node_crop_mirror_normalize.h"
 #include "exception.h"
 
-CropMirrorNormalizeNode::CropMirrorNormalizeNode(const std::vector<Tensor *> &inputs, const std::vector<Tensor *> &outputs) :
-        Node(inputs, outputs),
+CropMirrorNormalizeNode::CropMirrorNormalizeNode(const std::vector<rocALTensor *> &inputs, const std::vector<rocALTensor *> &outputs) :
+        TensorNode(inputs, outputs),
         _mirror(MIRROR_RANGE[0], MIRROR_RANGE[1])
 {
     _crop_param = std::make_shared<RocalCropParam>(_batch_size);
@@ -57,7 +57,7 @@ void CropMirrorNormalizeNode::create_node()
         THROW(" vxAddArrayItems failed in the crop resize node (vxExtrppNode_CropMirrorNormalizeCropbatchPD    )  node: "+ TOSTR(status) + "  "+ TOSTR(status))
 
     unsigned int chnShift = 0;
-    if(_inputs[0]->info().format() != _outputs[0]->info().format())
+    if(_inputs[0]->info().layout() != _outputs[0]->info().layout())
         chnShift = 1;
     vx_scalar  chnToggle = vxCreateScalar(vxGetContext((vx_reference)_graph->get()),VX_TYPE_UINT32,&chnShift);
     bool packed;
@@ -77,7 +77,7 @@ void CropMirrorNormalizeNode::create_node()
 
 void CropMirrorNormalizeNode::update_node()
 {
-    _crop_param->set_image_dimensions(_inputs[0]->info().get_roi_width_vec(), _inputs[0]->info().get_roi_height_vec());
+    // _crop_param->set_image_dimensions(_inputs[0]->info().get_roi_width_vec(), _inputs[0]->info().get_roi_height_vec()); // TODO - Needs Modification
     _crop_param->update_array();
     std::vector<uint32_t> crop_h_dims, crop_w_dims;
     _crop_param->get_crop_dimensions(crop_w_dims, crop_h_dims);

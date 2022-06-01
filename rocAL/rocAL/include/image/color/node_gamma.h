@@ -25,10 +25,10 @@ THE SOFTWARE.
 #include "parameter_factory.h"
 #include "parameter_vx.h"
 
-class GammaNode : public Node
+class GammaNode : public TensorNode
 {
 public:
-    GammaNode(const std::vector<Tensor *> &inputs, const std::vector<Tensor *> &outputs);
+    GammaNode(const std::vector<rocALTensor *> &inputs, const std::vector<rocALTensor *> &outputs);
     GammaNode() = delete;
     void init(float shift);
     void init(FloatParam *shift);

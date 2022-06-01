@@ -381,32 +381,12 @@ MasterGraph::update_node_parameters()
     return Status::OK;
 }
 
-size_t
-MasterGraph::augmentation_branch_count()
-{
-    return _output_tensors.size();
+// size_t
+// MasterGraph::augmentation_branch_count()
+// {
+//     return _output_tensors.size();
 
-}
-
-// This is being used only in copy out tensor which will be changed.
-std::vector<RocalColorFormat>
-MasterGraph::output_color_format()
-{
-    return _output_tensors.get_color_format();
-}
-
-std::vector<size_t>
-MasterGraph::tensor_output_width()
-{
-    return _output_tensors.get_width();
-}
-
-
-std::vector<size_t>
-MasterGraph::tensor_output_height()
-{
-    return _output_tensors.get_height();
-}
+// }
 
 
 MasterGraph::Status

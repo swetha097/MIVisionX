@@ -44,7 +44,11 @@ THE SOFTWARE.
  * @param mem input Rocal type
  * @return the OpenVX type associated with input argument
  */
-extern vx_enum vx_mem_type(RocalMemType mem);
+vx_enum vx_mem_type(RocalMemType mem); // TODO - extern was used previously ?
+
+vx_size tensor_data_size(RocalTensorDataType data_type);
+
+/*! \brief Holds the information about a rocALTensor */
 
 class rocALTensorInfo
 {
@@ -101,7 +105,7 @@ public:
         {
             _max_width = _dims->at(1);
             _max_height = _dims->at(2);
-            std::cerr<<"\n Setting _max_width :: "<<_max_width<<"\t _max_height :: "<<_max_height;
+            // std::cerr<<"\n Setting _max_width :: "<<_max_width<<"\t _max_height :: "<<_max_height;
         }
         _layout = layout;
     }
@@ -123,18 +127,7 @@ public:
     bool is_image() const { return _is_image; }
     unsigned data_type_size()
     {
-        if(_data_type == RocalTensorDataType::FP32)
-        {
-            _data_type_size = sizeof(vx_float32);
-        }
-        else if(_data_type == RocalTensorDataType::FP16)
-        {
-            _data_type_size = sizeof(vx_int16); // have to change this to float 16
-        }
-        else if(_data_type == RocalTensorDataType::UINT8)
-        {
-            _data_type_size = sizeof(vx_uint8);
-        }
+        _data_type_size = tensor_data_size(_data_type);
         return _data_type_size;
     }
     unsigned num_of_frames() const
@@ -144,7 +137,6 @@ public:
         else
             ERR("The frames dimension 'F' is applicable only for 5D NFCHW or NFHWC tensors")
     }
-
 
 private:
     Type _type = Type::UNKNOWN;//!< tensor type, whether is virtual tensor, created from handle or is a regular tensor
@@ -188,7 +180,7 @@ public:
     /*! Releases the OpenVX Tensor object */
     ~rocALTensor();
 
-    //! Constructor accepting the image information as input
+    //! Constructor accepting the tensor information as input
     explicit rocALTensor(const rocALTensorInfo& tensor_info);
 
     int create(vx_context context);
@@ -199,12 +191,13 @@ public:
     int create_virtual(vx_context context, vx_graph graph);
 
 private:
-    vx_tensor _vx_handle = nullptr;//!< The OpenVX image
-    void* _mem_handle = nullptr;//!< Pointer to the image's internal buffer (opencl or host)
-    rocALTensorInfo _info;//!< The structure holding the info related to the stored OpenVX image
+    vx_tensor _vx_handle = nullptr;//!< The OpenVX tensor
+    void* _mem_handle = nullptr;//!< Pointer to the tensor's internal buffer (opencl or host)
+    rocALTensorInfo _info;//!< The structure holding the info related to the stored OpenVX tensor
     vx_context _context = nullptr;
 };
 
+/*! \brief Contains a list of rocALTensors corresponding to different outputs */
 class rocALTensorList
 {
 public:
@@ -214,9 +207,6 @@ public:
     {
         _tensor_list.emplace_back(tensor);
         _tensor_data_size.emplace_back(tensor->info().data_size());
-        _tensor_list_height.emplace_back(tensor->info().max_height() * tensor->info().batch_size());
-        _tensor_list_width.emplace_back(tensor->info().max_width());
-        _tensor_list_color_format.emplace_back(tensor->info().color_format());
     }
     std::vector<size_t> data_size()
     {
@@ -235,153 +225,8 @@ public:
     {
         return _tensor_list[index];
     }
-    std::vector<size_t> get_height() { return _tensor_list_height; }
-    std::vector<size_t> get_width() { return _tensor_list_width; }
-    std::vector<RocalColorFormat> get_color_format() { return _tensor_list_color_format; }
 
 private:
     std::vector<rocALTensor*> _tensor_list;
     std::vector<size_t> _tensor_data_size;
-    std::vector<size_t> _tensor_list_height;
-    std::vector<size_t> _tensor_list_width;
-    std::vector<RocalColorFormat> _tensor_list_color_format;
 };
-
-/*! \brief Holds the information about an OpenVX Tensor */
-
-struct TensorInfo
-{
-    friend struct Tensor;
-    enum class Type
-    {
-        UNKNOWN = -1,
-        REGULAR =0,
-        VIRTUAL = 1,
-        HANDLE =2
-    };
-    //! Default constructor,
-    /*! initializes memory type to host  */
-    TensorInfo();
-
-    //! Initializer constructor
-    TensorInfo(
-        unsigned width_,
-        unsigned height_,
-        unsigned batches_,
-        unsigned channels_,
-        RocalMemType mem_type_,
-        RocalColorFormat color_format,
-        RocalTensorDataType data_type,
-        RocalTensorlayout   tensor_format);
-
-    unsigned width() const { return _width; }
-    unsigned height_batch() const {return _height * _batch_size; }
-    unsigned height() const { return _height; }
-    unsigned channels() const { return _channels; }
-    unsigned stride() const { return _stride; }
-    unsigned height_single() const { return _height;}
-    void width(unsigned width) { _width = width; }
-    void height(unsigned height) { _height = height; }
-    void batch_size(unsigned batch_size) { _batch_size = batch_size; }
-    void channels(unsigned channels) { _channels = channels; }
-    void format(RocalTensorlayout format) { _format = format; }
-    void color_format(RocalColorFormat color_fmt)  { _color_fmt = color_fmt; }
-    void data_type(RocalTensorDataType data_type)  { _data_type = data_type; }
-    Type type() const { return _type; }
-    RocalTensorDataType data_type() const { return _data_type;}
-    unsigned batch_size() const {return _batch_size;}
-    RocalMemType mem_type() const { return _mem_type; }
-    RocalTensorlayout format() const { return _format; }
-    unsigned data_size() const { return _data_size; }
-    RocalColorFormat color_format() const {return _color_fmt; }
-    unsigned color_plane_count() const { return _color_planes; }
-    unsigned get_roi_width(int batch_idx) const;
-    unsigned get_roi_height(int batch_idx) const;
-    uint32_t * get_roi_width() const;
-    uint32_t * get_roi_height() const;
-    const std::vector<uint32_t>& get_roi_width_vec() const;
-    const std::vector<uint32_t>& get_roi_height_vec() const;
-    bool is_image() const { return _is_image; }
-    size_t data_type_size()
-    {
-        if(_data_type == RocalTensorDataType::FP32)
-        {
-            _data_type_size = sizeof(vx_float32);
-        }
-        else if(_data_type == RocalTensorDataType::FP16)
-        {
-            _data_type_size = sizeof(vx_int16); // have to change this to float 16
-        }
-        else if(_data_type == RocalTensorDataType::UINT8)
-        {
-            _data_type_size = sizeof(vx_uint8);
-        }
-        return _data_type_size;
-    }
-private:
-    Type _type = Type::UNKNOWN;//!< image type, whether is virtual image, created from handle or is a regular image
-    unsigned _width;//!< image width for a single image in the batch
-    unsigned _height;//!< image height for a single image in the batch
-    unsigned _batch_size;//!< the batch size (images in the batch are stacked on top of each other)
-    unsigned _channels;//!< number of channels
-    unsigned _data_size;//!< total size of the memory needed to keep the image's data in bytes including all planes
-    RocalMemType _mem_type;//!< memory type, currently either OpenCL or Host
-    RocalColorFormat _color_fmt;//!< color format of the image
-    RocalTensorDataType _data_type = RocalTensorDataType::FP32;
-    RocalTensorlayout _format = RocalTensorlayout::NCHW;
-    unsigned _color_planes;//!< number of color planes
-    unsigned _stride;//!< if different from width
-    std::shared_ptr<std::vector<uint32_t>> _roi_width;//!< The actual image width stored in the buffer, it's always smaller than _width/_batch_size. It's created as a vector of pointers to integers, so that if it's passed from one image to another and get updated by one and observed for all.
-    std::shared_ptr<std::vector<uint32_t>> _roi_height;//!< The actual image height stored in the buffer, it's always smaller than _height. It's created as a vector of pointers to integers, so that if it's passed from one image to another and get updated by one changes can be observed for all.
-    void reallocate_tensor_roi_buffers();
-    bool _is_image = false;
-    size_t _data_type_size;
-};
-
-bool operator==(const TensorInfo& rhs, const TensorInfo& lhs);
-
-/*! \brief Holds an OpenVX tensor and it's info
-*
-* Keeps the information about the ROCAL tensor that can be queried using OVX API as well,
-* but for simplicity and ease of use, they are kept in separate fields
-*/
-struct Tensor
-{
-    int swap_handle(void* handle);
-
-    const TensorInfo& info() { return _info; }
-    //! Default constructor
-    Tensor() = delete;
-    void* buffer() { return _mem_handle; }
-    vx_tensor handle() { return _vx_handle; }
-    vx_context context() { return _context; }
-#if !ENABLE_HIP
-    unsigned copy_data(cl_command_queue queue, unsigned char* user_buffer, bool sync);
-    unsigned copy_data(cl_command_queue queue, cl_mem user_buffer, bool sync);
-#else
-    unsigned copy_data(hipStream_t stream, unsigned char* user_buffer, bool sync);
-    unsigned copy_data(hipStream_t stream, void* hip_memory, bool sync);
-#endif
-    //! Default destructor
-    /*! Releases the OpenVX Tensor object */
-    ~Tensor();
-
-    //! Constructor accepting the image information as input
-    explicit Tensor(const TensorInfo& tensor_info);
-
-    int create(vx_context context);
-    void update_tensor_roi(const std::vector<uint32_t> &width, const std::vector<uint32_t> &height);
-    void reset_tensor_roi() { _info.reallocate_tensor_roi_buffers(); }
-    // create_from_handle() no internal memory allocation is done here since tensor's handle should be swapped with external buffers before usage
-    int create_from_handle(vx_context context);
-    int create_virtual(vx_context context, vx_graph graph);
-
-private:
-    vx_tensor _vx_handle = nullptr;//!< The OpenVX image
-    void* _mem_handle = nullptr;//!< Pointer to the image's internal buffer (opencl or host)
-    TensorInfo _info;//!< The structure holding the info related to the stored OpenVX image
-    vx_context _context = nullptr;
-};
-
-
-

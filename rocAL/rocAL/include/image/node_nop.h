@@ -24,10 +24,10 @@ THE SOFTWARE.
 #include "node.h"
 #include "graph.h"
 
-class NopNode : public Node
+class NopNode : public TensorNode
 {
 public:
-    NopNode(const std::vector<Tensor *> &inputs, const std::vector<Tensor *> &outputs);
+    NopNode(const std::vector<rocALTensor *> &inputs, const std::vector<rocALTensor *> &outputs);
     NopNode() = delete;
 protected:
     void create_node() override;

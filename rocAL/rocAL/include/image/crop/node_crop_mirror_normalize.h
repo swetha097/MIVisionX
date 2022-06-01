@@ -26,10 +26,10 @@ THE SOFTWARE.
 #include "parameter_crop_factory.h"
 #include "parameter_vx.h"
 #include "rocal_api_types.h"
-class CropMirrorNormalizeNode : public Node
+class CropMirrorNormalizeNode : public TensorNode
 {
 public:
-    CropMirrorNormalizeNode(const std::vector<Tensor *> &inputs, const std::vector<Tensor *> &outputs);
+    CropMirrorNormalizeNode(const std::vector<rocALTensor *> &inputs, const std::vector<rocALTensor *> &outputs);
     CropMirrorNormalizeNode() = delete;
     void init(int crop_h, int crop_w, float start_x, float start_y, float mean, float std_dev, IntParam *mirror);
     vx_array return_mirror(){ return _mirror.default_array();  }

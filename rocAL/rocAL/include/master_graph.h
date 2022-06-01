@@ -54,14 +54,11 @@ public:
     size_t remaining_images_count();
     MasterGraph::Status copy_output(std::vector<void *> &out_ptr);
     Status copy_output(void* out_ptr, size_t out_size);
-    std::vector<size_t> tensor_output_width();
-    std::vector<size_t> tensor_output_height();
     std::vector<size_t> tensor_output_byte_size();
     size_t tensor_output_depth();
-    size_t augmentation_branch_count();
+    // size_t augmentation_branch_count();
     size_t output_sample_size();
     size_t tensor_output_sample_size();
-    std::vector<RocalColorFormat> output_color_format();
     Status build();
     Status run();
     Timing timing();
@@ -117,11 +114,6 @@ private:
     // CropCordBatch* _random_bbox_crop_cords_data = nullptr;
     std::thread _output_thread;
     rocALTensorInfo _output_tensor_info;
-    // std::vector<rocALTensor*> _output_tensors;
-    // std::list<rocALTensor*> _internal_tensors;
-    // std::list<std::shared_ptr<Node>> _tensor_nodes;
-    // std::list<std::shared_ptr<Node>> _tensor_root_nodes;
-    // std::map<rocALTensor*, std::shared_ptr<Node>> _tensor_map;
 
     // std::vector<rocALTensor*> _output_tensors;
     rocALTensorList _output_tensors;
@@ -134,10 +126,6 @@ private:
     // ImageInfo _output_image_info;//!< Keeps the information about ROCAL's output image , it includes all images of a batch stacked on top of each other
     // std::vector<Image*> _output_images;//!< Keeps the ovx images that are used to store the augmented output (there is an image per augmentation branch)
     // std::list<Image*> _internal_images;//!< Keeps all the ovx images (virtual/non-virtual) either intermediate images, or input images that feed the graph
-    // std::list<std::shared_ptr<Node>> _nodes;//!< List of all the nodes
-    // std::list<std::shared_ptr<Node>> _root_nodes;//!< List of all root nodes (image/video loaders)
-    // std::list<std::shared_ptr<Node>> _meta_data_nodes;//!< List of nodes where meta data has to be updated after augmentation
-    // std::map<Image*, std::shared_ptr<Node>> _image_map;//!< key: image, value : Parent node
 #if ENABLE_HIP
     void * _output_tensor;//!< In the GPU processing case , is used to convert the U8 samples to float32 before they are being transfered back to host
     DeviceManagerHip   _device;//!< Keeps the device related constructs needed for running on GPU

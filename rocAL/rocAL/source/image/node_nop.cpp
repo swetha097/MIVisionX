@@ -24,8 +24,8 @@ THE SOFTWARE.
 #include "node_nop.h"
 #include "exception.h"
 
-NopNode::NopNode(const std::vector<Tensor *> &inputs, const std::vector<Tensor *> &outputs) :
-        Node(inputs, outputs)
+NopNode::NopNode(const std::vector<rocALTensor *> &inputs, const std::vector<rocALTensor *> &outputs) :
+        TensorNode(inputs, outputs)
 {
 }
 
