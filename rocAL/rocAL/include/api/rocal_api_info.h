@@ -48,4 +48,6 @@ extern "C" const char* ROCAL_API_CALL rocalGetErrorMessage(RocalContext rocal_co
 /// \return The timing info associated with recent execution.
 extern "C" TimingInfo ROCAL_API_CALL rocalGetTimingInfo(RocalContext rocal_context);
 
+
+
 #endif //MIVISIONX_ROCAL_API_INFO_H
