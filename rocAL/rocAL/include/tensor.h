@@ -72,6 +72,7 @@ public:
 
     // Setting properties required for Image / Video
     void set_roi_type(RocalROIType roi_type) { _roi_type = roi_type; }
+    void set_data_type(RocalTensorDataType data_type) { _data_type = data_type; }
     void set_tensor_layout(RocalTensorlayout layout)
     {
         if(layout != RocalTensorlayout::NONE)
@@ -121,7 +122,7 @@ public:
     RocalROIType roi_type() const { return _roi_type; }
     RocalTensorDataType data_type() const { return _data_type; }
     RocalTensorlayout layout() const { return _layout; }
-    std::shared_ptr<std::vector<RocalROI>> get_roi() const { return _roi; }
+    std::vector<RocalROI> get_roi() const { return _roi; }
     RocalColorFormat color_format() const {return _color_format; }
     Type type() const { return _type; }
     bool is_image() const { return _is_image; }
@@ -148,7 +149,7 @@ private:
     RocalTensorDataType _data_type = RocalTensorDataType::FP32;
     RocalTensorlayout _layout = RocalTensorlayout::NCHW;
     RocalColorFormat _color_format;
-    std::shared_ptr<std::vector<RocalROI>> _roi;
+    std::vector<RocalROI> _roi;
     unsigned _data_type_size;
     unsigned _data_size = 0;
     unsigned _max_width, _max_height;

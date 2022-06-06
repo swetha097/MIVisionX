@@ -25,21 +25,20 @@ THE SOFTWARE.
 #include "node_crop_mirror_normalize.h"
 #include "exception.h"
 
-CropMirrorNormalizeNode::CropMirrorNormalizeNode(const std::vector<rocALTensor *> &inputs, const std::vector<rocALTensor *> &outputs) :
+CropMirrorNormalizeTensorNode::CropMirrorNormalizeTensorNode(const std::vector<rocALTensor *> &inputs, const std::vector<rocALTensor *> &outputs) :
         Node(inputs, outputs),
         _mirror(MIRROR_RANGE[0], MIRROR_RANGE[1])
 {
     _crop_param = std::make_shared<RocalCropParam>(_batch_size);
 }
 
-void CropMirrorNormalizeNode::create_node()
+void CropMirrorNormalizeTensorNode::create_node()
 {
     if(_node)
         return;
 
     if(_crop_param->crop_h == 0 || _crop_param->crop_w == 0)
         THROW("Uninitialized destination dimension - Invalid Crop Sizes")
-
     _crop_param->create_array(_graph);
     _mean_vx.resize(_batch_size);
     _std_dev_vx.resize(_batch_size);
@@ -47,6 +46,12 @@ void CropMirrorNormalizeNode::create_node()
          _mean_vx[i] = _mean;
          _std_dev_vx[i] = _std_dev;
     }
+    //
+    // if(_inputs[0]->info().layout() == RocalTensorlayout::NCHW)
+    //     _layout = 1;
+    // if(_inputs[0]->info().roi_type() == RocalROIType::XYWH)
+    //     _roi_type = 1;
+//
     _mean_array = vxCreateArray(vxGetContext((vx_reference)_graph->get()), VX_TYPE_FLOAT32, _batch_size);
     _std_dev_array = vxCreateArray(vxGetContext((vx_reference)_graph->get()), VX_TYPE_FLOAT32, _batch_size);
     vx_status status = VX_SUCCESS;
@@ -57,8 +62,8 @@ void CropMirrorNormalizeNode::create_node()
         THROW(" vxAddArrayItems failed in the crop resize node (vxExtrppNode_CropMirrorNormalizeCropbatchPD    )  node: "+ TOSTR(status) + "  "+ TOSTR(status))
 
     unsigned int chnShift = 0;
-    if(_inputs[0]->info().layout() != _outputs[0]->info().layout())
-        chnShift = 1;
+    // if(_inputs[0]->info().format() != _outputs[0]->info().format())
+    //     chnShift = 1;
     vx_scalar  chnToggle = vxCreateScalar(vxGetContext((vx_reference)_graph->get()),VX_TYPE_UINT32,&chnShift);
     bool packed;
     if(_inputs[0]->info().color_format() != RocalColorFormat::RGB_PLANAR)
@@ -66,30 +71,35 @@ void CropMirrorNormalizeNode::create_node()
         packed = true;
     }
     vx_scalar is_packed = vxCreateScalar(vxGetContext((vx_reference)_graph->get()),VX_TYPE_BOOL,&packed);
+    vx_scalar layout = vxCreateScalar(vxGetContext((vx_reference)_graph->get()),VX_TYPE_UINT32,&_layout);
+    vx_scalar roi_type = vxCreateScalar(vxGetContext((vx_reference)_graph->get()),VX_TYPE_UINT32,&_roi_type);
     _node = vxExtrppNode_CropMirrorNormalize(_graph->get(), _inputs[0]->handle(),
-                                                    _src_roi_width,_src_roi_height,_outputs[0]->handle(), _crop_param->cropw_arr, _crop_param->croph_arr, _crop_param->x1_arr, _crop_param->y1_arr,
-                                                    _mean_array, _std_dev_array, _mirror.default_array() , is_packed, chnToggle, _batch_size);
+                                                   _src_tensor_roi, _outputs[0]->handle(),_src_tensor_roi,_crop_param->cropw_arr, _crop_param->croph_arr, _crop_param->x1_arr, _crop_param->y1_arr,
+                                                    _mean_array, _std_dev_array, _mirror.default_array() , is_packed, chnToggle,layout, roi_type, _batch_size);
     if((status = vxGetStatus((vx_reference)_node)) != VX_SUCCESS)
         THROW("Error adding the crop mirror normalize tensor (vxExtrppNode_CropMirrorNormalizeCropbatchPD    ) failed: "+TOSTR(status))
 
 }
 
 
-void CropMirrorNormalizeNode::update_node()
+void CropMirrorNormalizeTensorNode::update_node()
 {
-    // _crop_param->set_image_dimensions(_inputs[0]->info().get_roi_width_vec(), _inputs[0]->info().get_roi_height_vec()); // TODO - Needs Modification
+    _crop_param->set_image_dimensions(_inputs[0]->info().get_roi());
+
     _crop_param->update_array();
     std::vector<uint32_t> crop_h_dims, crop_w_dims;
     _crop_param->get_crop_dimensions(crop_w_dims, crop_h_dims);
     _outputs[0]->update_tensor_roi(crop_w_dims, crop_h_dims);
     _mirror.update_array();
+
 }
 
-void CropMirrorNormalizeNode::init(int crop_h, int crop_w, float start_x, float start_y, float mean, float std_dev, IntParam *mirror)
+void CropMirrorNormalizeTensorNode::init(int crop_h, int crop_w, float start_x, float start_y, float mean, float std_dev, IntParam *mirror,int layout)
 {
     _crop_param->crop_h = crop_h;
     _crop_param->crop_w = crop_w;
     _mean   = mean;
     _std_dev = std_dev;
     _mirror.set_param(core(mirror));
+    _layout=layout;
 }
