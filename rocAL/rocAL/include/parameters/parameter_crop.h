@@ -50,11 +50,11 @@ public:
         x_drift_factor     = default_x_drift_factor();
         y_drift_factor     = default_y_drift_factor();
     }
-    void set_image_dimensions( const std::vector<RocalROI> roi)
+    void set_image_dimensions( const std::shared_ptr<std::vector<RocalROI>> roi)
     {
-        if(in_roi.size() != roi.size())
+        if(in_roi.size() != roi->size())
             THROW("wrong input width or height size")
-        in_roi = roi;
+        in_roi = *roi;
     }
     void set_random() {_random = true;}
     void set_x_drift_factor(Parameter<float>* x_drift);
