@@ -72,7 +72,12 @@ public:
 
     // Setting properties required for Image / Video
     void set_roi_type(RocalROIType roi_type) { _roi_type = roi_type; }
-    void set_data_type(RocalTensorDataType data_type) { _data_type = data_type; }
+    void set_data_type(RocalTensorDataType data_type)
+    {
+        int data_size = _data_size / _data_type_size;
+        _data_type = data_type;
+        _data_size = data_size * data_type_size();
+    }
     void set_tensor_layout(RocalTensorlayout layout)
     {
         if(layout != RocalTensorlayout::NONE)
@@ -150,7 +155,7 @@ private:
     RocalTensorlayout _layout = RocalTensorlayout::NCHW;
     RocalColorFormat _color_format;
     std::shared_ptr<std::vector<RocalROI>> _roi;
-    unsigned _data_type_size;
+    unsigned _data_type_size = tensor_data_size(_data_type);
     unsigned _data_size = 0;
     unsigned _max_width, _max_height;
     unsigned _frames; // denotes the F dimension in the tensor
