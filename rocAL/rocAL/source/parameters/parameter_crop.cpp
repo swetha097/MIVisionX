@@ -57,8 +57,7 @@ void CropParam::array_init()
     croph_arr_val.resize(batch_size);
     x2_arr_val.resize(batch_size);
     y2_arr_val.resize(batch_size);
-    in_width.resize(batch_size);
-    in_height.resize(batch_size);
+    in_roi.resize(batch_size);
 }
 
 void CropParam::create_array(std::shared_ptr<Graph> graph)
@@ -100,6 +99,7 @@ void CropParam::update_crop_array()
     status = vxCopyArrayRange((vx_array)y2_arr, 0, batch_size, sizeof(vx_uint32), y2_arr_val.data(), VX_WRITE_ONLY, VX_MEMORY_TYPE_HOST);
     if(status != VX_SUCCESS)
         WRN("ERROR: vxCopyArrayRange x1_arr failed " +TOSTR(status));
+
 }
 
 Parameter<float> *CropParam::default_x_drift_factor()
