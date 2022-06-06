@@ -83,7 +83,7 @@ namespace rali{
     // {
     //     rocALTensor* rocal_tensor = rocalJpegFileSource(context,source_path, rocal_color_format, internal_shard_count, is_output, shuffle, loop, decode_size_policy, max_width, max_height, dec_type );
     //     return rocal_tensor;
-            
+
     // }
 
     PYBIND11_MODULE(rali_pybind, m) {
@@ -108,7 +108,68 @@ namespace rali{
             .def_readwrite("transfer_time",&TimingInfo::transfer_time);
         py::class_<rocALTensor>(m, "rocALTensor");
             // .def_readwrite("swap_handle",&rocALTensor::swap_handle);
-        py::class_<rocALTensorList>(m, "rocALTensorList");
+        py::class_<rocALTensorList>(m, "rocALTensorList")
+            .def(
+                "at",
+                [](rocALTensorList &output_tensor_list, uint idx)
+                {
+                    uint h = output_tensor_list.at(idx)->info().max_height();
+                    uint w = output_tensor_list.at(idx)->info().max_width();
+                    std::cerr << "\n height in pybind: " << h;
+                    std::cerr << "\n width in pybind: " << w;
+                    std::cerr << "\n Number of dims: " << output_tensor_list.at(idx)->info().num_of_dims();
+                    std::cerr << "\n N               ::" << output_tensor_list.at(idx)->info().dims()->at(0);
+                    std::cerr << "\n C                ::" << output_tensor_list.at(idx)->info().dims()->at(1);
+                    std::cerr << "\n H                ::" << output_tensor_list.at(idx)->info().dims()->at(2);
+                    std::cerr << "\n W                ::" << output_tensor_list.at(idx)->info().dims()->at(3);
+
+                    unsigned n = output_tensor_list.at(idx)->info().dims()->at(0);
+                    unsigned c = output_tensor_list.at(idx)->info().dims()->at(3);
+
+
+                    // for(int i=0;i<output_tensor_list.at(idx)->info().dims()->at(0)*output_tensor_list.at(idx)->info().dims()->at(1)*output_tensor_list.at(idx)->info().dims()->at(2)*output_tensor_list.at(idx)->info().dims()->at(3);i++)
+                    // unsigned char * temp = (unsigned char *) (output_tensor_list.at(idx)->buffer());
+                    // for (uint i = 0; i < 10; i++)
+                    //     std::cerr << "\n **********************************************:" <<  (float)temp[i];
+                    // std::exit(0);
+                    // return (unsigned char*)output_tensor_list.at(idx)->buffer();
+                    // TODO
+                    // Change according to rocalTensor datatype (uint8, float16, float32)
+                    // return py::array(py::buffer_info(
+                    //     output_tensor_list.at(idx)->buffer(),
+                    //     sizeof(float),
+                    //     py::format_descriptor<float>::format(),
+                    //     output_tensor_list.at(idx)->info().num_of_dims(),
+                    //     {output_tensor_list.at(idx)->info().dims()->at(0), output_tensor_list.at(idx)->info().dims()->at(1), output_tensor_list.at(idx)->info().dims()->at(2), output_tensor_list.at(idx)->info().dims()->at(3)},
+                    //     {sizeof(float) * output_tensor_list.at(idx)->info().dims()->at(1) * output_tensor_list.at(idx)->info().dims()->at(2) * output_tensor_list.at(idx)->info().dims()->at(3), sizeof(float) * output_tensor_list.at(idx)->info().dims()->at(2) * output_tensor_list.at(idx)->info().dims()->at(3), sizeof(float) * output_tensor_list.at(idx)->info().dims()->at(3), sizeof(float)}));
+
+                    return py::array(py::buffer_info(
+                        (unsigned char*)(output_tensor_list.at(idx)->buffer()),
+                        sizeof(unsigned char),
+                        py::format_descriptor<unsigned char>::format(),
+                        output_tensor_list.at(idx)->info().num_of_dims(),
+                        {n,h,w,c},
+                        {sizeof(unsigned char) * w * h * c, sizeof(unsigned char) * w * c , sizeof(unsigned char) * c, sizeof(unsigned char)}));
+
+                    // return py::array(py::buffer_info(
+                    //     (float*)(output_tensor_list.at(idx)->buffer()),
+                    //     sizeof(float),
+                    //     py::format_descriptor<float>::format(),
+                    //     output_tensor_list.at(idx)->info().num_of_dims(),
+                    //     {n,h,w,c},
+                    //     {sizeof(float) * w * h * c, sizeof(float) * w * c , sizeof(float) * c, sizeof(float)}));
+
+                    // return py::array_t<int>(
+                    //                                       {n, h, w, c},
+                    //                                       {sizeof(int) * w * h * c, sizeof(int) * w * c , sizeof(int) * c, sizeof(int)},
+                    //                                       (int *)((unsigned char *)(output_tensor_list.at(idx)->buffer())),
+                    //                                       py::cast<py::none>(Py_None));
+                },
+                "idx"_a,
+                R"code(
+                Returns a rocAL tensor at given position `i` in the rocALTensorlist.
+                )code",
+                py::keep_alive<0, 1>());
         py::class_<rocALTensorInfo>(m, "rocALTensorInfo");
 
         py::module types_m = m.def_submodule("types");
@@ -150,7 +211,7 @@ namespace rali{
             .value("SOFTWARE_DECODE",ROCAL_SW_DECODE)
             .export_values();
         // rocal_api_info.h
-        m.def("rocalGetRemainingImages",&rocalGetRemainingImages);
+        m.def("getRemainingImages",&rocalGetRemainingImages);
         m.def("isEmpty",&rocalIsEmpty);
         m.def("getStatus",rocalGetStatus);
         m.def("rocalGetErrorMessage",&rocalGetErrorMessage);
