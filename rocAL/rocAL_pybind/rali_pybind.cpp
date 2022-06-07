@@ -78,14 +78,6 @@ namespace rali{
         return py::bytes(s);
     }
 
-    // py::object wrapper_rocalJpegFileSource(RocalContext context, const char* source_path, RocalImageColor rocal_color_format, unsigned internal_shard_count, bool is_output, bool shuffle, bool loop, RocalImageSizeEvaluationPolicy decode_size_policy, unsigned max_width, unsigned max_height, RocalDecoderType dec_type)
-
-    // {
-    //     rocALTensor* rocal_tensor = rocalJpegFileSource(context,source_path, rocal_color_format, internal_shard_count, is_output, shuffle, loop, decode_size_policy, max_width, max_height, dec_type );
-    //     return rocal_tensor;
-
-    // }
-
     PYBIND11_MODULE(rali_pybind, m) {
         m.doc() = "Python bindings for the C++ portions of ROCAL";
         // rocal_api.h
@@ -115,55 +107,32 @@ namespace rali{
                 {
                     uint h = output_tensor_list.at(idx)->info().max_height();
                     uint w = output_tensor_list.at(idx)->info().max_width();
-                    std::cerr << "\n height in pybind: " << h;
-                    std::cerr << "\n width in pybind: " << w;
-                    std::cerr << "\n Number of dims: " << output_tensor_list.at(idx)->info().num_of_dims();
-                    std::cerr << "\n N               ::" << output_tensor_list.at(idx)->info().dims()->at(0);
-                    std::cerr << "\n C                ::" << output_tensor_list.at(idx)->info().dims()->at(1);
-                    std::cerr << "\n H                ::" << output_tensor_list.at(idx)->info().dims()->at(2);
-                    std::cerr << "\n W                ::" << output_tensor_list.at(idx)->info().dims()->at(3);
 
-                    unsigned n = output_tensor_list.at(idx)->info().dims()->at(0);
-                    unsigned c = output_tensor_list.at(idx)->info().dims()->at(3);
+                    if (output_tensor_list.at(idx)->info().layout() == RocalTensorlayout::NHWC )
+                    {
+                        unsigned n = output_tensor_list.at(idx)->info().dims()->at(0);
+                        unsigned c = output_tensor_list.at(idx)->info().dims()->at(3);
+                        return py::array(py::buffer_info(
+                            (unsigned char *)(output_tensor_list.at(idx)->buffer()),
+                            sizeof(unsigned char),
+                            py::format_descriptor<unsigned char>::format(),
+                            output_tensor_list.at(idx)->info().num_of_dims(),
+                            {n, h, w, c},
+                            {sizeof(unsigned char) * w * h * c, sizeof(unsigned char) * w * c, sizeof(unsigned char) * c, sizeof(unsigned char)}));
+                    }
 
-
-                    // for(int i=0;i<output_tensor_list.at(idx)->info().dims()->at(0)*output_tensor_list.at(idx)->info().dims()->at(1)*output_tensor_list.at(idx)->info().dims()->at(2)*output_tensor_list.at(idx)->info().dims()->at(3);i++)
-                    // unsigned char * temp = (unsigned char *) (output_tensor_list.at(idx)->buffer());
-                    // for (uint i = 0; i < 10; i++)
-                    //     std::cerr << "\n **********************************************:" <<  (float)temp[i];
-                    // std::exit(0);
-                    // return (unsigned char*)output_tensor_list.at(idx)->buffer();
-                    // TODO
-                    // Change according to rocalTensor datatype (uint8, float16, float32)
-                    // return py::array(py::buffer_info(
-                    //     output_tensor_list.at(idx)->buffer(),
-                    //     sizeof(float),
-                    //     py::format_descriptor<float>::format(),
-                    //     output_tensor_list.at(idx)->info().num_of_dims(),
-                    //     {output_tensor_list.at(idx)->info().dims()->at(0), output_tensor_list.at(idx)->info().dims()->at(1), output_tensor_list.at(idx)->info().dims()->at(2), output_tensor_list.at(idx)->info().dims()->at(3)},
-                    //     {sizeof(float) * output_tensor_list.at(idx)->info().dims()->at(1) * output_tensor_list.at(idx)->info().dims()->at(2) * output_tensor_list.at(idx)->info().dims()->at(3), sizeof(float) * output_tensor_list.at(idx)->info().dims()->at(2) * output_tensor_list.at(idx)->info().dims()->at(3), sizeof(float) * output_tensor_list.at(idx)->info().dims()->at(3), sizeof(float)}));
-
-                    return py::array(py::buffer_info(
-                        (unsigned char*)(output_tensor_list.at(idx)->buffer()),
-                        sizeof(unsigned char),
-                        py::format_descriptor<unsigned char>::format(),
-                        output_tensor_list.at(idx)->info().num_of_dims(),
-                        {n,h,w,c},
-                        {sizeof(unsigned char) * w * h * c, sizeof(unsigned char) * w * c , sizeof(unsigned char) * c, sizeof(unsigned char)}));
-
-                    // return py::array(py::buffer_info(
-                    //     (float*)(output_tensor_list.at(idx)->buffer()),
-                    //     sizeof(float),
-                    //     py::format_descriptor<float>::format(),
-                    //     output_tensor_list.at(idx)->info().num_of_dims(),
-                    //     {n,h,w,c},
-                    //     {sizeof(float) * w * h * c, sizeof(float) * w * c , sizeof(float) * c, sizeof(float)}));
-
-                    // return py::array_t<int>(
-                    //                                       {n, h, w, c},
-                    //                                       {sizeof(int) * w * h * c, sizeof(int) * w * c , sizeof(int) * c, sizeof(int)},
-                    //                                       (int *)((unsigned char *)(output_tensor_list.at(idx)->buffer())),
-                    //                                       py::cast<py::none>(Py_None));
+                    else if (output_tensor_list.at(idx)->info().layout() == RocalTensorlayout::NCHW )
+                    {
+                        unsigned n = output_tensor_list.at(idx)->info().dims()->at(0);
+                        unsigned c = output_tensor_list.at(idx)->info().dims()->at(1);
+                        return py::array(py::buffer_info(
+                            (unsigned char *)(output_tensor_list.at(idx)->buffer()),
+                            sizeof(unsigned char),
+                            py::format_descriptor<unsigned char>::format(),
+                            output_tensor_list.at(idx)->info().num_of_dims(),
+                            {n, c, h, w},
+                            {sizeof(unsigned char) * c * h * w, sizeof(unsigned char) * h * w, sizeof(unsigned char) * w, sizeof(unsigned char)}));
+                    }
                 },
                 "idx"_a,
                 R"code(

@@ -39,7 +39,7 @@ def main():
     with pipe:
         # jpegs, labels = fn.readers.file(file_root=data_path)
         jpeps = [1]
-        images = fn.decoders.image(jpeps,file_root=data_path, output_type=types.RGB, shard_id=0, num_shards=1, random_shuffle=True)
+        images = fn.decoders.image(jpeps,file_root=data_path, output_type=types.RGB, shard_id=0, num_shards=1, random_shuffle=False)
         brightend_images = fn.brightness(images)
         brightend_images2 = fn.brightness(brightend_images)
 
@@ -48,18 +48,9 @@ def main():
     pipe.build()
     # imageIterator = RALI_iterator(pipe)
     # Need to call pipe.run() instead of iterator now (pipe.run() name is changed to pipe.run_tensor())
-    pipe.run()
-    output_data_batch_1 = pipe.run_tensor()
-    print("\n OUTPUT DATA!!!!: ", output_data_batch_1) # rocALTensorList
 
-    # print("\n OUTPUT DATA 0 ::", output_data_batch_1.at(0)) # Decoder Node rocALTensor
-    # print("\n OUTPUT DATA 1 ::", output_data_batch_1.at(1)) # Brightness Node  1 rocALTensor
-    # print("\n OUTPUT DATA 2 ::", output_data_batch_1.at(2)) # Brightness Node  2 rocALTensor
-
-    # print("\n OUTPUT DATA 0 ::", output_data_batch_1.at(0).shape) # Decoder Node rocALTensor
-    # print("\n OUTPUT DATA 1 ::", output_data_batch_1.at(1).shape) # Brightness Node  1 rocALTensor
-    # print("\n OUTPUT DATA 2 ::", output_data_batch_1.at(2).shape) # Brightness Node  2 rocALTensor
-
+    output_data_batch_1 = pipe.run()
+    print("\n OUTPUT DATA!!!!: ", output_data_batch_1) # rocALTensorList 1
 
     cv2.imwrite("output_images0_0.jpg", cv2.cvtColor(output_data_batch_1.at(0)[0], cv2.COLOR_RGB2BGR))
     cv2.imwrite("output_images0_1.jpg", cv2.cvtColor(output_data_batch_1.at(0)[1], cv2.COLOR_RGB2BGR))
@@ -69,44 +60,35 @@ def main():
     cv2.imwrite("output_images1_1.jpg", cv2.cvtColor(output_data_batch_1.at(1)[1], cv2.COLOR_RGB2BGR))
     cv2.imwrite("output_images1_2.jpg", cv2.cvtColor(output_data_batch_1.at(1)[2], cv2.COLOR_RGB2BGR))
 
-    cv2.imwrite("output_images0.jpg", cv2.cvtColor(output_data_batch_1.at(2)[0], cv2.COLOR_RGB2BGR))
-    cv2.imwrite("output_images1.jpg", cv2.cvtColor(output_data_batch_1.at(2)[1], cv2.COLOR_RGB2BGR))
-    cv2.imwrite("output_images2.jpg", cv2.cvtColor(output_data_batch_1.at(2)[2], cv2.COLOR_RGB2BGR))
+    cv2.imwrite("output_images2_0.jpg", cv2.cvtColor(output_data_batch_1.at(2)[0], cv2.COLOR_RGB2BGR))
+    cv2.imwrite("output_images2_1.jpg", cv2.cvtColor(output_data_batch_1.at(2)[1], cv2.COLOR_RGB2BGR))
+    cv2.imwrite("output_images2_2.jpg", cv2.cvtColor(output_data_batch_1.at(2)[2], cv2.COLOR_RGB2BGR))
 
-    if pipe.getRemainingImages() >0:
-        print("YES")
-        pipe.run()
+    output_data_batch_2 = pipe.run()
+    print("\n OUTPUT DATA BATCH 2!!!!: ", output_data_batch_2) # rocALTensorList 2
+    cv2.imwrite("output_images_batch_2_0_0.jpg", cv2.cvtColor(output_data_batch_2.at(0)[0], cv2.COLOR_RGB2BGR))
+    cv2.imwrite("output_images_batch_2_0_1.jpg", cv2.cvtColor(output_data_batch_2.at(0)[1], cv2.COLOR_RGB2BGR))
+    cv2.imwrite("output_images_batch_2_0_2.jpg", cv2.cvtColor(output_data_batch_2.at(0)[2], cv2.COLOR_RGB2BGR))
 
-        output_data_batch_2 = pipe.run_tensor()
-        print("\n OUTPUT DATA BATCH 2!!!!: ", output_data_batch_2) # rocALTensorList
-        cv2.imwrite("output_images_batch_2_0_0.jpg", cv2.cvtColor(output_data_batch_2.at(0)[0], cv2.COLOR_RGB2BGR))
-        cv2.imwrite("output_images_batch_2_0_1.jpg", cv2.cvtColor(output_data_batch_2.at(0)[1], cv2.COLOR_RGB2BGR))
-        cv2.imwrite("output_images_batch_2_0_2.jpg", cv2.cvtColor(output_data_batch_2.at(0)[2], cv2.COLOR_RGB2BGR))
+    cv2.imwrite("output_images_batch_2_1_0.jpg", cv2.cvtColor(output_data_batch_2.at(1)[0], cv2.COLOR_RGB2BGR))
+    cv2.imwrite("output_images_batch_2_1_1.jpg", cv2.cvtColor(output_data_batch_2.at(1)[1], cv2.COLOR_RGB2BGR))
+    cv2.imwrite("output_images_batch_2_1_2.jpg", cv2.cvtColor(output_data_batch_2.at(1)[2], cv2.COLOR_RGB2BGR))
 
-        cv2.imwrite("output_images_batch_2_1_0.jpg", cv2.cvtColor(output_data_batch_2.at(1)[0], cv2.COLOR_RGB2BGR))
-        cv2.imwrite("output_images_batch_2_1_1.jpg", cv2.cvtColor(output_data_batch_2.at(1)[1], cv2.COLOR_RGB2BGR))
-        cv2.imwrite("output_images_batch_2_1_2.jpg", cv2.cvtColor(output_data_batch_2.at(1)[2], cv2.COLOR_RGB2BGR))
+    cv2.imwrite("output_images_batch_2_2_0.jpg", cv2.cvtColor(output_data_batch_2.at(2)[0], cv2.COLOR_RGB2BGR))
+    cv2.imwrite("output_images_batch_2_2_1.jpg", cv2.cvtColor(output_data_batch_2.at(2)[1], cv2.COLOR_RGB2BGR))
+    cv2.imwrite("output_images_batch_2_2_2.jpg", cv2.cvtColor(output_data_batch_2.at(2)[2], cv2.COLOR_RGB2BGR))
 
-        cv2.imwrite("output_images_batch_2_0.jpg", cv2.cvtColor(output_data_batch_2.at(2)[0], cv2.COLOR_RGB2BGR))
-        cv2.imwrite("output_images_batch_2_1.jpg", cv2.cvtColor(output_data_batch_2.at(2)[1], cv2.COLOR_RGB2BGR))
-        cv2.imwrite("output_images_batch_2_2.jpg", cv2.cvtColor(output_data_batch_2.at(2)[2], cv2.COLOR_RGB2BGR))
+    output_data_batch_3 = pipe.run()
+    print("3 BATCH")
+    output_data_batch_4 = pipe.run()
+    print("4 BATCH")
+    output_data_batch_5 = pipe.run()
+    print(output_data_batch_5)
 
-
-    # exit(0)
-    # epochs = 2
     import timeit
     start = timeit.default_timer() #Timer starts
 
-    # for epoch in range(int(epochs)):
-    #     try:
-    #         path= "OUTPUT_IMAGES_PYTHON/NEW_API/FILE_READER/"+"epoch"+str(epoch)+"/"
-    #         os.makedirs(path, exist_ok=True)
-    #     except OSError as error:
-    #         print(error)
-    #     print("EPOCH:::::",epoch)
-    #     for i, (image_batch, image_tensor) in enumerate(imageIterator, 0):
-    #             cv2.imwrite(path+"output_images_"+str(i)+".jpg", cv2.cvtColor(image_batch, cv2.COLOR_RGB2BGR))
-    #     imageIterator.reset()
+
 
     stop = timeit.default_timer() #Timer Stops
     print('\n Time: ', stop - start)

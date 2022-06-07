@@ -331,16 +331,6 @@ rocALTensor * MasterGraph::create_tensor(const rocALTensorInfo &info, bool is_ou
     return internal_output;
 }
 
-rocALTensor * MasterGraph::create_tensor(const rocALTensorInfo &info)
-{
-    auto* output = new rocALTensor(info);
-    // if the image is not an output image, the image creation is deferred and later it'll be created as a virtual image
-    if (output->create_from_handle(_context) != 0)
-        THROW("Cannot create the tensor from handle")
-
-    return output;
-}
-
 // rocALTensor * MasterGraph::create_rocal_tensor(const rocALTensorInfo &info, bool is_output)
 // {
 //     auto* output = new rocALTensor(info);
@@ -360,11 +350,19 @@ rocALTensor * MasterGraph::create_tensor(const rocALTensorInfo &info)
 void
 MasterGraph::set_output(rocALTensor* output_tensor)
 {
+    auto* output = new rocALTensor(output_tensor->info());
+
     if(output_tensor->is_handle_set() == false)
     {
         if (output_tensor->create_from_handle(_context) != 0)
                 THROW("Cannot create the image from handle")
-        _output_tensors.push_back(output_tensor);
+
+        _internal_tensor_list.push_back(output_tensor);
+
+        if (output->create_from_handle(_context) != 0)
+                THROW("Cannot create the image from handle")
+
+        _output_tensor_list.push_back(output);
     }
     else
     {

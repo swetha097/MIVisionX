@@ -135,7 +135,7 @@ class Pipeline(object):
             exit(0)
         return self
 
-    def run(self):
+    def rocalRun(self):
         """ Run the pipeline using rocalRun call
         """
         status = b.rocalRun(self._handle)
@@ -149,7 +149,6 @@ class Pipeline(object):
         It returns a list of outputs created by calling ROCAL Operators."""
         print("definegraph is deprecated")
         raise NotImplementedError
-
 
     def get_handle(self):
         return self._handle
@@ -299,5 +298,16 @@ class Pipeline(object):
     def Timing_Info(self):
         return b.getTimingInfo(self._handle)
 
-    def run_tensor(self):
-        return b.rocalGetOutputTensors(self._handle)
+    def run(self):
+        """
+        It rises StopIteration if data set reached its end.
+        return:
+        :return:
+        A list of `rocALTensorList` objects for respective pipeline outputs.
+        """
+        try:
+            if self.getRemainingImages() > 0:
+                self.rocalRun()
+                return b.rocalGetOutputTensors(self._handle)
+        except:
+            raise StopIteration
