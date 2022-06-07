@@ -307,3 +307,32 @@ rocalCopyTensor(
 //     }
 //     return output;
 // }
+
+
+RocalTensor ROCAL_API_CALL
+rocalGammaTensor(
+        RocalContext p_context,
+        RocalTensor p_input,
+        bool is_output,
+        RocalFloatParam p_alpha)
+{
+    if(!p_input || !p_context)
+        THROW("Null values passed as input")
+    rocALTensor* output = nullptr;
+    auto context = static_cast<Context*>(p_context);
+    auto input = static_cast<rocALTensor*>(p_input);
+    auto alpha = static_cast<FloatParam*>(p_alpha);
+    try
+    {
+
+        output = context->master_graph->create_tensor(input->info(), is_output);
+
+        context->master_graph->add_node<GammaTensorNode>({input}, {output})->init(alpha);
+    }
+    catch(const std::exception& e)
+    {
+        context->capture_error(e.what());
+        ERR(e.what())
+    }
+    return output;
+}

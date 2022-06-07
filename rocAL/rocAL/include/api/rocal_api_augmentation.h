@@ -27,7 +27,8 @@ THE SOFTWARE.
 extern "C" RocalTensor ROCAL_API_CALL rocalBrightnessTensor(RocalContext context, RocalTensor input, bool is_output,
                                                    RocalFloatParam alpha = NULL, RocalFloatParam beta = NULL);
 
-
+extern "C" RocalTensor ROCAL_API_CALL rocalGammaTensor(RocalContext context, RocalTensor input, bool is_output,
+                                                   RocalFloatParam alpha = NULL);
 
 /// Accepts U8 and RGB24 inputs
 /// \param context

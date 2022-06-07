@@ -24,15 +24,15 @@ THE SOFTWARE.
 #include <VX/vx_compatibility.h>
 #include <graph.h>
 #include "node_gamma.h"
-#include "exception.h"
+#include "exception.h"[]
 
-GammaNode::GammaNode(const std::vector<rocALTensor *> &inputs, const std::vector<rocALTensor *> &outputs) :
+GammaTensorNode::GammaTensorNode(const std::vector<rocALTensor *> &inputs, const std::vector<rocALTensor *> &outputs) :
         Node(inputs, outputs),
         _shift(SHIFT_RANGE[0], SHIFT_RANGE[1])
 {
 }
 
-void GammaNode::create_node()
+void GammaTensorNode::create_node()
 {
     if(_node)
         return;
@@ -41,7 +41,20 @@ void GammaNode::create_node()
         THROW("Uninitialized input/output arguments")
 
     _shift.create_array(_graph , VX_TYPE_FLOAT32, _batch_size);
-    _node = vxExtrppNode_GammaCorrection(_graph->get(), _inputs[0]->handle(), _src_roi_width, _src_roi_height, _outputs[0]->handle(), _shift.default_array(), _batch_size);
+    if(_inputs[0]->info().layout() == RocalTensorlayout::NCHW)
+        _layout = 1;
+    else if(_inputs[0]->info().layout() == RocalTensorlayout::NFHWC)
+        _layout = 2;
+    else if(_inputs[0]->info().layout() == RocalTensorlayout::NFCHW)
+        _layout = 3;
+
+    if(_inputs[0]->info().roi_type() == RocalROIType::XYWH)
+        _roi_type = 1;
+
+    vx_scalar layout = vxCreateScalar(vxGetContext((vx_reference)_graph->get()),VX_TYPE_UINT32,&_layout);
+    vx_scalar roi_type = vxCreateScalar(vxGetContext((vx_reference)_graph->get()),VX_TYPE_UINT32,&_roi_type);
+
+    _node = vxExtrppNode_GammaCorrection(_graph->get(), _inputs[0]->handle(), _src_tensor_roi, _outputs[0]->handle(), _shift.default_array(), layout, roi_type, _batch_size);
 
     vx_status status;
     if((status = vxGetStatus((vx_reference)_node)) != VX_SUCCESS)
@@ -49,17 +62,21 @@ void GammaNode::create_node()
 
 }
 
-void GammaNode::init(float shfit)
+void GammaTensorNode::init(float shfit)
 {
     _shift.set_param(shfit);
+    _layout = _roi_type = 0;
+
 }
 
-void GammaNode::init(FloatParam* shfit)
+void GammaTensorNode::init(FloatParam* shfit)
 {
     _shift.set_param(core(shfit));
+    _layout = _roi_type = 0;
+
 }
 
-void GammaNode::update_node()
+void GammaTensorNode::update_node()
 {
      _shift.update_array();
 }

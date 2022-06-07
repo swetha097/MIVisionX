@@ -25,11 +25,11 @@ THE SOFTWARE.
 #include "parameter_factory.h"
 #include "parameter_vx.h"
 
-class GammaNode : public Node
+class GammaTensorNode : public Node
 {
 public:
-    GammaNode(const std::vector<rocALTensor *> &inputs, const std::vector<rocALTensor *> &outputs);
-    GammaNode() = delete;
+    GammaTensorNode(const std::vector<rocALTensor *> &inputs, const std::vector<rocALTensor *> &outputs);
+    GammaTensorNode() = delete;
     void init(float shift);
     void init(FloatParam *shift);
 
@@ -38,5 +38,6 @@ protected:
     void create_node() override;
 private:
     ParameterVX<float> _shift;
+    unsigned _layout, _roi_type;
     constexpr static float SHIFT_RANGE [2] = {0.3, 7.00};
 };
