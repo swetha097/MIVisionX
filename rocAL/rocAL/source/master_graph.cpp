@@ -279,6 +279,7 @@ MasterGraph::build()
     _ring_buffer.init(_mem_type, _device.resources(), _internal_tensor_list.data_size(), _internal_tensor_list.size()); // TODO - Tensorlist change here
 #endif
     // std::cerr<<"\n Initializing Ring buffer with tensor_output_byte_size "<<tensor_output_byte_size();
+    _output_tensor_list = _internal_tensor_list;
     create_single_graph();
     start_processing();
     return Status::OK;
@@ -313,21 +314,17 @@ MasterGraph::create_loader_output_tensor(const rocALTensorInfo &info)
 
 rocALTensor * MasterGraph::create_tensor(const rocALTensorInfo &info, bool is_output)
 {
-    auto* internal_output = new rocALTensor(info);
-    auto* output = new rocALTensor(info);
+    auto* new_tensor = new rocALTensor(info);
     // if the image is not an output image, the image creation is deferred and later it'll be created as a virtual image
     if(is_output)
     {
-        if (internal_output->create_from_handle(_context) != 0)
-            THROW("Cannot create the tensor from handle")
-        if (output->create_from_handle(_context) != 0)
+        if (new_tensor->create_from_handle(_context) != 0)
             THROW("Cannot create the tensor from handle")
 
-        _internal_tensor_list.push_back(internal_output);
-        _output_tensor_list.push_back(output);
+        _internal_tensor_list.push_back(new_tensor);
     }
 
-    return internal_output;
+    return new_tensor;
 }
 
 // rocALTensor * MasterGraph::create_rocal_tensor(const rocALTensorInfo &info, bool is_output)
