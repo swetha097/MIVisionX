@@ -330,16 +330,6 @@ rocALTensor * MasterGraph::create_tensor(const rocALTensorInfo &info, bool is_ou
     return internal_output;
 }
 
-rocALTensor * MasterGraph::create_tensor(const rocALTensorInfo &info)
-{
-    auto* output = new rocALTensor(info);
-    // if the image is not an output image, the image creation is deferred and later it'll be created as a virtual image
-    if (output->create_from_handle(_context) != 0)
-        THROW("Cannot create the tensor from handle")
-
-    return output;
-}
-
 // rocALTensor * MasterGraph::create_rocal_tensor(const rocALTensorInfo &info, bool is_output)
 // {
 //     auto* output = new rocALTensor(info);
