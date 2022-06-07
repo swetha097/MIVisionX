@@ -121,7 +121,8 @@ private:
     rocALTensorInfo _output_tensor_info;
 
     // std::vector<rocALTensor*> _output_tensors;
-    rocALTensorList _output_tensors;
+    rocALTensorList _internal_tensor_list;
+    rocALTensorList _output_tensor_list;
     std::list<rocALTensor*> _internal_tensors;
     std::list<std::shared_ptr<Node>> _tensor_nodes;
     std::list<std::shared_ptr<Node>> _tensor_root_nodes;
