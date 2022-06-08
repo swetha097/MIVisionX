@@ -51,32 +51,39 @@ def main():
 
     output_data_batch_1 = pipe.run()
     print("\n OUTPUT DATA!!!!: ", output_data_batch_1) # rocALTensorList 1
+    print("\n rocALTensor:: ",output_data_batch_1[0])
+    # print("\n rocALTensor:: ",output_data_batch_1[0].at(0))
+    print("\n size of rocalTensor ",output_data_batch_1[0].at(0).shape)
 
-    cv2.imwrite("output_images0_0.jpg", cv2.cvtColor(output_data_batch_1.at(0)[0], cv2.COLOR_RGB2BGR))
-    cv2.imwrite("output_images0_1.jpg", cv2.cvtColor(output_data_batch_1.at(0)[1], cv2.COLOR_RGB2BGR))
-    cv2.imwrite("output_images0_2.jpg", cv2.cvtColor(output_data_batch_1.at(0)[2], cv2.COLOR_RGB2BGR))
+    print(output_data_batch_1[0].at(0).transpose(2,1,0).shape)
+    print(output_data_batch_1[0].at(0))
 
-    cv2.imwrite("output_images1_0.jpg", cv2.cvtColor(output_data_batch_1.at(1)[0], cv2.COLOR_RGB2BGR))
-    cv2.imwrite("output_images1_1.jpg", cv2.cvtColor(output_data_batch_1.at(1)[1], cv2.COLOR_RGB2BGR))
-    cv2.imwrite("output_images1_2.jpg", cv2.cvtColor(output_data_batch_1.at(1)[2], cv2.COLOR_RGB2BGR))
+    cv2.imwrite("output_images0_0.jpg", cv2.cvtColor(output_data_batch_1[0].at(0), cv2.COLOR_RGB2BGR))
+    cv2.imwrite("output_images0_1.jpg", cv2.cvtColor(output_data_batch_1[0].at(1), cv2.COLOR_RGB2BGR))
+    cv2.imwrite("output_images0_2.jpg", cv2.cvtColor(output_data_batch_1[0].at(2), cv2.COLOR_RGB2BGR))
 
-    cv2.imwrite("output_images2_0.jpg", cv2.cvtColor(output_data_batch_1.at(2)[0], cv2.COLOR_RGB2BGR))
-    cv2.imwrite("output_images2_1.jpg", cv2.cvtColor(output_data_batch_1.at(2)[1], cv2.COLOR_RGB2BGR))
-    cv2.imwrite("output_images2_2.jpg", cv2.cvtColor(output_data_batch_1.at(2)[2], cv2.COLOR_RGB2BGR))
+    cv2.imwrite("output_images1_0.jpg", cv2.cvtColor(output_data_batch_1[1].at(0), cv2.COLOR_RGB2BGR))
+    cv2.imwrite("output_images1_1.jpg", cv2.cvtColor(output_data_batch_1[1].at(1), cv2.COLOR_RGB2BGR))
+    cv2.imwrite("output_images1_2.jpg", cv2.cvtColor(output_data_batch_1[1].at(2), cv2.COLOR_RGB2BGR))
+
+    cv2.imwrite("output_images2_0.jpg", cv2.cvtColor(output_data_batch_1[2].at(0), cv2.COLOR_RGB2BGR))
+    cv2.imwrite("output_images2_1.jpg", cv2.cvtColor(output_data_batch_1[2].at(1), cv2.COLOR_RGB2BGR))
+    cv2.imwrite("output_images2_2.jpg", cv2.cvtColor(output_data_batch_1[2].at(2), cv2.COLOR_RGB2BGR))
 
     output_data_batch_2 = pipe.run()
     print("\n OUTPUT DATA BATCH 2!!!!: ", output_data_batch_2) # rocALTensorList 2
-    cv2.imwrite("output_images_batch_2_0_0.jpg", cv2.cvtColor(output_data_batch_2.at(0)[0], cv2.COLOR_RGB2BGR))
-    cv2.imwrite("output_images_batch_2_0_1.jpg", cv2.cvtColor(output_data_batch_2.at(0)[1], cv2.COLOR_RGB2BGR))
-    cv2.imwrite("output_images_batch_2_0_2.jpg", cv2.cvtColor(output_data_batch_2.at(0)[2], cv2.COLOR_RGB2BGR))
 
-    cv2.imwrite("output_images_batch_2_1_0.jpg", cv2.cvtColor(output_data_batch_2.at(1)[0], cv2.COLOR_RGB2BGR))
-    cv2.imwrite("output_images_batch_2_1_1.jpg", cv2.cvtColor(output_data_batch_2.at(1)[1], cv2.COLOR_RGB2BGR))
-    cv2.imwrite("output_images_batch_2_1_2.jpg", cv2.cvtColor(output_data_batch_2.at(1)[2], cv2.COLOR_RGB2BGR))
+    cv2.imwrite("output_images2_0_0.jpg", cv2.cvtColor(output_data_batch_2[0].at(0), cv2.COLOR_RGB2BGR))
+    cv2.imwrite("output_images2_0_1.jpg", cv2.cvtColor(output_data_batch_2[0].at(1), cv2.COLOR_RGB2BGR))
+    cv2.imwrite("output_images2_0_2.jpg", cv2.cvtColor(output_data_batch_2[0].at(2), cv2.COLOR_RGB2BGR))
 
-    cv2.imwrite("output_images_batch_2_2_0.jpg", cv2.cvtColor(output_data_batch_2.at(2)[0], cv2.COLOR_RGB2BGR))
-    cv2.imwrite("output_images_batch_2_2_1.jpg", cv2.cvtColor(output_data_batch_2.at(2)[1], cv2.COLOR_RGB2BGR))
-    cv2.imwrite("output_images_batch_2_2_2.jpg", cv2.cvtColor(output_data_batch_2.at(2)[2], cv2.COLOR_RGB2BGR))
+    cv2.imwrite("output_images2_1_0.jpg", cv2.cvtColor(output_data_batch_2[1].at(0), cv2.COLOR_RGB2BGR))
+    cv2.imwrite("output_images2_1_1.jpg", cv2.cvtColor(output_data_batch_2[1].at(1), cv2.COLOR_RGB2BGR))
+    cv2.imwrite("output_images2_1_2.jpg", cv2.cvtColor(output_data_batch_2[1].at(2), cv2.COLOR_RGB2BGR))
+
+    cv2.imwrite("output_images2_2_0.jpg", cv2.cvtColor(output_data_batch_2[2].at(0), cv2.COLOR_RGB2BGR))
+    cv2.imwrite("output_images2_2_1.jpg", cv2.cvtColor(output_data_batch_2[2].at(1), cv2.COLOR_RGB2BGR))
+    cv2.imwrite("output_images2_2_2.jpg", cv2.cvtColor(output_data_batch_2[2].at(2), cv2.COLOR_RGB2BGR))
 
     output_data_batch_3 = pipe.run()
     print("3 BATCH")

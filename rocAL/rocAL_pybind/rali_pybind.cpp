@@ -98,9 +98,56 @@ namespace rali{
             .def_readwrite("decode_time",&TimingInfo::decode_time)
             .def_readwrite("process_time",&TimingInfo::process_time)
             .def_readwrite("transfer_time",&TimingInfo::transfer_time);
-        py::class_<rocALTensor>(m, "rocALTensor");
-            // .def_readwrite("swap_handle",&rocALTensor::swap_handle);
+        py::class_<rocALTensor>(m, "rocALTensor")
+            .def(
+                "at",
+                [](rocALTensor &output_tensor, uint idx)
+                {
+                    uint h = output_tensor.info().max_height();
+                    uint w = output_tensor.info().max_width();
+
+                    if (output_tensor.info().layout() == RocalTensorlayout::NHWC)
+                    {
+                        unsigned c = output_tensor.info().dims()->at(3);
+                        return py::array(py::buffer_info(
+                            ((unsigned char *)(output_tensor.buffer())) + idx * c * h * w,
+                            sizeof(unsigned char),
+                            py::format_descriptor<unsigned char>::format(),
+                            output_tensor.info().num_of_dims() - 1,
+                            {h, w, c},
+                            {sizeof(unsigned char) * w * c, sizeof(unsigned char) * c, sizeof(unsigned char)}));
+                    }
+
+                    else if (output_tensor.info().layout() == RocalTensorlayout::NCHW)
+                    {
+                        unsigned n = output_tensor.info().dims()->at(0);
+                        unsigned c = output_tensor.info().dims()->at(1);
+                        return py::array(py::buffer_info(
+                            ((unsigned char *)(output_tensor.buffer())) + idx * c * h * w,
+                            sizeof(unsigned char),
+                            py::format_descriptor<unsigned char>::format(),
+                            output_tensor.info().num_of_dims(),
+                            {c, h, w},
+                            {sizeof(unsigned char) * c * h * w, sizeof(unsigned char) * h * w, sizeof(unsigned char) * w, sizeof(unsigned char)}));
+                    }
+                },
+                "idx"_a,
+                R"code(
+                Returns a rocAL tensor at given position `i` in the rocALTensorlist.
+                )code",
+                py::keep_alive<0, 1>());
+
+        // .def_readwrite("swap_handle",&rocALTensor::swap_handle);
         py::class_<rocALTensorList>(m, "rocALTensorList")
+            .def(
+                "__getitem__",
+                [](rocALTensorList &output_tensor_list, uint idx)
+                {
+                    return output_tensor_list.at(idx);
+                },
+                R"code(
+                Returns a tensor at given position in the list.
+                )code")
             .def(
                 "at",
                 [](rocALTensorList &output_tensor_list, uint idx)
@@ -108,7 +155,7 @@ namespace rali{
                     uint h = output_tensor_list.at(idx)->info().max_height();
                     uint w = output_tensor_list.at(idx)->info().max_width();
 
-                    if (output_tensor_list.at(idx)->info().layout() == RocalTensorlayout::NHWC )
+                    if (output_tensor_list.at(idx)->info().layout() == RocalTensorlayout::NHWC)
                     {
                         unsigned n = output_tensor_list.at(idx)->info().dims()->at(0);
                         unsigned c = output_tensor_list.at(idx)->info().dims()->at(3);
@@ -121,7 +168,7 @@ namespace rali{
                             {sizeof(unsigned char) * w * h * c, sizeof(unsigned char) * w * c, sizeof(unsigned char) * c, sizeof(unsigned char)}));
                     }
 
-                    else if (output_tensor_list.at(idx)->info().layout() == RocalTensorlayout::NCHW )
+                    else if (output_tensor_list.at(idx)->info().layout() == RocalTensorlayout::NCHW)
                     {
                         unsigned n = output_tensor_list.at(idx)->info().dims()->at(0);
                         unsigned c = output_tensor_list.at(idx)->info().dims()->at(1);
@@ -204,7 +251,17 @@ namespace rali{
         m.def("GetIntValue",&rocalGetIntValue);
         m.def("GetFloatValue",&rocalGetFloatValue);
         // rocal_api_data_transfer.h
-        m.def("rocalGetOutputTensors",&rocalGetOutputTensors, py::return_value_policy::reference);
+        // m.def("rocalGetOutputTensors",&rocalGetOutputTensors, py::return_value_policy::reference);
+        m.def("rocalGetOutputTensors", [](RocalContext context)
+        {
+            rocALTensorList * tl = rocalGetOutputTensors(context);
+            py::list list;
+            unsigned int size_of_tensor_list = tl->size();
+            for (uint i =0; i< size_of_tensor_list; i++)
+                list.append(tl->at(i));
+            return list;
+        }
+        );
         // rocal_api_data_loaders.h
         m.def("ImageDecoder",&rocalJpegFileSource,"Reads file from the source given and decodes it according to the policy",
             py::return_value_policy::reference,
@@ -219,21 +276,6 @@ namespace rali{
             py::arg("max_width") = 0,
             py::arg("max_height") = 0,
             py::arg("dec_type") = 0);
-        // m.def("ImageDecoder",&wrapper_rocalJpegFileSource);
-
-        // .def("ShareOutputs",
-        // [](rocALTensor *rt) {
-
-        //   py::tuple outs(ws.NumOutput());
-        //   for (int i = 0; i < ws.NumOutput(); ++i) {
-        //     if (ws.OutputIsType<CPUBackend>(i)) {
-        //       outs[i] = ws.OutputPtr<CPUBackend>(i);
-        //     } else {
-        //       outs[i] = ws.OutputPtr<GPUBackend>(i);
-        //     }
-        //   }
-        //   return outs;
-        // }, py::return_value_policy::take_ownership)
         m.def("ImageDecoderShard",&rocalJpegFileSourceSingleShard,"Reads file from the source given and decodes it according to the shard id and number of shards",
             py::return_value_policy::reference,
             py::arg("context"),
