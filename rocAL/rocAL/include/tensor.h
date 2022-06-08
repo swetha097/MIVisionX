@@ -231,6 +231,16 @@ public:
     {
         return _tensor_list[index];
     }
+    void operator=(rocALTensorList &other)
+    {
+        for(unsigned idx = 0; idx < other.size(); idx++)
+        {
+            auto* new_tensor = new rocALTensor(other[idx]->info());
+            if (new_tensor->create_from_handle(other[idx]->context()) != 0)
+                THROW("Cannot create the tensor from handle")
+            this->push_back(new_tensor);
+        }
+    }
 
 private:
     std::vector<rocALTensor*> _tensor_list;

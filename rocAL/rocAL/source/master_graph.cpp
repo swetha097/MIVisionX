@@ -197,7 +197,7 @@ MasterGraph::run()
     if(no_more_processed_data()) {
         return MasterGraph::Status::NO_MORE_DATA;
     }
-    // if(_output_tensors.size() != 0)
+    // if(_internal_tensor_list.size() != 0)
     // {
         _ring_buffer.block_if_empty();// wait here if the user thread (caller of this function) is faster in consuming the processed images compare to th output routine in producing them
     // }
@@ -255,13 +255,13 @@ MasterGraph::create_single_graph()
 MasterGraph::Status
 MasterGraph::build()
 {
-    if(_output_tensors.empty())
+    if(_internal_tensor_list.empty())
         THROW("No output images or tensors are there, cannot create the pipeline")
 
     // Verify all output images have the same dimension, otherwise creating a unified tensor from them is not supported
-    // _output_tensor_info = _output_tensors.front()->info();
+    // _output_tensor_info = _internal_tensor_list.front()->info();
     // _max_tensor_type_size = _output_tensor_info.data_type_size();
-    // for(auto&& output_tensor : _output_tensors)
+    // for(auto&& output_tensor : _internal_tensor_list)
     // {
         // rocALTensorInfo tensor_info  = output_tensor->info();
         // if(tensor_info.data_type_size() > _max_tensor_type_size)
@@ -272,13 +272,14 @@ MasterGraph::build()
     // }
 
     // allocate_output_tensor();
-    // if(_output_tensors.size() != 0)
+    // if(_internal_tensor_list.size() != 0)
 #if ENABLE_HIP
-    _ring_buffer.initHip(_mem_type, _device.resources(), _output_tensors.data_size(), _output_tensors.size());
+    _ring_buffer.initHip(_mem_type, _device.resources(), _internal_tensor_list.data_size(), _internal_tensor_list.size());
 #else
-    _ring_buffer.init(_mem_type, _device.resources(), _output_tensors.data_size(), _output_tensors.size()); // TODO - Tensorlist change here
+    _ring_buffer.init(_mem_type, _device.resources(), _internal_tensor_list.data_size(), _internal_tensor_list.size()); // TODO - Tensorlist change here
 #endif
     // std::cerr<<"\n Initializing Ring buffer with tensor_output_byte_size "<<tensor_output_byte_size();
+    _output_tensor_list = _internal_tensor_list;
     create_single_graph();
     start_processing();
     return Status::OK;
@@ -313,17 +314,17 @@ MasterGraph::create_loader_output_tensor(const rocALTensorInfo &info)
 
 rocALTensor * MasterGraph::create_tensor(const rocALTensorInfo &info, bool is_output)
 {
-    auto* output = new rocALTensor(info);
+    auto* new_tensor = new rocALTensor(info);
     // if the image is not an output image, the image creation is deferred and later it'll be created as a virtual image
     if(is_output)
     {
-        if (output->create_from_handle(_context) != 0)
+        if (new_tensor->create_from_handle(_context) != 0)
             THROW("Cannot create the tensor from handle")
 
-        _output_tensors.push_back(output);
+        _internal_tensor_list.push_back(new_tensor);
     }
 
-    return output;
+    return new_tensor;
 }
 
 // rocALTensor * MasterGraph::create_rocal_tensor(const rocALTensorInfo &info, bool is_output)
@@ -351,7 +352,8 @@ void MasterGraph::release()
 
     // release all openvx resources.
     vx_status status;
-    _output_tensors.release();
+    _internal_tensor_list.release();
+    _output_tensor_list.release();
     for(auto& tensor: _internal_tensors)
         delete tensor;
 
@@ -384,7 +386,7 @@ MasterGraph::Status
 MasterGraph::allocate_output_tensor()
 {
 //     // creating a float buffer that can accommodates all output images
-//     // size_t total_size =  _output_tensors.size();
+//     // size_t total_size =  _internal_tensor_list.size();
 //     // size_t output_size;
 //     // output_size = tensor_output_byte_size();
 
@@ -502,7 +504,13 @@ MasterGraph::copy_output(
 rocALTensorList *
 MasterGraph::get_output_tensors()
 {
-    return &_output_tensors;
+    std::vector<void*> output_ptr = _ring_buffer.get_read_buffers();
+    // TODO - check here if size of internal tensor and ring buffer is same?
+    for(unsigned i = 0; i < _internal_tensor_list.size(); i++)
+    {
+        _output_tensor_list[i]->swap_handle(output_ptr[i]);
+    }
+    return &_output_tensor_list;
 }
 
 MasterGraph::Status
@@ -565,7 +573,7 @@ MasterGraph::copy_output(std::vector<void *> &out_ptr)
     {
         // get_host_master_read_buffer is blocking if _ring_buffer is empty, and blocks this thread till internal processing thread process a new batch and store in the _ring_buffer
         std::vector<void*> ptr = _ring_buffer.get_read_buffers();
-        for(unsigned i = 0; i < _output_tensors.size(); i++)
+        for(unsigned i = 0; i < _internal_tensor_list.size(); i++)
             memcpy(out_ptr[i], ptr[i], size[i]);
     }
     _convert_time.end();
@@ -601,7 +609,7 @@ void MasterGraph::output_routine()
                 // processed images stored in the _ring_buffer will be consumed by the user when it calls the run() func
                 notify_user_thread();
                 // the following call is required in case the ring buffer is waiting for more data to be loaded and there is no more data to process.
-                if(_output_tensors.size() != 0)
+                if(_internal_tensor_list.size() != 0)
                     _ring_buffer.release_if_empty();
                 std::this_thread::sleep_for(std::chrono::milliseconds(100));
                 continue;
@@ -635,33 +643,33 @@ void MasterGraph::output_routine()
                     break;
 
                 // Swap handles on the output images, so that new processed image will be written to the a new buffer
-                for (size_t idx = 0; idx < _output_tensors.size(); idx++)
+                for (size_t idx = 0; idx < _internal_tensor_list.size(); idx++)
                 {
-                    // if(_output_tensors.size() != 0)
-                    size_t tensor_each_cycle_size = tensor_each_cycle_size_vec[idx] / _user_to_internal_batch_ratio; // TODO - Batch ratio calculation TO be removed
+                    // if(_internal_tensor_list.size() != 0)
                     auto tensor_write_buffer = _ring_buffer.get_write_buffers();
+                    size_t tensor_each_cycle_size = tensor_each_cycle_size_vec[idx] / _user_to_internal_batch_ratio; // TODO - Batch ratio calculation TO be removed
                     if(_affinity == RocalAffinity::GPU)
                     {
-                        _output_tensors[idx]->swap_handle(tensor_write_buffer[idx]);
+                        _internal_tensor_list[idx]->swap_handle(tensor_write_buffer[idx]);
                     }
                     else
                     {
                         // std::cerr<<"\n idx::"<<idx<<"\t tensor_each_cycle_size::"<<tensor_each_cycle_size<<"\t cycle_idx"<<cycle_idx;
                         // Have to change float to the equivalent of max size data type
-                        if(_output_tensors[idx]->info().data_type() == RocalTensorDataType::FP32)
+                        if(_internal_tensor_list[idx]->info().data_type() == RocalTensorDataType::FP32)
                         {
                             auto this_cycle_buffer_ptr = (vx_float32 *) tensor_write_buffer[idx] + tensor_each_cycle_size * cycle_idx;
-                            _output_tensors[idx]->swap_handle(this_cycle_buffer_ptr);
+                            _internal_tensor_list[idx]->swap_handle(this_cycle_buffer_ptr);
                         }
-                        else if (_output_tensors[idx]->info().data_type() == RocalTensorDataType::FP16)
+                        else if (_internal_tensor_list[idx]->info().data_type() == RocalTensorDataType::FP16)
                         {
                             auto this_cycle_buffer_ptr = (half *) tensor_write_buffer[idx] + tensor_each_cycle_size * cycle_idx;
-                            _output_tensors[idx]->swap_handle(this_cycle_buffer_ptr);
+                            _internal_tensor_list[idx]->swap_handle(this_cycle_buffer_ptr);
                         }
-                        else if(_output_tensors[idx]->info().data_type() == RocalTensorDataType::UINT8)
+                        else if(_internal_tensor_list[idx]->info().data_type() == RocalTensorDataType::UINT8)
                         {
                             auto this_cycle_buffer_ptr = (vx_uint8 *) tensor_write_buffer[idx] + tensor_each_cycle_size * cycle_idx;
-                            _output_tensors[idx]->swap_handle(this_cycle_buffer_ptr);
+                            _internal_tensor_list[idx]->swap_handle(this_cycle_buffer_ptr);
                         }
                     }
                 }
@@ -700,7 +708,7 @@ void MasterGraph::output_routine()
                 _graph->process();
                 _process_time.end();
             }
-            if(_output_tensors.size() != 0)
+            if(_internal_tensor_list.size() != 0)
             {
                 _ring_buffer.set_meta_data(full_batch_image_names, full_batch_meta_data);
                 _ring_buffer.push();
@@ -829,7 +837,7 @@ size_t MasterGraph::tensor_output_sample_size()
 std::vector<size_t> MasterGraph::tensor_output_byte_size()
 {
     // std::cerr<<"\n _output_tensor_info.data_size():: "<<_output_tensor_info.data_size()<<"\t _max_tensor_type_size:: "<<_max_tensor_type_size;
-    return _output_tensors.data_size();
+    return _internal_tensor_list.data_size();
 }
 
 
