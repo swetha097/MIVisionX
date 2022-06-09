@@ -81,8 +81,8 @@ static vx_status VX_CALLBACK refreshCropMirrorNormalize(vx_node node, const vx_r
 
     STATUS_ERROR_CHECK(vxCopyArrayRange((vx_array)parameters[6], 0, data->nbatchSize, sizeof(vx_uint32), data->start_x, VX_READ_ONLY, VX_MEMORY_TYPE_HOST));
     STATUS_ERROR_CHECK(vxCopyArrayRange((vx_array)parameters[7], 0, data->nbatchSize, sizeof(vx_uint32), data->start_y, VX_READ_ONLY, VX_MEMORY_TYPE_HOST));
-    STATUS_ERROR_CHECK(vxCopyArrayRange((vx_array)parameters[8], 0, data->nbatchSize, sizeof(vx_float32), data->mean, VX_READ_ONLY, VX_MEMORY_TYPE_HOST));
-    STATUS_ERROR_CHECK(vxCopyArrayRange((vx_array)parameters[9], 0, data->nbatchSize, sizeof(vx_float32), data->std_dev, VX_READ_ONLY, VX_MEMORY_TYPE_HOST));
+    STATUS_ERROR_CHECK(vxCopyArrayRange((vx_array)parameters[8], 0, data->nbatchSize*3, sizeof(vx_float32), data->mean, VX_READ_ONLY, VX_MEMORY_TYPE_HOST));
+    STATUS_ERROR_CHECK(vxCopyArrayRange((vx_array)parameters[9], 0, data->nbatchSize*3, sizeof(vx_float32), data->std_dev, VX_READ_ONLY, VX_MEMORY_TYPE_HOST));
     STATUS_ERROR_CHECK(vxCopyArrayRange((vx_array)parameters[10], 0, data->nbatchSize, sizeof(vx_uint32), data->mirror, VX_READ_ONLY, VX_MEMORY_TYPE_HOST));
     STATUS_ERROR_CHECK(vxReadScalarValue((vx_scalar)parameters[11], &data->is_packed));
     STATUS_ERROR_CHECK(vxReadScalarValue((vx_scalar)parameters[12], &data->chnShift));
@@ -352,8 +352,8 @@ std::cerr<<"layoutttt "<<layout;
         data->dst_desc_ptr->strides.wStride = 1;
         data->dst_desc_ptr->layout = RpptLayout::NHWC;
     }
-    data->mean = (vx_float32 *)malloc(sizeof(vx_float32) * data->nbatchSize);
-    data->std_dev = (vx_float32 *)malloc(sizeof(vx_float32) * data->nbatchSize);
+    data->mean = (vx_float32 *)malloc(sizeof(vx_float32) * data->nbatchSize*3);
+    data->std_dev = (vx_float32 *)malloc(sizeof(vx_float32) * data->nbatchSize*3);
     data->mirror = (vx_uint32 *)malloc(sizeof(vx_uint32) * data->nbatchSize);
 
     data->start_x = (vx_uint32 *)malloc(sizeof(vx_uint32) * data->nbatchSize);

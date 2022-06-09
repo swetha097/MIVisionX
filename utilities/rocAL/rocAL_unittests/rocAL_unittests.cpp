@@ -78,7 +78,7 @@ int main(int argc, const char **argv)
 int test(int test_case, const char *path, const char *outName, int rgb, int gpu, int display, int width, int height)
 {
     size_t num_threads = 1;
-    int inputBatchSize = 1;
+    int inputBatchSize = 4;
     int decode_max_width = width; // Why was it weight * 2
     int decode_max_height = height;
     // int decode_max_width = 0;
@@ -124,7 +124,7 @@ int test(int test_case, const char *path, const char *outName, int rgb, int gpu,
 
     RocalTensor input1;
     RocalTensorLayout tensorLayout = RocalTensorLayout::ROCAL_NHWC;
-    RocalTensorOutputType tensorOutputType = RocalTensorOutputType::ROCAL_UINT8;
+    RocalTensorOutputType tensorOutputType = RocalTensorOutputType::ROCAL_FP32;
 
     // The jpeg file loader can automatically select the best size to decode all images to that size
     // User can alternatively set the size or change the policy that is used to automatically find the size
@@ -139,7 +139,7 @@ int test(int test_case, const char *path, const char *outName, int rgb, int gpu,
     }
     else
     {
-        input1 = rocalJpegFileSource(handle, path, color_format, num_threads, true, true, false,
+        input1 = rocalJpegFileSource(handle, path, color_format, num_threads, false, false, false,
                                     ROCAL_USE_USER_GIVEN_SIZE, decode_max_width, decode_max_height);
     }
 #endif
@@ -162,7 +162,7 @@ int test(int test_case, const char *path, const char *outName, int rgb, int gpu,
         std::vector<float> sdev{1, 1, 1};
         std::cout << ">>>>>>> Running "
                   << " Crop Mirror Normalize Tensor" << std::endl;
-        // image1 = rocalCropMirrorNormalize(handle, input1, tensorLayout, tensorOutputType, 3, resize_w, resize_h, 0, 0, 0, mean, sdev, true);
+        image1 = rocalCropMirrorNormalize(handle, input1, tensorLayout, tensorOutputType, 3, resize_w, resize_h, 0, 0, 0, mean, sdev, true);
     }
     break;
     case 1:
@@ -243,10 +243,8 @@ int test(int test_case, const char *path, const char *outName, int rgb, int gpu,
             int w = output_tensor_list->at(idx)->info().max_width();
             mat_input = cv::Mat(h, w, cv_color_format);
             mat_output = cv::Mat(h, w, cv_color_format);
-
             mat_input.data = (unsigned char *)(output_tensor_list->at(idx)->buffer());
             mat_input.copyTo(mat_output(cv::Rect(0, 0, w, h)));
-
             std::string out_filename = std::string(outName) + ".png";   // in case the user specifies non png filename
             if (display)
                 out_filename = std::string(outName) + std::to_string(index) + std::to_string(idx) + ".png";   // in case the user specifies non png filename
@@ -265,7 +263,6 @@ int test(int test_case, const char *path, const char *outName, int rgb, int gpu,
         mat_input.release();
         mat_output.release();
     }
-
     high_resolution_clock::time_point t2 = high_resolution_clock::now();
     auto dur = duration_cast<microseconds>(t2 - t1).count();
     auto rocal_timing = rocalGetTimingInfo(handle);

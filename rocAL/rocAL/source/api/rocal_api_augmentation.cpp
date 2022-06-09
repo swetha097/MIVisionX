@@ -188,14 +188,14 @@ ROCAL_API_CALL rocalCropMirrorNormalize(RocalContext p_context, RocalTensor p_in
     auto context = static_cast<Context*>(p_context);
     auto input = static_cast<rocALTensor*>(p_input);
     auto mirror = static_cast<IntParam *>(p_mirror);
-    float mean_acutal = 0, std_actual = 0; // Mean of vectors
-    for(unsigned i = 0; i < mean.size(); i++)
-    {
-        mean_acutal += mean[i];
-        std_actual  += std_dev[i];
-    }
-    mean_acutal /= mean.size();
-    std_actual /= std_dev.size();
+    // float mean_acutal = 0, std_actual = 0; // Mean of vectors
+    // for(unsigned i = 0; i < mean.size(); i++)
+    // {
+    //     mean_acutal += mean[i];
+    //     std_actual  += std_dev[i];
+    // }
+    // mean_acutal /= mean.size();
+    // std_actual /= std_dev.size();
     RocalTensorlayout op_tensorFormat;
     RocalTensorDataType op_tensorDataType;
     try
@@ -246,8 +246,8 @@ ROCAL_API_CALL rocalCropMirrorNormalize(RocalContext p_context, RocalTensor p_in
         output = context->master_graph->create_tensor(output_info, is_output);
         // For the nodes that user provides the output size the dimension of all the images after this node will be fixed and equal to that size
         output->reset_tensor_roi();
-        context->master_graph->add_node<CropMirrorNormalizeTensorNode>({input}, {output})->init(crop_height, crop_width, start_x, start_y, mean_acutal,
-                                                                                        std_actual , mirror,layout );
+        context->master_graph->add_node<CropMirrorNormalizeTensorNode>({input}, {output})->init(crop_height, crop_width, start_x, start_y, mean,
+                                                                                        std_dev , mirror,layout );
     }
     catch(const std::exception& e)
     {
