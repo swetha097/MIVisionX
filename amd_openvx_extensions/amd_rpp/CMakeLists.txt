@@ -135,6 +135,7 @@ list(APPEND SOURCES
         source/tensor/GammaCorrection.cpp
         source/tensor/Resize.cpp
         source/tensor/Exposure.cpp
+        source/tensor/ColorCast.cpp
 
 
         source/tensor/Nop.cpp

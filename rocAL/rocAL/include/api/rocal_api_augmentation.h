@@ -42,6 +42,15 @@ extern "C" RocalTensor ROCAL_API_CALL rocalResize(RocalContext context, RocalTen
                                                                   int interpolation_type,
                                                                   bool is_output);
 
+extern "C" RocalTensor ROCAL_API_CALL rocalColorCast( RocalContext p_context, RocalTensor p_input,
+                                                            RocalTensorLayout rocal_tensor_layout,
+                                                            RocalTensorOutputType rocal_tensor_output_type,
+                                                            bool is_output,
+                                                            RocalFloatParam R_value = NULL,
+                                                            RocalFloatParam G_value = NULL,
+                                                            RocalFloatParam B_value = NULL,
+                                                            RocalFloatParam alpha_tensor = NULL);
+
 /// Accepts U8 and RGB24 inputs
 /// \param context
 /// \param input

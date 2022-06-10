@@ -138,6 +138,8 @@ extern "C" SHARED_PUBLIC vx_node VX_API_CALL vxExtrppNode_GammaCorrection(vx_gra
 extern "C" SHARED_PUBLIC vx_node VX_API_CALL vxExtrppNode_NopTensor(vx_graph graph, vx_tensor pSrc, vx_tensor pDst);
 extern "C" SHARED_PUBLIC vx_node VX_API_CALL vxExtrppNode_Resize(vx_graph graph, vx_tensor pSrc, vx_array srcROI, vx_tensor pDst, vx_array dstROI,vx_array dst_width,vx_array dst_height, vx_scalar interpolation_type, vx_scalar is_packed, vx_scalar chnShift,vx_scalar layout, vx_scalar roiType, vx_uint32 nbatchSize);
 extern "C" SHARED_PUBLIC vx_node VX_API_CALL vxExtrppNode_Exposure(vx_graph graph, vx_tensor pSrc,vx_array srcROI, vx_tensor pDst, vx_array exposure,vx_scalar layout, vx_scalar roiType, vx_uint32 nbatchSize);
+extern "C" SHARED_PUBLIC vx_node VX_API_CALL vxExtrppNode_ColorCast(vx_graph graph, vx_tensor pSrc, vx_array srcROI, vx_tensor pDst, vx_array red, vx_array green, vx_array blue, vx_array alpha, vx_scalar layout, vx_scalar roiType, vx_uint32 nbatchSize);
+
 
 
 
