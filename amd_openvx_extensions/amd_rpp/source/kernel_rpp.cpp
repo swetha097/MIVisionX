@@ -1873,6 +1873,61 @@ VX_API_ENTRY vx_node VX_API_CALL vxExtrppNode_GammaCorrection(vx_graph graph, vx
     return node;
 }
 
+VX_API_ENTRY vx_node VX_API_CALL vxExtrppNode_Exposure(vx_graph graph, vx_tensor pSrc,vx_array srcROI, vx_tensor pDst, vx_array exposure,vx_scalar layout, vx_scalar roiType, vx_uint32 nbatchSize)
+{
+    vx_node node = NULL;
+    vx_context context = vxGetContext((vx_reference)graph);
+    if (vxGetStatus((vx_reference)context) == VX_SUCCESS)
+    {
+        vx_uint32 dev_type = getGraphAffinity(graph);
+        vx_scalar DEV_TYPE = vxCreateScalar(vxGetContext((vx_reference)graph), VX_TYPE_UINT32, &dev_type);
+        vx_scalar NBATCHSIZE = vxCreateScalar(vxGetContext((vx_reference)graph), VX_TYPE_UINT32, &nbatchSize);
+        vx_reference params[] = {
+            (vx_reference)pSrc,
+            (vx_reference)srcROI,
+            // (vx_reference)srcImgHeight,
+            (vx_reference)pDst,
+            (vx_reference)exposure,
+             (vx_reference)layout,
+            (vx_reference)roiType,
+            (vx_reference)NBATCHSIZE,
+            (vx_reference)DEV_TYPE};
+        node = createNode(graph, VX_KERNEL_RPP_EXPOSURE, params, 8);
+    }
+    return node;
+}
+
+
+
+VX_API_ENTRY vx_node VX_API_CALL vxExtrppNode_Resize(vx_graph graph, vx_tensor pSrc, vx_array srcROI, vx_tensor pDst, vx_array dstROI,vx_array dst_width,vx_array dst_height, vx_scalar interpolation_type, vx_scalar is_packed, vx_scalar chnShift,vx_scalar layout, vx_scalar roiType, vx_uint32 nbatchSize)
+{
+    vx_node node = NULL;
+    vx_context context = vxGetContext((vx_reference)graph);
+    if (vxGetStatus((vx_reference)context) == VX_SUCCESS)
+    {
+        vx_uint32 dev_type = getGraphAffinity(graph);
+        vx_scalar DEV_TYPE = vxCreateScalar(vxGetContext((vx_reference)graph), VX_TYPE_UINT32, &dev_type);
+        vx_scalar NBATCHSIZE = vxCreateScalar(vxGetContext((vx_reference)graph), VX_TYPE_UINT32, &nbatchSize);
+        vx_reference params[] = {
+            (vx_reference)pSrc,
+            (vx_reference)srcROI,
+            (vx_reference)pDst,
+            (vx_reference)dstROI,
+            (vx_reference)dst_width,
+            (vx_reference)dst_height,
+            (vx_reference)interpolation_type,
+            (vx_reference)is_packed,
+            (vx_reference)chnShift,
+            (vx_reference)layout,
+            (vx_reference)roiType,
+            (vx_reference)NBATCHSIZE,
+            (vx_reference)DEV_TYPE};
+        node = createNode(graph, VX_KERNEL_RPP_RESIZE, params, 13);
+    }
+    return node;
+}
+
+
 // VX_API_ENTRY vx_node VX_API_CALL vxExtrppNode_GammaCorrection(vx_graph graph, vx_tensor pSrc, vx_array srcImgWidth, vx_array srcImgHeight, vx_tensor pDst, vx_array gamma, vx_uint32 nbatchSize)
 // {
 //     vx_node node = NULL;

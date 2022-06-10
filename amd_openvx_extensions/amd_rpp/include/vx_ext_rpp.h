@@ -136,6 +136,10 @@ extern "C" SHARED_PUBLIC vx_node VX_API_CALL vxExtrppNode_CopyTensor(vx_graph gr
 extern "C" SHARED_PUBLIC vx_node VX_API_CALL vxExtrppNode_CropMirrorNormalize(vx_graph graph, vx_tensor pSrc, vx_array srcROI, vx_tensor pDst, vx_array dstROI,vx_array crop_w,vx_array crop_h, vx_array x1, vx_array y1, vx_array mean, vx_array std_dev, vx_array flip, vx_scalar is_packed, vx_scalar chnShift,vx_scalar layout, vx_scalar roiType, vx_uint32 nbatchSize);
 extern "C" SHARED_PUBLIC vx_node VX_API_CALL vxExtrppNode_GammaCorrection(vx_graph graph, vx_tensor pSrc, vx_array srcROI, vx_tensor pDst, vx_array alpha, vx_scalar layout, vx_scalar roiType, vx_uint32 nbatchSize);
 extern "C" SHARED_PUBLIC vx_node VX_API_CALL vxExtrppNode_NopTensor(vx_graph graph, vx_tensor pSrc, vx_tensor pDst);
+extern "C" SHARED_PUBLIC vx_node VX_API_CALL vxExtrppNode_Resize(vx_graph graph, vx_tensor pSrc, vx_array srcROI, vx_tensor pDst, vx_array dstROI,vx_array dst_width,vx_array dst_height, vx_scalar interpolation_type, vx_scalar is_packed, vx_scalar chnShift,vx_scalar layout, vx_scalar roiType, vx_uint32 nbatchSize);
+extern "C" SHARED_PUBLIC vx_node VX_API_CALL vxExtrppNode_Exposure(vx_graph graph, vx_tensor pSrc,vx_array srcROI, vx_tensor pDst, vx_array exposure,vx_scalar layout, vx_scalar roiType, vx_uint32 nbatchSize);
+
+
 
 #ifdef __cplusplus
 }

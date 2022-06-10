@@ -124,7 +124,7 @@ int test(int test_case, const char *path, const char *outName, int rgb, int gpu,
 
     RocalTensor input1;
     RocalTensorLayout tensorLayout = RocalTensorLayout::ROCAL_NHWC;
-    RocalTensorOutputType tensorOutputType = RocalTensorOutputType::ROCAL_FP32;
+    RocalTensorOutputType tensorOutputType = RocalTensorOutputType::ROCAL_UINT8;
 
     // The jpeg file loader can automatically select the best size to decode all images to that size
     // User can alternatively set the size or change the policy that is used to automatically find the size
@@ -169,16 +169,31 @@ int test(int test_case, const char *path, const char *outName, int rgb, int gpu,
     {
         std::cout << ">>>>>>> Running "
                   << "rocalBrightness" << std::endl;
-        image1 = rocalBrightnessTensor(handle, input1, true);
+        image1 = rocalBrightness(handle, input1, true);
     }
     break;
     case 2:
     {
         std::cout << ">>>>>>> Running "
                   << "rocalGamma" << std::endl;
-        image1 = rocalGammaTensor(handle, input1, true);
+        image1 = rocalGamma(handle, input1, true);
+    }
+    case 3:
+    {
+         std::cout << ">>>>>>> Running "
+                  << "rocalResiz" << std::endl;
+        image1 = rocalResize(handle, input1, tensorLayout, tensorOutputType, 3,resize_w , resize_h, 0,true);
+
     }
     break;
+    case 4: 
+    {
+        std::cout << ">>>>>>> Running "
+                  << "rocalExposure" << std::endl;
+        image1 = rocalExposure(handle, input1, tensorLayout, tensorOutputType, true);
+    break;
+    }
+
     default:
         std::cout << "Not a valid option! Exiting!\n";
         return -1;

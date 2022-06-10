@@ -22,6 +22,9 @@ THE SOFTWARE.
 
 
 #include "node_gamma.h"
+#include "node_exposure.h"
+#include "node_resize.h"
+
 #include "node_brightness.h"
 #include "node_crop_mirror_normalize.h"
 #include "node_copy.h"
@@ -33,7 +36,7 @@ THE SOFTWARE.
 #include "rocal_api.h"
 
 RocalTensor ROCAL_API_CALL
-rocalBrightnessTensor(
+rocalBrightness(
         RocalContext p_context,
         RocalTensor p_input,
         bool is_output,
@@ -61,6 +64,67 @@ rocalBrightnessTensor(
     }
     return output;
 }
+
+
+RocalTensor ROCAL_API_CALL
+rocalExposure(
+        RocalContext p_context,
+        RocalTensor p_input,
+        RocalTensorLayout rocal_tensor_layout,
+        RocalTensorOutputType rocal_tensor_output_type,
+        bool is_output,
+        RocalFloatParam p_alpha)
+{
+    if(!p_context || !p_input)
+        THROW("Null values passed as input")
+    rocALTensor* output = nullptr;
+    auto context = static_cast<Context*>(p_context);
+    auto input = static_cast<rocALTensor*>(p_input);
+    auto alpha = static_cast<FloatParam*>(p_alpha);
+    RocalTensorlayout op_tensorFormat;
+    RocalTensorDataType op_tensorDataType;
+    try
+    {
+        switch(rocal_tensor_layout)
+        {
+            case 0:
+                op_tensorFormat = RocalTensorlayout::NHWC;
+                break;
+            case 1:
+                op_tensorFormat = RocalTensorlayout::NCHW;
+                break;
+            default:
+                THROW("Unsupported Tensor layout" + TOSTR(rocal_tensor_layout))
+        }
+
+        switch(rocal_tensor_output_type)
+        {
+            case ROCAL_FP32:
+                std::cerr<<"\n Setting output type to FP32";
+                op_tensorDataType = RocalTensorDataType::FP32;
+                break;
+            case ROCAL_FP16:
+                op_tensorDataType = RocalTensorDataType::FP16;
+                break;
+            case ROCAL_UINT8:
+                op_tensorDataType = RocalTensorDataType::UINT8;
+                break;
+            default:
+                THROW("Unsupported Tensor output type" + TOSTR(rocal_tensor_output_type))
+        }
+        output = context->master_graph->create_tensor(input->info(), is_output);
+
+        context->master_graph->add_node<ExposureTensorNode>({input}, {output})->init(alpha);
+    }
+    catch(const std::exception& e)
+    {
+        context->capture_error(e.what());
+        ERR(e.what())
+    }
+    return output;
+}
+
+
 
 // RocalTensor ROCAL_API_CALL
 // rocalGamma(
@@ -310,7 +374,7 @@ rocalCopyTensor(
 
 
 RocalTensor ROCAL_API_CALL
-rocalGammaTensor(
+rocalGamma(
         RocalContext p_context,
         RocalTensor p_input,
         bool is_output,
@@ -335,4 +399,77 @@ rocalGammaTensor(
         ERR(e.what())
     }
     return output;
+}
+
+//resize
+RocalTensor
+ROCAL_API_CALL rocalResize(RocalContext p_context, 
+                                            RocalTensor p_input,
+                                            RocalTensorLayout rocal_tensor_layout,
+
+                                            RocalTensorOutputType rocal_tensor_output_type,
+                                            unsigned resize_depth,
+                                            unsigned resize_height,
+                                            unsigned resize_width,
+                                            int interpolation_type,
+                                            bool is_output)
+{
+    rocALTensor* output = nullptr;
+    auto context = static_cast<Context*>(p_context);
+    auto input = static_cast<rocALTensor*>(p_input);
+    RocalTensorlayout op_tensorFormat;
+    RocalTensorDataType op_tensorDataType;
+    try
+    {
+        if(!input || !context || resize_width == 0 || resize_height == 0)
+            THROW("Null values passed as input")
+        int layout=0;
+        switch(rocal_tensor_layout)
+        {
+            case 0:
+                op_tensorFormat = RocalTensorlayout::NHWC;
+                layout=0;
+                break;
+            case 1:
+                op_tensorFormat = RocalTensorlayout::NCHW;
+                layout=1;
+                break;
+            default:
+                THROW("Unsupported Tensor layout" + TOSTR(rocal_tensor_layout))
+        }
+        switch(rocal_tensor_output_type)
+        {
+            case ROCAL_FP32:
+                std::cerr<<"\n Setting output type to FP32";
+                op_tensorDataType = RocalTensorDataType::FP32;
+                break;
+            case ROCAL_FP16:
+                std::cerr<<"\n Setting output type to FP16";
+                op_tensorDataType = RocalTensorDataType::FP16;
+                break;
+            case ROCAL_UINT8:
+                std::cerr<<"\n Setting output type to UINT8";
+                op_tensorDataType = RocalTensorDataType::UINT8;
+                break;
+            default:
+                THROW("Unsupported Tensor output type" + TOSTR(rocal_tensor_output_type))
+        }
+        // For the crop mirror normalize resize node, user can create an image with a different width and height
+        rocALTensorInfo output_info = input->info();
+        // Need to just set dims depending on NCHW or NHWC
+        output_info.set_width(resize_width);
+        output_info.set_height(resize_height);
+        // output_info.set_data_type(op_tensorDataType);
+        output = context->master_graph->create_tensor(output_info, is_output);
+        // For the nodes that user provides the output size the dimension of all the images after this node will be fixed and equal to that size
+        output->reset_tensor_roi();
+        context->master_graph->add_node<ResizeTensorNode>({input}, {output})->init( interpolation_type, layout);
+    }
+    catch(const std::exception& e)
+    {
+        context->capture_error(e.what());
+        ERR(e.what());
+    }
+
+    return output; // Changed to input----------------IMPORTANT
 }

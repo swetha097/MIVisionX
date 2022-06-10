@@ -24,11 +24,23 @@ THE SOFTWARE.
 #define MIVISIONX_ROCAL_API_AUGMENTATION_H
 #include "rocal_api_types.h"
 
-extern "C" RocalTensor ROCAL_API_CALL rocalBrightnessTensor(RocalContext context, RocalTensor input, bool is_output,
+extern "C" RocalTensor ROCAL_API_CALL rocalBrightness(RocalContext context, RocalTensor input, bool is_output,
                                                    RocalFloatParam alpha = NULL, RocalFloatParam beta = NULL);
 
-extern "C" RocalTensor ROCAL_API_CALL rocalGammaTensor(RocalContext context, RocalTensor input, bool is_output,
+extern "C" RocalTensor ROCAL_API_CALL rocalGamma(RocalContext context, RocalTensor input, bool is_output,
                                                    RocalFloatParam alpha = NULL);
+
+extern "C" RocalTensor ROCAL_API_CALL rocalExposure(RocalContext context, RocalTensor input,RocalTensorLayout rocal_tensor_layout,RocalTensorOutputType rocal_tensor_output_type, bool is_output,
+                                                   RocalFloatParam alpha = NULL);
+                                    
+extern "C" RocalTensor ROCAL_API_CALL rocalResize(RocalContext context, RocalTensor input,
+                                                                  RocalTensorLayout rocal_tensor_layout,
+                                                                  RocalTensorOutputType rocal_tensor_output_type,
+                                                                  unsigned resize_depth,
+                                                                  unsigned resize_height,
+                                                                  unsigned resize_width,
+                                                                  int interpolation_type,
+                                                                  bool is_output);
 
 /// Accepts U8 and RGB24 inputs
 /// \param context
@@ -37,8 +49,8 @@ extern "C" RocalTensor ROCAL_API_CALL rocalGammaTensor(RocalContext context, Roc
 /// \param alpha
 /// \param beta
 /// \return
-extern "C" RocalTensor ROCAL_API_CALL rocalBrightness(RocalContext context, RocalTensor input, bool is_output,
-                                                   RocalFloatParam alpha = NULL, RocalFloatParam beta = NULL);
+// extern "C" RocalTensor ROCAL_API_CALL rocalBrightness(RocalContext context, RocalTensor input, bool is_output,
+//                                                    RocalFloatParam alpha = NULL, RocalFloatParam beta = NULL);
 
 /// Accepts U8 and RGB24 inputs
 /// \param context
@@ -56,9 +68,9 @@ extern "C" RocalTensor ROCAL_API_CALL rocalBrightnessFixed(RocalContext context,
 /// \param is_output
 /// \param alpha
 /// \return
-extern "C" RocalTensor ROCAL_API_CALL rocalGamma(RocalContext context, RocalTensor input,
-                                              bool is_output,
-                                              RocalFloatParam alpha = NULL);
+// extern "C" RocalTensor ROCAL_API_CALL rocalGamma(RocalContext context, RocalTensor input,
+//                                               bool is_output,
+//                                               RocalFloatParam alpha = NULL);
 
 /// Accepts U8 and RGB24 inputs
 /// \param context
