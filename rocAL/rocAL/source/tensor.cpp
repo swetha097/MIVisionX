@@ -375,10 +375,6 @@ unsigned rocALTensor::copy_data(hipStream_t stream, unsigned char* user_buffer, 
     if(_info._type != rocALTensorInfo::Type::HANDLE)
         return 0;
 
-    // unsigned size = _info.width() *
-    //                 _info.height_batch() *
-    //                 _info.color_plane_count();
-
     if (_info._mem_type == RocalMemType::HIP)
     {
         // copy from device to host
@@ -393,9 +389,9 @@ unsigned rocALTensor::copy_data(hipStream_t stream, unsigned char* user_buffer, 
     }
     else
     {
-        memcpy(user_buffer, _mem_handle, size);
+        memcpy(user_buffer, _mem_handle, _info.data_size());
     }
-    return size;
+    return _info.data_size();
 }
 unsigned rocALTensor::copy_data(hipStream_t stream, void* hip_memory, bool sync)
 {

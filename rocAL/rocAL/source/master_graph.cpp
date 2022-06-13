@@ -523,58 +523,56 @@ MasterGraph::copy_output(std::vector<void *> &out_ptr)
     // Copies to the output context given by the user
     std::vector<size_t> size;
     size = tensor_output_byte_size();
-// #if !ENABLE_HIP
-//     if(processing_on_device_ocl())
-//     {
-//         //NOTE: the CL_TRUE flag is only used on the last buffer read call,
-//         // to avoid unnecessary sequence of synchronizations
+#if !ENABLE_HIP
+    if(processing_on_device_ocl())
+    {
+        //NOTE: the CL_TRUE flag is only used on the last buffer read call,
+        // to avoid unnecessary sequence of synchronizations
 
-//         // get_read_buffers() calls block_if_empty() internally and blocks if buffers are empty until a new batch is processed
-//         auto output_buffers =_ring_buffer.get_read_buffers();
-//         auto out_image_idx = output_buffers.size();
-//         for( auto&& output_handle: output_buffers)
-//         {
-//             bool sync_flag = (--out_image_idx == 0) ? CL_TRUE : CL_FALSE;
-//             cl_int status;
-//             if((status = clEnqueueReadBuffer(_device.resources().cmd_queue,
-//                                              (cl_mem) output_handle,
-//                                              sync_flag?(CL_TRUE):CL_FALSE,
-//                                              0,
-//                                              size,
-//                                              (((unsigned char *)out_ptr) + dest_buf_offset),
-//                                              0 , nullptr, nullptr)) != CL_SUCCESS)
-//                 THROW("clEnqueueReadBuffer failed: " + TOSTR(status))
-//             dest_buf_offset += size;
-//         }
-//     }
-// #else
-//     if(processing_on_device_hip())
-//     {
-//         //NOTE: the CL_TRUE flag is only used on the last buffer read call,
-//         // to avoid unnecessary sequence of synchronizations
+        // get_read_buffers() calls block_if_empty() internally and blocks if buffers are empty until a new batch is processed
+        auto output_buffers =_ring_buffer.get_read_buffers();
+        auto out_image_idx = output_buffers.size();
+        for(unsigned i = 0; i < _internal_tensor_list.size(); i++)
+        {
+            bool sync_flag = (--out_image_idx == 0) ? CL_TRUE : CL_FALSE;
+            cl_int status;
+            if((status = clEnqueueReadBuffer(_device.resources().cmd_queue,
+                                             (cl_mem) output_buffers[i],
+                                             sync_flag?(CL_TRUE):CL_FALSE,
+                                             0,
+                                             size[i],
+                                             (((unsigned char *)(out_ptr[i])),
+                                             0 , nullptr, nullptr)) != CL_SUCCESS))
+                THROW("clEnqueueReadBuffer failed: " + TOSTR(status))
+        }
+    }
+#else
+    if(processing_on_device_hip())
+    {
+        //NOTE: the CL_TRUE flag is only used on the last buffer read call,
+        // to avoid unnecessary sequence of synchronizations
 
-//         // get_read_buffers() calls block_if_empty() internally and blocks if buffers are empty until a new batch is processed
-//         auto output_buffers =_ring_buffer.get_read_buffers();
-//         for( auto&& output_handle: output_buffers)
-//         {
-//             hipError_t err = hipMemcpyDtoHAsync((void *)(out_ptr+dest_buf_offset), output_handle, size, _device.resources().hip_stream);
-//             if (err) {
-//                 THROW("hipMemcpyDtoHAsync failed: " + TOSTR(err))
-//             }
-//             dest_buf_offset += size;
-//         }
-//         // sync to finish copy
-//         if (hipStreamSynchronize(_device.resources().hip_stream) != hipSuccess)
-//             THROW("hipStreamSynchronize failed for hipMemcpy ")
+        // get_read_buffers() calls block_if_empty() internally and blocks if buffers are empty until a new batch is processed
+        auto output_buffers =_ring_buffer.get_read_buffers();
+        for(unsigned i = 0; i < _internal_tensor_list.size(); i++)
+        {
+            hipError_t err = hipMemcpyDtoHAsync((void *)(out_ptr[i]), output_buffers[i], size[i], _device.resources().hip_stream);
+            if (err) {
+                THROW("hipMemcpyDtoHAsync failed: " + TOSTR(err))
+            }
+        }
+        // sync to finish copy
+        if (hipStreamSynchronize(_device.resources().hip_stream) != hipSuccess)
+            THROW("hipStreamSynchronize failed for hipMemcpy ")
 
-//     }
-// #endif
-    // else
+    }
+#endif
+    else
     {
         // get_host_master_read_buffer is blocking if _ring_buffer is empty, and blocks this thread till internal processing thread process a new batch and store in the _ring_buffer
-        std::vector<void*> ptr = _ring_buffer.get_read_buffers();
+        auto output_buffers = _ring_buffer.get_read_buffers();
         for(unsigned i = 0; i < _internal_tensor_list.size(); i++)
-            memcpy(out_ptr[i], ptr[i], size[i]);
+            memcpy(out_ptr[i], output_buffers[i], size[i]);
     }
     _convert_time.end();
     return Status::OK;

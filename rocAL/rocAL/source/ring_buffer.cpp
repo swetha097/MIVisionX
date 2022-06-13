@@ -26,7 +26,7 @@ THE SOFTWARE.
 TensorRingBuffer::TensorRingBuffer(unsigned buffer_depth):
         BUFF_DEPTH(buffer_depth),
         _dev_sub_buffer(buffer_depth),
-        _host_master_buffers(BUFF_DEPTH)
+        _host_sub_buffers(BUFF_DEPTH)
 {
     reset();
 }
@@ -61,13 +61,13 @@ std::vector<void*> TensorRingBuffer::get_read_buffers()
     return _host_sub_buffers[_read_ptr];
 }
 
-void *TensorRingBuffer::get_host_master_read_buffer() {
-    block_if_empty();
-    if((_mem_type == RocalMemType::OCL) || (_mem_type == RocalMemType::HIP))
-        return nullptr;
+// void *TensorRingBuffer::get_host_master_read_buffer() {
+//     block_if_empty();
+//     if((_mem_type == RocalMemType::OCL) || (_mem_type == RocalMemType::HIP))
+//         return nullptr;
 
-    return _host_master_buffers[_read_ptr];
-}
+//     return _host_master_buffers[_read_ptr];
+// }
 
 
 std::vector<void*> TensorRingBuffer::get_write_buffers()
@@ -145,12 +145,10 @@ void TensorRingBuffer::init(RocalMemType mem_type, DeviceResources dev, std::vec
     }
     else
     {
-        _host_sub_buffers.resize(BUFF_DEPTH);
         for(size_t buffIdx = 0; buffIdx < BUFF_DEPTH; buffIdx++)
         {
             // const size_t master_buffer_size = sub_buffer_size * sub_buffer_count;
             // a minimum of extra MEM_ALIGNMENT is allocated
-            // _host_master_buffers[buffIdx] = aligned_alloc(MEM_ALIGNMENT, MEM_ALIGNMENT * (master_buffer_size / MEM_ALIGNMENT + 1));
             _host_sub_buffers[buffIdx].resize(_sub_buffer_count);
             for(size_t sub_buff_idx = 0; sub_buff_idx < _sub_buffer_count; sub_buff_idx++)
                 _host_sub_buffers[buffIdx][sub_buff_idx] = aligned_alloc(MEM_ALIGNMENT, MEM_ALIGNMENT * (_sub_buffer_size[sub_buff_idx] / MEM_ALIGNMENT + 1));
@@ -180,7 +178,6 @@ void TensorRingBuffer::initHip(RocalMemType mem_type, DeviceResourcesHip dev, st
             _dev_sub_buffer[buffIdx].resize(_sub_buffer_count);
             for(unsigned sub_idx = 0; sub_idx < _sub_buffer_count; sub_idx++)
             {
-
                 hipError_t err =  hipMalloc(&_dev_sub_buffer[buffIdx][sub_idx], _sub_buffer_size[sub_idx]);
                 if(err != hipSuccess)
                 {
@@ -193,13 +190,9 @@ void TensorRingBuffer::initHip(RocalMemType mem_type, DeviceResourcesHip dev, st
     }
     else
     {
-        _host_sub_buffers.resize(BUFF_DEPTH);
         for(size_t buffIdx = 0; buffIdx < BUFF_DEPTH; buffIdx++)
         {
-            const size_t master_buffer_size = sub_buffer_size * sub_buffer_count;
-            // std::cerr<<"\n sub_buffer_size:: "<<sub_buffer_size<<"\t sub_buffer_count:: "<<sub_buffer_count;
             // a minimum of extra MEM_ALIGNMENT is allocated
-            // _host_master_buffers[buffIdx] = aligned_alloc(MEM_ALIGNMENT, MEM_ALIGNMENT * (master_buffer_size / MEM_ALIGNMENT + 1));
             _host_sub_buffers[buffIdx].resize(_sub_buffer_count);
             for(size_t sub_buff_idx = 0; sub_buff_idx < _sub_buffer_count; sub_buff_idx++)
                 _host_sub_buffers[buffIdx][sub_buff_idx] = aligned_alloc(MEM_ALIGNMENT, MEM_ALIGNMENT * (_sub_buffer_size[sub_buff_idx] / MEM_ALIGNMENT + 1));
@@ -241,12 +234,12 @@ TensorRingBuffer::~TensorRingBuffer()
      //  if(_mem_type!= RocalMemType::OCL)
     //      return;
     if (_mem_type == RocalMemType::HOST) {
-        for (unsigned idx = 0; idx < _host_master_buffers.size(); idx++)
-            if (_host_master_buffers[idx]) {
-                free(_host_master_buffers[idx]);
+        for (unsigned buffIdx = 0; buffIdx < _host_sub_buffers.size(); buffIdx++) {
+            for (unsigned sub_buf_idx = 0; sub_buf_idx < _dev_sub_buffer[buffIdx].size(); sub_buf_idx++){
+                if (_host_sub_buffers[buffIdx][sub_buf_idx])
+                    free(_host_sub_buffers[buffIdx][sub_buf_idx]);
             }
-
-        _host_master_buffers.clear();
+        }
         _host_sub_buffers.clear();
     }
 #if ENABLE_HIP
