@@ -87,6 +87,12 @@ public:
     const std::pair<ImageNameBatch,pMetaDataBatch>& meta_data();
     const std::pair<ImageNameBatch,pMetaDataBatch>& tensor_meta_data();
     void set_loop(bool val) { _loop = val; }
+    // void set_output_images(const std::vector<rocALTensor*> &output_images, unsigned int num_of_outputs)
+    // {
+    //     _output_tensor.resize(num_of_outputs);
+    //     _output_tensor = output_images;
+    // }
+    void set_output(rocALTensor* output_image);
     bool empty() { return (remaining_images_count() < _user_batch_size); }
     size_t internal_batch_size() { return _internal_batch_size; }
     std::shared_ptr<MetaDataGraph> meta_data_graph() { return _meta_data_graph; }

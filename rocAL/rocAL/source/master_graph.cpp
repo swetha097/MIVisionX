@@ -32,6 +32,7 @@ THE SOFTWARE.
 #include "ocl_setup.h"
 #include "meta_data_reader_factory.h"
 #include "meta_data_graph_factory.h"
+#include "node_copy.h"
 // #include "randombboxcrop_meta_data_reader_factory.h"
 
 using half_float::half;
@@ -341,6 +342,32 @@ rocALTensor * MasterGraph::create_tensor(const rocALTensorInfo &info, bool is_ou
 
 //     return output;
 // }
+
+
+void
+MasterGraph::set_output(rocALTensor* output_tensor)
+{
+    auto* output = new rocALTensor(output_tensor->info());
+
+    if(output_tensor->is_handle_set() == false)
+    {
+        if (output_tensor->create_from_handle(_context) != 0)
+                THROW("Cannot create the image from handle")
+
+        _internal_tensor_list.push_back(output_tensor);
+
+        if (output->create_from_handle(_context) != 0)
+                THROW("Cannot create the image from handle")
+
+        _output_tensor_list.push_back(output);
+    }
+    else
+    {
+        // Decoder case only
+        auto actual_output = create_tensor(output_tensor->info(), true);
+        add_node<CopyNode>({output_tensor}, {actual_output});
+    }
+}
 
 
 void MasterGraph::release()
