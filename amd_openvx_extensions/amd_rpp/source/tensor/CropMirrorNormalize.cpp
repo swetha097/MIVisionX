@@ -209,7 +209,6 @@ static vx_status VX_CALLBACK processCropMirrorNormalize(vx_node node, const vx_r
 
 
 
-        std::cerr<<"\n Gonna call RPP";
         // data->src_desc_ptr->dataType=RpptDataType::F32;
         // data->dst_desc_ptr->dataType=RpptDataType::F32;
 
@@ -218,7 +217,7 @@ static vx_status VX_CALLBACK processCropMirrorNormalize(vx_node node, const vx_r
                                                  data->mean,data->std_dev,
                                                  data->mirror, data->roi_tensor_Ptr,data->roiType,
                                                  data->rppHandle);
-        std::cerr<<"\n Back call RPP";
+
         return_status = (rpp_status == RPP_SUCCESS) ? VX_SUCCESS : VX_FAILURE;
     }
     return return_status;
@@ -235,7 +234,7 @@ static vx_status VX_CALLBACK initializeCropMirrorNormalize(vx_node node, const v
 #elif ENABLE_HIP
     // STATUS_extern "C" SHARED_PUBLIC vx_node VX_API_CALL vxExtrppNode_GammaCorrection(vx_graph graph, vx_tensor pSrc,vx_array srcROI, vx_tensor pDst, vx_array gamma,vx_scalar layout, vx_scalar roiType, vx_uint32 nbatchSize);
 
-ERROR_CHECK(vxQueryNode(node, VX_NODE_ATTRIBUTE_AMD_HIP_STREAM, &data->handle.hipstream, sizeof(data->handle.hipstream)));
+    STATUS_ERROR_CHECK(vxQueryNode(node, VX_NODE_ATTRIBUTE_AMD_HIP_STREAM, &data->handle.hipstream, sizeof(data->handle.hipstream)));
 #endif
     STATUS_ERROR_CHECK(vxCopyScalar((vx_scalar)parameters[16], &data->device_type, VX_READ_ONLY, VX_MEMORY_TYPE_HOST));
     STATUS_ERROR_CHECK(vxReadScalarValue((vx_scalar)parameters[15], &data->nbatchSize));

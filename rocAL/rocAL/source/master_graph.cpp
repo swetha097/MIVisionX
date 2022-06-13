@@ -568,8 +568,8 @@ MasterGraph::copy_output(std::vector<void *> &out_ptr)
                                              sync_flag?(CL_TRUE):CL_FALSE,
                                              0,
                                              size[i],
-                                             (((unsigned char *)(out_ptr[i])),
-                                             0 , nullptr, nullptr)) != CL_SUCCESS))
+                                             out_ptr[i],
+                                             0 , nullptr, nullptr)) != CL_SUCCESS)
                 THROW("clEnqueueReadBuffer failed: " + TOSTR(status))
         }
     }
