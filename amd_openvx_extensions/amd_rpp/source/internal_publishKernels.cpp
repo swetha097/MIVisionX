@@ -132,6 +132,8 @@ vx_status get_kernels_to_publish()
     STATUS_ERROR_CHECK(ADD_KERENEL(Resize_Register));
     STATUS_ERROR_CHECK(ADD_KERENEL(Exposure_Register));
     STATUS_ERROR_CHECK(ADD_KERENEL(ColorCast_Register));
+    STATUS_ERROR_CHECK(ADD_KERENEL(Spatter_Register));
+
 
 
 

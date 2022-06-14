@@ -181,7 +181,7 @@ int test(int test_case, const char *path, const char *outName, int rgb, int gpu,
     case 3:
     {
          std::cout << ">>>>>>> Running "
-                  << "rocalResiz" << std::endl;
+                  << "rocalResize" << std::endl;
         image1 = rocalResize(handle, input1, tensorLayout, tensorOutputType, 3,resize_w , resize_h, 0,true);
 
     }
@@ -198,6 +198,13 @@ int test(int test_case, const char *path, const char *outName, int rgb, int gpu,
         std::cout << ">>>>>>> Running "
                   << "rocalColorCast" << std::endl;
         image1 = rocalColorCast(handle, input1, tensorLayout, tensorOutputType, true);
+    break;
+    }
+    case 6: 
+    {
+        std::cout << ">>>>>>> Running "
+                  << "rocalspatter" << std::endl;
+        image1 = rocalSpatter(handle, input1, tensorLayout, tensorOutputType, true);
     break;
     }
     default:
