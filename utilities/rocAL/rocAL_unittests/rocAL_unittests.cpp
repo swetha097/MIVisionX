@@ -207,6 +207,13 @@ int test(int test_case, const char *path, const char *outName, int rgb, int gpu,
         image1 = rocalSpatter(handle, input1, tensorLayout, tensorOutputType, true);
     break;
     }
+    case 7: 
+    {
+        std::cout << ">>>>>>> Running "
+                  << "rocalColorTwist" << std::endl;
+        image1 = rocalColorTwist(handle, input1, tensorLayout, tensorOutputType, true);
+    break;
+    }
     default:
         std::cout << "Not a valid option! Exiting!\n";
         return -1;

@@ -137,6 +137,8 @@ list(APPEND SOURCES
         source/tensor/Exposure.cpp
         source/tensor/ColorCast.cpp
         source/tensor/Spatter.cpp
+        source/tensor/ColorTwist.cpp
+
 
 
 

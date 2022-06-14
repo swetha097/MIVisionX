@@ -31,6 +31,8 @@ THE SOFTWARE.
 #include "node_nop.h"
 #include "meta_node_crop_mirror_normalize.h"
 #include "node_spatter.h"
+#include "node_color_twist.h"
+
 
 #include "commons.h"
 #include "context.h"
@@ -211,11 +213,6 @@ rocalSpatter(
     rocALTensor* output = nullptr;
     auto context = static_cast<Context*>(p_context);
     auto input = static_cast<rocALTensor*>(p_input);
-    // auto red = static_cast<FloatParam*>(R_value);
-    // auto green = static_cast<FloatParam*>(G_value);
-    // auto blue = static_cast<FloatParam*>(B_value);
-    // auto alpha = static_cast<FloatParam*>(alpha_tensor);
-
     RocalTensorlayout op_tensorFormat;
     RocalTensorDataType op_tensorDataType;
     try
@@ -261,6 +258,73 @@ rocalSpatter(
     }
     return output;
 }
+
+
+RocalTensor ROCAL_API_CALL
+rocalColorTwist(
+        RocalContext p_context,
+        RocalTensor p_input,
+        RocalTensorLayout rocal_tensor_layout,
+        RocalTensorOutputType rocal_tensor_output_type,
+        bool is_output,
+        RocalFloatParam p_alpha,
+        RocalFloatParam p_beta,
+        RocalFloatParam p_hue,
+        RocalFloatParam p_sat)
+{
+    if(!p_context || !p_input)
+        THROW("Null values passed as input")
+    rocALTensor* output = nullptr;
+    auto context = static_cast<Context*>(p_context);
+    auto input = static_cast<rocALTensor*>(p_input);
+    auto alpha = static_cast<FloatParam*>(p_alpha);
+    auto beta = static_cast<FloatParam*>(p_beta);
+    auto hue = static_cast<FloatParam*>(p_hue);
+    auto sat = static_cast<FloatParam*>(p_sat);
+
+    RocalTensorlayout op_tensorFormat;
+    RocalTensorDataType op_tensorDataType;
+    try
+    {
+        switch(rocal_tensor_layout)
+        {
+            case 0:
+                op_tensorFormat = RocalTensorlayout::NHWC;
+                break;
+            case 1:
+                op_tensorFormat = RocalTensorlayout::NCHW;
+                break;
+            default:
+                THROW("Unsupported Tensor layout" + TOSTR(rocal_tensor_layout))
+        }
+
+        switch(rocal_tensor_output_type)
+        {
+            case ROCAL_FP32:
+                std::cerr<<"\n Setting output type to FP32";
+                op_tensorDataType = RocalTensorDataType::FP32;
+                break;
+            case ROCAL_FP16:
+                op_tensorDataType = RocalTensorDataType::FP16;
+                break;
+            case ROCAL_UINT8:
+                op_tensorDataType = RocalTensorDataType::UINT8;
+                break;
+            default:
+                THROW("Unsupported Tensor output type" + TOSTR(rocal_tensor_output_type))
+        }
+        output = context->master_graph->create_tensor(input->info(), is_output);
+
+        context->master_graph->add_node<ColorTwistTensorNode>({input}, {output})->init(alpha, beta, hue ,sat);
+    }
+    catch(const std::exception& e)
+    {
+        context->capture_error(e.what());
+        ERR(e.what())
+    }
+    return output;
+}
+
 
 
 // RocalTensor ROCAL_API_CALL

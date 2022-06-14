@@ -60,7 +60,11 @@ extern "C" RocalTensor ROCAL_API_CALL rocalSpatter(RocalContext p_context,RocalT
                                                         int G_value=0,
                                                         int B_value=0);
 
-                                                     
+extern "C" RocalTensor ROCAL_API_CALL rocalColorTwist(RocalContext context, RocalTensor input,RocalTensorLayout rocal_tensor_layout,RocalTensorOutputType rocal_tensor_output_type, bool is_output,
+                                                   RocalFloatParam alpha = NULL, RocalFloatParam beta = NULL, RocalFloatParam hue = NULL, RocalFloatParam sat = NULL);
+
+
+
 
 /// Accepts U8 and RGB24 inputs
 /// \param context
