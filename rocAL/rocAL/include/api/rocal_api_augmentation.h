@@ -62,6 +62,19 @@ extern "C" RocalTensor ROCAL_API_CALL rocalSpatter(RocalContext p_context,RocalT
 
 extern "C" RocalTensor ROCAL_API_CALL rocalColorTwist(RocalContext context, RocalTensor input,RocalTensorLayout rocal_tensor_layout,RocalTensorOutputType rocal_tensor_output_type, bool is_output,
                                                    RocalFloatParam alpha = NULL, RocalFloatParam beta = NULL, RocalFloatParam hue = NULL, RocalFloatParam sat = NULL);
+                    
+
+extern "C" RocalTensor ROCAL_API_CALL rocalCrop(RocalContext context, RocalTensor input,
+                                                                  RocalTensorLayout rocal_tensor_layout,
+                                                                  RocalTensorOutputType rocal_tensor_output_type,
+                                                                  unsigned crop_depth,
+                                                                  unsigned crop_height,
+                                                                  unsigned crop_width,
+                                                                  float start_x,
+                                                                  float start_y,
+                                                                  float start_z,
+                                                                  bool is_output);
+
 
 
 

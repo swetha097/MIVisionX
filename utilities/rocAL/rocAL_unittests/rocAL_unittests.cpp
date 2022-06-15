@@ -150,8 +150,8 @@ int test(int test_case, const char *path, const char *outName, int rgb, int gpu,
         return -1;
     }
 
-    int resize_w = width;
-    int resize_h = height;
+    int resize_w = 300;
+    int resize_h = 110;
     RocalTensor image1, image2;
 
     switch (test_case)
@@ -161,7 +161,7 @@ int test(int test_case, const char *path, const char *outName, int rgb, int gpu,
         std::vector<float> mean{0, 0, 0};
         std::vector<float> sdev{1, 1, 1};
         std::cout << ">>>>>>> Running "
-                  << " Crop Mirror Normalize Tensor" << std::endl;
+                  << " Crop Mirror Normalize " << std::endl;
         image1 = rocalCropMirrorNormalize(handle, input1, tensorLayout, tensorOutputType, 3, resize_w, resize_h, 0, 0, 0, mean, sdev, true);
     }
     break;
@@ -212,6 +212,13 @@ int test(int test_case, const char *path, const char *outName, int rgb, int gpu,
         std::cout << ">>>>>>> Running "
                   << "rocalColorTwist" << std::endl;
         image1 = rocalColorTwist(handle, input1, tensorLayout, tensorOutputType, true);
+    break;
+    }
+    case 8: 
+    {
+        std::cout << ">>>>>>> Running "
+                  << "rocalCrop" << std::endl;
+        image1 = rocalCrop(handle, input1, tensorLayout, tensorOutputType, 3, resize_w, resize_h, 0, 0, 0,true);
     break;
     }
     default:

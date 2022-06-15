@@ -32,6 +32,7 @@ THE SOFTWARE.
 #include "meta_node_crop_mirror_normalize.h"
 #include "node_spatter.h"
 #include "node_color_twist.h"
+#include "node_crop.h"
 
 
 #include "commons.h"
@@ -194,6 +195,83 @@ rocalExposure(
     }
     return output;
 }
+
+
+RocalTensor
+ROCAL_API_CALL rocalCrop(RocalContext p_context, 
+                                            RocalTensor p_input,
+                                            RocalTensorLayout rocal_tensor_layout,
+
+                                            RocalTensorOutputType rocal_tensor_output_type,
+                                            unsigned crop_depth,
+                                            unsigned crop_height,
+                                            unsigned crop_width,
+                                            float start_x,
+                                            float start_y,
+                                            float start_z,
+                                            bool is_output)
+{
+    rocALTensor* output = nullptr;
+    auto context = static_cast<Context*>(p_context);
+    auto input = static_cast<rocALTensor*>(p_input);
+    RocalTensorlayout op_tensorFormat;
+    RocalTensorDataType op_tensorDataType;
+    try
+    {
+        if(!input || !context || crop_width == 0 || crop_height == 0)
+            THROW("Null values passed as input")
+        int layout=0;
+        switch(rocal_tensor_layout)
+        {
+            case 0:
+                op_tensorFormat = RocalTensorlayout::NHWC;
+                layout=0;
+                break;
+            case 1:
+                op_tensorFormat = RocalTensorlayout::NCHW;
+                layout=1;
+                break;
+            default:
+                THROW("Unsupported Tensor layout" + TOSTR(rocal_tensor_layout))
+        }
+
+        switch(rocal_tensor_output_type)
+        {
+            case ROCAL_FP32:
+                std::cerr<<"\n Setting output type to FP32";
+                op_tensorDataType = RocalTensorDataType::FP32;
+                break;
+            case ROCAL_FP16:
+                std::cerr<<"\n Setting output type to FP16";
+                op_tensorDataType = RocalTensorDataType::FP16;
+                break;
+            case ROCAL_UINT8:
+                std::cerr<<"\n Setting output type to UINT8";
+                op_tensorDataType = RocalTensorDataType::UINT8;
+                break;
+            default:
+                THROW("Unsupported Tensor output type" + TOSTR(rocal_tensor_output_type))
+        }
+        // For the crop mirror normalize resize node, user can create an image with a different width and height
+        rocALTensorInfo output_info = input->info();
+        // output_info.max_width(crop_width);
+        // output_info.max_height(crop_height);
+        // output_info.format(op_tensorFormat);
+        output_info.set_data_type(op_tensorDataType);
+        output = context->master_graph->create_tensor(output_info, is_output);
+        // For the nodes that user provides the output size the dimension of all the images after this node will be fixed and equal to that size
+        output->reset_tensor_roi();
+        context->master_graph->add_node<CropTensorNode>({input}, {output})->init(crop_height, crop_width, start_x, start_y,layout);
+    }
+    catch(const std::exception& e)
+    {
+        context->capture_error(e.what());
+        ERR(e.what());
+    }
+
+    return output; // Changed to input----------------IMPORTANT
+}
+
 
 
 

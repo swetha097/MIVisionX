@@ -138,6 +138,8 @@ list(APPEND SOURCES
         source/tensor/ColorCast.cpp
         source/tensor/Spatter.cpp
         source/tensor/ColorTwist.cpp
+        source/tensor/Crop.cpp
+
 
 
 
