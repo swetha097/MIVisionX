@@ -139,6 +139,8 @@ list(APPEND SOURCES
         source/tensor/Spatter.cpp
         source/tensor/ColorTwist.cpp
         source/tensor/Crop.cpp
+        source/tensor/Contrast.cpp
+
 
 
 

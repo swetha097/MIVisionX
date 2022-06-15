@@ -221,6 +221,13 @@ int test(int test_case, const char *path, const char *outName, int rgb, int gpu,
         image1 = rocalCrop(handle, input1, tensorLayout, tensorOutputType, 3, resize_w, resize_h, 0, 0, 0,true);
     break;
     }
+    case 9:
+    {
+        std::cout << ">>>>>>> Running "
+                  << "rocalContrast" << std::endl;
+        image1 = rocalContrast(handle, input1, true);
+    break;
+    }
     default:
         std::cout << "Not a valid option! Exiting!\n";
         return -1;

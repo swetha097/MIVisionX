@@ -33,6 +33,7 @@ THE SOFTWARE.
 #include "node_spatter.h"
 #include "node_color_twist.h"
 #include "node_crop.h"
+#include "node_contrast.h"
 
 
 #include "commons.h"
@@ -68,6 +69,38 @@ rocalBrightness(
     }
     return output;
 }
+
+//contrast
+RocalTensor ROCAL_API_CALL
+rocalContrast(
+        RocalContext p_context,
+        RocalTensor p_input,
+        bool is_output,
+        RocalFloatParam c_factor,
+        RocalFloatParam c_center)
+{
+    if(!p_input || !p_context)
+        THROW("Null values passed as input")
+    rocALTensor* output = nullptr;
+    auto context = static_cast<Context*>(p_context);
+    auto input = static_cast<rocALTensor*>(p_input);
+    auto contrast_factor = static_cast<FloatParam*>(c_factor);
+    auto contrast_center = static_cast<FloatParam*>(c_center);
+    try
+    {
+
+        output = context->master_graph->create_tensor(input->info(), is_output);
+
+        context->master_graph->add_node<ContrastTensorNode>({input}, {output})->init(contrast_factor, contrast_center);
+    }
+    catch(const std::exception& e)
+    {
+        context->capture_error(e.what());
+        ERR(e.what())
+    }
+    return output;
+}
+
 
 //colorcast
 RocalTensor

@@ -30,6 +30,11 @@ extern "C" RocalTensor ROCAL_API_CALL rocalBrightness(RocalContext context, Roca
 extern "C" RocalTensor ROCAL_API_CALL rocalGamma(RocalContext context, RocalTensor input, bool is_output,
                                                    RocalFloatParam alpha = NULL);
 
+
+
+extern "C" RocalTensor ROCAL_API_CALL rocalContrast(RocalContext context, RocalTensor input, bool is_output,
+                                                   RocalFloatParam c_fator = NULL, RocalFloatParam c_center = NULL);
+
 extern "C" RocalTensor ROCAL_API_CALL rocalExposure(RocalContext context, RocalTensor input,RocalTensorLayout rocal_tensor_layout,RocalTensorOutputType rocal_tensor_output_type, bool is_output,
                                                    RocalFloatParam alpha = NULL);
                                     
