@@ -239,8 +239,6 @@ ROCAL_API_CALL rocalCropMirrorNormalize(RocalContext p_context, RocalTensor p_in
         }
         // For the crop mirror normalize resize node, user can create an image with a different width and height
         rocALTensorInfo output_info = input->info();
-        // output_info.max_width(crop_width);
-        // output_info.max_height(crop_height);
         // output_info.format(op_tensorFormat);
         output_info.set_data_type(op_tensorDataType);
         output = context->master_graph->create_tensor(output_info, is_output);

@@ -80,37 +80,38 @@ public:
     }
     void set_tensor_layout(RocalTensorlayout layout)
     {
+        _max_dims.resize(3);
         if(layout != RocalTensorlayout::NONE)
         {
             _is_image = true;
             if(layout == RocalTensorlayout::NHWC)
             {
-                _max_width = _dims->at(2);
-                _max_height = _dims->at(1);
+                _max_dims[0] = _dims->at(2);
+                _max_dims[1] = _dims->at(1);
             }
             else if(layout == RocalTensorlayout::NCHW)
             {
-                _max_width = _dims->at(3);
-                _max_height = _dims->at(2);
+                _max_dims[0] = _dims->at(3);
+                _max_dims[1] = _dims->at(2);
             }
             else if(layout == RocalTensorlayout::NFHWC)
             {
-                _max_width = _dims->at(3);
-                _max_height = _dims->at(2);
-                _frames = _dims->at(1);
+                _max_dims[0] = _dims->at(3);
+                _max_dims[1] = _dims->at(2);
+                _max_dims[2] = _dims->at(1);
             }
             else if(layout == RocalTensorlayout::NFCHW)
             {
-                _max_width = _dims->at(4);
-                _max_height = _dims->at(3);
-                _frames = _dims->at(1);
+                _max_dims[0] = _dims->at(4);
+                _max_dims[1] = _dims->at(3);
+                _max_dims[2] = _dims->at(1);
             }
             reallocate_tensor_roi_buffers();
         }
         else
         {
-            _max_width = _dims->at(1);
-            _max_height = _dims->at(2);
+            _max_dims[0] = _dims->at(1);
+            _max_dims[1] = _dims->at(2);
             // std::cerr<<"\n Setting _max_width :: "<<_max_width<<"\t _max_height :: "<<_max_height;
         }
         _layout = layout;
@@ -120,8 +121,7 @@ public:
     unsigned num_of_dims() const { return _num_of_dims; }
     unsigned batch_size() const { return _batch_size; }
     unsigned data_size() const { return _data_size; }
-    unsigned max_width() const { return _max_width; }
-    unsigned max_height() const { return _max_height; }
+    std::vector<unsigned> max_dims() const { return _max_dims; }
     std::shared_ptr<std::vector<unsigned>> dims() const { return _dims; }
     RocalMemType mem_type() const { return _mem_type; }
     RocalROIType roi_type() const { return _roi_type; }
@@ -135,13 +135,6 @@ public:
     {
         _data_type_size = tensor_data_size(_data_type);
         return _data_type_size;
-    }
-    unsigned num_of_frames() const
-    {
-        if(_num_of_dims == 5)
-            return _frames;
-        else
-            ERR("The frames dimension 'F' is applicable only for 5D NFCHW or NFHWC tensors")
     }
 
 private:
@@ -157,7 +150,7 @@ private:
     std::shared_ptr<std::vector<RocalROI>> _roi;
     unsigned _data_type_size = tensor_data_size(_data_type);
     unsigned _data_size = 0;
-    unsigned _max_width, _max_height;
+    std::vector<unsigned> _max_dims;
     unsigned _frames; // denotes the F dimension in the tensor
     bool _is_image = false;
     void reallocate_tensor_roi_buffers();

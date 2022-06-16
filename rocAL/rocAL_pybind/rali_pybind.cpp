@@ -103,8 +103,8 @@ namespace rali{
                 "at",
                 [](rocALTensor &output_tensor, uint idx)
                 {
-                    uint h = output_tensor.info().max_height();
-                    uint w = output_tensor.info().max_width();
+                    uint h = output_tensor.info().max_dims().at(1);
+                    uint w = output_tensor.info().max_dims().at(0);
 
                     if (output_tensor.info().layout() == RocalTensorlayout::NHWC)
                     {
@@ -152,8 +152,8 @@ namespace rali{
                 "at",
                 [](rocALTensorList &output_tensor_list, uint idx)
                 {
-                    uint h = output_tensor_list.at(idx)->info().max_height();
-                    uint w = output_tensor_list.at(idx)->info().max_width();
+                    uint h = output_tensor_list.at(idx)->info()->max_dims().at(1);
+                    uint w = output_tensor_list.at(idx)->info()->max_dims().at(0);
 
                     if (output_tensor_list.at(idx)->info().layout() == RocalTensorlayout::NHWC)
                     {
