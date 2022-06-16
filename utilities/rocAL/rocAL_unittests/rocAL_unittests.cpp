@@ -239,8 +239,8 @@ int test(int test_case, const char *path, const char *outName, int rgb, int gpu,
         cv::Mat mat_output;
         for(int idx = 0; idx < output_tensor_list->size(); idx++)
         {
-            int h = output_tensor_list->at(idx)->info().max_height() * output_tensor_list->at(idx)->info().batch_size();
-            int w = output_tensor_list->at(idx)->info().max_width();
+            int h = output_tensor_list->at(idx)->info().max_dims().at(1) * output_tensor_list->at(idx)->info().dims()->at(0);
+            int w = output_tensor_list->at(idx)->info().max_dims().at(0);
             mat_input = cv::Mat(h, w, cv_color_format);
             mat_output = cv::Mat(h, w, cv_color_format);
 

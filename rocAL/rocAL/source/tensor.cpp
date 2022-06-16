@@ -80,8 +80,7 @@ vx_size tensor_data_size(RocalTensorDataType data_type)
 
 bool operator==(const rocALTensorInfo &rhs, const rocALTensorInfo &lhs)
 {
-    return (rhs.max_width() == lhs.max_width() &&
-            rhs.batch_size() == lhs.batch_size() &&
+    return (rhs.dims() == lhs.dims() &&
             rhs.mem_type() == lhs.mem_type() &&
             rhs.data_type() == lhs.data_type() &&
             rhs.color_format() == lhs.color_format() &&
@@ -178,19 +177,19 @@ void rocALTensor::update_tensor_roi(const std::vector<uint32_t> &width, const st
 
         for (unsigned i = 0; i < info().batch_size(); i++)
         {
-            if (width[i] > _info.max_width())
+            if (width[i] > _info.max_dims().at(0))
             {
-                ERR("Given ROI width is larger than buffer width for tensor[" + TOSTR(i) + "] " + TOSTR(width[i]) + " > " + TOSTR(_info.max_width()))
-                _info.get_roi()->at(i).x2 = _info.max_width();
+                ERR("Given ROI width is larger than buffer width for tensor[" + TOSTR(i) + "] " + TOSTR(width[i]) + " > " + TOSTR(_info.max_dims().at(0)))
+                _info.get_roi()->at(i).x2 = _info.max_dims().at(0);
             }
             else
             {
                 _info.get_roi()->at(i).x2 = width[i];
             }
-            if (height[i] > _info.max_height())
+            if (height[i] > _info.max_dims().at(1))
             {
-                ERR("Given ROI height is larger than buffer with for tensor[" + TOSTR(i) + "] " + TOSTR(height[i]) + " > " + TOSTR(_info.max_height()))
-                _info.get_roi()->at(i).y2 = _info.max_height();
+                ERR("Given ROI height is larger than buffer with for tensor[" + TOSTR(i) + "] " + TOSTR(height[i]) + " > " + TOSTR(_info.max_dims().at(1)))
+                _info.get_roi()->at(i).y2 = _info.max_dims().at(1);
             }
             else
             {
@@ -250,7 +249,7 @@ int rocALTensor::create_virtual(vx_context context, vx_graph graph)
     _vx_handle = vxCreateVirtualTensor(graph, num_of_dims, dims, interpret_tensor_data_type(_info.data_type()), 0);
     vx_status status;
     if ((status = vxGetStatus((vx_reference)_vx_handle)) != VX_SUCCESS)
-        THROW("Error: vxCreateVirtualTensor(input:[" + TOSTR(_info.max_width()) + "W" + TOSTR(_info.max_height()) + "H" + "]): failed " + TOSTR(status))
+        THROW("Error: vxCreateVirtualTensor(input:[" + TOSTR(_info.max_dims().at(0)) + "W" + TOSTR(_info.max_dims().at(1)) + "H" + "]): failed " + TOSTR(status))
 
     _info._type = rocALTensorInfo::Type::VIRTUAL;
     return 0;
@@ -327,8 +326,6 @@ int rocALTensor::create(vx_context context)
     vx_status status;
     // vx_size dims[4]; // = {(vx_size)_info.width(), (vx_size)_info.height(), (vx_size)_info.channels(), (vx_size)_info.batch_size()};
     // dims[0] = (vx_size)_info.batch_size();
-    // dims[1] = (vx_size)_info.max_height();
-    // dims[2] = (vx_size)_info.max_width();
     // dims[3] = (vx_size)_info.channels();
     vx_enum tensor_data_type = interpret_tensor_data_type(_info.data_type());
     _vx_handle = vxCreateTensor(context, _info.num_of_dims(),(vx_size*) _info.dims()->data(), tensor_data_type, 0);

@@ -178,8 +178,8 @@ AudioLoader::load_routine()
             {
                 load_status = _audio_loader->load(data,
                                                 _decoded_img_info._image_names,
-                                                _output_tensor->info().max_width(),
-                                                _output_tensor->info().max_height(),
+                                                _output_tensor->info().max_dims().at(0),
+                                                _output_tensor->info().max_dims().at(1),
                                                 _decoded_img_info._roi_width,
                                                 _decoded_img_info._roi_height,
                                                 _decoded_img_info._original_width,
@@ -201,8 +201,8 @@ AudioLoader::load_routine()
             {
                 load_status = _audio_loader->load(data,
                                                 _decoded_img_info._image_names,
-                                                _output_tensor->info().max_width(),
-                                                _output_tensor->info().max_height(),
+                                                _output_tensor->info().max_dims().at(0),
+                                                _output_tensor->info().max_dims().at(1),
                                                 _decoded_img_info._roi_width,
                                                 _decoded_img_info._roi_height,
                                                 _decoded_img_info._original_width,
