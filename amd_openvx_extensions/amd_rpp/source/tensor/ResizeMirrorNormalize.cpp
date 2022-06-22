@@ -22,9 +22,9 @@ THE SOFTWARE.
 
 #include "internal_publishKernels.h"
 #include "vx_ext_amd.h"
-#define NUM_OF_DIMS 5
+#define NUM_OF_DIMS 4
 
-struct CropMirrorNormalizeLocalData
+struct ResizeMirrorNormalizeLocalData
 {
     RPPCommonHandle handle;
     rppHandle_t rppHandle;
@@ -36,10 +36,9 @@ struct CropMirrorNormalizeLocalData
     RpptDescPtr dst_desc_ptr;
     RppPtr_t pSrc;
     RppPtr_t pDst;
-    vx_uint32 *start_x;
-    vx_uint32 *start_y;
-    vx_uint32 *crop_h;
-    vx_uint32 *crop_w;
+    vx_uint32 *resize_h;
+    vx_uint32 *resize_w;
+    vx_uint32 *interpolation_type;
     vx_float32 *mean;
     vx_float32 *std_dev;
     vx_uint32 *mirror;
@@ -50,9 +49,11 @@ struct CropMirrorNormalizeLocalData
     vx_uint32 batch_size;
     RpptROI *roi_tensor_Ptr;
     RpptRoiType roiType;
-    vx_uint32 chnShift; //NHWC to NCHW
-    vx_enum in_tensor_type ;
+    vx_uint32 chnShift; // NHWC to NCHW
+    vx_enum in_tensor_type;
     vx_enum out_tensor_type;
+    // RpptInterpolationType interpolation_type;
+    RpptImagePatch *dstimgsize;
 
 #if ENABLE_OPENCL
     cl_mem cl_pSrc;
@@ -63,38 +64,38 @@ struct CropMirrorNormalizeLocalData
 #endif
 };
 /*
-* Number of Dims is 4
-* If is_packed is true - NHWC
-* Dims[0] = N , Dims[1] = H, Dims[2] = W, Dims[3] = C
-* If is_packed is true - NCHW
-* Dims[0] = N , Dims[1] = C, Dims[2] = H, Dims[3] = W
-*/
-static vx_status VX_CALLBACK refreshCropMirrorNormalize(vx_node node, const vx_reference *parameters, vx_uint32 num, CropMirrorNormalizeLocalData *data)
+ * Number of Dims is 4
+ * If is_packed is true - NHWC
+ * Dims[0] = N , Dims[1] = H, Dims[2] = W, Dims[3] = C
+ * If is_packed is true - NCHW
+ * Dims[0] = N , Dims[1] = C, Dims[2] = H, Dims[3] = W
+ */
+static vx_status VX_CALLBACK refreshResizeMirrorNormalize(vx_node node, const vx_reference *parameters, vx_uint32 num, ResizeMirrorNormalizeLocalData *data)
 {
+    std::cerr<<"Refresh_ resizze_mirror_noramlize/n";
 
     vx_status status = VX_SUCCESS;
+    std::cerr<<"\ndata->nbatchSize    "<<data->nbatchSize;
 
     STATUS_ERROR_CHECK(vxCopyArrayRange((vx_array)parameters[1], 0, data->nbatchSize * 4, sizeof(unsigned), data->roi_tensor_Ptr, VX_READ_ONLY, VX_MEMORY_TYPE_HOST));
-    STATUS_ERROR_CHECK(vxCopyArrayRange((vx_array)parameters[4], 0, data->nbatchSize, sizeof(vx_uint32), data->crop_w, VX_READ_ONLY, VX_MEMORY_TYPE_HOST));
-    STATUS_ERROR_CHECK(vxCopyArrayRange((vx_array)parameters[5], 0, data->nbatchSize, sizeof(vx_uint32), data->crop_h, VX_READ_ONLY, VX_MEMORY_TYPE_HOST));
-
-
-    STATUS_ERROR_CHECK(vxCopyArrayRange((vx_array)parameters[6], 0, data->nbatchSize, sizeof(vx_uint32), data->start_x, VX_READ_ONLY, VX_MEMORY_TYPE_HOST));
-    STATUS_ERROR_CHECK(vxCopyArrayRange((vx_array)parameters[7], 0, data->nbatchSize, sizeof(vx_uint32), data->start_y, VX_READ_ONLY, VX_MEMORY_TYPE_HOST));
-    STATUS_ERROR_CHECK(vxCopyArrayRange((vx_array)parameters[8], 0, data->nbatchSize*3, sizeof(vx_float32), data->mean, VX_READ_ONLY, VX_MEMORY_TYPE_HOST));
-    STATUS_ERROR_CHECK(vxCopyArrayRange((vx_array)parameters[9], 0, data->nbatchSize*3, sizeof(vx_float32), data->std_dev, VX_READ_ONLY, VX_MEMORY_TYPE_HOST));
-    STATUS_ERROR_CHECK(vxCopyArrayRange((vx_array)parameters[10], 0, data->nbatchSize, sizeof(vx_uint32), data->mirror, VX_READ_ONLY, VX_MEMORY_TYPE_HOST));
-    STATUS_ERROR_CHECK(vxReadScalarValue((vx_scalar)parameters[11], &data->is_packed));
-    STATUS_ERROR_CHECK(vxReadScalarValue((vx_scalar)parameters[12], &data->chnShift));
-
-    for(int i = 0; i < data->nbatchSize; i++)
+    STATUS_ERROR_CHECK(vxCopyArrayRange((vx_array)parameters[4], 0, data->nbatchSize, sizeof(vx_uint32), data->resize_w, VX_READ_ONLY, VX_MEMORY_TYPE_HOST));
+    STATUS_ERROR_CHECK(vxCopyArrayRange((vx_array)parameters[5], 0, data->nbatchSize, sizeof(vx_uint32), data->resize_h, VX_READ_ONLY, VX_MEMORY_TYPE_HOST));
+    std::cerr << "data->resize_w "<<*data->resize_w<<"  "<<*data->resize_h;
+    // STATUS_ERROR_CHECK(vxCopyArrayRange((vx_array)parameters[6], 0, data->nbatchSize, sizeof(vx_uint32), data->interpolation_type, VX_READ_ONLY, VX_MEMORY_TYPE_HOST));
+    STATUS_ERROR_CHECK(vxReadScalarValue((vx_scalar)parameters[10], &data->is_packed));
+    STATUS_ERROR_CHECK(vxCopyArrayRange((vx_array)parameters[7], 0, data->nbatchSize*3, sizeof(vx_float32), data->mean, VX_READ_ONLY, VX_MEMORY_TYPE_HOST));
+    STATUS_ERROR_CHECK(vxCopyArrayRange((vx_array)parameters[8], 0, data->nbatchSize*3, sizeof(vx_float32), data->std_dev, VX_READ_ONLY, VX_MEMORY_TYPE_HOST));
+    STATUS_ERROR_CHECK(vxCopyArrayRange((vx_array)parameters[9], 0, data->nbatchSize, sizeof(vx_uint32), data->mirror, VX_READ_ONLY, VX_MEMORY_TYPE_HOST));
+    STATUS_ERROR_CHECK(vxReadScalarValue((vx_scalar)parameters[11], &data->chnShift));
+    for (int i = 0; i < data->nbatchSize; i++)
     {
-        data->roi_tensor_Ptr[i].xywhROI.xy.x = data->start_x[i];
-        data->roi_tensor_Ptr[i].xywhROI.xy.y = data->start_y[i];
-        data->roi_tensor_Ptr[i].xywhROI.roiWidth =data->crop_w[i];
-        data->roi_tensor_Ptr[i].xywhROI.roiHeight =data->crop_h[i];
+        // data->roi_tensor_Ptr[i].xywhROI.roiWidth =data->resize_w[i];
+        // data->roi_tensor_Ptr[i].xywhROI.roiHeight =data->resize_h[i];
+        data->dstimgsize[i].width = data->resize_w[i];
+        data->dstimgsize[i].height = data->resize_h[i];
+        std::cerr << "data->resize_w[i] " << data->resize_w[i] << "  " << data->resize_w[i]<<"\n";
     }
-
+    std::cerr<<"data->dstimgsize[i].widthhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhh"<<data->dstimgsize[0].width<<"  "<<data->dstimgsize[0].height<<"\n";
     if (data->device_type == AGO_TARGET_AFFINITY_GPU)
     {
 #if ENABLE_OPENCL
@@ -107,7 +108,7 @@ static vx_status VX_CALLBACK refreshCropMirrorNormalize(vx_node node, const vx_r
     }
     if (data->device_type == AGO_TARGET_AFFINITY_CPU)
     {
-        std::cerr<<"\n Comes to CPU";
+        std::cerr << "\n Comes to CPU";
 
         if (data->in_tensor_type == vx_type_e::VX_TYPE_UINT8 && data->out_tensor_type == vx_type_e::VX_TYPE_UINT8)
         {
@@ -123,8 +124,8 @@ static vx_status VX_CALLBACK refreshCropMirrorNormalize(vx_node node, const vx_r
         // else if (in_tensor_type == vx_type_e::VX_TYPE_FLOAT16 && out_tensor_type == vx_type_e::VX_TYPE_FLOAT16)
         // {
         //
-            // STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[0], VX_TENSOR_BUFFER_HOST, &data->pSrc, sizeof(vx_float16)));
-        //     STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[3], VX_TENSOR_BUFFER_HOST, &data->pDst, sizeof(vx_float16)));
+        // STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[0], VX_TENSOR_BUFFER_HOST, &data->pSrc, sizeof(vx_float16)));
+        //     STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[2], VX_TENSOR_BUFFER_HOST, &data->pDst, sizeof(vx_float16)));
         // }
         else if (data->in_tensor_type == vx_type_e::VX_TYPE_INT8 && data->out_tensor_type == vx_type_e::VX_TYPE_INT8)
         {
@@ -133,6 +134,7 @@ static vx_status VX_CALLBACK refreshCropMirrorNormalize(vx_node node, const vx_r
         }
         else if (data->in_tensor_type == vx_type_e::VX_TYPE_UINT8 && data->out_tensor_type == vx_type_e::VX_TYPE_FLOAT32)
         {
+            std::cerr << "^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^";
             STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[0], VX_TENSOR_BUFFER_HOST, &data->pSrc, sizeof(vx_uint8)));
             STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[2], VX_TENSOR_BUFFER_HOST, &data->pDst, sizeof(vx_float32)));
         }
@@ -140,36 +142,41 @@ static vx_status VX_CALLBACK refreshCropMirrorNormalize(vx_node node, const vx_r
         // else if(in_tensor_type == vx_type_e::VX_TYPE_UINT8 && out_tensor_type == vx_type_e::VX_TYPE_FLOAT16)
         // {
         //     STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[0], VX_TENSOR_BUFFER_HOST, &data->pSrc, sizeof(vx_uint8)));
-        //     STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[3], VX_TENSOR_BUFFER_HOST, &data->pDst, sizeof(vx_float16)));
+        //     STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[2], VX_TENSOR_BUFFER_HOST, &data->pDst, sizeof(vx_float16)));
         // }
     }
     return status;
 }
 
-static vx_status VX_CALLBACK validateCropMirrorNormalize(vx_node node, const vx_reference parameters[], vx_uint32 num, vx_meta_format metas[])
+static vx_status VX_CALLBACK validateResizeMirrorNormalize(vx_node node, const vx_reference parameters[], vx_uint32 num, vx_meta_format metas[])
 {
+    std::cerr<<"validation_resize_mirror_normalize\n";
     vx_status status = VX_SUCCESS;
     vx_enum scalar_type;
+    STATUS_ERROR_CHECK(vxQueryScalar((vx_scalar)parameters[11], VX_SCALAR_TYPE, &scalar_type, sizeof(scalar_type)));
+    if (scalar_type != VX_TYPE_UINT32)
+        return ERRMSG(VX_ERROR_INVALID_TYPE, "validate: Paramter: #11 type=%d (must be a boolean size)\n", scalar_type);
+
+    STATUS_ERROR_CHECK(vxQueryScalar((vx_scalar)parameters[12], VX_SCALAR_TYPE, &scalar_type, sizeof(scalar_type)));
+    if (scalar_type != VX_TYPE_UINT32)
+        return ERRMSG(VX_ERROR_INVALID_TYPE, "validate: Paramter: #2 type=%d (must be a boolean size)\n", scalar_type);
     STATUS_ERROR_CHECK(vxQueryScalar((vx_scalar)parameters[13], VX_SCALAR_TYPE, &scalar_type, sizeof(scalar_type)));
     if (scalar_type != VX_TYPE_UINT32)
-        return ERRMSG(VX_ERROR_INVALID_TYPE, "validate: Paramter: #13 type=%d (must be a boolean size)\n", scalar_type);
+        return ERRMSG(VX_ERROR_INVALID_TYPE, "validate: Paramter: #13 type=%d (must be size)\n", scalar_type);
     STATUS_ERROR_CHECK(vxQueryScalar((vx_scalar)parameters[14], VX_SCALAR_TYPE, &scalar_type, sizeof(scalar_type)));
     if (scalar_type != VX_TYPE_UINT32)
         return ERRMSG(VX_ERROR_INVALID_TYPE, "validate: Paramter: #14 type=%d (must be size)\n", scalar_type);
     STATUS_ERROR_CHECK(vxQueryScalar((vx_scalar)parameters[15], VX_SCALAR_TYPE, &scalar_type, sizeof(scalar_type)));
     if (scalar_type != VX_TYPE_UINT32)
         return ERRMSG(VX_ERROR_INVALID_TYPE, "validate: Paramter: #15 type=%d (must be size)\n", scalar_type);
-    STATUS_ERROR_CHECK(vxQueryScalar((vx_scalar)parameters[16], VX_SCALAR_TYPE, &scalar_type, sizeof(scalar_type)));
-    if (scalar_type != VX_TYPE_UINT32)
-        return ERRMSG(VX_ERROR_INVALID_TYPE, "validate: Paramter: #16 type=%d (must be size)\n", scalar_type);
-
+    std::cerr<<"validation_resize_mirror_normalize22222\n";
 
     // Check for output parameters
     vx_tensor output;
     vx_parameter output_param;
     size_t num_tensor_dims;
     vx_uint8 tensor_fixed_point_position;
-    size_t tensor_dims[5];
+    size_t tensor_dims[4];
     vx_enum tensor_type;
     output_param = vxGetParameterByIndex(node, 2);
     STATUS_ERROR_CHECK(vxQueryParameter(output_param, VX_PARAMETER_ATTRIBUTE_REF, &output, sizeof(vx_tensor)));
@@ -186,64 +193,112 @@ static vx_status VX_CALLBACK validateCropMirrorNormalize(vx_node node, const vx_
     return status;
 }
 
-static vx_status VX_CALLBACK processCropMirrorNormalize(vx_node node, const vx_reference *parameters, vx_uint32 num)
+static vx_status VX_CALLBACK processResizeMirrorNormalize(vx_node node, const vx_reference *parameters, vx_uint32 num)
 {
+    std::cerr<<"process_resize_mirror_normalize\n";
     vx_status vxstatus;
     RppStatus rpp_status = RPP_SUCCESS;
     vx_status return_status = VX_SUCCESS;
-    CropMirrorNormalizeLocalData *data = NULL;
+    ResizeMirrorNormalizeLocalData *data = NULL;
     STATUS_ERROR_CHECK(vxQueryNode(node, VX_NODE_LOCAL_DATA_PTR, &data, sizeof(data)));
 
     Rpp32u N, C;
     N = data->nbatchSize;
     C = data->channels;
 
-    if(data->device_type == AGO_TARGET_AFFINITY_CPU)
+    if (data->device_type == AGO_TARGET_AFFINITY_CPU)
     {
-        vxstatus = refreshCropMirrorNormalize(node, parameters, num, data);
+        vxstatus = refreshResizeMirrorNormalize(node, parameters, num, data);
 
-        for(int i = 0; i < data->nbatchSize; i++)
+        for (int i = 0; i < data->nbatchSize; i++)
         {
-            std::cerr<<"\n data->roi_tensor_Ptr values :: "<<data->roi_tensor_Ptr[i].xywhROI.xy.x<<" "<<data->roi_tensor_Ptr[i].xywhROI.xy.y<<" "<<data->roi_tensor_Ptr[i].xywhROI.roiWidth<<" "<<data->roi_tensor_Ptr[i].xywhROI.roiHeight;
+            std::cerr << "\n data->roi_tensor_Ptr values :: " << data->roi_tensor_Ptr[i].xywhROI.xy.x << " " << data->roi_tensor_Ptr[i].xywhROI.xy.y << " " << data->roi_tensor_Ptr[i].xywhROI.roiWidth << " " << data->roi_tensor_Ptr[i].xywhROI.roiHeight;
         }
+        //     unsigned long long ioBufferSize = (unsigned long long)data->src_desc_ptr->h * (unsigned long long)data->src_desc_ptr->w * (unsigned long long)data->src_desc_ptr->c * (unsigned long long)data->src_desc_ptr->n;
+        //     float *temp = ((float*)calloc( ioBufferSize,sizeof(float) ));
 
+        //    if(1)
+        //    {
+        //             for (int i=0;i< ioBufferSize;i++)
+        //             {
+        //                 temp[i]=(float)*((unsigned char*)(data->pSrc) + i);
+        //             }
+        //    }
 
+        int *temp = ((int *)calloc(100, sizeof(int)));
+        std::cerr << "printing pSrc\n";
+        
+        // for (int i = 0; i < 100; i++)
+        // {
+        //     temp[i] = (int)*((unsigned char *)(data->pSrc) + i);
+        //     std::cerr<<"\n "<<temp[i];
+        //     // std::cerr<<" data->dstimgsize "<< data->dstimgsize[i].width<<" "<<data->dstimgsize[i].height<<"\n";
+        //     // std::cerr<<"data->roi_tensor_Ptr[i].xywhROI.roiWidth" <<data->roi_tensor_Ptr[i].xywhROI.roiWidth<<"  "<<data->roi_tensor_Ptr[i].xywhROI.roiHeight<<"\n";
 
-        std::cerr<<"\n Gonna call RPP";
+        //     // std::cerr<<temp[i]<<" ";
+        // }
+        std::cerr << " data->dstimgsize " << data->dstimgsize[0].width << " " << data->dstimgsize[0].height << "\n";
+
+        std::cerr << "\n Gonna call RPP";
         // data->src_desc_ptr->dataType=RpptDataType::F32;
         // data->dst_desc_ptr->dataType=RpptDataType::F32;
 
-        rpp_status = rppt_crop_mirror_normalize_host(data->pSrc, data->src_desc_ptr,
-                                                data->pDst, data->dst_desc_ptr,
-                                                 data->mean,data->std_dev,
-                                                 data->mirror, data->roi_tensor_Ptr,data->roiType,
-                                                 data->rppHandle);
-        std::cerr<<"\n Back call RPP";
+        rpp_status = rppt_resize_mirror_normalize_host(data->pSrc, data->src_desc_ptr,
+                                      data->pDst, data->dst_desc_ptr,
+                                      data->dstimgsize,
+                                      // data->interpolation_type,
+                                      RpptInterpolationType::BILINEAR,
+                                      data->mean,data->std_dev,
+                                      data->mirror,
+                                      data->roi_tensor_Ptr, data->roiType,
+                                      data->rppHandle);
+
+        std::cerr << "\back to rpp";
         return_status = (rpp_status == RPP_SUCCESS) ? VX_SUCCESS : VX_FAILURE;
+
+        //   float *temp = ((float*)calloc( 100,sizeof(float) ));
+
+    //     for (int i = 0; i < 100; i++)
+    //     {
+    //         float temp1 = (int)*((unsigned char *)(data->pDst) + i);
+    //         std::cout << temp1 << " ";
+    //     }
     }
     return return_status;
 }
 
-static vx_status VX_CALLBACK initializeCropMirrorNormalize(vx_node node, const vx_reference *parameters, vx_uint32 num)
+static vx_status VX_CALLBACK initializeResizeMirrorNormalize(vx_node node, const vx_reference *parameters, vx_uint32 num)
 {
-    CropMirrorNormalizeLocalData *data = new CropMirrorNormalizeLocalData;
+    std::cerr<<"intitalization_resize_mirror_normalize\n";
+    ResizeMirrorNormalizeLocalData *data = new ResizeMirrorNormalizeLocalData;
     unsigned layout, roiType;
     memset(data, 0, sizeof(*data));
+        std::cerr<<"intitalization_resize_mirror_normalize2222\n";
+
 // std::cerr<<"\n INIT2";
 #if ENABLE_OPENCL
     STATUS_ERROR_CHECK(vxQueryNode(node, VX_NODE_ATTRIBUTE_AMD_OPENCL_COMMAND_QUEUE, &data->handle.cmdq, sizeof(data->handle.cmdq)));
 #elif ENABLE_HIP
     // STATUS_extern "C" SHARED_PUBLIC vx_node VX_API_CALL vxExtrppNode_GammaCorrection(vx_graph graph, vx_tensor pSrc,vx_array srcROI, vx_tensor pDst, vx_array gamma,vx_scalar layout, vx_scalar roiType, vx_uint32 nbatchSize);
 
-ERROR_CHECK(vxQueryNode(node, VX_NODE_ATTRIBUTE_AMD_HIP_STREAM, &data->handle.hipstream, sizeof(data->handle.hipstream)));
+    ERROR_CHECK(vxQueryNode(node, VX_NODE_ATTRIBUTE_AMD_HIP_STREAM, &data->handle.hipstream, sizeof(data->handle.hipstream)));
 #endif
-    STATUS_ERROR_CHECK(vxCopyScalar((vx_scalar)parameters[16], &data->device_type, VX_READ_ONLY, VX_MEMORY_TYPE_HOST));
-    STATUS_ERROR_CHECK(vxReadScalarValue((vx_scalar)parameters[15], &data->nbatchSize));
-    STATUS_ERROR_CHECK(vxCopyScalar((vx_scalar)parameters[13], &layout, VX_READ_ONLY, VX_MEMORY_TYPE_HOST));
+    std::cerr<<"intitalization_resize_mirror_normalize33333\n";
+
+    STATUS_ERROR_CHECK(vxCopyScalar((vx_scalar)parameters[15], &data->device_type, VX_READ_ONLY, VX_MEMORY_TYPE_HOST));
+        std::cerr<<"intitalization_resize_mirror_normalize 4444\n";
+
+    STATUS_ERROR_CHECK(vxReadScalarValue((vx_scalar)parameters[14], &data->nbatchSize));
+            std::cerr<<"intitalization_resize_mirror_normalize 5555\n";
+
+    STATUS_ERROR_CHECK(vxCopyScalar((vx_scalar)parameters[12], &layout, VX_READ_ONLY, VX_MEMORY_TYPE_HOST));
+        std::cerr<<"intitalization_resize_mirror_normalize 666\n";
+
+    std::cerr << "layoutttttttttttt " << layout;
     // STATUS_ERROR_CHECK(vxReadScalarValue((vx_scalar)parameters[13], &layout));
     // std::cerr<<"\n layout "<<layout;
-    STATUS_ERROR_CHECK(vxCopyScalar((vx_scalar)parameters[14], &roiType, VX_READ_ONLY, VX_MEMORY_TYPE_HOST));
-    if(roiType == 1)
+    STATUS_ERROR_CHECK(vxCopyScalar((vx_scalar)parameters[13], &roiType, VX_READ_ONLY, VX_MEMORY_TYPE_HOST));
+    if (roiType == 1)
         data->roiType = RpptRoiType::XYWH;
     else
         data->roiType = RpptRoiType::LTRB;
@@ -252,77 +307,75 @@ ERROR_CHECK(vxQueryNode(node, VX_NODE_ATTRIBUTE_AMD_HIP_STREAM, &data->handle.hi
     data->src_desc_ptr = &data->srcDesc;
     STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[0], VX_TENSOR_NUMBER_OF_DIMS, &data->src_desc_ptr->numDims, sizeof(data->src_desc_ptr->numDims)));
     STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[0], VX_TENSOR_DIMS, &data->in_tensor_dims, sizeof(vx_size) * data->src_desc_ptr->numDims));
-    STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[0],VX_TENSOR_DATA_TYPE, &data->in_tensor_type, sizeof(data->in_tensor_type)));
-    if(data->in_tensor_type == vx_type_e::VX_TYPE_UINT8)
+    STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[0], VX_TENSOR_DATA_TYPE, &data->in_tensor_type, sizeof(data->in_tensor_type)));
+    if (data->in_tensor_type == vx_type_e::VX_TYPE_UINT8)
     {
-        std::cerr<<"datatype check UINT8";
+        std::cerr << "datatype check UINT8";
         data->src_desc_ptr->dataType = RpptDataType::U8;
     }
     else if (data->in_tensor_type == vx_type_e::VX_TYPE_FLOAT32)
     {
-        std::cerr<<"datatype check FLOAT32";
+        std::cerr << "datatype check FLOAT32";
         data->src_desc_ptr->dataType = RpptDataType::F32;
     }
     // else if (data->src_desc_ptr->dataType == vx_type_e::VX_TYPE_FLOAT16)
     //     data->src_desc_ptr->dataType = RpptDataType::F16;
     else if (data->in_tensor_type == vx_type_e::VX_TYPE_INT8)
     {
-        std::cerr<<"datatype check INT8";
+        std::cerr << "datatype check INT8";
         data->src_desc_ptr->dataType = RpptDataType::I8;
     }
 
-
-     data->src_desc_ptr->offsetInBytes = 0;
+    data->src_desc_ptr->offsetInBytes = 0;
     // Querying for output tensor
     data->dst_desc_ptr = &data->dstDesc;
     STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[2], VX_TENSOR_NUMBER_OF_DIMS, &data->dst_desc_ptr->numDims, sizeof(data->dst_desc_ptr->numDims)));
     STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[2], VX_TENSOR_DIMS, &data->out_tensor_dims, sizeof(vx_size) * data->dst_desc_ptr->numDims));
-    STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[2],VX_TENSOR_DATA_TYPE, &data->out_tensor_type, sizeof(data->out_tensor_type)));
-    if(data->out_tensor_type == vx_type_e::VX_TYPE_UINT8)
+    STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[2], VX_TENSOR_DATA_TYPE, &data->out_tensor_type, sizeof(data->out_tensor_type)));
+    if (data->out_tensor_type == vx_type_e::VX_TYPE_UINT8)
     {
-        data->dst_desc_ptr->dataType= RpptDataType::U8;
-         std::cerr<<"dst datatype check UINT8";
+        data->dst_desc_ptr->dataType = RpptDataType::U8;
+        std::cerr << "dst datatype check UINT8";
     }
     else if (data->out_tensor_type == vx_type_e::VX_TYPE_FLOAT32)
     {
         data->dst_desc_ptr->dataType = RpptDataType::F32;
-        std::cerr<<"dst datatype check FLOAT32";
-
+        std::cerr << "dst datatype check FLOAT32";
     }
     // else if (data->src_desc_ptr->dataType == vx_type_e::VX_TYPE_FLOAT16)
     //     data->src_desc_ptr->dataType = RpptDataType::F16;
     else if (data->out_tensor_type == vx_type_e::VX_TYPE_INT8)
     {
-        std::cerr<<"dst datatype check INT8";
+        std::cerr << "dst datatype check INT8";
 
         data->dst_desc_ptr->dataType = RpptDataType::I8;
     }
-     data->dst_desc_ptr->offsetInBytes = 0;
-    //declaring and pushing values to roi_tensor_Ptr
-    data->roi_tensor_Ptr = (RpptROI *) calloc(data->nbatchSize, sizeof(RpptROI));
+    data->dst_desc_ptr->offsetInBytes = 0;
+    // declaring and pushing values to roi_tensor_Ptr
+    data->roi_tensor_Ptr = (RpptROI *)calloc(data->nbatchSize, sizeof(RpptROI));
+    data->dstimgsize = (RpptImagePatch *)calloc(data->nbatchSize, sizeof(RpptImagePatch));
 
-
-std::cerr<<"layoutttt "<<layout;
-    if(layout == 0) // NHWC
+    layout = 0;
+    if (layout == 0) // NHWC
     {
         // source_description_ptr
         data->src_desc_ptr->n = data->in_tensor_dims[0];
         data->src_desc_ptr->h = data->in_tensor_dims[1];
         data->src_desc_ptr->w = data->in_tensor_dims[2];
         data->src_desc_ptr->c = data->in_tensor_dims[3];
-        std::cerr<<"\n n h w c "<<data->src_desc_ptr->n<<" "<<data->src_desc_ptr->h<<" "<<data->src_desc_ptr->w<<" "<<data->src_desc_ptr->c;
+        std::cerr << "\n n h w c " << data->src_desc_ptr->n << " " << data->src_desc_ptr->h << " " << data->src_desc_ptr->w << " " << data->src_desc_ptr->c;
         data->src_desc_ptr->strides.nStride = data->src_desc_ptr->c * data->src_desc_ptr->w * data->src_desc_ptr->h;
         data->src_desc_ptr->strides.hStride = data->src_desc_ptr->c * data->src_desc_ptr->w;
         data->src_desc_ptr->strides.wStride = data->src_desc_ptr->c;
         data->src_desc_ptr->strides.cStride = 1;
         data->src_desc_ptr->layout = RpptLayout::NHWC;
 
-        //destination_description_ptr
+        // destination_description_ptr
         data->dst_desc_ptr->n = data->out_tensor_dims[0];
         data->dst_desc_ptr->h = data->out_tensor_dims[1];
         data->dst_desc_ptr->w = data->out_tensor_dims[2];
         data->dst_desc_ptr->c = data->out_tensor_dims[3];
-        std::cerr<<"\n dest n h w c "<<data->dst_desc_ptr->n<<" "<<data->dst_desc_ptr->h<<" "<<data->dst_desc_ptr->w<<" "<<data->dst_desc_ptr->c;
+        std::cerr << "\n dest n h w c " << data->dst_desc_ptr->n << " " << data->dst_desc_ptr->h << " " << data->dst_desc_ptr->w << " " << data->dst_desc_ptr->c;
         data->dst_desc_ptr->strides.nStride = data->dst_desc_ptr->c * data->dst_desc_ptr->w * data->dst_desc_ptr->h;
         data->dst_desc_ptr->strides.hStride = data->dst_desc_ptr->c * data->dst_desc_ptr->w;
         data->dst_desc_ptr->strides.wStride = data->dst_desc_ptr->c;
@@ -345,23 +398,23 @@ std::cerr<<"layoutttt "<<layout;
         data->dst_desc_ptr->h = data->out_tensor_dims[2];
         data->dst_desc_ptr->w = data->out_tensor_dims[3];
         data->dst_desc_ptr->c = data->out_tensor_dims[1];
-        std::cerr<<"\ndest n h w c "<<data->dst_desc_ptr->n<<" "<<data->dst_desc_ptr->h<<" "<<data->dst_desc_ptr->w<<" "<<data->dst_desc_ptr->c;
+        std::cerr << "\ndest n h w c " << data->dst_desc_ptr->n << " " << data->dst_desc_ptr->h << " " << data->dst_desc_ptr->w << " " << data->dst_desc_ptr->c;
         data->dst_desc_ptr->strides.nStride = data->dst_desc_ptr->c * data->dst_desc_ptr->w * data->dst_desc_ptr->h;
         data->dst_desc_ptr->strides.cStride = data->dst_desc_ptr->w * data->dst_desc_ptr->h;
         data->dst_desc_ptr->strides.hStride = data->dst_desc_ptr->w;
         data->dst_desc_ptr->strides.wStride = 1;
         data->dst_desc_ptr->layout = RpptLayout::NHWC;
     }
+
+    data->interpolation_type = (vx_uint32 *)malloc(sizeof(vx_uint32) * data->nbatchSize);
+    data->resize_w = (vx_uint32 *)malloc(sizeof(vx_uint32) * data->nbatchSize);
+    data->resize_h = (vx_uint32 *)malloc(sizeof(vx_uint32) * data->nbatchSize);
     data->mean = (vx_float32 *)malloc(sizeof(vx_float32) * data->nbatchSize*3);
     data->std_dev = (vx_float32 *)malloc(sizeof(vx_float32) * data->nbatchSize*3);
     data->mirror = (vx_uint32 *)malloc(sizeof(vx_uint32) * data->nbatchSize);
 
-    data->start_x = (vx_uint32 *)malloc(sizeof(vx_uint32) * data->nbatchSize);
-    data->start_y = (vx_uint32 *)malloc(sizeof(vx_uint32) * data->nbatchSize);
-    data->crop_w = (vx_uint32 *)malloc(sizeof(vx_uint32) * data->nbatchSize);
-    data->crop_h = (vx_uint32 *)malloc(sizeof(vx_uint32) * data->nbatchSize);
 
-    refreshCropMirrorNormalize(node, parameters, num, data);
+    refreshResizeMirrorNormalize(node, parameters, num, data);
 #if ENABLE_OPENCL
     if (data->device_type == AGO_TARGET_AFFINITY_GPU)
         rppCreateWithStreamAndBatchSize(&data->rppHandle, data->handle.cmdq, data->nbatchSize);
@@ -374,11 +427,9 @@ std::cerr<<"layoutttt "<<layout;
     return VX_SUCCESS;
 }
 
-
-
-static vx_status VX_CALLBACK uninitializeCropMirrorNormalize(vx_node node, const vx_reference *parameters, vx_uint32 num)
+static vx_status VX_CALLBACK uninitializeResizeMirrorNormalize(vx_node node, const vx_reference *parameters, vx_uint32 num)
 {
-    CropMirrorNormalizeLocalData *data;
+    ResizeMirrorNormalizeLocalData *data;
     STATUS_ERROR_CHECK(vxQueryNode(node, VX_NODE_LOCAL_DATA_PTR, &data, sizeof(data)));
 #if ENABLE_OPENCL || ENABLE_HIP
     if (data->device_type == AGO_TARGET_AFFINITY_GPU)
@@ -386,10 +437,9 @@ static vx_status VX_CALLBACK uninitializeCropMirrorNormalize(vx_node node, const
 #endif
     if (data->device_type == AGO_TARGET_AFFINITY_CPU)
         rppDestroyHost(data->rppHandle);
-    free(data->start_x);
-    free(data->start_y);
-    free(data->crop_w);
-    free(data->crop_h);
+    free(data->interpolation_type);
+    free(data->resize_w);
+    free(data->resize_h);
     free(data->mean);
     free(data->std_dev);
     free(data->mirror);
@@ -421,17 +471,17 @@ static vx_status VX_CALLBACK query_target_support(vx_graph graph, vx_node node,
     return VX_SUCCESS;
 }
 
-vx_status CropMirrorNormalize_Register(vx_context context)
+vx_status ResizeMirrorNormalize_Register(vx_context context)
 {
     vx_status status = VX_SUCCESS;
     // Add kernel to the context with callbacks
-    vx_kernel kernel = vxAddUserKernel(context, "org.rpp.CropMirrorNormalize",
-                                       VX_KERNEL_RPP_CROPMIRRORNORMALIZE,
-                                       processCropMirrorNormalize,
-                                       17,
-                                       validateCropMirrorNormalize,
-                                       initializeCropMirrorNormalize,
-                                       uninitializeCropMirrorNormalize);
+    vx_kernel kernel = vxAddUserKernel(context, "org.rpp.ResizeMirrorNormalize",
+                                       VX_KERNEL_RPP_RESIZEMIRRORNORMALIZE,
+                                       processResizeMirrorNormalize,
+                                       16,
+                                       validateResizeMirrorNormalize,
+                                       initializeResizeMirrorNormalize,
+                                       uninitializeResizeMirrorNormalize);
     ERROR_CHECK_OBJECT(kernel);
     AgoTargetAffinityInfo affinity;
     vxQueryContext(context, VX_CONTEXT_ATTRIBUTE_AMD_AFFINITY, &affinity, sizeof(affinity));
@@ -453,19 +503,18 @@ vx_status CropMirrorNormalize_Register(vx_context context)
         PARAM_ERROR_CHECK(vxAddParameterToKernel(kernel, 3, VX_INPUT, VX_TYPE_ARRAY, VX_PARAMETER_STATE_REQUIRED));
         PARAM_ERROR_CHECK(vxAddParameterToKernel(kernel, 4, VX_INPUT, VX_TYPE_ARRAY, VX_PARAMETER_STATE_REQUIRED));
         PARAM_ERROR_CHECK(vxAddParameterToKernel(kernel, 5, VX_INPUT, VX_TYPE_ARRAY, VX_PARAMETER_STATE_REQUIRED));
-        PARAM_ERROR_CHECK(vxAddParameterToKernel(kernel, 6, VX_INPUT, VX_TYPE_ARRAY, VX_PARAMETER_STATE_REQUIRED));
+        PARAM_ERROR_CHECK(vxAddParameterToKernel(kernel, 6, VX_INPUT, VX_TYPE_SCALAR, VX_PARAMETER_STATE_REQUIRED));
         PARAM_ERROR_CHECK(vxAddParameterToKernel(kernel, 7, VX_INPUT, VX_TYPE_ARRAY, VX_PARAMETER_STATE_REQUIRED));
         PARAM_ERROR_CHECK(vxAddParameterToKernel(kernel, 8, VX_INPUT, VX_TYPE_ARRAY, VX_PARAMETER_STATE_REQUIRED));
         PARAM_ERROR_CHECK(vxAddParameterToKernel(kernel, 9, VX_INPUT, VX_TYPE_ARRAY, VX_PARAMETER_STATE_REQUIRED));
-        PARAM_ERROR_CHECK(vxAddParameterToKernel(kernel, 10, VX_INPUT, VX_TYPE_ARRAY, VX_PARAMETER_STATE_REQUIRED));
-        PARAM_ERROR_CHECK(vxAddParameterToKernel(kernel, 11, VX_INPUT, VX_TYPE_SCALAR, VX_PARAMETER_STATE_REQUIRED));
+
+        PARAM_ERROR_CHECK(vxAddParameterToKernel(kernel, 10, VX_INPUT, VX_TYPE_SCALAR, VX_PARAMETER_STATE_REQUIRED));
+        PARAM_ERROR_CHECK(vxAddParameterToKernel(kernel,11, VX_INPUT, VX_TYPE_SCALAR, VX_PARAMETER_STATE_REQUIRED));
         PARAM_ERROR_CHECK(vxAddParameterToKernel(kernel, 12, VX_INPUT, VX_TYPE_SCALAR, VX_PARAMETER_STATE_REQUIRED));
         PARAM_ERROR_CHECK(vxAddParameterToKernel(kernel, 13, VX_INPUT, VX_TYPE_SCALAR, VX_PARAMETER_STATE_REQUIRED));
         PARAM_ERROR_CHECK(vxAddParameterToKernel(kernel, 14, VX_INPUT, VX_TYPE_SCALAR, VX_PARAMETER_STATE_REQUIRED));
         PARAM_ERROR_CHECK(vxAddParameterToKernel(kernel, 15, VX_INPUT, VX_TYPE_SCALAR, VX_PARAMETER_STATE_REQUIRED));
-        PARAM_ERROR_CHECK(vxAddParameterToKernel(kernel, 16, VX_INPUT, VX_TYPE_SCALAR, VX_PARAMETER_STATE_REQUIRED));
         PARAM_ERROR_CHECK(vxFinalizeKernel(kernel));
-
     }
     if (status != VX_SUCCESS)
     {

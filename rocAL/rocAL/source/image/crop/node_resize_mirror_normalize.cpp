@@ -20,26 +20,25 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
+
 #include <vx_ext_rpp.h>
 #include <graph.h>
-#include "node_crop_mirror_normalize.h"
+#include "node_resize_mirror_normalize.h"
 #include "exception.h"
-
-CropMirrorNormalizeTensorNode::CropMirrorNormalizeTensorNode(const std::vector<rocALTensor *> &inputs, const std::vector<rocALTensor *> &outputs) :
+ResizeMirrorNormalizeTensorNode::ResizeMirrorNormalizeTensorNode(const std::vector<rocALTensor *> &inputs, const std::vector<rocALTensor *> &outputs) :
         Node(inputs, outputs),
         _mirror(MIRROR_RANGE[0], MIRROR_RANGE[1])
-{
-    _crop_param = std::make_shared<RocalCropParam>(_batch_size);
-}
 
-void CropMirrorNormalizeTensorNode::create_node()
 {
+}
+    
+void ResizeMirrorNormalizeTensorNode::create_node()
+{
+    std::cerr<<"create_node checking \n";
     if(_node)
         return;
-
-    if(_crop_param->crop_h == 0 || _crop_param->crop_w == 0)
-        THROW("Uninitialized destination dimension - Invalid Crop Sizes")
-    _crop_param->create_array(_graph);
+    std::vector<uint32_t> dst_roi_width(_batch_size,_outputs[0]->info().get_width());
+    std::vector<uint32_t> dst_roi_height(_batch_size, _outputs[0]->info().get_height());
     _mean_vx.resize(_batch_size*3);
     _std_dev_vx.resize(_batch_size*3);
     for (uint i=0; i < _batch_size; i++ ) {
@@ -51,56 +50,64 @@ void CropMirrorNormalizeTensorNode::create_node()
         _std_dev_vx[3*i+1] = _std_dev[1];
         _std_dev_vx[3*i+2] = _std_dev[2];
     }
+std::cerr<<"create_node checking 222222\n";
+    _dst_roi_width = vxCreateArray(vxGetContext((vx_reference)_graph->get()), VX_TYPE_UINT32, _batch_size);
+    _dst_roi_height = vxCreateArray(vxGetContext((vx_reference)_graph->get()), VX_TYPE_UINT32, _batch_size);
+   
     
+    vx_status status = VX_SUCCESS;
+    std::cerr<<"create_node checking 333\n";
     _mean_array = vxCreateArray(vxGetContext((vx_reference)_graph->get()), VX_TYPE_FLOAT32, _batch_size*3);
     _std_dev_array = vxCreateArray(vxGetContext((vx_reference)_graph->get()), VX_TYPE_FLOAT32, _batch_size*3);
-    vx_status status = VX_SUCCESS;
+
     status |= vxAddArrayItems(_mean_array,_batch_size*3, _mean_vx.data(), sizeof(vx_float32));
+    std::cerr<<"create_node checking 44444\n";
+
     status |= vxAddArrayItems(_std_dev_array,_batch_size*3, _std_dev_vx.data(), sizeof(vx_float32));
+    std::cerr<<"create_node checking 5555\n";
+
     _mirror.create_array(_graph ,VX_TYPE_UINT32, _batch_size);
-    if(status != 0)
-        THROW(" vxAddArrayItems failed in the crop resize node (vxExtrppNode_CropMirrorNormalizeCropbatchPD    )  node: "+ TOSTR(status) + "  "+ TOSTR(status))
+    vx_status width_status, height_status;
+std::cerr<<"create_node checking 6666\n";
+
+    width_status = vxAddArrayItems(_dst_roi_width, _batch_size, dst_roi_width.data(), sizeof(vx_uint32));
+    height_status = vxAddArrayItems(_dst_roi_height, _batch_size, dst_roi_height.data(), sizeof(vx_uint32));
+    std::cerr<<"dst_roi_height "<<dst_roi_height[0]<<"  "<<dst_roi_width[0];
+     if(width_status != 0 || height_status != 0)
+        THROW(" vxAddArrayItems failed in the resize (vxExtrppNode_ResizebatchPD) node: "+ TOSTR(width_status) + "  "+ TOSTR(height_status));
+    bool packed;
+    vx_scalar interpolation = vxCreateScalar(vxGetContext((vx_reference)_graph->get()),VX_TYPE_UINT32,&_interpolation_type);
+std::cerr<<"create_node checking 44444\n";
 
     unsigned int chnShift = 0;
-    // if(_inputs[0]->info().format() != _outputs[0]->info().format())
-    //     chnShift = 1;
     vx_scalar  chnToggle = vxCreateScalar(vxGetContext((vx_reference)_graph->get()),VX_TYPE_UINT32,&chnShift);
-    bool packed;
-    if(_inputs[0]->info().color_format() != RocalColorFormat::RGB_PLANAR)
-    {
-        packed = true;
-    }
     vx_scalar is_packed = vxCreateScalar(vxGetContext((vx_reference)_graph->get()),VX_TYPE_BOOL,&packed);
+
     vx_scalar layout = vxCreateScalar(vxGetContext((vx_reference)_graph->get()),VX_TYPE_UINT32,&_layout);
     vx_scalar roi_type = vxCreateScalar(vxGetContext((vx_reference)_graph->get()),VX_TYPE_UINT32,&_roi_type);
-    _node = vxExtrppNode_CropMirrorNormalize(_graph->get(), _inputs[0]->handle(),
-                                                   _src_tensor_roi, _outputs[0]->handle(),_src_tensor_roi,_crop_param->cropw_arr, _crop_param->croph_arr, _crop_param->x1_arr, _crop_param->y1_arr,
-                                                    _mean_array, _std_dev_array, _mirror.default_array() , is_packed, chnToggle,layout, roi_type, _batch_size);
+    std::cerr<<"node checking 11111\n";
+   _node = vxExtrppNode_ResizeMirrorNormalize(_graph->get(), _inputs[0]->handle(),
+                                                   _src_tensor_roi,_outputs[0]->handle(),_src_tensor_roi,_dst_roi_width,_dst_roi_height,
+                                                   interpolation,_mean_array, _std_dev_array, _mirror.default_array() ,
+                                                   is_packed, chnToggle,layout, roi_type, _batch_size);
+    std::cerr<<"node checking 22222222\n";
+    // vx_status status;
     if((status = vxGetStatus((vx_reference)_node)) != VX_SUCCESS)
-        THROW("Error adding the crop mirror normalize tensor (vxExtrppNode_CropMirrorNormalizeCropbatchPD    ) failed: "+TOSTR(status))
+        THROW("Adding the resize (vxExtrppNode_ResizebatchPD) node failed: "+ TOSTR(status))
 
 }
-
-
-void CropMirrorNormalizeTensorNode::update_node()
+void ResizeMirrorNormalizeTensorNode::update_node()
 {
-    _crop_param->set_image_dimensions(_inputs[0]->info().get_roi());
-
-    _crop_param->update_array();
-    std::vector<uint32_t> crop_h_dims, crop_w_dims;
-    _crop_param->get_crop_dimensions(crop_w_dims, crop_h_dims);
-    _outputs[0]->update_tensor_roi(crop_w_dims, crop_h_dims);
     _mirror.update_array();
 
 }
-
-void CropMirrorNormalizeTensorNode::init(int crop_h, int crop_w, float start_x, float start_y, std::vector<float>& mean, std::vector<float>& std_dev, IntParam *mirror,int layout)
+void ResizeMirrorNormalizeTensorNode::init(int interpolation_type,std::vector<float>& mean, std::vector<float>& std_dev, IntParam *mirror, int layout)
 {
-    std::cerr<<"init checkingggg/n";
-    _crop_param->crop_h = crop_h;
-    _crop_param->crop_w = crop_w;
-    _mean   = mean;
-    _std_dev = std_dev;
-    _mirror.set_param(core(mirror));
-    _layout=layout;
+    std::cerr<<"init checking \n";
+  _interpolation_type=interpolation_type;
+  _mean   = mean;
+  _std_dev = std_dev;
+  _mirror.set_param(core(mirror));
+  _layout=layout;
+  
 }

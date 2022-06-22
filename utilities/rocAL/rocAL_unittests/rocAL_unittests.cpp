@@ -171,7 +171,7 @@ int test(int test_case, const char *path, const char *outName, int rgb, int gpu,
                   << "rocalBrightness" << std::endl;
         image1 = rocalBrightness(handle, input1, true);
     }
-    break;
+break;
     case 2:
     {
         std::cout << ">>>>>>> Running "
@@ -228,6 +228,17 @@ int test(int test_case, const char *path, const char *outName, int rgb, int gpu,
         image1 = rocalContrast(handle, input1, true);
     break;
     }
+    case 10:
+    {
+        std::vector<float> mean{0, 0, 0};
+        std::vector<float> sdev{1, 1, 1};
+        std::cout << ">>>>>>> Running "
+                  << " Resize Mirror Normalize " << std::endl;
+        image1 = rocalResizeMirrorNormalize(handle, input1, tensorLayout, tensorOutputType, 3,resize_w , resize_h, 0, mean, sdev,true);
+        break;
+    }
+    
+    
     default:
         std::cout << "Not a valid option! Exiting!\n";
         return -1;

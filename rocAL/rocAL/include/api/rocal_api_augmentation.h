@@ -47,6 +47,20 @@ extern "C" RocalTensor ROCAL_API_CALL rocalResize(RocalContext context, RocalTen
                                                                   int interpolation_type,
                                                                   bool is_output);
 
+
+extern "C" RocalTensor ROCAL_API_CALL rocalResizeMirrorNormalize(RocalContext p_context, 
+                                            RocalTensor p_input,
+                                            RocalTensorLayout rocal_tensor_layout,
+                                            RocalTensorOutputType rocal_tensor_output_type,
+                                            unsigned resize_depth,
+                                            unsigned resize_height,
+                                            unsigned resize_width,
+                                            int interpolation_type,
+                                            std::vector<float> &mean,
+                                            std::vector<float> &std_dev,
+                                            bool is_output,
+                                             RocalIntParam mirror = NULL);
+
 extern "C" RocalTensor ROCAL_API_CALL rocalColorCast( RocalContext p_context, RocalTensor p_input,
                                                             RocalTensorLayout rocal_tensor_layout,
                                                             RocalTensorOutputType rocal_tensor_output_type,

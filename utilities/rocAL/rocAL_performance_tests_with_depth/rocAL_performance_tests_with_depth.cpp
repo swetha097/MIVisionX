@@ -566,7 +566,7 @@ int test(int test_case, const char* path, int rgb, int gpu, int width, int heigh
     cv::Mat mat_input(h, w, cv_color_format);
     cv::Mat mat_color;
     int col_counter = 0;
-    cv::namedWindow("output", CV_WINDOW_AUTOSIZE);
+    // cv::namedWindow("output", CV_WINDOW_AUTOSIZE);
     printf("Going to process images\n");
     printf("Remaining images %d \n", rocalGetRemainingImages(handle));
     high_resolution_clock::time_point t1 = high_resolution_clock::now();

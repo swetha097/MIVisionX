@@ -68,7 +68,6 @@ static vx_status VX_CALLBACK refreshGammaCorrection(vx_node node, const vx_refer
             for(int f = 0; f < num_of_frames; f++)
             {
                 data->alpha[index + f] = data->alpha[n];
-                // data->beta[index + f] = data->beta[n];
                 data->roi_tensor_Ptr[index + f].xywhROI.xy.x = data->roi_tensor_Ptr[n].xywhROI.xy.x;
                 data->roi_tensor_Ptr[index + f].xywhROI.xy.y = data->roi_tensor_Ptr[n].xywhROI.xy.y;
                 data->roi_tensor_Ptr[index + f].xywhROI.roiWidth = data->roi_tensor_Ptr[n].xywhROI.roiWidth;
