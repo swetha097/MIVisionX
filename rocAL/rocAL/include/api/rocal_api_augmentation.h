@@ -48,6 +48,12 @@ extern "C" RocalTensor ROCAL_API_CALL rocalResize(RocalContext context, RocalTen
                                                                   bool is_output);
 
 
+
+extern "C" RocalTensor ROCAL_API_CALL rocalFlip(RocalContext context, RocalTensor input, bool is_output,
+                                                   RocalFloatParam h_flag = NULL, RocalFloatParam v_flag = NULL);
+
+
+
 extern "C" RocalTensor ROCAL_API_CALL rocalResizeMirrorNormalize(RocalContext p_context, 
                                             RocalTensor p_input,
                                             RocalTensorLayout rocal_tensor_layout,

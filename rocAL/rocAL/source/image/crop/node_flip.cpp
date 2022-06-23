@@ -21,26 +21,24 @@ THE SOFTWARE.
 */
 
 #include <vx_ext_rpp.h>
-#include <VX/vx_compatibility.h>
-#include <graph.h>
-#include "node_gamma.h"
+#include "node_flip.h"
 #include "exception.h"
 
-GammaTensorNode::GammaTensorNode(const std::vector<rocALTensor *> &inputs, const std::vector<rocALTensor *> &outputs) :
+FlipTensorNode::FlipTensorNode(const std::vector<rocALTensor *> &inputs,const std::vector<rocALTensor *> &outputs) :
         Node(inputs, outputs),
-        _shift(SHIFT_RANGE[0], SHIFT_RANGE[1])
+        _horizontal(HORIZONTAL_RANGE[0], HORIZONTAL_RANGE[1]),
+        _vertical (VERTICAL_RANGE[0], VERTICAL_RANGE[1])
 {
 }
 
-void GammaTensorNode::create_node()
+void FlipTensorNode::create_node()
 {
     if(_node)
         return;
 
-    if(_outputs.empty() || _inputs.empty())
-        THROW("Uninitialized input/output arguments")
+    _horizontal.create_array(_graph , VX_TYPE_UINT32, _batch_size);
+    _vertical.create_array(_graph , VX_TYPE_UINT8, _batch_size);
 
-    _shift.create_array(_graph , VX_TYPE_FLOAT32, _batch_size);
     if(_inputs[0]->info().layout() == RocalTensorlayout::NCHW)
         _layout = 1;
     else if(_inputs[0]->info().layout() == RocalTensorlayout::NFHWC)
@@ -50,33 +48,34 @@ void GammaTensorNode::create_node()
 
     if(_inputs[0]->info().roi_type() == RocalROIType::XYWH)
         _roi_type = 1;
-
     vx_scalar layout = vxCreateScalar(vxGetContext((vx_reference)_graph->get()),VX_TYPE_UINT32,&_layout);
     vx_scalar roi_type = vxCreateScalar(vxGetContext((vx_reference)_graph->get()),VX_TYPE_UINT32,&_roi_type);
-
-    _node = vxExtrppNode_GammaCorrection(_graph->get(), _inputs[0]->handle(), _src_tensor_roi, _outputs[0]->handle(), _shift.default_array(), layout, roi_type, _batch_size);
+    _node = vxExtrppNode_Flip(_graph->get(), _inputs[0]->handle(), _src_tensor_roi, _outputs[0]->handle(), _horizontal.default_array(), _vertical.default_array(), layout, roi_type, _batch_size);
 
     vx_status status;
     if((status = vxGetStatus((vx_reference)_node)) != VX_SUCCESS)
-        THROW("Adding the gamma (vxExtrppNode_GammaCorrectionbatchPD) node failed: "+ TOSTR(status))
-
+        THROW("Adding the brightness_batch (vxExtrppNode_BrightnessbatchPD) node failed: "+ TOSTR(status))
 }
 
-void GammaTensorNode::init(float shfit)
+void FlipTensorNode::init( int h_flag, int v_flag)
 {
-    _shift.set_param(shfit);
+    _horizontal.set_param(h_flag);
+    _vertical.set_param(v_flag);
     _layout = _roi_type = 0;
-
 }
 
-void GammaTensorNode::init(FloatParam* shfit)
+void FlipTensorNode::init( IntParam* h_flag, IntParam* v_flag)
 {
-    _shift.set_param(core(shfit));
+    _horizontal.set_param(core(h_flag));
+    _vertical.set_param(core(v_flag));
     _layout = _roi_type = 0;
-
 }
 
-void GammaTensorNode::update_node()
+
+void FlipTensorNode::update_node()
 {
-     _shift.update_array();
+
+    _horizontal.update_array();
+    _vertical.update_array();
 }
+

@@ -35,6 +35,7 @@ THE SOFTWARE.
 #include "node_crop.h"
 #include "node_contrast.h"
 #include "node_resize_mirror_normalize.h"
+#include "node_flip.h"
 
 
 
@@ -770,9 +771,12 @@ ROCAL_API_CALL rocalResize(RocalContext p_context,
         }
         // For the crop mirror normalize resize node, user can create an image with a different width and height
         rocALTensorInfo output_info = input->info();
+        
         // Need to just set dims depending on NCHW or NHWC
         output_info.set_width(resize_width);
         output_info.set_height(resize_height);
+        std::cerr << " OUT W & H : " << output_info.max_width() << output_info.max_height() << "\n";
+        std::cerr << " IN W & H : " << input->info().max_width() << input->info().max_height() << "\n";
         // output_info.set_data_type(op_tensorDataType);
         output = context->master_graph->create_tensor(output_info, is_output);
         // For the nodes that user provides the output size the dimension of all the images after this node will be fixed and equal to that size
@@ -868,4 +872,36 @@ ROCAL_API_CALL rocalResizeMirrorNormalize(RocalContext p_context,
     }
 
     return output; // Changed to input----------------IMPORTANT
+}
+
+
+
+RocalTensor ROCAL_API_CALL
+rocalFlip(
+        RocalContext p_context,
+        RocalTensor p_input,
+        bool is_output,
+        RocalIntParam h_flag,
+        RocalIntParam v_flag)
+{
+    if(!p_input || !p_context)
+        THROW("Null values passed as input")
+    rocALTensor* output = nullptr;
+    auto context = static_cast<Context*>(p_context);
+    auto input = static_cast<rocALTensor*>(p_input);
+    auto horizontal_flag = static_cast<IntParam*>(h_flag);
+    auto vertical_flag = static_cast<IntParam*>(v_flag);
+    try
+    {
+
+        output = context->master_graph->create_tensor(input->info(), is_output);
+
+        context->master_graph->add_node<FlipTensorNode>({input}, {output})->init(horizontal_flag, vertical_flag);
+    }
+    catch(const std::exception& e)
+    {
+        context->capture_error(e.what());
+        ERR(e.what())
+    }
+    return output;
 }

@@ -237,7 +237,13 @@ break;
         image1 = rocalResizeMirrorNormalize(handle, input1, tensorLayout, tensorOutputType, 3,resize_w , resize_h, 0, mean, sdev,true);
         break;
     }
-    
+    case 11:
+    {
+        std::cout << ">>>>>>> Running "
+                  << "rocalFlip" << std::endl;
+        image1 = rocalFlip(handle, input1, true);
+    }
+break;
     
     default:
         std::cout << "Not a valid option! Exiting!\n";
