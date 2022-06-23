@@ -77,7 +77,7 @@ public:
     // rocALTensor *create_rocal_tensor_from_image(const rocALTensorInfo &info);
     // rocALTensor *create_rocal_loader_output_tensor(const rocALTensorInfo &info);
 
-    MetaDataBatch *create_label_reader(const char *source_path, MetaDataReaderType reader_type);
+    void create_label_reader(const char *source_path, MetaDataReaderType reader_type);
     // MetaDataBatch *create_coco_meta_data_reader(const char *source_path, bool is_output);
     // MetaDataBatch *create_tf_record_meta_data_reader(const char *source_path, MetaDataReaderType reader_type,  MetaDataType label_type, const std::map<std::string, std::string> feature_key_map);
     // MetaDataBatch *create_caffe_lmdb_record_meta_data_reader(const char *source_path, MetaDataReaderType reader_type,  MetaDataType label_type);
@@ -86,6 +86,8 @@ public:
     // void create_randombboxcrop_reader(RandomBBoxCrop_MetaDataReaderType reader_type, RandomBBoxCrop_MetaDataType label_type, bool all_boxes_overlap, bool no_crop, FloatParam* aspect_ratio, bool has_shape, int crop_width, int crop_height, int num_attempts, FloatParam* scaling, int total_num_attempts, int64_t seed=0);
     const std::pair<ImageNameBatch,pMetaDataBatch>& meta_data();
     const std::pair<ImageNameBatch,pMetaDataBatch>& tensor_meta_data();
+    rocALTensorList * labels_meta_data();
+
     void set_loop(bool val) { _loop = val; }
     // void set_output_images(const std::vector<rocALTensor*> &output_images, unsigned int num_of_outputs)
     // {
@@ -127,6 +129,9 @@ private:
     std::list<std::shared_ptr<Node>> _tensor_nodes;
     std::list<std::shared_ptr<Node>> _tensor_root_nodes;
     std::map<rocALTensor*, std::shared_ptr<Node>> _tensor_map;
+
+    // Output tensorList for metadata
+    rocALTensorList _labels_tensor_list;
 
     // cl_mem _output_tensor;//!< In the GPU processing case , is used to convert the U8 samples to float32 before they are being transfered back to host
     // ImageInfo _output_image_info;//!< Keeps the information about ROCAL's output image , it includes all images of a batch stacked on top of each other

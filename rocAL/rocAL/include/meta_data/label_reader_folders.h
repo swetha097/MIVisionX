@@ -35,6 +35,7 @@ public :
     void read_all(const std::string& path) override;
     void release(std::string image_name);
     void release() override;
+    int max_size() override;
     void print_map_contents();
     MetaDataBatch * get_output() override { return _output; }
     LabelReaderFolders();

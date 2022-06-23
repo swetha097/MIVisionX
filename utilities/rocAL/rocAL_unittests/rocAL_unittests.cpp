@@ -120,7 +120,7 @@ int test(int test_case, const char *path, const char *outName, int rgb, int gpu,
     RocalIntParam rand_mirror = rocalCreateIntRand(new_values, new_freq, 2);
 
     /*>>>>>>>>>>>>>>>>>>> Graph description <<<<<<<<<<<<<<<<<<<*/
-    // RocalMetaData meta_data = rocalCreateLabelReader(handle, path);
+    rocalCreateLabelReader(handle, path);
 
     RocalTensor input1;
     RocalTensorLayout tensorLayout = RocalTensorLayout::ROCAL_NHWC;
@@ -224,7 +224,7 @@ int test(int test_case, const char *path, const char *outName, int rgb, int gpu,
         // }
         // int label_id[inputBatchSize];
         // int image_name_length[inputBatchSize];
-        // rocalGetImageLabels(handle, label_id);
+        rocALTensorList* labels = rocalGetImageLabels(handle);
         // int img_size = rocalGetImageNameLen(handle, image_name_length);
         // char img_name[img_size];
         // rocalGetImageName(handle, img_name);
@@ -260,6 +260,13 @@ int test(int test_case, const char *path, const char *outName, int rgb, int gpu,
             {
                 cv::imwrite(out_filename, mat_output, compression_params);
             }
+
+            for(int i = 0; i < labels->size(); i++)
+            {
+                int * labels_buffer = (int *)(labels->at(i)->buffer());
+                std::cerr << ">>>>> LABELS : " << labels_buffer[0] << "\t";
+            }
+            std::cerr << "\n";
             // col_counter = (col_counter + 1) % number_of_cols;
         }
         mat_input.release();

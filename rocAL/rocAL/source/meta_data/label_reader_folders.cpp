@@ -74,6 +74,11 @@ void LabelReaderFolders::release()
     _map_content.clear();
 }
 
+int LabelReaderFolders::max_size()
+{
+    return 1;
+}
+
 void LabelReaderFolders::release(std::string image_name)
 {
     if(!exists(image_name))

@@ -29,13 +29,13 @@ THE SOFTWARE.
 #include "rocal_api.h"
 #define MAX_BUFFER 10000
 
-RocalMetaData
+void
 ROCAL_API_CALL rocalCreateLabelReader(RocalContext p_context, const char* source_path) {
     if (!p_context)
         THROW("Invalid rocal context passed to rocalCreateLabelReader")
     auto context = static_cast<Context*>(p_context);
 
-    return context->master_graph->create_label_reader(source_path, MetaDataReaderType::FOLDER_BASED_LABEL_READER);
+    context->master_graph->create_label_reader(source_path, MetaDataReaderType::FOLDER_BASED_LABEL_READER);
 
 }
 
@@ -75,22 +75,15 @@ ROCAL_API_CALL rocalGetImageNameLen(RocalContext p_context, int* buf)
     return size;
 }
 
-void
-ROCAL_API_CALL rocalGetImageLabels(RocalContext p_context, int* buf)
+RocalMetaData
+ROCAL_API_CALL rocalGetImageLabels(RocalContext p_context)
 {
 
     if (!p_context)
         THROW("Invalid rocal context passed to rocalGetImageLabels")
     auto context = static_cast<Context*>(p_context);
-    auto meta_data = context->master_graph->meta_data();
-    if(!meta_data.second) {
-        WRN("No label has been loaded for this output image")
-        return;
-    }
-    size_t meta_data_batch_size = meta_data.second->get_label_batch().size();
-    if(context->user_batch_size() != meta_data_batch_size)
-        THROW("meta data batch size is wrong " + TOSTR(meta_data_batch_size) + " != "+ TOSTR(context->user_batch_size() ))
-    memcpy(buf, meta_data.second->get_label_batch().data(),  sizeof(int)*meta_data_batch_size);
+    auto meta_data = context->master_graph->labels_meta_data();
+    return meta_data;
 }
 
 unsigned

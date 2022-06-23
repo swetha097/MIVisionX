@@ -25,6 +25,7 @@ THE SOFTWARE.
 #include <utility>
 #include <vector>
 #include <memory>
+#include <cstring>
 #include "commons.h"
 
 
@@ -93,6 +94,7 @@ struct MetaDataBatch
     virtual void resize(int batch_size) = 0;
     virtual int size() = 0;
     virtual int mask_size() = 0;
+    virtual void copy_data(void * buffer, size_t data_size) = 0;
     virtual MetaDataBatch&  operator += (MetaDataBatch& other) = 0;
     MetaDataBatch* concatenate(MetaDataBatch* other)
     {
@@ -145,6 +147,10 @@ struct LabelBatch : public MetaDataBatch
         _label_id = std::move(labels);
     }
     LabelBatch() = default;
+    void copy_data(void * buffer, size_t data_size)
+    {
+        mempcpy((int *)buffer, _label_id.data(), data_size);
+    }
 };
 
 struct BoundingBoxBatch: public MetaDataBatch
@@ -182,6 +188,10 @@ struct BoundingBoxBatch: public MetaDataBatch
     std::shared_ptr<MetaDataBatch> clone() override
     {
         return std::make_shared<BoundingBoxBatch>(*this);
+    }
+    void copy_data(void * buffer, size_t data_size)
+    {
+        return;
     }
 };
 using ImageNameBatch = std::vector<std::string>;

@@ -27,7 +27,7 @@ THE SOFTWARE.
 /// \param rocal_context
 /// \param source_path path to the folder that contains the dataset or metadata file
 /// \return RocalMetaData object, can be used to inquire about the rocal's output (processed) tensors
-extern "C" RocalMetaData ROCAL_API_CALL rocalCreateLabelReader(RocalContext rocal_context, const char* source_path);
+extern "C" void ROCAL_API_CALL rocalCreateLabelReader(RocalContext rocal_context, const char* source_path);
 
 ///
 /// \param rocal_context
@@ -97,7 +97,7 @@ extern "C" unsigned ROCAL_API_CALL rocalGetImageNameLen(RocalContext rocal_conte
 
 /// \param meta_data RocalMetaData object that contains info about the images and labels
 /// \param buf user's buffer that will be filled with labels. Its needs to be at least of size batch_size.
-extern "C" void ROCAL_API_CALL rocalGetImageLabels(RocalContext rocal_context, int* buf);
+extern "C" RocalMetaData ROCAL_API_CALL rocalGetImageLabels(RocalContext rocal_context);
 
 /// \param meta_data RocalMetaData object that contains info about the images and labels
 /// \param numOfClasses the number of classes for a image dataset

@@ -72,6 +72,14 @@ vx_size tensor_data_size(RocalTensorDataType data_type)
         {
             return sizeof(vx_uint8);
         }
+        case RocalTensorDataType::UINT32:
+        {
+            return sizeof(vx_uint32);
+        }
+        case RocalTensorDataType::INT32:
+        {
+            return sizeof(vx_int32);
+        }
         break;
         default:
             throw std::runtime_error("tensor data_type not valid");
@@ -92,6 +100,8 @@ void rocALTensorInfo::reallocate_tensor_roi_buffers()
     _roi = std::make_shared<std::vector<RocalROI>>(_batch_size);
     // _roi_height = std::make_shared<std::vector<uint32_t>>(_batch_size);
     // _roi_width = std::make_shared<std::vector<uint32_t>>(_batch_size);
+
+    // TODO - Needs change here
     _roi->resize(_batch_size);
     if(layout() == RocalTensorlayout::NCHW)
     {

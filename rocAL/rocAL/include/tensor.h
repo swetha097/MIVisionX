@@ -108,11 +108,10 @@ public:
             }
             reallocate_tensor_roi_buffers();
         }
-        else
+        else if(!_is_metadata)
         {
             _max_dims[0] = _dims->at(1);
             _max_dims[1] = _dims->at(2);
-            // std::cerr<<"\n Setting _max_width :: "<<_max_width<<"\t _max_height :: "<<_max_height;
         }
         _layout = layout;
     }
@@ -136,6 +135,8 @@ public:
         _data_type_size = tensor_data_size(_data_type);
         return _data_type_size;
     }
+    void set_metadata() { _is_metadata = true; }
+    bool is_metadata() const { return _is_metadata; }
 
 private:
     Type _type = Type::UNKNOWN;//!< tensor type, whether is virtual tensor, created from handle or is a regular tensor
@@ -154,6 +155,7 @@ private:
     unsigned _frames; // denotes the F dimension in the tensor
     bool _is_image = false;
     void reallocate_tensor_roi_buffers();
+    bool _is_metadata = false;
 };
 
 bool operator==(const rocALTensorInfo& rhs, const rocALTensorInfo& lhs);
@@ -166,6 +168,7 @@ public:
     //! Default constructor
     rocALTensor() = delete;
     void* buffer() { return _mem_handle; }
+    void set_mem_handle(void * buffer) { _mem_handle = buffer; }
     vx_tensor handle() { return _vx_handle; }
     vx_context context() { return _context; }
 #if !ENABLE_HIP

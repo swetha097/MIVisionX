@@ -20,13 +20,15 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
+#include <cstring>
 #include <device_manager.h>
 #include "ring_buffer.h"
 
 TensorRingBuffer::TensorRingBuffer(unsigned buffer_depth):
         BUFF_DEPTH(buffer_depth),
         _dev_sub_buffer(buffer_depth),
-        _host_sub_buffers(BUFF_DEPTH)
+        _host_sub_buffers(BUFF_DEPTH),
+        _host_meta_master_buffers(BUFF_DEPTH)
 {
     reset();
 }
@@ -77,6 +79,15 @@ std::vector<void*> TensorRingBuffer::get_write_buffers()
         return _dev_sub_buffer[_write_ptr];
 
     return _host_sub_buffers[_write_ptr];
+}
+
+std::vector<void*> TensorRingBuffer::get_meta_read_buffers()
+{
+    block_if_empty();
+    if((_mem_type == RocalMemType::OCL) || (_mem_type == RocalMemType::HIP))
+        return _dev_sub_buffer[_read_ptr];
+
+    return _host_meta_sub_buffers[_read_ptr];
 }
 
 
@@ -152,6 +163,56 @@ void TensorRingBuffer::init(RocalMemType mem_type, DeviceResources dev, std::vec
             _host_sub_buffers[buffIdx].resize(_sub_buffer_count);
             for(size_t sub_buff_idx = 0; sub_buff_idx < _sub_buffer_count; sub_buff_idx++)
                 _host_sub_buffers[buffIdx][sub_buff_idx] = aligned_alloc(MEM_ALIGNMENT, MEM_ALIGNMENT * (_sub_buffer_size[sub_buff_idx] / MEM_ALIGNMENT + 1));
+        }
+    }
+}
+
+void TensorRingBuffer::init_metadata(RocalMemType mem_type, DeviceResources dev, size_t sub_buffer_size, unsigned sub_buffer_count)
+{
+    if(BUFF_DEPTH < 2)
+        THROW ("Error internal buffer size for the ring buffer should be greater than one")
+    std::cerr << "<<<< Init Metadata >>>>\n";
+    // Allocating buffers
+    if(mem_type== RocalMemType::OCL)
+    {
+    //     if(_dev.cmd_queue == nullptr || _dev.device_id == nullptr || _dev.context == nullptr)
+    //         THROW("Error ocl structure needed since memory type is OCL");
+
+    //     cl_int err = CL_SUCCESS;
+
+    //     for(size_t buffIdx = 0; buffIdx < BUFF_DEPTH; buffIdx++)
+    //     {
+    //         cl_mem_flags flags = CL_MEM_READ_ONLY;
+
+    //         _dev_sub_buffer[buffIdx].resize(sub_buffer_count);
+    //         for(unsigned sub_idx = 0; sub_idx < sub_buffer_count; sub_idx++)
+    //         {
+    //             _dev_sub_buffer[buffIdx][sub_idx] =  clCreateBuffer(_dev.context, flags, sub_buffer_size[sub_idx], NULL, &err);
+
+    //             if(err)
+    //             {
+    //                 _dev_sub_buffer.clear();
+    //                 THROW("clCreateBuffer of size " + TOSTR(sub_buffer_size[sub_idx]) + " index " + TOSTR(sub_idx) +
+    //                       " failed " + TOSTR(err));
+    //             }
+
+    //             clRetainMemObject((cl_mem)_dev_sub_buffer[buffIdx][sub_idx]);
+    //         }
+        // }
+    }
+    else
+    {
+        _host_meta_sub_buffers.resize(BUFF_DEPTH);
+        for(size_t buffIdx = 0; buffIdx < BUFF_DEPTH; buffIdx++)
+        {
+            const size_t master_buffer_size = sub_buffer_size * sub_buffer_count;
+            // a minimum of extra MEM_ALIGNMENT is allocated
+            _host_meta_master_buffers[buffIdx] = aligned_alloc(MEM_ALIGNMENT, MEM_ALIGNMENT * (master_buffer_size / MEM_ALIGNMENT + 1));
+
+            // TODO - NEEDS CHANGE
+            _host_meta_sub_buffers[buffIdx].resize(sub_buffer_count);
+            for(size_t sub_buff_idx = 0; sub_buff_idx < sub_buffer_count; sub_buff_idx++)
+                _host_meta_sub_buffers[buffIdx][sub_buff_idx] = _host_meta_master_buffers[buffIdx] + sub_buffer_size * sub_buff_idx; // TODO - Need to pass datatype
         }
     }
 }
@@ -298,9 +359,10 @@ void TensorRingBuffer::increment_write_ptr()
     _wait_for_load.notify_all();
 }
 
-void TensorRingBuffer::set_meta_data( ImageNameBatch names, pMetaDataBatch meta_data)
+void TensorRingBuffer::set_meta_data( ImageNameBatch names, pMetaDataBatch meta_data, size_t data_size)
 {
     _last_image_meta_data = std::move(std::make_pair(std::move(names), meta_data));
+    meta_data->copy_data(_host_meta_master_buffers[_write_ptr], data_size);
 }
 
 MetaDataNamePair& TensorRingBuffer::get_meta_data()

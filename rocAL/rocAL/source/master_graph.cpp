@@ -735,7 +735,7 @@ void MasterGraph::output_routine()
             }
             if(_internal_tensor_list.size() != 0)
             {
-                _ring_buffer.set_meta_data(full_batch_image_names, full_batch_meta_data);
+                _ring_buffer.set_meta_data(full_batch_image_names, full_batch_meta_data, _user_batch_size * sizeof(int));
                 _ring_buffer.push();
             }
         }
@@ -778,7 +778,7 @@ void MasterGraph::stop_processing()
         _output_thread.join();
 }
 
-MetaDataBatch * MasterGraph::create_label_reader(const char *source_path, MetaDataReaderType reader_type)
+void MasterGraph::create_label_reader(const char *source_path, MetaDataReaderType reader_type)
 {
     if( _meta_data_reader)
         THROW("A metadata reader has already been created")
@@ -786,11 +786,29 @@ MetaDataBatch * MasterGraph::create_label_reader(const char *source_path, MetaDa
     _meta_data_reader = create_meta_data_reader(config);
     _meta_data_reader->init(config);
     _meta_data_reader->read_all(source_path);
+    auto max_buffer_size = _meta_data_reader->max_size();
+
+    unsigned num_of_dims = 1;
+    std::vector<unsigned> dims;
+    dims.resize(num_of_dims);
+    dims.at(0) = max_buffer_size;
+    auto info  = rocALTensorInfo(num_of_dims,
+                                 std::make_shared<std::vector<unsigned> >(std::move(dims)),
+                                 _mem_type,
+                                 RocalTensorDataType::INT32);
+    info.set_metadata();
+    info.set_tensor_layout(RocalTensorlayout::NONE);
+
+    for(int i = 0; i < _user_batch_size; i++)
+    {
+        auto tensor = new rocALTensor(info);
+        _labels_tensor_list.push_back(tensor);
+    }
+    _ring_buffer.init_metadata(_mem_type, _device.resources(), max_buffer_size * sizeof(vx_int32), _user_batch_size);
     if (_augmented_meta_data)
         THROW("Metadata can only have a single output")
     else
         _augmented_meta_data = _meta_data_reader->get_output();
-    return _meta_data_reader->get_output();
 }
 
 const std::pair<ImageNameBatch,pMetaDataBatch>& MasterGraph::meta_data()
@@ -799,6 +817,17 @@ const std::pair<ImageNameBatch,pMetaDataBatch>& MasterGraph::meta_data()
         THROW("No meta data has been loaded")
     return _ring_buffer.get_meta_data();
 
+}
+
+rocALTensorList * MasterGraph::labels_meta_data()
+{
+    if(_ring_buffer.level() == 0)
+        THROW("No meta data has been loaded")
+    auto meta_data_buffers = _ring_buffer.get_meta_read_buffers();
+    for(int i = 0; i < _labels_tensor_list.size(); i++)
+        _labels_tensor_list[i]->set_mem_handle(meta_data_buffers[i]);
+
+    return &_labels_tensor_list;
 }
 
 const std::pair<ImageNameBatch,pMetaDataBatch>& MasterGraph::tensor_meta_data()
