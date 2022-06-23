@@ -37,7 +37,7 @@ void FlipTensorNode::create_node()
         return;
 
     _horizontal.create_array(_graph , VX_TYPE_UINT32, _batch_size);
-    _vertical.create_array(_graph , VX_TYPE_UINT8, _batch_size);
+    _vertical.create_array(_graph , VX_TYPE_UINT32, _batch_size);
 
     if(_inputs[0]->info().layout() == RocalTensorlayout::NCHW)
         _layout = 1;

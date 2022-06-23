@@ -775,6 +775,8 @@ ROCAL_API_CALL rocalResize(RocalContext p_context,
         // Need to just set dims depending on NCHW or NHWC
         output_info.set_width(resize_width);
         output_info.set_height(resize_height);
+        
+        std::cerr<<"\n\n\nwidth     "<<output_info.get_width();
         std::cerr << " OUT W & H : " << output_info.max_width() << output_info.max_height() << "\n";
         std::cerr << " IN W & H : " << input->info().max_width() << input->info().max_height() << "\n";
         // output_info.set_data_type(op_tensorDataType);
@@ -858,6 +860,10 @@ ROCAL_API_CALL rocalResizeMirrorNormalize(RocalContext p_context,
         // Need to just set dims depending on NCHW or NHWC
         output_info.set_width(resize_width);
         output_info.set_height(resize_height);
+        
+        std::cerr<<"\n\n\nwidth     "<<output_info.get_width();
+        std::cerr << " OUT W & H : " << output_info.max_width() << output_info.max_height() << "\n";
+        std::cerr << " IN W & H : " << input->info().max_width() << input->info().max_height() << "\n";
         // output_info.set_data_type(op_tensorDataType);
         output = context->master_graph->create_tensor(output_info, is_output);
         // For the nodes that user provides the output size the dimension of all the images after this node will be fixed and equal to that size

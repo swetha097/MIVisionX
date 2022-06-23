@@ -123,10 +123,8 @@ public:
     unsigned max_width() const { return _max_width; }
     unsigned max_height() const { return _max_height; }
 
-    void set_width(unsigned width) { _width = width; 
-                                        _max_width=width;}
-    void set_height(unsigned height) {_height= height;
-                                        _max_height=height; }
+    void set_width(unsigned width) { _width = width; }
+    void set_height(unsigned height) {_height= height; }
     unsigned get_width() const { return _width; }
     unsigned get_height() const { return _height; }
 
