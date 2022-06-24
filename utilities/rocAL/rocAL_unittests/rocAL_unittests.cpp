@@ -244,6 +244,14 @@ break;
         image1 = rocalFlip(handle, input1, true);
     }
 break;
+    case 12:
+    {
+        std::cout << ">>>>>>> Running "
+                  << "rocalColorJitter" << std::endl;
+        image1 = rocalColorJitter(handle, input1, tensorLayout, tensorOutputType, true);
+    }
+break;
+
     
     default:
         std::cout << "Not a valid option! Exiting!\n";

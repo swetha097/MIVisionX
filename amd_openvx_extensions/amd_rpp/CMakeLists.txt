@@ -142,6 +142,8 @@ list(APPEND SOURCES
         source/tensor/Contrast.cpp
         source/tensor/ResizeMirrorNormalize.cpp
         source/tensor/Flip.cpp
+        source/tensor/ColorJitter.cpp
+
 
 
 

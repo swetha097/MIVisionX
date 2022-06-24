@@ -299,10 +299,17 @@ static vx_status VX_CALLBACK initializeResizeMirrorNormalize(vx_node node, const
     // std::cerr<<"\n layout "<<layout;
     STATUS_ERROR_CHECK(vxCopyScalar((vx_scalar)parameters[13], &roiType, VX_READ_ONLY, VX_MEMORY_TYPE_HOST));
     if (roiType == 1)
+    {
         data->roiType = RpptRoiType::XYWH;
-    else
-        data->roiType = RpptRoiType::LTRB;
+        std::cerr<<"roiType  XYWH\n";
 
+    }
+    else
+    {
+        data->roiType = RpptRoiType::LTRB;
+        std::cerr<<"roiType  LTRB\n";
+
+    }
     // Querying for input tensor
     data->src_desc_ptr = &data->srcDesc;
     STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[0], VX_TENSOR_NUMBER_OF_DIMS, &data->src_desc_ptr->numDims, sizeof(data->src_desc_ptr->numDims)));

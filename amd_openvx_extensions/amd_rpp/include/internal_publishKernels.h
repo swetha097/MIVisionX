@@ -50,6 +50,8 @@ vx_status Crop_Register(vx_context);
 vx_status Contrast_Register(vx_context);
 vx_status ResizeMirrorNormalize_Register(vx_context);
 vx_status Flip_Register(vx_context);
+vx_status ColorJitter_Register(vx_context);
+
 
 
 
@@ -156,6 +158,7 @@ vx_status WarpPerspectivebatchPD_Register(vx_context);
 #define VX_KERNEL_RPP_CONTRAST_NAME                                          "org.rpp.Contrast"
 #define VX_KERNEL_RPP_RESIZEMIRROR_NAME                                      "org.rpp.ResizeMirrorNormalize"
 #define VX_KERNEL_RPP_FLIP_NAME                                              "org.rpp.Flip"
+#define VX_KERNEL_RPP_COLORJITTER_NAME                                       "org.rpp.ColorJitter"
 
 
 

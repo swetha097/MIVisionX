@@ -27,6 +27,9 @@ THE SOFTWARE.
 extern "C" RocalTensor ROCAL_API_CALL rocalBrightness(RocalContext context, RocalTensor input, bool is_output,
                                                    RocalFloatParam alpha = NULL, RocalFloatParam beta = NULL);
 
+// extern "C" RocalTensor ROCAL_API_CALL rocalColorJitter(RocalContext context, RocalTensor input, bool is_output,
+//                                                    RocalFloatParam brightness = NULL, RocalFloatParam contrast = NULL, RocalFloatParam hue = NULL, RocalFloatParam saturation = NULL);
+
 extern "C" RocalTensor ROCAL_API_CALL rocalGamma(RocalContext context, RocalTensor input, bool is_output,
                                                    RocalFloatParam alpha = NULL);
 
@@ -86,6 +89,10 @@ extern "C" RocalTensor ROCAL_API_CALL rocalSpatter(RocalContext p_context,RocalT
                                                         int B_value=0);
 
 extern "C" RocalTensor ROCAL_API_CALL rocalColorTwist(RocalContext context, RocalTensor input,RocalTensorLayout rocal_tensor_layout,RocalTensorOutputType rocal_tensor_output_type, bool is_output,
+                                                   RocalFloatParam alpha = NULL, RocalFloatParam beta = NULL, RocalFloatParam hue = NULL, RocalFloatParam sat = NULL);
+
+
+extern "C" RocalTensor ROCAL_API_CALL rocalColorJitter(RocalContext context, RocalTensor input,RocalTensorLayout rocal_tensor_layout,RocalTensorOutputType rocal_tensor_output_type, bool is_output,
                                                    RocalFloatParam alpha = NULL, RocalFloatParam beta = NULL, RocalFloatParam hue = NULL, RocalFloatParam sat = NULL);
                     
 

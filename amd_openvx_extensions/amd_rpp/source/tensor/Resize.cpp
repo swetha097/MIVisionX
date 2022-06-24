@@ -84,7 +84,7 @@ static vx_status VX_CALLBACK refreshResize(vx_node node, const vx_reference *par
         // data->roi_tensor_Ptr[i].xywhROI.roiHeight =data->resize_h[i];
         data->dstimgsize[i].width = data->resize_w[i];
         data->dstimgsize[i].height = data->resize_h[i];
-        std::cerr << "data->resize_w[i] " << data->resize_w[i] << "  " << data->resize_w[i];
+        std::cerr << "data->resize_w[i] " << data->resize_w[i] << "  " << data->resize_h[i];
     }
 
     if (data->device_type == AGO_TARGET_AFFINITY_GPU)
@@ -218,13 +218,14 @@ static vx_status VX_CALLBACK processResize(vx_node node, const vx_reference *par
         for (int i = 0; i < 100; i++)
         {
             temp[i] = (int)*((unsigned char *)(data->pSrc) + i);
-            std::cerr<<"\n "<<temp[i];
+            // std::cerr<<"\n "<<temp[i];
             // std::cerr<<" data->dstimgsize "<< data->dstimgsize[i].width<<" "<<data->dstimgsize[i].height<<"\n";
             // std::cerr<<"data->roi_tensor_Ptr[i].xywhROI.roiWidth" <<data->roi_tensor_Ptr[i].xywhROI.roiWidth<<"  "<<data->roi_tensor_Ptr[i].xywhROI.roiHeight<<"\n";
 
             // std::cerr<<temp[i]<<" ";
         }
-        std::cerr << " data->dstimgsize " << data->dstimgsize[1].width << " " << data->dstimgsize[1].height << "\n";
+
+        std::cerr << " \ndata->dstimgsize " << data->dstimgsize[1].width << " " << data->dstimgsize[1].height << "\n";
 
         std::cerr << "\n Gonna call RPP";
         // data->src_desc_ptr->dataType=RpptDataType::F32;
@@ -240,14 +241,13 @@ static vx_status VX_CALLBACK processResize(vx_node node, const vx_reference *par
         std::cerr << "\back to rpp";
         return_status = (rpp_status == RPP_SUCCESS) ? VX_SUCCESS : VX_FAILURE;
 
-        //   float *temp = ((float*)calloc( 100,sizeof(float) ));
-        int *temp1 = ((int *)calloc(100, sizeof(int)));
+        // int *temp1 = ((int *)calloc(100, sizeof(int)));
 
-        for (int i = 0; i < 100; i++)
-        {
-             temp1[i] = (int)*((unsigned char *)(data->pDst) + i);
-            std::cout << temp1[i] << " ";
-        }
+        // for (int i = 0; i < 100; i++)
+        // {
+        //      temp1[i] = (int)*((unsigned char *)(data->pDst) + i);
+        //     std::cout << temp1[i] << " ";
+        // }
     }
     return return_status;
 }
@@ -273,9 +273,14 @@ static vx_status VX_CALLBACK initializeResize(vx_node node, const vx_reference *
     // std::cerr<<"\n layout "<<layout;
     STATUS_ERROR_CHECK(vxCopyScalar((vx_scalar)parameters[10], &roiType, VX_READ_ONLY, VX_MEMORY_TYPE_HOST));
     if (roiType == 1)
+    {
         data->roiType = RpptRoiType::XYWH;
+        std::cerr<<"roiType  XYWH\n";
+    }
     else
         data->roiType = RpptRoiType::LTRB;
+        std::cerr<<"roiType  LTRB\n";
+
 
     // Querying for input tensor
     data->src_desc_ptr = &data->srcDesc;
