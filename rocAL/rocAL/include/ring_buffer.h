@@ -50,14 +50,14 @@ public:
     void initHip(RocalMemType mem_type, DeviceResourcesHip dev, std::vector<size_t> sub_buffer_size, unsigned sub_buffer_count);
 #else
     void init(RocalMemType mem_type, DeviceResources dev, std::vector<size_t> sub_buffer_size, unsigned sub_buffer_count);
-    void init_metadata(RocalMemType mem_type, DeviceResources dev, size_t sub_buffer_size, unsigned sub_buffer_count);
+    void init_metadata(RocalMemType mem_type, DeviceResources dev, std::vector<size_t> sub_buffer_size, unsigned sub_buffer_count);
 #endif
     std::vector<void*> get_read_buffers();
     void* get_host_master_read_buffer();
     std::vector<void*> get_write_buffers();
     MetaDataNamePair& get_meta_data();
     std::vector<void*> get_meta_read_buffers();
-    void set_meta_data(ImageNameBatch names, pMetaDataBatch meta_data, size_t data_size);
+    void set_meta_data(ImageNameBatch names, pMetaDataBatch meta_data);
     void reset();
     void pop();
     void push();
@@ -83,8 +83,7 @@ private:
     std::vector<std::vector<void*>> _dev_sub_buffer;
     std::vector<void*> _host_master_buffers;
     std::vector<std::vector<void*>> _host_sub_buffers;
-    std::vector<void*> _host_meta_master_buffers;
-    std::vector<std::vector<void*>> _host_meta_sub_buffers;
+    std::vector<std::vector<void*>> _host_meta_data_buffers;
     bool _dont_block = false;
     RocalMemType _mem_type;
     void * _last_batch_meta_data;

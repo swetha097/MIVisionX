@@ -27,8 +27,7 @@ THE SOFTWARE.
 TensorRingBuffer::TensorRingBuffer(unsigned buffer_depth):
         BUFF_DEPTH(buffer_depth),
         _dev_sub_buffer(buffer_depth),
-        _host_sub_buffers(BUFF_DEPTH),
-        _host_meta_master_buffers(BUFF_DEPTH)
+        _host_sub_buffers(BUFF_DEPTH)
 {
     reset();
 }
@@ -87,7 +86,7 @@ std::vector<void*> TensorRingBuffer::get_meta_read_buffers()
     if((_mem_type == RocalMemType::OCL) || (_mem_type == RocalMemType::HIP))
         return _dev_sub_buffer[_read_ptr];
 
-    return _host_meta_sub_buffers[_read_ptr];
+    return _host_meta_data_buffers[_read_ptr];
 }
 
 
@@ -167,7 +166,7 @@ void TensorRingBuffer::init(RocalMemType mem_type, DeviceResources dev, std::vec
     }
 }
 
-void TensorRingBuffer::init_metadata(RocalMemType mem_type, DeviceResources dev, size_t sub_buffer_size, unsigned sub_buffer_count)
+void TensorRingBuffer::init_metadata(RocalMemType mem_type, DeviceResources dev, std::vector<size_t> sub_buffer_size, unsigned sub_buffer_count)
 {
     if(BUFF_DEPTH < 2)
         THROW ("Error internal buffer size for the ring buffer should be greater than one")
@@ -202,17 +201,13 @@ void TensorRingBuffer::init_metadata(RocalMemType mem_type, DeviceResources dev,
     }
     else
     {
-        _host_meta_sub_buffers.resize(BUFF_DEPTH);
+        _host_meta_data_buffers.resize(BUFF_DEPTH);
         for(size_t buffIdx = 0; buffIdx < BUFF_DEPTH; buffIdx++)
         {
-            const size_t master_buffer_size = sub_buffer_size * sub_buffer_count;
             // a minimum of extra MEM_ALIGNMENT is allocated
-            _host_meta_master_buffers[buffIdx] = aligned_alloc(MEM_ALIGNMENT, MEM_ALIGNMENT * (master_buffer_size / MEM_ALIGNMENT + 1));
-
-            // TODO - NEEDS CHANGE
-            _host_meta_sub_buffers[buffIdx].resize(sub_buffer_count);
+            _host_meta_data_buffers[buffIdx].resize(sub_buffer_count);
             for(size_t sub_buff_idx = 0; sub_buff_idx < sub_buffer_count; sub_buff_idx++)
-                _host_meta_sub_buffers[buffIdx][sub_buff_idx] = _host_meta_master_buffers[buffIdx] + sub_buffer_size * sub_buff_idx; // TODO - Need to pass datatype
+                _host_meta_data_buffers[buffIdx][sub_buff_idx] = malloc(sub_buffer_size[sub_buff_idx]);
         }
     }
 }
@@ -299,9 +294,12 @@ TensorRingBuffer::~TensorRingBuffer()
             for (unsigned sub_buf_idx = 0; sub_buf_idx < _dev_sub_buffer[buffIdx].size(); sub_buf_idx++){
                 if (_host_sub_buffers[buffIdx][sub_buf_idx])
                     free(_host_sub_buffers[buffIdx][sub_buf_idx]);
+                if (_host_meta_data_buffers[buffIdx][sub_buf_idx])
+                    free(_host_meta_data_buffers[buffIdx][sub_buf_idx]);
             }
         }
         _host_sub_buffers.clear();
+        _host_meta_data_buffers.clear();
     }
 #if ENABLE_HIP
     else if (_mem_type == RocalMemType::HIP) {
@@ -359,10 +357,10 @@ void TensorRingBuffer::increment_write_ptr()
     _wait_for_load.notify_all();
 }
 
-void TensorRingBuffer::set_meta_data( ImageNameBatch names, pMetaDataBatch meta_data, size_t data_size)
+void TensorRingBuffer::set_meta_data( ImageNameBatch names, pMetaDataBatch meta_data)
 {
     _last_image_meta_data = std::move(std::make_pair(std::move(names), meta_data));
-    meta_data->copy_data(_host_meta_master_buffers[_write_ptr], data_size);
+    meta_data->copy_data(_host_meta_data_buffers[_write_ptr]);
 }
 
 MetaDataNamePair& TensorRingBuffer::get_meta_data()

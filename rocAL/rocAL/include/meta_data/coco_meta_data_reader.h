@@ -22,14 +22,14 @@ THE SOFTWARE.
 
 #pragma once
 #include <map>
-#include <dirent.h>
 #include "commons.h"
 #include "meta_data.h"
 #include "meta_data_reader.h"
+#include "timing_debug.h"
 
-class LabelReaderFolders: public MetaDataReader
+class COCOMetaDataReader: public MetaDataReader
 {
-public :
+public:
     void init(const MetaDataConfig& cfg) override;
     void lookup(const std::vector<std::string>& image_names) override;
     void read_all(const std::string& path) override;
@@ -37,18 +37,19 @@ public :
     void release() override;
     void print_map_contents();
     MetaDataBatch * get_output() override { return _output; }
-    LabelReaderFolders();
-    ~LabelReaderFolders() override { delete _output; }
+    COCOMetaDataReader();
+    ~COCOMetaDataReader() override { delete _output; }
 private:
-    void read_files(const std::string& _path);
-    bool exists(const std::string &image_name);
-    void add(std::string image_name, int label);
-    std::map<std::string, std::shared_ptr<Label>> _map_content;
-    std::map<std::string, std::shared_ptr<Label>>::iterator _itr;
+    BoundingBoxBatch* _output;
     std::string _path;
-    LabelBatch* _output;
-    DIR *_src_dir, *_sub_dir;
-    struct dirent *_entity;
-    std::vector<std::string> _file_names;
-    std::vector<std::string> _subfolder_file_names;
+    int meta_data_reader_type;
+    void add(std::string image_name, BoundingBoxCords bbox, BoundingBoxLabels b_labels, ImgSize image_size);
+    bool exists(const std::string &image_name);
+    std::map<std::string, std::shared_ptr<MetaData>> _map_content;
+    std::map<std::string, std::shared_ptr<MetaData>>::iterator _itr;
+    std::map<std::string, ImgSize> _map_img_sizes;
+    std::map<std::string, ImgSize> ::iterator itr;
+    std::map<int, int> _label_info;
+    std::map<int, int> ::iterator _it_label;
+    TimingDBG _coco_metadata_read_time;
 };

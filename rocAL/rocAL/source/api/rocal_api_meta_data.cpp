@@ -40,6 +40,15 @@ ROCAL_API_CALL rocalCreateLabelReader(RocalContext p_context, const char* source
 }
 
 void
+ROCAL_API_CALL rocalCreateCOCOReader(RocalContext p_context, const char* source_path, bool is_output){
+    if (!p_context)
+        THROW("Invalid rali context passed to raliCreateCOCOReader")
+    auto context = static_cast<Context*>(p_context);
+
+    context->master_graph->create_coco_meta_data_reader(source_path, is_output, MetaDataReaderType::COCO_META_DATA_READER,  MetaDataType::BoundingBox);
+}
+
+void
 ROCAL_API_CALL rocalGetImageName(RocalContext p_context,  char* buf)
 {
     if (!p_context)
@@ -211,7 +220,7 @@ ROCAL_API_CALL rocalGetImageSizes(RocalContext p_context, int* buf)
     }
     for(unsigned i = 0; i < meta_data_batch_size; i++)
     {
-        memcpy(buf, meta_data.second->get_img_sizes_batch()[i].data(), sizeof(ImgSize));
+        memcpy(buf, &(meta_data.second->get_img_sizes_batch()[i]), sizeof(ImgSize));
         buf += 2;
     }
 }
