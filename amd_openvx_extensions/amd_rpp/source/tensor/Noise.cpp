@@ -36,7 +36,7 @@ struct NoiseLocalData
     vx_float32 *beta;
     vx_float32 *hue;
     vx_float32 *sat;
-    vx_uint32 *seed;
+    vx_uint32 seed;
     vx_size channels;
     RpptDescPtr src_desc_ptr;
     RpptDesc srcDesc;

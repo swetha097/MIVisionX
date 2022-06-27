@@ -148,6 +148,8 @@ extern "C" SHARED_PUBLIC vx_node VX_API_CALL vxExtrppNode_Flip(vx_graph graph, v
 extern "C" SHARED_PUBLIC vx_node VX_API_CALL vxExtrppNode_ColorJitter(vx_graph graph, vx_tensor pSrc, vx_array srcROI, vx_tensor pDst, vx_array brightness, vx_array contrast, vx_array hue, vx_array saturation, vx_scalar layout, vx_scalar roiType, vx_uint32 nbatchSize);
 // extern "C" SHARED_PUBLIC vx_node VX_API_CALL vxExtrppNode_Noise(vx_graph graph, vx_tensor pSrc, vx_array srcROI, vx_tensor pDst, vx_array brightness, vx_array contrast, vx_array hue, vx_array saturation, vx_scalar seed, vx_scalar layout, vx_scalar roiType, vx_uint32 nbatchSize);
 extern "C" SHARED_PUBLIC vx_node VX_API_CALL vxExtrppNode_Noise(vx_graph graph, vx_tensor pSrc, vx_array srcROI, vx_tensor pDst, vx_array alpha, vx_array beta, vx_array hue, vx_array sat, vx_scalar seed, vx_scalar layout, vx_scalar roiType, vx_uint32 nbatchSize);
+extern "C" SHARED_PUBLIC vx_node VX_API_CALL vxExtrppNode_Blend(vx_graph graph, vx_tensor pSrc, vx_tensor pSrc1, vx_array srcROI, vx_tensor pDst, vx_array alpha, vx_scalar layout, vx_scalar roiType, vx_uint32 nbatchSize);
+
 
 
 

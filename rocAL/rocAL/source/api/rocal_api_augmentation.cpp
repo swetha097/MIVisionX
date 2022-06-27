@@ -38,6 +38,8 @@ THE SOFTWARE.
 #include "node_flip.h"
 #include "node_color_jitter.h"
 #include "node_noise.h"
+#include "node_blend.h"
+
 
 
 
@@ -1038,6 +1040,41 @@ rocalFlip(
         output = context->master_graph->create_tensor(input->info(), is_output);
 
         context->master_graph->add_node<FlipTensorNode>({input}, {output})->init(horizontal_flag, vertical_flag);
+    }
+    catch(const std::exception& e)
+    {
+        context->capture_error(e.what());
+        ERR(e.what())
+    }
+    return output;
+}
+
+
+//blend
+
+RocalTensor ROCAL_API_CALL
+rocalBlend(
+        RocalContext p_context,
+        RocalTensor p_input,
+        RocalTensor p_input1,
+        bool is_output,
+        RocalFloatParam p_alpha)
+{
+    if(!p_input || !p_context)
+        THROW("Null values passed as input")
+    rocALTensor* output = nullptr;
+    auto context = static_cast<Context*>(p_context);
+    auto input = static_cast<rocALTensor*>(p_input);
+    auto input1 = static_cast<rocALTensor*>(p_input1);
+
+    auto alpha = static_cast<FloatParam*>(p_alpha);
+    try
+    {
+
+        output = context->master_graph->create_tensor(input->info(), is_output);
+        std::cerr<<"in rocal_api_augmentaiton**********************\n";
+
+        context->master_graph->add_node<BlendTensorNode>({input,input1}, {output})->init(alpha);
     }
     catch(const std::exception& e)
     {

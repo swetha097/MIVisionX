@@ -30,6 +30,8 @@ extern "C" RocalTensor ROCAL_API_CALL rocalBrightness(RocalContext context, Roca
 extern "C" RocalTensor ROCAL_API_CALL rocalNoise(RocalContext context, RocalTensor input,RocalTensorLayout rocal_tensor_layout,RocalTensorOutputType rocal_tensor_output_type, bool is_output,
                                                    RocalFloatParam alpha = NULL, RocalFloatParam beta = NULL, RocalFloatParam hue = NULL, RocalFloatParam sat = NULL, int seed=0);
 
+extern "C" RocalTensor ROCAL_API_CALL rocalBlend(RocalContext context, RocalTensor input,RocalTensor input1, bool is_output,
+                                                   RocalFloatParam alpha = NULL);
 
 extern "C" RocalTensor ROCAL_API_CALL rocalGamma(RocalContext context, RocalTensor input, bool is_output,
                                                    RocalFloatParam alpha = NULL);

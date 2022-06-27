@@ -144,14 +144,7 @@ list(APPEND SOURCES
         source/tensor/Flip.cpp
         source/tensor/ColorJitter.cpp
         source/tensor/Noise.cpp
-
-
-
-
-
-
-
-
+        source/tensor/Blend.cpp
 
 
 

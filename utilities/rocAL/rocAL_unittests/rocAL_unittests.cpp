@@ -254,10 +254,20 @@ break;
     case 13:
     {
         std::cout << ">>>>>>> Running "
-                  << "rocalColorNoise" << std::endl;
+                  << "rocalNoise" << std::endl;
         image1 = rocalNoise(handle, input1, tensorLayout, tensorOutputType, true);
     }
 break;
+case 14:
+    {
+        std::cout << ">>>>>>> Running "
+                  << "rocalBlend" << std::endl;
+        image2=rocalFlip(handle, input1, true);
+        image1 = rocalBlend(handle, input1,image2, true);
+
+    }
+break;
+
     
     default:
         std::cout << "Not a valid option! Exiting!\n";
