@@ -58,6 +58,7 @@ public:
     MetaDataNamePair& get_meta_data();
     std::vector<void*> get_meta_read_buffers();
     void set_meta_data(ImageNameBatch names, pMetaDataBatch meta_data);
+    void rellocate_meta_data_buffer(void * buffer, size_t buffer_size, unsigned buff_idx);
     void reset();
     void pop();
     void push();
@@ -77,6 +78,8 @@ private:
     const unsigned BUFF_DEPTH;
     std::vector<size_t> _sub_buffer_size;
     unsigned _sub_buffer_count;
+    std::vector<size_t> _meta_data_sub_buffer_size;
+    unsigned _meta_data_sub_buffer_count;
     std::mutex _lock;
     std::condition_variable _wait_for_load;
     std::condition_variable _wait_for_unload;

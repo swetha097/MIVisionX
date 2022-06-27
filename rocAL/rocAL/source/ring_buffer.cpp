@@ -172,6 +172,8 @@ void TensorRingBuffer::init_metadata(RocalMemType mem_type, DeviceResources dev,
         THROW ("Error internal buffer size for the ring buffer should be greater than one")
     std::cerr << "<<<< Init Metadata >>>>\n";
     // Allocating buffers
+    _meta_data_sub_buffer_size = sub_buffer_size;
+    _meta_data_sub_buffer_count = sub_buffer_count;
     if(mem_type== RocalMemType::OCL)
     {
     //     if(_dev.cmd_queue == nullptr || _dev.device_id == nullptr || _dev.context == nullptr)
@@ -360,7 +362,21 @@ void TensorRingBuffer::increment_write_ptr()
 void TensorRingBuffer::set_meta_data( ImageNameBatch names, pMetaDataBatch meta_data)
 {
     _last_image_meta_data = std::move(std::make_pair(std::move(names), meta_data));
+    auto actual_buffer_size = meta_data->get_buffer_size();
+    for(unsigned i = 0; i < _meta_data_sub_buffer_count; i++)
+    {
+        if(actual_buffer_size[i] > _meta_data_sub_buffer_size[i])
+            rellocate_meta_data_buffer(_host_meta_data_buffers[_write_ptr][i], actual_buffer_size[i], i);
+    }
     meta_data->copy_data(_host_meta_data_buffers[_write_ptr]);
+}
+
+void TensorRingBuffer::rellocate_meta_data_buffer(void * buffer, size_t buffer_size, unsigned buff_idx)
+{
+    void *new_ptr = realloc(buffer, buffer_size);
+    if(buffer == nullptr)
+        THROW("Metadata ring buffer reallocation failed")
+    _host_meta_data_buffers[_write_ptr][buff_idx] = new_ptr;
 }
 
 MetaDataNamePair& TensorRingBuffer::get_meta_data()

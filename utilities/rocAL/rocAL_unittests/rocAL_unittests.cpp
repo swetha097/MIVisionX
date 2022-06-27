@@ -349,30 +349,27 @@ int test(int test_case, int reader_type, int pipeline_type, const char *path, co
                 // }
             }
             break;
-#if 0
             case 2: //detection pipeline
             {
-                int img_size = rocalGetImageNameLen(handle, image_name_length);
-                char img_name[img_size];
-                rocalGetImageName(handle, img_name);
-                std::cerr << "\nPrinting image names of batch: " << img_name;
-                int bb_label_count[inputBatchSize];
-                int size = rocalGetBoundingBoxCount(handle, bb_label_count);
-                for (int i = 0; i < (int)inputBatchSize; i++)
-                    std::cerr << "\n Number of box:  " << bb_label_count[i];
-                int bb_labels[size];
-                rocalGetBoundingBoxLabel(handle, bb_labels);
-                float bb_coords[size * 4];
-                rocalGetBoundingBoxCords(handle, bb_coords);
-                int img_sizes_batch[inputBatchSize * 2];
-                rocalGetImageSizes(handle, img_sizes_batch);
-                for (int i = 0; i < (int)inputBatchSize; i++)
+                rocALTensorList* bbox_labels = rocalGetBoundingBoxLabel(handle);
+                rocALTensorList* bbox_coords = rocalGetBoundingBoxCords(handle);
+                for(int i = 0; i < bbox_labels->size(); i++)
                 {
-                    std::cout<<"\nwidth:"<<img_sizes_batch[i*2];
-                    std::cout<<"\nHeight:"<<img_sizes_batch[(i*2)+1];
+                    int * labels_buffer = (int *)(bbox_labels->at(i)->buffer());
+                    float *bbox_buffer = (float *)(bbox_coords->at(i)->buffer());
+                    std::cerr << "\n>>>>> BBOX LABELS : ";
+                    for(int j = 0; j < bbox_labels->at(i)->info().dims()->at(0); j++)
+                        std::cerr << labels_buffer[j] << " ";
+                    std::cerr << "\n>>>>> BBOXX : " <<bbox_coords->at(i)->info().dims()->at(0) << " : \n";
+                    for(int j = 0, j4 = 0; j < bbox_coords->at(i)->info().dims()->at(0); j++, j4 = j * 4)
+                        std::cerr << bbox_buffer[j4] << " " << bbox_buffer[j4 + 1] << " " << bbox_buffer[j4 + 2] << " " << bbox_buffer[j4 + 3] << "\n";
+
                 }
+
+
             }
             break;
+#if 0
             case 3: // keypoints pipeline
             {
                 int size = inputBatchSize;

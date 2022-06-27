@@ -46,14 +46,21 @@ struct MetaData
     void set_bb_labels(BoundingBoxLabels bb_label_ids)
     {
         _bb_label_ids = std::move(bb_label_ids);
-        _bb_labels_dims = {(unsigned)_bb_label_ids.size()};
         _object_count = _bb_label_ids.size();
     }
     ImgSize& get_img_size() {return _img_size; }
     MaskCords& get_mask_cords() { return _mask_cords;}
     int get_object_count() { return _object_count; }
-    std::vector<unsigned> get_bb_label_dims() {return _bb_labels_dims; }
-    std::vector<unsigned> get_bb_cords_dims() {return _bb_coords_dims; }
+    std::vector<unsigned> get_bb_label_dims()
+    {
+        _bb_labels_dims = {(unsigned) _bb_label_ids.size()};
+        return _bb_labels_dims;
+    }
+    std::vector<unsigned> get_bb_cords_dims()
+    {
+        _bb_coords_dims = {(unsigned) _bb_cords.size(), 4};
+        return _bb_coords_dims;
+    }
 
 protected:
     BoundingBoxCords _bb_cords = {}; // For bb use
@@ -84,41 +91,22 @@ struct BoundingBox : public MetaData
     {
         _bb_cords =std::move(bb_cords);
         _bb_label_ids = std::move(bb_label_ids);
-        _bb_labels_dims = {(unsigned)_bb_label_ids.size()};
-        _bb_coords_dims = {(unsigned)_bb_cords.size(), 4};
-        _object_count = bb_label_ids.size();
     }
     BoundingBox(BoundingBoxCords bb_cords,BoundingBoxLabels bb_label_ids ,ImgSize img_size)
     {
         _bb_cords =std::move(bb_cords);
         _bb_label_ids = std::move(bb_label_ids);
         _img_size = std::move(img_size);
-        _bb_labels_dims = {(unsigned)_bb_label_ids.size()};
-        _bb_coords_dims = {(unsigned)_bb_cords.size(), 4};
-        _object_count = bb_label_ids.size();
     }
     BoundingBox(BoundingBoxCords bb_cords,BoundingBoxLabels bb_label_ids ,ImgSize img_size, MaskCords mask_cords)
     {
-        _bb_cords =std::move(bb_cords);
+        _bb_cords = std::move(bb_cords);
         _bb_label_ids = std::move(bb_label_ids);
         _img_size = std::move(img_size);
         _mask_cords = std::move(mask_cords);
-        _bb_labels_dims = {(unsigned)_bb_label_ids.size()};
-        _bb_coords_dims = {(unsigned)_bb_cords.size(), 4};
-        _object_count = _bb_label_ids.size();
     }
-    void set_bb_cords(BoundingBoxCords bb_cords)
-    {
-        _bb_cords =std::move(bb_cords);
-        _bb_coords_dims = {(unsigned)_bb_cords.size(), 4};
-        _object_count = bb_cords.size();
-    }
-    void set_bb_labels(BoundingBoxLabels bb_label_ids)
-    {
-        _bb_label_ids = std::move(bb_label_ids);
-        _bb_labels_dims = {(unsigned)_bb_label_ids.size()};
-        _object_count = _bb_label_ids.size();
-    }
+    void set_bb_cords(BoundingBoxCords bb_cords) { _bb_cords = std::move(bb_cords); }
+    void set_bb_labels(BoundingBoxLabels bb_label_ids) { _bb_label_ids = std::move(bb_label_ids); }
     void set_img_sizes(ImgSize img_size) { _img_size =std::move(img_size); }
     void set_mask_cords(MaskCords mask_cords) { _mask_cords = std::move(mask_cords);}
 };
@@ -131,7 +119,7 @@ struct MetaDataBatch
     virtual int size() = 0;
     virtual int mask_size() = 0;
     virtual void copy_data(std::vector<void*> buffer) = 0;
-    virtual void increment_object_count(int count) = 0;
+    virtual std::vector<unsigned>& get_buffer_size() = 0;
     virtual MetaDataBatch&  operator += (MetaDataBatch& other) = 0;
     MetaDataBatch* concatenate(MetaDataBatch* other)
     {
@@ -147,7 +135,7 @@ struct MetaDataBatch
     void reset_objects_count() { _objects_count = 0; }
     std::vector<std::vector<unsigned>>& get_bb_labels_dims_batch() { return _bb_labels_dims; }
     std::vector<std::vector<unsigned>>& get_bb_cords_dims_batch() { return _bb_coords_dims; }
-
+    void increment_object_count(int count) { _objects_count += count; }
 protected:
     std::vector<int> _label_id = {}; // For label use only
     std::vector<BoundingBoxCords> _bb_cords = {};
@@ -157,6 +145,7 @@ protected:
     std::vector<std::vector<unsigned>> _bb_labels_dims = {};
     std::vector<std::vector<unsigned>> _bb_coords_dims = {};
     std::vector<std::vector<unsigned>> _mask_coords_dims = {};
+    std::vector<unsigned> _buffer_size;
     int _objects_count = 0;
 };
 
@@ -165,6 +154,7 @@ struct LabelBatch : public MetaDataBatch
     void clear() override
     {
         _label_id.clear();
+        _buffer_size.clear();
         _objects_count = 0;
     }
     MetaDataBatch&  operator += (MetaDataBatch& other) override
@@ -193,16 +183,17 @@ struct LabelBatch : public MetaDataBatch
         _label_id = std::move(labels);
     }
     LabelBatch() = default;
-    void copy_data(std::vector<void*> buffer)
+    void copy_data(std::vector<void*> buffer) override
     {
         if(buffer.size() < 1)
             THROW("The buffers are insufficient") // TODO -change
         mempcpy((int *)buffer[0], _label_id.data(), _label_id.size() * sizeof(int));
         std::cerr << "OBJECT COUNT : " << _objects_count << "\n";
     }
-    void increment_object_count(int count)
+    std::vector<unsigned>& get_buffer_size() override
     {
-        _objects_count += count;
+        _buffer_size.emplace_back(_objects_count * sizeof(int));
+        return _buffer_size;
     }
 };
 
@@ -217,6 +208,7 @@ struct BoundingBoxBatch: public MetaDataBatch
         _bb_coords_dims.clear();
         _bb_labels_dims.clear();
         _objects_count = 0;
+        _buffer_size.clear();
     }
     MetaDataBatch&  operator += (MetaDataBatch& other) override
     {
@@ -224,6 +216,8 @@ struct BoundingBoxBatch: public MetaDataBatch
         _bb_label_ids.insert(_bb_label_ids.end(), other.get_bb_labels_batch().begin(), other.get_bb_labels_batch().end());
         _img_sizes.insert(_img_sizes.end(),other.get_img_sizes_batch().begin(), other.get_img_sizes_batch().end());
         _mask_cords.insert(_mask_cords.end(),other.get_mask_cords_batch().begin(), other.get_mask_cords_batch().end());
+        _bb_labels_dims.insert(_bb_labels_dims.end(), other.get_bb_labels_dims_batch().begin(), other.get_bb_labels_dims_batch().end());
+        _bb_coords_dims.insert(_bb_coords_dims.end(), other.get_bb_cords_dims_batch().begin(), other.get_bb_cords_dims_batch().end());
         return *this;
     }
     void resize(int batch_size) override
@@ -249,15 +243,23 @@ struct BoundingBoxBatch: public MetaDataBatch
     }
     void copy_data(std::vector<void*> buffer)
     {
-        std::cerr << "OBJECTS COUNT << : " << _objects_count << "\n";
         if(buffer.size() < 2)
             THROW("The buffers are insufficient") // TODO -change
-        mempcpy((int *)buffer[0], _bb_label_ids.data(), _objects_count * sizeof(int));
-        mempcpy((float *)buffer[1], _bb_cords.data(), _objects_count * 4 * sizeof(int));
+        int *labels_buffer = (int *)buffer[0];
+        float *bbox_buffer = (float *)buffer[1];
+        for(unsigned i = 0; i < _bb_label_ids.size(); i++)
+        {
+            mempcpy(labels_buffer, _bb_label_ids[i].data(), _bb_labels_dims[i][0] * sizeof(int));
+            memcpy(bbox_buffer, _bb_cords[i].data(), _bb_coords_dims[i][0] * sizeof(BoundingBoxCord));
+            labels_buffer += _bb_labels_dims[i][0];
+            bbox_buffer += (_bb_coords_dims[i][0] * 4);
+        }
     }
-    void increment_object_count(int count)
+    std::vector<unsigned>& get_buffer_size() override
     {
-        _objects_count += count;
+        _buffer_size.emplace_back(_objects_count * sizeof(int));
+        _buffer_size.emplace_back(_objects_count * 4 * sizeof(float));
+        return _buffer_size;
     }
 };
 using ImageNameBatch = std::vector<std::string>;

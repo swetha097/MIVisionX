@@ -113,8 +113,8 @@ extern "C" unsigned ROCAL_API_CALL rocalGetBoundingBoxCount(RocalContext rocal_c
 ///
 /// \param rocal_context
 /// \param buf The user's buffer that will be filled with bounding box label info for the images in the output batch. It needs to be of size returned by a call to the rocalGetBoundingBoxCount
-extern "C" void ROCAL_API_CALL rocalGetBoundingBoxLabel(RocalContext rocal_context, int* buf);
-extern "C" void ROCAL_API_CALL rocalGetBoundingBoxCords(RocalContext rocal_context, float* buf);
+extern "C" RocalMetaData ROCAL_API_CALL rocalGetBoundingBoxLabel(RocalContext rocal_context);
+extern "C" RocalMetaData ROCAL_API_CALL rocalGetBoundingBoxCords(RocalContext rocal_context);
 
 ///
 /// \param rocal_context
