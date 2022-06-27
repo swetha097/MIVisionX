@@ -251,7 +251,13 @@ break;
         image1 = rocalColorJitter(handle, input1, tensorLayout, tensorOutputType, true);
     }
 break;
-
+    case 13:
+    {
+        std::cout << ">>>>>>> Running "
+                  << "rocalColorNoise" << std::endl;
+        image1 = rocalNoise(handle, input1, tensorLayout, tensorOutputType, true);
+    }
+break;
     
     default:
         std::cout << "Not a valid option! Exiting!\n";

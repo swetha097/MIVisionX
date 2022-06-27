@@ -139,6 +139,8 @@ vx_status get_kernels_to_publish()
     STATUS_ERROR_CHECK(ADD_KERENEL(ResizeMirrorNormalize_Register));
     STATUS_ERROR_CHECK(ADD_KERENEL(Flip_Register));
     STATUS_ERROR_CHECK(ADD_KERENEL(ColorJitter_Register));
+    STATUS_ERROR_CHECK(ADD_KERENEL(Noise_Register));
+
 
 
 
