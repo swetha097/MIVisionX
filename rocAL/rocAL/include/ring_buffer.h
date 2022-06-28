@@ -35,11 +35,11 @@ THE SOFTWARE.
 #include "commons.h"
 
 using MetaDataNamePair = std::pair<ImageNameBatch,pMetaDataBatch>;
-class TensorRingBuffer
+class RingBuffer
 {
 public:
-    explicit TensorRingBuffer(unsigned buffer_depth);
-    ~TensorRingBuffer();
+    explicit RingBuffer(unsigned buffer_depth);
+    ~RingBuffer();
     size_t level();
     bool empty();
     ///\param mem_type
