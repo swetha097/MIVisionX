@@ -649,8 +649,6 @@ rocalVideoFileSourceSingleShard(
 #ifdef RALI_VIDEO
         if(sequence_length == 0)
             THROW("Sequence length passed should be bigger than 0")
-        // Set video loader flag in master_graph
-        // context->master_graph->set_video_loader_flag();
 
         if(shard_count < 1 )
             THROW("Shard count should be bigger than 0")
@@ -749,8 +747,6 @@ rocalVideoFileSource(
 #ifdef RALI_VIDEO
         if(sequence_length == 0)
             THROW("Sequence length passed should be bigger than 0")
-        // Set video loader flag in master_graph
-        // context->master_graph->set_video_loader_flag();
 
         // Set default step and stride values if 0 is passed
         step = (step == 0)? sequence_length : step;

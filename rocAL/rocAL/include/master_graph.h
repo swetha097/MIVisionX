@@ -57,9 +57,6 @@ public:
     MasterGraph::Status copy_output(std::vector<void *> &out_ptr);
     Status copy_output(void* out_ptr, size_t out_size);
     std::vector<size_t> tensor_output_byte_size();
-    size_t tensor_output_depth();
-    size_t output_sample_size();
-    size_t tensor_output_sample_size();
     Status build();
     Status run();
     Timing timing();
@@ -71,13 +68,9 @@ public:
     template <typename T>
     std::shared_ptr<T> add_node(const std::vector<rocALTensor *> &input, const std::vector<rocALTensor *> &output);
     rocALTensor *create_tensor(const rocALTensorInfo &info, bool is_output);
-    rocALTensor *create_tensor_from_image(const rocALTensorInfo &info);
     rocALTensor *create_loader_output_tensor(const rocALTensorInfo &info);
     rocALTensorList * get_output_tensors();
 
-    // rocALTensor *create_rocal_tensor(const rocALTensorInfo &info, bool is_output);
-    // rocALTensor *create_rocal_tensor_from_image(const rocALTensorInfo &info);
-    // rocALTensor *create_rocal_loader_output_tensor(const rocALTensorInfo &info);
     void get_meta_data_tensor_dims(pMetaDataBatch &meta_data);
     void create_label_reader(const char *source_path, MetaDataReaderType reader_type);
     void create_coco_meta_data_reader(const char *source_path, bool is_output, MetaDataReaderType reader_type, MetaDataType label_type);
@@ -94,11 +87,6 @@ public:
     rocALTensorList * bbox_meta_data();
 
     void set_loop(bool val) { _loop = val; }
-    // void set_output_images(const std::vector<rocALTensor*> &output_images, unsigned int num_of_outputs)
-    // {
-    //     _output_tensor.resize(num_of_outputs);
-    //     _output_tensor = output_images;
-    // }
     void set_output(rocALTensor* output_image);
     bool empty() { return (remaining_images_count() < _user_batch_size); }
     size_t internal_batch_size() { return _internal_batch_size; }
@@ -129,8 +117,8 @@ private:
 
     // std::vector<rocALTensor*> _output_tensors;
     rocALTensorList _internal_tensor_list;
-    rocALTensorList _output_tensor_list;
-    std::list<rocALTensor*> _internal_tensors;
+    rocALTensorList _output_tensor_list;    //!< Keeps a list of ovx tensors that are used to store the augmented outputs (there is an augmentation output batch per element in the list)
+    std::list<rocALTensor*> _internal_tensors;  //!< Keeps all the ovx tensors (virtual/non-virtual) either intermediate tensors, or input tensors that feed the graph
     std::list<std::shared_ptr<Node>> _tensor_nodes;
     std::list<std::shared_ptr<Node>> _tensor_root_nodes;
     std::map<rocALTensor*, std::shared_ptr<Node>> _tensor_map;
@@ -145,8 +133,6 @@ private:
 
     // cl_mem _output_tensor;//!< In the GPU processing case , is used to convert the U8 samples to float32 before they are being transfered back to host
     // ImageInfo _output_image_info;//!< Keeps the information about ROCAL's output image , it includes all images of a batch stacked on top of each other
-    // std::vector<Image*> _output_images;//!< Keeps the ovx images that are used to store the augmented output (there is an image per augmentation branch)
-    // std::list<Image*> _internal_images;//!< Keeps all the ovx images (virtual/non-virtual) either intermediate images, or input images that feed the graph
 #if ENABLE_HIP
     void * _output_tensor;//!< In the GPU processing case , is used to convert the U8 samples to float32 before they are being transfered back to host
     DeviceManagerHip   _device;//!< Keeps the device related constructs needed for running on GPU
@@ -216,30 +202,6 @@ std::shared_ptr<T> MasterGraph::add_node(const std::vector<rocALTensor *> &input
     return node;
 }
 
-
-    // template <typename T>
-    // std::shared_ptr<T> MasterGraph::add_tensor_node(const std::vector<rocALTensor *> &inputs, const std::vector<rocALTensor *> &outputs)
-    // {
-    //     auto node = std::make_shared<T>(inputs, outputs);
-    //     _tensor_nodes.push_back(node);
-
-    //     for(auto& input: inputs)
-    //     {
-    //         if (_tensor_map.find(input) == _tensor_map.end())
-    //             THROW("Input image is invalid, cannot be found among output of previously created nodes")
-
-    //         auto parent_node = _tensor_map.find(input)->second;
-    //         parent_node->add_next(node);
-    //         node->add_previous(parent_node);
-    //     }
-
-    //     for(auto& output: outputs)
-    //         _tensor_map.insert(make_pair(output, node));
-
-    //     return node;
-    // }
-
-//************************************************************************************************
 template<> inline std::shared_ptr<ImageLoaderNode> MasterGraph::add_node(const std::vector<rocALTensor*>& inputs, const std::vector<rocALTensor*>& outputs)
 {
     if(_loader_module)
@@ -328,6 +290,28 @@ template<> inline std::shared_ptr<VideoLoaderSingleShardNode> MasterGraph::add_n
 }
 
 //************************************************************************************************
+
+    // template <typename T>
+    // std::shared_ptr<T> MasterGraph::add_tensor_node(const std::vector<rocALTensor *> &inputs, const std::vector<rocALTensor *> &outputs)
+    // {
+    //     auto node = std::make_shared<T>(inputs, outputs);
+    //     _tensor_nodes.push_back(node);
+
+    //     for(auto& input: inputs)
+    //     {
+    //         if (_tensor_map.find(input) == _tensor_map.end())
+    //             THROW("Input image is invalid, cannot be found among output of previously created nodes")
+
+    //         auto parent_node = _tensor_map.find(input)->second;
+    //         parent_node->add_next(node);
+    //         node->add_previous(parent_node);
+    //     }
+
+    //     for(auto& output: outputs)
+    //         _tensor_map.insert(make_pair(output, node));
+
+    //     return node;
+    // }
 
 /*
  * Explicit specialization for ImageLoaderNode

@@ -31,6 +31,7 @@ RingBuffer::RingBuffer(unsigned buffer_depth):
 {
     reset();
 }
+
 void RingBuffer::block_if_empty()
 {
     std::unique_lock<std::mutex> lock(_lock);
@@ -53,6 +54,7 @@ void RingBuffer:: block_if_full()
         _wait_for_unload.wait(lock);
     }
 }
+
 std::vector<void*> RingBuffer::get_read_buffers()
 {
     block_if_empty();
@@ -61,15 +63,6 @@ std::vector<void*> RingBuffer::get_read_buffers()
 
     return _host_sub_buffers[_read_ptr];
 }
-
-// void *RingBuffer::get_host_master_read_buffer() {
-//     block_if_empty();
-//     if((_mem_type == RocalMemType::OCL) || (_mem_type == RocalMemType::HIP))
-//         return nullptr;
-
-//     return _host_master_buffers[_read_ptr];
-// }
-
 
 std::vector<void*> RingBuffer::get_write_buffers()
 {
@@ -88,7 +81,6 @@ std::vector<void*> RingBuffer::get_meta_read_buffers()
 
     return _host_meta_data_buffers[_read_ptr];
 }
-
 
 void RingBuffer::unblock_reader()
 {
@@ -170,43 +162,19 @@ void RingBuffer::init_metadata(RocalMemType mem_type, DeviceResources dev, std::
 {
     if(BUFF_DEPTH < 2)
         THROW ("Error internal buffer size for the ring buffer should be greater than one")
-    std::cerr << "<<<< Init Metadata >>>>\n";
+
     // Allocating buffers
     _meta_data_sub_buffer_size = sub_buffer_size;
     _meta_data_sub_buffer_count = sub_buffer_count;
-    if(mem_type== RocalMemType::OCL)
+    if(mem_type== RocalMemType::OCL || mem_type== RocalMemType::HIP)
     {
-    //     if(_dev.cmd_queue == nullptr || _dev.device_id == nullptr || _dev.context == nullptr)
-    //         THROW("Error ocl structure needed since memory type is OCL");
-
-    //     cl_int err = CL_SUCCESS;
-
-    //     for(size_t buffIdx = 0; buffIdx < BUFF_DEPTH; buffIdx++)
-    //     {
-    //         cl_mem_flags flags = CL_MEM_READ_ONLY;
-
-    //         _dev_sub_buffer[buffIdx].resize(sub_buffer_count);
-    //         for(unsigned sub_idx = 0; sub_idx < sub_buffer_count; sub_idx++)
-    //         {
-    //             _dev_sub_buffer[buffIdx][sub_idx] =  clCreateBuffer(_dev.context, flags, sub_buffer_size[sub_idx], NULL, &err);
-
-    //             if(err)
-    //             {
-    //                 _dev_sub_buffer.clear();
-    //                 THROW("clCreateBuffer of size " + TOSTR(sub_buffer_size[sub_idx]) + " index " + TOSTR(sub_idx) +
-    //                       " failed " + TOSTR(err));
-    //             }
-
-    //             clRetainMemObject((cl_mem)_dev_sub_buffer[buffIdx][sub_idx]);
-    //         }
-        // }
+        THROW("Metadata is not supported with GPU backends")
     }
     else
     {
         _host_meta_data_buffers.resize(BUFF_DEPTH);
         for(size_t buffIdx = 0; buffIdx < BUFF_DEPTH; buffIdx++)
         {
-            // a minimum of extra MEM_ALIGNMENT is allocated
             _host_meta_data_buffers[buffIdx].resize(sub_buffer_count);
             for(size_t sub_buff_idx = 0; sub_buff_idx < sub_buffer_count; sub_buff_idx++)
                 _host_meta_data_buffers[buffIdx][sub_buff_idx] = malloc(sub_buffer_size[sub_buff_idx]);

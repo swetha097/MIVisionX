@@ -244,13 +244,7 @@ int rocALTensor::create_virtual(vx_context context, vx_graph graph)
 
     _context = context;
 
-    // create a virtual Tensor as the output Tensor for this node
-    // vx_size dims[4];
-    // dims[0] = (vx_size)_info.batch_size();
-    // dims[1] = (vx_size)_info.height();
-    // dims[2] = (vx_size)_info.width();
-    // dims[3] = (vx_size)_info.channels();
-    // TODO - shobi find a better way to convert from unsigned to size_t
+    // TODO - find a better way to convert from unsigned to size_t
     unsigned num_of_dims = _info.num_of_dims();
     vx_size dims[num_of_dims];
     for(unsigned i = 0; i < num_of_dims; i++)
@@ -279,22 +273,6 @@ int rocALTensor::create_from_handle(vx_context context)
     _context = context;
     // bool nhwc = true;
     vx_enum tensor_data_type = interpret_tensor_data_type(_info.data_type());
-    // vx_size dims[4];
-    // if (nhwc)
-    // {
-    //     dims[0] = (vx_size)_info.batch_size();
-    //     dims[1] = (vx_size)_info.height();
-    //     dims[2] = (vx_size)_info.width();
-    //     dims[3] = (vx_size)_info.channels();
-    // }
-    // else
-    // {
-    //     dims[0] = (vx_size)_info.width();
-    //     dims[1] = (vx_size)_info.height();
-    //     dims[2] = (vx_size)_info.channels();
-    //     dims[3] = (vx_size)_info.batch_size();
-    // }
-
     unsigned num_of_dims = _info.num_of_dims();
     vx_size stride[num_of_dims];
     void *ptr[1] = {nullptr};
@@ -306,17 +284,12 @@ int rocALTensor::create_from_handle(vx_context context)
         stride[i] = stride[i - 1] * _info.dims()->at(i - 1);
     }
     vx_status status;
-    // shobi find a better way to convert from unsigned to size_t
+    // TODO - find a better way to convert from unsigned to size_t
     vx_size dims[num_of_dims];
     for(unsigned i = 0; i < num_of_dims; i++)
     {
         dims[i] = _info.dims()->at(i);
     }
-    // dims[0] = _info.dims()->at(0);
-    // dims[1] = _info.dims()->at(1);
-    // dims[2] = _info.dims()->at(2);
-    // dims[3] = _info.dims()->at(3);
-    // std::cerr<<"\n dims in local "<<dims[0]<<" "<<dims[1]<<" "<<dims[2]<<" "<<dims[3];
     _vx_handle = vxCreateTensorFromHandle(_context, num_of_dims, dims, tensor_data_type, 0, stride, ptr, vx_mem_type(_info._mem_type));
     if ((status = vxGetStatus((vx_reference)_vx_handle)) != VX_SUCCESS)
         THROW("Error: vxCreateTensorFromHandle(input: failed " + TOSTR(status))
@@ -335,9 +308,6 @@ int rocALTensor::create(vx_context context)
     _context = context;
 
     vx_status status;
-    // vx_size dims[4]; // = {(vx_size)_info.width(), (vx_size)_info.height(), (vx_size)_info.channels(), (vx_size)_info.batch_size()};
-    // dims[0] = (vx_size)_info.batch_size();
-    // dims[3] = (vx_size)_info.channels();
     vx_enum tensor_data_type = interpret_tensor_data_type(_info.data_type());
     _vx_handle = vxCreateTensor(context, _info.num_of_dims(),(vx_size*) _info.dims()->data(), tensor_data_type, 0);
     if ((status = vxGetStatus((vx_reference)_vx_handle)) != VX_SUCCESS)
