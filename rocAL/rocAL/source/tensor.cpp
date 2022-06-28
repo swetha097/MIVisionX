@@ -211,7 +211,8 @@ void rocALTensor::update_tensor_roi(const std::vector<uint32_t> &width, const st
 
 rocALTensor::~rocALTensor()
 {
-    vxReleaseTensor(&_vx_handle);
+    // if(!_info.is_metadata())
+        vxReleaseTensor(&_vx_handle);
 }
 
 //! Converts the Rocal data_type to OpenVX

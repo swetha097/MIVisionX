@@ -24,6 +24,7 @@ THE SOFTWARE.
 #include <memory>
 #include "reader_factory.h"
 #include "file_source_reader.h"
+#include "coco_file_source_reader.h"
 
 std::shared_ptr<Reader> create_reader(ReaderConfig config) {
     switch(config.type()) {
@@ -32,6 +33,14 @@ std::shared_ptr<Reader> create_reader(ReaderConfig config) {
             auto ret = std::make_shared<FileSourceReader>();
             if(ret->initialize(config) != Reader::Status::OK)
                 throw std::runtime_error("File reader cannot access the storage");
+            return ret;
+        }
+        break;
+        case StorageType ::COCO_FILE_SYSTEM:
+        {
+            auto ret = std::make_shared<COCOFileSourceReader>();
+            if(ret->initialize(config) != Reader::Status::OK)
+                throw std::runtime_error("COCO File reader cannot access the storage");
             return ret;
         }
         break;

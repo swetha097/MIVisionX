@@ -115,6 +115,20 @@ public:
         }
         _layout = layout;
     }
+    void set_dims(std::vector<unsigned> &new_dims)
+    {
+        _data_size = _data_type_size;
+        if(_num_of_dims == new_dims.size())
+        {
+            for(unsigned i = 0; i < _num_of_dims; i++)
+            {
+                _dims->at(i) = new_dims[i];
+                _data_size *= new_dims[i];
+            }
+        }
+        else
+            THROW("The size of number of dimensions does not match with the dimensions of existing tensor")
+    }
     void set_color_format(RocalColorFormat color_format) { _color_format = color_format; }
 
     unsigned num_of_dims() const { return _num_of_dims; }
@@ -192,7 +206,7 @@ public:
     int create_from_handle(vx_context context);
     int create_virtual(vx_context context, vx_graph graph);
     bool is_handle_set() { return (_vx_handle != 0); }
-
+    void set_dims(std::vector<unsigned> &dims) { _info.set_dims(dims); }
 private:
     vx_tensor _vx_handle = nullptr;//!< The OpenVX tensor
     void* _mem_handle = nullptr;//!< Pointer to the tensor's internal buffer (opencl or host)

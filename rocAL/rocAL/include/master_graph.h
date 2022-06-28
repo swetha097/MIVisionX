@@ -44,6 +44,8 @@ THE SOFTWARE.
 #endif
 // #include "randombboxcrop_meta_data_reader.h"
 #define MAX_STRING_LENGTH 100
+#define MAX_OBJECTS 50
+#define BBOX_COUNT 4
 class MasterGraph
 {
 public:
@@ -76,8 +78,9 @@ public:
     // rocALTensor *create_rocal_tensor(const rocALTensorInfo &info, bool is_output);
     // rocALTensor *create_rocal_tensor_from_image(const rocALTensorInfo &info);
     // rocALTensor *create_rocal_loader_output_tensor(const rocALTensorInfo &info);
-
+    void get_meta_data_tensor_dims(pMetaDataBatch &meta_data);
     void create_label_reader(const char *source_path, MetaDataReaderType reader_type);
+    void create_coco_meta_data_reader(const char *source_path, bool is_output, MetaDataReaderType reader_type, MetaDataType label_type);
     // MetaDataBatch *create_coco_meta_data_reader(const char *source_path, bool is_output);
     // MetaDataBatch *create_tf_record_meta_data_reader(const char *source_path, MetaDataReaderType reader_type,  MetaDataType label_type, const std::map<std::string, std::string> feature_key_map);
     // MetaDataBatch *create_caffe_lmdb_record_meta_data_reader(const char *source_path, MetaDataReaderType reader_type,  MetaDataType label_type);
@@ -87,6 +90,8 @@ public:
     const std::pair<ImageNameBatch,pMetaDataBatch>& meta_data();
     const std::pair<ImageNameBatch,pMetaDataBatch>& tensor_meta_data();
     rocALTensorList * labels_meta_data();
+    rocALTensorList * bbox_labels_meta_data();
+    rocALTensorList * bbox_meta_data();
 
     void set_loop(bool val) { _loop = val; }
     // void set_output_images(const std::vector<rocALTensor*> &output_images, unsigned int num_of_outputs)
@@ -132,6 +137,11 @@ private:
 
     // Output tensorList for metadata
     rocALTensorList _labels_tensor_list;
+    rocALTensorList _bbox_tensor_list;
+    std::vector<std::vector<unsigned>> _labels_tensor_dims;
+    std::vector<std::vector<unsigned>> _bbox_tensor_dims;
+
+    std::vector<size_t> _meta_data_buffer_size;
 
     // cl_mem _output_tensor;//!< In the GPU processing case , is used to convert the U8 samples to float32 before they are being transfered back to host
     // ImageInfo _output_image_info;//!< Keeps the information about ROCAL's output image , it includes all images of a batch stacked on top of each other
