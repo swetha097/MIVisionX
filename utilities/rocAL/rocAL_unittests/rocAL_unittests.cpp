@@ -267,7 +267,14 @@ case 14:
 
     }
 break;
+case 15:
+    {
+        std::cout << ">>>>>>> Running "
+                  << "rocalGridmask" << std::endl;
+        image1 = rocalGridmask(handle, input1, true);
 
+    }
+break;
     
     default:
         std::cout << "Not a valid option! Exiting!\n";

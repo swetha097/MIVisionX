@@ -28,7 +28,7 @@ extern "C" RocalTensor ROCAL_API_CALL rocalBrightness(RocalContext context, Roca
                                                    RocalFloatParam alpha = NULL, RocalFloatParam beta = NULL);
 
 extern "C" RocalTensor ROCAL_API_CALL rocalNoise(RocalContext context, RocalTensor input,RocalTensorLayout rocal_tensor_layout,RocalTensorOutputType rocal_tensor_output_type, bool is_output,
-                                                   RocalFloatParam alpha = NULL, RocalFloatParam beta = NULL, RocalFloatParam hue = NULL, RocalFloatParam sat = NULL, int seed=0);
+                                                   RocalFloatParam alpha = NULL, RocalFloatParam beta = NULL, RocalFloatParam hue = NULL, RocalFloatParam sat = NULL, int seed=11110);
 
 extern "C" RocalTensor ROCAL_API_CALL rocalBlend(RocalContext context, RocalTensor input,RocalTensor input1, bool is_output,
                                                    RocalFloatParam alpha = NULL);
@@ -98,7 +98,15 @@ extern "C" RocalTensor ROCAL_API_CALL rocalColorTwist(RocalContext context, Roca
 extern "C" RocalTensor ROCAL_API_CALL rocalColorJitter(RocalContext context, RocalTensor input,RocalTensorLayout rocal_tensor_layout,RocalTensorOutputType rocal_tensor_output_type, bool is_output,
                                                    RocalFloatParam alpha = NULL, RocalFloatParam beta = NULL, RocalFloatParam hue = NULL, RocalFloatParam sat = NULL);
                     
-
+extern "C" RocalTensor ROCAL_API_CALL rocalGridmask(
+        RocalContext p_context,
+        RocalTensor p_input,
+        bool is_output,
+        int tileWidth=40,
+        float gridRatio=0.5,
+        float gridvalue=0.6,
+        unsigned int x=0,
+        unsigned int y=0 );
 extern "C" RocalTensor ROCAL_API_CALL rocalCrop(RocalContext context, RocalTensor input,
                                                                   RocalTensorLayout rocal_tensor_layout,
                                                                   RocalTensorOutputType rocal_tensor_output_type,

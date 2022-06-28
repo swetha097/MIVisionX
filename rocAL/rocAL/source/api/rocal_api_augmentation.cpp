@@ -39,6 +39,8 @@ THE SOFTWARE.
 #include "node_color_jitter.h"
 #include "node_noise.h"
 #include "node_blend.h"
+#include "node_gridmask.h"
+
 
 
 
@@ -1075,6 +1077,40 @@ rocalBlend(
         std::cerr<<"in rocal_api_augmentaiton**********************\n";
 
         context->master_graph->add_node<BlendTensorNode>({input,input1}, {output})->init(alpha);
+    }
+    catch(const std::exception& e)
+    {
+        context->capture_error(e.what());
+        ERR(e.what())
+    }
+    return output;
+}
+
+
+//gridmask
+RocalTensor ROCAL_API_CALL
+rocalGridmask(
+        RocalContext p_context,
+        RocalTensor p_input,
+        bool is_output,
+        int tileWidth,
+        float gridRatio,
+        float gridAngle,
+        unsigned int x,
+        unsigned int y )
+{
+    if(!p_input || !p_context)
+        THROW("Null values passed as input")
+    rocALTensor* output = nullptr;
+    auto context = static_cast<Context*>(p_context);
+    auto input = static_cast<rocALTensor*>(p_input);
+    // auto alpha = static_cast<FloatParam*>(p_alpha);
+    try
+    {
+
+        output = context->master_graph->create_tensor(input->info(), is_output);
+
+        context->master_graph->add_node<GridmaskTensorNode>({input}, {output})->init(tileWidth, gridRatio, gridAngle,x,y);
     }
     catch(const std::exception& e)
     {

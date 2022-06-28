@@ -145,6 +145,8 @@ list(APPEND SOURCES
         source/tensor/ColorJitter.cpp
         source/tensor/Noise.cpp
         source/tensor/Blend.cpp
+        source/tensor/Gridmask.cpp
+
 
 
 

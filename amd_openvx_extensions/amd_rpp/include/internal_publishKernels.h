@@ -53,6 +53,8 @@ vx_status Flip_Register(vx_context);
 vx_status ColorJitter_Register(vx_context);
 vx_status Noise_Register(vx_context);
 vx_status Blend_Register(vx_context);
+vx_status Gridmask_Register(vx_context);
+
 
 
 
