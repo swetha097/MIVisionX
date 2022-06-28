@@ -24,14 +24,14 @@ THE SOFTWARE.
 #include "node_brightness.h"
 #include "exception.h"
 
-BrightnessTensorNode::BrightnessTensorNode(const std::vector<rocALTensor *> &inputs,const std::vector<rocALTensor *> &outputs) :
+BrightnessNode::BrightnessNode(const std::vector<rocALTensor *> &inputs,const std::vector<rocALTensor *> &outputs) :
         Node(inputs, outputs),
         _alpha(ALPHA_RANGE[0], ALPHA_RANGE[1]),
         _beta (BETA_RANGE[0], BETA_RANGE[1])
 {
 }
 
-void BrightnessTensorNode::create_node()
+void BrightnessNode::create_node()
 {
     if(_node)
         return;
@@ -58,14 +58,14 @@ void BrightnessTensorNode::create_node()
         THROW("Adding the brightness_batch (vxExtrppNode_BrightnessbatchPD) node failed: "+ TOSTR(status))
 }
 
-void BrightnessTensorNode::init( float alpha, float beta)
+void BrightnessNode::init( float alpha, float beta)
 {
     _alpha.set_param(alpha);
     _beta.set_param(beta);
     _layout = _roi_type = 0;
 }
 
-void BrightnessTensorNode::init( FloatParam* alpha, FloatParam* beta)
+void BrightnessNode::init( FloatParam* alpha, FloatParam* beta)
 {
     _alpha.set_param(core(alpha));
     _beta.set_param(core(beta));
@@ -73,7 +73,7 @@ void BrightnessTensorNode::init( FloatParam* alpha, FloatParam* beta)
 }
 
 
-void BrightnessTensorNode::update_node()
+void BrightnessNode::update_node()
 {
     _alpha.update_array();
     _beta.update_array();

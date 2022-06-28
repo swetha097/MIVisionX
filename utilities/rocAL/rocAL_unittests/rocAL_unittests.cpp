@@ -178,6 +178,7 @@ break;
                   << "rocalGamma" << std::endl;
         image1 = rocalGamma(handle, input1, true);
     }
+    break;
     case 3:
     {
          std::cout << ">>>>>>> Running "
@@ -190,7 +191,7 @@ break;
     {
         std::cout << ">>>>>>> Running "
                   << "rocalExposure" << std::endl;
-        image1 = rocalExposure(handle, input1, tensorLayout, tensorOutputType, true);
+        image1 = rocalExposure(handle, input1, true);
     break;
     }
     case 5: 

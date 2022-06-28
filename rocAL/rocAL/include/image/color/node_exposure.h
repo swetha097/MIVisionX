@@ -27,11 +27,11 @@ THE SOFTWARE.
 #include "parameter_vx.h"
 #include "graph.h"
 
-class ExposureTensorNode : public Node
+class ExposureNode : public Node
 {
 public:
-    ExposureTensorNode(const std::vector<rocALTensor *> &inputs, const std::vector<rocALTensor *> &outputs);
-    ExposureTensorNode() = delete;
+    ExposureNode(const std::vector<rocALTensor *> &inputs, const std::vector<rocALTensor *> &outputs);
+    ExposureNode() = delete;
 
     void init( float shift);
     void init( FloatParam* shift);

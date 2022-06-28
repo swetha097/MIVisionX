@@ -4,13 +4,13 @@
 #include "node_exposure.h"
 #include "exception.h"
 
-ExposureTensorNode::ExposureTensorNode(const std::vector<rocALTensor *> &inputs,const std::vector<rocALTensor *> &outputs) :
+ExposureNode::ExposureNode(const std::vector<rocALTensor *> &inputs,const std::vector<rocALTensor *> &outputs) :
         Node(inputs, outputs),
         _shift(SHIFT_RANGE[0], SHIFT_RANGE[1])
 {
 }
 
-void ExposureTensorNode::create_node()
+void ExposureNode::create_node()
 {
     if(_node)
         return;
@@ -31,20 +31,20 @@ void ExposureTensorNode::create_node()
         THROW("Adding the Exposure_batch (vxExtrppNode_Exposure) node failed: "+ TOSTR(status))
 }
 
-void ExposureTensorNode::init( float shift)
+void ExposureNode::init( float shift)
 {
     _shift.set_param(shift);
     _layout = _roi_type = 0;
 }
 
-void ExposureTensorNode::init( FloatParam* shift)
+void ExposureNode::init( FloatParam* shift)
 {
     _shift.set_param(core(shift));
     _layout = _roi_type = 0;
 }
 
 
-void ExposureTensorNode::update_node()
+void ExposureNode::update_node()
 {
     _shift.update_array();
 }

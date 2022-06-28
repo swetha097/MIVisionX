@@ -243,15 +243,15 @@ static vx_status VX_CALLBACK processResizeMirrorNormalize(vx_node node, const vx
         // data->src_desc_ptr->dataType=RpptDataType::F32;
         // data->dst_desc_ptr->dataType=RpptDataType::F32;
 
-        rpp_status = rppt_resize_mirror_normalize_host(data->pSrc, data->src_desc_ptr,
-                                      data->pDst, data->dst_desc_ptr,
-                                      data->dstimgsize,
-                                      // data->interpolation_type,
-                                      RpptInterpolationType::BILINEAR,
-                                      data->mean,data->std_dev,
-                                      data->mirror,
-                                      data->roi_tensor_Ptr, data->roiType,
-                                      data->rppHandle);
+        // rpp_status = rppt_resize_mirror_normalize_host(data->pSrc, data->src_desc_ptr,
+        //                               data->pDst, data->dst_desc_ptr,
+        //                               data->dstimgsize,
+        //                               // data->interpolation_type,
+        //                               RpptInterpolationType::BILINEAR,
+        //                               data->mean,data->std_dev,
+        //                               data->mirror,
+        //                               data->roi_tensor_Ptr, data->roiType,
+        //                               data->rppHandle);
 
         std::cerr << "\back to rpp";
         return_status = (rpp_status == RPP_SUCCESS) ? VX_SUCCESS : VX_FAILURE;

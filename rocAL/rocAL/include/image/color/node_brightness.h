@@ -26,11 +26,11 @@ THE SOFTWARE.
 #include "parameter_vx.h"
 #include "graph.h"
 
-class BrightnessTensorNode : public Node
+class BrightnessNode : public Node
 {
 public:
-    BrightnessTensorNode(const std::vector<rocALTensor *> &inputs, const std::vector<rocALTensor *> &outputs);
-    BrightnessTensorNode() = delete;
+    BrightnessNode(const std::vector<rocALTensor *> &inputs, const std::vector<rocALTensor *> &outputs);
+    BrightnessNode() = delete;
 
     void init( float alpha, float beta);
     void init( FloatParam* alpha_param, FloatParam* beta_param);
