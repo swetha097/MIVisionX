@@ -74,8 +74,6 @@ extern "C" RocalTensor ROCAL_API_CALL rocalResizeMirrorNormalize(RocalContext p_
                                              RocalIntParam mirror = NULL);
 
 extern "C" RocalTensor ROCAL_API_CALL rocalColorCast( RocalContext p_context, RocalTensor p_input,
-                                                            RocalTensorLayout rocal_tensor_layout,
-                                                            RocalTensorOutputType rocal_tensor_output_type,
                                                             bool is_output,
                                                             RocalFloatParam R_value = NULL,
                                                             RocalFloatParam G_value = NULL,
@@ -84,14 +82,12 @@ extern "C" RocalTensor ROCAL_API_CALL rocalColorCast( RocalContext p_context, Ro
 
 
 extern "C" RocalTensor ROCAL_API_CALL rocalSpatter(RocalContext p_context,RocalTensor p_input,
-                                                        RocalTensorLayout rocal_tensor_layout,
-                                                        RocalTensorOutputType rocal_tensor_output_type,
                                                         bool is_output,
                                                         int R_value=0,
                                                         int G_value=0,
                                                         int B_value=0);
 
-extern "C" RocalTensor ROCAL_API_CALL rocalColorTwist(RocalContext context, RocalTensor input,RocalTensorLayout rocal_tensor_layout,RocalTensorOutputType rocal_tensor_output_type, bool is_output,
+extern "C" RocalTensor ROCAL_API_CALL rocalColorTwist(RocalContext context, RocalTensor input, bool is_output,
                                                    RocalFloatParam alpha = NULL, RocalFloatParam beta = NULL, RocalFloatParam hue = NULL, RocalFloatParam sat = NULL);
 
 

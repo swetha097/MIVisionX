@@ -2,18 +2,16 @@
 #include "node_color_cast.h"
 #include "exception.h"
 
-ColorCastTensorNode::ColorCastTensorNode(const std::vector<rocALTensor *> &inputs,const std::vector<rocALTensor *> &outputs) :
+ColorCastNode::ColorCastNode(const std::vector<rocALTensor *> &inputs,const std::vector<rocALTensor *> &outputs) :
         Node(inputs, outputs),
         _red(RED_RANGE[0], RED_RANGE[1]),
         _green (GREEN_RANGE[0], GREEN_RANGE[1]),
         _blue(BLUE_RANGE[0], BLUE_RANGE[1]),
         _alpha(ALPHA_RANGE[0], ALPHA_RANGE[1])
-
-
 {
 }
 
-void ColorCastTensorNode::create_node()
+void ColorCastNode::create_node()
 {
     if(_node)
         return;
@@ -25,6 +23,11 @@ void ColorCastTensorNode::create_node()
 
     if(_inputs[0]->info().layout() == RocalTensorlayout::NCHW)
         _layout = 1;
+    else if(_inputs[0]->info().layout() == RocalTensorlayout::NFHWC)
+        _layout = 2;
+    else if(_inputs[0]->info().layout() == RocalTensorlayout::NFCHW)
+        _layout = 3;
+        
     if(_inputs[0]->info().roi_type() == RocalROIType::XYWH)
         _roi_type = 1;
     vx_scalar layout = vxCreateScalar(vxGetContext((vx_reference)_graph->get()),VX_TYPE_UINT32,&_layout);
@@ -37,28 +40,26 @@ void ColorCastTensorNode::create_node()
         THROW("Adding the colorcast_batch (vxExtrppNode_ColotCast) node failed: "+ TOSTR(status))
 }
 
-void ColorCastTensorNode::init( float red, float green, float blue , float alpha,int layout)
+void ColorCastNode::init( float red, float green, float blue , float alpha)
 {
-    _layout=layout;
     _red.set_param(red);
     _green.set_param(green);
     _blue.set_param(blue);
     _alpha.set_param(alpha);
-    // _layout = _roi_type = 0;
+    _layout = _roi_type = 0;
 }
 
-void ColorCastTensorNode::init( FloatParam* red, FloatParam* green, FloatParam* blue, FloatParam* alpha, int layout)
+void ColorCastNode::init( FloatParam* red, FloatParam* green, FloatParam* blue, FloatParam* alpha)
 {
-    _layout=layout;
     _red.set_param(core(red));
     _green.set_param(core(green));
     _blue.set_param(core(blue));
     _alpha.set_param(core(alpha));
-    // _layout = _roi_type = 0;
+    _layout = _roi_type = 0;
 }
 
 
-void ColorCastTensorNode::update_node()
+void ColorCastNode::update_node()
 {
     _red.update_array();
     _green.update_array();

@@ -26,13 +26,13 @@ THE SOFTWARE.
 #include "parameter_vx.h"
 #include "graph.h"
 
-class SpatterTensorNode : public Node
+class SpatterNode : public Node
 {
 public:
-    SpatterTensorNode(const std::vector<rocALTensor *> &inputs, const std::vector<rocALTensor *> &outputs);
-    SpatterTensorNode() = delete;
+    SpatterNode(const std::vector<rocALTensor *> &inputs, const std::vector<rocALTensor *> &outputs);
+    SpatterNode() = delete;
 
-    void init( int red, int blue,int green,int layout );
+    void init( int red, int blue, int green);
 
 protected:
     void create_node() override ;
@@ -40,7 +40,6 @@ protected:
 private:
 
     int _red,_blue,_green;
-
     unsigned _layout, _roi_type;
     
 };

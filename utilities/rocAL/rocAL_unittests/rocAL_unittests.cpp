@@ -198,21 +198,21 @@ break;
     {
         std::cout << ">>>>>>> Running "
                   << "rocalColorCast" << std::endl;
-        image1 = rocalColorCast(handle, input1, tensorLayout, tensorOutputType, true);
+        image1 = rocalColorCast(handle, input1, true);
     break;
     }
     case 6: 
     {
         std::cout << ">>>>>>> Running "
                   << "rocalspatter" << std::endl;
-        image1 = rocalSpatter(handle, input1, tensorLayout, tensorOutputType, true);
+        image1 = rocalSpatter(handle, input1, true);
     break;
     }
     case 7: 
     {
         std::cout << ">>>>>>> Running "
                   << "rocalColorTwist" << std::endl;
-        image1 = rocalColorTwist(handle, input1, tensorLayout, tensorOutputType, true);
+        image1 = rocalColorTwist(handle, input1, true);
     break;
     }
     case 8: 

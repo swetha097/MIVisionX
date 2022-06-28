@@ -2,7 +2,7 @@
 #include "node_color_twist.h"
 #include "exception.h"
 
-ColorTwistTensorNode::ColorTwistTensorNode(const std::vector<rocALTensor *> &inputs,const std::vector<rocALTensor *> &outputs) :
+ColorTwistNode::ColorTwistNode(const std::vector<rocALTensor *> &inputs,const std::vector<rocALTensor *> &outputs) :
         Node(inputs, outputs),
         _alpha(ALPHA_RANGE[0], ALPHA_RANGE[1]),
         _beta (BETA_RANGE[0], BETA_RANGE[1]),
@@ -13,7 +13,7 @@ ColorTwistTensorNode::ColorTwistTensorNode(const std::vector<rocALTensor *> &inp
 {
 }
 
-void ColorTwistTensorNode::create_node()
+void ColorTwistNode::create_node()
 {
     if(_node)
         return;
@@ -37,7 +37,7 @@ void ColorTwistTensorNode::create_node()
         THROW("Adding the colortwist_batch (vxExtrppNode_ColotTwsit) node failed: "+ TOSTR(status))
 }
 
-void ColorTwistTensorNode::init( float alpha, float beta, float hue , float sat)
+void ColorTwistNode::init( float alpha, float beta, float hue , float sat)
 {
     _alpha.set_param(alpha);
     _beta.set_param(beta);
@@ -46,7 +46,7 @@ void ColorTwistTensorNode::init( float alpha, float beta, float hue , float sat)
     _layout = _roi_type = 0;
 }
 
-void ColorTwistTensorNode::init( FloatParam* alpha, FloatParam* beta, FloatParam* hue, FloatParam* sat)
+void ColorTwistNode::init( FloatParam* alpha, FloatParam* beta, FloatParam* hue, FloatParam* sat)
 {
     _alpha.set_param(core(alpha));
     _beta.set_param(core(beta));
@@ -56,7 +56,7 @@ void ColorTwistTensorNode::init( FloatParam* alpha, FloatParam* beta, FloatParam
 }
 
 
-void ColorTwistTensorNode::update_node()
+void ColorTwistNode::update_node()
 {
     _alpha.update_array();
     _beta.update_array();

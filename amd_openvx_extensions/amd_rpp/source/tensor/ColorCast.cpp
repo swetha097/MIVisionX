@@ -41,10 +41,12 @@ struct ColorCastLocalData
     RpptROI *roi_tensor_Ptr;
     RpptRoiType roiType;
     size_t in_tensor_dims[NUM_OF_DIMS];
-    vx_enum in_tensor_type ;
+    vx_enum in_tensor_type;
     vx_enum out_tensor_type; 
     RpptRGB *rgbTensor;
-    Rpp32f *alphaTensor; 
+    Rpp32f *alphaTensor;
+    Rpp32u layout;
+
 #if ENABLE_OPENCL
     cl_mem cl_pSrc;
     cl_mem cl_pDst;
@@ -65,13 +67,28 @@ static vx_status VX_CALLBACK refreshColorCast(vx_node node, const vx_reference *
 
     for (int i = 0; i < data->nbatchSize; i++)
     {
-        data->rgbTensor[i].R =00;//data->red[i];
-        data->rgbTensor[i].G=00;//data->green[i];
-        data->rgbTensor[i].B=100;//data->blue[i];
-        data->alphaTensor[i]=0.5;//data->alpha[i];
-        // data->dstimgsize[i].width = data->resize_w[i];
-        // data->dstimgsize[i].height = data->resize_h[i];
-        // std::cerr << "data->resize_w[i] " << data->resize_w[i] << "  " << data->resize_w[i];
+        data->rgbTensor[i].R =data->red[i];
+        data->rgbTensor[i].G=data->green[i];
+        data->rgbTensor[i].B=data->blue[i];
+        data->alphaTensor[i]=data->alpha[i];
+    }
+    if(data->layout == 2 || data->layout == 3)
+    {
+        unsigned num_of_frames = data->in_tensor_dims[1]; // Num of frames 'F'
+        for(int n = data->nbatchSize - 1; n >= 0; n--)
+        {
+            unsigned index = n * num_of_frames;
+            for(int f = 0; f < num_of_frames; f++)
+            {
+                data->rgbTensor[index + f] = data->rgbTensor[n];
+                data->alphaTensor[index + f] = data->alphaTensor[n];
+                data->roi_tensor_Ptr[index + f].xywhROI.xy.x = data->roi_tensor_Ptr[n].xywhROI.xy.x;
+                data->roi_tensor_Ptr[index + f].xywhROI.xy.y = data->roi_tensor_Ptr[n].xywhROI.xy.y;
+                data->roi_tensor_Ptr[index + f].xywhROI.roiWidth = data->roi_tensor_Ptr[n].xywhROI.roiWidth;
+                data->roi_tensor_Ptr[index + f].xywhROI.roiHeight = data->roi_tensor_Ptr[n].xywhROI.roiHeight;
+
+            }
+        }
     }
     if (data->device_type == AGO_TARGET_AFFINITY_GPU)
     {
@@ -85,35 +102,8 @@ static vx_status VX_CALLBACK refreshColorCast(vx_node node, const vx_reference *
     }
     if (data->device_type == AGO_TARGET_AFFINITY_CPU)
     {
-        if (data->in_tensor_type == vx_type_e::VX_TYPE_UINT8 && data->out_tensor_type == vx_type_e::VX_TYPE_UINT8)
-        {
-            STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[0], VX_TENSOR_BUFFER_HOST, &data->pSrc, sizeof(vx_uint8)));
-            STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[2], VX_TENSOR_BUFFER_HOST, &data->pDst, sizeof(vx_uint8)));
-        }
-        else if (data->in_tensor_type == vx_type_e::VX_TYPE_FLOAT32 && data->out_tensor_type == vx_type_e::VX_TYPE_FLOAT32)
-        {
-            std::cerr<<"*******************FLOAT32*******************";
-
-            STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[0], VX_TENSOR_BUFFER_HOST, &data->pSrc, sizeof(vx_float32)));
-            STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[2], VX_TENSOR_BUFFER_HOST, &data->pDst, sizeof(vx_float32)));
-        }
-        // vx_float16 is not supported. Have to disable it once it is done.
-        // else if (in_tensor_type == vx_type_e::VX_TYPE_FLOAT16 && out_tensor_type == vx_type_e::VX_TYPE_FLOAT16)
-        // {
-        //     
-            // STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[0], VX_TENSOR_BUFFER_HOST, &data->pSrc, sizeof(vx_float16)));
-        //     STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[3], VX_TENSOR_BUFFER_HOST, &data->pDst, sizeof(vx_float16)));
-        // }
-        else if (data->in_tensor_type == vx_type_e::VX_TYPE_INT8 && data->out_tensor_type == vx_type_e::VX_TYPE_INT8)
-        {
-            STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[0], VX_TENSOR_BUFFER_HOST, &data->pSrc, sizeof(vx_int8)));
-            STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[2], VX_TENSOR_BUFFER_HOST, &data->pDst, sizeof(vx_int8)));
-        }
-        else if (data->in_tensor_type == vx_type_e::VX_TYPE_UINT8 && data->out_tensor_type == vx_type_e::VX_TYPE_FLOAT32)
-        {
-            STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[0], VX_TENSOR_BUFFER_HOST, &data->pSrc, sizeof(vx_uint8)));
-            STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[2], VX_TENSOR_BUFFER_HOST, &data->pDst, sizeof(vx_float32)));
-        }
+        STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[0], VX_TENSOR_BUFFER_HOST, &data->pSrc, sizeof(vx_uint8)));
+        STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[2], VX_TENSOR_BUFFER_HOST, &data->pDst, sizeof(vx_uint8)));
     }
     return status;
 }
@@ -168,8 +158,6 @@ static vx_status VX_CALLBACK processColorCast(vx_node node, const vx_reference *
 #if ENABLE_OPENCL
         refreshColorCast(node, parameters, num, data);
         rpp_status = rppt_color_cast_gpu((void *)data->cl_pSrc, data->src_desc_ptr, (void *)data->cl_pDst, data->src_desc_ptr, data->rgbTensor,  data->alphaTensor, data->roi_tensor_Ptr, data->roiType, data->rppHandle);
-        // rpp_status = rppt_color_cast_host(data->pSrc, data->src_desc_ptr, data->pDst, data->src_desc_ptr, data->rgbTensor, data->alphaTensor, data->roi_tensor_Ptr, data->roiType, data->rppHandle);
-
         return_status = (rpp_status == RPP_SUCCESS) ? VX_SUCCESS : VX_FAILURE;
 #elif ENABLE_HIP
         refreshColorCast(node, parameters, num, data);
@@ -184,19 +172,9 @@ static vx_status VX_CALLBACK processColorCast(vx_node node, const vx_reference *
         {
             std::cerr<<"\n bbox values :: "<<data->roi_tensor_Ptr[i].xywhROI.xy.x<<" "<<data->roi_tensor_Ptr[i].xywhROI.xy.y<<" "<<data->roi_tensor_Ptr[i].xywhROI.roiWidth<<" "<<data->roi_tensor_Ptr[i].xywhROI.roiHeight;
         }
-        std::cerr<<"data->rgbtensor  "<<int(data->rgbTensor[0].R) <<" "<<int(data->rgbTensor[0].G)<<"  "<<int(data->rgbTensor[0].B)<<"\n";
         rpp_status = rppt_color_cast_host(data->pSrc, data->src_desc_ptr, data->pDst, data->src_desc_ptr, data->rgbTensor, data->alphaTensor, data->roi_tensor_Ptr, data->roiType, data->rppHandle);
         return_status = (rpp_status == RPP_SUCCESS) ? VX_SUCCESS : VX_FAILURE;
         std::cerr<<"\n back from RPP";
-        //   float *temp = ((float*)calloc( 100,sizeof(float) ));
-
-        // for (int i=0;i< 100;i++)
-        //         {
-        //             temp[i]=*((float *)(data->pDst) + i);
-        //             // *((float *)(data->pDst) + i)=*((float *)(data->pDst) + i)*255;
-        //             std::cout<<temp[i]<<" ";
-
-        //         }
     }
     return return_status;
 }
@@ -204,7 +182,7 @@ static vx_status VX_CALLBACK processColorCast(vx_node node, const vx_reference *
 static vx_status VX_CALLBACK initializeColorCast(vx_node node, const vx_reference *parameters, vx_uint32 num)
 {
     ColorCastLocalData *data = new ColorCastLocalData;
-    unsigned layout, roiType;
+    unsigned roiType;
     memset(data, 0, sizeof(*data));
 #if ENABLE_OPENCL
     STATUS_ERROR_CHECK(vxQueryNode(node, VX_NODE_ATTRIBUTE_AMD_OPENCL_COMMAND_QUEUE, &data->handle.cmdq, sizeof(data->handle.cmdq)));
@@ -213,8 +191,7 @@ static vx_status VX_CALLBACK initializeColorCast(vx_node node, const vx_referenc
 #endif
     STATUS_ERROR_CHECK(vxCopyScalar((vx_scalar)parameters[10], &data->device_type, VX_READ_ONLY, VX_MEMORY_TYPE_HOST));
     STATUS_ERROR_CHECK(vxReadScalarValue((vx_scalar)parameters[9], &data->nbatchSize));
-    STATUS_ERROR_CHECK(vxCopyScalar((vx_scalar)parameters[7], &layout, VX_READ_ONLY, VX_MEMORY_TYPE_HOST));
-    std::cerr<<"\n layout "<<layout;
+    STATUS_ERROR_CHECK(vxCopyScalar((vx_scalar)parameters[7], &data->layout, VX_READ_ONLY, VX_MEMORY_TYPE_HOST));
     STATUS_ERROR_CHECK(vxCopyScalar((vx_scalar)parameters[8], &roiType, VX_READ_ONLY, VX_MEMORY_TYPE_HOST));
     if(roiType == 1)
         data->roiType = RpptRoiType::XYWH;
@@ -229,18 +206,8 @@ static vx_status VX_CALLBACK initializeColorCast(vx_node node, const vx_referenc
     {
         data->src_desc_ptr->dataType = RpptDataType::U8;
     }
-    else if (data->in_tensor_type == vx_type_e::VX_TYPE_FLOAT32)
-    {
-        data->src_desc_ptr->dataType = RpptDataType::F32;
-    }
-    // else if (data->src_desc_ptr->dataType == vx_type_e::VX_TYPE_FLOAT16)
-    //     data->src_desc_ptr->dataType = RpptDataType::F16;
-    else if (data->in_tensor_type == vx_type_e::VX_TYPE_INT8)
-    {
-        data->src_desc_ptr->dataType = RpptDataType::I8;
-    }
      data->src_desc_ptr->offsetInBytes = 0;
-    if(layout == 0) // NHWC
+    if(data->layout == 0) // NHWC
     {
         data->src_desc_ptr->n = data->in_tensor_dims[0];
         data->src_desc_ptr->h = data->in_tensor_dims[1];
@@ -255,7 +222,7 @@ static vx_status VX_CALLBACK initializeColorCast(vx_node node, const vx_referenc
         std::cerr<<"\n Setting layout "<<data->src_desc_ptr->layout;
         std::cerr<<"\n Setting data type "<<data->src_desc_ptr->dataType;
     }
-    else // NCHW
+    else if(data->layout == 1)// NCHW
     {
         data->src_desc_ptr->n = data->in_tensor_dims[0];
         data->src_desc_ptr->h = data->in_tensor_dims[2];
@@ -266,18 +233,46 @@ static vx_status VX_CALLBACK initializeColorCast(vx_node node, const vx_referenc
         data->src_desc_ptr->strides.hStride = data->src_desc_ptr->w;
         data->src_desc_ptr->strides.wStride = 1;
         data->src_desc_ptr->layout = RpptLayout::NCHW;
+        std::cerr<<"\n Setting layout "<<data->src_desc_ptr->layout;
+        std::cerr<<"\n Setting data type "<<data->src_desc_ptr->dataType;
+    }
+    else if(data->layout == 2) // NFHWC
+    {
+        data->src_desc_ptr->n = data->in_tensor_dims[0] * data->in_tensor_dims[1];
+        data->src_desc_ptr->h = data->in_tensor_dims[2];
+        data->src_desc_ptr->w = data->in_tensor_dims[3];
+        data->src_desc_ptr->c = data->in_tensor_dims[4];
+        std::cerr<<"\n n h w c "<<data->src_desc_ptr->n<<" "<<data->src_desc_ptr->h<<" "<<data->src_desc_ptr->w<<" "<<data->src_desc_ptr->c;
+        data->src_desc_ptr->strides.nStride = data->src_desc_ptr->c * data->src_desc_ptr->w * data->src_desc_ptr->h;
+        data->src_desc_ptr->strides.hStride = data->src_desc_ptr->c * data->src_desc_ptr->w;
+        data->src_desc_ptr->strides.wStride = data->src_desc_ptr->c;
+        data->src_desc_ptr->strides.cStride = 1;
+        data->src_desc_ptr->layout = RpptLayout::NHWC;
+        std::cerr<<"\n Setting layout "<<data->src_desc_ptr->layout;
+        std::cerr<<"\n Setting data type "<<data->src_desc_ptr->dataType;
+    }
+    else if(data->layout == 3)// NFCHW
+    {
+        data->src_desc_ptr->n = data->in_tensor_dims[0] * data->in_tensor_dims[1];
+        data->src_desc_ptr->h = data->in_tensor_dims[3];
+        data->src_desc_ptr->w = data->in_tensor_dims[4];
+        data->src_desc_ptr->c = data->in_tensor_dims[2];
+        data->src_desc_ptr->strides.nStride = data->src_desc_ptr->c * data->src_desc_ptr->w * data->src_desc_ptr->h;
+        data->src_desc_ptr->strides.cStride = data->src_desc_ptr->w * data->src_desc_ptr->h;
+        data->src_desc_ptr->strides.hStride = data->src_desc_ptr->w;
+        data->src_desc_ptr->strides.wStride = 1;
+        data->src_desc_ptr->layout = RpptLayout::NCHW;
+        std::cerr<<"\n Setting layout "<<data->src_desc_ptr->layout;
+        std::cerr<<"\n Setting data type "<<data->src_desc_ptr->dataType;
     }
     data->roi_tensor_Ptr = (RpptROI *) calloc(data->nbatchSize, sizeof(RpptROI));
-    data->red = (vx_float32 *)malloc(sizeof(vx_float32) * data->nbatchSize);
-    data->green = (vx_float32 *)malloc(sizeof(vx_float32) * data->nbatchSize);
-    data->blue = (vx_float32 *)malloc(sizeof(vx_float32) * data->nbatchSize);
-    data->alpha = (vx_float32 *)malloc(sizeof(vx_float32) * data->nbatchSize);
+    data->red = (vx_float32 *)malloc(sizeof(vx_float32) * data->src_desc_ptr->n);
+    data->green = (vx_float32 *)malloc(sizeof(vx_float32) * data->src_desc_ptr->n);
+    data->blue = (vx_float32 *)malloc(sizeof(vx_float32) * data->src_desc_ptr->n);
+    data->alpha = (vx_float32 *)malloc(sizeof(vx_float32) * data->src_desc_ptr->n);
 
-    data->rgbTensor = (RpptRGB *)calloc(data->nbatchSize, sizeof(RpptRGB));
-    data->alphaTensor = (Rpp32f *)calloc(data->nbatchSize, sizeof(Rpp32f));
-
-
-
+    data->rgbTensor = (RpptRGB *)calloc(data->src_desc_ptr->n, sizeof(RpptRGB));
+    data->alphaTensor = (Rpp32f *)calloc(data->src_desc_ptr->n, sizeof(Rpp32f));
     refreshColorCast(node, parameters, num, data);
 #if ENABLE_OPENCL
     if (data->device_type == AGO_TARGET_AFFINITY_GPU)

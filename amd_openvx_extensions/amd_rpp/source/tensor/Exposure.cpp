@@ -250,7 +250,7 @@ static vx_status VX_CALLBACK initializeExposure(vx_node node, const vx_reference
         data->src_desc_ptr->layout = RpptLayout::NCHW;
     }
     data->roi_tensor_Ptr = (RpptROI *) calloc(data->nbatchSize, sizeof(RpptROI));
-    data->exposure_value = (vx_float32 *)malloc(sizeof(vx_float32) * data->nbatchSize);
+    data->exposure_value = (vx_float32 *)malloc(sizeof(vx_float32) * data->src_desc_ptr->n);
     refreshExposure(node, parameters, num, data);
 #if ENABLE_OPENCL
     if (data->device_type == AGO_TARGET_AFFINITY_GPU)

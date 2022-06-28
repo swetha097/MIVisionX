@@ -26,11 +26,11 @@ THE SOFTWARE.
 #include "parameter_vx.h"
 #include "graph.h"
 
-class ColorTwistTensorNode : public Node
+class ColorTwistNode : public Node
 {
 public:
-    ColorTwistTensorNode(const std::vector<rocALTensor *> &inputs, const std::vector<rocALTensor *> &outputs);
-    ColorTwistTensorNode() = delete;
+    ColorTwistNode(const std::vector<rocALTensor *> &inputs, const std::vector<rocALTensor *> &outputs);
+    ColorTwistNode() = delete;
 
     void init( float alpha, float beta,float hue , float sat);
     void init( FloatParam* alpha_param, FloatParam* beta_param,  FloatParam* hue_param,  FloatParam* sat_param );

@@ -26,14 +26,14 @@ THE SOFTWARE.
 #include "parameter_vx.h"
 #include "graph.h"
 
-class ColorCastTensorNode : public Node
+class ColorCastNode : public Node
 {
 public:
-    ColorCastTensorNode(const std::vector<rocALTensor *> &inputs, const std::vector<rocALTensor *> &outputs);
-    ColorCastTensorNode() = delete;
+    ColorCastNode(const std::vector<rocALTensor *> &inputs, const std::vector<rocALTensor *> &outputs);
+    ColorCastNode() = delete;
 
-    void init( float red, float blue,float green , float alpha,int layout);
-    void init( FloatParam* red_param, FloatParam* green_param,  FloatParam* blue_param,  FloatParam* alpha_param, int layout );
+    void init( float red, float blue,float green , float alpha);
+    void init( FloatParam* red_param, FloatParam* green_param,  FloatParam* blue_param,  FloatParam* alpha_param);
 
 protected:
     void create_node() override ;

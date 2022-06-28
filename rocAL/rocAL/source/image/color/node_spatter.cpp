@@ -2,26 +2,29 @@
 #include "node_spatter.h"
 #include "exception.h"
 
-SpatterTensorNode::SpatterTensorNode(const std::vector<rocALTensor *> &inputs,const std::vector<rocALTensor *> &outputs) :
+SpatterNode::SpatterNode(const std::vector<rocALTensor *> &inputs,const std::vector<rocALTensor *> &outputs) :
         Node(inputs, outputs)
-
-
 {
 }
 
-void SpatterTensorNode::create_node()
+void SpatterNode::create_node()
 {
     if(_node)
         return;
 
-    
-    if(_inputs[0]->info().layout() == RocalTensorlayout::NCHW)
-        _layout = 1;
-    if(_inputs[0]->info().roi_type() == RocalROIType::XYWH)
-        _roi_type = 1;
     vx_scalar red_val = vxCreateScalar(vxGetContext((vx_reference)_graph->get()),VX_TYPE_UINT32,&_red);
     vx_scalar green_val = vxCreateScalar(vxGetContext((vx_reference)_graph->get()),VX_TYPE_UINT32,&_green);
     vx_scalar blue_val = vxCreateScalar(vxGetContext((vx_reference)_graph->get()),VX_TYPE_UINT32,&_blue);
+    
+    if(_inputs[0]->info().layout() == RocalTensorlayout::NCHW)
+        _layout = 1;
+    else if(_inputs[0]->info().layout() == RocalTensorlayout::NFHWC)
+        _layout = 2;
+    else if(_inputs[0]->info().layout() == RocalTensorlayout::NFCHW)
+        _layout = 3;
+
+    if(_inputs[0]->info().roi_type() == RocalROIType::XYWH)
+        _roi_type = 1;
 
     vx_scalar layout = vxCreateScalar(vxGetContext((vx_reference)_graph->get()),VX_TYPE_UINT32,&_layout);
     vx_scalar roi_type = vxCreateScalar(vxGetContext((vx_reference)_graph->get()),VX_TYPE_UINT32,&_roi_type);
@@ -33,18 +36,14 @@ void SpatterTensorNode::create_node()
         THROW("Adding the spatter_batch (vxExtrppNode_spatter) node failed: "+ TOSTR(status))
 }
 
-void SpatterTensorNode::init( int red, int green, int blue,int layout)
+void SpatterNode::init( int red, int green, int blue)
 {
-    _layout=layout;
     _red = red;
     _green = green;
     _blue = blue;
+    _layout = _roi_type = 0;
 }
 
-
-
-
-void SpatterTensorNode::update_node()
+void SpatterNode::update_node()
 {
-    
 }

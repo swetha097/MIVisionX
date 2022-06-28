@@ -621,9 +621,7 @@ void MasterGraph::output_routine()
             for(unsigned cycle_idx = 0; cycle_idx < _user_to_internal_batch_ratio; cycle_idx++)
             {
                 // Swap handles on the input image, so that new image is loaded to be processed
-                std::cerr << "\nBefore load next\n";
                 auto load_ret = _loader_module->load_next();
-                std::cerr << "\nAfter load next\n";
                 if (load_ret != LoaderModuleStatus::OK)
                     THROW("Loader module failed to load next batch of images, status " + TOSTR(load_ret))
                 if (!_processing)
