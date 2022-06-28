@@ -646,9 +646,7 @@ void MasterGraph::output_routine()
             for(unsigned cycle_idx = 0; cycle_idx < _user_to_internal_batch_ratio; cycle_idx++)
             {
                 // Swap handles on the input image, so that new image is loaded to be processed
-                std::cerr << "\nBefore load next\n";
                 auto load_ret = _loader_module->load_next();
-                std::cerr << "\nAfter load next\n";
                 if (load_ret != LoaderModuleStatus::OK)
                     THROW("Loader module failed to load next batch of images, status " + TOSTR(load_ret))
                 if (!_processing)
@@ -717,10 +715,6 @@ void MasterGraph::output_routine()
                         if(_is_random_bbox_crop)
                         {
                             _meta_data_graph->update_random_bbox_meta_data(_augmented_meta_data, decode_image_info, crop_image_info);
-                        }
-                        else
-                        {
-                            _meta_data_graph->update_meta_data(_augmented_meta_data, decode_image_info);
                         }
                         _meta_data_graph->process(_augmented_meta_data);
                     }
@@ -898,8 +892,11 @@ rocALTensorList * MasterGraph::bbox_labels_meta_data()
         _labels_tensor_list[i]->set_dims(_labels_tensor_dims[i]);
         _labels_tensor_list[i]->set_mem_handle(meta_data_buffers); // TODO - Need to update according to the metadata
         meta_data_buffers += _labels_tensor_list[i]->info().data_size();
+        // if(i%_user_batch_size == 1)
+        std::cerr << "DATA SIZE : " << _labels_tensor_list[i]->info().data_size() << " " << _labels_tensor_list[i]->info().dims()->at(0) << "\n";
     }
-
+    std::cerr << "DATA SIZE : " << _labels_tensor_list[0]->info().data_size() << " " << _labels_tensor_list[0]->info().dims()->at(0) << "\n";
+    std::cerr << "DATA SIZE : " << _labels_tensor_list[1]->info().data_size() << " " << _labels_tensor_list[1]->info().dims()->at(0) << "\n";
     return &_labels_tensor_list;
 }
 
@@ -910,7 +907,7 @@ rocALTensorList * MasterGraph::bbox_meta_data()
     auto meta_data_buffers = _ring_buffer.get_meta_read_buffers()[1]; // Get labels buffer from ring buffer
     for(int i = 0; i < _bbox_tensor_list.size(); i++)
     {
-        std::cerr << "[" <<  _bbox_tensor_dims[i][0] << " ," <<  _bbox_tensor_dims[i][1] << "]\n";
+        // std::cerr << "[" <<  _bbox_tensor_dims[i][0] << " ," <<  _bbox_tensor_dims[i][1] << "]\n";
         _bbox_tensor_list[i]->set_dims(_bbox_tensor_dims[i]);
         _bbox_tensor_list[i]->set_mem_handle(meta_data_buffers); // TODO - Need to update according to the metadata
         meta_data_buffers += _bbox_tensor_list[i]->info().data_size();

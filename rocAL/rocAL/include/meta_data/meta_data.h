@@ -241,7 +241,7 @@ struct BoundingBoxBatch: public MetaDataBatch
     {
         return std::make_shared<BoundingBoxBatch>(*this);
     }
-    void copy_data(std::vector<void*> buffer)
+    void copy_data(std::vector<void*> buffer) override
     {
         if(buffer.size() < 2)
             THROW("The buffers are insufficient") // TODO -change
