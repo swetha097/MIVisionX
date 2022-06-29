@@ -22,7 +22,7 @@ THE SOFTWARE.
 
 #include "internal_publishKernels.h"
 
-struct ResizebatchPDLocalData
+struct ResizetensorLocalData
 {
     RPPCommonHandle handle;
     rppHandle_t rppHandle;
@@ -54,7 +54,7 @@ struct ResizebatchPDLocalData
 #endif
 };
 
-static vx_status VX_CALLBACK refreshResizebatchPD(vx_node node, const vx_reference *parameters, vx_uint32 num, ResizebatchPDLocalData *data)
+static vx_status VX_CALLBACK refreshResizetensor(vx_node node, const vx_reference *parameters, vx_uint32 num, ResizetensorLocalData *data)
 {
     vx_status status = VX_SUCCESS;
     STATUS_ERROR_CHECK(vxCopyArrayRange((vx_array)parameters[1], 0, data->nbatchSize, sizeof(Rpp32u), data->srcBatch_width, VX_READ_ONLY, VX_MEMORY_TYPE_HOST));
@@ -90,7 +90,7 @@ static vx_status VX_CALLBACK refreshResizebatchPD(vx_node node, const vx_referen
     return status;
 }
 
-static vx_status VX_CALLBACK validateResizebatchPD(vx_node node, const vx_reference parameters[], vx_uint32 num, vx_meta_format metas[])
+static vx_status VX_CALLBACK validateResizetensor(vx_node node, const vx_reference parameters[], vx_uint32 num, vx_meta_format metas[])
 {
     vx_status status = VX_SUCCESS;
     vx_enum scalar_type;
@@ -109,7 +109,7 @@ static vx_status VX_CALLBACK validateResizebatchPD(vx_node node, const vx_refere
     STATUS_ERROR_CHECK(vxQueryImage(input, VX_IMAGE_ATTRIBUTE_FORMAT, &df_image, sizeof(df_image)));
     if (df_image != VX_DF_IMAGE_U8 && df_image != VX_DF_IMAGE_RGB)
     {
-        return ERRMSG(VX_ERROR_INVALID_FORMAT, "validate: ResizebatchPD: image: #0 format=%4.4s (must be RGB2 or U008)\n", (char *)&df_image);
+        return ERRMSG(VX_ERROR_INVALID_FORMAT, "validate: Resizetensor: image: #0 format=%4.4s (must be RGB2 or U008)\n", (char *)&df_image);
     }
 
     // Check for output parameters
@@ -131,11 +131,11 @@ static vx_status VX_CALLBACK validateResizebatchPD(vx_node node, const vx_refere
     return status;
 }
 
-static vx_status VX_CALLBACK processResizebatchPD(vx_node node, const vx_reference *parameters, vx_uint32 num)
+static vx_status VX_CALLBACK processResizetensor(vx_node node, const vx_reference *parameters, vx_uint32 num)
 {
     RppStatus rpp_status = RPP_SUCCESS;
     vx_status return_status = VX_SUCCESS;
-    ResizebatchPDLocalData *data = NULL;
+    ResizetensorLocalData *data = NULL;
     STATUS_ERROR_CHECK(vxQueryNode(node, VX_NODE_LOCAL_DATA_PTR, &data, sizeof(data)));
     vx_df_image df_image = VX_DF_IMAGE_VIRT;
     STATUS_ERROR_CHECK(vxQueryImage((vx_image)parameters[0], VX_IMAGE_ATTRIBUTE_FORMAT, &df_image, sizeof(df_image)));
@@ -143,7 +143,7 @@ static vx_status VX_CALLBACK processResizebatchPD(vx_node node, const vx_referen
     if (data->device_type == AGO_TARGET_AFFINITY_GPU)
     {
 #if ENABLE_OPENCL
-        refreshResizebatchPD(node, parameters, num, data);
+        refreshResizetensor(node, parameters, num, data);
         if (df_image == VX_DF_IMAGE_U8)
         {
             rpp_status = rppi_resize_u8_pln1_batchPD_gpu((void *)data->cl_pSrc, data->srcDimensions, data->maxSrcDimensions, (void *)data->cl_pDst, data->dstDimensions, data->maxDstDimensions, output_format_toggle, data->nbatchSize, data->rppHandle);
@@ -154,23 +154,23 @@ static vx_status VX_CALLBACK processResizebatchPD(vx_node node, const vx_referen
         }
         return_status = (rpp_status == RPP_SUCCESS) ? VX_SUCCESS : VX_FAILURE;
 #elif ENABLE_HIP
-        refreshResizebatchPD(node, parameters, num, data);
+        refreshResizetensor(node, parameters, num, data);
         rpp_status = rppt_resize_gpu(data->hip_pSrc, data->srcDescPtr, data->hip_pDst, data->dstDescPtr, data->d_dstImgSize, RpptInterpolationType::TRIANGULAR, data->d_roiTensorPtrSrc, data->roiType, data->rppHandle);
         return_status = (rpp_status == RPP_SUCCESS) ? VX_SUCCESS : VX_FAILURE;
 #endif
     }
     if (data->device_type == AGO_TARGET_AFFINITY_CPU)
     {
-        refreshResizebatchPD(node, parameters, num, data);
+        refreshResizetensor(node, parameters, num, data);
         rpp_status = rppt_resize_host(data->pSrc, data->srcDescPtr, data->pDst, data->dstDescPtr, data->dstImgSize, RpptInterpolationType::TRIANGULAR, data->roiTensorPtrSrc, data->roiType, data->rppHandle);
         return_status = (rpp_status == RPP_SUCCESS) ? VX_SUCCESS : VX_FAILURE;
     }
     return return_status;
 }
 
-static vx_status VX_CALLBACK initializeResizebatchPD(vx_node node, const vx_reference *parameters, vx_uint32 num)
+static vx_status VX_CALLBACK initializeResizetensor(vx_node node, const vx_reference *parameters, vx_uint32 num)
 {
-    ResizebatchPDLocalData *data = new ResizebatchPDLocalData;
+    ResizetensorLocalData *data = new ResizetensorLocalData;
     memset(data, 0, sizeof(*data));
 #if ENABLE_OPENCL
     STATUS_ERROR_CHECK(vxQueryNode(node, VX_NODE_ATTRIBUTE_AMD_OPENCL_COMMAND_QUEUE, &data->handle.cmdq, sizeof(data->handle.cmdq)));
@@ -264,7 +264,7 @@ static vx_status VX_CALLBACK initializeResizebatchPD(vx_node node, const vx_refe
     hipMalloc(&data->d_dstImgSize, data->nbatchSize * sizeof(RpptImagePatch));
     hipMalloc(&data->d_roiTensorPtrSrc, data->nbatchSize * sizeof(RpptROI));
 #endif
-    refreshResizebatchPD(node, parameters, num, data);
+    refreshResizetensor(node, parameters, num, data);
 #if ENABLE_OPENCL
     if (data->device_type == AGO_TARGET_AFFINITY_GPU)
         rppCreateWithStreamAndBatchSize(&data->rppHandle, data->handle.cmdq, data->nbatchSize);
@@ -279,9 +279,9 @@ static vx_status VX_CALLBACK initializeResizebatchPD(vx_node node, const vx_refe
     return VX_SUCCESS;
 }
 
-static vx_status VX_CALLBACK uninitializeResizebatchPD(vx_node node, const vx_reference *parameters, vx_uint32 num)
+static vx_status VX_CALLBACK uninitializeResizetensor(vx_node node, const vx_reference *parameters, vx_uint32 num)
 {
-    ResizebatchPDLocalData *data;
+    ResizetensorLocalData *data;
     STATUS_ERROR_CHECK(vxQueryNode(node, VX_NODE_LOCAL_DATA_PTR, &data, sizeof(data)));
 #if ENABLE_HIP
     hipFree(data->d_dstImgSize);
@@ -328,17 +328,17 @@ static vx_status VX_CALLBACK query_target_support(vx_graph graph, vx_node node,
     return VX_SUCCESS;
 }
 
-vx_status ResizebatchPD_Register(vx_context context)
+vx_status Resizetensor_Register(vx_context context)
 {
     vx_status status = VX_SUCCESS;
     // Add kernel to the context with callbacks
-    vx_kernel kernel = vxAddUserKernel(context, "org.rpp.ResizebatchPD",
-                                       VX_KERNEL_RPP_RESIZEBATCHPD,
-                                       processResizebatchPD,
+    vx_kernel kernel = vxAddUserKernel(context, "org.rpp.Resizetensor",
+                                       VX_KERNEL_RPP_RESIZETENSOR,
+                                       processResizetensor,
                                        8,
-                                       validateResizebatchPD,
-                                       initializeResizebatchPD,
-                                       uninitializeResizebatchPD);
+                                       validateResizetensor,
+                                       initializeResizetensor,
+                                       uninitializeResizetensor);
     ERROR_CHECK_OBJECT(kernel);
     AgoTargetAffinityInfo affinity;
     vxQueryContext(context, VX_CONTEXT_ATTRIBUTE_AMD_AFFINITY, &affinity, sizeof(affinity));
