@@ -892,11 +892,7 @@ rocALTensorList * MasterGraph::bbox_labels_meta_data()
         _labels_tensor_list[i]->set_dims(_labels_tensor_dims[i]);
         _labels_tensor_list[i]->set_mem_handle(meta_data_buffers); // TODO - Need to update according to the metadata
         meta_data_buffers += _labels_tensor_list[i]->info().data_size();
-        // if(i%_user_batch_size == 1)
-        std::cerr << "DATA SIZE : " << _labels_tensor_list[i]->info().data_size() << " " << _labels_tensor_list[i]->info().dims()->at(0) << "\n";
     }
-    std::cerr << "DATA SIZE : " << _labels_tensor_list[0]->info().data_size() << " " << _labels_tensor_list[0]->info().dims()->at(0) << "\n";
-    std::cerr << "DATA SIZE : " << _labels_tensor_list[1]->info().data_size() << " " << _labels_tensor_list[1]->info().dims()->at(0) << "\n";
     return &_labels_tensor_list;
 }
 
@@ -927,8 +923,8 @@ void MasterGraph::get_meta_data_tensor_dims(pMetaDataBatch &meta_data)
 {
     // bblabels and bbox should have same size
     // Check if metadata has labels/bbox with bool
-    _labels_tensor_dims = meta_data->get_bb_labels_dims_batch();
-    _bbox_tensor_dims = meta_data->get_bb_cords_dims_batch();
+    _labels_tensor_dims = meta_data->get_metadata_dimensions_batch().bb_labels_dims();
+    _bbox_tensor_dims = meta_data->get_metadata_dimensions_batch().bb_cords_dims();
 }
 
 size_t MasterGraph::compute_optimum_internal_batch_size(size_t user_batch_size, RocalAffinity affinity)
