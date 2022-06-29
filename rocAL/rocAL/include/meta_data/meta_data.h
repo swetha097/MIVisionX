@@ -213,7 +213,6 @@ struct LabelBatch : public MetaDataBatch
         if(buffer.size() < 1)
             THROW("The buffers are insufficient") // TODO -change
         mempcpy((int *)buffer[0], _label_id.data(), _label_id.size() * sizeof(int));
-        std::cerr << "OBJECT COUNT : " << _objects_count << "\n";
     }
     std::vector<unsigned>& get_buffer_size() override
     {

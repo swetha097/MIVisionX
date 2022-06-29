@@ -24,14 +24,15 @@ THE SOFTWARE.
 #include <device_manager.h>
 #include "ring_buffer.h"
 
-TensorRingBuffer::TensorRingBuffer(unsigned buffer_depth):
+RingBuffer::RingBuffer(unsigned buffer_depth):
         BUFF_DEPTH(buffer_depth),
         _dev_sub_buffer(buffer_depth),
         _host_sub_buffers(BUFF_DEPTH)
 {
     reset();
 }
-void TensorRingBuffer::block_if_empty()
+
+void RingBuffer::block_if_empty()
 {
     std::unique_lock<std::mutex> lock(_lock);
     if(empty())
@@ -42,7 +43,7 @@ void TensorRingBuffer::block_if_empty()
     }
 }
 
-void TensorRingBuffer:: block_if_full()
+void RingBuffer:: block_if_full()
 {
     std::unique_lock<std::mutex> lock(_lock);
     // Write the whole buffer except for the last spot which is being read by the reader thread
@@ -53,7 +54,8 @@ void TensorRingBuffer:: block_if_full()
         _wait_for_unload.wait(lock);
     }
 }
-std::vector<void*> TensorRingBuffer::get_read_buffers()
+
+std::vector<void*> RingBuffer::get_read_buffers()
 {
     block_if_empty();
     if((_mem_type == RocalMemType::OCL) || (_mem_type == RocalMemType::HIP))
@@ -62,16 +64,7 @@ std::vector<void*> TensorRingBuffer::get_read_buffers()
     return _host_sub_buffers[_read_ptr];
 }
 
-// void *TensorRingBuffer::get_host_master_read_buffer() {
-//     block_if_empty();
-//     if((_mem_type == RocalMemType::OCL) || (_mem_type == RocalMemType::HIP))
-//         return nullptr;
-
-//     return _host_master_buffers[_read_ptr];
-// }
-
-
-std::vector<void*> TensorRingBuffer::get_write_buffers()
+std::vector<void*> RingBuffer::get_write_buffers()
 {
     block_if_full();
     if((_mem_type == RocalMemType::OCL) || (_mem_type == RocalMemType::HIP))
@@ -80,7 +73,7 @@ std::vector<void*> TensorRingBuffer::get_write_buffers()
     return _host_sub_buffers[_write_ptr];
 }
 
-std::vector<void*> TensorRingBuffer::get_meta_read_buffers()
+std::vector<void*> RingBuffer::get_meta_read_buffers()
 {
     block_if_empty();
     if((_mem_type == RocalMemType::OCL) || (_mem_type == RocalMemType::HIP))
@@ -89,33 +82,32 @@ std::vector<void*> TensorRingBuffer::get_meta_read_buffers()
     return _host_meta_data_buffers[_read_ptr];
 }
 
-
-void TensorRingBuffer::unblock_reader()
+void RingBuffer::unblock_reader()
 {
     // Wake up the reader thread in case it's waiting for a load
     _wait_for_load.notify_all();
 }
 
-void TensorRingBuffer::release_all_blocked_calls()
+void RingBuffer::release_all_blocked_calls()
 {
     _dont_block = true;
     unblock_reader();
     unblock_writer();
 }
 
-void TensorRingBuffer::release_if_empty()
+void RingBuffer::release_if_empty()
 {
     if (empty()) unblock_reader();
 }
 
-void TensorRingBuffer::unblock_writer()
+void RingBuffer::unblock_writer()
 {
     // Wake up the writer thread in case it's waiting for an unload
     _wait_for_unload.notify_all();
 }
 
 #if !ENABLE_HIP
-void TensorRingBuffer::init(RocalMemType mem_type, DeviceResources dev, std::vector<size_t> sub_buffer_size, unsigned sub_buffer_count)
+void RingBuffer::init(RocalMemType mem_type, DeviceResources dev, std::vector<size_t> sub_buffer_size, unsigned sub_buffer_count)
 {
     _mem_type = mem_type;
     _dev = dev;
@@ -166,47 +158,23 @@ void TensorRingBuffer::init(RocalMemType mem_type, DeviceResources dev, std::vec
     }
 }
 
-void TensorRingBuffer::init_metadata(RocalMemType mem_type, DeviceResources dev, std::vector<size_t> sub_buffer_size, unsigned sub_buffer_count)
+void RingBuffer::init_metadata(RocalMemType mem_type, DeviceResources dev, std::vector<size_t> sub_buffer_size, unsigned sub_buffer_count)
 {
     if(BUFF_DEPTH < 2)
         THROW ("Error internal buffer size for the ring buffer should be greater than one")
-    std::cerr << "<<<< Init Metadata >>>>\n";
+
     // Allocating buffers
     _meta_data_sub_buffer_size = sub_buffer_size;
     _meta_data_sub_buffer_count = sub_buffer_count;
-    if(mem_type== RocalMemType::OCL)
+    if(mem_type== RocalMemType::OCL || mem_type== RocalMemType::HIP)
     {
-    //     if(_dev.cmd_queue == nullptr || _dev.device_id == nullptr || _dev.context == nullptr)
-    //         THROW("Error ocl structure needed since memory type is OCL");
-
-    //     cl_int err = CL_SUCCESS;
-
-    //     for(size_t buffIdx = 0; buffIdx < BUFF_DEPTH; buffIdx++)
-    //     {
-    //         cl_mem_flags flags = CL_MEM_READ_ONLY;
-
-    //         _dev_sub_buffer[buffIdx].resize(sub_buffer_count);
-    //         for(unsigned sub_idx = 0; sub_idx < sub_buffer_count; sub_idx++)
-    //         {
-    //             _dev_sub_buffer[buffIdx][sub_idx] =  clCreateBuffer(_dev.context, flags, sub_buffer_size[sub_idx], NULL, &err);
-
-    //             if(err)
-    //             {
-    //                 _dev_sub_buffer.clear();
-    //                 THROW("clCreateBuffer of size " + TOSTR(sub_buffer_size[sub_idx]) + " index " + TOSTR(sub_idx) +
-    //                       " failed " + TOSTR(err));
-    //             }
-
-    //             clRetainMemObject((cl_mem)_dev_sub_buffer[buffIdx][sub_idx]);
-    //         }
-        // }
+        THROW("Metadata is not supported with GPU backends")
     }
     else
     {
         _host_meta_data_buffers.resize(BUFF_DEPTH);
         for(size_t buffIdx = 0; buffIdx < BUFF_DEPTH; buffIdx++)
         {
-            // a minimum of extra MEM_ALIGNMENT is allocated
             _host_meta_data_buffers[buffIdx].resize(sub_buffer_count);
             for(size_t sub_buff_idx = 0; sub_buff_idx < sub_buffer_count; sub_buff_idx++)
                 _host_meta_data_buffers[buffIdx][sub_buff_idx] = malloc(sub_buffer_size[sub_buff_idx]);
@@ -215,7 +183,7 @@ void TensorRingBuffer::init_metadata(RocalMemType mem_type, DeviceResources dev,
 }
 
 #else
-void TensorRingBuffer::initHip(RocalMemType mem_type, DeviceResourcesHip dev, std::vector<size_t> sub_buffer_size, unsigned sub_buffer_count)
+void RingBuffer::initHip(RocalMemType mem_type, DeviceResourcesHip dev, std::vector<size_t> sub_buffer_size, unsigned sub_buffer_count)
 {
     _mem_type = mem_type;
     _devhip = dev;
@@ -259,7 +227,7 @@ void TensorRingBuffer::initHip(RocalMemType mem_type, DeviceResourcesHip dev, st
 }
 #endif
 
-void TensorRingBuffer::push()
+void RingBuffer::push()
 {
     // pushing and popping to and from image and metadata buffer should be atomic so that their level stays the same at all times
     std::unique_lock<std::mutex> lock(_names_buff_lock);
@@ -267,7 +235,7 @@ void TensorRingBuffer::push()
     increment_write_ptr();
 }
 
-void TensorRingBuffer::pop()
+void RingBuffer::pop()
 {
     if(empty())
         return;
@@ -277,7 +245,7 @@ void TensorRingBuffer::pop()
     _meta_ring_buffer.pop();
 }
 
-void TensorRingBuffer::reset()
+void RingBuffer::reset()
 {
     _write_ptr = 0;
     _read_ptr = 0;
@@ -287,7 +255,7 @@ void TensorRingBuffer::reset()
         _meta_ring_buffer.pop();
 }
 
-TensorRingBuffer::~TensorRingBuffer()
+RingBuffer::~RingBuffer()
 {
      //  if(_mem_type!= RocalMemType::OCL)
     //      return;
@@ -324,21 +292,21 @@ TensorRingBuffer::~TensorRingBuffer()
 #endif
 }
 
-bool TensorRingBuffer::empty()
+bool RingBuffer::empty()
 {
     return (_level <= 0);
 }
 
-bool TensorRingBuffer::full()
+bool RingBuffer::full()
 {
     return (_level >= BUFF_DEPTH - 1);
 }
 
-size_t TensorRingBuffer::level()
+size_t RingBuffer::level()
 {
     return _level;
 }
-void TensorRingBuffer::increment_read_ptr()
+void RingBuffer::increment_read_ptr()
 {
     std::unique_lock<std::mutex> lock(_lock);
     _read_ptr = (_read_ptr+1)%BUFF_DEPTH;
@@ -349,7 +317,7 @@ void TensorRingBuffer::increment_read_ptr()
 
 }
 
-void TensorRingBuffer::increment_write_ptr()
+void RingBuffer::increment_write_ptr()
 {
     std::unique_lock<std::mutex> lock(_lock);
     _write_ptr = (_write_ptr+1)%BUFF_DEPTH;
@@ -359,7 +327,7 @@ void TensorRingBuffer::increment_write_ptr()
     _wait_for_load.notify_all();
 }
 
-void TensorRingBuffer::set_meta_data( ImageNameBatch names, pMetaDataBatch meta_data)
+void RingBuffer::set_meta_data( ImageNameBatch names, pMetaDataBatch meta_data)
 {
     _last_image_meta_data = std::move(std::make_pair(std::move(names), meta_data));
     auto actual_buffer_size = meta_data->get_buffer_size();
@@ -371,7 +339,7 @@ void TensorRingBuffer::set_meta_data( ImageNameBatch names, pMetaDataBatch meta_
     meta_data->copy_data(_host_meta_data_buffers[_write_ptr]);
 }
 
-void TensorRingBuffer::rellocate_meta_data_buffer(void * buffer, size_t buffer_size, unsigned buff_idx)
+void RingBuffer::rellocate_meta_data_buffer(void * buffer, size_t buffer_size, unsigned buff_idx)
 {
     void *new_ptr = realloc(buffer, buffer_size);
     if(buffer == nullptr)
@@ -379,7 +347,7 @@ void TensorRingBuffer::rellocate_meta_data_buffer(void * buffer, size_t buffer_s
     _host_meta_data_buffers[_write_ptr][buff_idx] = new_ptr;
 }
 
-MetaDataNamePair& TensorRingBuffer::get_meta_data()
+MetaDataNamePair& RingBuffer::get_meta_data()
 {
     block_if_empty();
     std::unique_lock<std::mutex> lock(_names_buff_lock);

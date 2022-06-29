@@ -156,13 +156,8 @@ static vx_status VX_CALLBACK processBrightness(vx_node node, const vx_reference 
     if (data->device_type == AGO_TARGET_AFFINITY_CPU)
     {
         refreshBrightness(node, parameters, num, data);
-        for(int i = 0; i < data->nbatchSize; i++)
-        {
-            std::cerr<<"\n bbox values :: "<<data->roi_tensor_Ptr[i].xywhROI.xy.x<<" "<<data->roi_tensor_Ptr[i].xywhROI.xy.y<<" "<<data->roi_tensor_Ptr[i].xywhROI.roiWidth<<" "<<data->roi_tensor_Ptr[i].xywhROI.roiHeight;
-        }
         rpp_status = rppt_brightness_host(data->pSrc, data->src_desc_ptr, data->pDst, data->src_desc_ptr, data->alpha, data->beta, data->roi_tensor_Ptr, data->roiType, data->rppHandle);
         return_status = (rpp_status == RPP_SUCCESS) ? VX_SUCCESS : VX_FAILURE;
-        std::cerr<<"\n back from RPP";
     }
     return return_status;
 }

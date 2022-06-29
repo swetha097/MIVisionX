@@ -241,7 +241,7 @@ MasterGraph::create_single_graph()
     _graph = std::make_shared<Graph>(_context, _affinity, 0, _gpu_id);
     for(auto& node: _tensor_nodes)
     {
-        // Any image not yet created can be created as virtual image
+        // Any tensor not yet created can be created as virtual tensor
         for(auto& tensor: node->output())
             if(tensor->info().type() == rocALTensorInfo::Type::UNKNOWN)
             {
@@ -279,7 +279,6 @@ MasterGraph::build()
 #else
     _ring_buffer.init(_mem_type, _device.resources(), _internal_tensor_list.data_size(), _internal_tensor_list.size()); // TODO - Tensorlist change here
 #endif
-    // std::cerr<<"\n Initializing Ring buffer with tensor_output_byte_size "<<tensor_output_byte_size();
     _output_tensor_list = _internal_tensor_list;
     create_single_graph();
     start_processing();
@@ -290,33 +289,21 @@ rocALTensor *
 MasterGraph::create_loader_output_tensor(const rocALTensorInfo &info)
 {
     /*
-    *   NOTE: Output image for a source node needs to be created as a regular (non-virtual) image
+    *   NOTE: Output tensor for a source node needs to be created as a regular (non-virtual) tensor
     */
     auto output = new rocALTensor(info);
     if(output->create_from_handle(_context) != 0)
-        THROW("Creating output image for loader failed");
+        THROW("Creating output tensor for loader failed");
 
     _internal_tensors.push_back(output);
 
     return output;
 }
 
-// rocALTensor*
-// MasterGraph::create_rocal_loader_output_tensor(const rocALTensorInfo &info)
-// {
-//     auto output = new rocALTensor(info);
-//     if(output->create_from_handle(_context) != 0)
-//         THROW("Creating output image for loader failed");
-
-//     _internal_rocal_tensors.push_back(output);
-
-//     return output;
-// }
-
 rocALTensor * MasterGraph::create_tensor(const rocALTensorInfo &info, bool is_output)
 {
     auto* new_tensor = new rocALTensor(info);
-    // if the image is not an output image, the image creation is deferred and later it'll be created as a virtual image
+    // if the tensor is not an output tensor, the tensor creation is deferred and later it'll be created as a virtual tensor
     if(is_output)
     {
         if (new_tensor->create_from_handle(_context) != 0)
@@ -328,22 +315,6 @@ rocALTensor * MasterGraph::create_tensor(const rocALTensorInfo &info, bool is_ou
     return new_tensor;
 }
 
-// rocALTensor * MasterGraph::create_rocal_tensor(const rocALTensorInfo &info, bool is_output)
-// {
-//     auto* output = new rocALTensor(info);
-//     // if the image is not an output image, the image creation is deferred and later it'll be created as a virtual image
-//     if(is_output)
-//     {
-//         if (output->create_from_handle(_context) != 0)
-//             THROW("Cannot create the tensor from handle")
-
-//         _output_rocal_tensors.push_back(output);
-//     }
-
-//     return output;
-// }
-
-
 void
 MasterGraph::set_output(rocALTensor* output_tensor)
 {
@@ -352,12 +323,12 @@ MasterGraph::set_output(rocALTensor* output_tensor)
     if(output_tensor->is_handle_set() == false)
     {
         if (output_tensor->create_from_handle(_context) != 0)
-                THROW("Cannot create the image from handle")
+                THROW("Cannot create the tensor from handle")
 
         _internal_tensor_list.push_back(output_tensor);
 
         if (output->create_from_handle(_context) != 0)
-                THROW("Cannot create the image from handle")
+                THROW("Cannot create the tensor from handle")
 
         _output_tensor_list.push_back(output);
     }
@@ -409,7 +380,7 @@ MasterGraph::update_node_parameters()
 }
 
 
-MasterGraph::Status
+MasterGraph::Status // TO be removed
 MasterGraph::allocate_output_tensor()
 {
 //     // creating a float buffer that can accommodates all output images
@@ -645,7 +616,7 @@ void MasterGraph::output_routine()
             // Multiple cycles worth of internal_batch_size images should be processed to complete a full _user_batch_size
             for(unsigned cycle_idx = 0; cycle_idx < _user_to_internal_batch_ratio; cycle_idx++)
             {
-                // Swap handles on the input image, so that new image is loaded to be processed
+                // Swap handles on the input tensor, so that new tensor is loaded to be processed
                 auto load_ret = _loader_module->load_next();
                 if (load_ret != LoaderModuleStatus::OK)
                     THROW("Loader module failed to load next batch of images, status " + TOSTR(load_ret))
@@ -665,7 +636,7 @@ void MasterGraph::output_routine()
                 if (!_processing)
                     break;
 
-                // Swap handles on the output images, so that new processed image will be written to the a new buffer
+                // Swap handles on the output tensor, so that new processed tensor will be written to the a new buffer
                 for (size_t idx = 0; idx < _internal_tensor_list.size(); idx++)
                 {
                     // if(_internal_tensor_list.size() != 0)
@@ -677,7 +648,6 @@ void MasterGraph::output_routine()
                     }
                     else
                     {
-                        // std::cerr<<"\n idx::"<<idx<<"\t tensor_each_cycle_size::"<<tensor_each_cycle_size<<"\t cycle_idx"<<cycle_idx;
                         // Have to change float to the equivalent of max size data type
                         if(_internal_tensor_list[idx]->info().data_type() == RocalTensorDataType::FP32)
                         {
@@ -967,28 +937,10 @@ size_t MasterGraph::compute_optimum_internal_batch_size(size_t user_batch_size, 
     return ret;
 }
 
-size_t MasterGraph::tensor_output_sample_size()
-{
-    return _output_tensor_info.data_size();
-}
-
-
-// size_t MasterGraph::output_sample_size()
-// {
-//     return tensor_output_height() * tensor_output_width() * tensor_output_depth();
-// }
-
 std::vector<size_t> MasterGraph::tensor_output_byte_size()
 {
-    // std::cerr<<"\n _output_tensor_info.data_size():: "<<_output_tensor_info.data_size()<<"\t _max_tensor_type_size:: "<<_max_tensor_type_size;
     return _internal_tensor_list.data_size();
 }
-
-
-// size_t MasterGraph::tensor_output_depth() // shobi Need to make this generic to all tensor instead of image
-// {
-//     return _output_tensor_info.channels();
-// }
 
 void MasterGraph::notify_user_thread()
 {
