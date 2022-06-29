@@ -231,7 +231,7 @@ void RingBuffer::push()
 {
     // pushing and popping to and from image and metadata buffer should be atomic so that their level stays the same at all times
     std::unique_lock<std::mutex> lock(_names_buff_lock);
-    _meta_ring_buffer.push(_last_image_meta_data);
+    _meta_ring_buffer.push(_last_image_meta_data_info);
     increment_write_ptr();
 }
 
@@ -329,7 +329,7 @@ void RingBuffer::increment_write_ptr()
 
 void RingBuffer::set_meta_data( ImageNameBatch names, pMetaDataBatch meta_data)
 {
-    _last_image_meta_data = std::move(std::make_pair(std::move(names), meta_data));
+    _last_image_meta_data_info = std::move(std::make_pair(std::move(names), meta_data->get_metadata_dimensions_batch()));
     auto actual_buffer_size = meta_data->get_buffer_size();
     for(unsigned i = 0; i < _meta_data_sub_buffer_count; i++)
     {
@@ -347,7 +347,7 @@ void RingBuffer::rellocate_meta_data_buffer(void * buffer, size_t buffer_size, u
     _host_meta_data_buffers[_write_ptr][buff_idx] = new_ptr;
 }
 
-MetaDataNamePair& RingBuffer::get_meta_data()
+MetaDataInfoNamePair& RingBuffer::get_meta_data_info()
 {
     block_if_empty();
     std::unique_lock<std::mutex> lock(_names_buff_lock);

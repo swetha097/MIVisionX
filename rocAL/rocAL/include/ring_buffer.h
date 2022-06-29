@@ -34,7 +34,7 @@ THE SOFTWARE.
 #include "meta_data.h"
 #include "commons.h"
 
-using MetaDataNamePair = std::pair<ImageNameBatch,pMetaDataBatch>;
+using MetaDataInfoNamePair = std::pair<ImageNameBatch,MetaDataDimensionsBatch>;
 class RingBuffer
 {
 public:
@@ -55,7 +55,7 @@ public:
     std::vector<void*> get_read_buffers();
     void* get_host_master_read_buffer();
     std::vector<void*> get_write_buffers();
-    MetaDataNamePair& get_meta_data();
+    MetaDataInfoNamePair& get_meta_data_info();
     std::vector<void*> get_meta_read_buffers();
     void set_meta_data(ImageNameBatch names, pMetaDataBatch meta_data);
     void rellocate_meta_data_buffer(void * buffer, size_t buffer_size, unsigned buff_idx);
@@ -70,8 +70,8 @@ public:
     void block_if_full();
     void release_if_empty();
 private:
-    std::queue<MetaDataNamePair> _meta_ring_buffer;
-    MetaDataNamePair _last_image_meta_data;
+    std::queue<MetaDataInfoNamePair> _meta_ring_buffer;
+    MetaDataInfoNamePair _last_image_meta_data_info;
     void increment_read_ptr();
     void increment_write_ptr();
     bool full();
