@@ -26,11 +26,11 @@ THE SOFTWARE.
 #include "parameter_vx.h"
 #include "graph.h"
 
-class ColorJitterTensorNode : public Node
+class ColorJitterNode : public Node
 {
 public:
-    ColorJitterTensorNode(const std::vector<rocALTensor *> &inputs, const std::vector<rocALTensor *> &outputs);
-    ColorJitterTensorNode() = delete;
+    ColorJitterNode(const std::vector<rocALTensor *> &inputs, const std::vector<rocALTensor *> &outputs);
+    ColorJitterNode() = delete;
 
     void init( float alpha, float beta,float hue , float sat);
     void init( FloatParam* alpha_param, FloatParam* beta_param,  FloatParam* hue_param,  FloatParam* sat_param );

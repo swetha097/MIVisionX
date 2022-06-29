@@ -52,22 +52,11 @@ struct FlipLocalData
 static vx_status VX_CALLBACK refreshFlip(vx_node node, const vx_reference *parameters, vx_uint32 num, FlipLocalData *data)
 {
     vx_status status = VX_SUCCESS;
-    if(data->layout == 0 || data->layout == 1)
+    STATUS_ERROR_CHECK(vxCopyArrayRange((vx_array)parameters[1], 0, data->nbatchSize * 4, sizeof(unsigned), data->roi_tensor_Ptr, VX_READ_ONLY, VX_MEMORY_TYPE_HOST));
+    STATUS_ERROR_CHECK(vxCopyArrayRange((vx_array)parameters[3], 0, data->nbatchSize, sizeof(vx_uint32), data->h_flag, VX_READ_ONLY, VX_MEMORY_TYPE_HOST));
+    STATUS_ERROR_CHECK(vxCopyArrayRange((vx_array)parameters[4], 0, data->nbatchSize, sizeof(vx_uint32), data->v_flag, VX_READ_ONLY, VX_MEMORY_TYPE_HOST));
+    if(data->layout == 2 || data->layout == 3)
     {
-        STATUS_ERROR_CHECK(vxCopyArrayRange((vx_array)parameters[1], 0, data->nbatchSize * 4, sizeof(unsigned), data->roi_tensor_Ptr, VX_READ_ONLY, VX_MEMORY_TYPE_HOST));
-        STATUS_ERROR_CHECK(vxCopyArrayRange((vx_array)parameters[3], 0, data->nbatchSize, sizeof(vx_uint32), data->h_flag, VX_READ_ONLY, VX_MEMORY_TYPE_HOST));
-        STATUS_ERROR_CHECK(vxCopyArrayRange((vx_array)parameters[4], 0, data->nbatchSize, sizeof(vx_uint32), data->v_flag, VX_READ_ONLY, VX_MEMORY_TYPE_HOST));
-    
-    for(int i = 0; i < data->nbatchSize; i++)
-        {
-            std::cerr<<"horizontal  "<<data->h_flag[i]<<"  "<<data->v_flag[i];
-            std::cerr<<"\n bbox values :: "<<data->roi_tensor_Ptr[i].xywhROI.xy.x<<" "<<data->roi_tensor_Ptr[i].xywhROI.xy.y<<" "<<data->roi_tensor_Ptr[i].xywhROI.roiWidth<<" "<<data->roi_tensor_Ptr[i].xywhROI.roiHeight;
-        }    }
-    else if(data->layout == 2 || data->layout == 3)
-    {
-        STATUS_ERROR_CHECK(vxCopyArrayRange((vx_array)parameters[1], 0, data->nbatchSize * 4, sizeof(unsigned), data->roi_tensor_Ptr, VX_READ_ONLY, VX_MEMORY_TYPE_HOST));
-        STATUS_ERROR_CHECK(vxCopyArrayRange((vx_array)parameters[3], 0, data->nbatchSize, sizeof(vx_uint32), data->h_flag, VX_READ_ONLY, VX_MEMORY_TYPE_HOST));
-        STATUS_ERROR_CHECK(vxCopyArrayRange((vx_array)parameters[4], 0, data->nbatchSize, sizeof(vx_uint32), data->v_flag, VX_READ_ONLY, VX_MEMORY_TYPE_HOST));
         unsigned num_of_frames = data->in_tensor_dims[1]; // Num of frames 'F'
         for(int n = data->nbatchSize - 1; n >= 0; n--)
         {
@@ -150,11 +139,11 @@ static vx_status VX_CALLBACK processFlip(vx_node node, const vx_reference *param
     {
 #if ENABLE_OPENCL
         refreshFlip(node, parameters, num, data);
-        // rpp_status = rppt_flip_gpu((void *)data->cl_pSrc, data->src_desc_ptr, (void *)data->cl_pDst, data->src_desc_ptr,  data->h_flag, data->v_flag, data->roi_tensor_Ptr, data->roiType, data->rppHandle);
+        rpp_status = rppt_flip_gpu((void *)data->cl_pSrc, data->src_desc_ptr, (void *)data->cl_pDst, data->src_desc_ptr,  data->h_flag, data->v_flag, data->roi_tensor_Ptr, data->roiType, data->rppHandle);
         return_status = (rpp_status == RPP_SUCCESS) ? VX_SUCCESS : VX_FAILURE;
 #elif ENABLE_HIP
         refreshFlip(node, parameters, num, data);
-        // rpp_status = rppt_flip_gpu((void *)data->hip_pSrc, data->src_desc_ptr, (void *)data->hip_pDst, data->src_desc_ptr,  data->h_flag, data->v_flag, data->roi_tensor_Ptr, data->roiType, data->rppHandle);
+        rpp_status = rppt_flip_gpu((void *)data->hip_pSrc, data->src_desc_ptr, (void *)data->hip_pDst, data->src_desc_ptr,  data->h_flag, data->v_flag, data->roi_tensor_Ptr, data->roiType, data->rppHandle);
         return_status = (rpp_status == RPP_SUCCESS) ? VX_SUCCESS : VX_FAILURE;
 #endif
     }
@@ -163,40 +152,8 @@ static vx_status VX_CALLBACK processFlip(vx_node node, const vx_reference *param
         refreshFlip(node, parameters, num, data);
         for(int i = 0; i < data->nbatchSize; i++)
         {
-            std::cerr<<"horizontal  "<<data->h_flag[i]<<"  "<<data->v_flag[i];
             std::cerr<<"\n bbox values :: "<<data->roi_tensor_Ptr[i].xywhROI.xy.x<<" "<<data->roi_tensor_Ptr[i].xywhROI.xy.y<<" "<<data->roi_tensor_Ptr[i].xywhROI.roiWidth<<" "<<data->roi_tensor_Ptr[i].xywhROI.roiHeight;
-        }
-
-        //     unsigned long long ioBufferSize = (unsigned long long)data->src_desc_ptr->h * (unsigned long long)data->src_desc_ptr->w * (unsigned long long)data->src_desc_ptr->c * (unsigned long long)data->src_desc_ptr->n;
-        //     float *temp = ((float*)calloc( ioBufferSize,sizeof(float) ));
-
-        //    if(0)
-        //    {
-        //             for (int i=0;i< ioBufferSize;i++)
-        //             {
-        //                 temp[i]=(float)*((unsigned char*)(data->pSrc) + i);
-        //             }
-        //    }
-
-        // // int *temp = ((int *)calloc(100, sizeof(int)));
-        // std::cerr << "printing pSrc\n";
-        
-        // for (int i = 0; i < 100; i++)
-        // {
-        //     temp[i] = (int)*((unsigned char *)(data->pSrc) + i);
-            // std::cerr<<"\n "<<temp[i];
-            // std::cerr<<" data->dstimgsize "<< data->dstimgsize[i].width<<" "<<data->dstimgsize[i].height<<"\n";
-            // std::cerr<<"data->roi_tensor_Ptr[i].xywhROI.roiWidth" <<data->roi_tensor_Ptr[i].xywhROI.roiWidth<<"  "<<data->roi_tensor_Ptr[i].xywhROI.roiHeight<<"\n";
-
-            // std::cerr<<temp[i]<<" ";
-        // }
-        // for (int i=0;i< data->nbatchSize;i++)
-        // {
-        //     data->h_flag[i]=0;
-        //     data->v_flag[i]=1;
-
-        // }
-        
+        }  
         rpp_status = rppt_flip_host(data->pSrc, data->src_desc_ptr, data->pDst, data->src_desc_ptr, data->h_flag, data->v_flag, data->roi_tensor_Ptr, data->roiType, data->rppHandle);
         return_status = (rpp_status == RPP_SUCCESS) ? VX_SUCCESS : VX_FAILURE;
         std::cerr<<"\n back from RPP";

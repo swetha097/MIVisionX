@@ -25,11 +25,11 @@ THE SOFTWARE.
 #include "parameter_factory.h"
 #include "parameter_vx.h"
 
-class BlendTensorNode : public Node
+class BlendNode : public Node
 {
 public:
-    BlendTensorNode(const std::vector<rocALTensor *> &inputs, const std::vector<rocALTensor *> &outputs);
-    BlendTensorNode() = delete;
+    BlendNode(const std::vector<rocALTensor *> &inputs, const std::vector<rocALTensor *> &outputs);
+    BlendNode() = delete;
     void init(float shift);
     void init(FloatParam *shift);
 

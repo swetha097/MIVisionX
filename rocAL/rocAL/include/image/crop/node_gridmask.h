@@ -25,21 +25,18 @@ THE SOFTWARE.
 #include "parameter_factory.h"
 #include "parameter_vx.h"
 
-class GridmaskTensorNode : public Node
+class GridmaskNode : public Node
 {
 public:
-    GridmaskTensorNode(const std::vector<rocALTensor *> &inputs, const std::vector<rocALTensor *> &outputs);
-    GridmaskTensorNode() = delete;
+    GridmaskNode(const std::vector<rocALTensor *> &inputs, const std::vector<rocALTensor *> &outputs);
+    GridmaskNode() = delete;
     void init(int tile_width, float grid_ratio, float grid_angle,int x,int y);
-    // void init(FloatParam *shift);
 
 protected:
     void update_node() override;
     void create_node() override;
 private:
-    // ParameterVX<float> _shift;
     int _tile_width ,_x, _y;
     float _grid_ratio, _grid_angle;
     unsigned _layout, _roi_type;
-    // constexpr static float SHIFT_RANGE [2] = {0.3, 7.00};
 };

@@ -6,11 +6,11 @@
 #include "parameter_vx.h"
 #include "rocal_api_types.h"
 
-class CropTensorNode : public Node
+class CropNode : public Node
 {
 public:
-    CropTensorNode(const std::vector<rocALTensor *> &inputs, const std::vector<rocALTensor *> &outputs);
-    CropTensorNode() = delete;
+    CropNode(const std::vector<rocALTensor *> &inputs, const std::vector<rocALTensor *> &outputs);
+    CropNode() = delete;
     void init(int crop_h, int crop_w, float start_x, float start_y,int layout);
     std::shared_ptr<RocalCropParam> return_crop_param() { return _crop_param; }
     vx_array get_src_width() { return _src_roi_width; }

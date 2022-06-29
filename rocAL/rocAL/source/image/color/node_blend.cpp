@@ -26,13 +26,13 @@ THE SOFTWARE.
 #include "node_blend.h"
 #include "exception.h"
 
-BlendTensorNode::BlendTensorNode(const std::vector<rocALTensor *> &inputs, const std::vector<rocALTensor *> &outputs) :
+BlendNode::BlendNode(const std::vector<rocALTensor *> &inputs, const std::vector<rocALTensor *> &outputs) :
         Node(inputs, outputs),
         _shift(SHIFT_RANGE[0], SHIFT_RANGE[1])
 {
 }
 
-void BlendTensorNode::create_node()
+void BlendNode::create_node()
 {
     std::cerr<<"in create_node()***************\n ";
     if(_node)
@@ -63,21 +63,21 @@ void BlendTensorNode::create_node()
 
 }
 
-void BlendTensorNode::init(float shfit)
+void BlendNode::init(float shfit)
 {
     _shift.set_param(shfit);
     _layout = _roi_type = 0;
 
 }
 
-void BlendTensorNode::init(FloatParam* shfit)
+void BlendNode::init(FloatParam* shfit)
 {
     _shift.set_param(core(shfit));
     _layout = _roi_type = 0;
 
 }
 
-void BlendTensorNode::update_node()
+void BlendNode::update_node()
 {
      _shift.update_array();
 }

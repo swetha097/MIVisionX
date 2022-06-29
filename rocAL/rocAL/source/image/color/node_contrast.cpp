@@ -24,14 +24,14 @@ THE SOFTWARE.
 #include "node_contrast.h"
 #include "exception.h"
 
-ContrastTensorNode::ContrastTensorNode(const std::vector<rocALTensor *> &inputs,const std::vector<rocALTensor *> &outputs) :
+ContrastNode::ContrastNode(const std::vector<rocALTensor *> &inputs,const std::vector<rocALTensor *> &outputs) :
         Node(inputs, outputs),
         _factor(FACTOR_RANGE[0], FACTOR_RANGE[1]),
         _center(CENTER_RANGE[0], CENTER_RANGE[1])
 {
 }
 
-void ContrastTensorNode::create_node()
+void ContrastNode::create_node()
 {
     if(_node)
         return;
@@ -50,22 +50,20 @@ void ContrastTensorNode::create_node()
         _roi_type = 1;
     vx_scalar layout = vxCreateScalar(vxGetContext((vx_reference)_graph->get()),VX_TYPE_UINT32,&_layout);
     vx_scalar roi_type = vxCreateScalar(vxGetContext((vx_reference)_graph->get()),VX_TYPE_UINT32,&_roi_type);
-
     _node = vxExtrppNode_Contrast(_graph->get(), _inputs[0]->handle(), _src_tensor_roi, _outputs[0]->handle(), _factor.default_array(), _center.default_array(), layout, roi_type, _batch_size);
-
     vx_status status;
     if((status = vxGetStatus((vx_reference)_node)) != VX_SUCCESS)
         THROW("Adding the Contrast_batch (vxExtrppNode_Contrast) node failed: "+ TOSTR(status))
 }
 
-void ContrastTensorNode::init( float c_factor, float c_center)
+void ContrastNode::init( float c_factor, float c_center)
 {
     _factor.set_param(c_factor);
     _center.set_param(c_center);
     _layout = _roi_type = 0;
 }
 
-void ContrastTensorNode::init( FloatParam* c_factor, FloatParam* c_center)
+void ContrastNode::init( FloatParam* c_factor, FloatParam* c_center)
 {
     _factor.set_param(core(c_factor));
     _center.set_param(core(c_center));
@@ -73,7 +71,7 @@ void ContrastTensorNode::init( FloatParam* c_factor, FloatParam* c_center)
 }
 
 
-void ContrastTensorNode::update_node()
+void ContrastNode::update_node()
 {
     _factor.update_array();
     _center.update_array();

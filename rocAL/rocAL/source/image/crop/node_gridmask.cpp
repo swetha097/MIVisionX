@@ -26,12 +26,12 @@ THE SOFTWARE.
 #include "node_gridmask.h"
 #include "exception.h"
 
-GridmaskTensorNode::GridmaskTensorNode(const std::vector<rocALTensor *> &inputs, const std::vector<rocALTensor *> &outputs) :
+GridmaskNode::GridmaskNode(const std::vector<rocALTensor *> &inputs, const std::vector<rocALTensor *> &outputs) :
         Node(inputs, outputs)
 {
 }
 
-void GridmaskTensorNode::create_node()
+void GridmaskNode::create_node()
 {
     std::cerr<<"In create node()\n";
     if(_node)
@@ -40,7 +40,6 @@ void GridmaskTensorNode::create_node()
     if(_outputs.empty() || _inputs.empty())
         THROW("Uninitialized input/output arguments")
 
-    // _shift.create_array(_graph , VX_TYPE_FLOAT32, _batch_size);
     if(_inputs[0]->info().layout() == RocalTensorlayout::NCHW)
         _layout = 1;
     else if(_inputs[0]->info().layout() == RocalTensorlayout::NFHWC)
@@ -53,45 +52,35 @@ void GridmaskTensorNode::create_node()
 
     vx_scalar layout = vxCreateScalar(vxGetContext((vx_reference)_graph->get()),VX_TYPE_UINT32,&_layout);
     vx_scalar roi_type = vxCreateScalar(vxGetContext((vx_reference)_graph->get()),VX_TYPE_UINT32,&_roi_type);
-    
     vx_scalar tile_width = vxCreateScalar(vxGetContext((vx_reference)_graph->get()),VX_TYPE_UINT32,&_tile_width);
     vx_scalar grid_ratio = vxCreateScalar(vxGetContext((vx_reference)_graph->get()),VX_TYPE_FLOAT32,&_grid_ratio);
     vx_scalar grid_angle = vxCreateScalar(vxGetContext((vx_reference)_graph->get()),VX_TYPE_FLOAT32,&_grid_angle);
     vx_scalar x = vxCreateScalar(vxGetContext((vx_reference)_graph->get()),VX_TYPE_UINT32,&_x);
     vx_scalar y = vxCreateScalar(vxGetContext((vx_reference)_graph->get()),VX_TYPE_UINT32,&_y);
 
-
-
-
-
     _node = vxExtrppNode_Gridmask(_graph->get(), _inputs[0]->handle(), _src_tensor_roi, _outputs[0]->handle(), tile_width, grid_ratio, grid_angle, x, y, layout, roi_type, _batch_size);
-std::cerr<<"after VX CALL \n";
+
     vx_status status;
     if((status = vxGetStatus((vx_reference)_node)) != VX_SUCCESS)
         THROW("Adding the gridmask (vxExtrppNode_GridmaskbatchPD) node failed: "+ TOSTR(status))
 
 }
 
-void GridmaskTensorNode::init(int tile_width, float grid_ratio, float grid_angle,int x,int y)
+void GridmaskNode::init(int tile_width, float grid_ratio, float grid_angle,int x,int y)
 {
     _tile_width=tile_width;
     _grid_ratio=grid_ratio;
     _grid_angle=grid_angle; 
     _x=x;
     _y=y;  
-    // _shift.set_param(shfit);
     _layout = _roi_type = 0;
 
 }
 
 // void GridmaskTensorNode::init(FloatParam* shfit)
 // {
-//     _shift.set_param(core(shfit));
-//     _layout = _roi_type = 0;
-
 // }
 
-void GridmaskTensorNode::update_node()
+void GridmaskNode::update_node()
 {
-    //  _shift.update_array();
 }

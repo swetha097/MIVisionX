@@ -25,17 +25,16 @@ THE SOFTWARE.
 #include "node_crop.h"
 #include "exception.h"
 
-CropTensorNode::CropTensorNode(const std::vector<rocALTensor *> &inputs, const std::vector<rocALTensor *> &outputs) :
+CropNode::CropNode(const std::vector<rocALTensor *> &inputs, const std::vector<rocALTensor *> &outputs) :
         Node(inputs, outputs)
 {
     _crop_param = std::make_shared<RocalCropParam>(_batch_size);
 }
 
-void CropTensorNode::create_node()
+void CropNode::create_node()
 {
     if(_node)
         return;
-
     if(_crop_param->crop_h == 0 || _crop_param->crop_w == 0)
         THROW("Uninitialized destination dimension - Invalid Crop Sizes")
     _crop_param->create_array(_graph);
@@ -50,36 +49,25 @@ void CropTensorNode::create_node()
     vx_scalar is_packed = vxCreateScalar(vxGetContext((vx_reference)_graph->get()),VX_TYPE_BOOL,&packed);
     vx_scalar layout = vxCreateScalar(vxGetContext((vx_reference)_graph->get()),VX_TYPE_UINT32,&_layout);
     vx_scalar roi_type = vxCreateScalar(vxGetContext((vx_reference)_graph->get()),VX_TYPE_UINT32,&_roi_type);
-    _node = vxExtrppNode_Crop(_graph->get(), _inputs[0]->handle(),
-                                                   _src_tensor_roi,_outputs[0]->handle(),_src_tensor_roi,_crop_param->cropw_arr, _crop_param->croph_arr, _crop_param->x1_arr, _crop_param->y1_arr,
-                                                   is_packed, chnToggle,layout, roi_type, _batch_size);
+    _node = vxExtrppNode_Crop(_graph->get(), _inputs[0]->handle(),_src_tensor_roi,_outputs[0]->handle(),_src_tensor_roi,_crop_param->cropw_arr, _crop_param->croph_arr, _crop_param->x1_arr, _crop_param->y1_arr,is_packed, chnToggle,layout, roi_type, _batch_size);
     vx_status status = VX_SUCCESS;
 
     if((status = vxGetStatus((vx_reference)_node)) != VX_SUCCESS)
         THROW("Error adding the crop tensor (vxExtrppNode_CropbatchPD    ) failed: "+TOSTR(status))
-
 }
 
-
-void CropTensorNode::update_node()
+void CropNode::update_node()
 {
     _crop_param->set_image_dimensions(_inputs[0]->info().get_roi());
-
     _crop_param->update_array();
     std::vector<uint32_t> crop_h_dims, crop_w_dims;
     _crop_param->get_crop_dimensions(crop_w_dims, crop_h_dims);
     _outputs[0]->update_tensor_roi(crop_w_dims, crop_h_dims);
-
-    
 }
 
-void CropTensorNode::init(int crop_h, int crop_w, float start_x, float start_y,int layout)
+void CropNode::init(int crop_h, int crop_w, float start_x, float start_y,int layout)
 {
     _crop_param->crop_h = crop_h;
     _crop_param->crop_w = crop_w;
     _layout=layout; 
-
 }
-
-
-

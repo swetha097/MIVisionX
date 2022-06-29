@@ -26,11 +26,11 @@ THE SOFTWARE.
 #include "parameter_vx.h"
 #include "graph.h"
 
-class ContrastTensorNode : public Node
+class ContrastNode : public Node
 {
 public:
-    ContrastTensorNode(const std::vector<rocALTensor *> &inputs, const std::vector<rocALTensor *> &outputs);
-    ContrastTensorNode() = delete;
+    ContrastNode(const std::vector<rocALTensor *> &inputs, const std::vector<rocALTensor *> &outputs);
+    ContrastNode() = delete;
 
     void init( float c_factor, float c_center);
     void init( FloatParam* c_factor_param, FloatParam* c_center_param);

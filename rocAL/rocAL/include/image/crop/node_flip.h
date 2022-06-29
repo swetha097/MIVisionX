@@ -26,11 +26,11 @@ THE SOFTWARE.
 #include "parameter_vx.h"
 #include "graph.h"
 
-class FlipTensorNode : public Node
+class FlipNode : public Node
 {
 public:
-    FlipTensorNode(const std::vector<rocALTensor *> &inputs, const std::vector<rocALTensor *> &outputs);
-    FlipTensorNode() = delete;
+    FlipNode(const std::vector<rocALTensor *> &inputs, const std::vector<rocALTensor *> &outputs);
+    FlipNode() = delete;
 
     void init( int h_flag, int v_flag);
     void init( IntParam* h_flag_param, IntParam* v_flag_param);

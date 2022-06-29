@@ -24,14 +24,14 @@ THE SOFTWARE.
 #include "node_flip.h"
 #include "exception.h"
 
-FlipTensorNode::FlipTensorNode(const std::vector<rocALTensor *> &inputs,const std::vector<rocALTensor *> &outputs) :
+FlipNode::FlipNode(const std::vector<rocALTensor *> &inputs,const std::vector<rocALTensor *> &outputs) :
         Node(inputs, outputs),
         _horizontal(HORIZONTAL_RANGE[0], HORIZONTAL_RANGE[1]),
         _vertical (VERTICAL_RANGE[0], VERTICAL_RANGE[1])
 {
 }
 
-void FlipTensorNode::create_node()
+void FlipNode::create_node()
 {
     if(_node)
         return;
@@ -57,14 +57,14 @@ void FlipTensorNode::create_node()
         THROW("Adding the brightness_batch (vxExtrppNode_BrightnessbatchPD) node failed: "+ TOSTR(status))
 }
 
-void FlipTensorNode::init( int h_flag, int v_flag)
+void FlipNode::init( int h_flag, int v_flag)
 {
     _horizontal.set_param(h_flag);
     _vertical.set_param(v_flag);
     _layout = _roi_type = 0;
 }
 
-void FlipTensorNode::init( IntParam* h_flag, IntParam* v_flag)
+void FlipNode::init( IntParam* h_flag, IntParam* v_flag)
 {
     _horizontal.set_param(core(h_flag));
     _vertical.set_param(core(v_flag));
@@ -72,7 +72,7 @@ void FlipTensorNode::init( IntParam* h_flag, IntParam* v_flag)
 }
 
 
-void FlipTensorNode::update_node()
+void FlipNode::update_node()
 {
 
     _horizontal.update_array();
