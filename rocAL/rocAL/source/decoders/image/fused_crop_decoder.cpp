@@ -106,8 +106,6 @@ Decoder::Status FusedCropTJDecoder::decode(unsigned char *input_buffer, size_t i
         {
             std::uniform_real_distribution<float> float_dis(0.08, 1.0);
             std::uniform_real_distribution<float> log_ratio_dist(-0.2877,  0.2877);
-
-
             float scale_dist = float_dis(_rngs[i]);
             double target_area  = scale_dist * original_image_width * original_image_height;
             double aspect_ratio = std::exp(log_ratio_dist(_rngs[i]));
@@ -163,7 +161,7 @@ Decoder::Status FusedCropTJDecoder::decode(unsigned char *input_buffer, size_t i
                       max_decoded_height,
                       tjpf,
                       TJFLAG_FASTDCT, &x1_diff, &crop_width_diff,
-		                  x1, y1, crop_width, crop_height) != 0)
+                          x1, y1, crop_width, crop_height) != 0)
 
     {
         WRN("Jpeg image decode failed " + STR(tjGetErrorStr2(m_jpegDecompressor)))
@@ -173,16 +171,13 @@ Decoder::Status FusedCropTJDecoder::decode(unsigned char *input_buffer, size_t i
     if (x1 != x1_diff) {
         // std::cout << "x_off changed by tjpeg decoder " << x1 << " " << x1_diff << std::endl;
         unsigned char *src_ptr_temp, *dst_ptr_temp;
-        unsigned int elements_in_row = max_decoded_width * planes;
         unsigned int elements_in_crop_row = crop_width * planes;
-        //unsigned int remainingElements =  elements_in_row - elements_in_crop_row;
         unsigned int xoffs = (x1-x1_diff) * planes;   // in case x1 gets adjusted by tjpeg decoder
         src_ptr_temp = output_buffer;
         dst_ptr_temp = output_buffer;
         for (unsigned int i = 0; i < crop_height; i++)
         {
             memcpy(dst_ptr_temp, src_ptr_temp + xoffs, elements_in_crop_row * sizeof(unsigned char));
-            //memset(dst_ptr_temp + elements_in_crop_row, 0, remainingElements * sizeof(unsigned char));
             src_ptr_temp +=  xoffs + elements_in_crop_row;
             dst_ptr_temp +=  xoffs + elements_in_crop_row;
         }
