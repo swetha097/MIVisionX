@@ -66,7 +66,7 @@ public:
 
     //! Initializer constructor with only fields common to all types (Image/ Video / Audio)
     rocALTensorInfo(unsigned num_of_dims,
-                    std::shared_ptr<std::vector<unsigned>> dims,
+                    std::vector<unsigned> dims,
                     RocalMemType mem_type,
                     RocalTensorDataType data_type);
 
@@ -86,32 +86,32 @@ public:
             _is_image = true;
             if(layout == RocalTensorlayout::NHWC)
             {
-                _max_dims[0] = _dims->at(2);
-                _max_dims[1] = _dims->at(1);
+                _max_dims[0] = _dims.at(2);
+                _max_dims[1] = _dims.at(1);
             }
             else if(layout == RocalTensorlayout::NCHW)
             {
-                _max_dims[0] = _dims->at(3);
-                _max_dims[1] = _dims->at(2);
+                _max_dims[0] = _dims.at(3);
+                _max_dims[1] = _dims.at(2);
             }
             else if(layout == RocalTensorlayout::NFHWC)
             {
-                _max_dims[0] = _dims->at(3);
-                _max_dims[1] = _dims->at(2);
-                _max_dims[2] = _dims->at(1);
+                _max_dims[0] = _dims.at(3);
+                _max_dims[1] = _dims.at(2);
+                _max_dims[2] = _dims.at(1);
             }
             else if(layout == RocalTensorlayout::NFCHW)
             {
-                _max_dims[0] = _dims->at(4);
-                _max_dims[1] = _dims->at(3);
-                _max_dims[2] = _dims->at(1);
+                _max_dims[0] = _dims.at(4);
+                _max_dims[1] = _dims.at(3);
+                _max_dims[2] = _dims.at(1);
             }
             reallocate_tensor_roi_buffers();
         }
         else if(!_is_metadata)
         {
-            _max_dims[0] = _dims->at(1);
-            _max_dims[1] = _dims->at(2);
+            _max_dims[0] = _dims.at(1);
+            _max_dims[1] = _dims.at(2);
         }
         _layout = layout;
     }
@@ -122,7 +122,7 @@ public:
         {
             for(unsigned i = 0; i < _num_of_dims; i++)
             {
-                _dims->at(i) = new_dims[i];
+                _dims.at(i) = new_dims[i];
                 _data_size *= new_dims[i];
             }
         }
@@ -135,7 +135,7 @@ public:
     unsigned batch_size() const { return _batch_size; }
     unsigned data_size() const { return _data_size; }
     std::vector<unsigned> max_dims() const { return _max_dims; }
-    std::shared_ptr<std::vector<unsigned>> dims() const { return _dims; }
+    std::vector<unsigned> dims() const { return _dims; }
     RocalMemType mem_type() const { return _mem_type; }
     RocalROIType roi_type() const { return _roi_type; }
     RocalTensorDataType data_type() const { return _data_type; }
@@ -155,7 +155,7 @@ public:
 private:
     Type _type = Type::UNKNOWN;//!< tensor type, whether is virtual tensor, created from handle or is a regular tensor
     unsigned _num_of_dims;
-    std::shared_ptr<std::vector<unsigned>> _dims;
+    std::vector<unsigned> _dims;
     unsigned _batch_size;
     RocalMemType _mem_type;
     RocalROIType _roi_type;

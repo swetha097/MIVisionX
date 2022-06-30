@@ -109,8 +109,8 @@ void rocALTensorInfo::reallocate_tensor_roi_buffers()
         {
             _roi->at(i).x1 = 0;
             _roi->at(i).y1 = 0;
-            _roi->at(i).x2 = _dims->at(3);
-            _roi->at(i).y2 = _dims->at(2);
+            _roi->at(i).x2 = _dims.at(3);
+            _roi->at(i).y2 = _dims.at(2);
         }
     }
     else if(layout() == RocalTensorlayout::NHWC)
@@ -119,8 +119,8 @@ void rocALTensorInfo::reallocate_tensor_roi_buffers()
         {
             _roi->at(i).x1 = 0;
             _roi->at(i).y1 = 0;
-            _roi->at(i).x2 = _dims->at(2);
-            _roi->at(i).y2 = _dims->at(1);
+            _roi->at(i).x2 = _dims.at(2);
+            _roi->at(i).y2 = _dims.at(1);
         }
     }
     else if(layout() == RocalTensorlayout::NFCHW)
@@ -129,8 +129,8 @@ void rocALTensorInfo::reallocate_tensor_roi_buffers()
         {
             _roi->at(i).x1 = 0;
             _roi->at(i).y1 = 0;
-            _roi->at(i).x2 = _dims->at(4);
-            _roi->at(i).y2 = _dims->at(3);
+            _roi->at(i).x2 = _dims.at(4);
+            _roi->at(i).y2 = _dims.at(3);
         }
     }
     else if(layout() == RocalTensorlayout::NFHWC)
@@ -139,26 +139,26 @@ void rocALTensorInfo::reallocate_tensor_roi_buffers()
         {
             _roi->at(i).x1 = 0;
             _roi->at(i).y1 = 0;
-            _roi->at(i).x2 = _dims->at(3);
-            _roi->at(i).y2 = _dims->at(2);
+            _roi->at(i).x2 = _dims.at(3);
+            _roi->at(i).y2 = _dims.at(2);
         }
     }
 }
 
 rocALTensorInfo::rocALTensorInfo() : _type(Type::UNKNOWN),
                                 _num_of_dims(0),
-                                _dims(nullptr),
+                                _dims({}),
                                 _mem_type(RocalMemType::HOST),
                                 _data_type(RocalTensorDataType::FP32){}
 
 rocALTensorInfo::rocALTensorInfo(
     unsigned num_of_dims,
-    std::shared_ptr<std::vector<unsigned>> dims,
+    std::vector<unsigned> dims,
     RocalMemType mem_type,
     RocalTensorDataType data_type) : _type(Type::UNKNOWN),
                                 _num_of_dims(num_of_dims),
                                 _dims(dims),
-                                _batch_size(dims->at(0)),
+                                _batch_size(dims.at(0)),
                                 _mem_type(mem_type),
                                 _data_type(data_type)
 {
@@ -167,7 +167,7 @@ rocALTensorInfo::rocALTensorInfo(
     _data_size = data_size;
     for(unsigned i = 0; i < _num_of_dims; i++)
     {
-        _data_size *= dims->at(i);
+        _data_size *= dims.at(i);
     }
     if(_num_of_dims <= 3)
         _is_image = false;
@@ -249,7 +249,7 @@ int rocALTensor::create_virtual(vx_context context, vx_graph graph)
     vx_size dims[num_of_dims];
     for(unsigned i = 0; i < num_of_dims; i++)
     {
-        dims[i] = _info.dims()->at(i);
+        dims[i] = _info.dims().at(i);
     }
     _vx_handle = vxCreateVirtualTensor(graph, num_of_dims, dims, interpret_tensor_data_type(_info.data_type()), 0);
     vx_status status;
@@ -281,14 +281,14 @@ int rocALTensor::create_from_handle(vx_context context)
     stride[0] = tensor_data_size(_info.data_type());
     for(unsigned i = 1; i < num_of_dims; i++)
     {
-        stride[i] = stride[i - 1] * _info.dims()->at(i - 1);
+        stride[i] = stride[i - 1] * _info.dims().at(i - 1);
     }
     vx_status status;
     // TODO - find a better way to convert from unsigned to size_t
     vx_size dims[num_of_dims];
     for(unsigned i = 0; i < num_of_dims; i++)
     {
-        dims[i] = _info.dims()->at(i);
+        dims[i] = _info.dims().at(i);
     }
     _vx_handle = vxCreateTensorFromHandle(_context, num_of_dims, dims, tensor_data_type, 0, stride, ptr, vx_mem_type(_info._mem_type));
     if ((status = vxGetStatus((vx_reference)_vx_handle)) != VX_SUCCESS)
@@ -309,7 +309,7 @@ int rocALTensor::create(vx_context context)
 
     vx_status status;
     vx_enum tensor_data_type = interpret_tensor_data_type(_info.data_type());
-    _vx_handle = vxCreateTensor(context, _info.num_of_dims(),(vx_size*) _info.dims()->data(), tensor_data_type, 0);
+    _vx_handle = vxCreateTensor(context, _info.num_of_dims(),(vx_size*) _info.dims().data(), tensor_data_type, 0);
     if ((status = vxGetStatus((vx_reference)_vx_handle)) != VX_SUCCESS)
         THROW("Error: vxCreateTensor(input: failed " + TOSTR(status))
     _info._type = rocALTensorInfo::Type::REGULAR;

@@ -758,7 +758,7 @@ void MasterGraph::create_label_reader(const char *source_path, MetaDataReaderTyp
     dims.resize(num_of_dims);
     dims.at(0) = max_buffer_size;
     auto info  = rocALTensorInfo(num_of_dims,
-                                 std::make_shared<std::vector<unsigned> >(std::move(dims)),
+                                 std::vector<unsigned>(std::move(dims)),
                                  _mem_type,
                                  RocalTensorDataType::INT32);
     info.set_metadata();
@@ -793,7 +793,7 @@ void MasterGraph::create_coco_meta_data_reader(const char *source_path, bool is_
     dims.resize(num_of_dims);
     dims.at(0) = MAX_OBJECTS;
     auto default_labels_info  = rocALTensorInfo(num_of_dims,
-                                        std::make_shared<std::vector<unsigned> >(std::move(dims)),
+                                        std::vector<unsigned>(std::move(dims)),
                                         _mem_type,
                                         RocalTensorDataType::INT32);
     default_labels_info.set_metadata();
@@ -804,7 +804,7 @@ void MasterGraph::create_coco_meta_data_reader(const char *source_path, bool is_
     dims.at(0) = MAX_OBJECTS;
     dims.at(1) = BBOX_COUNT;
     auto default_bbox_info  = rocALTensorInfo(num_of_dims,
-                                        std::make_shared<std::vector<unsigned> >(std::move(dims)),
+                                        std::vector<unsigned>(std::move(dims)),
                                         _mem_type,
                                         RocalTensorDataType::FP32);
     default_bbox_info.set_metadata();
