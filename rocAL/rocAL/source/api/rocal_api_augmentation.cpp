@@ -41,13 +41,46 @@ THE SOFTWARE.
 #include "node_blend.h"
 #include "node_gridmask.h"
 
-
-
-
-
 #include "commons.h"
 #include "context.h"
 #include "rocal_api.h"
+
+
+void get_rocal_tensor_layout(RocalTensorLayout &tensor_layout, RocalTensorlayout &op_tensor_layout, int &layout)
+{
+    switch(tensor_layout)
+    {
+        case 0:
+            op_tensor_layout = RocalTensorlayout::NHWC;
+            layout = 0;
+            return;
+        case 1:
+            op_tensor_layout = RocalTensorlayout::NCHW;
+            layout = 1;
+            return;
+        default:
+            THROW("Unsupported Tensor layout" + TOSTR(rocal_tensor_layout))
+    }
+}
+
+void get_rocal_tensor_data_type(RocalTensorOutputType &tensor_output_type, RocalTensorDataType &tensor_data_type)
+{
+    switch(tensor_output_type)
+    {
+        case ROCAL_FP32:
+            std::cerr<<"\n Setting output type to FP32";
+            tensor_data_type = RocalTensorDataType::FP32;
+            return;
+        case ROCAL_FP16:
+            tensor_data_type = RocalTensorDataType::FP16;
+            return;
+        case ROCAL_UINT8:
+            tensor_data_type = RocalTensorDataType::UINT8;
+            return;
+        default:
+            THROW("Unsupported Tensor output type" + TOSTR(rocal_tensor_output_type))
+    }
+}
 
 RocalTensor ROCAL_API_CALL
 rocalBrightness(
@@ -108,33 +141,9 @@ rocalNoise(
     RocalTensorDataType op_tensorDataType;
     try
     {
-        switch(rocal_tensor_layout)
-        {
-            case 0:
-                op_tensorFormat = RocalTensorlayout::NHWC;
-                break;
-            case 1:
-                op_tensorFormat = RocalTensorlayout::NCHW;
-                break;
-            default:
-                THROW("Unsupported Tensor layout" + TOSTR(rocal_tensor_layout))
-        }
-
-        switch(rocal_tensor_output_type)
-        {
-            case ROCAL_FP32:
-                std::cerr<<"\n Setting output type to FP32";
-                op_tensorDataType = RocalTensorDataType::FP32;
-                break;
-            case ROCAL_FP16:
-                op_tensorDataType = RocalTensorDataType::FP16;
-                break;
-            case ROCAL_UINT8:
-                op_tensorDataType = RocalTensorDataType::UINT8;
-                break;
-            default:
-                THROW("Unsupported Tensor output type" + TOSTR(rocal_tensor_output_type))
-        }
+        int layout = 0;
+        get_rocal_tensor_layout(rocal_tensor_layout, op_tensorFormat, layout);
+        get_rocal_tensor_data_type(rocal_tensor_output_type, op_tensorDataType);
         output = context->master_graph->create_tensor(input->info(), is_output);
 
         context->master_graph->add_node<NoiseTensorNode>({input}, {output})->init(alpha, beta, hue ,sat,seed);
@@ -309,7 +318,7 @@ rocalExposure(
 
 
 RocalTensor
-ROCAL_API_CALL rocalCrop(RocalContext p_context, 
+ROCAL_API_CALL rocalCrop(RocalContext p_context,
                                             RocalTensor p_input,
                                             RocalTensorLayout rocal_tensor_layout,
 
@@ -714,52 +723,21 @@ ROCAL_API_CALL rocalCropMirrorNormalize(RocalContext p_context, RocalTensor p_in
     // }
     // mean_acutal /= mean.size();
     // std_actual /= std_dev.size();
-    RocalTensorlayout op_tensorFormat;
+    RocalTensorlayout op_tensorLayout;
     RocalTensorDataType op_tensorDataType;
     try
     {
         if(!input || !context || crop_width == 0 || crop_height == 0)
             THROW("Null values passed as input")
         int layout=0;
-        switch(rocal_tensor_layout)
-        {
-            case 0:
-                op_tensorFormat = RocalTensorlayout::NHWC;
-                layout=0;
-                std::cerr<<"RocalTensorlayout::NHWC";
-                break;
-            case 1:
-                op_tensorFormat = RocalTensorlayout::NCHW;
-                layout=1;
-                std::cerr<<"RocalTensorlayout::NCHW";
-
-                break;
-            default:
-                THROW("Unsupported Tensor layout" + TOSTR(rocal_tensor_layout))
-        }
-
-        switch(rocal_tensor_output_type)
-        {
-            case ROCAL_FP32:
-                std::cerr<<"\n Setting output type to FP32";
-                op_tensorDataType = RocalTensorDataType::FP32;
-                break;
-            case ROCAL_FP16:
-                std::cerr<<"\n Setting output type to FP16";
-                op_tensorDataType = RocalTensorDataType::FP16;
-                break;
-            case ROCAL_UINT8:
-                std::cerr<<"\n Setting output type to UINT8";
-                op_tensorDataType = RocalTensorDataType::UINT8;
-                break;
-            default:
-                THROW("Unsupported Tensor output type" + TOSTR(rocal_tensor_output_type))
-        }
+        get_rocal_tensor_layout(rocal_tensor_layout, op_tensorLayout, layout);
+        get_rocal_tensor_data_type(rocal_tensor_output_type, op_tensorDataType);
         // For the crop mirror normalize resize node, user can create an image with a different width and height
         rocALTensorInfo output_info = input->info();
         // output_info.max_width(crop_width);
         // output_info.max_height(crop_height);
         // output_info.format(op_tensorFormat);
+        output_info.set_tensor_layout(op_tensorLayout);
         output_info.set_data_type(op_tensorDataType);
         output = context->master_graph->create_tensor(output_info, is_output);
         // For the nodes that user provides the output size the dimension of all the images after this node will be fixed and equal to that size
@@ -857,7 +835,7 @@ rocalGamma(
 
 //resize
 RocalTensor
-ROCAL_API_CALL rocalResize(RocalContext p_context, 
+ROCAL_API_CALL rocalResize(RocalContext p_context,
                                             RocalTensor p_input,
                                             RocalTensorLayout rocal_tensor_layout,
 
@@ -910,11 +888,11 @@ ROCAL_API_CALL rocalResize(RocalContext p_context,
         }
         // For the crop mirror normalize resize node, user can create an image with a different width and height
         rocALTensorInfo output_info = input->info();
-        
+
         // Need to just set dims depending on NCHW or NHWC
         output_info.set_width(resize_width);
         output_info.set_height(resize_height);
-        
+
         std::cerr<<"\n\n\nwidth     "<<output_info.get_width();
         std::cerr << " OUT W & H : " << output_info.max_width() << output_info.max_height() << "\n";
         std::cerr << " IN W & H : " << input->info().max_width() << input->info().max_height() << "\n";
@@ -939,7 +917,7 @@ ROCAL_API_CALL rocalResize(RocalContext p_context,
 
 //resize
 RocalTensor
-ROCAL_API_CALL rocalResizeMirrorNormalize(RocalContext p_context, 
+ROCAL_API_CALL rocalResizeMirrorNormalize(RocalContext p_context,
                                             RocalTensor p_input,
                                             RocalTensorLayout rocal_tensor_layout,
                                             RocalTensorOutputType rocal_tensor_output_type,
@@ -999,7 +977,7 @@ ROCAL_API_CALL rocalResizeMirrorNormalize(RocalContext p_context,
         // Need to just set dims depending on NCHW or NHWC
         output_info.set_width(resize_width);
         output_info.set_height(resize_height);
-        
+
         std::cerr<<"\n\n\nwidth     "<<output_info.get_width();
         std::cerr << " OUT W & H : " << output_info.max_width() << output_info.max_height() << "\n";
         std::cerr << " IN W & H : " << input->info().max_width() << input->info().max_height() << "\n";
