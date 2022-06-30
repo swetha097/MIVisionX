@@ -51,7 +51,7 @@ void CropMirrorNormalizeTensorNode::create_node()
         _std_dev_vx[3*i+1] = _std_dev[1];
         _std_dev_vx[3*i+2] = _std_dev[2];
     }
-    
+
     _mean_array = vxCreateArray(vxGetContext((vx_reference)_graph->get()), VX_TYPE_FLOAT32, _batch_size*3);
     _std_dev_array = vxCreateArray(vxGetContext((vx_reference)_graph->get()), VX_TYPE_FLOAT32, _batch_size*3);
     vx_status status = VX_SUCCESS;
@@ -96,5 +96,5 @@ void CropMirrorNormalizeTensorNode::init(int crop_h, int crop_w, float start_x, 
     _mean   = mean;
     _std_dev = std_dev;
     _mirror.set_param(core(mirror));
-    _layout=layout;
+    // _layout = (unsigned) _outputs[0]->layout();
 }
