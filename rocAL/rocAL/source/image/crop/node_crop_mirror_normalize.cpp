@@ -60,10 +60,7 @@ void CropMirrorNormalizeTensorNode::create_node()
     _mirror.create_array(_graph ,VX_TYPE_UINT32, _batch_size);
     if(status != 0)
         THROW(" vxAddArrayItems failed in the crop resize node (vxExtrppNode_CropMirrorNormalizeCropbatchPD    )  node: "+ TOSTR(status) + "  "+ TOSTR(status))
-
     unsigned int chnShift = 0;
-    // if(_inputs[0]->info().format() != _outputs[0]->info().format())
-    //     chnShift = 1;
     vx_scalar  chnToggle = vxCreateScalar(vxGetContext((vx_reference)_graph->get()),VX_TYPE_UINT32,&chnShift);
     bool packed;
     if(_inputs[0]->info().color_format() != RocalColorFormat::RGB_PLANAR)
@@ -81,11 +78,9 @@ void CropMirrorNormalizeTensorNode::create_node()
 
 }
 
-
 void CropMirrorNormalizeTensorNode::update_node()
 {
     _crop_param->set_image_dimensions(_inputs[0]->info().get_roi());
-
     _crop_param->update_array();
     std::vector<uint32_t> crop_h_dims, crop_w_dims;
     _crop_param->get_crop_dimensions(crop_w_dims, crop_h_dims);
@@ -96,7 +91,6 @@ void CropMirrorNormalizeTensorNode::update_node()
 
 void CropMirrorNormalizeTensorNode::init(int crop_h, int crop_w, float start_x, float start_y, std::vector<float>& mean, std::vector<float>& std_dev, IntParam *mirror,int layout)
 {
-    std::cerr<<"init checkingggg/n";
     _crop_param->crop_h = crop_h;
     _crop_param->crop_w = crop_w;
     _mean   = mean;

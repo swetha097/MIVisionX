@@ -32,10 +32,10 @@ struct NoiseLocalData
     Rpp32u nbatchSize;
     RppPtr_t pSrc;
     RppPtr_t pDst;
-    vx_float32 *alpha;
-    vx_float32 *beta;
-    vx_float32 *hue;
-    vx_float32 *sat;
+    vx_float32 *noise_prob;
+    vx_float32 *salt_prob;
+    vx_float32 *noise_value;
+    vx_float32 *salt_value;
     vx_uint32 seed;
     vx_size channels;
     RpptDescPtr src_desc_ptr;
@@ -45,6 +45,8 @@ struct NoiseLocalData
     size_t in_tensor_dims[NUM_OF_DIMS];
     vx_enum in_tensor_type ;
     vx_enum out_tensor_type; 
+    Rpp32u layout;
+
 #if ENABLE_OPENCL
     cl_mem cl_pSrc;
     cl_mem cl_pDst;
@@ -58,10 +60,30 @@ static vx_status VX_CALLBACK refreshNoise(vx_node node, const vx_reference *para
 {
     vx_status status = VX_SUCCESS;
     STATUS_ERROR_CHECK(vxCopyArrayRange((vx_array)parameters[1], 0, data->nbatchSize * 4, sizeof(unsigned), data->roi_tensor_Ptr, VX_READ_ONLY, VX_MEMORY_TYPE_HOST));
-    STATUS_ERROR_CHECK(vxCopyArrayRange((vx_array)parameters[3], 0, data->nbatchSize, sizeof(vx_float32), data->alpha, VX_READ_ONLY, VX_MEMORY_TYPE_HOST));
-    STATUS_ERROR_CHECK(vxCopyArrayRange((vx_array)parameters[4], 0, data->nbatchSize, sizeof(vx_float32), data->beta, VX_READ_ONLY, VX_MEMORY_TYPE_HOST));
-    STATUS_ERROR_CHECK(vxCopyArrayRange((vx_array)parameters[5], 0, data->nbatchSize, sizeof(vx_float32), data->hue, VX_READ_ONLY, VX_MEMORY_TYPE_HOST));
-    STATUS_ERROR_CHECK(vxCopyArrayRange((vx_array)parameters[6], 0, data->nbatchSize, sizeof(vx_float32), data->sat, VX_READ_ONLY, VX_MEMORY_TYPE_HOST));
+    STATUS_ERROR_CHECK(vxCopyArrayRange((vx_array)parameters[3], 0, data->nbatchSize, sizeof(vx_float32), data->noise_prob, VX_READ_ONLY, VX_MEMORY_TYPE_HOST));
+    STATUS_ERROR_CHECK(vxCopyArrayRange((vx_array)parameters[4], 0, data->nbatchSize, sizeof(vx_float32), data->salt_prob, VX_READ_ONLY, VX_MEMORY_TYPE_HOST));
+    STATUS_ERROR_CHECK(vxCopyArrayRange((vx_array)parameters[5], 0, data->nbatchSize, sizeof(vx_float32), data->noise_value, VX_READ_ONLY, VX_MEMORY_TYPE_HOST));
+    STATUS_ERROR_CHECK(vxCopyArrayRange((vx_array)parameters[6], 0, data->nbatchSize, sizeof(vx_float32), data->salt_value, VX_READ_ONLY, VX_MEMORY_TYPE_HOST));
+    if(data->layout == 2 || data->layout == 3)
+    {
+        unsigned num_of_frames = data->in_tensor_dims[1]; // Num of frames 'F'
+        for(int n = data->nbatchSize - 1; n >= 0; n--)
+        {
+            unsigned index = n * num_of_frames;
+            for(int f = 0; f < num_of_frames; f++)
+            {
+                data->noise_prob[index + f] = data->noise_prob[n];
+                data->salt_prob[index + f] = data->salt_prob[n];
+                data->noise_value[index + f] = data->noise_value[n];
+                data->salt_value[index + f] = data->salt_value[n];
+                data->roi_tensor_Ptr[index + f].xywhROI.xy.x = data->roi_tensor_Ptr[n].xywhROI.xy.x;
+                data->roi_tensor_Ptr[index + f].xywhROI.xy.y = data->roi_tensor_Ptr[n].xywhROI.xy.y;
+                data->roi_tensor_Ptr[index + f].xywhROI.roiWidth = data->roi_tensor_Ptr[n].xywhROI.roiWidth;
+                data->roi_tensor_Ptr[index + f].xywhROI.roiHeight = data->roi_tensor_Ptr[n].xywhROI.roiHeight;
+
+            }
+        }
+    }
     if (data->device_type == AGO_TARGET_AFFINITY_GPU)
     {
 #if ENABLE_OPENCL
@@ -81,8 +103,6 @@ static vx_status VX_CALLBACK refreshNoise(vx_node node, const vx_reference *para
         }
         else if (data->in_tensor_type == vx_type_e::VX_TYPE_FLOAT32 && data->out_tensor_type == vx_type_e::VX_TYPE_FLOAT32)
         {
-            std::cerr<<"*******************FLOAT32*******************";
-
             STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[0], VX_TENSOR_BUFFER_HOST, &data->pSrc, sizeof(vx_float32)));
             STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[2], VX_TENSOR_BUFFER_HOST, &data->pDst, sizeof(vx_float32)));
         }
@@ -109,7 +129,6 @@ static vx_status VX_CALLBACK refreshNoise(vx_node node, const vx_reference *para
 
 static vx_status VX_CALLBACK validateNoise(vx_node node, const vx_reference parameters[], vx_uint32 num, vx_meta_format metas[])
 {
-    std::cerr<<"NOISE";
     vx_status status = VX_SUCCESS;
     vx_enum scalar_type;
     STATUS_ERROR_CHECK(vxQueryScalar((vx_scalar)parameters[7], VX_SCALAR_TYPE, &scalar_type, sizeof(scalar_type)));
@@ -159,11 +178,11 @@ static vx_status VX_CALLBACK processNoise(vx_node node, const vx_reference *para
     {
 #if ENABLE_OPENCL
         refreshNoise(node, parameters, num, data);
-        // rpp_status = rppt_color_twist_gpu((void *)data->cl_pSrc, data->src_desc_ptr, (void *)data->cl_pDst, data->src_desc_ptr,  data->alpha, data->beta, data->hue, data->sat, data->roi_tensor_Ptr, data->roiType, data->rppHandle);
+        // rpp_status = rppt_color_twist_gpu((void *)data->cl_pSrc, data->src_desc_ptr, (void *)data->cl_pDst, data->src_desc_ptr,  data->noise_prob, data->salt_prob, data->noise_value, data->salt_value, data->roi_tensor_Ptr, data->roiType, data->rppHandle);
         return_status = (rpp_status == RPP_SUCCESS) ? VX_SUCCESS : VX_FAILURE;
 #elif ENABLE_HIP
         refreshNoise(node, parameters, num, data);
-        // rpp_status = rppt_color_twist_gpu((void *)data->hip_pSrc, data->src_desc_ptr, (void *)data->hip_pDst, data->src_desc_ptr,  data->alpha, data->beta, data->hue, data->sat, data->roi_tensor_Ptr, data->roiType, data->rppHandle);
+        // rpp_status = rppt_color_twist_gpu((void *)data->hip_pSrc, data->src_desc_ptr, (void *)data->hip_pDst, data->src_desc_ptr,  data->noise_prob, data->salt_prob, data->noise_value, data->salt_value, data->roi_tensor_Ptr, data->roiType, data->rppHandle);
         return_status = (rpp_status == RPP_SUCCESS) ? VX_SUCCESS : VX_FAILURE;
 #endif
     }
@@ -173,32 +192,10 @@ static vx_status VX_CALLBACK processNoise(vx_node node, const vx_reference *para
         for(int i = 0; i < data->nbatchSize; i++)
         {
             std::cerr<<"\n bbox values :: "<<data->roi_tensor_Ptr[i].xywhROI.xy.x<<" "<<data->roi_tensor_Ptr[i].xywhROI.xy.y<<" "<<data->roi_tensor_Ptr[i].xywhROI.roiWidth<<" "<<data->roi_tensor_Ptr[i].xywhROI.roiHeight;
-            std::cerr<<"data->alpha  "<<data->alpha[i]<<"  "<<data->beta[i]<<"  "<<data->hue[i]<<"  "<< data->sat[i];
-            data->alpha[i]=1.02;
-            data->beta[i]=1.1;
-            data->hue[i]=0.02;
-            data->sat[i]=1.3;
-
         }
-         float *temp1 = ((float*)calloc( 100,sizeof(float) ));
-
-        for (int i = 0; i < 100; i++)
-        {
-            temp1[i] = (float)*((unsigned char *)(data->pDst) + i);
-            std::cout << temp1[i] << " ";
-        }
-        rpp_status = rppt_salt_and_pepper_noise_host(data->pSrc, data->src_desc_ptr, data->pDst, data->src_desc_ptr, data->alpha, data->beta,data->hue, data->sat, 1255459, data->roi_tensor_Ptr, data->roiType, data->rppHandle);
+        rpp_status = rppt_salt_and_pepper_noise_host(data->pSrc, data->src_desc_ptr, data->pDst, data->src_desc_ptr, data->noise_prob, data->salt_prob,data->noise_value, data->salt_value, 1255459, data->roi_tensor_Ptr, data->roiType, data->rppHandle);
         return_status = (rpp_status == RPP_SUCCESS) ? VX_SUCCESS : VX_FAILURE;
         std::cerr<<"\n back from RPP";
-          float *temp = ((float*)calloc( 100,sizeof(float) ));
-
-        for (int i=0;i< 100;i++)
-                {
-                    temp[i]=*((float *)(data->pDst) + i);
-                    // *((float *)(data->pDst) + i)=*((float *)(data->pDst) + i)*255;
-                    std::cout<<temp[i]<<" ";
-
-                }
     }
     return return_status;
 }
@@ -206,7 +203,7 @@ static vx_status VX_CALLBACK processNoise(vx_node node, const vx_reference *para
 static vx_status VX_CALLBACK initializeNoise(vx_node node, const vx_reference *parameters, vx_uint32 num)
 {
     NoiseLocalData *data = new NoiseLocalData;
-    unsigned layout, roiType;
+    unsigned roiType;
     memset(data, 0, sizeof(*data));
 #if ENABLE_OPENCL
     STATUS_ERROR_CHECK(vxQueryNode(node, VX_NODE_ATTRIBUTE_AMD_OPENCL_COMMAND_QUEUE, &data->handle.cmdq, sizeof(data->handle.cmdq)));
@@ -215,12 +212,9 @@ static vx_status VX_CALLBACK initializeNoise(vx_node node, const vx_reference *p
 #endif
     STATUS_ERROR_CHECK(vxCopyScalar((vx_scalar)parameters[11], &data->device_type, VX_READ_ONLY, VX_MEMORY_TYPE_HOST));
     STATUS_ERROR_CHECK(vxReadScalarValue((vx_scalar)parameters[10], &data->nbatchSize));
-    STATUS_ERROR_CHECK(vxCopyScalar((vx_scalar)parameters[8], &layout, VX_READ_ONLY, VX_MEMORY_TYPE_HOST));
-    std::cerr<<"\n layout "<<layout;
+    STATUS_ERROR_CHECK(vxCopyScalar((vx_scalar)parameters[8], &data->layout, VX_READ_ONLY, VX_MEMORY_TYPE_HOST));
     STATUS_ERROR_CHECK(vxCopyScalar((vx_scalar)parameters[9], &roiType, VX_READ_ONLY, VX_MEMORY_TYPE_HOST));
     STATUS_ERROR_CHECK(vxCopyScalar((vx_scalar)parameters[7], &data->seed, VX_READ_ONLY, VX_MEMORY_TYPE_HOST));
-
-
     if(roiType == 1)
         data->roiType = RpptRoiType::XYWH;
     else
@@ -245,7 +239,7 @@ static vx_status VX_CALLBACK initializeNoise(vx_node node, const vx_reference *p
         data->src_desc_ptr->dataType = RpptDataType::I8;
     }
      data->src_desc_ptr->offsetInBytes = 0;
-    if(layout == 0) // NHWC
+    if(data->layout == 0) // NHWC
     {
         data->src_desc_ptr->n = data->in_tensor_dims[0];
         data->src_desc_ptr->h = data->in_tensor_dims[1];
@@ -260,7 +254,7 @@ static vx_status VX_CALLBACK initializeNoise(vx_node node, const vx_reference *p
         std::cerr<<"\n Setting layout "<<data->src_desc_ptr->layout;
         std::cerr<<"\n Setting data type "<<data->src_desc_ptr->dataType;
     }
-    else // NCHW
+    else if(data->layout == 1)// NCHW
     {
         data->src_desc_ptr->n = data->in_tensor_dims[0];
         data->src_desc_ptr->h = data->in_tensor_dims[2];
@@ -272,11 +266,38 @@ static vx_status VX_CALLBACK initializeNoise(vx_node node, const vx_reference *p
         data->src_desc_ptr->strides.wStride = 1;
         data->src_desc_ptr->layout = RpptLayout::NCHW;
     }
+    else if(data->layout == 2) // NFHWC
+    {
+        data->src_desc_ptr->n = data->in_tensor_dims[0] * data->in_tensor_dims[1];
+        data->src_desc_ptr->h = data->in_tensor_dims[2];
+        data->src_desc_ptr->w = data->in_tensor_dims[3];
+        data->src_desc_ptr->c = data->in_tensor_dims[4];
+        std::cerr<<"\n n h w c "<<data->src_desc_ptr->n<<" "<<data->src_desc_ptr->h<<" "<<data->src_desc_ptr->w<<" "<<data->src_desc_ptr->c;
+        data->src_desc_ptr->strides.nStride = data->src_desc_ptr->c * data->src_desc_ptr->w * data->src_desc_ptr->h;
+        data->src_desc_ptr->strides.hStride = data->src_desc_ptr->c * data->src_desc_ptr->w;
+        data->src_desc_ptr->strides.wStride = data->src_desc_ptr->c;
+        data->src_desc_ptr->strides.cStride = 1;
+        data->src_desc_ptr->layout = RpptLayout::NHWC;
+        std::cerr<<"\n Setting layout "<<data->src_desc_ptr->layout;
+        std::cerr<<"\n Setting data type "<<data->src_desc_ptr->dataType;
+    }
+    else if(data->layout == 3)// NFCHW
+    {
+        data->src_desc_ptr->n = data->in_tensor_dims[0] * data->in_tensor_dims[1];
+        data->src_desc_ptr->h = data->in_tensor_dims[3];
+        data->src_desc_ptr->w = data->in_tensor_dims[4];
+        data->src_desc_ptr->c = data->in_tensor_dims[2];
+        data->src_desc_ptr->strides.nStride = data->src_desc_ptr->c * data->src_desc_ptr->w * data->src_desc_ptr->h;
+        data->src_desc_ptr->strides.cStride = data->src_desc_ptr->w * data->src_desc_ptr->h;
+        data->src_desc_ptr->strides.hStride = data->src_desc_ptr->w;
+        data->src_desc_ptr->strides.wStride = 1;
+        data->src_desc_ptr->layout = RpptLayout::NCHW;
+    }
     data->roi_tensor_Ptr = (RpptROI *) calloc(data->nbatchSize, sizeof(RpptROI));
-    data->alpha = (vx_float32 *)malloc(sizeof(vx_float32) * data->nbatchSize);
-    data->beta = (vx_float32 *)malloc(sizeof(vx_float32) * data->nbatchSize);
-    data->hue = (vx_float32 *)malloc(sizeof(vx_float32) * data->nbatchSize);
-    data->sat = (vx_float32 *)malloc(sizeof(vx_float32) * data->nbatchSize);
+    data->noise_prob = (vx_float32 *)malloc(sizeof(vx_float32) * data->src_desc_ptr->n);
+    data->salt_prob = (vx_float32 *)malloc(sizeof(vx_float32) * data->src_desc_ptr->n);
+    data->noise_value = (vx_float32 *)malloc(sizeof(vx_float32) * data->src_desc_ptr->n);
+    data->salt_value = (vx_float32 *)malloc(sizeof(vx_float32) * data->src_desc_ptr->n);
     refreshNoise(node, parameters, num, data);
 #if ENABLE_OPENCL
     if (data->device_type == AGO_TARGET_AFFINITY_GPU)
@@ -303,10 +324,10 @@ static vx_status VX_CALLBACK uninitializeNoise(vx_node node, const vx_reference 
     if (data->device_type == AGO_TARGET_AFFINITY_CPU)
         rppDestroyHost(data->rppHandle);
     free(data->roi_tensor_Ptr);
-    free(data->alpha);
-    free(data->beta);
-    free(data->hue);
-    free(data->sat);
+    free(data->noise_prob);
+    free(data->salt_prob);
+    free(data->noise_value);
+    free(data->salt_value);
     delete (data);
     return VX_SUCCESS;
 }
@@ -372,7 +393,6 @@ vx_status Noise_Register(vx_context context)
         PARAM_ERROR_CHECK(vxAddParameterToKernel(kernel, 9, VX_INPUT, VX_TYPE_SCALAR, VX_PARAMETER_STATE_REQUIRED));
         PARAM_ERROR_CHECK(vxAddParameterToKernel(kernel, 10, VX_INPUT, VX_TYPE_SCALAR, VX_PARAMETER_STATE_REQUIRED));
         PARAM_ERROR_CHECK(vxAddParameterToKernel(kernel, 11, VX_INPUT, VX_TYPE_SCALAR, VX_PARAMETER_STATE_REQUIRED));
-
         PARAM_ERROR_CHECK(vxFinalizeKernel(kernel));
     }
     if (status != VX_SUCCESS)

@@ -40,22 +40,16 @@ THE SOFTWARE.
 #include "node_noise.h"
 #include "node_blend.h"
 #include "node_gridmask.h"
-
-
-
-
-
 #include "commons.h"
 #include "context.h"
 #include "rocal_api.h"
 
 RocalTensor ROCAL_API_CALL
-rocalBrightness(
-        RocalContext p_context,
-        RocalTensor p_input,
-        bool is_output,
-        RocalFloatParam p_alpha,
-        RocalFloatParam p_beta)
+rocalBrightness(RocalContext p_context,
+                RocalTensor p_input,
+                bool is_output,
+                RocalFloatParam p_alpha,
+                RocalFloatParam p_beta)
 {
     if(!p_input || !p_context)
         THROW("Null values passed as input")
@@ -66,7 +60,6 @@ rocalBrightness(
     auto beta = static_cast<FloatParam*>(p_beta);
     try
     {
-
         output = context->master_graph->create_tensor(input->info(), is_output);
 
         context->master_graph->add_node<BrightnessNode>({input}, {output})->init(alpha, beta);
@@ -79,30 +72,27 @@ rocalBrightness(
     return output;
 }
 
-//Noise
-
 RocalTensor ROCAL_API_CALL
-rocalNoise(
-        RocalContext p_context,
-        RocalTensor p_input,
-        RocalTensorLayout rocal_tensor_layout,
-        RocalTensorOutputType rocal_tensor_output_type,
-        bool is_output,
-        RocalFloatParam p_alpha,
-        RocalFloatParam p_beta,
-        RocalFloatParam p_hue,
-        RocalFloatParam p_sat,
-        int seed)
+rocalNoise(RocalContext p_context,
+           RocalTensor p_input,
+           RocalTensorLayout rocal_tensor_layout,
+           RocalTensorOutputType rocal_tensor_output_type,
+           bool is_output,
+           RocalFloatParam noise_p,
+           RocalFloatParam salt_p,
+           RocalFloatParam noise_v,
+           RocalFloatParam salt_v,
+           int seed)
 {
     if(!p_context || !p_input)
         THROW("Null values passed as input")
     rocALTensor* output = nullptr;
     auto context = static_cast<Context*>(p_context);
     auto input = static_cast<rocALTensor*>(p_input);
-    auto alpha = static_cast<FloatParam*>(p_alpha);
-    auto beta = static_cast<FloatParam*>(p_beta);
-    auto hue = static_cast<FloatParam*>(p_hue);
-    auto sat = static_cast<FloatParam*>(p_sat);
+    auto noise_prob = static_cast<FloatParam*>(noise_p);
+    auto salt_prob = static_cast<FloatParam*>(salt_p);
+    auto noise_value = static_cast<FloatParam*>(noise_v);
+    auto salt_value = static_cast<FloatParam*>(salt_v);
 
     RocalTensorlayout op_tensorFormat;
     RocalTensorDataType op_tensorDataType;
@@ -137,7 +127,7 @@ rocalNoise(
         }
         output = context->master_graph->create_tensor(input->info(), is_output);
 
-        context->master_graph->add_node<NoiseTensorNode>({input}, {output})->init(alpha, beta, hue ,sat,seed);
+        context->master_graph->add_node<NoiseTensorNode>({input}, {output})->init(noise_prob, salt_prob, noise_value ,salt_value,seed);
     }
     catch(const std::exception& e)
     {
@@ -147,15 +137,12 @@ rocalNoise(
     return output;
 }
 
-
-//contrast
 RocalTensor ROCAL_API_CALL
-rocalContrast(
-        RocalContext p_context,
-        RocalTensor p_input,
-        bool is_output,
-        RocalFloatParam c_factor,
-        RocalFloatParam c_center)
+rocalContrast(RocalContext p_context,
+              RocalTensor p_input,
+              bool is_output,
+              RocalFloatParam c_factor,
+              RocalFloatParam c_center)
 {
     if(!p_input || !p_context)
         THROW("Null values passed as input")
@@ -178,17 +165,14 @@ rocalContrast(
     return output;
 }
 
-
-//colorcast
 RocalTensor
-ROCAL_API_CALL rocalColorCast(
-        RocalContext p_context,
-        RocalTensor p_input,
-        bool is_output,
-        RocalFloatParam R_value,
-        RocalFloatParam G_value,
-        RocalFloatParam B_value,
-        RocalFloatParam alpha_tensor)
+ROCAL_API_CALL rocalColorCast(RocalContext p_context,
+                              RocalTensor p_input,
+                              bool is_output,
+                              RocalFloatParam R_value,
+                              RocalFloatParam G_value,
+                              RocalFloatParam B_value,
+                              RocalFloatParam alpha_tensor)
 {
     if(!p_context || !p_input)
         THROW("Null values passed as input")
@@ -215,11 +199,10 @@ ROCAL_API_CALL rocalColorCast(
 }
 
 RocalTensor ROCAL_API_CALL
-rocalExposure(
-        RocalContext p_context,
-        RocalTensor p_input,
-        bool is_output,
-        RocalFloatParam p_alpha)
+rocalExposure(RocalContext p_context,
+              RocalTensor p_input,
+              bool is_output,
+              RocalFloatParam p_alpha)
 {
     if(!p_context || !p_input)
         THROW("Null values passed as input")
@@ -241,19 +224,18 @@ rocalExposure(
     return output;
 }
 
-
-RocalTensor
-ROCAL_API_CALL rocalCrop(RocalContext p_context, 
-                                            RocalTensor p_input,
-                                            RocalTensorLayout rocal_tensor_layout,
-                                            RocalTensorOutputType rocal_tensor_output_type,
-                                            unsigned crop_depth,
-                                            unsigned crop_height,
-                                            unsigned crop_width,
-                                            float start_x,
-                                            float start_y,
-                                            float start_z,
-                                            bool is_output)
+RocalTensor ROCAL_API_CALL 
+rocalCrop(RocalContext p_context, 
+          RocalTensor p_input,
+          RocalTensorLayout rocal_tensor_layout,
+          RocalTensorOutputType rocal_tensor_output_type,
+          unsigned crop_depth,
+          unsigned crop_height,
+          unsigned crop_width,
+          float start_x,
+          float start_y,
+          float start_z,
+          bool is_output)
 {
     rocALTensor* output = nullptr;
     auto context = static_cast<Context*>(p_context);
@@ -310,8 +292,7 @@ ROCAL_API_CALL rocalCrop(RocalContext p_context,
 }
 
 RocalTensor ROCAL_API_CALL
-rocalSpatter(
-             RocalContext p_context,
+rocalSpatter(RocalContext p_context,
              RocalTensor p_input,
              bool is_output,
              int R_value,
@@ -338,44 +319,8 @@ rocalSpatter(
 }
 
 RocalTensor ROCAL_API_CALL
-rocalColorTwist(
-        RocalContext p_context,
-        RocalTensor p_input,
-        bool is_output,
-        RocalFloatParam p_alpha,
-        RocalFloatParam p_beta,
-        RocalFloatParam p_hue,
-        RocalFloatParam p_sat)
-{
-    if(!p_context || !p_input)
-        THROW("Null values passed as input")
-    rocALTensor* output = nullptr;
-    auto context = static_cast<Context*>(p_context);
-    auto input = static_cast<rocALTensor*>(p_input);
-    auto alpha = static_cast<FloatParam*>(p_alpha);
-    auto beta = static_cast<FloatParam*>(p_beta);
-    auto hue = static_cast<FloatParam*>(p_hue);
-    auto sat = static_cast<FloatParam*>(p_sat);
-
-    try
-    {
-        output = context->master_graph->create_tensor(input->info(), is_output);
-        context->master_graph->add_node<ColorTwistNode>({input}, {output})->init(alpha, beta, hue ,sat);
-    }
-    catch(const std::exception& e)
-    {
-        context->capture_error(e.what());
-        ERR(e.what())
-    }
-    return output;
-}
-
-RocalTensor ROCAL_API_CALL
-rocalColorJitter(
-                RocalContext p_context,
+rocalColorTwist(RocalContext p_context,
                 RocalTensor p_input,
-                RocalTensorLayout rocal_tensor_layout,
-                RocalTensorOutputType rocal_tensor_output_type,
                 bool is_output,
                 RocalFloatParam p_alpha,
                 RocalFloatParam p_beta,
@@ -391,7 +336,39 @@ rocalColorJitter(
     auto beta = static_cast<FloatParam*>(p_beta);
     auto hue = static_cast<FloatParam*>(p_hue);
     auto sat = static_cast<FloatParam*>(p_sat);
+    try
+    {
+        output = context->master_graph->create_tensor(input->info(), is_output);
+        context->master_graph->add_node<ColorTwistNode>({input}, {output})->init(alpha, beta, hue ,sat);
+    }
+    catch(const std::exception& e)
+    {
+        context->capture_error(e.what());
+        ERR(e.what())
+    }
+    return output;
+}
 
+RocalTensor ROCAL_API_CALL
+rocalColorJitter(RocalContext p_context,
+                 RocalTensor p_input,
+                 RocalTensorLayout rocal_tensor_layout,
+                 RocalTensorOutputType rocal_tensor_output_type,
+                 bool is_output,
+                 RocalFloatParam p_alpha,
+                 RocalFloatParam p_beta,
+                 RocalFloatParam p_hue,
+                 RocalFloatParam p_sat)
+{
+    if(!p_context || !p_input)
+        THROW("Null values passed as input")
+    rocALTensor* output = nullptr;
+    auto context = static_cast<Context*>(p_context);
+    auto input = static_cast<rocALTensor*>(p_input);
+    auto alpha = static_cast<FloatParam*>(p_alpha);
+    auto beta = static_cast<FloatParam*>(p_beta);
+    auto hue = static_cast<FloatParam*>(p_hue);
+    auto sat = static_cast<FloatParam*>(p_sat);
     RocalTensorlayout op_tensorFormat;
     RocalTensorDataType op_tensorDataType;
     try
@@ -435,141 +412,26 @@ rocalColorJitter(
     return output;
 }
 
-
-// RocalTensor ROCAL_API_CALL
-// rocalGamma(
-//         RocalContext p_context,
-//         RocalTensor p_input,
-//         bool is_output,
-//         RocalFloatParam p_alpha)
-// {
-//     if(!p_context || !p_input)
-//         THROW("Null values passed as input")
-//     Tensor* output = nullptr;
-//     auto context = static_cast<Context*>(p_context);
-//     auto input = static_cast<Tensor*>(p_input);
-//     auto alpha = static_cast<FloatParam*>(p_alpha);
-//     try
-//     {
-//         output = context->master_graph->create_tensor(input->info(), is_output);
-
-//         context->master_graph->add_tensor_node<GammaNode>({input}, {output})->init(alpha);
-//     }
-//     catch(const std::exception& e)
-//     {
-//         context->capture_error(e.what());
-//         ERR(e.what())
-//     }
-//     return output;
-// }
-
-// RocalTensor ROCAL_API_CALL
-// rocalGammaFixed(
-//         RocalContext p_context,
-//         RocalTensor p_input,
-//         float alpha,
-//         bool is_output)
-// {
-//     if(!p_input || !p_context)
-//         THROW("Null values passed as input")
-//     Tensor* output = nullptr;
-//     auto context = static_cast<Context*>(p_context);
-//     auto input = static_cast<Tensor*>(p_input);
-//     try
-//     {
-//         if(!input || !context)
-//             THROW("Null values passed as input")
-
-//         output = context->master_graph->create_tensor(input->info(), is_output);
-
-//         context->master_graph->add_tensor_node<GammaNode>({input}, {output})->init(`);
-//     }
-//     catch(const std::exception& e)
-//     {
-//         context->capture_error(e.what());
-//         ERR(e.what())
-//     }
-//     return output;
-// }
-
-// RocalTensor ROCAL_API_CALL
-// rocalBrightness(
-//         RocalContext p_context,
-//         RocalTensor p_input,
-//         bool is_output,
-//         RocalFloatParam p_alpha,
-//         RocalFloatParam p_beta)
-// {
-//     if(!p_input || !p_context)
-//         THROW("Null values passed as input")
-//     Tensor* output = nullptr;
-//     auto context = static_cast<Context*>(p_context);
-//     auto input = static_cast<Tensor*>(p_input);
-//     auto alpha = static_cast<FloatParam*>(p_alpha);
-//     auto beta = static_cast<FloatParam*>(p_beta);
-//     try
-//     {
-
-//         output = context->master_graph->create_tensor(input->info(), is_output);
-
-//         context->master_graph->add_tensor_node<BrightnessNode>({input}, {output})->init(alpha, beta);
-//     }
-//     catch(const std::exception& e)
-//     {
-//         context->capture_error(e.what());
-//         ERR(e.what())
-//     }
-//     return output;
-// }
-
-// RocalTensor ROCAL_API_CALL
-// rocalBrightnessFixed(
-//         RocalContext p_context,
-//         RocalTensor p_input,
-//         float alpha,
-//         float beta,
-//         bool is_output)
-// {
-//     if(!p_input || !p_context)
-//         THROW("Null values passed as input")
-//     Tensor* output = nullptr;
-//     auto context = static_cast<Context*>(p_context);
-//     auto input = static_cast<Tensor*>(p_input);
-//     try
-//     {
-//         if(!input || !context)
-//             THROW("Null values passed as input")
-
-//         output = context->master_graph->create_tensor(input->info(), is_output);
-
-//         context->master_graph->add_tensor_node<BrightnessNode>({input}, {output})->init(alpha, beta);
-//     }
-//     catch(const std::exception& e)
-//     {
-//         context->capture_error(e.what());
-//         ERR(e.what())
-//     }
-//     return output;
-// }
-
-RocalTensor
-ROCAL_API_CALL rocalCropMirrorNormalize(RocalContext p_context, RocalTensor p_input, RocalTensorLayout rocal_tensor_layout,
-                                    RocalTensorOutputType rocal_tensor_output_type, unsigned crop_depth, unsigned crop_height,
-                                    unsigned crop_width, float start_x, float start_y, float start_z, std::vector<float> &mean,
-                                    std::vector<float> &std_dev, bool is_output, RocalIntParam p_mirror)
+RocalTensor ROCAL_API_CALL 
+rocalCropMirrorNormalize(RocalContext p_context, 
+                         RocalTensor p_input, 
+                         RocalTensorLayout rocal_tensor_layout,
+                         RocalTensorOutputType rocal_tensor_output_type,
+                         unsigned crop_depth,
+                         unsigned crop_height,
+                         unsigned crop_width, 
+                         float start_x, 
+                         float start_y, 
+                         float start_z, 
+                         std::vector<float> &mean,
+                         std::vector<float> &std_dev, 
+                         bool is_output, 
+                         RocalIntParam p_mirror)
 {
     rocALTensor* output = nullptr;
     auto context = static_cast<Context*>(p_context);
     auto input = static_cast<rocALTensor*>(p_input);
     auto mirror = static_cast<IntParam *>(p_mirror);
-    // float mean_acutal = 0, std_actual = 0; // Mean of vectors
-    // for(unsigned i = 0; i < mean.size(); i++)
-    // {
-    //     mean_acutal += mean[i];
-    //     std_actual  += std_dev[i];
-    // }
-    // mean_acutal /= mean.size();
-    // std_actual /= std_dev.size();
     RocalTensorlayout op_tensorFormat;
     RocalTensorDataType op_tensorDataType;
     try
@@ -593,19 +455,15 @@ ROCAL_API_CALL rocalCropMirrorNormalize(RocalContext p_context, RocalTensor p_in
             default:
                 THROW("Unsupported Tensor layout" + TOSTR(rocal_tensor_layout))
         }
-
         switch(rocal_tensor_output_type)
         {
             case ROCAL_FP32:
-                std::cerr<<"\n Setting output type to FP32";
                 op_tensorDataType = RocalTensorDataType::FP32;
                 break;
             case ROCAL_FP16:
-                std::cerr<<"\n Setting output type to FP16";
                 op_tensorDataType = RocalTensorDataType::FP16;
                 break;
             case ROCAL_UINT8:
-                std::cerr<<"\n Setting output type to UINT8";
                 op_tensorDataType = RocalTensorDataType::UINT8;
                 break;
             default:
@@ -613,31 +471,24 @@ ROCAL_API_CALL rocalCropMirrorNormalize(RocalContext p_context, RocalTensor p_in
         }
         // For the crop mirror normalize resize node, user can create an image with a different width and height
         rocALTensorInfo output_info = input->info();
-        // output_info.max_width(crop_width);
-        // output_info.max_height(crop_height);
-        // output_info.format(op_tensorFormat);
         output_info.set_data_type(op_tensorDataType);
         output = context->master_graph->create_tensor(output_info, is_output);
-        // For the nodes that user provides the output size the dimension of all the images after this node will be fixed and equal to that size
         output->reset_tensor_roi();
         context->master_graph->add_node<CropMirrorNormalizeTensorNode>({input}, {output})->init(crop_height, crop_width, start_x, start_y, mean,
-                                                                                        std_dev , mirror,layout );
+                                                                                                std_dev , mirror,layout );
     }
     catch(const std::exception& e)
     {
         context->capture_error(e.what());
         ERR(e.what());
     }
-
     return output; // Changed to input----------------IMPORTANT
 }
 
-
 RocalTensor  ROCAL_API_CALL
-rocalCopyTensor(
-        RocalContext p_context,
-        RocalTensor p_input,
-        bool is_output)
+rocalCopyTensor(RocalContext p_context,
+                RocalTensor p_input,
+                bool is_output)
 {
     if(!p_context || !p_input)
         THROW("Null values passed as input")
@@ -657,38 +508,11 @@ rocalCopyTensor(
     return output;
 }
 
-
-// RocalTensor  ROCAL_API_CALL
-// rocalNopTensor(
-//         RocalContext p_context,
-//         RocalTensor p_input,
-//         bool is_output)
-// {
-//     if(!p_context || !p_input)
-//         THROW("Null values passed as input")
-//     Tensor* output = nullptr;
-//     auto context = static_cast<Context*>(p_context);
-//     auto input = static_cast<Tensor*>(p_input);
-//     try
-//     {
-//         output = context->master_graph->create_tensor(input->info(), is_output);
-//         context->master_graph->add_tensor_node<NopNode>({input}, {output});
-//     }
-//     catch(const std::exception& e)
-//     {
-//         context->capture_error(e.what());
-//         ERR(e.what())
-//     }
-//     return output;
-// }
-
-
 RocalTensor ROCAL_API_CALL
-rocalGamma(
-        RocalContext p_context,
-        RocalTensor p_input,
-        bool is_output,
-        RocalFloatParam p_alpha)
+rocalGamma(RocalContext p_context,
+           RocalTensor p_input,
+           bool is_output,
+           RocalFloatParam p_alpha)
 {
     if(!p_input || !p_context)
         THROW("Null values passed as input")
@@ -712,17 +536,16 @@ rocalGamma(
 }
 
 //resize
-RocalTensor
-ROCAL_API_CALL rocalResize(RocalContext p_context, 
-                                            RocalTensor p_input,
-                                            RocalTensorLayout rocal_tensor_layout,
-
-                                            RocalTensorOutputType rocal_tensor_output_type,
-                                            unsigned resize_depth,
-                                            unsigned resize_height,
-                                            unsigned resize_width,
-                                            int interpolation_type,
-                                            bool is_output)
+RocalTensor ROCAL_API_CALL 
+rocalResize(RocalContext p_context, 
+            RocalTensor p_input,
+            RocalTensorLayout rocal_tensor_layout,
+            RocalTensorOutputType rocal_tensor_output_type,
+            unsigned resize_depth,
+            unsigned resize_height,
+            unsigned resize_width,
+            int interpolation_type,
+            bool is_output)
 {
     rocALTensor* output = nullptr;
     auto context = static_cast<Context*>(p_context);
@@ -764,51 +587,40 @@ ROCAL_API_CALL rocalResize(RocalContext p_context,
             default:
                 THROW("Unsupported Tensor output type" + TOSTR(rocal_tensor_output_type))
         }
-        // For the crop mirror normalize resize node, user can create an image with a different width and height
         rocALTensorInfo output_info = input->info();
-        
-        // Need to just set dims depending on NCHW or NHWC
         output_info.set_width(resize_width);
         output_info.set_height(resize_height);
-        
-        std::cerr<<"\n\n\nwidth     "<<output_info.get_width();
-        std::cerr << " OUT W & H : " << output_info.max_width() << output_info.max_height() << "\n";
-        std::cerr << " IN W & H : " << input->info().max_width() << input->info().max_height() << "\n";
-        // output_info.set_data_type(op_tensorDataType);
         output = context->master_graph->create_tensor(output_info, is_output);
-        // For the nodes that user provides the output size the dimension of all the images after this node will be fixed and equal to that size
         output->reset_tensor_roi();
-        context->master_graph->add_node<ResizeTensorNode>({input}, {output})->init( interpolation_type, layout);
+        context->master_graph->add_node<ResizeNode>({input}, {output})->init( interpolation_type, layout);
     }
     catch(const std::exception& e)
     {
         context->capture_error(e.what());
         ERR(e.what());
     }
-
     return output; // Changed to input----------------IMPORTANT
 }
 
 //resizemirrornormalize
 RocalTensor
 ROCAL_API_CALL rocalResizeMirrorNormalize(RocalContext p_context, 
-                                         RocalTensor p_input,
-                                         RocalTensorLayout rocal_tensor_layout,
-                                         RocalTensorOutputType rocal_tensor_output_type,
-                                         unsigned resize_depth,
-                                         unsigned resize_height,
-                                         unsigned resize_width,
-                                         int interpolation_type,
-                                         std::vector<float> &mean,
-                                         std::vector<float> &std_dev,
-                                         bool is_output,
-                                         RocalIntParam p_mirror)
+                                          RocalTensor p_input,
+                                          RocalTensorLayout rocal_tensor_layout,
+                                          RocalTensorOutputType rocal_tensor_output_type,
+                                          unsigned resize_depth,
+                                          unsigned resize_height,
+                                          unsigned resize_width,
+                                          int interpolation_type,
+                                          std::vector<float> &mean,
+                                          std::vector<float> &std_dev,
+                                          bool is_output,
+                                          RocalIntParam p_mirror)
 {
     rocALTensor* output = nullptr;
     auto context = static_cast<Context*>(p_context);
     auto input = static_cast<rocALTensor*>(p_input);
     auto mirror = static_cast<IntParam *>(p_mirror);
-
     RocalTensorlayout op_tensorFormat;
     RocalTensorDataType op_tensorDataType;
     try
@@ -846,21 +658,12 @@ ROCAL_API_CALL rocalResizeMirrorNormalize(RocalContext p_context,
             default:
                 THROW("Unsupported Tensor output type" + TOSTR(rocal_tensor_output_type))
         }
-        // For the crop mirror normalize resize node, user can create an image with a different width and height
         rocALTensorInfo output_info = input->info();
-        // Need to just set dims depending on NCHW or NHWC
         output_info.set_width(resize_width);
         output_info.set_height(resize_height);
-        
-        std::cerr<<"\n\n\nwidth     "<<output_info.get_width();
-        std::cerr << " OUT W & H : " << output_info.max_width() << output_info.max_height() << "\n";
-        std::cerr << " IN W & H : " << input->info().max_width() << input->info().max_height() << "\n";
-        // output_info.set_data_type(op_tensorDataType);
         output = context->master_graph->create_tensor(output_info, is_output);
-        // For the nodes that user provides the output size the dimension of all the images after this node will be fixed and equal to that size
         output->reset_tensor_roi();
-        context->master_graph->add_node<ResizeMirrorNormalizeTensorNode>({input}, {output})->init( interpolation_type, mean,std_dev , mirror, layout);
-        std::cerr<<"checking2222222222\n";
+        context->master_graph->add_node<ResizeMirrorNormalizeNode>({input}, {output})->init( interpolation_type, mean,std_dev , mirror, layout);
     }
     catch(const std::exception& e)
     {
@@ -871,15 +674,12 @@ ROCAL_API_CALL rocalResizeMirrorNormalize(RocalContext p_context,
     return output; // Changed to input----------------IMPORTANT
 }
 
-
-
 RocalTensor ROCAL_API_CALL
-rocalFlip(
-        RocalContext p_context,
-        RocalTensor p_input,
-        bool is_output,
-        RocalIntParam h_flag,
-        RocalIntParam v_flag)
+rocalFlip(RocalContext p_context,
+          RocalTensor p_input,
+          bool is_output,
+          RocalIntParam h_flag,
+          RocalIntParam v_flag)
 {
     if(!p_input || !p_context)
         THROW("Null values passed as input")
@@ -903,16 +703,12 @@ rocalFlip(
     return output;
 }
 
-
-//blend
-
 RocalTensor ROCAL_API_CALL
-rocalBlend(
-        RocalContext p_context,
-        RocalTensor p_input,
-        RocalTensor p_input1,
-        bool is_output,
-        RocalFloatParam p_alpha)
+rocalBlend(RocalContext p_context,
+           RocalTensor p_input,
+           RocalTensor p_input1,
+           bool is_output,
+           RocalFloatParam p_alpha)
 {
     if(!p_input || !p_context)
         THROW("Null values passed as input")
@@ -936,28 +732,23 @@ rocalBlend(
     return output;
 }
 
-
-//gridmask
 RocalTensor ROCAL_API_CALL
-rocalGridmask(
-             RocalContext p_context,
-             RocalTensor p_input,
-             bool is_output,
-             int tileWidth,
-             float gridRatio,
-             float gridAngle,
-             unsigned int x,
-             unsigned int y )
+rocalGridmask(RocalContext p_context,
+              RocalTensor p_input,
+              bool is_output,
+              int tileWidth,
+              float gridRatio,
+              float gridAngle,
+              unsigned int x,
+              unsigned int y )
 {
     if(!p_input || !p_context)
         THROW("Null values passed as input")
     rocALTensor* output = nullptr;
     auto context = static_cast<Context*>(p_context);
     auto input = static_cast<rocALTensor*>(p_input);
-    // auto alpha = static_cast<FloatParam*>(p_alpha);
     try
     {
-
         output = context->master_graph->create_tensor(input->info(), is_output);
 
         context->master_graph->add_node<GridmaskNode>({input}, {output})->init(tileWidth, gridRatio, gridAngle,x,y);

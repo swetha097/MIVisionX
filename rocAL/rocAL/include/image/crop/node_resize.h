@@ -5,11 +5,11 @@
 #include "parameter_vx.h"
 #include "rocal_api_types.h"
 //final
-class ResizeTensorNode : public Node
+class ResizeNode : public Node
 {
 public:
-    ResizeTensorNode(const std::vector<rocALTensor *> &inputs, const std::vector<rocALTensor *> &outputs);
-    ResizeTensorNode() = delete;
+    ResizeNode(const std::vector<rocALTensor *> &inputs, const std::vector<rocALTensor *> &outputs);
+    ResizeNode() = delete;
     void init(int interpolation_type, int layout);
 
     unsigned int get_dst_width() { return 100; }

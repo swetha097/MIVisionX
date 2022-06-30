@@ -5,11 +5,11 @@
 #include "parameter_vx.h"
 #include "rocal_api_types.h"
 //final
-class ResizeMirrorNormalizeTensorNode : public Node
+class ResizeMirrorNormalizeNode : public Node
 {
 public:
-    ResizeMirrorNormalizeTensorNode(const std::vector<rocALTensor *> &inputs, const std::vector<rocALTensor *> &outputs);
-    ResizeMirrorNormalizeTensorNode() = delete;
+    ResizeMirrorNormalizeNode(const std::vector<rocALTensor *> &inputs, const std::vector<rocALTensor *> &outputs);
+    ResizeMirrorNormalizeNode() = delete;
     void init(int interpolation_type,std::vector<float>& mean,  std::vector<float>& std_dev, IntParam *mirror, int layout);
     vx_array return_mirror(){ return _mirror.default_array();  }
 

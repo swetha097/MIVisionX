@@ -32,23 +32,23 @@ public:
     NoiseTensorNode(const std::vector<rocALTensor *> &inputs, const std::vector<rocALTensor *> &outputs);
     NoiseTensorNode() = delete;
 
-    void init( float alpha, float beta,float hue , float sat,int seed);
-    void init( FloatParam* alpha_param, FloatParam* beta_param,  FloatParam* hue_param,  FloatParam* sat_param, int seed );
+    void init( float _noise_prob, float _salt_prob,float hue , float _noise_value,int _salt_value);
+    void init( FloatParam* _noise_prob_param, FloatParam* _salt_prob_param,  FloatParam* _noise_value_param,  FloatParam* _salt_value_param, int seed );
 
 protected:
     void create_node() override ;
     void update_node() override;
 private:
 
-    ParameterVX<float> _alpha;
-    ParameterVX<float> _beta;
-    ParameterVX<float> _hue;
-    ParameterVX<float> _sat;
+    ParameterVX<float> _noise_prob;
+    ParameterVX<float> _salt_prob;
+    ParameterVX<float> _noise_value;
+    ParameterVX<float> _salt_value;
 
     unsigned _layout, _roi_type;
     int _seed;
-    constexpr static float ALPHA_RANGE [2] = {0.1, 1.95};
-    constexpr static float   BETA_RANGE [2] = {0, 1.5};
-    constexpr static float HUE_RANGE [2] = {0, 0.5};
-    constexpr static float SAT_RANGE [2] = {0.1, 1.5};
+    constexpr static float NOISE_PROB_RANGE [2] = {0.1, 1};
+    constexpr static float SALT_PROB_RANGE [2] = {0.1, 1};
+    constexpr static float NOISE_RANGE [2] = {0, 0.5};
+    constexpr static float SALT_RANGE [2] = {0.1, 1};
 };
