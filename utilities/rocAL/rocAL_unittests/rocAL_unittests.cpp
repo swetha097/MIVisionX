@@ -88,7 +88,7 @@ int main(int argc, const char **argv)
 int test(int test_case, int reader_type, int pipeline_type, const char *path, const char *outName, int rgb, int gpu, int width, int height, int num_of_classes, int display_all)
 {
     size_t num_threads = 1;
-    unsigned int inputBatchSize = 2;
+    unsigned int inputBatchSize = 4;
     int decode_max_width = width;
     int decode_max_height = height;
     std::cout << ">>> test case " << test_case << std::endl;
@@ -358,10 +358,10 @@ int test(int test_case, int reader_type, int pipeline_type, const char *path, co
                     int * labels_buffer = (int *)(bbox_labels->at(i)->buffer());
                     float *bbox_buffer = (float *)(bbox_coords->at(i)->buffer());
                     std::cerr << "\n>>>>> BBOX LABELS : ";
-                    for(int j = 0; j < bbox_labels->at(i)->info().dims()->at(0); j++)
+                    for(int j = 0; j < bbox_labels->at(i)->info().dims().at(0); j++)
                         std::cerr << labels_buffer[j] << " ";
-                    std::cerr << "\n>>>>> BBOXX : " <<bbox_coords->at(i)->info().dims()->at(0) << " : \n";
-                    for(int j = 0, j4 = 0; j < bbox_coords->at(i)->info().dims()->at(0); j++, j4 = j * 4)
+                    std::cerr << "\n>>>>> BBOXX : " <<bbox_coords->at(i)->info().dims().at(0) << " : \n";
+                    for(int j = 0, j4 = 0; j < bbox_coords->at(i)->info().dims().at(0); j++, j4 = j * 4)
                         std::cerr << bbox_buffer[j4] << " " << bbox_buffer[j4 + 1] << " " << bbox_buffer[j4 + 2] << " " << bbox_buffer[j4 + 3] << "\n";
 
                 }
@@ -412,7 +412,7 @@ int test(int test_case, int reader_type, int pipeline_type, const char *path, co
         cv::Mat mat_output;
         for(int idx = 0; idx < output_tensor_list->size(); idx++)
         {
-            int h = output_tensor_list->at(idx)->info().max_dims().at(1) * output_tensor_list->at(idx)->info().dims()->at(0);
+            int h = output_tensor_list->at(idx)->info().max_dims().at(1) * output_tensor_list->at(idx)->info().dims().at(0);
             int w = output_tensor_list->at(idx)->info().max_dims().at(0);
             mat_input = cv::Mat(h, w, cv_color_format);
             mat_output = cv::Mat(h, w, cv_color_format);

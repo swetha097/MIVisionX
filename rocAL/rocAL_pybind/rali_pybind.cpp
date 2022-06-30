@@ -108,7 +108,7 @@ namespace rali{
 
                     if (output_tensor.info().layout() == RocalTensorlayout::NHWC)
                     {
-                        unsigned c = output_tensor.info().dims()->at(3);
+                        unsigned c = output_tensor.info().dims().at(3);
                         return py::array(py::buffer_info(
                             ((unsigned char *)(output_tensor.buffer())) + idx * c * h * w,
                             sizeof(unsigned char),
@@ -120,8 +120,8 @@ namespace rali{
 
                     else if (output_tensor.info().layout() == RocalTensorlayout::NCHW)
                     {
-                        unsigned n = output_tensor.info().dims()->at(0);
-                        unsigned c = output_tensor.info().dims()->at(1);
+                        unsigned n = output_tensor.info().dims().at(0);
+                        unsigned c = output_tensor.info().dims().at(1);
                         return py::array(py::buffer_info(
                             ((unsigned char *)(output_tensor.buffer())) + idx * c * h * w,
                             sizeof(unsigned char),
@@ -157,8 +157,8 @@ namespace rali{
 
                     if (output_tensor_list.at(idx)->info().layout() == RocalTensorlayout::NHWC)
                     {
-                        unsigned n = output_tensor_list.at(idx)->info().dims()->at(0);
-                        unsigned c = output_tensor_list.at(idx)->info().dims()->at(3);
+                        unsigned n = output_tensor_list.at(idx)->info().dims().at(0);
+                        unsigned c = output_tensor_list.at(idx)->info().dims().at(3);
                         return py::array(py::buffer_info(
                             (unsigned char *)(output_tensor_list.at(idx)->buffer()),
                             sizeof(unsigned char),
@@ -170,8 +170,8 @@ namespace rali{
 
                     else if (output_tensor_list.at(idx)->info().layout() == RocalTensorlayout::NCHW)
                     {
-                        unsigned n = output_tensor_list.at(idx)->info().dims()->at(0);
-                        unsigned c = output_tensor_list.at(idx)->info().dims()->at(1);
+                        unsigned n = output_tensor_list.at(idx)->info().dims().at(0);
+                        unsigned c = output_tensor_list.at(idx)->info().dims().at(1);
                         return py::array(py::buffer_info(
                             (unsigned char *)(output_tensor_list.at(idx)->buffer()),
                             sizeof(unsigned char),

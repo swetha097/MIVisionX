@@ -170,7 +170,7 @@ rocalJpegFileSourceSingleShard(
         dims.at(2) = width;
         dims.at(3) = num_of_planes;
         auto info  = rocALTensorInfo(num_of_dims,
-                                std::make_shared<std::vector<unsigned> >(std::move(dims)),
+                                std::vector<unsigned>(std::move(dims)),
                                 context->master_graph->mem_type(),
                                 tensor_data_type);
         info.set_roi_type(roi_type);
@@ -260,7 +260,7 @@ rocalJpegFileSource(
         dims[3] = num_of_planes;
         std::cerr<<"\n dims"<<dims[0]<<dims[1]<<dims[2]<<dims[3];
         auto info  = rocALTensorInfo(num_of_dims,
-                                std::make_shared<std::vector<unsigned> >(std::move(dims)),
+                                std::vector<unsigned>(std::move(dims)),
                                 context->master_graph->mem_type(),
                                 tensor_data_type);
         info.set_roi_type(roi_type);
@@ -346,7 +346,7 @@ rocalJpegCOCOFileSource(
         dims[3] = num_of_planes;
         std::cerr<<"\n dims"<<dims[0]<<dims[1]<<dims[2]<<dims[3];
         auto info  = rocALTensorInfo(num_of_dims,
-                                std::make_shared<std::vector<unsigned> >(std::move(dims)),
+                                std::vector<unsigned>(std::move(dims)),
                                 context->master_graph->mem_type(),
                                 tensor_data_type);
         info.set_roi_type(roi_type);
@@ -438,7 +438,7 @@ rocalJpegCOCOFileSourceSingleShard(
         dims.at(2) = width;
         dims.at(3) = num_of_planes;
         auto info  = rocALTensorInfo(num_of_dims,
-                                std::make_shared<std::vector<unsigned> >(std::move(dims)),
+                                std::vector<unsigned>(std::move(dims)),
                                 context->master_graph->mem_type(),
                                 tensor_data_type);
         info.set_roi_type(roi_type);
@@ -513,7 +513,7 @@ rocalAudioFileSourceSingleShard(
         dims.at(1) = max_frames;
         dims.at(2) = max_channels;
         auto info  = rocALTensorInfo(num_of_dims,
-                                std::make_shared<std::vector<unsigned> >(std::move(dims)),
+                                std::vector<unsigned>(std::move(dims)),
                                 context->master_graph->mem_type(),
                                 tensor_data_type);
         output = context->master_graph->create_loader_output_tensor(info);
@@ -590,7 +590,7 @@ rocalAudioFileSource(
         dims.at(1) = max_frames;
         dims.at(2) = max_channels;
         auto info  = rocALTensorInfo(num_of_dims,
-                                std::make_shared<std::vector<unsigned> >(std::move(dims)),
+                                std::vector<unsigned>(std::move(dims)),
                                 context->master_graph->mem_type(),
                                 tensor_data_type);
         info.set_tensor_layout(RocalTensorlayout::NONE);
@@ -685,7 +685,7 @@ rocalVideoFileSourceSingleShard(
         dims.at(4) = num_of_planes;
 
         auto info  = rocALTensorInfo(num_of_dims,
-                                     std::make_shared<std::vector<unsigned> >(std::move(dims)),
+                                     std::vector<unsigned>(std::move(dims)),
                                      context->master_graph->mem_type(),
                                      tensor_data_type);
         info.set_roi_type(roi_type);
@@ -775,7 +775,7 @@ rocalVideoFileSource(
         dims.at(4) = num_of_planes;
 
         auto info  = rocALTensorInfo(num_of_dims,
-                                     std::make_shared<std::vector<unsigned> >(std::move(dims)),
+                                     std::vector<unsigned>(std::move(dims)),
                                      context->master_graph->mem_type(),
                                      tensor_data_type);
 
