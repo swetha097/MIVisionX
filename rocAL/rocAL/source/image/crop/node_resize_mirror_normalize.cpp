@@ -88,4 +88,6 @@ void ResizeMirrorNormalizeNode::init(int interpolation_type,std::vector<float>& 
   _std_dev = std_dev;
   _mirror.set_param(core(mirror));
   _layout=layout;
+    // _layout = (unsigned) _outputs[0]->layout();
+
 }

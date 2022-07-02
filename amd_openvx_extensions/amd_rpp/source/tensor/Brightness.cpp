@@ -35,11 +35,18 @@ struct BrightnessLocalData
     vx_float32 *beta;
     vx_size channels;
     RpptDescPtr src_desc_ptr;
+    RpptDescPtr dst_desc_ptr;
+
     RpptDesc srcDesc;
+    RpptDesc dstDesc;
+
     RpptROI *roi_tensor_Ptr;
     RpptRoiType roiType;
     size_t in_tensor_dims[NUM_OF_DIMS]; // will have NHWC info
+    size_t out_tensor_dims[NUM_OF_DIMS];
     Rpp32u layout;
+    vx_enum in_tensor_type ;
+    vx_enum out_tensor_type;
 #if ENABLE_OPENCL
     cl_mem cl_pSrc;
     cl_mem cl_pDst;
@@ -86,8 +93,32 @@ static vx_status VX_CALLBACK refreshBrightness(vx_node node, const vx_reference 
     }
     if (data->device_type == AGO_TARGET_AFFINITY_CPU)
     {
-        STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[0], VX_TENSOR_BUFFER_HOST, &data->pSrc, sizeof(vx_uint8)));
-        STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[2], VX_TENSOR_BUFFER_HOST, &data->pDst, sizeof(vx_uint8)));
+        if (data->in_tensor_type == vx_type_e::VX_TYPE_UINT8 && data->out_tensor_type == vx_type_e::VX_TYPE_UINT8)
+        {
+            STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[0], VX_TENSOR_BUFFER_HOST, &data->pSrc, sizeof(vx_uint8)));
+            STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[2], VX_TENSOR_BUFFER_HOST, &data->pDst, sizeof(vx_uint8)));
+        }
+        else if (data->in_tensor_type == vx_type_e::VX_TYPE_FLOAT32 && data->out_tensor_type == vx_type_e::VX_TYPE_FLOAT32)
+        {
+            STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[0], VX_TENSOR_BUFFER_HOST, &data->pSrc, sizeof(vx_float32)));
+            STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[2], VX_TENSOR_BUFFER_HOST, &data->pDst, sizeof(vx_float32)));
+        }
+        else if (data->in_tensor_type == vx_type_e::VX_TYPE_INT8 && data->out_tensor_type == vx_type_e::VX_TYPE_INT8)
+        {
+            STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[0], VX_TENSOR_BUFFER_HOST, &data->pSrc, sizeof(vx_int8)));
+            STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[2], VX_TENSOR_BUFFER_HOST, &data->pDst, sizeof(vx_int8)));
+        }
+        else if (data->in_tensor_type == vx_type_e::VX_TYPE_UINT8 && data->out_tensor_type == vx_type_e::VX_TYPE_FLOAT32)
+        {
+            STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[0], VX_TENSOR_BUFFER_HOST, &data->pSrc, sizeof(vx_uint8)));
+            STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[2], VX_TENSOR_BUFFER_HOST, &data->pDst, sizeof(vx_float32)));
+        }
+        // vx_float16 is not supported. Have to disable it once it is done.
+        // else if(in_tensor_type == vx_type_e::VX_TYPE_UINT8 && out_tensor_type == vx_type_e::VX_TYPE_FLOAT16)
+        // {
+        //     STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[0], VX_TENSOR_BUFFER_HOST, &data->pSrc, sizeof(vx_uint8)));
+        //     STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[3], VX_TENSOR_BUFFER_HOST, &data->pDst, sizeof(vx_float16)));
+        // }
     }
     return status;
 }
@@ -194,8 +225,46 @@ static vx_status VX_CALLBACK initializeBrightness(vx_node node, const vx_referen
     STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[0], VX_TENSOR_NUMBER_OF_DIMS, &data->src_desc_ptr->numDims, sizeof(data->src_desc_ptr->numDims)));
     STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[0], VX_TENSOR_DIMS, &data->in_tensor_dims, sizeof(vx_size) * data->src_desc_ptr->numDims));
     STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[0], VX_TENSOR_DATA_TYPE, &data->src_desc_ptr->dataType, sizeof(data->src_desc_ptr->dataType)));
-    if(data->src_desc_ptr->dataType == vx_type_e::VX_TYPE_UINT8) // TODO - Resolve warning
+    if(data->in_tensor_type == vx_type_e::VX_TYPE_UINT8)
+    {
         data->src_desc_ptr->dataType = RpptDataType::U8;
+    }
+    else if (data->in_tensor_type == vx_type_e::VX_TYPE_FLOAT32)
+    {
+        data->src_desc_ptr->dataType = RpptDataType::F32;
+    }
+    // else if (data->src_desc_ptr->dataType == vx_type_e::VX_TYPE_FLOAT16)
+    // {
+    //     data->src_desc_ptr->dataType = RpptDataType::F16;
+    // }
+    else if (data->in_tensor_type == vx_type_e::VX_TYPE_INT8)
+    {
+        data->src_desc_ptr->dataType = RpptDataType::I8;
+    }
+    // Querying for output tensor
+    data->dst_desc_ptr = &data->dstDesc;
+    STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[2], VX_TENSOR_NUMBER_OF_DIMS, &data->dst_desc_ptr->numDims, sizeof(data->dst_desc_ptr->numDims)));
+    STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[2], VX_TENSOR_DIMS, &data->out_tensor_dims, sizeof(vx_size) * data->dst_desc_ptr->numDims));
+    STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[2],VX_TENSOR_DATA_TYPE, &data->out_tensor_type, sizeof(data->out_tensor_type)));
+    if(data->out_tensor_type == vx_type_e::VX_TYPE_UINT8)
+    {
+        data->dst_desc_ptr->dataType= RpptDataType::U8;
+    }
+    else if (data->out_tensor_type == vx_type_e::VX_TYPE_FLOAT32)
+    {
+        data->dst_desc_ptr->dataType = RpptDataType::F32;
+
+    }
+    // else if (data->src_desc_ptr->dataType == vx_type_e::VX_TYPE_FLOAT16)
+    // {
+    //     data->src_desc_ptr->dataType = RpptDataType::F16;
+    // }
+    else if (data->out_tensor_type == vx_type_e::VX_TYPE_INT8)
+    {
+        std::cerr<<"dst datatype check INT8";
+
+        data->dst_desc_ptr->dataType = RpptDataType::I8;
+    }
      data->src_desc_ptr->offsetInBytes = 0;
     if(data->layout == 0) // NHWC
     {
@@ -211,6 +280,18 @@ static vx_status VX_CALLBACK initializeBrightness(vx_node node, const vx_referen
         data->src_desc_ptr->layout = RpptLayout::NHWC;
         std::cerr<<"\n Setting layout "<<data->src_desc_ptr->layout;
         std::cerr<<"\n Setting data type "<<data->src_desc_ptr->dataType;
+
+        //destination_description_ptr
+        data->dst_desc_ptr->n = data->out_tensor_dims[0];
+        data->dst_desc_ptr->h = data->out_tensor_dims[1];
+        data->dst_desc_ptr->w = data->out_tensor_dims[2];
+        data->dst_desc_ptr->c = data->out_tensor_dims[3];
+        std::cerr<<"\n dest n h w c "<<data->dst_desc_ptr->n<<" "<<data->dst_desc_ptr->h<<" "<<data->dst_desc_ptr->w<<" "<<data->dst_desc_ptr->c;
+        data->dst_desc_ptr->strides.nStride = data->dst_desc_ptr->c * data->dst_desc_ptr->w * data->dst_desc_ptr->h;
+        data->dst_desc_ptr->strides.hStride = data->dst_desc_ptr->c * data->dst_desc_ptr->w;
+        data->dst_desc_ptr->strides.wStride = data->dst_desc_ptr->c;
+        data->dst_desc_ptr->strides.cStride = 1;
+        data->dst_desc_ptr->layout = RpptLayout::NHWC;
     }
     else if(data->layout == 1)// NCHW
     {
@@ -223,6 +304,17 @@ static vx_status VX_CALLBACK initializeBrightness(vx_node node, const vx_referen
         data->src_desc_ptr->strides.hStride = data->src_desc_ptr->w;
         data->src_desc_ptr->strides.wStride = 1;
         data->src_desc_ptr->layout = RpptLayout::NCHW;
+
+        data->dst_desc_ptr->n = data->out_tensor_dims[0];
+        data->dst_desc_ptr->h = data->out_tensor_dims[2];
+        data->dst_desc_ptr->w = data->out_tensor_dims[3];
+        data->dst_desc_ptr->c = data->out_tensor_dims[1];
+        std::cerr<<"\ndest n h w c "<<data->dst_desc_ptr->n<<" "<<data->dst_desc_ptr->h<<" "<<data->dst_desc_ptr->w<<" "<<data->dst_desc_ptr->c;
+        data->dst_desc_ptr->strides.nStride = data->dst_desc_ptr->c * data->dst_desc_ptr->w * data->dst_desc_ptr->h;
+        data->dst_desc_ptr->strides.cStride = data->dst_desc_ptr->w * data->dst_desc_ptr->h;
+        data->dst_desc_ptr->strides.hStride = data->dst_desc_ptr->w;
+        data->dst_desc_ptr->strides.wStride = 1;
+        data->dst_desc_ptr->layout = RpptLayout::NCHW;
     }
     else if(data->layout == 2) // NFHWC
     {
@@ -238,6 +330,18 @@ static vx_status VX_CALLBACK initializeBrightness(vx_node node, const vx_referen
         data->src_desc_ptr->layout = RpptLayout::NHWC;
         std::cerr<<"\n Setting layout "<<data->src_desc_ptr->layout;
         std::cerr<<"\n Setting data type "<<data->src_desc_ptr->dataType;
+
+        //destination_description_ptr
+        data->dst_desc_ptr->n = data->out_tensor_dims[0] * data->in_tensor_dims[1];
+        data->dst_desc_ptr->h = data->out_tensor_dims[1];
+        data->dst_desc_ptr->w = data->out_tensor_dims[2];
+        data->dst_desc_ptr->c = data->out_tensor_dims[3];
+        std::cerr<<"\n dest n h w c "<<data->dst_desc_ptr->n<<" "<<data->dst_desc_ptr->h<<" "<<data->dst_desc_ptr->w<<" "<<data->dst_desc_ptr->c;
+        data->dst_desc_ptr->strides.nStride = data->dst_desc_ptr->c * data->dst_desc_ptr->w * data->dst_desc_ptr->h;
+        data->dst_desc_ptr->strides.hStride = data->dst_desc_ptr->c * data->dst_desc_ptr->w;
+        data->dst_desc_ptr->strides.wStride = data->dst_desc_ptr->c;
+        data->dst_desc_ptr->strides.cStride = 1;
+        data->dst_desc_ptr->layout = RpptLayout::NHWC;
     }
     else if(data->layout == 3)// NFCHW
     {
@@ -250,6 +354,17 @@ static vx_status VX_CALLBACK initializeBrightness(vx_node node, const vx_referen
         data->src_desc_ptr->strides.hStride = data->src_desc_ptr->w;
         data->src_desc_ptr->strides.wStride = 1;
         data->src_desc_ptr->layout = RpptLayout::NCHW;
+
+        data->dst_desc_ptr->n = data->out_tensor_dims[0] * data->in_tensor_dims[1];
+        data->dst_desc_ptr->h = data->out_tensor_dims[1];
+        data->dst_desc_ptr->w = data->out_tensor_dims[2];
+        data->dst_desc_ptr->c = data->out_tensor_dims[3];
+        std::cerr<<"\n dest n h w c "<<data->dst_desc_ptr->n<<" "<<data->dst_desc_ptr->h<<" "<<data->dst_desc_ptr->w<<" "<<data->dst_desc_ptr->c;
+        data->dst_desc_ptr->strides.nStride = data->dst_desc_ptr->c * data->dst_desc_ptr->w * data->dst_desc_ptr->h;
+        data->dst_desc_ptr->strides.hStride = data->dst_desc_ptr->c * data->dst_desc_ptr->w;
+        data->dst_desc_ptr->strides.wStride = data->dst_desc_ptr->c;
+        data->dst_desc_ptr->strides.cStride = 1;
+        data->dst_desc_ptr->layout = RpptLayout::NCHW;
     }
     data->roi_tensor_Ptr = (RpptROI *) calloc(data->src_desc_ptr->n, sizeof(RpptROI));
     data->alpha = (vx_float32 *)malloc(sizeof(vx_float32) * data->src_desc_ptr->n);

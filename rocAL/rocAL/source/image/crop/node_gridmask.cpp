@@ -40,12 +40,12 @@ void GridmaskNode::create_node()
     if(_outputs.empty() || _inputs.empty())
         THROW("Uninitialized input/output arguments")
 
-    if(_inputs[0]->info().layout() == RocalTensorlayout::NCHW)
-        _layout = 1;
-    else if(_inputs[0]->info().layout() == RocalTensorlayout::NFHWC)
-        _layout = 2;
-    else if(_inputs[0]->info().layout() == RocalTensorlayout::NFCHW)
-        _layout = 3;
+    // if(_inputs[0]->info().layout() == RocalTensorlayout::NCHW)
+    //     _layout = 1;
+    // else if(_inputs[0]->info().layout() == RocalTensorlayout::NFHWC)
+    //     _layout = 2;
+    // else if(_inputs[0]->info().layout() == RocalTensorlayout::NFCHW)
+    //     _layout = 3;
 
     if(_inputs[0]->info().roi_type() == RocalROIType::XYWH)
         _roi_type = 1;
@@ -55,10 +55,10 @@ void GridmaskNode::create_node()
     vx_scalar tile_width = vxCreateScalar(vxGetContext((vx_reference)_graph->get()),VX_TYPE_UINT32,&_tile_width);
     vx_scalar grid_ratio = vxCreateScalar(vxGetContext((vx_reference)_graph->get()),VX_TYPE_FLOAT32,&_grid_ratio);
     vx_scalar grid_angle = vxCreateScalar(vxGetContext((vx_reference)_graph->get()),VX_TYPE_FLOAT32,&_grid_angle);
-    vx_scalar x = vxCreateScalar(vxGetContext((vx_reference)_graph->get()),VX_TYPE_UINT32,&_x);
-    vx_scalar y = vxCreateScalar(vxGetContext((vx_reference)_graph->get()),VX_TYPE_UINT32,&_y);
+    vx_scalar shift_x = vxCreateScalar(vxGetContext((vx_reference)_graph->get()),VX_TYPE_UINT32,&_shift_x);
+    vx_scalar shift_y = vxCreateScalar(vxGetContext((vx_reference)_graph->get()),VX_TYPE_UINT32,&_shift_y);
 
-    _node = vxExtrppNode_Gridmask(_graph->get(), _inputs[0]->handle(), _src_tensor_roi, _outputs[0]->handle(), tile_width, grid_ratio, grid_angle, x, y, layout, roi_type, _batch_size);
+    _node = vxExtrppNode_Gridmask(_graph->get(), _inputs[0]->handle(), _src_tensor_roi, _outputs[0]->handle(), tile_width, grid_ratio, grid_angle, shift_x, shift_y, layout, roi_type, _batch_size);
 
     vx_status status;
     if((status = vxGetStatus((vx_reference)_node)) != VX_SUCCESS)
@@ -66,14 +66,15 @@ void GridmaskNode::create_node()
 
 }
 
-void GridmaskNode::init(int tile_width, float grid_ratio, float grid_angle,int x,int y)
+void GridmaskNode::init(int tile_width, float grid_ratio, float grid_angle,int shift_x,int shift_y, int layout)
 {
     _tile_width=tile_width;
     _grid_ratio=grid_ratio;
     _grid_angle=grid_angle; 
-    _x=x;
-    _y=y;  
+    _shift_x=shift_x;
+    _shift_y=shift_y;  
     _layout = _roi_type = 0;
+    // _layout = (unsigned) _outputs[0]->layout();
 
 }
 

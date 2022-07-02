@@ -39,12 +39,12 @@ void FlipNode::create_node()
     _horizontal.create_array(_graph , VX_TYPE_UINT32, _batch_size);
     _vertical.create_array(_graph , VX_TYPE_UINT32, _batch_size);
 
-    if(_inputs[0]->info().layout() == RocalTensorlayout::NCHW)
-        _layout = 1;
-    else if(_inputs[0]->info().layout() == RocalTensorlayout::NFHWC)
-        _layout = 2;
-    else if(_inputs[0]->info().layout() == RocalTensorlayout::NFCHW)
-        _layout = 3;
+    // if(_inputs[0]->info().layout() == RocalTensorlayout::NCHW)
+    //     _layout = 1;
+    // else if(_inputs[0]->info().layout() == RocalTensorlayout::NFHWC)
+    //     _layout = 2;
+    // else if(_inputs[0]->info().layout() == RocalTensorlayout::NFCHW)
+    //     _layout = 3;
 
     if(_inputs[0]->info().roi_type() == RocalROIType::XYWH)
         _roi_type = 1;
@@ -57,18 +57,22 @@ void FlipNode::create_node()
         THROW("Adding the brightness_batch (vxExtrppNode_BrightnessbatchPD) node failed: "+ TOSTR(status))
 }
 
-void FlipNode::init( int h_flag, int v_flag)
+void FlipNode::init( int h_flag, int v_flag, int layout)
 {
     _horizontal.set_param(h_flag);
     _vertical.set_param(v_flag);
     _layout = _roi_type = 0;
+    // _layout = (unsigned) _outputs[0]->layout();
+
 }
 
-void FlipNode::init( IntParam* h_flag, IntParam* v_flag)
+void FlipNode::init( IntParam* h_flag, IntParam* v_flag, int layout)
 {
     _horizontal.set_param(core(h_flag));
     _vertical.set_param(core(v_flag));
     _layout = _roi_type = 0;
+    // _layout = (unsigned) _outputs[0]->layout();
+
 }
 
 

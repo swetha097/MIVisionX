@@ -43,12 +43,12 @@ void ColorJitterNode::create_node()
     _hue.create_array(_graph , VX_TYPE_FLOAT32, _batch_size);
     _sat.create_array(_graph , VX_TYPE_FLOAT32, _batch_size);
 
-    if(_inputs[0]->info().layout() == RocalTensorlayout::NCHW)
-        _layout = 1;
-    else if(_inputs[0]->info().layout() == RocalTensorlayout::NFHWC)
-        _layout = 2;
-    else if(_inputs[0]->info().layout() == RocalTensorlayout::NFCHW)
-        _layout = 3;
+    // if(_inputs[0]->info().layout() == RocalTensorlayout::NCHW)
+    //     _layout = 1;
+    // else if(_inputs[0]->info().layout() == RocalTensorlayout::NFHWC)
+    //     _layout = 2;
+    // else if(_inputs[0]->info().layout() == RocalTensorlayout::NFCHW)
+    //     _layout = 3;
 
     if(_inputs[0]->info().roi_type() == RocalROIType::XYWH)
         _roi_type = 1;
@@ -62,22 +62,26 @@ void ColorJitterNode::create_node()
         THROW("Adding the colortwist_batch (vxExtrppNode_ColotTwsit) node failed: "+ TOSTR(status))
 }
 
-void ColorJitterNode::init( float alpha, float beta, float hue , float sat)
+void ColorJitterNode::init( float alpha, float beta, float hue , float sat, int layout)
 {
     _alpha.set_param(alpha);
     _beta.set_param(beta);
     _hue.set_param(hue);
     _sat.set_param(sat);
     _layout = _roi_type = 0;
+    // _layout = (unsigned) _outputs[0]->layout();
+
 }
 
-void ColorJitterNode::init( FloatParam* alpha, FloatParam* beta, FloatParam* hue, FloatParam* sat)
+void ColorJitterNode::init( FloatParam* alpha, FloatParam* beta, FloatParam* hue, FloatParam* sat, int layout)
 {
     _alpha.set_param(core(alpha));
     _beta.set_param(core(beta));
     _hue.set_param(core(hue));
     _sat.set_param(core(sat));
     _layout = _roi_type = 0;
+    // _layout = (unsigned) _outputs[0]->layout();
+
 }
 
 

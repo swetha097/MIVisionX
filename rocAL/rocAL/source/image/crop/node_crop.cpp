@@ -70,4 +70,6 @@ void CropNode::init(int crop_h, int crop_w, float start_x, float start_y,int lay
     _crop_param->crop_h = crop_h;
     _crop_param->crop_w = crop_w;
     _layout=layout; 
+    // _layout = (unsigned) _outputs[0]->layout();
+
 }
