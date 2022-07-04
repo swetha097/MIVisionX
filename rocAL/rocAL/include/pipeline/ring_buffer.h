@@ -50,8 +50,8 @@ public:
     void initHip(RocalMemType mem_type, DeviceResourcesHip dev, std::vector<size_t> sub_buffer_size, unsigned sub_buffer_count);
 #else
     void init(RocalMemType mem_type, DeviceResources dev, std::vector<size_t> sub_buffer_size, unsigned sub_buffer_count);
-    void init_metadata(RocalMemType mem_type, DeviceResources dev, std::vector<size_t> sub_buffer_size, unsigned sub_buffer_count);
 #endif
+    void init_metadata(RocalMemType mem_type, std::vector<size_t> sub_buffer_size, unsigned sub_buffer_count);
     std::vector<void*> get_read_buffers();
     void* get_host_master_read_buffer();
     std::vector<void*> get_write_buffers();
