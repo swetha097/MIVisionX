@@ -108,7 +108,11 @@ int main(int argc, const char ** argv)
         return -1;
     }
 
+<<<<<<< HEAD
     RocalDecoderType dec_type = (RocalDecoderType) dec_mode;
+=======
+    RaliDecoderType dec_type = (RocalDecoderType) dec_mode;
+>>>>>>> 49e7b614f3008a9b2052557919a866a77ff30546
 
     /*>>>>>>>>>>>>>>>> Creating rocAL parameters  <<<<<<<<<<<<<<<<*/
 
