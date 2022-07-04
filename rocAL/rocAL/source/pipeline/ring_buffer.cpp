@@ -158,30 +158,6 @@ void RingBuffer::init(RocalMemType mem_type, DeviceResources dev, std::vector<si
     }
 }
 
-void RingBuffer::init_metadata(RocalMemType mem_type, DeviceResources dev, std::vector<size_t> sub_buffer_size, unsigned sub_buffer_count)
-{
-    if(BUFF_DEPTH < 2)
-        THROW ("Error internal buffer size for the ring buffer should be greater than one")
-
-    // Allocating buffers
-    _meta_data_sub_buffer_size = sub_buffer_size;
-    _meta_data_sub_buffer_count = sub_buffer_count;
-    if(mem_type== RocalMemType::OCL || mem_type== RocalMemType::HIP)
-    {
-        THROW("Metadata is not supported with GPU backends")
-    }
-    else
-    {
-        _host_meta_data_buffers.resize(BUFF_DEPTH);
-        for(size_t buffIdx = 0; buffIdx < BUFF_DEPTH; buffIdx++)
-        {
-            _host_meta_data_buffers[buffIdx].resize(sub_buffer_count);
-            for(size_t sub_buff_idx = 0; sub_buff_idx < sub_buffer_count; sub_buff_idx++)
-                _host_meta_data_buffers[buffIdx][sub_buff_idx] = malloc(sub_buffer_size[sub_buff_idx]);
-        }
-    }
-}
-
 #else
 void RingBuffer::initHip(RocalMemType mem_type, DeviceResourcesHip dev, std::vector<size_t> sub_buffer_size, unsigned sub_buffer_count)
 {
@@ -226,6 +202,30 @@ void RingBuffer::initHip(RocalMemType mem_type, DeviceResourcesHip dev, std::vec
     }
 }
 #endif
+
+void RingBuffer::init_metadata(RocalMemType mem_type, std::vector<size_t> sub_buffer_size, unsigned sub_buffer_count)
+{
+    if(BUFF_DEPTH < 2)
+        THROW ("Error internal buffer size for the ring buffer should be greater than one")
+
+    // Allocating buffers
+    _meta_data_sub_buffer_size = sub_buffer_size;
+    _meta_data_sub_buffer_count = sub_buffer_count;
+    if(mem_type== RocalMemType::OCL || mem_type== RocalMemType::HIP)
+    {
+        THROW("Metadata is not supported with GPU backends")
+    }
+    else
+    {
+        _host_meta_data_buffers.resize(BUFF_DEPTH);
+        for(size_t buffIdx = 0; buffIdx < BUFF_DEPTH; buffIdx++)
+        {
+            _host_meta_data_buffers[buffIdx].resize(sub_buffer_count);
+            for(size_t sub_buff_idx = 0; sub_buff_idx < sub_buffer_count; sub_buff_idx++)
+                _host_meta_data_buffers[buffIdx][sub_buff_idx] = malloc(sub_buffer_size[sub_buff_idx]);
+        }
+    }
+}
 
 void RingBuffer::push()
 {

@@ -35,6 +35,7 @@ THE SOFTWARE.
 
 #include <half.hpp>
 using half_float::half;
+#include "tensor.h"
 
 typedef void * RocalFloatParam;
 typedef void * RocalIntParam;

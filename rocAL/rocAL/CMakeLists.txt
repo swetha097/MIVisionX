@@ -153,13 +153,13 @@ if(${BUILD_ROCAL})
         include/api/rocal_api_parameters.h
         include/api/rocal_api_meta_data.h
         include/api/rocal_api_data_loaders.h
-        # include/pipeline/tensor.h
-        # include/device/device_manager.h
-        # include/device/device_data_transfer_code.h
-        # include/device/device_code.h
-        # include/pipeline/commons.h
-        # include/pipeline/exception.h
-        # include/pipeline/log.h
+        include/pipeline/tensor.h
+        include/device/device_manager.h
+        include/device/device_data_transfer_code.h
+        include/device/device_code.h
+        include/pipeline/commons.h
+        include/pipeline/exception.h
+        include/pipeline/log.h
         DESTINATION ${CMAKE_INSTALL_LIBEXECDIR}/mivisionx/rali/python
         )
     if(FFMPEG_FOUND)

@@ -770,7 +770,7 @@ void MasterGraph::create_label_reader(const char *source_path, MetaDataReaderTyp
         auto tensor = new rocALTensor(info);
         _labels_tensor_list.push_back(tensor);
     }
-    _ring_buffer.init_metadata(_mem_type, _device.resources(), _meta_data_buffer_size, _meta_data_buffer_size.size());
+    _ring_buffer.init_metadata(RocalMemType::HOST, _meta_data_buffer_size, _meta_data_buffer_size.size());
     if (_augmented_meta_data)
         THROW("Metadata can only have a single output")
     else
@@ -819,7 +819,7 @@ void MasterGraph::create_coco_meta_data_reader(const char *source_path, bool is_
         _labels_tensor_list.push_back(new rocALTensor(labels_info));
         _bbox_tensor_list.push_back(new rocALTensor(bbox_info));
     }
-    _ring_buffer.init_metadata(_mem_type, _device.resources(), _meta_data_buffer_size, _meta_data_buffer_size.size());
+    _ring_buffer.init_metadata(RocalMemType::HOST, _meta_data_buffer_size, _meta_data_buffer_size.size());
     if(is_output)
     {
         if (_augmented_meta_data)
