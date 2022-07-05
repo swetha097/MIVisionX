@@ -36,10 +36,8 @@ struct BrightnessLocalData
     vx_size channels;
     RpptDescPtr src_desc_ptr;
     RpptDescPtr dst_desc_ptr;
-
     RpptDesc srcDesc;
     RpptDesc dstDesc;
-
     RpptROI *roi_tensor_Ptr;
     RpptRoiType roiType;
     size_t in_tensor_dims[NUM_OF_DIMS]; // will have NHWC info
@@ -58,6 +56,7 @@ struct BrightnessLocalData
 
 static vx_status VX_CALLBACK refreshBrightness(vx_node node, const vx_reference *parameters, vx_uint32 num, BrightnessLocalData *data)
 {
+    std::cerr<<"refreshBrightness\n\n";
     vx_status status = VX_SUCCESS;
     STATUS_ERROR_CHECK(vxCopyArrayRange((vx_array)parameters[1], 0, data->nbatchSize * 4, sizeof(unsigned), data->roi_tensor_Ptr, VX_READ_ONLY, VX_MEMORY_TYPE_HOST));
     STATUS_ERROR_CHECK(vxCopyArrayRange((vx_array)parameters[3], 0, data->nbatchSize, sizeof(vx_float32), data->alpha, VX_READ_ONLY, VX_MEMORY_TYPE_HOST));
@@ -93,23 +92,32 @@ static vx_status VX_CALLBACK refreshBrightness(vx_node node, const vx_reference 
     }
     if (data->device_type == AGO_TARGET_AFFINITY_CPU)
     {
+        // STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[0], VX_TENSOR_BUFFER_HOST, &data->pSrc, sizeof(vx_uint8)));
+        //     STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[2], VX_TENSOR_BUFFER_HOST, &data->pDst, sizeof(vx_uint8)));
         if (data->in_tensor_type == vx_type_e::VX_TYPE_UINT8 && data->out_tensor_type == vx_type_e::VX_TYPE_UINT8)
         {
+            std::cerr<<"UINT8888888888\n";
             STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[0], VX_TENSOR_BUFFER_HOST, &data->pSrc, sizeof(vx_uint8)));
             STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[2], VX_TENSOR_BUFFER_HOST, &data->pDst, sizeof(vx_uint8)));
         }
         else if (data->in_tensor_type == vx_type_e::VX_TYPE_FLOAT32 && data->out_tensor_type == vx_type_e::VX_TYPE_FLOAT32)
         {
+            std::cerr<<"FLOAT32222222\n";
+
             STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[0], VX_TENSOR_BUFFER_HOST, &data->pSrc, sizeof(vx_float32)));
             STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[2], VX_TENSOR_BUFFER_HOST, &data->pDst, sizeof(vx_float32)));
         }
         else if (data->in_tensor_type == vx_type_e::VX_TYPE_INT8 && data->out_tensor_type == vx_type_e::VX_TYPE_INT8)
         {
+            std::cerr<<"INT888888888888888\n";
+
             STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[0], VX_TENSOR_BUFFER_HOST, &data->pSrc, sizeof(vx_int8)));
             STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[2], VX_TENSOR_BUFFER_HOST, &data->pDst, sizeof(vx_int8)));
         }
         else if (data->in_tensor_type == vx_type_e::VX_TYPE_UINT8 && data->out_tensor_type == vx_type_e::VX_TYPE_FLOAT32)
         {
+            std::cerr<<"UINt8 TO FLOAT32\n";
+
             STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[0], VX_TENSOR_BUFFER_HOST, &data->pSrc, sizeof(vx_uint8)));
             STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[2], VX_TENSOR_BUFFER_HOST, &data->pDst, sizeof(vx_float32)));
         }
@@ -186,6 +194,7 @@ static vx_status VX_CALLBACK processBrightness(vx_node node, const vx_reference 
         {
             std::cerr<<"\n bbox values :: "<<data->roi_tensor_Ptr[i].xywhROI.xy.x<<" "<<data->roi_tensor_Ptr[i].xywhROI.xy.y<<" "<<data->roi_tensor_Ptr[i].xywhROI.roiWidth<<" "<<data->roi_tensor_Ptr[i].xywhROI.roiHeight;
         }
+        std::cerr<<"hello\n\n";
         if(0)
         {
             float *temp1 = ((float*)calloc( 100,sizeof(float)));
@@ -224,21 +233,24 @@ static vx_status VX_CALLBACK initializeBrightness(vx_node node, const vx_referen
     data->src_desc_ptr = &data->srcDesc;
     STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[0], VX_TENSOR_NUMBER_OF_DIMS, &data->src_desc_ptr->numDims, sizeof(data->src_desc_ptr->numDims)));
     STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[0], VX_TENSOR_DIMS, &data->in_tensor_dims, sizeof(vx_size) * data->src_desc_ptr->numDims));
-    STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[0], VX_TENSOR_DATA_TYPE, &data->src_desc_ptr->dataType, sizeof(data->src_desc_ptr->dataType)));
+    STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[0], VX_TENSOR_DATA_TYPE, &data->in_tensor_type, sizeof(data->in_tensor_type)));
     if(data->in_tensor_type == vx_type_e::VX_TYPE_UINT8)
     {
+        std::cerr<<"UUUUUUNIT8\n";
         data->src_desc_ptr->dataType = RpptDataType::U8;
     }
     else if (data->in_tensor_type == vx_type_e::VX_TYPE_FLOAT32)
     {
+        std::cerr<<"FFFFFFFLOAT\n";
         data->src_desc_ptr->dataType = RpptDataType::F32;
     }
-    // else if (data->src_desc_ptr->dataType == vx_type_e::VX_TYPE_FLOAT16)
+    // else if (data->in_tensor_type->dataType == vx_type_e::VX_TYPE_FLOAT16)
     // {
     //     data->src_desc_ptr->dataType = RpptDataType::F16;
     // }
     else if (data->in_tensor_type == vx_type_e::VX_TYPE_INT8)
     {
+        std::cerr<<"FFFFFFFLOST\n";
         data->src_desc_ptr->dataType = RpptDataType::I8;
     }
     // Querying for output tensor
@@ -246,12 +258,23 @@ static vx_status VX_CALLBACK initializeBrightness(vx_node node, const vx_referen
     STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[2], VX_TENSOR_NUMBER_OF_DIMS, &data->dst_desc_ptr->numDims, sizeof(data->dst_desc_ptr->numDims)));
     STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[2], VX_TENSOR_DIMS, &data->out_tensor_dims, sizeof(vx_size) * data->dst_desc_ptr->numDims));
     STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[2],VX_TENSOR_DATA_TYPE, &data->out_tensor_type, sizeof(data->out_tensor_type)));
-    if(data->out_tensor_type == vx_type_e::VX_TYPE_UINT8)
+    if (data->out_tensor_type == vx_type_e::VX_TYPE_FLOAT32)
     {
+        std::cerr<<"ooooooooooooooFFFFFFFLOST\n";
+
+        data->dst_desc_ptr->dataType = RpptDataType::F32;
+
+    }
+    else if(data->out_tensor_type == vx_type_e::VX_TYPE_UINT8)
+    {
+                std::cerr<<"ooooooooooooooooooUUUUUUNIT8\n";
+
         data->dst_desc_ptr->dataType= RpptDataType::U8;
     }
     else if (data->out_tensor_type == vx_type_e::VX_TYPE_FLOAT32)
     {
+        std::cerr<<"ooooooooooooooFFFFFFFLOST\n";
+
         data->dst_desc_ptr->dataType = RpptDataType::F32;
 
     }
@@ -278,7 +301,7 @@ static vx_status VX_CALLBACK initializeBrightness(vx_node node, const vx_referen
         data->src_desc_ptr->strides.wStride = data->src_desc_ptr->c;
         data->src_desc_ptr->strides.cStride = 1;
         data->src_desc_ptr->layout = RpptLayout::NHWC;
-        std::cerr<<"\n Setting layout "<<data->src_desc_ptr->layout;
+        std::cerr<<"\n Setting layoutt "<<data->src_desc_ptr->layout;
         std::cerr<<"\n Setting data type "<<data->src_desc_ptr->dataType;
 
         //destination_description_ptr
@@ -328,7 +351,7 @@ static vx_status VX_CALLBACK initializeBrightness(vx_node node, const vx_referen
         data->src_desc_ptr->strides.wStride = data->src_desc_ptr->c;
         data->src_desc_ptr->strides.cStride = 1;
         data->src_desc_ptr->layout = RpptLayout::NHWC;
-        std::cerr<<"\n Setting layout "<<data->src_desc_ptr->layout;
+        std::cerr<<"\n Setting layouttttttttttttttt "<<data->src_desc_ptr->layout;
         std::cerr<<"\n Setting data type "<<data->src_desc_ptr->dataType;
 
         //destination_description_ptr

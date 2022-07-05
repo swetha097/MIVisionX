@@ -62,7 +62,8 @@ void BrightnessNode::init( float alpha, float beta, int layout )
 {
     _alpha.set_param(alpha);
     _beta.set_param(beta);
-    _layout = _roi_type = 0;
+    _layout = layout;
+    _roi_type = 0;
     // _layout = (unsigned) _outputs[0]->layout();
     
 }
@@ -71,7 +72,8 @@ void BrightnessNode::init( FloatParam* alpha, FloatParam* beta, int layout)
 {
     _alpha.set_param(core(alpha));
     _beta.set_param(core(beta));
-    _layout = _roi_type = 0;
+    _layout =layout;
+    _roi_type = 0;
     // _layout = (unsigned) _outputs[0]->layout();
 
 }

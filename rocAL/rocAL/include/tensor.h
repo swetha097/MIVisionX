@@ -78,6 +78,13 @@ public:
         _data_type = data_type;
         _data_size = data_size * data_type_size();
     }
+    int get_data_type()
+    {
+        if(_data_type== RocalTensorDataType::FP32)
+        return 1;
+        else 
+        return 0;
+    }
     void set_tensor_layout(RocalTensorlayout layout)
     {
         if(layout != RocalTensorlayout::NONE)

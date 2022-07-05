@@ -124,7 +124,7 @@ int test(int test_case, const char *path, const char *outName, int rgb, int gpu,
 
     RocalTensor input1;
     RocalTensorLayout tensorLayout = RocalTensorLayout::ROCAL_NHWC;
-    RocalTensorOutputType tensorOutputType = RocalTensorOutputType::ROCAL_UINT8;
+    RocalTensorOutputType tensorOutputType = RocalTensorOutputType::ROCAL_FP32;
 
     // The jpeg file loader can automatically select the best size to decode all images to that size
     // User can alternatively set the size or change the policy that is used to automatically find the size
@@ -295,7 +295,8 @@ break;
     int col_counter = 0;
 
     RocalTensorList output_tensor_list;
-    auto cv_color_format = ((color_format == RocalImageColor::ROCAL_COLOR_RGB24) ?  ((tensorOutputType == RocalTensorOutputType::ROCAL_FP32) ? CV_32FC3 : CV_8UC3) : CV_8UC1);
+    auto cv_color_format = ((color_format == RocalImageColor::ROCAL_COLOR_RGB24) ?  ((tensorOutputType == RocalTensorOutputType::ROCAL_FP32) ? CV_8UC3 : CV_8UC3) : CV_8UC1);
+    std::cerr<<"\n\ncv_color_format"<<cv_color_format<<"\n"<<color_format<<"\n"<<tensorOutputType;
     high_resolution_clock::time_point t1 = high_resolution_clock::now();
     int index = 0;
     while (rocalGetRemainingImages(handle) >= inputBatchSize)
@@ -341,7 +342,21 @@ break;
             int w = output_tensor_list->at(idx)->info().max_width();
             mat_input = cv::Mat(h, w, cv_color_format);
             mat_output = cv::Mat(h, w, cv_color_format);
-            mat_input.data = (unsigned char *)(output_tensor_list->at(idx)->buffer());
+        //      switch (tensorOutputType)
+        // {
+        // case ROCAL_FP32:
+        //     rocalCopyToTensorOutput(handle, mat_input.data, h * w * p);
+        //     break;
+        // case ROCAL_UINT8:
+        //     rocalCopyToTensorOutput(handle, mat_input.data, h * w * p);
+        //     break;
+        // }
+            float * tempo= ( float *)(output_tensor_list->at(idx)->buffer());
+            for(int j=0;j<(h*w*3);j++)
+            {
+            mat_input.data[j] =(unsigned char)(int)(tempo[j]*255.0f);
+            }
+            // mat_input.data = (unsigned char *)(output_tensor_list->at(idx)->buffer());
             mat_input.copyTo(mat_output(cv::Rect(0, 0, w, h)));
             std::string out_filename = std::string(outName) + ".png";   // in case the user specifies non png filename
             if (display)

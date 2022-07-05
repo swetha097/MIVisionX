@@ -107,10 +107,11 @@ rocalBrightness(RocalContext p_context,
         get_rocal_tensor_data_type(rocal_tensor_output_type, op_tensorDataType);
         rocALTensorInfo output_info = input->info();
         output_info.set_tensor_layout(op_tensorLayout);
+        std::cerr<<"op_tensorDataType"<<(unsigned)op_tensorDataType;
         output_info.set_data_type(op_tensorDataType);
-
-        output = context->master_graph->create_tensor(input->info(), is_output);
-
+        std::cerr<<"\n\n&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&"<<output_info.get_data_type();
+        output = context->master_graph->create_tensor(output_info, is_output);
+        output->reset_tensor_roi();
         context->master_graph->add_node<BrightnessNode>({input}, {output})->init(alpha, beta,layout);
     }
     catch(const std::exception& e)
@@ -547,7 +548,7 @@ ROCAL_API_CALL rocalCropMirrorNormalize(RocalContext p_context, RocalTensor p_in
         output_info.set_data_type(op_tensorDataType);
         output = context->master_graph->create_tensor(output_info, is_output);
         output->reset_tensor_roi();
-        context->master_graph->add_node<CropMirrorNormalizeTensorNode>({input}, {output})->init(crop_height, crop_width, start_x, start_y, mean, std_dev , mirror,layout );
+        context->master_graph->add_node<CropMirrorNormalizeNode>({input}, {output})->init(crop_height, crop_width, start_x, start_y, mean, std_dev , mirror,layout );
     }
     catch(const std::exception& e)
     {
