@@ -27,7 +27,7 @@ THE SOFTWARE.
 RingBuffer::RingBuffer(unsigned buffer_depth):
         BUFF_DEPTH(buffer_depth),
         _dev_sub_buffer(buffer_depth),
-        _host_sub_buffers(BUFF_DEPTH)
+        _host_sub_buffers(buffer_depth)
 {
     reset();
 }
@@ -76,9 +76,6 @@ std::vector<void*> RingBuffer::get_write_buffers()
 std::vector<void*> RingBuffer::get_meta_read_buffers()
 {
     block_if_empty();
-    if((_mem_type == RocalMemType::OCL) || (_mem_type == RocalMemType::HIP))
-        return _dev_sub_buffer[_read_ptr];
-
     return _host_meta_data_buffers[_read_ptr];
 }
 
@@ -276,7 +273,7 @@ RingBuffer::~RingBuffer()
         for (size_t buffIdx = 0; buffIdx < _dev_sub_buffer.size(); buffIdx++)
             for (unsigned sub_buf_idx = 0; sub_buf_idx < _dev_sub_buffer[buffIdx].size(); sub_buf_idx++)
                 if (_dev_sub_buffer[buffIdx][sub_buf_idx])
-                    if ( hipFree((void *)_dev_sub_buffer[buffIdx][sub_buf_idx]) != hipSuccess )
+                    if (hipFree(_dev_sub_buffer[buffIdx][sub_buf_idx]) != hipSuccess)
                         ERR("Could not release hip memory in the ring buffer")
         _dev_sub_buffer.clear();
     }

@@ -185,13 +185,13 @@ public:
     void set_mem_handle(void * buffer) { _mem_handle = buffer; }
     vx_tensor handle() { return _vx_handle; }
     vx_context context() { return _context; }
-#if !ENABLE_HIP
+#if ENABLE_OPENCL
     unsigned copy_data(cl_command_queue queue, unsigned char* user_buffer, bool sync);
     unsigned copy_data(cl_command_queue queue, cl_mem user_buffer, bool sync);
-#else
-    unsigned copy_data(hipStream_t stream, unsigned char* user_buffer, bool sync);
-    unsigned copy_data(hipStream_t stream, void* hip_memory, bool sync);
+#elif ENABLE_HIP
+    unsigned copy_data(hipStream_t stream, void* host_memory, bool sync);
 #endif
+    unsigned copy_data(unsigned char* user_buffer, bool sync);
     //! Default destructor
     /*! Releases the OpenVX Tensor object */
     ~rocALTensor();

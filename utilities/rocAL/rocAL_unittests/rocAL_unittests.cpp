@@ -152,7 +152,7 @@ int test(int test_case, int reader_type, int pipeline_type, const char *path, co
             if (decode_max_height <= 0 || decode_max_width <= 0)
                 input1 = rocalJpegCOCOFileSource(handle, path, json_path, color_format, num_threads, false, true, false);
             else
-                input1 = rocalJpegCOCOFileSource(handle, path, json_path, color_format, num_threads, false, true, false, ROCAL_USE_USER_GIVEN_SIZE, decode_max_width, decode_max_height);
+                input1 = rocalJpegCOCOFileSource(handle, path, json_path, color_format, num_threads, true, true, false, ROCAL_USE_USER_GIVEN_SIZE, decode_max_width, decode_max_height);
         }
         break;
 #if 0
@@ -417,7 +417,15 @@ int test(int test_case, int reader_type, int pipeline_type, const char *path, co
             mat_input = cv::Mat(h, w, cv_color_format);
             mat_output = cv::Mat(h, w, cv_color_format);
 
-            mat_input.data = (unsigned char *)(output_tensor_list->at(idx)->buffer());
+            if(output_tensor_list->at(idx)->info().mem_type() == RocalMemType::HIP)
+            {
+                unsigned char *out_buffer;
+                out_buffer = (unsigned char *)malloc(output_tensor_list->at(idx)->info().data_size());
+                output_tensor_list->at(idx)->copy_data(out_buffer, false);
+                mat_input.data = (unsigned char *)out_buffer;
+            }
+            else if(output_tensor_list->at(idx)->info().mem_type() == RocalMemType::HOST)
+                mat_input.data = (unsigned char *)(output_tensor_list->at(idx)->buffer());
             mat_input.copyTo(mat_output(cv::Rect(0, 0, w, h)));
 
             std::string out_filename = std::string(outName) + ".png";   // in case the user specifies non png filename

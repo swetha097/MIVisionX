@@ -211,7 +211,8 @@ void rocALTensor::update_tensor_roi(const std::vector<uint32_t> &width, const st
 
 rocALTensor::~rocALTensor()
 {
-    // if(!_info.is_metadata())
+    _mem_handle = nullptr;
+    if(_vx_handle)
         vxReleaseTensor(&_vx_handle);
 }
 
@@ -315,13 +316,11 @@ int rocALTensor::create(vx_context context)
     _info._type = rocALTensorInfo::Type::REGULAR;
     return 0;
 }
-#if !ENABLE_HIP
+#if ENABLE_OPENCL
 unsigned rocALTensor::copy_data(cl_command_queue queue, unsigned char *user_buffer, bool sync)
 {
     if (_info._type != rocALTensorInfo::Type::HANDLE)
         return 0;
-
-    // unsigned size = _info.stride() * _info.height() * _info.channels() * _info.batch_size();
 
     if (_info._mem_type == RocalMemType::OCL)
     {
@@ -346,9 +345,32 @@ unsigned rocALTensor::copy_data(cl_command_queue queue, cl_mem user_buffer, bool
 {
     return 0;
 }
+#elif ENABLE_HIP
+    unsigned rocALTensor::copy_data(hipStream_t stream, void* host_memory, bool sync)
+    {
+        if(_info._type != rocALTensorInfo::Type::HANDLE)
+            return 0;
 
-#else
-unsigned rocALTensor::copy_data(hipStream_t stream, unsigned char* user_buffer, bool sync)
+        if (_info._mem_type == RocalMemType::HIP)
+        {
+            // copy from device to host
+            hipError_t status;
+            if ((status = hipMemcpyDtoHAsync((void *)host_memory, _mem_handle, _info.data_size(), stream)))
+                THROW("copy_data::hipMemcpyDtoH failed: " + TOSTR(status))
+            if (sync)
+            {
+                if ((status =hipStreamSynchronize(stream)))
+                    THROW("copy_data::hipStreamSynchronize failed: " + TOSTR(status))
+            }
+        }
+        else
+        {
+            memcpy(host_memory, _mem_handle, _info.data_size());
+        }
+        return _info.data_size();
+    }
+#endif
+unsigned rocALTensor::copy_data(unsigned char* user_buffer, bool sync)
 {
     if(_info._type != rocALTensorInfo::Type::HANDLE)
         return 0;
@@ -357,13 +379,8 @@ unsigned rocALTensor::copy_data(hipStream_t stream, unsigned char* user_buffer, 
     {
         // copy from device to host
         hipError_t status;
-        if ((status = hipMemcpyDtoHAsync((void *)user_buffer, _mem_handle, _info.data_size(), stream)))
-            THROW("copy_data::hipMemcpyDtoHAsync failed: " + TOSTR(status))
-        if (sync) {
-            if ((status =hipStreamSynchronize(stream)))
-                THROW("copy_data::hipStreamSynchronize failed: " + TOSTR(status))
-        }
-
+        if ((status = hipMemcpyDtoH((void *)user_buffer, _mem_handle, _info.data_size())))
+            THROW("copy_data::hipMemcpyDtoH failed: " + TOSTR(status))
     }
     else
     {
@@ -371,12 +388,6 @@ unsigned rocALTensor::copy_data(hipStream_t stream, unsigned char* user_buffer, 
     }
     return _info.data_size();
 }
-unsigned rocALTensor::copy_data(hipStream_t stream, void* hip_memory, bool sync)
-{
-    // todo:: copy from host to device
-    return 0;
-}
-#endif
 
 int rocALTensor::swap_handle(void *handle)
 {
