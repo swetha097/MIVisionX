@@ -1509,7 +1509,7 @@ int agoGetDataFromDescription(AgoContext * acontext, AgoGraph * agraph, AgoData 
         data->ref.type = VX_TYPE_THRESHOLD;
         const char *s = strstr(desc, ","); if (!s) return -1;
         char thresh_type[64];
-        // char data_type[64];
+        //char data_type[64];
         uint32_t input_format, output_format;
         memcpy(thresh_type, desc, s - desc); thresh_type[s - desc] = 0;
         s = strstr(s, ",");

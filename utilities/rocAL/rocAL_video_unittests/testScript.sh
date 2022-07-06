@@ -28,6 +28,7 @@ fi
 SAVE_FRAMES=1   # (save_frames:on/off)
 RGB=1           # (rgb:1/gray:0)
 DEVICE=0        # (cpu:0/gpu:1)
+HARDWARE_DECODE_MODE=0 # (hardware_decode_mode:on/off)
 SHUFFLE=0       # (shuffle:on/off)
 
 BATCH_SIZE=1         # Number of sequences per batch
@@ -41,13 +42,13 @@ FILELIST_FRAMENUM=1          # enables file number or timestamps parsing for tex
 ENABLE_METADATA=0            # outputs labels and names of the associated frames
 ENABLE_FRAME_NUMBER=0        # outputs the starting frame numbers of the sequences in the batch
 ENABLE_TIMESTAMPS=0          # outputs timestamps of the frames in the batch
-ENABLE_SEQUENCE_REARRANGE=0  # rearranges the frames in the sequence NOTE: The order needs to be set in the rocal_video_unittests.cpp
+ENABLE_SEQUENCE_REARRANGE=0  # rearranges the frames in the sequence NOTE: The order needs to be set in the rocAL_video_unittests.cpp
 
 echo "$INPUT_PATH"
-echo ./rocAL_video_unittests "$INPUT_PATH" $READER_CASE $DEVICE $BATCH_SIZE $SEQUENCE_LENGTH $STEP $STRIDE \
+echo ./rocAL_video_unittests "$INPUT_PATH" $READER_CASE $DEVICE $HARDWARE_DECODE_MODE $BATCH_SIZE $SEQUENCE_LENGTH $STEP $STRIDE \
 $RGB $SAVE_FRAMES $SHUFFLE $RESIZE_WIDTH $RESIZE_HEIGHT $FILELIST_FRAMENUM \
 $ENABLE_METADATA $ENABLE_FRAME_NUMBER $ENABLE_TIMESTAMPS $ENABLE_SEQUENCE_REARRANGE
 
-./rocAL_video_unittests "$INPUT_PATH" $READER_CASE $DEVICE $BATCH_SIZE $SEQUENCE_LENGTH $STEP $STRIDE \
+./rocAL_video_unittests "$INPUT_PATH" $READER_CASE $DEVICE $HARDWARE_DECODE_MODE $BATCH_SIZE $SEQUENCE_LENGTH $STEP $STRIDE \
 $RGB $SAVE_FRAMES $SHUFFLE $RESIZE_WIDTH $RESIZE_HEIGHT $FILELIST_FRAMENUM \
 $ENABLE_METADATA $ENABLE_FRAME_NUMBER $ENABLE_TIMESTAMPS $ENABLE_SEQUENCE_REARRANGE

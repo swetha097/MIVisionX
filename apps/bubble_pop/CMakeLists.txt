@@ -28,21 +28,33 @@ project(vx_pop)
 
 set(CMAKE_CXX_STANDARD 11)
 
+set(ROCM_PATH /opt/rocm CACHE PATH "Default ROCm installation path")
+#Added Default libdir
+set(CMAKE_INSTALL_LIBDIR "lib" CACHE STRING "Library install directory")
+include(GNUInstallDirs)
+
 find_package(OpenCV REQUIRED)
 
 include_directories(include)
 
 if(DEFINED OPENVX_INCLUDES)
-    message(STATUS "OPENVX_INCLUDES: \t${OPENVX_INCLUDES}")
-    include_directories(${OPENVX_INCLUDES})
+    message(STATUS "BUBBLE POP - OPENVX_INCLUDES: \t${OPENVX_INCLUDES}")
 else()
-    include_directories (/opt/rocm/mivisionx/include)
+	set(OPENVX_INCLUDES ${ROCM_PATH}/${CMAKE_INSTALL_INCLUDEDIR}/mivisionx)
+	message(STATUS "BUBBLE POP - OPENVX_INCLUDES: \t<empty> \tDefault:${OPENVX_INCLUDES}")
+endif()
+include_directories(${OPENVX_INCLUDES})
+
+set(SHARED_LIB_TYPE so)
+if(APPLE)
+  set(SHARED_LIB_TYPE dylib)
 endif()
 
 if(DEFINED OPENVX_LIBRARIES)
-    message(STATUS "OPENVX_LIBRARIES: \t${OPENVX_LIBRARIES}")
+    message(STATUS "BUBBLE POP - OPENVX_LIBRARIES: \t${OPENVX_LIBRARIES}")
 else()
-    set(OPENVX_LIBRARIES /opt/rocm/mivisionx/lib/libopenvx.so)
+    set(OPENVX_LIBRARIES ${ROCM_PATH}/${CMAKE_INSTALL_LIBDIR}/libopenvx.${SHARED_LIB_TYPE})
+	message(STATUS "BUBBLE POP - OPENVX_LIBRARIES: \t<empty> \tDefault:${OPENVX_LIBRARIES}")
 endif()
 
 list    (APPEND SOURCES
@@ -59,6 +71,14 @@ target_link_libraries(${PROJECT_NAME} ${OPENVX_LIBRARIES} ${OpenCV_LIBRARIES})
 add_executable(vxPop source/AMD_app.cpp)
 target_link_libraries(vxPop ${OPENVX_LIBRARIES} ${OpenCV_LIBRARIES} ${PROJECT_NAME})
 
+if(${OpenCV_VERSION_MAJOR} EQUAL 4)
+	target_compile_definitions(${PROJECT_NAME} PUBLIC USE_OPENCV_4=1)
+	target_compile_definitions(vxPop PUBLIC USE_OPENCV_4=1)
+else()
+	target_compile_definitions(${PROJECT_NAME} PUBLIC USE_OPENCV_4=0)
+	target_compile_definitions(vxPop PUBLIC USE_OPENCV_4=0)
+endif()
+
 file(COPY image DESTINATION ${CMAKE_BINARY_DIR})
 file(COPY gdf DESTINATION ${CMAKE_BINARY_DIR})
 
@@ -69,3 +89,5 @@ if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "MSVC")
 else()
 	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fdata-sections")
 endif()
+
+install(TARGETS ${PROJECT_NAME} RUNTIME DESTINATION ${ROCM_PATH}/${CMAKE_INSTALL_BINDIR})
