@@ -279,9 +279,26 @@ int test(int test_case, int reader_type, int pipeline_type, const char *path, co
     {
     case 0:
     {
+        std::vector<float> mean{0, 0, 0};
+        std::vector<float> sdev{1, 1, 1};
         std::cout << ">>>>>>> Running "
-                  << "rocalBrightness" << std::endl;
+                  << " Crop Mirror Normalize " << std::endl;
+        image1 = rocalCropMirrorNormalize(handle, input1, tensorLayout, tensorOutputType, 3, resize_w, resize_h, 0, 0, 0, mean, sdev, true);
+        break;
+    }
+    case 1:
+    {
+        std::cout << ">>>>>>> Running "
+                  << "rocalCropMirrorNormalize" << std::endl;
         image1 = rocalBrightnessTensor(handle, input1, true);
+    }
+    break;
+    case 3:
+    {
+         std::cout << ">>>>>>> Running "
+                  << "rocalResize" << std::endl;
+        image1 = rocalResize(handle, input1, tensorLayout, tensorOutputType, 3,resize_w , resize_h, 0,true);
+
     }
     break;
     default:

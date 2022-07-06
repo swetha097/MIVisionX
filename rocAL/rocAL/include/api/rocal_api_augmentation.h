@@ -79,6 +79,19 @@ extern "C" RocalTensor ROCAL_API_CALL rocalCopyTensor(RocalContext context, Roca
 extern "C" RocalTensor ROCAL_API_CALL rocalNopTensor(RocalContext context, RocalTensor input, bool is_output);
 
 
+// extern "C" RocalTensor ROCAL_API_CALL rocalCropMirrorNormalize(RocalContext context, RocalTensor input,
+//                                                                   RocalTensorLayout rocal_tensor_layout,
+//                                                                   RocalTensorOutputType rocal_tensor_output_type,
+//                                                                   unsigned crop_depth,
+//                                                                   unsigned crop_height,
+//                                                                   unsigned crop_width,
+//                                                                   float start_x,
+//                                                                   float start_y,
+//                                                                   float start_z,
+//                                                                   std::vector<float> &mean,
+//                                                                   std::vector<float> &std_dev,
+//                                                                   bool is_output,
+//                                                                   RocalIntParam mirror = NULL);
 extern "C" RocalTensor ROCAL_API_CALL rocalCropMirrorNormalize(RocalContext context, RocalTensor input,
                                                                   RocalTensorLayout rocal_tensor_layout,
                                                                   RocalTensorOutputType rocal_tensor_output_type,
@@ -92,6 +105,17 @@ extern "C" RocalTensor ROCAL_API_CALL rocalCropMirrorNormalize(RocalContext cont
                                                                   std::vector<float> &std_dev,
                                                                   bool is_output,
                                                                   RocalIntParam mirror = NULL);
+
+
+
+extern "C" RocalTensor ROCAL_API_CALL rocalResize(RocalContext context, RocalTensor input,
+                                                                  RocalTensorLayout rocal_tensor_layout,
+                                                                  RocalTensorOutputType rocal_tensor_output_type,
+                                                                  unsigned resize_depth,
+                                                                  unsigned resize_height,
+                                                                  unsigned resize_width,
+                                                                  int interpolation_type,
+                                                                  bool is_output);
 
 
 #endif //MIVISIONX_ROCAL_API_AUGMENTATION_H

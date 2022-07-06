@@ -25,14 +25,14 @@ THE SOFTWARE.
 #include "node_crop_mirror_normalize.h"
 #include "exception.h"
 
-CropMirrorNormalizeTensorNode::CropMirrorNormalizeTensorNode(const std::vector<rocALTensor *> &inputs, const std::vector<rocALTensor *> &outputs) :
+CropMirrorNormalizeNode::CropMirrorNormalizeNode(const std::vector<rocALTensor *> &inputs, const std::vector<rocALTensor *> &outputs) :
         Node(inputs, outputs),
         _mirror(MIRROR_RANGE[0], MIRROR_RANGE[1])
 {
     _crop_param = std::make_shared<RocalCropParam>(_batch_size);
 }
 
-void CropMirrorNormalizeTensorNode::create_node()
+void CropMirrorNormalizeNode::create_node()
 {
     if(_node)
         return;
@@ -40,30 +40,27 @@ void CropMirrorNormalizeTensorNode::create_node()
     if(_crop_param->crop_h == 0 || _crop_param->crop_w == 0)
         THROW("Uninitialized destination dimension - Invalid Crop Sizes")
     _crop_param->create_array(_graph);
-    _mean_vx.resize(_batch_size);
-    _std_dev_vx.resize(_batch_size);
+    _mean_vx.resize(_batch_size*3);
+    _std_dev_vx.resize(_batch_size*3);
     for (uint i=0; i < _batch_size; i++ ) {
-         _mean_vx[i] = _mean;
-         _std_dev_vx[i] = _std_dev;
+        _mean_vx[3*i] = _mean[0];
+        _mean_vx[3*i+1] = _mean[1];
+        _mean_vx[3*i+2] = _mean[2];
+
+        _std_dev_vx[3*i] = _std_dev[0];
+        _std_dev_vx[3*i+1] = _std_dev[1];
+        _std_dev_vx[3*i+2] = _std_dev[2];
     }
-    //
-    // if(_inputs[0]->info().layout() == RocalTensorlayout::NCHW)
-    //     _layout = 1;
-    // if(_inputs[0]->info().roi_type() == RocalROIType::XYWH)
-    //     _roi_type = 1;
-//
-    _mean_array = vxCreateArray(vxGetContext((vx_reference)_graph->get()), VX_TYPE_FLOAT32, _batch_size);
-    _std_dev_array = vxCreateArray(vxGetContext((vx_reference)_graph->get()), VX_TYPE_FLOAT32, _batch_size);
+
+    _mean_array = vxCreateArray(vxGetContext((vx_reference)_graph->get()), VX_TYPE_FLOAT32, _batch_size*3);
+    _std_dev_array = vxCreateArray(vxGetContext((vx_reference)_graph->get()), VX_TYPE_FLOAT32, _batch_size*3);
     vx_status status = VX_SUCCESS;
-    status |= vxAddArrayItems(_mean_array,_batch_size, _mean_vx.data(), sizeof(vx_float32));
-    status |= vxAddArrayItems(_std_dev_array,_batch_size, _std_dev_vx.data(), sizeof(vx_float32));
+    status |= vxAddArrayItems(_mean_array,_batch_size*3, _mean_vx.data(), sizeof(vx_float32));
+    status |= vxAddArrayItems(_std_dev_array,_batch_size*3, _std_dev_vx.data(), sizeof(vx_float32));
     _mirror.create_array(_graph ,VX_TYPE_UINT32, _batch_size);
     if(status != 0)
         THROW(" vxAddArrayItems failed in the crop resize node (vxExtrppNode_CropMirrorNormalizeCropbatchPD    )  node: "+ TOSTR(status) + "  "+ TOSTR(status))
-
     unsigned int chnShift = 0;
-    // if(_inputs[0]->info().format() != _outputs[0]->info().format())
-    //     chnShift = 1;
     vx_scalar  chnToggle = vxCreateScalar(vxGetContext((vx_reference)_graph->get()),VX_TYPE_UINT32,&chnShift);
     bool packed;
     if(_inputs[0]->info().color_format() != RocalColorFormat::RGB_PLANAR)
@@ -81,11 +78,9 @@ void CropMirrorNormalizeTensorNode::create_node()
 
 }
 
-
-void CropMirrorNormalizeTensorNode::update_node()
+void CropMirrorNormalizeNode::update_node()
 {
     _crop_param->set_image_dimensions(_inputs[0]->info().get_roi());
-
     _crop_param->update_array();
     std::vector<uint32_t> crop_h_dims, crop_w_dims;
     _crop_param->get_crop_dimensions(crop_w_dims, crop_h_dims);
@@ -94,12 +89,12 @@ void CropMirrorNormalizeTensorNode::update_node()
 
 }
 
-void CropMirrorNormalizeTensorNode::init(int crop_h, int crop_w, float start_x, float start_y, float mean, float std_dev, IntParam *mirror,int layout)
+void CropMirrorNormalizeNode::init(int crop_h, int crop_w, float start_x, float start_y, std::vector<float>& mean, std::vector<float>& std_dev, IntParam *mirror,int layout)
 {
     _crop_param->crop_h = crop_h;
     _crop_param->crop_w = crop_w;
     _mean   = mean;
     _std_dev = std_dev;
     _mirror.set_param(core(mirror));
-    _layout=layout;
+    // _layout = (unsigned) _outputs[0]->layout();
 }

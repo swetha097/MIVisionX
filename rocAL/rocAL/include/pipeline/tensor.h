@@ -149,6 +149,11 @@ public:
         _data_type_size = tensor_data_size(_data_type);
         return _data_type_size;
     }
+    void set_width(unsigned width) { _width = width; }
+    void set_height(unsigned height) {_height= height; }
+    unsigned get_width() const { return _width; }
+    unsigned get_height() const { return _height; }
+
     void set_metadata() { _is_metadata = true; }
     bool is_metadata() const { return _is_metadata; }
 
@@ -166,6 +171,8 @@ private:
     unsigned _data_type_size = tensor_data_size(_data_type);
     unsigned _data_size = 0;
     std::vector<unsigned> _max_dims;
+    unsigned _max_width, _max_height,_width,_height;
+
     unsigned _frames; // denotes the F dimension in the tensor
     bool _is_image = false;
     void reallocate_tensor_roi_buffers();
