@@ -30,6 +30,7 @@ THE SOFTWARE.
 #include "master_graph.h"
 #include "parameter_factory.h"
 #include "ocl_setup.h"
+#include "log.h"
 #include "meta_data_reader_factory.h"
 #include "meta_data_graph_factory.h"
 #include "node_copy.h"
@@ -89,13 +90,15 @@ MasterGraph::~MasterGraph()
     release();
 }
 
-MasterGraph::MasterGraph(size_t batch_size, RocalAffinity affinity, int gpu_id, size_t cpu_threads,  size_t prefetch_queue_depth, RocalTensorDataType output_tensor_data_type):
-        _ring_buffer(OUTPUT_RING_BUFFER_DEPTH),
+MasterGraph::MasterGraph(size_t batch_size, RocalAffinity affinity, int gpu_id, size_t cpu_threads, size_t prefetch_queue_depth, RocalTensorDataType output_tensor_data_type):
+        _ring_buffer(prefetch_queue_depth),
         _output_tensor(nullptr),
         _graph(nullptr),
         _affinity(affinity),
         _gpu_id(gpu_id),
         _convert_time("Conversion Time", DBG_TIMING),
+        _process_time("Process Time", DBG_TIMING),
+        _bencode_time("BoxEncoder Time", DBG_TIMING),
         _user_batch_size(batch_size),
         _cpu_threads(cpu_threads),
 #if ENABLE_HIP
@@ -103,13 +106,14 @@ MasterGraph::MasterGraph(size_t batch_size, RocalAffinity affinity, int gpu_id, 
 #else
         _mem_type ((_affinity == RocalAffinity::GPU) ? RocalMemType::OCL : RocalMemType::HOST),
 #endif
-        _process_time("Process Time", DBG_TIMING),
         _first_run(true),
         _processing(false),
         _internal_batch_size(compute_optimum_internal_batch_size(batch_size, affinity)),
         _user_to_internal_batch_ratio (_user_batch_size/_internal_batch_size),
         _prefetch_queue_depth(prefetch_queue_depth),
-        _out_data_type(output_tensor_data_type)
+        _out_data_type(output_tensor_data_type),
+        _rb_block_if_empty_time("Ring Buffer Block IF Empty Time"),
+        _rb_block_if_full_time("Ring Buffer Block IF Full Time")
 {
     try {
         vx_status status;
@@ -200,7 +204,10 @@ MasterGraph::run()
     if(no_more_processed_data()) {
         return MasterGraph::Status::NO_MORE_DATA;
     }
+
+    _rb_block_if_empty_time.start();
     _ring_buffer.block_if_empty();// wait here if the user thread (caller of this function) is faster in consuming the processed images compare to th output routine in producing them
+    _rb_block_if_empty_time.end();
 
     if(_first_run)
     {
@@ -477,6 +484,7 @@ MasterGraph::timing()
     Timing t = _loader_module->timing();
     t.image_process_time += _process_time.get_timing();
     t.copy_to_output += _convert_time.get_timing();
+    t.bb_process_time += _bencode_time.get_timing();
     return t;
 }
 
