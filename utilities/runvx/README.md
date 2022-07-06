@@ -6,19 +6,19 @@ If available, this project uses OpenCV for camera capture and image display.
 
 ## Prerequisites
 
-* **CPU**: 64-bit SSE4.2 or above
-* **GPU**: GFX7 or later [optional]
+* **CPU**: AMD64
+* **GPU**: AMD Radeon&trade; Graphics [optional]
 * Windows: install the latest drivers and OpenCL SDK download [optional]
 * Linux: install ROCm [optional]
 * OpenCV `3.4+` [optional]
-  + Set `OpenCV_DIR` environment variable to `OpenCV/build` folder
+  + `Windows`:Set `OpenCV_DIR` environment variable to `OpenCV/build` folder
 * Install `libssl-dev` on Linux [optional]
 
 ## RunVX Usage and GDF Syntax
     runvx.exe [options] <file.gdf> [argument(s)]
     runvx.exe [options] node <kernelName> [argument(s)]
     runvx.exe [options] shell [argument(s)]
-        
+
     The argument(s) are data objects created using <data-description> syntax.
     These arguments can be accessed from inside GDF as $1, $2, etc.
 
@@ -47,7 +47,7 @@ If available, this project uses OpenCV for camera capture and image display.
           into files '<dumpFilePrefix>dumpdata_####_<object-type>_<object-name>.raw'
       -discard-commands:<cmd>[,cmd[...]]
           Discard the listed commands.
-    
+
     The supported list of OpenVX built-in kernel names is given below:
         org.khronos.openvx.color_convert
         org.khronos.openvx.channel_extract
@@ -90,7 +90,7 @@ If available, this project uses OpenCV for camera capture and image display.
         org.khronos.openvx.optical_flow_pyr_lk
         org.khronos.openvx.remap
         org.khronos.openvx.halfscale_gaussian
-        
+
     The supported list of AMD's built-in kernel names is given below:
         com.amd.nn_extension.argmax_layer
         com.amd.nn_extension.batch_normalization_layer
@@ -112,7 +112,7 @@ If available, this project uses OpenCV for camera capture and image display.
         com.amd.nn_extension.gather_layer
         com.amd.nn_extension.topk_layer
         com.amd.nn_extension.nms_layer
-        
+
     The available GDF commands are:
       import <libraryName>
           Import kernels in a library using vxLoadKernel API.
@@ -142,7 +142,7 @@ If available, this project uses OpenCV for camera capture and image display.
               tensor:<num-of-dims>,{<dim0>,<dim1>,...},<data-type>,<fixed-point-pos>
               tensor-from-roi:<master-tensor>,<num-of-dims>,{<start0>,<start1>,...},{<end0>,<end1>,...}
               tensor-from-handle:<num-of-dims>,{<dim0>,<dim1>,...},<data-type>,<fixed-point-pos>,{<stride0>,<stride1>,...},<num-alloc-handles>,<memory-type>
-				
+
           For virtual object in default graph use the below syntax for
           <data-description>:
               virtual-array:<data-type>,<capacity>
@@ -163,7 +163,7 @@ If available, this project uses OpenCV for camera capture and image display.
               <space> can be vx_color_space_e enums BT709 or BT601_525 or BT601_625
 
       node <kernelName> [<argument(s)>]
-          Create a node of specified kernel in the default graph with specified node arguments. 
+          Create a node of specified kernel in the default graph with specified node arguments.
           Node arguments have to be OpenVX data objects created earlier in GDF or data objects
           specified on command-line accessible as $1, $2, etc. For scalar enumerations as node
           arguments, use !<enumName> syntax (e.g., !VX_CHANNEL_Y for channel_extract node).
@@ -349,18 +349,18 @@ File **canny.gdf**:
     # create input and output images
     data input  = image:480,360,RGB2
     data output = image:480,360,U008
-    
+
     # specify input source for input image and request for displaying input and output images
     read input  examples/images/face1.jpg
     view input  inputWindow
     view output edgesWindow
-    
+
     # compute luma image channel from input RGB image
     data yuv  = image-virtual:0,0,IYUV
     data luma = image-virtual:0,0,U008
     node org.khronos.openvx.color_convert input yuv
     node org.khronos.openvx.channel_extract yuv !CHANNEL_Y luma
-    
+
     # compute edges in luma image using Canny edge detector
     data hyst = threshold:RANGE,U008,U008:INIT,80,100
     data gradient_size = scalar:INT32,3
@@ -426,9 +426,9 @@ File **skintonedetect.gdf**:
 
 
 ### Feature Tracker
-The feature tracker example demonstrates building an application with two 
+The feature tracker example demonstrates building an application with two
 separate graphs that uses Harris Corners and Optical Flow kernels.
-This example requires use of delay data objects that contain 
+This example requires use of delay data objects that contain
 multiple pyramid and array objects.
 Use [PETS09-S1-L1-View001.avi](http://ewh.ieee.org/r6/scv/sps/openvx-material/PETS09-S1-L1-View001.avi) as input video sequence.
 
@@ -439,16 +439,16 @@ File **feature_tracker.gdf**:
     # create image object for the input video sequence.
     data input = image:768,576,RGB2
     read input PETS09-S1-L1-View001.avi
-    
+
     # create output keypoint array objects inside a delay object with two slots.
     # two slots are needed to keep track current keypoints from previous time.
     data exemplarArr = array:KEYPOINT,10000   # max trackable keypoints are 10,000
     data delayArr = delay:exemplarArr,2       # two slots inside the delay object
-    
+
     # request for displaying input with keypoints from delay slot[0].
     view input    feature_tracker
     view delayArr feature_tracker
-    
+
     # create pyramid objects inside a delay object with two slots.
     # two slots of pyramids are needed for optical flow kernel.
     data exemplarPyr = pyramid:6,half,768,576,U008

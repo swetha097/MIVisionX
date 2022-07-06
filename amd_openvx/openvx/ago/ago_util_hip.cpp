@@ -27,8 +27,11 @@ THE SOFTWARE.
 // Create HIP Context
 int agoGpuHipCreateContext(AgoContext *context, int deviceID) {
     if (deviceID >= 0) {
-        // use the given HIP device
+      // release context if already set.
         context->hip_context_imported = true;
+        agoGpuHipReleaseContext(context);
+        // use the given HIP device
+
     }
     else {
         // select the first device
@@ -76,7 +79,7 @@ int agoGpuHipCreateContext(AgoContext *context, int deviceID) {
     if (err != hipSuccess) {
         agoAddLogEntry(NULL, VX_FAILURE, "ERROR: hipGetDeviceProperties(%d) => %d (failed)\n", deviceID, err);
     }
-    agoAddLogEntry(&context->ref, VX_SUCCESS, "OK: OpenVX using GPU device#%d %s (%s) (with %d CUs) on PCI bus %02x:%02x.%x\n",
+    agoAddLogEntry(&context->ref, VX_SUCCESS, "OK: OpenVX using GPU device - %d: %s [%s] with %d CUs on PCI bus %02x:%02x.%x\n",
                    deviceID, context->hip_dev_prop.name, context->hip_dev_prop.gcnArchName, context->hip_dev_prop.multiProcessorCount,
                    context->hip_dev_prop.pciBusID, context->hip_dev_prop.pciDomainID, context->hip_dev_prop.pciDeviceID);
 
@@ -91,10 +94,6 @@ int agoGpuHipReleaseContext(AgoContext * context) {
             return -1;
         }
         context->hip_stream = NULL;
-    }
-    if (!context->hip_context_imported) {
-        // reset the device
-        hipDeviceReset();
     }
     return 0;
 }
@@ -716,7 +715,10 @@ int agoGpuHipSingleNodeLaunch(AgoGraph * graph, AgoNode * node) {
         status = kernel->kernel_f(node, (vx_reference *)node->paramList, node->paramCount);
     }
     if (status) {
-        agoAddLogEntry((vx_reference)graph, VX_FAILURE, "ERROR: kernel %s exec failed (%d:%s)\n", kernel->name, status, agoEnum2Name(status));
+        if (status == VX_ERROR_GRAPH_ABANDONED)
+            agoAddLogEntry((vx_reference)graph, VX_FAILURE, "INFO: kernel %s exec returned graph_stopped status: (this could mean EOS for amd_media extension (%d))\n", kernel->name, status);
+        else
+            agoAddLogEntry((vx_reference)graph, VX_FAILURE, "ERROR: kernel %s exec failed (%d:%s)\n", kernel->name, status, agoEnum2Name(status));
         return -1;
     }
     if(graph->enable_node_level_gpu_flush) {

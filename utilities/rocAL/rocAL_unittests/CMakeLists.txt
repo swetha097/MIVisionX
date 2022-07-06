@@ -36,6 +36,8 @@ find_package(AMDRPP QUIET)
 
 include_directories(${ROCM_PATH}/libexec/mivisionx/rali/python/)
 include_directories(${ROCM_PATH}/include/)
+# include_directories(${ROCM_PATH}/include/mivisionx/)
+# include_directories(${ROCM_PATH}/opencl/include/)
 link_directories(${ROCM_PATH}/lib/)
 file(GLOB My_Source_Files ./*.cpp)
 add_executable(${PROJECT_NAME} ${My_Source_Files})
