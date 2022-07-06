@@ -134,6 +134,8 @@ list(APPEND SOURCES
         source/tensor/CropMirrorNormalize.cpp
         source/tensor/GammaCorrection.cpp
         source/tensor/Nop.cpp
+        source/tensor/Resize.cpp
+
         source/kernel_rpp.cpp
         source/internal_publishKernels.cpp
     )
