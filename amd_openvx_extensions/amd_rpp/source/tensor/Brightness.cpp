@@ -250,7 +250,7 @@ static vx_status VX_CALLBACK initializeBrightness(vx_node node, const vx_referen
     // }
     else if (data->in_tensor_type == vx_type_e::VX_TYPE_INT8)
     {
-        std::cerr<<"FFFFFFFLOST\n";
+        std::cerr<<"iiiiin\n";
         data->src_desc_ptr->dataType = RpptDataType::I8;
     }
     // Querying for output tensor

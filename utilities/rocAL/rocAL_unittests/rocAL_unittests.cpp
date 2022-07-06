@@ -351,12 +351,15 @@ break;
         //     rocalCopyToTensorOutput(handle, mat_input.data, h * w * p);
         //     break;
         // }
+        if(0)
+        {
             float * tempo= ( float *)(output_tensor_list->at(idx)->buffer());
             for(int j=0;j<(h*w*3);j++)
             {
             mat_input.data[j] =(unsigned char)(int)(tempo[j]*255.0f);
             }
-            // mat_input.data = (unsigned char *)(output_tensor_list->at(idx)->buffer());
+        }
+            mat_input.data = (unsigned char *)(output_tensor_list->at(idx)->buffer());
             mat_input.copyTo(mat_output(cv::Rect(0, 0, w, h)));
             std::string out_filename = std::string(outName) + ".png";   // in case the user specifies non png filename
             if (display)

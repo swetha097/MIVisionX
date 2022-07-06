@@ -155,7 +155,7 @@ rocalNoise(RocalContext p_context,
         output_info.set_tensor_layout(op_tensorLayout);
         output_info.set_data_type(op_tensorDataType);
 
-        output = context->master_graph->create_tensor(input->info(), is_output);
+        output = context->master_graph->create_tensor(output_info, is_output);
 
         context->master_graph->add_node<NoiseTensorNode>({input}, {output})->init(noise_prob, salt_prob, noise_value ,salt_value,seed, layout);
     }
@@ -194,7 +194,7 @@ rocalContrast(RocalContext p_context,
         output_info.set_tensor_layout(op_tensorLayout);
         output_info.set_data_type(op_tensorDataType);
 
-        output = context->master_graph->create_tensor(input->info(), is_output);
+        output = context->master_graph->create_tensor(output_info, is_output);
 
         context->master_graph->add_node<ContrastNode>({input}, {output})->init(contrast_factor, contrast_center, layout);
     }
@@ -237,7 +237,7 @@ ROCAL_API_CALL rocalColorCast(RocalContext p_context,
         output_info.set_tensor_layout(op_tensorLayout);
         output_info.set_data_type(op_tensorDataType);
 
-        output = context->master_graph->create_tensor(input->info(), is_output);
+        output = context->master_graph->create_tensor(output_info, is_output);
 
         context->master_graph->add_node<ColorCastNode>({input}, {output})->init(red, green, blue ,alpha, layout);
     }
@@ -274,7 +274,7 @@ rocalExposure(RocalContext p_context,
         output_info.set_tensor_layout(op_tensorLayout);
         output_info.set_data_type(op_tensorDataType);
 
-        output = context->master_graph->create_tensor(input->info(), is_output);
+        output = context->master_graph->create_tensor(output_info, is_output);
 
         context->master_graph->add_node<ExposureNode>({input}, {output})->init(alpha,layout);
     }
@@ -353,7 +353,7 @@ rocalSpatter(RocalContext p_context,
         output_info.set_tensor_layout(op_tensorLayout);
         output_info.set_data_type(op_tensorDataType);
 
-        output = context->master_graph->create_tensor(input->info(), is_output);
+        output = context->master_graph->create_tensor(output_info, is_output);
 
         context->master_graph->add_node<SpatterNode>({input}, {output})->init(R_value, G_value, B_value, layout);
     }
@@ -396,7 +396,7 @@ rocalColorTwist(RocalContext p_context,
         output_info.set_tensor_layout(op_tensorLayout);
         output_info.set_data_type(op_tensorDataType);
 
-        output = context->master_graph->create_tensor(input->info(), is_output);
+        output = context->master_graph->create_tensor(output_info, is_output);
         context->master_graph->add_node<ColorTwistNode>({input}, {output})->init(alpha, beta, hue ,sat, layout);
     }
     catch(const std::exception& e)
@@ -438,7 +438,7 @@ rocalColorJitter(RocalContext p_context,
         output_info.set_tensor_layout(op_tensorLayout);
         output_info.set_data_type(op_tensorDataType);
 
-        output = context->master_graph->create_tensor(input->info(), is_output);
+        output = context->master_graph->create_tensor(output_info, is_output);
 
         context->master_graph->add_node<ColorJitterNode>({input}, {output})->init(alpha, beta, hue ,sat, layout);
     }
@@ -605,7 +605,7 @@ rocalGamma(RocalContext p_context,
         output_info.set_tensor_layout(op_tensorLayout);
         output_info.set_data_type(op_tensorDataType);
 
-        output = context->master_graph->create_tensor(input->info(), is_output);
+        output = context->master_graph->create_tensor(output_info, is_output);
 
         context->master_graph->add_node<GammaNode>({input}, {output})->init(alpha,layout);
     }
@@ -734,7 +734,7 @@ rocalFlip(RocalContext p_context,
         output_info.set_tensor_layout(op_tensorLayout);
         output_info.set_data_type(op_tensorDataType);
 
-        output = context->master_graph->create_tensor(input->info(), is_output);
+        output = context->master_graph->create_tensor(output_info, is_output);
 
         context->master_graph->add_node<FlipNode>({input}, {output})->init(horizontal_flag, vertical_flag, layout);
     }
@@ -773,7 +773,7 @@ rocalBlend(RocalContext p_context,
         output_info.set_tensor_layout(op_tensorLayout);
         output_info.set_data_type(op_tensorDataType);
 
-        output = context->master_graph->create_tensor(input->info(), is_output);
+        output = context->master_graph->create_tensor(output_info, is_output);
 
         context->master_graph->add_node<BlendNode>({input,input1}, {output})->init(alpha, layout);
     }
@@ -813,7 +813,7 @@ rocalGridmask(RocalContext p_context,
         output_info.set_tensor_layout(op_tensorLayout);
         output_info.set_data_type(op_tensorDataType);
 
-        output = context->master_graph->create_tensor(input->info(), is_output);
+        output = context->master_graph->create_tensor(output_info, is_output);
 
         context->master_graph->add_node<GridmaskNode>({input}, {output})->init(tileWidth, gridRatio, gridAngle,shift_x,shift_y, layout);
     }
