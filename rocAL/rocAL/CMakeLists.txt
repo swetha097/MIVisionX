@@ -35,7 +35,7 @@ if(GPU_SUPPORT)
     find_package(Protobuf QUIET)
     find_package(FFmpeg QUIET)
     find_package(OpenCV QUIET)
-    #find_package(SndFile)
+    # find_package(SndFile)
     find_library(libsnd_LIBS
     NAMES sndfile libsndfile
     PATHS ${CMAKE_SYSTEM_PREFIX_PATH} ${LIBSND_ROOT_DIR} "/usr/local"
@@ -124,7 +124,7 @@ if(GPU_SUPPORT)
         message("-- ${Yellow}NOTE: rocAL library requires libsnd(sndfile), Not found. Try to specify it's location with `-DLIBSND_ROOT_DIR`.${ColourReset}")
     endif()
     message(STATUS "Found libsnd: ${libsnd_LIBS}")
-    #list(APPEND DALI_LIBS ${libsnd_LIBS})
+    # #list(APPEND DALI_LIBS ${libsnd_LIBS})
     if(NOT Protobuf_FOUND)
         set(BUILD_ROCAL false)
         message("-- ${Yellow}NOTE: rocAL library requires Protobuf, Not Found ${ColourReset}")

@@ -1,16 +1,16 @@
-/* 
+/*
 Copyright (c) 2015 - 2022 Advanced Micro Devices, Inc. All rights reserved.
- 
+
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
 in the Software without restriction, including without limitation the rights
 to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
 copies of the Software, and to permit persons to whom the Software is
 furnished to do so, subject to the following conditions:
- 
+
 The above copyright notice and this permission notice shall be included in
 all copies or substantial portions of the Software.
- 
+
 THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL THE
@@ -86,7 +86,7 @@ static float sobelFilter_7x7_y[7][7] = {
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Generate OpenCL code for following non-linear filter kernels:
 //   VX_KERNEL_AMD_DILATE_U8_U8_3x3, VX_KERNEL_AMD_DILATE_U1_U8_3x3,
-//   VX_KERNEL_AMD_ERODE_U8_U8_3x3, VX_KERNEL_AMD_ERODE_U1_U8_3x3, 
+//   VX_KERNEL_AMD_ERODE_U8_U8_3x3, VX_KERNEL_AMD_ERODE_U1_U8_3x3,
 //   VX_KERNEL_AMD_MEDIAN_U8_U8_3x3
 //
 int HafGpu_NonLinearFilter_3x3_ANY_U8(AgoNode * node)
@@ -575,7 +575,7 @@ int HafGpu_NonLinearFilter_3x3_ANY_U8(AgoNode * node)
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Generate OpenCL code for following non-linear filter kernels:
 //   VX_KERNEL_AMD_DILATE_U8_U1_3x3, VX_KERNEL_AMD_DILATE_U1_U1_3x3,
-//   VX_KERNEL_AMD_ERODE_U8_U1_3x3, VX_KERNEL_AMD_ERODE_U1_U1_3x3, 
+//   VX_KERNEL_AMD_ERODE_U8_U1_3x3, VX_KERNEL_AMD_ERODE_U1_U1_3x3,
 //
 int HafGpu_NonLinearFilter_3x3_ANY_U1(AgoNode * node)
 {
@@ -603,7 +603,7 @@ int HafGpu_NonLinearFilter_3x3_ANY_U1(AgoNode * node)
 	node->opencl_local_buffer_size_in_bytes = 0;
 
 	// generate computation
-	if (node->akernel->id == VX_KERNEL_AMD_DILATE_U8_U1_3x3 || 
+	if (node->akernel->id == VX_KERNEL_AMD_DILATE_U8_U1_3x3 ||
 		node->akernel->id == VX_KERNEL_AMD_DILATE_U1_U1_3x3 ||
 		node->akernel->id == VX_KERNEL_AMD_ERODE_U8_U1_3x3 ||
 		node->akernel->id == VX_KERNEL_AMD_ERODE_U1_U1_3x3) {
@@ -869,7 +869,7 @@ int HafGpu_CannySobelFilters(AgoNode * node)
 			"  mp += (((uint)dr) << 2);\n"
 			"  return mp;\n"
 			"}\n")
-			, node->akernel->id == VX_KERNEL_AMD_CANNY_SOBEL_U16_U8_7x7_L2NORM ? "*0.0625f" : ""); 
+			, node->akernel->id == VX_KERNEL_AMD_CANNY_SOBEL_U16_U8_7x7_L2NORM ? "*0.0625f" : "");
 		node->opencl_code += item;
 	}
 	int width = node->paramList[0]->u.img.width;
@@ -884,8 +884,8 @@ int HafGpu_CannySobelFilters(AgoNode * node)
 		"  mp = CannyMagPhase(gx.s0, gy.s0) & mask; mp = select(mp, 0u, (int)x < %d);                           r.s0  =  mp;\n"         // (N>>1)-0
 		"  mp = CannyMagPhase(gx.s1, gy.s1) & mask; mp = select(mp, 0u, (int)x < %d);                           r.s0 |= (mp << 16);\n"  // (N>>1)-1
 		"  mp = CannyMagPhase(gx.s2, gy.s2) & mask; mp = select(mp, 0u, (int)x < %d);                           r.s1  =  mp;\n"         // (N > 5) ? (N>>1)-2 : 0
-		"  mp = CannyMagPhase(gx.s3, gy.s3) & mask;                                                             r.s1 |= (mp << 16);\n"  // 
-		"  mp = CannyMagPhase(gx.s4, gy.s4) & mask;                                                             r.s2  =  mp;\n"         // 
+		"  mp = CannyMagPhase(gx.s3, gy.s3) & mask;                                                             r.s1 |= (mp << 16);\n"  //
+		"  mp = CannyMagPhase(gx.s4, gy.s4) & mask;                                                             r.s2  =  mp;\n"         //
 		"  mp = CannyMagPhase(gx.s5, gy.s5) & mask;                               mp = select(0u, mp, x < %du); r.s2 |= (mp << 16);\n"  //           width-(N>>1)-5
 		"  mp = CannyMagPhase(gx.s6, gy.s6) & mask;                               mp = select(0u, mp, x < %du); r.s3  =  mp;\n"         //           width-(N>>1)-6
 		"  mp = CannyMagPhase(gx.s7, gy.s7) & mask;                               mp = select(0u, mp, x < %du); r.s3 |= (mp << 16);\n"  //           width-(N>>1)-7
@@ -1234,7 +1234,7 @@ int HafGpu_HarrisScoreFilters(AgoNode * node)
 				}
 			}
 		}
-		sprintf(item, 
+		sprintf(item,
 			"    *(__local float4 *)&lbuf_ptr[%d] = sum%d;\n"
 			"  }\n"
 			"  barrier(CLK_LOCAL_MEM_FENCE);\n"
@@ -1444,7 +1444,7 @@ int HafGpu_ScaleGaussianHalf(AgoNode * node)
 		)
 		, work_group_width, work_group_height, NODE_OPENCL_KERNEL_NAME, LMemSize, (width + 3) / 4, height);
 	node->opencl_code = item;
-	int srcImageBufferSize = node->paramList[1]->size;
+	int srcImageBufferSize = (int) node->paramList[1]->size;
 	// load input image into local
 	if (HafGpu_Load_Local_ImageSize(work_group_width, work_group_height, LMemStride, work_group_height * 2 - 1 + LMemSideTB * 2, LMemSideLR, LMemSideTB, node->opencl_code, srcImageBufferSize) < 0) {
 		return -1;
@@ -1681,8 +1681,8 @@ int HafGpu_ScaleGaussianOrb(AgoNode * node, vx_interpolation_type_e interpolatio
 			"  }\n"
 			"}\n"
 			)
-			, LMemStride, xscale, xscale, xscale * 2.0f, xscale * 3.0f, 
-			  LMemStride * 16, xscale, xscale * 2.0f, xscale * 3.0f, LMemStride * 16, 
+			, LMemStride, xscale, xscale, xscale * 2.0f, xscale * 3.0f,
+			  LMemStride * 16, xscale, xscale * 2.0f, xscale * 3.0f, LMemStride * 16,
 			  yscale, LMemStride, LMemStride, LMemStride * 2, LMemStride * 3, LMemStride * 4);
 		node->opencl_code += item;
 	}

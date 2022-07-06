@@ -6,6 +6,7 @@ MIVisionX samples using OpenVX and OpenVX extensions. In the samples below we wi
 * [GDF - Graph Description Format Samples](#gdf---graph-description-format)
 * [Loom 360 Stitch - Radeon Loom 360 Stitch Samples](#loom-360-stitch---radeon-loom-360-stitch-samples)
 * [Model Compiler Samples - Run Efficient Inference](#model-compiler-samples---run-efficient-inference)
+* [MIVisionX Inference Deploy Samples](inference/mv_objdetect/)
 
 ## GDF - Graph Description Format
 
@@ -16,8 +17,8 @@ MIVisionX samples using [RunVX](../utilities/runvx#amd-runvx)
 * To run the samples we need to put MIVisionX executables and libraries into the system path
 
 ``` 
-export PATH=$PATH:/opt/rocm/mivisionx/bin
-export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/opt/rocm/mivisionx/lib
+export PATH=$PATH:/opt/rocm/bin
+export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/opt/rocm/lib
 ```
 
 * To get help on RunVX, use `-h` option
@@ -114,8 +115,8 @@ MIVisionX samples using [LoomShell](../utilities/loom_shell#radeon-loomshell)
 * To run the samples we need to put MIVisionX executables and libraries into the system path
 
 ``` 
-export PATH=$PATH:/opt/rocm/mivisionx/bin
-export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/opt/rocm/mivisionx/lib
+export PATH=$PATH:/opt/rocm/bin
+export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/opt/rocm/lib
 ```
 
 * To get help on loom_shell, use `-help` option

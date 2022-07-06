@@ -75,12 +75,12 @@ static mv_status MIVID_API_CALL mvLoadUpdateAndCompileModelForBackend(mivid_back
 
     if (backend == OpenVX_Rocm_GPU) {
         printf("compiling model for backend OpenVX_Rocm_GPU\n");
-        std::string compiler_path = "/opt/rocm/mivisionx/model_compiler";       // default
+        std::string compiler_path = "/opt/rocm/libexec/mivisionx/model_compiler";       // default
         char *model_compiler_path = getenv("MIVISIONX_MODEL_COMPILER_PATH");
-        std::string install_dir = std::string(install_folder).empty()? "mvdeploy_lib" : std::string(install_folder); 
+        std::string install_dir = std::string(install_folder).empty()? "mvdeploy_lib" : std::string(install_folder);
         if (model_compiler_path != nullptr) {
             compiler_path = std::string(model_compiler_path);
-            //return MV_FAILURE;  
+            //return MV_FAILURE;
         } else
         {
             printf("Env MIVISIONX_MODEL_COMPILER_PATH is not specified, using default %s\n", compiler_path.c_str());
@@ -107,7 +107,7 @@ static mv_status MIVID_API_CALL mvLoadUpdateAndCompileModelForBackend(mivid_back
             // do nothing; convert to openvx in later steps
         }
         else{
-            return MV_ERROR_NOT_SUPPORTED;  
+            return MV_ERROR_NOT_SUPPORTED;
         }
         // step-2: run nnir_update.py for fusing kernels and quantizing
         if (update_params != nullptr) {
@@ -151,7 +151,7 @@ static mv_status MIVID_API_CALL mvLoadUpdateAndCompileModelForBackend(mivid_back
             command = "python3 "+ compiler_path + "/python/" + "nnir_to_clib.py nnir-output ";
         }
 
-        command += install_dir + ">>nnir_to_clib.log"; 
+        command += install_dir + ">>nnir_to_clib.log";
         info("executing: %% %s", command.c_str());
         status = system(command.c_str());
         info("nnir_to_clib generated completed (%d)", status);
@@ -179,7 +179,7 @@ static mv_status MIVID_API_CALL mvLoadUpdateAndCompileModelForBackend(mivid_back
         command = "rm -rf /" + install_dir + "/nnir-output/";
         status = system(command.c_str());
         return MV_SUCCESS;
-    } 
+    }
     else if (backend == OpenVX_WinML) {
         if (!strcmp(strchr(model_name, '.'), "onnx")){
             return MV_ERROR_NOT_SUPPORTED;
@@ -187,7 +187,7 @@ static mv_status MIVID_API_CALL mvLoadUpdateAndCompileModelForBackend(mivid_back
         // todo:: do the required initialization for WinML
         // compile and generate single node executable
         return MV_ERROR_NOT_IMPLEMENTED;
-    } 
+    }
     else {
         return MV_ERROR_NOT_SUPPORTED;
     }
@@ -248,7 +248,7 @@ int main(int argc, const char ** argv)
     if (input_dim_str == nullptr)
     {
         printf("Error:: input dims not specified \n");
-        return -1;        
+        return -1;
     }
     std::stringstream input_dims(input_dim_str);
     size_t inp_dims[4];
@@ -271,6 +271,6 @@ int main(int argc, const char ** argv)
     }
     printf("OK: MIVisionX model compilation Successful \n");
 
-    return 0;    
+    return 0;
 }
 

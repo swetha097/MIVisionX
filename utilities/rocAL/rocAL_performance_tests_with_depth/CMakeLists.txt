@@ -28,45 +28,37 @@ cmake_minimum_required (VERSION 3.0)
 
 project (rocAL_performance_tests_with_depth)
 
-set (CMAKE_CXX_STANDARD 11)
+set(CMAKE_CXX_STANDARD 11)
+set(ROCM_PATH /opt/rocm CACHE PATH "Default ROCm installation path")
+
 list(APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/../amd_openvx/cmake)
 
 find_package(OpenCV QUIET)
 find_package(AMDRPP QUIET)
 
-include_directories ( ${OpenCV_INCLUDE_DIRS}  /opt/rocm/mivisionx/include/)
+include_directories(${ROCM_PATH}/libexec/mivisionx/rali/python/)
+link_directories(${ROCM_PATH}/lib/)
+file(GLOB My_Source_Files ./*.cpp)
+add_executable(${PROJECT_NAME} ${My_Source_Files})
 
-link_directories    (/opt/rocm/mivisionx/lib/)
+if(OpenCV_FOUND)
+    if(${OpenCV_VERSION_MAJOR} EQUAL 3 OR ${OpenCV_VERSION_MAJOR} EQUAL 4)
+        message("-- OpenCV Found -- Version-${OpenCV_VERSION_MAJOR}.${OpenCV_VERSION_MINOR}.X Supported")
+        include_directories(${OpenCV_INCLUDE_DIRS})
+        target_link_libraries(${PROJECT_NAME} ${OpenCV_LIBRARIES})
+        if(${OpenCV_VERSION_MAJOR} EQUAL 4)
+	        target_compile_definitions(${PROJECT_NAME} PUBLIC USE_OPENCV_4=1)
+        else()
+	        target_compile_definitions(${PROJECT_NAME} PUBLIC USE_OPENCV_4=0)
+        endif()
+    else()
+        message(FATAL_ERROR "OpenCV Found -- Version-${OpenCV_VERSION_MAJOR}.${OpenCV_VERSION_MINOR}.X Not Supported")
+    endif()
+else()
+    message(FATAL_ERROR "OpenCV Not Found -- No Display Support")
+endif()
 
-add_executable(${PROJECT_NAME} ./rocAL_performance_tests_with_depth.cpp)
-target_compile_definitions(${PROJECT_NAME} PUBLIC ENABLE_OPENCV=1)
-include_directories(${OpenCV_INCLUDE_DIRS})
+target_link_libraries(${PROJECT_NAME} rocal)
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3 -mf16c -Wall ")
-target_link_libraries(${PROJECT_NAME} rocal ${OpenCV_LIBRARIES})
 
-
-
-install (TARGETS ${PROJECT_NAME} DESTINATION bin)
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+install(TARGETS ${PROJECT_NAME} DESTINATION ${CMAKE_INSTALL_BINDIR})

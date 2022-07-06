@@ -116,25 +116,32 @@ def generateCMakeFiles(graph,outputFolder):
 """
 cmake_minimum_required (VERSION 3.0)
 project (mvdeploy)
+
 set (CMAKE_CXX_STANDARD 11)
+
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/lib)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/bin)
-set(CMAKE_INSTALL_PREFIX /opt/rocm/mivisionx)
+
+set(ROCM_PATH /opt/rocm CACHE PATH "Default ROCm installation path")
+# avoid setting the default installation path to /usr/local
+if(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
+  set(CMAKE_INSTALL_PREFIX ${ROCM_PATH} CACHE PATH "mivisionx default installation path" FORCE)
+endif(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
+set(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
 
 list(APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake)
 
-set(ROCM_PATH /opt/rocm CACHE PATH "ROCm Installation Path")
 #find the OPENVX backend type
 set(OPENVX_BACKEND_OPENCL_FOUND 0)
 set(OPENVX_BACKEND_HIP_FOUND 0)
-if(EXISTS ${ROCM_PATH}/mivisionx/include/openvx_backend.h)
-    file(READ ${ROCM_PATH}/mivisionx/include/openvx_backend.h OPENVX_BACKEND_FILE)
+if(EXISTS ${ROCM_PATH}/include/mivisionx/openvx_backend.h)
+    file(READ ${ROCM_PATH}/include/mivisionx/openvx_backend.h OPENVX_BACKEND_FILE)
     string(REGEX MATCH "ENABLE_OPENCL ([0-9]*)" _ ${OPENVX_BACKEND_FILE})
     set(OPENVX_BACKEND_OPENCL_FOUND ${CMAKE_MATCH_1})
     string(REGEX MATCH "ENABLE_HIP ([0-9]*)" _ ${OPENVX_BACKEND_FILE})
     set(OPENVX_BACKEND_HIP_FOUND ${CMAKE_MATCH_1})
 else()
-    message("-- ${Red}WARNING: ${ROCM_PATH}/mivisionx/include/openvx_backend.h file Not Found. please install the latest mivisionx! ${ColourReset}")
+    message("-- WARNING: ${ROCM_PATH}/include/mivisionx/openvx_backend.h file Not Found. please install the latest mivisionx!")
 endif()
 
 if (OPENVX_BACKEND_OPENCL_FOUND)
@@ -143,25 +150,39 @@ if (OPENVX_BACKEND_OPENCL_FOUND)
 endif()
 
 find_package(OpenCV QUIET)
-include_directories (/opt/rocm/mivisionx/include)
-link_directories    (/opt/rocm/mivisionx/lib)
+include_directories (/opt/rocm/include/mivisionx)
+include_directories (${PROJECT_SOURCE_DIR}/lib)
+link_directories    (/opt/rocm/lib)
 list(APPEND SOURCES mvmodule.cpp)
 add_library(mv_deploy SHARED ${SOURCES})
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -msse4.2 -std=c++11")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -msse4.2 -std=gnu++14")
 target_compile_definitions(mv_deploy PRIVATE ENABLE_MVDEPLOY=1)
 target_link_libraries(mv_deploy openvx vx_nn pthread ${CMAKE_DL_LIBS})
 install (TARGETS mv_deploy DESTINATION lib)
 
 option (USE_POSTPROC  "Use postprocessing module implementation" OFF) 
 add_executable(mvtestdeploy mvtestdeploy.cpp mvdeploy_api.cpp)
-if (OpenCV_FOUND)
-  target_compile_definitions(mvtestdeploy PUBLIC ENABLE_OPENCV=1)
-  include_directories(${OpenCV_INCLUDE_DIRS} ${PROJECT_SOURCE_DIR}/lib)
-  target_link_libraries(mvtestdeploy ${OpenCV_LIBRARIES})
-else(OpenCV_FOUND)
-  target_compile_definitions(mvtestdeploy PUBLIC ENABLE_OPENCV=0)
-  include_directories(${PROJECT_SOURCE_DIR}/lib)
-endif(OpenCV_FOUND)
+
+if(OpenCV_FOUND)
+    if(${OpenCV_VERSION_MAJOR} EQUAL 3 OR ${OpenCV_VERSION_MAJOR} EQUAL 4)
+        message("-- OpenCV Found -- Version-${OpenCV_VERSION_MAJOR}.${OpenCV_VERSION_MINOR}.X Supported")
+        target_compile_definitions(mvtestdeploy PUBLIC ENABLE_OPENCV=1)
+        include_directories(${OpenCV_INCLUDE_DIRS})
+        target_link_libraries(mvtestdeploy ${OpenCV_LIBRARIES})
+        if(${OpenCV_VERSION_MAJOR} EQUAL 4)
+	        target_compile_definitions(mvtestdeploy PUBLIC USE_OPENCV_4=1)
+        else()
+	        target_compile_definitions(mvtestdeploy PUBLIC USE_OPENCV_4=0)
+        endif()
+    else()
+        message("-- WARNING: OpenCV Found -- Version-${OpenCV_VERSION_MAJOR}.${OpenCV_VERSION_MINOR}.X Not Supported")
+        target_compile_definitions(mvtestdeploy PUBLIC ENABLE_OPENCV=0)
+    endif()
+else()
+    message("-- WARNING: OpenCV Not Found -- No Display Support")
+    target_compile_definitions(mvtestdeploy PUBLIC ENABLE_OPENCV=0)
+endif()
+
 #add optional postprocess module
 if (USE_POSTPROC)
   include_directories ("${PROJECT_SOURCE_DIR}/mv_extras")
@@ -249,14 +270,14 @@ set(ROCM_PATH /opt/rocm CACHE PATH "ROCm Installation Path")
 #find the OPENVX backend type
 set(OPENVX_BACKEND_OPENCL_FOUND 0)
 set(OPENVX_BACKEND_HIP_FOUND 0)
-if(EXISTS ${ROCM_PATH}/mivisionx/include/openvx_backend.h)
-    file(READ ${ROCM_PATH}/mivisionx/include/openvx_backend.h OPENVX_BACKEND_FILE)
+if(EXISTS ${ROCM_PATH}/include/mivisionx/openvx_backend.h)
+    file(READ ${ROCM_PATH}/include/mivisionx/openvx_backend.h OPENVX_BACKEND_FILE)
     string(REGEX MATCH "ENABLE_OPENCL ([0-9]*)" _ ${OPENVX_BACKEND_FILE})
     set(OPENVX_BACKEND_OPENCL_FOUND ${CMAKE_MATCH_1})
     string(REGEX MATCH "ENABLE_HIP ([0-9]*)" _ ${OPENVX_BACKEND_FILE})
     set(OPENVX_BACKEND_HIP_FOUND ${CMAKE_MATCH_1})
 else()
-    message("-- ${Red}WARNING: ${ROCM_PATH}/mivisionx/include/openvx_backend.h file Not Found. please install the latest mivisionx! ${ColourReset}")
+    message("-- ${Red}WARNING: ${ROCM_PATH}/include/mivisionx/openvx_backend.h file Not Found. please install the latest mivisionx! ${ColourReset}")
 endif()
 
 if (OPENVX_BACKEND_OPENCL_FOUND)
@@ -265,17 +286,29 @@ if (OPENVX_BACKEND_OPENCL_FOUND)
 endif()
 
 find_package(OpenCV QUIET)
-include_directories (/opt/rocm/mivisionx/include ../)
-link_directories    (/opt/rocm/mivisionx/lib)
+include_directories (/opt/rocm/include/miviisionx ../)
+link_directories    (/opt/rocm/lib)
 add_library(${PROJECT_NAME} SHARED mv_extras_postproc.cpp)
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -msse4.2 -std=c++11")
-if (OpenCV_FOUND)
-  target_compile_definitions(mv_extras PUBLIC ENABLE_OPENCV=1)
-  include_directories(${OpenCV_INCLUDE_DIRS})
-  target_link_libraries(mv_extras ${OpenCV_LIBRARIES})
-else(OpenCV_FOUND)
-  target_compile_definitions(mv_extras PUBLIC ENABLE_OPENCV=0)
-endif(OpenCV_FOUND)
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -msse4.2 -std=gnu++14")
+
+if(OpenCV_FOUND)
+    if(${OpenCV_VERSION_MAJOR} EQUAL 3 OR ${OpenCV_VERSION_MAJOR} EQUAL 4)
+        target_compile_definitions(mv_extras PUBLIC ENABLE_OPENCV=1)
+        include_directories(${OpenCV_INCLUDE_DIRS})
+        target_link_libraries(mv_extras ${OpenCV_LIBRARIES})
+        if(${OpenCV_VERSION_MAJOR} EQUAL 4)
+	        target_compile_definitions(mv_extras PUBLIC USE_OPENCV_4=1)
+        else()
+	        target_compile_definitions(mv_extras PUBLIC USE_OPENCV_4=0)
+        endif()
+    else()
+        target_compile_definitions(mv_extras PUBLIC ENABLE_OPENCV=0)
+    endif()
+else()
+    message(FATAL_ERROR "OpenCV Not Found -- No Display Support")
+    target_compile_definitions(mv_extras PUBLIC ENABLE_OPENCV=0)
+endif()
+
 target_link_libraries(mv_extras openvx vx_nn vx_amd_media pthread ${CMAKE_DL_LIBS})
 """)
 
@@ -1493,6 +1526,7 @@ def generateDeployH(graph,fileName):
 #include <stdarg.h>
 #include <iostream>
 #include <sstream>
+#include <fstream>
 #include <vector>
 #include <stdio.h>
 #include <string.h>
@@ -1504,9 +1538,10 @@ def generateDeployH(graph,fileName):
 
 #if ENABLE_OPENCV
 #include <opencv2/opencv.hpp>
-#include <opencv/cv.h>
-#include <opencv/highgui.h>
 using namespace cv;
+#endif
+#if USE_OPENCV_4
+#define CV_LOAD_IMAGE_COLOR IMREAD_COLOR
 #endif
 #include <half.hpp>
 #include <immintrin.h>
@@ -1942,7 +1977,7 @@ int main(int argc, const char ** argv)
 def generateExtrasCPP(graph,extraFolder):
     print('copying mv_extras_postproc.cpp to ' + extraFolder + ' ...')
     file_dir = os.path.dirname(os.path.abspath(__file__))
-    cmd = "cp " + file_dir + "/../mv_extras_postproc.cpp " + "./" + extraFolder
+    cmd = "cp " + file_dir + "/../mv_deploy/mv_extras_postproc.cpp " + "./" + extraFolder
     ret = subprocess.call(cmd, shell=True)
     if ret:
         print(('ERROR: generateExtrasCPP', ret))
@@ -1952,7 +1987,7 @@ def generateExtrasCPP(graph,extraFolder):
 def generateExtrasH(graph,extraFolder):
     print('copying mv_extras_postproc.h to ' + extraFolder + ' ...')
     file_dir = os.path.dirname(os.path.abspath(__file__))
-    cmd = "cp " + file_dir + "/../mv_extras_postproc.h " + "./" + extraFolder
+    cmd = "cp " + file_dir + "/../mv_deploy/mv_extras_postproc.h " + "./" + extraFolder
     ret = subprocess.call(cmd, shell=True)
     if ret:
         print(('ERROR: generateExtrasCPP', ret))

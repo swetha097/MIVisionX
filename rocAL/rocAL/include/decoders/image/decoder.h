@@ -39,7 +39,6 @@ enum class DecoderType
 };
 
 
-
 class DecoderConfig
 {
 public:
@@ -72,7 +71,8 @@ public:
         OK = 0,
         HEADER_DECODE_FAILED,
         CONTENT_DECODE_FAILED,
-        UNSUPPORTED
+        UNSUPPORTED,
+        NO_MEMORY
     };
 
     enum class ColorFormat {
@@ -111,6 +111,7 @@ public:
                                    Decoder::ColorFormat desired_decoded_color_format, DecoderConfig decoder_config, bool keep_original) = 0;
 
     virtual ~Decoder() = default;
+    virtual void initialize(int device_id) = 0;
     virtual bool is_partial_decoder() = 0;
     virtual void set_bbox_coords(std::vector <float> bbox_coords) = 0;
     virtual std::vector <float> get_bbox_coords() = 0;

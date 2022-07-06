@@ -1,19 +1,19 @@
 ################################################################################
-# 
+#
 # MIT License
-# 
+#
 # Copyright (c) 2017 - 2022 Advanced Micro Devices, Inc.
-# 
+#
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
 # in the Software without restriction, including without limitation the rights
 # to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
 # copies of the Software, and to permit persons to whom the Software is
 # furnished to do so, subject to the following conditions:
-# 
+#
 # The above copyright notice and this permission notice shall be included in all
 # copies or substantial portions of the Software.
-# 
+#
 # THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 # IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 # FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -21,7 +21,7 @@
 # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
-# 
+#
 ################################################################################
 # - Try to find ffmpeg libraries (libavcodec, libavformat and libavutil)
 # Once done this will define
@@ -64,7 +64,7 @@ else()
   endif()
 
   # AVCODEC
-  find_path(AVCODEC_INCLUDE_DIR 
+  find_path(AVCODEC_INCLUDE_DIR
     NAMES libavcodec/avcodec.h
     PATHS ${_FFMPEG_AVCODEC_INCLUDE_DIRS}
       /usr/local/include
@@ -85,7 +85,7 @@ else()
   mark_as_advanced(AVCODEC_LIBRARY)
 
   # AVFORMAT
-  find_path(AVFORMAT_INCLUDE_DIR 
+  find_path(AVFORMAT_INCLUDE_DIR
     NAMES libavformat/avformat.h
     PATHS ${_FFMPEG_AVFORMAT_INCLUDE_DIRS}
       /usr/local/include
@@ -106,7 +106,7 @@ else()
   mark_as_advanced(AVFORMAT_LIBRARY)
 
   # AVUTIL
-  find_path(AVUTIL_INCLUDE_DIR 
+  find_path(AVUTIL_INCLUDE_DIR
     NAMES libavutil/avutil.h
     PATHS ${_FFMPEG_AVUTIL_INCLUDE_DIRS}
       /usr/local/include
@@ -126,8 +126,8 @@ else()
   )
   mark_as_advanced(AVUTIL_LIBRARY)
 
-  # SWSCALE  
-  find_path(SWSCALE_INCLUDE_DIR 
+  # SWSCALE
+  find_path(SWSCALE_INCLUDE_DIR
     NAMES libswscale/swscale.h
     PATHS ${_FFMPEG_SWSCALE_INCLUDE_DIRS}
       /usr/local/include
@@ -150,7 +150,7 @@ else()
   if(AVCODEC_LIBRARY AND AVFORMAT_LIBRARY)
     set(FFMPEG_FOUND TRUE)
   endif()
-  
+
   if(_FFMPEG_AVCODEC_VERSION VERSION_LESS 58.18.100 OR _FFMPEG_AVFORMAT_VERSION VERSION_LESS 58.12.100 OR _FFMPEG_AVUTIL_VERSION VERSION_LESS 56.14.100)
     if(FFMPEG_FOUND)
       message("-- ${White}FFMPEG   required min version - 4.0.4 Found:${FFMPEG_VERSION}")
@@ -159,23 +159,23 @@ else()
       message("-- ${White}AVUTIL   required min version - 56.14.100 Found:${_FFMPEG_AVUTIL_VERSION}${ColourReset}")
     endif()
     set(FFMPEG_FOUND FALSE)
-    message( "-- ${Yellow}FindFFmpeg failed to find: FFMPEG${ColourReset}" )
+    message( "-- ${Yellow}NOTE: FindFFmpeg failed to find -- FFMPEG${ColourReset}" )
   endif()
-  
+
   if(FFMPEG_FOUND)
     set(FFMPEG_INCLUDE_DIR ${AVFORMAT_INCLUDE_DIR} CACHE INTERNAL "")
-    set(FFMPEG_LIBRARIES 
+    set(FFMPEG_LIBRARIES
       ${AVCODEC_LIBRARY}
       ${AVFORMAT_LIBRARY}
       ${AVUTIL_LIBRARY}
-      ${SWSCALE_LIBRARY} 
+      ${SWSCALE_LIBRARY}
       CACHE INTERNAL ""
     )
   endif()
 
   if(FFMPEG_FOUND)
     if(NOT FFMPEG_FIND_QUIETLY)
-      message("-- ${Blue}Using FFMPEG -- Libraries:${FFMPEG_LIBRARIES} Includes:${FFMPEG_INCLUDE_DIR}${ColourReset}")
+      message("-- ${White}Using FFMPEG -- Libraries:${FFMPEG_LIBRARIES} Includes:${FFMPEG_INCLUDE_DIR}${ColourReset}")
     endif()
   else()
     if(FFMPEG_FIND_REQUIRED)

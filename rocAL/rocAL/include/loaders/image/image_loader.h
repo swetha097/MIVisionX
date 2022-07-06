@@ -51,10 +51,12 @@ public:
     void start_loading() override;
     LoaderModuleStatus set_cpu_affinity(cpu_set_t cpu_mask);
     LoaderModuleStatus set_cpu_sched_policy(struct sched_param sched_policy);
+    void set_gpu_device_id(int device_id);
     std::vector<std::string> get_id() override;
     decoded_image_info get_decode_image_info() override;
     crop_image_info get_crop_image_info() override;
     void set_prefetch_queue_depth(size_t prefetch_queue_depth)  override;
+    void shut_down() override;
 private:
     bool is_out_of_data();
     void de_init();
@@ -84,6 +86,7 @@ private:
     size_t _image_counter = 0;//!< How many images have been loaded already
     size_t _remaining_image_count;//!< How many images are there yet to be loaded
     bool _decoder_keep_original = false;
+    int _device_id;
     bool tensor = true; // for debugging should be removed
     // std::shared_ptr<RandomBBoxCrop_MetaDataReader> _randombboxcrop_meta_data_reader = nullptr;
 };

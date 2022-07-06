@@ -76,5 +76,3 @@ FusedJpegCropNode::~FusedJpegCropNode()
 {
     _loader_module = nullptr;
 }
-
-

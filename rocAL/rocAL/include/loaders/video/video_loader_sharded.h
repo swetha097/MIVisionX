@@ -39,7 +39,7 @@ public:
     ~VideoLoaderSharded() override;
     LoaderModuleStatus load_next() override;
     void initialize(ReaderConfig reader_cfg, DecoderConfig decoder_cfg, RocalMemType mem_type, unsigned batch_size, bool keep_orig_size = false) override;
-    // void shut_down() override;
+    void shut_down() override;
     void set_output (rocALTensor* output_image) override;
     size_t remaining_count() override;
     void reset() override;

@@ -29,11 +29,23 @@ THE SOFTWARE.
 #include <string>
 #include <string.h>
 #include <sys/stat.h>
-#include <opencv2/opencv.hpp>
-#include <opencv/highgui.h>
+#include <vector>
+
 #include "rocal_api.h"
 
+#include "opencv2/opencv.hpp"
 using namespace cv;
+
+#if USE_OPENCV_4
+#define CV_LOAD_IMAGE_COLOR IMREAD_COLOR
+#define CV_BGR2GRAY COLOR_BGR2GRAY
+#define CV_GRAY2RGB COLOR_GRAY2RGB
+#define CV_RGB2BGR COLOR_RGB2BGR
+#define CV_FONT_HERSHEY_SIMPLEX FONT_HERSHEY_SIMPLEX
+#define CV_FILLED FILLED
+#define CV_WINDOW_AUTOSIZE WINDOW_AUTOSIZE
+#endif
+
 using namespace std::chrono;
 
 bool IsPathExist(const char *s)
@@ -93,6 +105,8 @@ int main(int argc, const char **argv)
     if (argc >= argIdx + MIN_ARG_COUNT)
         processing_device = atoi(argv[++argIdx]);
     if (argc >= argIdx + MIN_ARG_COUNT)
+        hardware_decode_mode = atoi(argv[++argIdx]);
+    if (argc >= argIdx + MIN_ARG_COUNT)
         input_batch_size = atoi(argv[++argIdx]);
     if (argc >= argIdx + MIN_ARG_COUNT)
         ouput_frames_per_sequence = sequence_length = atoi(argv[++argIdx]);
@@ -121,6 +135,7 @@ int main(int argc, const char **argv)
     if (argc >= argIdx + MIN_ARG_COUNT)
         enable_sequence_rearrange = atoi(argv[++argIdx]) ? true : false;
 
+    auto decoder_mode = ((hardware_decode_mode == 1) ? RocalDecodeDevice::ROCAL_HW_DECODE : RocalDecodeDevice::ROCAL_SW_DECODE);
     if (!IsPathExist(source_path))
     {
         std::cout << "\nThe folder/file path does not exist\n";
@@ -284,7 +299,7 @@ int main(int argc, const char **argv)
                     if (color_format == RocalImageColor::ROCAL_COLOR_RGB24)
                     {
                         cv::cvtColor(mat_output, mat_color, CV_RGB2BGR);
-                        cv::imwrite(save_image_path, mat_color);
+                        cv::imwrite(save_image_path, mat_output);
 			            video_writer.write(mat_color);
                     }
                     else
