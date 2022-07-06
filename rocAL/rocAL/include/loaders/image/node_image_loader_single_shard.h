@@ -53,4 +53,3 @@ protected:
 private:
     std::shared_ptr<ImageLoader> _loader_module = nullptr;
 };
-

@@ -25,6 +25,13 @@ THE SOFTWARE.
 #include "decoder.h"
 #if ENABLE_OPENCV
 #include <opencv2/opencv.hpp>
+
+#if USE_OPENCV_4
+using namespace cv;
+#define CV_LOAD_IMAGE_COLOR IMREAD_COLOR
+#define CV_LOAD_IMAGE_GRAYSCALE IMREAD_GRAYSCALE
+#endif
+
 class CVDecoder : public Decoder {
 public:
     //! Default constructor
@@ -60,8 +67,8 @@ public:
     void set_bbox_coords(std::vector <float> bbox_coord) override { _bbox_coord = bbox_coord;}
     std::vector <float> get_bbox_coords() override { return _bbox_coord;}
     //virtual Status decode(unsigned char* input_buffer, size_t input_size,  unsigned char* output_buffer,int desired_width, int desired_height, ColorFormat desired_color);
+    void initialize(int device_id) override {};
     ~CVDecoder() override;
-
 
 private:
   //cv::Mat m_mat_compressed;

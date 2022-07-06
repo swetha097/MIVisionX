@@ -69,7 +69,7 @@ AudioReadAndDecode::~AudioReadAndDecode()
 }
 
 void
-AudioReadAndDecode::create(ReaderConfig reader_config, DecoderConfig decoder_config, int batch_size)
+AudioReadAndDecode::create(ReaderConfig reader_config, DecoderConfig decoder_config, int batch_size, int device_id)
 {
     // Can initialize it to any decoder types if needed
     _batch_size = batch_size;

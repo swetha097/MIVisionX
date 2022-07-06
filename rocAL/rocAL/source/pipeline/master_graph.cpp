@@ -151,6 +151,8 @@ MasterGraph::MasterGraph(size_t batch_size, RocalAffinity affinity, int gpu_id, 
                             &hipDevice, sizeof(hipDevice)) != VX_SUCCESS))
                         THROW("vxSetContextAttribute for hipDevice(%d) failed " + TOSTR(hipDevice) + TOSTR(status))
                 }
+                else
+                    THROW("ERROR: HIP Device(%d) out of range" + TOSTR(gpu_id));
             }
 #endif
         }
@@ -198,10 +200,7 @@ MasterGraph::run()
     if(no_more_processed_data()) {
         return MasterGraph::Status::NO_MORE_DATA;
     }
-    // if(_internal_tensor_list.size() != 0)
-    // {
-        _ring_buffer.block_if_empty();// wait here if the user thread (caller of this function) is faster in consuming the processed images compare to th output routine in producing them
-    // }
+    _ring_buffer.block_if_empty();// wait here if the user thread (caller of this function) is faster in consuming the processed images compare to th output routine in producing them
 
     if(_first_run)
     {
@@ -211,10 +210,7 @@ MasterGraph::run()
     }
     else
     {
-        // if(_output_tensors.size() != 0)
-        // {
-            _ring_buffer.pop();
-        // }
+        _ring_buffer.pop();
     }
 
     // If the last batch of processed imaged has been just popped from the ring_buffer it means user has previously consumed all the processed images.
@@ -345,9 +341,11 @@ void MasterGraph::release()
 {
     LOG("MasterGraph release ...")
     stop_processing();
+    _tensor_nodes.clear();
     _tensor_root_nodes.clear();
     _tensor_map.clear();
-
+    _ring_buffer.release_gpu_res();
+    _loader_module->shut_down();
     // release all openvx resources.
     vx_status status;
     _internal_tensor_list.release();

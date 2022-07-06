@@ -104,6 +104,7 @@ ImageLoaderSharded::initialize(ReaderConfig reader_cfg, DecoderConfig decoder_cf
     {
         _loaders[idx]->set_output(_output_tensor);
         // _loaders[idx]->set_random_bbox_data_reader(_randombboxcrop_meta_data_reader);
+        _loaders[idx]->set_gpu_device_id(idx);
         reader_cfg.set_shard_count(_shard_count);
         reader_cfg.set_shard_id(idx);
         _loaders[idx]->initialize(reader_cfg, decoder_cfg, mem_type, batch_size, keep_orig_size);
@@ -133,6 +134,12 @@ void ImageLoaderSharded::start_loading()
 #endif
     }
 
+}
+
+void ImageLoaderSharded::shut_down()
+{
+    for(unsigned i = 0; i < _loaders.size(); i++)
+        _loaders[i]->shut_down();
 }
 
 void ImageLoaderSharded::set_output (rocALTensor* output_tensor)

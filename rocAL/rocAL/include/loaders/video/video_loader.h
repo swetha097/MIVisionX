@@ -58,6 +58,7 @@ public:
     crop_image_info get_crop_image_info() {};
     // std::vector<size_t> get_sequence_start_frame_number();
     // std::vector<std::vector<float>> get_sequence_frame_timestamps();
+    void shut_down() override;
 
 private:
     bool is_out_of_data();
