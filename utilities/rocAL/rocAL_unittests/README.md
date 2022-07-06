@@ -18,6 +18,6 @@ This application can be used to verify the functionality of the API offered by r
   ````
 ### running the application
   ````
-Go to MIVisionX-tests/rocal-unittests
-sh run-rocal-unittests.sh
+Go to MIVisionX-tests/rocAL-unittests
+sh run-rocAL-unittests.sh
   ````

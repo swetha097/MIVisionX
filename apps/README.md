@@ -2,6 +2,9 @@
 
 MIVisionX has several applications built on top of OpenVX and its modules, it uses AMD optimized libraries to build applications that can be used as prototypes or used as models to develop products.
 
+## Prerequisites
+* [MIVisionX](https://github.com/GPUOpen-ProfessionalCompute-Libraries/MIVisionX#build--install-mivisionx) installed
+
 ## Bubble Pop
 
 This sample [application](./bubble_pop) creates bubbles and donuts to pop using OpenVX & OpenCV functionality.
@@ -55,6 +58,12 @@ This sample [application](./mivisionx_winml_classifier/README.md) shows how to r
 This sample [application](./mivisionx_winml_yolov2#yolov2-using-amd-winml-extension) shows how to run tiny yolov2(20 classes) with MIVisionX RunTime on Windows.
 
 <p align="center"> <img width="60%" src="./mivisionx_winml_yolov2/image/cat-yolo.jpg"> </p>
+
+## Optical Flow
+
+This sample [application](./optical_flow#openvx-samples) we will create an OpenVX graph to run Optical Flow on a video/live. This sample application uses <a href="https://en.wikipedia.org/wiki/OpenCV" target="_blank">OpenCV</a> to decode input video and display the output.
+
+<p align="center"> <img width="60%" src="../docs/images/optical_flow_video.gif"> </p>
 
 ## External Application
 

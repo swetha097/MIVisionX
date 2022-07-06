@@ -27,15 +27,25 @@ THE SOFTWARE.
 #include <chrono>
 #include <cstdio>
 #include <unistd.h>
-#include <opencv2/opencv.hpp>
-#include <opencv/highgui.h>
 #include <vector>
 #include<string>
 
 #include "rocal_api.h"
 
+#include "opencv2/opencv.hpp"
 using namespace cv;
 
+#if USE_OPENCV_4
+#define CV_LOAD_IMAGE_COLOR IMREAD_COLOR
+#define CV_BGR2GRAY COLOR_BGR2GRAY
+#define CV_GRAY2RGB COLOR_GRAY2RGB
+#define CV_RGB2BGR COLOR_RGB2BGR
+#define CV_FONT_HERSHEY_SIMPLEX FONT_HERSHEY_SIMPLEX
+#define CV_FILLED FILLED
+#define CV_WINDOW_AUTOSIZE WINDOW_AUTOSIZE
+#endif
+
+#define DISPLAY 1
 //#define RANDOMBBOXCROP
 
 using namespace std::chrono;
@@ -88,7 +98,7 @@ int main(int argc, const char **argv)
 int test(int test_case, int reader_type, int pipeline_type, const char *path, const char *outName, int rgb, int gpu, int width, int height, int num_of_classes, int display_all)
 {
     size_t num_threads = 1;
-    unsigned int inputBatchSize = 4;
+    unsigned int inputBatchSize = 2;
     int decode_max_width = width;
     int decode_max_height = height;
     std::cout << ">>> test case " << test_case << std::endl;
@@ -142,7 +152,7 @@ int test(int test_case, int reader_type, int pipeline_type, const char *path, co
         case 2: //coco detection
         {
             std::cout << ">>>>>>> Running COCO READER" << std::endl;
-            char const *json_path = "/data/coco_10_img/coco2017/annotations/instances_train2017.json";
+            char const *json_path = "";
             if (strcmp(json_path, "") == 0)
             {
                 std::cout << "\n json_path has to be set in rocal_unit test manually";

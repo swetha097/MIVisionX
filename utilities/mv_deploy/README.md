@@ -11,13 +11,13 @@ The sample demonstrates the use of mv_compile utility to do video decoding and i
 
 ## Prerequisites
 
-* Ubuntu `16.04`/`18.04` or CentOS `7.5`/`7.6`
-* [ROCm supported hardware](https://rocm.github.io/ROCmInstall.html#hardware-support) 
+* Ubuntu `18.04`/`20.04` or CentOS `7`/`8`
+* [ROCm supported hardware](https://rocm.github.io/ROCmInstall.html#hardware-support)
 	* AMD Radeon GPU or APU required
 * [ROCm](https://github.com/RadeonOpenCompute/ROCm#installing-from-amd-rocm-repositories)
 * Build & Install [MIVisionX](https://github.com/GPUOpen-ProfessionalCompute-Libraries/MIVisionX#linux-1)
-	* MIVisionX installs model compiler at `/opt/rocm/mivisionx`
-  * mv_compile installs at `/opt/rocm/mivisionx/bin` and mvdeploy_api.h installs at `/opt/rocm/mivisionx/include` 
+	* MIVisionX installs model compiler at `/opt/rocm/libexec/mivisionx`
+  * mv_compile installs at `/opt/rocm/bin` and mvdeploy_api.h installs at `/opt/rocm/include/mivisionx`
 
 
 ### Usage
@@ -37,4 +37,4 @@ mv_compile   --model 	        <model_name: name of the trained model with path> 
 This project is licensed under the MIT License - see the LICENSE.md file for details
 
 # Author
-rrawther@amd.com
+Rajy Rawther - `mivisionx.support@amd.com`

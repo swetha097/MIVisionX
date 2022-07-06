@@ -1,8 +1,5 @@
 build*
 docker_build*
-debug_build*
-debug*
-temp_build*
 .vscode*
 opencv-3.4.0/*
 openvx_test_results*

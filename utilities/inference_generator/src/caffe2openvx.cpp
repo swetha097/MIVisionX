@@ -2329,8 +2329,8 @@ void generateCode(
     ofsCodeM << "list(APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake)" << std::endl;
     ofsCodeM << "find_package(OpenCL     REQUIRED)" << std::endl;
     ofsCodeM << "include_directories (${OpenCL_INCLUDE_DIRS} ${OpenCL_INCLUDE_DIRS}/Headers )" << std::endl;
-    ofsCodeM << "include_directories (/opt/rocm/mivisionx/include)" << std::endl;
-    ofsCodeM << "link_directories    (/opt/rocm/mivisionx/lib)" << std::endl;
+    ofsCodeM << "include_directories (/opt/rocm/include/mivisionx)" << std::endl;
+    ofsCodeM << "link_directories    (/opt/rocm/lib)" << std::endl;
     ofsCodeM << "list(APPEND SOURCES annmodule.cpp)" << std::endl;
     ofsCodeM << "add_library(${PROJECT_NAME} SHARED ${SOURCES})" << std::endl;
     ofsCodeM << "set(CMAKE_CXX_FLAGS \"${CMAKE_CXX_FLAGS} -msse4.2 -std=c++11\")" << std::endl;
@@ -2528,7 +2528,7 @@ void generateCode(
     ofsCodeA << std::endl;
     ofsCodeA << "    return 0;"<< std::endl;
     ofsCodeA << "}" << std::endl;
-   
+
     ofsCodeD << "find_path(OPENCL_INCLUDE_DIRS"  << std::endl;
     ofsCodeD << "NAMES OpenCL/cl.h CL/cl.h" << std::endl;
     ofsCodeD << "HINTS" << std::endl;
