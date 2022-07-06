@@ -26,16 +26,18 @@ THE SOFTWARE.
 #include <iostream>
 #include <vector>
 #include "parameter_factory.h"
+
 enum class DecoderType
 {
     TURBO_JPEG = 0,//!< Can only decode
     FUSED_TURBO_JPEG = 1, //!< FOR PARTIAL DECODING
     OPENCV_DEC = 2, //!< for back_up decoding
-    SKIP_DECODE  = 3, //!< For skipping decoding in case of uncompressed data from reader
-    OVX_FFMPEG = 4,//!< Uses FFMPEG to decode video streams, can decode up to 4 video streams simultaneously
-    SNDFILE = 5,//!< Uses sndfile to decode audio files
-    FFMPEG_SOFTWARE_DECODE = 6,
-    FFMPEG_HARDWARE_DECODE = 7,
+    HW_JPEG_DEC  = 3,
+    SKIP_DECODE  = 4, //!< For skipping decoding in case of uncompressed data from reader
+    OVX_FFMPEG = 5,//!< Uses FFMPEG to decode video streams, can decode up to 4 video streams simultaneously
+    SNDFILE = 6,//!< Uses sndfile to decode audio files
+    FFMPEG_SOFTWARE_DECODE = 7,
+    FFMPEG_HARDWARE_DECODE = 8,
 };
 
 

@@ -25,7 +25,7 @@ _shuffle_time("shuffle_time", DBG_TIMING)
     _file_count_all_shards = 0;
 }
 
-unsigned COCOFileSourceReader::count()
+unsigned COCOFileSourceReader::count_items()
 {
     if (_loop)
         return _file_names.size();
@@ -88,7 +88,7 @@ size_t COCOFileSourceReader::open()
     {
         _last_id.erase(0, last_slash_idx + 1);
     }
-    _last_path = file_path; // shobi: have to change this to subtract path - last_id
+
 #if USE_STDIO_FILE
     _current_fPtr = fopen(file_path.c_str(), "rb"); // Open the file,
     if (!_current_fPtr) // Check if it is ready for reading
@@ -118,7 +118,7 @@ size_t COCOFileSourceReader::open()
     return _current_file_size;
 }
 
-size_t COCOFileSourceReader::read(unsigned char *buf, size_t read_size)
+size_t COCOFileSourceReader::read_data(unsigned char *buf, size_t read_size)
 {
 #if USE_STDIO_FILE
     if (!_current_fPtr)

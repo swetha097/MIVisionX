@@ -114,10 +114,15 @@ enum RocalDecoderType
 {
     ROCAL_DECODER_TJPEG = 0,
     ROCAL_DECODER_OPENCV = 1,
-    ROCAL_DECODER_VIDEO_FFMPEG_SW = 2,
-    ROCAL_DECODER_VIDEO_FFMPEG_HW = 3,
-    ROCAL_DECODER_AUDIO_SNDFILE = 4
+    ROCAL_DECODER_HW_JEPG = 2,
+    ROCAL_DECODER_VIDEO_FFMPEG_SW = 3,
+    ROCAL_DECODER_VIDEO_FFMPEG_HW = 4,
+    ROCAL_DECODER_AUDIO_SNDFILE = 5
 };
 
+// rocal external memcpy flags
+#define    ROCAL_MEMCPY_TO_HOST      1      // force copy to user provided host memory
+#define    ROCAL_MEMCPY_TO_DEVICE    2      // force copy to user provided device memory (gpu)
+#define    ROCAL_MEMCPY_IS_PINNED    4      // for future use
 
 #endif //MIVISIONX_ROCAL_API_TYPES_H

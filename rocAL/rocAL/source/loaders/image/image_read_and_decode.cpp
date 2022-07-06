@@ -82,21 +82,12 @@ ImageReadAndDecode::create(ReaderConfig reader_config, DecoderConfig decoder_con
     _actual_decoded_height.resize(_batch_size);
     _original_height.resize(_batch_size);
     _original_width.resize(_batch_size);
-    _decoder_cv.resize(batch_size);
     _decoder_config = decoder_config;
-    _decoder_config_cv =  decoder_config;
-    _decoder_config_cv._type = DecoderType::OPENCV_DEC;
     if ((_decoder_config._type != DecoderType::SKIP_DECODE)) {
         for (int i = 0; i < batch_size; i++) {
-            _compressed_buff[i].resize(
-                    MAX_COMPRESSED_SIZE); // If we don't need MAX_COMPRESSED_SIZE we can remove this & resize in load module
+            _compressed_buff[i].resize(MAX_COMPRESSED_SIZE); // If we don't need MAX_COMPRESSED_SIZE we can remove this & resize in load module
             _decoder[i] = create_decoder(decoder_config);
-            _decoder_cv[i] = nullptr;
-#if ENABLE_OPENCV
-            // create backup decoder if decoding fails on TJpeg
-            if (_decoder_config._type != DecoderType::OPENCV_DEC)
-                _decoder_cv[i] = create_decoder(_decoder_config_cv);
-#endif
+            _decoder[i]->initialize(device_id);
         }
     }
     _reader = create_reader(reader_config);
@@ -112,7 +103,7 @@ ImageReadAndDecode::reset()
 size_t
 ImageReadAndDecode::count()
 {
-    return _reader->count();
+    return _reader->count_items();
 }
 
 std::vector<std::vector<float>>
@@ -144,7 +135,7 @@ ImageReadAndDecode::load(unsigned char* buff,
         THROW("Zero image dimension is not valid")
     if(!buff)
         THROW("Null pointer passed as output buffer")
-    if(_reader->count() < _batch_size)
+    if(_reader->count_items() < _batch_size)
         return LoaderModuleStatus::NO_MORE_DATA_TO_READ;
     // load images/frames from the disk and push them as a large image onto the buff
     unsigned file_counter = 0;
@@ -158,7 +149,7 @@ ImageReadAndDecode::load(unsigned char* buff,
     // File read is done serially since I/O parallelization does not work very well.
     _file_load_time.start();// Debug timing
     if (_decoder_config._type == DecoderType::SKIP_DECODE) {
-        while ((file_counter != _batch_size) && _reader->count() > 0)
+        while ((file_counter != _batch_size) && _reader->count_items() > 0)
         {
             auto read_ptr = buff + image_size * file_counter;
             size_t fsize = _reader->open();
@@ -167,7 +158,7 @@ ImageReadAndDecode::load(unsigned char* buff,
                 continue;
             }
 
-            _actual_read_size[file_counter] = _reader->read(read_ptr, fsize);
+            _actual_read_size[file_counter] = _reader->read_data(read_ptr, fsize);
             if(_actual_read_size[file_counter] < fsize)
                 LOG("Reader read less than requested bytes of size: " + _actual_read_size[file_counter]);
 
@@ -183,8 +174,9 @@ ImageReadAndDecode::load(unsigned char* buff,
         }
         //_file_load_time.end();// Debug timing
         //return LoaderModuleStatus::OK;
-    }else {
-        while ((file_counter != _batch_size) && _reader->count() > 0) {
+    }
+    else {
+        while ((file_counter != _batch_size) && _reader->count_items() > 0) {
 
             size_t fsize = _reader->open();
             if (fsize == 0) {
@@ -193,7 +185,7 @@ ImageReadAndDecode::load(unsigned char* buff,
             }
 
             _compressed_buff[file_counter].reserve(fsize);
-            _actual_read_size[file_counter] = _reader->read(_compressed_buff[file_counter].data(), fsize);
+            _actual_read_size[file_counter] = _reader->read_data(_compressed_buff[file_counter].data(), fsize);
             _image_names[file_counter] = _reader->id();
             _reader->close();
             _compressed_image_size[file_counter] = fsize;
@@ -223,29 +215,13 @@ ImageReadAndDecode::load(unsigned char* buff,
             // initialize the actual decoded height and width with the maximum
             _actual_decoded_width[i] = max_decoded_width;
             _actual_decoded_height[i] = max_decoded_height;
-
             int original_width, original_height, jpeg_sub_samp;
             if (_decoder[i]->decode_info(_compressed_buff[i].data(), _actual_read_size[i], &original_width, &original_height,
                                          &jpeg_sub_samp) != Decoder::Status::OK) {
-                // try open_cv decoder
-#if 0//ENABLE_OPENCV
-                WRN("Using OpenCV for decode_info");
-                if (_decoder_cv[i] && _decoder_cv[i]->decode_info(_compressed_buff[i].data(), _actual_read_size[i], &original_width, &original_height,
-                                         &jpeg_sub_samp) != Decoder::Status::OK) {
-#endif
                     continue;
-#if 0//ENABLE_OPENCV
-                }
-#endif
             }
             _original_height[i] = original_height;
             _original_width[i] = original_width;
-#if 0
-            if((unsigned)original_width != max_decoded_width || (unsigned)original_height != max_decoded_height)
-                // Seeting the whole buffer to zero in case resizing to exact output dimension is not possible.
-                memset(_decompressed_buff_ptrs[i],0 , image_size);
-#endif
-
             // decode the image and get the actual decoded image width and height
             size_t scaledw, scaledh;
             if(_decoder[i]->is_partial_decoder()) // && _randombboxcrop_meta_data_reader)
@@ -259,27 +235,12 @@ ImageReadAndDecode::load(unsigned char* buff,
                                     original_width, original_height,
                                     scaledw, scaledh,
                                     decoder_color_format, _decoder_config, keep_original) != Decoder::Status::OK) {
-                // try decoding with OpenCV decoder:: seems like opencv also failing in those images
-#if 0//ENABLE_OPENCV
-                WRN("Using OpenCV for decode");
-                if (_decoder_cv[i] && _decoder_cv[i]->decode(_compressed_buff[i].data(), _compressed_image_size[i], _decompressed_buff_ptrs[i],
-                                        max_decoded_width, max_decoded_height,
-                                        original_width, original_height,
-                                        scaledw, scaledh,
-                                        decoder_color_format, _decoder_config, keep_original) != Decoder::Status::OK) {
-
-                    continue;
-
-                }
-#endif
-
             }
             _actual_decoded_width[i] = scaledw;
             _actual_decoded_height[i] = scaledh;
         }
         for (size_t i = 0; i < _batch_size; i++) {
             names[i] = _image_names[i];
-
             roi_width[i] = _actual_decoded_width[i];
             roi_height[i] = _actual_decoded_height[i];
             actual_width[i] = _original_width[i];

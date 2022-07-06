@@ -104,7 +104,7 @@ AudioReadAndDecode::reset()
 size_t
 AudioReadAndDecode::count()
 {
-    return _reader->count();
+    return _reader->count_items();
 }
 
 LoaderModuleStatus
@@ -121,7 +121,7 @@ AudioReadAndDecode::load(float* buff,
         THROW("Zero audio dimension is not valid")
     if(!buff)
         THROW("Null pointer passed as output buffer")
-    if(_reader->count() < _batch_size)
+    if(_reader->count_items() < _batch_size)
         return LoaderModuleStatus::NO_MORE_DATA_TO_READ;
     // load audios/frames from the disk and push them as a large audio onto the buff
     unsigned file_counter = 0;
@@ -134,7 +134,7 @@ AudioReadAndDecode::load(float* buff,
     // Decode with the channels and size equal to a single audio
     // File read is done serially since I/O parallelization does not work very well.
     _file_load_time.start();// Debug timing
-    while ((file_counter != _batch_size) && _reader->count() > 0) {
+    while ((file_counter != _batch_size) && _reader->count_items() > 0) {
 
         size_t fsize = _reader->open();
         if (fsize == 0) {
@@ -144,7 +144,7 @@ AudioReadAndDecode::load(float* buff,
 
         // _compressed_buff[file_counter].reserve(fsize);
         // _actual_read_size[file_counter] = _reader->read(_compressed_buff[file_counter].data(), fsize);
-        _audio_names[file_counter] = _reader->path();
+        // _audio_names[file_counter] = _reader->path();
         _reader->close();
         // _compressed_audio_size[file_counter] = fsize;
         file_counter++;

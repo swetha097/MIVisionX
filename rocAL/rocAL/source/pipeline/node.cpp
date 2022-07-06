@@ -33,13 +33,13 @@ Node::~Node()
 void
 Node::create(std::shared_ptr<Graph> graph)
 {
-    // if(_outputs.empty() || _inputs.empty())
-    //     THROW("Uninitialized input/output images to the node")
+    if(_outputs.empty() || _inputs.empty())
+        THROW("Uninitialized input/output images to the node")
 
     _graph = graph;
 
-    // if(!_inputs.empty())
-    // {
+    if(!_inputs.empty())
+    {
         vx_status roi_status;
         std::vector<uint32_t> _src_roi;
         _src_roi.reserve(_batch_size * 4);
@@ -47,7 +47,7 @@ Node::create(std::shared_ptr<Graph> graph)
         roi_status = vxAddArrayItems(_src_tensor_roi, _batch_size * 4, _src_roi.data(), sizeof(vx_uint32));
         if (roi_status != 0)
             THROW(" vxAddArrayItems failed : " + TOSTR(roi_status))
-    // }
+    }
 
     create_node();
 }
