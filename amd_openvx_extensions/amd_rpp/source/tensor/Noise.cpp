@@ -56,6 +56,8 @@ struct NoiseLocalData
 #elif ENABLE_HIP
     void *hip_pSrc;
     void *hip_pDst;
+    RpptROI *hip_roi_tensor_Ptr;
+
 #endif
 };
 
@@ -95,6 +97,8 @@ static vx_status VX_CALLBACK refreshNoise(vx_node node, const vx_reference *para
 #elif ENABLE_HIP
         STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[0], VX_TENSOR_BUFFER_HIP, &data->hip_pSrc, sizeof(data->hip_pSrc)));
         STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[2], VX_TENSOR_BUFFER_HIP, &data->hip_pDst, sizeof(data->hip_pDst)));
+        hipMemcpy(data->hip_roi_tensor_Ptr, data->roi_tensor_Ptr, data->nbatchSize * sizeof(RpptROI), hipMemcpyHostToDevice);
+
 #endif
     }
     if (data->device_type == AGO_TARGET_AFFINITY_CPU)
@@ -187,11 +191,11 @@ static vx_status VX_CALLBACK processNoise(vx_node node, const vx_reference *para
     {
 #if ENABLE_OPENCL
         refreshNoise(node, parameters, num, data);
-        // rpp_status = rppt_color_twist_gpu((void *)data->cl_pSrc, data->src_desc_ptr, (void *)data->cl_pDst, data->src_desc_ptr,  data->noise_prob, data->salt_prob, data->noise_value, data->salt_value, data->roi_tensor_Ptr, data->roiType, data->rppHandle);
+        rpp_status = rppt_color_twist_gpu((void *)data->cl_pSrc, data->src_desc_ptr, (void *)data->cl_pDst, data->src_desc_ptr,  data->noise_prob, data->salt_prob, data->noise_value, data->salt_value, data->roi_tensor_Ptr, data->roiType, data->rppHandle);
         return_status = (rpp_status == RPP_SUCCESS) ? VX_SUCCESS : VX_FAILURE;
 #elif ENABLE_HIP
         refreshNoise(node, parameters, num, data);
-        // rpp_status = rppt_color_twist_gpu((void *)data->hip_pSrc, data->src_desc_ptr, (void *)data->hip_pDst, data->src_desc_ptr,  data->noise_prob, data->salt_prob, data->noise_value, data->salt_value, data->roi_tensor_Ptr, data->roiType, data->rppHandle);
+        rpp_status = rppt_salt_and_pepper_noise_gpu((void *)data->hip_pSrc, data->src_desc_ptr, (void *)data->hip_pDst, data->src_desc_ptr,  data->noise_prob, data->salt_prob, data->noise_value, data->salt_value, data->seed,data->hip_roi_tensor_Ptr, data->roiType, data->rppHandle);
         return_status = (rpp_status == RPP_SUCCESS) ? VX_SUCCESS : VX_FAILURE;
 #endif
     }
@@ -381,6 +385,10 @@ static vx_status VX_CALLBACK initializeNoise(vx_node node, const vx_reference *p
         data->dst_desc_ptr->strides.cStride = 1;
         data->dst_desc_ptr->layout = RpptLayout::NCHW;
     }
+#if ENABLE_HIP
+    if (data->device_type == AGO_TARGET_AFFINITY_GPU)
+        hipMalloc(&data->hip_roi_tensor_Ptr, data->src_desc_ptr->n * sizeof(RpptROI));
+#endif
     data->roi_tensor_Ptr = (RpptROI *) calloc(data->nbatchSize, sizeof(RpptROI));
     data->noise_prob = (vx_float32 *)malloc(sizeof(vx_float32) * data->src_desc_ptr->n);
     data->salt_prob = (vx_float32 *)malloc(sizeof(vx_float32) * data->src_desc_ptr->n);
@@ -416,6 +424,10 @@ static vx_status VX_CALLBACK uninitializeNoise(vx_node node, const vx_reference 
     free(data->salt_prob);
     free(data->noise_value);
     free(data->salt_value);
+#if ENABLE_HIP
+    if (data->device_type == AGO_TARGET_AFFINITY_GPU)
+        hipFree(data->hip_roi_tensor_Ptr);
+#endif
     delete (data);
     return VX_SUCCESS;
 }

@@ -146,10 +146,7 @@ list(APPEND SOURCES
         source/tensor/Noise.cpp
         source/tensor/Blend.cpp
         source/tensor/Gridmask.cpp
-
-
-
-
+        
         source/tensor/Nop.cpp
         source/kernel_rpp.cpp
         source/internal_publishKernels.cpp

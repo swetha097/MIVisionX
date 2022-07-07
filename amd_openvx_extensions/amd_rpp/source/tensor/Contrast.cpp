@@ -53,6 +53,8 @@ struct ContrastLocalData
 #elif ENABLE_HIP
     void *hip_pSrc;
     void *hip_pDst;
+    RpptROI *hip_roi_tensor_Ptr;
+
 #endif
 };
 
@@ -87,6 +89,8 @@ static vx_status VX_CALLBACK refreshContrast(vx_node node, const vx_reference *p
 #elif ENABLE_HIP
         STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[0], VX_TENSOR_BUFFER_HIP, &data->hip_pSrc, sizeof(data->hip_pSrc)));
         STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[2], VX_TENSOR_BUFFER_HIP, &data->hip_pDst, sizeof(data->hip_pDst)));
+        hipMemcpy(data->hip_roi_tensor_Ptr, data->roi_tensor_Ptr, data->nbatchSize * sizeof(RpptROI), hipMemcpyHostToDevice);
+
 #endif
     }
     if (data->device_type == AGO_TARGET_AFFINITY_CPU)
@@ -176,11 +180,11 @@ static vx_status VX_CALLBACK processContrast(vx_node node, const vx_reference *p
     {
 #if ENABLE_OPENCL
         refreshContrast(node, parameters, num, data);
-        rpp_status = rppt_contrast_gpu((void *)data->cl_pSrc, data->src_desc_ptr, (void *)data->cl_pDst, data->src_desc_ptr,  data->c_factor, data->c_centre, data->roi_tensor_Ptr, data->roiType, data->rppHandle);
+        rpp_status = rppt_contrast_gpu((void *)data->cl_pSrc, data->src_desc_ptr, (void *)data->cl_pDst, data->src_desc_ptr,  data->c_factor, data->c_centre, data->hip_roi_tensor_Ptr, data->roiType, data->rppHandle);
         return_status = (rpp_status == RPP_SUCCESS) ? VX_SUCCESS : VX_FAILURE;
 #elif ENABLE_HIP
         refreshContrast(node, parameters, num, data);
-        rpp_status = rppt_contrast_gpu((void *)data->hip_pSrc, data->src_desc_ptr, (void *)data->hip_pDst, data->src_desc_ptr,  data->c_factor, data->c_centre, data->roi_tensor_Ptr, data->roiType, data->rppHandle);
+        rpp_status = rppt_contrast_gpu((void *)data->hip_pSrc, data->src_desc_ptr, (void *)data->hip_pDst, data->src_desc_ptr,  data->c_factor, data->c_centre, data->hip_roi_tensor_Ptr, data->roiType, data->rppHandle);
         return_status = (rpp_status == RPP_SUCCESS) ? VX_SUCCESS : VX_FAILURE;
 #endif
     }
@@ -376,6 +380,10 @@ static vx_status VX_CALLBACK initializeContrast(vx_node node, const vx_reference
         data->dst_desc_ptr->strides.cStride = 1;
         data->dst_desc_ptr->layout = RpptLayout::NCHW;
     }
+#if ENABLE_HIP
+    if (data->device_type == AGO_TARGET_AFFINITY_GPU)
+        hipMalloc(&data->hip_roi_tensor_Ptr, data->src_desc_ptr->n * sizeof(RpptROI));
+#endif
     data->roi_tensor_Ptr = (RpptROI *) calloc(data->src_desc_ptr->n, sizeof(RpptROI));
     data->c_factor = (vx_float32 *)malloc(sizeof(vx_float32) * data->src_desc_ptr->n);
     data->c_centre = (vx_float32 *)malloc(sizeof(vx_float32) * data->src_desc_ptr->n);
@@ -407,6 +415,10 @@ static vx_status VX_CALLBACK uninitializeContrast(vx_node node, const vx_referen
     free(data->roi_tensor_Ptr);
     free(data->c_factor);
     free(data->c_centre);
+#if ENABLE_HIP
+    if (data->device_type == AGO_TARGET_AFFINITY_GPU)
+        hipFree(data->hip_roi_tensor_Ptr);
+#endif
     delete (data);
     return VX_SUCCESS;
 }

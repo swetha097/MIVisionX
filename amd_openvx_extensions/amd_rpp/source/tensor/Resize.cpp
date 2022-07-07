@@ -77,6 +77,7 @@ static vx_status VX_CALLBACK refreshResize(vx_node node, const vx_reference *par
     {
         data->dstimgsize[i].width = data->resize_w[i];
         data->dstimgsize[i].height = data->resize_h[i];
+        std::cerr<<"data->resize_h[i] "<<data->resize_h[i];
     }
     if(data->layout == 2 || data->layout == 3)
     {
@@ -205,6 +206,7 @@ static vx_status VX_CALLBACK processResize(vx_node node, const vx_reference *par
         {
             std::cerr << "\n data->roi_tensor_Ptr values :: " << data->roi_tensor_Ptr[i].xywhROI.xy.x << " " << data->roi_tensor_Ptr[i].xywhROI.xy.y << " " << data->roi_tensor_Ptr[i].xywhROI.roiWidth << " " << data->roi_tensor_Ptr[i].xywhROI.roiHeight;
         }
+        std::cerr<<"data->dstimgsize[i].width"<<data->dstimgsize[0].width<<"  "<<data->dstimgsize[0].height<<"\n";
         rpp_status = rppt_resize_host(data->pSrc, data->src_desc_ptr,
                                       data->pDst, data->dst_desc_ptr,
                                       data->dstimgsize,
@@ -227,9 +229,7 @@ static vx_status VX_CALLBACK initializeResize(vx_node node, const vx_reference *
 #if ENABLE_OPENCL
     STATUS_ERROR_CHECK(vxQueryNode(node, VX_NODE_ATTRIBUTE_AMD_OPENCL_COMMAND_QUEUE, &data->handle.cmdq, sizeof(data->handle.cmdq)));
 #elif ENABLE_HIP
-    // STATUS_extern "C" SHARED_PUBLIC vx_node VX_API_CALL vxExtrppNode_GammaCorrection(vx_graph graph, vx_tensor pSrc,vx_array srcROI, vx_tensor pDst, vx_array gamma,vx_scalar layout, vx_scalar roiType, vx_uint32 nbatchSize);
-
-    ERROR_CHECK(vxQueryNode(node, VX_NODE_ATTRIBUTE_AMD_HIP_STREAM, &data->handle.hipstream, sizeof(data->handle.hipstream)));
+    STATUS_ERROR_CHECK(vxQueryNode(node, VX_NODE_ATTRIBUTE_AMD_HIP_STREAM, &data->handle.hipstream, sizeof(data->handle.hipstream)));
 #endif
     STATUS_ERROR_CHECK(vxCopyScalar((vx_scalar)parameters[12], &data->device_type, VX_READ_ONLY, VX_MEMORY_TYPE_HOST));
     STATUS_ERROR_CHECK(vxReadScalarValue((vx_scalar)parameters[11], &data->nbatchSize));

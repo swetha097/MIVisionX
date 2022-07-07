@@ -54,6 +54,8 @@ struct FlipLocalData
 #elif ENABLE_HIP
     void *hip_pSrc;
     void *hip_pDst;
+    RpptROI *hip_roi_tensor_Ptr;
+
 #endif
 };
 
@@ -89,6 +91,8 @@ static vx_status VX_CALLBACK refreshFlip(vx_node node, const vx_reference *param
 #elif ENABLE_HIP
         STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[0], VX_TENSOR_BUFFER_HIP, &data->hip_pSrc, sizeof(data->hip_pSrc)));
         STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[2], VX_TENSOR_BUFFER_HIP, &data->hip_pDst, sizeof(data->hip_pDst)));
+        hipMemcpy(data->hip_roi_tensor_Ptr, data->roi_tensor_Ptr, data->nbatchSize * sizeof(RpptROI), hipMemcpyHostToDevice);
+
 #endif
     }
     if (data->device_type == AGO_TARGET_AFFINITY_CPU)
@@ -178,11 +182,11 @@ static vx_status VX_CALLBACK processFlip(vx_node node, const vx_reference *param
     {
 #if ENABLE_OPENCL
         refreshFlip(node, parameters, num, data);
-        rpp_status = rppt_flip_gpu((void *)data->cl_pSrc, data->src_desc_ptr, (void *)data->cl_pDst, data->src_desc_ptr,  data->h_flag, data->v_flag, data->roi_tensor_Ptr, data->roiType, data->rppHandle);
+        rpp_status = rppt_flip_gpu((void *)data->cl_pSrc, data->src_desc_ptr, (void *)data->cl_pDst, data->src_desc_ptr,  data->h_flag, data->v_flag, data->hip_roi_tensor_Ptr, data->roiType, data->rppHandle);
         return_status = (rpp_status == RPP_SUCCESS) ? VX_SUCCESS : VX_FAILURE;
 #elif ENABLE_HIP
         refreshFlip(node, parameters, num, data);
-        rpp_status = rppt_flip_gpu((void *)data->hip_pSrc, data->src_desc_ptr, (void *)data->hip_pDst, data->src_desc_ptr,  data->h_flag, data->v_flag, data->roi_tensor_Ptr, data->roiType, data->rppHandle);
+        rpp_status = rppt_flip_gpu((void *)data->hip_pSrc, data->src_desc_ptr, (void *)data->hip_pDst, data->src_desc_ptr,  data->h_flag, data->v_flag, data->hip_roi_tensor_Ptr, data->roiType, data->rppHandle);
         return_status = (rpp_status == RPP_SUCCESS) ? VX_SUCCESS : VX_FAILURE;
 #endif
     }
@@ -378,7 +382,10 @@ static vx_status VX_CALLBACK initializeFlip(vx_node node, const vx_reference *pa
         data->dst_desc_ptr->strides.cStride = 1;
         data->dst_desc_ptr->layout = RpptLayout::NCHW;
     }
-
+#if ENABLE_HIP
+    if (data->device_type == AGO_TARGET_AFFINITY_GPU)
+        hipMalloc(&data->hip_roi_tensor_Ptr, data->src_desc_ptr->n * sizeof(RpptROI));
+#endif
     data->roi_tensor_Ptr = (RpptROI *) calloc(data->src_desc_ptr->n, sizeof(RpptROI));
     data->h_flag = (vx_uint32 *)malloc(sizeof(vx_uint32) * data->src_desc_ptr->n);
     data->v_flag = (vx_uint32 *)malloc(sizeof(vx_uint32) * data->src_desc_ptr->n);
@@ -410,6 +417,10 @@ static vx_status VX_CALLBACK uninitializeFlip(vx_node node, const vx_reference *
     free(data->roi_tensor_Ptr);
     free(data->h_flag);
     free(data->v_flag);
+#if ENABLE_HIP
+    if (data->device_type == AGO_TARGET_AFFINITY_GPU)
+        hipFree(data->hip_roi_tensor_Ptr);
+#endif
     delete (data);
     return VX_SUCCESS;
 }

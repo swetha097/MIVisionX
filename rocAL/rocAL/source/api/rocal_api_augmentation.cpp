@@ -606,7 +606,7 @@ rocalGamma(RocalContext p_context,
         output_info.set_data_type(op_tensorDataType);
 
         output = context->master_graph->create_tensor(output_info, is_output);
-
+        output->reset_tensor_roi();
         context->master_graph->add_node<GammaNode>({input}, {output})->init(alpha,layout);
     }
     catch(const std::exception& e)
@@ -645,7 +645,7 @@ rocalResize(RocalContext p_context,
         rocALTensorInfo output_info = input->info();
         output_info.set_tensor_layout(op_tensorLayout);
         output_info.set_data_type(op_tensorDataType);
-
+        std::cerr<<"resize width and resize height *******************************\n\n"<<resize_height<<"  "<<resize_width;
         output_info.set_width(resize_width);
         output_info.set_height(resize_height);
         output = context->master_graph->create_tensor(output_info, is_output);

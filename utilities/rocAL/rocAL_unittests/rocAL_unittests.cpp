@@ -134,15 +134,20 @@ int test(int test_case, int reader_type, int pipeline_type, const char *path, co
 
     RocalTensor input1;
     RocalTensorLayout tensorLayout = RocalTensorLayout::ROCAL_NHWC;
-    RocalTensorOutputType tensorOutputType = RocalTensorOutputType::ROCAL_FP32;
+    RocalTensorOutputType tensorOutputType = RocalTensorOutputType::ROCAL_UINT8;
 
     // The jpeg file loader can automatically select the best size to decode all images to that size
     // User can alternatively set the size or change the policy that is used to automatically find the size
     switch (reader_type)
     {
-        input1 = rocalJpegFileSource(handle, path, color_format, num_threads, false, false, false,
-                                    ROCAL_USE_USER_GIVEN_SIZE, decode_max_width, decode_max_height);
-    }
+#if 0
+        case 1: //image_partial decode
+        {
+            std::cout << ">>>>>>> Running PARTIAL DECODE" << std::endl;
+            rocalCreateLabelReader(handle, path);
+            input1 = rocalFusedJpegCrop(handle, path, color_format, num_threads, false, false);
+        }
+        break;
 #endif
         case 2: //coco detection
         {
@@ -299,7 +304,7 @@ break;
     {
          std::cout << ">>>>>>> Running "
                   << "rocalResize" << std::endl;
-        image1 = rocalResize(handle, input1, tensorLayout, tensorOutputType, 3,resize_w , resize_h, 0,true);
+        image1 = rocalResize(handle, input1, tensorLayout, tensorOutputType, 3,700 , 700, 0,true);
 
     }
     break;
@@ -418,8 +423,6 @@ break;
     RocalTensorList output_tensor_list;
     auto cv_color_format = ((color_format == RocalImageColor::ROCAL_COLOR_RGB24) ?  ((tensorOutputType == RocalTensorOutputType::ROCAL_FP32) ? CV_8UC3 : CV_8UC3) : CV_8UC1);
     std::cerr<<"\n\ncv_color_format"<<cv_color_format<<"\n"<<color_format<<"\n"<<tensorOutputType;
-    high_resolution_clock::time_point t1 = high_resolution_clock::now();
-    int index = 0;
     while (rocalGetRemainingImages(handle) >= inputBatchSize)
     {
         index++;

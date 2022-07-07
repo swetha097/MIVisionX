@@ -55,6 +55,8 @@ struct GridmaskLocalData
 #elif ENABLE_HIP
     void *hip_pSrc;
     void *hip_pDst;
+    RpptROI *hip_roi_tensor_Ptr;
+
 #endif
 };
 
@@ -87,6 +89,8 @@ static vx_status VX_CALLBACK refreshGridmask(vx_node node, const vx_reference *p
 #elif ENABLE_HIP
         STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[0], VX_TENSOR_BUFFER_HIP, &data->hip_pSrc, sizeof(data->hip_pSrc)));
         STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[2], VX_TENSOR_BUFFER_HIP, &data->hip_pDst, sizeof(data->hip_pDst)));
+        hipMemcpy(data->hip_roi_tensor_Ptr, data->roi_tensor_Ptr, data->nbatchSize * sizeof(RpptROI), hipMemcpyHostToDevice);
+
 #endif
     }
     if (data->device_type == AGO_TARGET_AFFINITY_CPU)
@@ -197,7 +201,7 @@ static vx_status VX_CALLBACK processGridmask(vx_node node, const vx_reference *p
         return_status = (rpp_status == RPP_SUCCESS) ? VX_SUCCESS : VX_FAILURE;
 #elif ENABLE_HIP
         refreshGridmask(node, parameters, num, data);
-        rpp_status = rppt_gridmask_gpu((void *)data->hip_pSrc, data->src_desc_ptr, (void *)data->hip_pDst, data->src_desc_ptr, data->tile_width, data->grid_ratio,data->grid_angle,data->translateVector, data->roi_tensor_Ptr, data->roiType, data->rppHandle);
+        rpp_status = rppt_gridmask_gpu((void *)data->hip_pSrc, data->src_desc_ptr, (void *)data->hip_pDst, data->src_desc_ptr, data->tile_width, data->grid_ratio,data->grid_angle,data->translateVector, data->hip_roi_tensor_Ptr, data->roiType, data->rppHandle);
         return_status = (rpp_status == RPP_SUCCESS) ? VX_SUCCESS : VX_FAILURE;
 #endif
     }
@@ -398,6 +402,10 @@ static vx_status VX_CALLBACK initializeGridmask(vx_node node, const vx_reference
         data->dst_desc_ptr->strides.cStride = 1;
         data->dst_desc_ptr->layout = RpptLayout::NCHW;
     }
+#if ENABLE_HIP
+    if (data->device_type == AGO_TARGET_AFFINITY_GPU)
+        hipMalloc(&data->hip_roi_tensor_Ptr, data->src_desc_ptr->n * sizeof(RpptROI));
+#endif
     data->roi_tensor_Ptr = (RpptROI *) calloc(data->src_desc_ptr->n, sizeof(RpptROI));
     data->translateVector.x=data->x;
     data->translateVector.y=data->y;
@@ -427,6 +435,10 @@ static vx_status VX_CALLBACK uninitializeGridmask(vx_node node, const vx_referen
     if (data->device_type == AGO_TARGET_AFFINITY_CPU)
         rppDestroyHost(data->rppHandle);
     free(data->roi_tensor_Ptr);
+#if ENABLE_HIP
+    if (data->device_type == AGO_TARGET_AFFINITY_GPU)
+        hipFree(data->hip_roi_tensor_Ptr);
+#endif
     delete (data);
     return VX_SUCCESS;
 }

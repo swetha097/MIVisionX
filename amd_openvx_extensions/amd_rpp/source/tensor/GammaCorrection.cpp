@@ -52,6 +52,7 @@ struct GammaCorrectionLocalData
 #elif ENABLE_HIP
     void *hip_pSrc;
     void *hip_pDst;
+    RpptROI *hip_roi_tensor_Ptr;
 #endif
 };
 
@@ -86,6 +87,7 @@ static vx_status VX_CALLBACK refreshGammaCorrection(vx_node node, const vx_refer
 #elif ENABLE_HIP
         STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[0], VX_TENSOR_BUFFER_HIP, &data->hip_pSrc, sizeof(data->hip_pSrc)));
         STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[2], VX_TENSOR_BUFFER_HIP, &data->hip_pDst, sizeof(data->hip_pDst)));
+        hipMemcpy(data->hip_roi_tensor_Ptr, data->roi_tensor_Ptr, data->nbatchSize * sizeof(RpptROI), hipMemcpyHostToDevice);
 #endif
     }
     if (data->device_type == AGO_TARGET_AFFINITY_CPU)
@@ -177,12 +179,14 @@ static vx_status VX_CALLBACK processGammaCorrection(vx_node node, const vx_refer
     {
 #if ENABLE_OPENCL
         refreshGammaCorrection(node, parameters, num, data);
-        // rpp_status = rppt_brightness_gpu((void *)data->cl_pSrc, data->src_desc_ptr, (void *)data->cl_pDst, data->src_desc_ptr,  data->alpha, data->beta, data->roi_tensor_Ptr, data->roiType, data->rppHandle);
+        rpp_status = rppt_gamma_correction_gpu((void *)data->cl_pSrc, data->src_desc_ptr, (void *)data->cl_pDst, data->src_desc_ptr,  data->alpha, data->beta, data->roi_tensor_Ptr, data->roiType, data->rppHandle);
         return_status = (rpp_status == RPP_SUCCESS) ? VX_SUCCESS : VX_FAILURE;
 #elif ENABLE_HIP
         refreshGammaCorrection(node, parameters, num, data);
-        // rpp_status = rppt_brightness_gpu((void *)data->hip_pSrc, data->src_desc_ptr, (void *)data->hip_pDst, data->src_desc_ptr,  data->alpha, data->beta, data->roi_tensor_Ptr, data->roiType, data->rppHandle);
+        std::cerr << "Calling Brightness GPU\n";
+        rpp_status = rppt_gamma_correction_gpu((void *)data->hip_pSrc, data->src_desc_ptr, (void *)data->hip_pDst, data->src_desc_ptr,  data->alpha, data->hip_roi_tensor_Ptr, data->roiType, data->rppHandle);
         return_status = (rpp_status == RPP_SUCCESS) ? VX_SUCCESS : VX_FAILURE;
+
 #endif
     }
     if (data->device_type == AGO_TARGET_AFFINITY_CPU)
@@ -193,7 +197,7 @@ static vx_status VX_CALLBACK processGammaCorrection(vx_node node, const vx_refer
             std::cerr<<"\n bbox values :: "<<data->roi_tensor_Ptr[i].xywhROI.xy.x<<" "<<data->roi_tensor_Ptr[i].xywhROI.xy.y<<" "<<data->roi_tensor_Ptr[i].xywhROI.roiWidth<<" "<<data->roi_tensor_Ptr[i].xywhROI.roiHeight;
         }
         std::cerr<<"hello\n\n";
-        if(1)
+        if(0)
         {
             float *temp1 = ((float*)calloc( 100,sizeof(float)));
             for (int i = 0; i < 100; i++)
@@ -389,6 +393,10 @@ static vx_status VX_CALLBACK initializeGammaCorrection(vx_node node, const vx_re
         data->dst_desc_ptr->strides.cStride = 1;
         data->dst_desc_ptr->layout = RpptLayout::NCHW;
     }
+#if ENABLE_HIP
+    if (data->device_type == AGO_TARGET_AFFINITY_GPU)
+        hipMalloc(&data->hip_roi_tensor_Ptr, data->src_desc_ptr->n * sizeof(RpptROI));
+#endif
     data->roi_tensor_Ptr = (RpptROI *) calloc(data->src_desc_ptr->n, sizeof(RpptROI));
     data->alpha = (vx_float32 *)malloc(sizeof(vx_float32) * data->src_desc_ptr->n);
     // data->beta = (vx_float32 *)malloc(sizeof(vx_float32) * data->src_desc_ptr->n);
@@ -419,6 +427,10 @@ static vx_status VX_CALLBACK uninitializeGammaCorrection(vx_node node, const vx_
         rppDestroyHost(data->rppHandle);
     free(data->roi_tensor_Ptr);
     free(data->alpha);
+#if ENABLE_HIP
+    if (data->device_type == AGO_TARGET_AFFINITY_GPU)
+        hipFree(data->hip_roi_tensor_Ptr);
+#endif
     // free(data->beta);
     delete (data);
     return VX_SUCCESS;
@@ -497,6 +509,45 @@ vx_status GammaCorrection_Register(vx_context context)
     }
     return status;
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
