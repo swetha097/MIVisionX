@@ -27,7 +27,7 @@ THE SOFTWARE.
 /// \param rocal_context
 /// \param source_path path to the folder that contains the dataset or metadata file
 /// \return RocalMetaData object, can be used to inquire about the rocal's output (processed) tensors
-extern "C" RocalMetaData ROCAL_API_CALL rocalCreateLabelReader(RocalContext rocal_context, const char* source_path);
+extern "C" void ROCAL_API_CALL rocalCreateLabelReader(RocalContext rocal_context, const char* source_path);
 
 ///
 /// \param rocal_context
@@ -50,7 +50,7 @@ extern "C" RocalMetaData ROCAL_API_CALL rocalCreateTFReaderDetection(RocalContex
 /// \param rocal_context
 /// \param source_path path to the coco json file
 /// \return RocalMetaData object, can be used to inquire about the rocal's output (processed) tensors
-extern "C" RocalMetaData ROCAL_API_CALL rocalCreateCOCOReader(RocalContext rocal_context, const char* source_path, bool is_output, bool mask);
+extern "C" void ROCAL_API_CALL rocalCreateCOCOReader(RocalContext rocal_context, const char* source_path, bool is_output);
 
 ///
 /// \param rocal_context
@@ -97,7 +97,7 @@ extern "C" unsigned ROCAL_API_CALL rocalGetImageNameLen(RocalContext rocal_conte
 
 /// \param meta_data RocalMetaData object that contains info about the images and labels
 /// \param buf user's buffer that will be filled with labels. Its needs to be at least of size batch_size.
-extern "C" void ROCAL_API_CALL rocalGetImageLabels(RocalContext rocal_context, int* buf);
+extern "C" RocalMetaData ROCAL_API_CALL rocalGetImageLabels(RocalContext rocal_context);
 
 /// \param meta_data RocalMetaData object that contains info about the images and labels
 /// \param numOfClasses the number of classes for a image dataset
@@ -106,15 +106,9 @@ extern "C" void ROCAL_API_CALL rocalGetOneHotImageLabels(RocalContext rocal_cont
 
 ///
 /// \param rocal_context
-/// \param buf The user's buffer that will be filled with number of object in the images.
-/// \return The size of the buffer needs to be provided by user to get bounding box info for all images in the output batch.
-extern "C" unsigned ROCAL_API_CALL rocalGetBoundingBoxCount(RocalContext rocal_context, int* buf);
-
-///
-/// \param rocal_context
 /// \param buf The user's buffer that will be filled with bounding box label info for the images in the output batch. It needs to be of size returned by a call to the rocalGetBoundingBoxCount
-extern "C" void ROCAL_API_CALL rocalGetBoundingBoxLabel(RocalContext rocal_context, int* buf);
-extern "C" void ROCAL_API_CALL rocalGetBoundingBoxCords(RocalContext rocal_context, float* buf);
+extern "C" RocalMetaData ROCAL_API_CALL rocalGetBoundingBoxLabel(RocalContext rocal_context);
+extern "C" RocalMetaData ROCAL_API_CALL rocalGetBoundingBoxCords(RocalContext rocal_context);
 
 ///
 /// \param rocal_context

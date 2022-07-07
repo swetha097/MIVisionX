@@ -104,3 +104,15 @@ rocalGetOutputTensors(
     }
     return nullptr;
 }
+
+void
+ROCAL_API_CALL rocalSetOutputs(RocalContext p_context, unsigned int num_of_outputs, std::vector<RocalTensor> &output_images)
+{
+    if (!p_context)
+        THROW("Invalid rocal context passed to rocalSetOutputs")
+    auto context = static_cast<Context *>(p_context);
+    for (auto& it : output_images) {
+        auto img = static_cast<RocalTensor>(it);
+        context->master_graph->set_output(img);
+    }
+}

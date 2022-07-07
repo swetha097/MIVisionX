@@ -121,14 +121,14 @@ list(APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake)
 #find the OPENVX backend type
 set(OPENVX_BACKEND_OPENCL_FOUND 0)
 set(OPENVX_BACKEND_HIP_FOUND 0)
-if(EXISTS ${ROCM_PATH}/mivisionx/include/openvx_backend.h)
-    file(READ ${ROCM_PATH}/mivisionx/include/openvx_backend.h OPENVX_BACKEND_FILE)
+if(EXISTS ${ROCM_PATH}/include/mivisionx/openvx_backend.h)
+    file(READ ${ROCM_PATH}/include/mivisionx/openvx_backend.h OPENVX_BACKEND_FILE)
     string(REGEX MATCH "ENABLE_OPENCL ([0-9]*)" _ ${OPENVX_BACKEND_FILE})
     set(OPENVX_BACKEND_OPENCL_FOUND ${CMAKE_MATCH_1})
     string(REGEX MATCH "ENABLE_HIP ([0-9]*)" _ ${OPENVX_BACKEND_FILE})
     set(OPENVX_BACKEND_HIP_FOUND ${CMAKE_MATCH_1})
 else()
-    message("-- ${Red}WARNING: ${ROCM_PATH}/mivisionx/include/openvx_backend.h file Not Found. please install the latest mivisionx! ${ColourReset}")
+    message("-- ${Red}WARNING: ${ROCM_PATH}/include/mivisionx/openvx_backend.h file Not Found. please install the latest mivisionx! ${ColourReset}")
 endif()
 
 find_package(OpenCV QUIET)
@@ -145,13 +145,13 @@ if (OPENVX_BACKEND_OPENCL_FOUND)
     include_directories(${OpenCL_INCLUDE_DIRS} ${OpenCL_INCLUDE_DIRS}/Headers )
 endif()
 
-include_directories(${ROCM_PATH}/mivisionx/include)
+include_directories(${ROCM_PATH}/include/mivisionx)
 
-link_directories(${ROCM_PATH}/mivisionx/lib)
+link_directories(${ROCM_PATH}/lib)
 
 list(APPEND SOURCES annmodule.cpp)
 add_library(${PROJECT_NAME} SHARED ${SOURCES})
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -msse4.2 -mf16c -std=c++11")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -msse4.2 -mf16c -std=gnu++14")
 
 if (OPENVX_BACKEND_OPENCL_FOUND)
     target_link_libraries(${PROJECT_NAME} openvx vx_nn pthread ${OpenCL_LIBRARIES})
@@ -161,9 +161,19 @@ endif()
 
 add_executable(anntest anntest.cpp)
 if(OpenCV_FOUND)
-  target_compile_definitions(anntest PUBLIC ENABLE_OPENCV=1)
-  include_directories(${OpenCV_INCLUDE_DIRS})
-  target_link_libraries(anntest ${OpenCV_LIBRARIES})
+    if(${OpenCV_VERSION_MAJOR} EQUAL 3 OR ${OpenCV_VERSION_MAJOR} EQUAL 4)
+        target_compile_definitions(anntest PUBLIC ENABLE_OPENCV=1)
+        include_directories(${OpenCV_INCLUDE_DIRS})
+        target_link_libraries(anntest ${OpenCV_LIBRARIES})
+        if(${OpenCV_VERSION_MAJOR} EQUAL 4)
+	        target_compile_definitions(anntest PUBLIC USE_OPENCV_4=1)
+        else()
+	        target_compile_definitions(anntest PUBLIC USE_OPENCV_4=0)
+        endif()
+    else()
+        target_compile_definitions(anntest PUBLIC ENABLE_OPENCV=0)
+        message("-- NOTE: anntest -- OpenCV Version-${OpenCV_VERSION_MAJOR}.${OpenCV_VERSION_MINOR}.X Not Supported")
+    endif()
 else(OpenCV_FOUND)
   target_compile_definitions(anntest PUBLIC ENABLE_OPENCV=0)
 endif(OpenCV_FOUND)
@@ -175,7 +185,7 @@ else()
 endif()
 
 add_library(annpython SHARED annpython.cpp)
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -msse4.2 -mf16c -std=c++11")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -msse4.2 -mf16c -std=gnu++14")
 
 if (OPENVX_BACKEND_OPENCL_FOUND)
     target_link_libraries(annpython ${PROJECT_NAME} openvx vx_nn pthread ${OpenCL_LIBRARIES})
@@ -1073,6 +1083,66 @@ static vx_status initializeTensor(vx_context context, vx_tensor tensor, FILE * f
     }    
 """ 
     % (node.inputs[0], node.inputs[1], node.outputs[0]))
+            elif node.type == 'less':
+                f.write( \
+"""
+    { 
+      vx_node node = vxTensorCompareLayer(graph, %s, %s, %s, 0);
+      ERROR_CHECK_OBJECT(node);
+      ERROR_CHECK_STATUS(vxReleaseNode(&node));
+    }    
+""" 
+    % (node.inputs[0], node.inputs[1], node.outputs[0]))
+            elif node.type == 'greater':
+                f.write( \
+"""
+    { 
+      vx_node node = vxTensorCompareLayer(graph, %s, %s, %s, 1);
+      ERROR_CHECK_OBJECT(node);
+      ERROR_CHECK_STATUS(vxReleaseNode(&node));
+    }    
+""" 
+    % (node.inputs[0], node.inputs[1], node.outputs[0]))
+            elif node.type == 'less_equal':
+                f.write( \
+"""
+    { 
+      vx_node node = vxTensorCompareLayer(graph, %s, %s, %s, 2);
+      ERROR_CHECK_OBJECT(node);
+      ERROR_CHECK_STATUS(vxReleaseNode(&node));
+    }    
+""" 
+    % (node.inputs[0], node.inputs[1], node.outputs[0]))
+            elif node.type == 'greater_equal':
+                f.write( \
+"""
+    { 
+      vx_node node = vxTensorCompareLayer(graph, %s, %s, %s, 3);
+      ERROR_CHECK_OBJECT(node);
+      ERROR_CHECK_STATUS(vxReleaseNode(&node));
+    }    
+""" 
+    % (node.inputs[0], node.inputs[1], node.outputs[0]))
+            elif node.type == 'equal':
+                f.write( \
+"""
+    { 
+      vx_node node = vxTensorCompareLayer(graph, %s, %s, %s, 4);
+      ERROR_CHECK_OBJECT(node);
+      ERROR_CHECK_STATUS(vxReleaseNode(&node));
+    }    
+""" 
+    % (node.inputs[0], node.inputs[1], node.outputs[0]))
+            elif node.type == 'not_equal':
+                f.write( \
+"""
+    { 
+      vx_node node = vxTensorCompareLayer(graph, %s, %s, %s, 5);
+      ERROR_CHECK_OBJECT(node);
+      ERROR_CHECK_STATUS(vxReleaseNode(&node));
+    }    
+""" 
+    % (node.inputs[0], node.inputs[1], node.outputs[0]))
             elif node.type == 'reduce_min':
                 axes = node.attr.get('axes')
                 axes_len = -1
@@ -1917,9 +1987,10 @@ using half_float::half;
 
 #if ENABLE_OPENCV
 #include <opencv2/opencv.hpp>
-#include <opencv/cv.h>
-#include <opencv/highgui.h>
 using namespace cv;
+#if USE_OPENCV_4
+#define CV_LOAD_IMAGE_COLOR IMREAD_COLOR
+#endif
 #endif
 
 #define ERROR_CHECK_OBJECT(obj) { vx_status status = vxGetStatus((vx_reference)(obj)); if(status != VX_SUCCESS) { vxAddLogEntry((vx_reference)context, status     , "ERROR: failed with status = (%d) at " __FILE__ "#%d\\n", status, __LINE__); return status; } }

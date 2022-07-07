@@ -18,12 +18,12 @@
     - [download](https://ffmpeg.org/download.html)
 * amdgpu Linux mesa driver for hardware support. Install with --no-dkms after installing ROCm.
     - [amdgpu](https://amdgpu-install.readthedocs.io/en/latest/)
-    
+
 ### Example 1: decode video with runvx using software decoder
 
 Following is an example gdf to decode 1 video stream using CPU decoder and decoded images will be written to output.yuv file
 
-``` 
+```
 import vx_amd_media
 
 # read input sequences
@@ -38,7 +38,7 @@ node com.amd.amd_media.decode vid1 nvimg NULL loop opencl_out
 
 Following is an example gdf to encode 1 video stream using hardware and decoded images will be written to output.yuv file
 
-``` 
+```
 import vx_amd_media
 
 # read input sequences
@@ -53,12 +53,15 @@ node com.amd.amd_media.decode vid1 nvimg NULL loop opencl_out
 
 Following is an example gdf to encode to .h264 stream from a YUV input file
 
-``` 
+Sample command: runvx -frames:<#framestoencode> file <encoder.gdf>
+
+```
 import vx_amd_media
 
 # read input sequences
-data yuvimg  = image:1920,1080,IYUV:read,input.yuv
-data vid1 = scalar:STRING,"{4, 30, 0, 15},<fname_with_full_path.264>"
+data yuvimg  = image:1920,1080,NV12:read,input.yuv
+data vid1 = scalar:STRING,"fname_with_full_path.264"
 data aux_output = array:UINT8,256
-node com.amd.amd_media.encode yuvimg vid1 NULL aux_output
+data gpu_mode = scalar:BOOL,FALSE
+node com.amd.amd_media.encode vid1 yuvimg NULL aux_output gpu_mode
 ```

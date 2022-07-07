@@ -544,7 +544,7 @@ ROCAL_API_CALL rocalCropMirrorNormalize(RocalContext p_context, RocalTensor p_in
         get_rocal_tensor_layout(rocal_tensor_layout, op_tensorLayout, layout);
         get_rocal_tensor_data_type(rocal_tensor_output_type, op_tensorDataType);
         rocALTensorInfo output_info = input->info();
-        output_info.set_tensor_layout(op_tensorLayout);
+        // output_info.format(op_tensorFormat);
         output_info.set_data_type(op_tensorDataType);
         output = context->master_graph->create_tensor(output_info, is_output);
         output->reset_tensor_roi();

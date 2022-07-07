@@ -23,30 +23,51 @@
 # SOFTWARE.
 #
 ################################################################################
-cmake_minimum_required (VERSION 3.0)
+cmake_minimum_required(VERSION 3.0)
+project(classifier)
 
-project (classification)
+# ROCm Path
+set(ROCM_PATH /opt/rocm CACHE PATH "Default ROCm installation path")
+# avoid setting the default installation path to /usr/local
+if(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
+  set(CMAKE_INSTALL_PREFIX ${ROCM_PATH} CACHE PATH "MIVisionX default installation path" FORCE)
+endif(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
+set(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
 
-set (CMAKE_CXX_STANDARD 11)
+# Add Default libdir
+set(CMAKE_INSTALL_LIBDIR "lib" CACHE STRING "Library install directory")
+include(GNUInstallDirs)
 
-list(APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake)
-find_package(OpenCL REQUIRED)
+# OpenCV -- Display Component
 find_package(OpenCV REQUIRED)
 
-include_directories(${OpenCL_INCLUDE_DIRS} ${OpenCL_INCLUDE_DIRS}/Headers )
-include_directories(${OpenCV_INCLUDE_DIRS})
-include_directories(/opt/rocm/mivisionx/include)
-include_directories(include)
+# Application Includes & Libraries
+include_directories(${PROJECT_SOURCE_DIR}/include ${ROCM_PATH}/${CMAKE_INSTALL_INCLUDEDIR}/mivisionx)
+link_directories(${ROCM_PATH}/${CMAKE_INSTALL_LIBDIR})
 
-link_directories(/opt/rocm/mivisionx/lib)
-
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -msse4.2 -mf16c -std=c++11")
-
+# Application Source Files
 add_library(caffeModels SHARED source/caffeModels.cpp)
 target_link_libraries(caffeModels openvx vx_nn pthread)
 
-add_executable(classifier source/classifier.cpp)
-target_compile_definitions(classifier PUBLIC ENABLE_OPENCV=1)
-target_link_libraries(classifier openvx vx_nn caffeModels ${OpenCV_LIBRARIES}  pthread)
+add_executable(${PROJECT_NAME} source/classifier.cpp)
 
+# Link Libraries & Set CXX Flags
+target_link_libraries(${PROJECT_NAME} openvx vx_nn caffeModels pthread)
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -msse4.2 -mf16c -std=gnu++14")
 
+# OpenCV 3/4 Support
+if(${OpenCV_VERSION_MAJOR} EQUAL 3 OR ${OpenCV_VERSION_MAJOR} EQUAL 4)
+	message("-- ${PROJECT_NAME} -- OpenCV Version Supported -- Version-${OpenCV_VERSION_MAJOR}.${OpenCV_VERSION_MINOR}.X")
+	if(${OpenCV_VERSION_MAJOR} EQUAL 4)
+	    target_compile_definitions(${PROJECT_NAME} PUBLIC USE_OPENCV_4=1)
+    else()
+	    target_compile_definitions(${PROJECT_NAME} PUBLIC USE_OPENCV_4=0)
+    endif()
+	include_directories(${OpenCV_INCLUDE_DIRS})
+	target_link_libraries(${PROJECT_NAME} ${OpenCV_LIBRARIES})
+else()
+	message(FATAL_ERROR "${PROJECT_NAME} -- OpenCV -- Version-${OpenCV_VERSION_MAJOR}.${OpenCV_VERSION_MINOR}.X Not Supported")
+endif()
+
+# Install Application in ROCm Bin Directory
+install(TARGETS ${PROJECT_NAME} DESTINATION ${ROCM_PATH}/${CMAKE_INSTALL_BINDIR})

@@ -27,9 +27,9 @@ import platform
 __author__ = "Kiriti Nagesh Gowda"
 __copyright__ = "Copyright 2018 - 2022, AMD MIVisionX - Library Tests Report"
 __license__ = "MIT"
-__version__ = "1.0.0"
+__version__ = "1.0.1"
 __maintainer__ = "Kiriti Nagesh Gowda"
-__email__ = "Kiriti.NageshGowda@amd.com"
+__email__ = "mivisionx.support@amd.com"
 __status__ = "Shipping"
 
 
@@ -47,18 +47,18 @@ def write_formatted(output, f):
 
 # Import arguments
 parser = argparse.ArgumentParser()
-parser.add_argument('--install_directory',    type=str, default='/opt/rocm/mivisionx',
+parser.add_argument('--install_directory',    type=str, default='/opt/rocm',
                     help='MIVisionX Install Directory - optional')
 parser.add_argument('--backend_type',       type=str, default='OCL',
-                    help='Backend type - optional (default:HOST [options:HOST/HIP/OCL])')
+                    help='Backend type - optional (default:CPU [options:CPU/HIP/OCL])')
 args = parser.parse_args()
 
 installDir = args.install_directory
 backendType = args.backend_type
 
 # check arguments
-if backendType not in ('HOST', 'HIP', 'OCL'):
-    print("ERROR: Backends supported - HOST or HIP or OCL]")
+if backendType not in ('CPU', 'HIP', 'OCL'):
+    print("ERROR: Backends supported - CPU or HIP or OCL]")
     exit()
 
 # check install
@@ -263,7 +263,7 @@ with open(reportFilename, 'w') as f:
         print("SUCCESS: All modules of MIVisionX built")
     f.write("\n")
 
-    f.write("\n\n---\n**Copyright AMD ROCm MIVisionX 2018 - 2020 -- runLibraryTests.py V-"+__version__+"**\n")
+    f.write("\n\n---\n**Copyright AMD ROCm MIVisionX 2018 - 2022 -- runLibraryTests.py V-"+__version__+"**\n")
     f.write("\n")
 
 # report file

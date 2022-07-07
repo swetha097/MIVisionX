@@ -1484,8 +1484,6 @@ protected:
              << "" << std::endl
              << "#if ENABLE_OPENCV" << std::endl
              << "#include <opencv2/opencv.hpp>" << std::endl
-             << "#include <opencv/cv.h>" << std::endl
-             << "#include <opencv/highgui.h>" << std::endl
              << "using namespace cv; " << std::endl
              << "#endif" << std::endl
              << "" << std::endl
@@ -1746,8 +1744,8 @@ protected:
              << "find_package(OpenCL REQUIRED)" << std::endl
              << "find_package(OpenCV QUIET)" << std::endl
              << "include_directories (${OpenCL_INCLUDE_DIRS} ${OpenCL_INCLUDE_DIRS}/Headers )" << std::endl
-             << "include_directories (/opt/rocm/mivisionx/include)" << std::endl
-             << "link_directories    (/opt/rocm/mivisionx/lib)" << std::endl
+             << "include_directories (/opt/rocm/include/mivisionx)" << std::endl
+             << "link_directories    (/opt/rocm/lib)" << std::endl
              << "list(APPEND SOURCES annmodule.cpp)" << std::endl
              << "add_library(${PROJECT_NAME} SHARED ${SOURCES})" << std::endl
              << "set(CMAKE_CXX_FLAGS \"${CMAKE_CXX_FLAGS} -msse4.2 -std=c++11\")" << std::endl

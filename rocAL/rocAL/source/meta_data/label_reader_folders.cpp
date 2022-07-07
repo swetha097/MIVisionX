@@ -93,7 +93,7 @@ void LabelReaderFolders::lookup(const std::vector<std::string>& image_names)
     }
     if(image_names.size() != (unsigned)_output->size())
         _output->resize(image_names.size());
-
+    _output->reset_objects_count();
     for(unsigned i = 0; i < image_names.size(); i++)
     {
         auto image_name = image_names[i];
@@ -101,6 +101,7 @@ void LabelReaderFolders::lookup(const std::vector<std::string>& image_names)
         if(_map_content.end() == it)
             THROW("ERROR: Given name not present in the map"+ image_name )
         _output->get_label_batch()[i] = it->second->get_label();
+        _output->increment_object_count(it->second->get_object_count());
     }
 }
 
@@ -121,7 +122,7 @@ void LabelReaderFolders::read_all(const std::string& _path)
     }
     std::sort(entry_name_list.begin(), entry_name_list.end());
     closedir(_sub_dir);
-
+    uint label_counter = 0;
     for (unsigned dir_count = 0; dir_count < entry_name_list.size(); ++dir_count) {
         std::string subfolder_path = _full_path + "/" + entry_name_list[dir_count];
         filesys::path pathObj(subfolder_path);
@@ -146,8 +147,9 @@ void LabelReaderFolders::read_all(const std::string& _path)
             _subfolder_file_names.clear();
             read_files(_folder_path);
             for(unsigned i = 0; i < _subfolder_file_names.size(); i++) {
-                add(_subfolder_file_names[i], dir_count);
+                add(_subfolder_file_names[i], label_counter);
             }
+            label_counter++;
         }
     }
 }

@@ -2266,8 +2266,8 @@ int ovxKernel_LaplacianPyramid(AgoNode * node, AgoKernelCommand cmd)
     }
     else if (cmd == ago_kernel_cmd_validate) {
         // validate parameters
-        vx_uint32 width = node->paramList[0]->u.img.width;
-        vx_uint32 height = node->paramList[0]->u.img.height;
+        vx_float32 width = (vx_float32)node->paramList[0]->u.img.width;
+        vx_float32 height = (vx_float32)node->paramList[0]->u.img.height;
         vx_df_image format = node->paramList[0]->u.img.format;
         if (format != VX_DF_IMAGE_S16 && format != VX_DF_IMAGE_U8)
             return VX_ERROR_INVALID_FORMAT;
@@ -2289,8 +2289,8 @@ int ovxKernel_LaplacianPyramid(AgoNode * node, AgoKernelCommand cmd)
         // set output image sizes same as input image size
         vx_meta_format meta;
         meta = &node->metaList[2];
-        meta->data.u.img.width = width;
-        meta->data.u.img.height = height;
+        meta->data.u.img.width = (vx_int32)width;
+        meta->data.u.img.height = (vx_int32)height;
         meta->data.u.img.format = format;
 
         status = VX_SUCCESS;
@@ -2316,8 +2316,8 @@ int ovxKernel_LaplacianReconstruct(AgoNode * node, AgoKernelCommand cmd)
     }
     else if (cmd == ago_kernel_cmd_validate) {
         // validate parameters
-        vx_uint32 width = node->paramList[1]->u.img.width;
-        vx_uint32 height = node->paramList[1]->u.img.height;
+        vx_float32 width = (vx_float32)node->paramList[1]->u.img.width;
+        vx_float32 height = (vx_float32)node->paramList[1]->u.img.height;
         vx_df_image format = node->paramList[1]->u.img.format;
         if (format != VX_DF_IMAGE_S16 && format != VX_DF_IMAGE_U8)
             return VX_ERROR_INVALID_FORMAT;
@@ -2337,8 +2337,8 @@ int ovxKernel_LaplacianReconstruct(AgoNode * node, AgoKernelCommand cmd)
         // set output image sizes same as input image size
         vx_meta_format meta;
         meta = &node->metaList[2];
-        meta->data.u.img.width = width;
-        meta->data.u.img.height = height;
+        meta->data.u.img.width = (vx_int32)width;
+        meta->data.u.img.height = (vx_int32)height;
         meta->data.u.img.format = format;
         status = VX_SUCCESS;
     }
@@ -22513,8 +22513,8 @@ int agoKernel_LaplacianPyramid_DATA_DATA_DATA(AgoNode * node, AgoKernelCommand c
     }
     else if (cmd == ago_kernel_cmd_validate) {
         // validate parameters
-        vx_uint32 width = node->paramList[1]->u.img.width;
-        vx_uint32 height = node->paramList[1]->u.img.height;
+        vx_float32 width = (vx_float32)node->paramList[1]->u.img.width;
+        vx_float32 height = (vx_float32)node->paramList[1]->u.img.height;
         vx_df_image format = node->paramList[1]->u.img.format;
         if (format != VX_DF_IMAGE_S16 && format != VX_DF_IMAGE_U8)
             return VX_ERROR_INVALID_FORMAT;
@@ -22533,8 +22533,8 @@ int agoKernel_LaplacianPyramid_DATA_DATA_DATA(AgoNode * node, AgoKernelCommand c
         // set output image sizes same as input image size
         vx_meta_format meta;
         meta = &node->metaList[0];
-        meta->data.u.img.width = width;
-        meta->data.u.img.height = height;
+        meta->data.u.img.width = (vx_uint32)width;
+        meta->data.u.img.height = (vx_uint32)height;
         meta->data.u.img.format = format;
 
         status = VX_SUCCESS;
@@ -22573,8 +22573,8 @@ int agoKernel_LaplacianReconstruct_DATA_DATA_DATA(AgoNode * node, AgoKernelComma
     }
     else if (cmd == ago_kernel_cmd_validate) {
         // validate parameters
-        vx_uint32 width = node->paramList[2]->u.img.width;
-        vx_uint32 height = node->paramList[2]->u.img.height;
+        vx_float32 width = (vx_float32)node->paramList[2]->u.img.width;
+        vx_float32 height = (vx_float32)node->paramList[2]->u.img.height;
         vx_df_image format = node->paramList[2]->u.img.format;
         if (format != VX_DF_IMAGE_S16 && format != VX_DF_IMAGE_U8)
             return VX_ERROR_INVALID_FORMAT;
@@ -22593,8 +22593,8 @@ int agoKernel_LaplacianReconstruct_DATA_DATA_DATA(AgoNode * node, AgoKernelComma
         // set output image sizes same as input image size
         vx_meta_format meta;
         meta = &node->metaList[0];
-        meta->data.u.img.width = width;
-        meta->data.u.img.height = height;
+        meta->data.u.img.width = (vx_uint32)width;
+        meta->data.u.img.height = (vx_uint32)height;
         meta->data.u.img.format = format;
 
         status = VX_SUCCESS;

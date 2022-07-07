@@ -307,60 +307,6 @@ extern "C"  RocalTensor  ROCAL_API_CALL rocalJpegCaffe2LMDBRecordSourceSingleSha
                                                                         RocalImageSizeEvaluationPolicy decode_size_policy = ROCAL_USE_MOST_FREQUENT_SIZE,
                                                                         unsigned max_width = 0, unsigned max_height = 0);
 
-/// Creates JPEG image reader and partial decoder. It allocates the resources and objects required to read and decode Jpeg images stored on the file systems. It has internal sharding capability to load/decode in parallel is user wants.
-/// If images are not Jpeg compressed they will be ignored and Crops t
-/// \param context Rocal context
-/// \param source_path A NULL terminated char string pointing to the location on the disk
-/// \param rocal_color_format The color format the images will be decoded to.
-/// \param num_threads Defines the parallelism level by internally sharding the input dataset and load/decode using multiple decoder/loader instances. Using shard counts bigger than 1 improves the load/decode performance if compute resources (CPU cores) are available.
-/// \param is_output Determines if the user wants the loaded images to be part of the output or not.
-/// \param shuffle Determines if the user wants to shuffle the dataset or not.
-/// \param loop Determines if the user wants to indefinitely loops through images or not.
-/// \param decode_size_policy
-/// \param max_width The maximum width of the decoded images, larger or smaller will be resized to closest
-/// \param max_height The maximum height of the decoded images, larger or smaller will be resized to closest
-/// \param area_factor Determines how much area to be cropped. Ranges from from 0.08 - 1.
-/// \param aspect_ratio Determines the aspect ration of crop. Ranges from 0.75 to 1.33.
-/// \param y_drift_factor - Determines from top left corder to height (crop_height), where to start cropping other wise try for a central crop or take image dims. Ranges from 0 to 1.
-/// \param x_drift_factor - Determines from top left corder to width (crop_width), where to start cropping other wise try for a central crop or take image dims. Ranges from 0 to 1.
-/// \return Reference to the output image
-extern "C"  RocalTensor  ROCAL_API_CALL rocalFusedJpegCrop(RocalContext context,
-                                                        const char* source_path,
-                                                        RocalImageColor rocal_color_format,
-                                                        unsigned num_threads,
-                                                        bool is_output ,
-                                                        bool shuffle = false,
-                                                        bool loop = false,
-                                                        RocalImageSizeEvaluationPolicy decode_size_policy = ROCAL_USE_MAX_SIZE,
-                                                        unsigned max_width = 0, unsigned max_height = 0,
-                                                        RocalFloatParam area_factor = NULL, RocalFloatParam aspect_ratio = NULL,
-                                                        RocalFloatParam y_drift_factor = NULL, RocalFloatParam x_drift_factor = NULL);
-
-
-/// Creates JPEG image reader and partial decoder. It allocates the resources and objects required to read and decode Jpeg images stored on the file systems. It accepts external sharding information to load a singe shard. only
-/// \param context Rocal context
-/// \param source_path A NULL terminated char string pointing to the location on the disk
-/// \param rocal_color_format The color format the images will be decoded to.
-/// \param shard_id Shard id for this loader
-/// \param shard_count Total shard count
-/// \param is_output Determines if the user wants the loaded images to be part of the output or not.
-/// \param decode_size_policy
-/// \param max_width The maximum width of the decoded images, larger or smaller will be resized to closest
-/// \param max_height The maximum height of the decoded images, larger or smaller will be resized to closest
-/// \return
-extern "C"  RocalTensor  ROCAL_API_CALL rocalFusedJpegCropSingleShard(RocalContext context,
-                                                        const char* source_path,
-                                                        RocalImageColor color_format,
-                                                        unsigned shard_id,
-                                                        unsigned shard_count,
-                                                        bool is_output ,
-                                                        bool shuffle = false,
-                                                        bool loop = false,
-                                                        RocalImageSizeEvaluationPolicy decode_size_policy = ROCAL_USE_MAX_SIZE,
-                                                        unsigned max_width = 0, unsigned max_height = 0,
-                                                        RocalFloatParam area_factor = NULL, RocalFloatParam aspect_ratio = NULL,
-                                                        RocalFloatParam y_drift_factor = NULL, RocalFloatParam x_drift_factor = NULL);
-
 
 /// Creates TensorFlow records JPEG image reader and decoder. It allocates the resources and objects required to read and decode Jpeg images stored on the file systems. It has internal sharding capability to load/decode in parallel is user wants.
 /// If images are not Jpeg compressed they will be ignored.
