@@ -140,7 +140,6 @@ int test(int test_case, int reader_type, int pipeline_type, const char *path, co
     // User can alternatively set the size or change the policy that is used to automatically find the size
     switch (reader_type)
     {
-#if 0
         case 1: //image_partial decode
         {
             std::cout << ">>>>>>> Running PARTIAL DECODE" << std::endl;
@@ -148,7 +147,6 @@ int test(int test_case, int reader_type, int pipeline_type, const char *path, co
             input1 = rocalFusedJpegCrop(handle, path, color_format, num_threads, false, false);
         }
         break;
-#endif
         case 2: //coco detection
         {
             std::cout << ">>>>>>> Running COCO READER" << std::endl;

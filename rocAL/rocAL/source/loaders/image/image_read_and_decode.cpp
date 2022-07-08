@@ -224,10 +224,10 @@ ImageReadAndDecode::load(unsigned char* buff,
             _original_width[i] = original_width;
             // decode the image and get the actual decoded image width and height
             size_t scaledw, scaledh;
-            if(_decoder[i]->is_partial_decoder()) // && _randombboxcrop_meta_data_reader)
-            {
-                _decoder[i]->set_bbox_coords(_bbox_coords[i]);
-            }
+            // if(_decoder[i]->is_partial_decoder()) // && _randombboxcrop_meta_data_reader)
+            // {
+                // _decoder[i]->set_bbox_coords(_bbox_coords[i]);
+            // }
             if (_decoder[i]->decode(_compressed_buff[i].data(), _compressed_image_size[i], _decompressed_buff_ptrs[i],
                                     max_decoded_width, max_decoded_height,
                                     original_width, original_height,
