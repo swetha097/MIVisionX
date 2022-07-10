@@ -109,13 +109,23 @@ extern "C" RocalTensor ROCAL_API_CALL rocalCropMirrorNormalize(RocalContext cont
 
 
 extern "C" RocalTensor ROCAL_API_CALL rocalResize(RocalContext context, RocalTensor input,
-                                                                  RocalTensorLayout rocal_tensor_layout,
-                                                                  RocalTensorOutputType rocal_tensor_output_type,
-                                                                  unsigned resize_depth,
-                                                                  unsigned resize_height,
-                                                                  unsigned resize_width,
-                                                                  int interpolation_type,
-                                                                  bool is_output);
+                                                  RocalTensorLayout rocal_tensor_layout,
+                                                  RocalTensorOutputType rocal_tensor_output_type,
+                                                  unsigned resize_depth,
+                                                  unsigned resize_height,
+                                                  unsigned resize_width,
+                                                  int interpolation_type,
+                                                  bool is_output);
+
+/// Accepts U8 and RGB24 input.
+/// \param context
+/// \param input
+/// \param size
+/// \param is_output
+/// \return
+extern "C"  RocalImage  ROCAL_API_CALL rocalResizeSingleParam(RocalContext context, RocalImage input,
+                                                unsigned size,
+                                                bool is_output );
 
 
 #endif //MIVISIONX_ROCAL_API_AUGMENTATION_H
