@@ -22,8 +22,6 @@ protected:
 private:
     vx_array  _dst_roi_width , _dst_roi_height,_src_roi_width, _src_roi_height;
     unsigned _layout, _roi_type;
-
     int _interpolation_type;
     RocalTensorLayout _rocal_tensor_layout;
-
 };

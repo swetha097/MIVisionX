@@ -125,6 +125,7 @@ public:
                 _dims.at(i) = new_dims[i];
                 _data_size *= new_dims[i];
             }
+            set_tensor_layout(_layout);
         }
         else
             THROW("The size of number of dimensions does not match with the dimensions of existing tensor")
@@ -150,7 +151,7 @@ public:
         return _data_type_size;
     }
     void set_width(unsigned width) { _width = width; }
-    void set_height(unsigned height) {_height= height; }
+    void set_height(unsigned height) {_height = height; }
     unsigned get_width() const { return _width; }
     unsigned get_height() const { return _height; }
 

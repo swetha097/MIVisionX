@@ -201,10 +201,10 @@ static vx_status VX_CALLBACK processResize(vx_node node, const vx_reference *par
     if (data->device_type == AGO_TARGET_AFFINITY_CPU)
     {
         vxstatus = refreshResize(node, parameters, num, data);
-        for (int i = 0; i < data->nbatchSize; i++)
-        {
-            std::cerr << "\n data->roi_tensor_Ptr values :: " << data->roi_tensor_Ptr[i].xywhROI.xy.x << " " << data->roi_tensor_Ptr[i].xywhROI.xy.y << " " << data->roi_tensor_Ptr[i].xywhROI.roiWidth << " " << data->roi_tensor_Ptr[i].xywhROI.roiHeight;
-        }
+        // for (int i = 0; i < data->nbatchSize; i++)
+        // {
+        //     std::cerr << "\n data->roi_tensor_Ptr values :: " << data->roi_tensor_Ptr[i].xywhROI.xy.x << " " << data->roi_tensor_Ptr[i].xywhROI.xy.y << " " << data->roi_tensor_Ptr[i].xywhROI.roiWidth << " " << data->roi_tensor_Ptr[i].xywhROI.roiHeight;
+        // }
         rpp_status = rppt_resize_host(data->pSrc, data->src_desc_ptr,
                                       data->pDst, data->dst_desc_ptr,
                                       data->dstimgsize,
@@ -223,7 +223,7 @@ static vx_status VX_CALLBACK initializeResize(vx_node node, const vx_reference *
     ResizeLocalData *data = new ResizeLocalData;
     unsigned layout, roiType;
     memset(data, 0, sizeof(*data));
-// std::cerr<<"\n INIT2";
+
 #if ENABLE_OPENCL
     STATUS_ERROR_CHECK(vxQueryNode(node, VX_NODE_ATTRIBUTE_AMD_OPENCL_COMMAND_QUEUE, &data->handle.cmdq, sizeof(data->handle.cmdq)));
 #elif ENABLE_HIP
@@ -238,9 +238,10 @@ static vx_status VX_CALLBACK initializeResize(vx_node node, const vx_reference *
         data->roiType = RpptRoiType::XYWH;
         std::cerr<<"roiType  XYWH\n";
     }
-    else
+    else {
         data->roiType = RpptRoiType::LTRB;
         std::cerr<<"roiType  LTRB\n";
+    }
     // Querying for input tensor
     data->src_desc_ptr = &data->srcDesc;
     STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[0], VX_TENSOR_NUMBER_OF_DIMS, &data->src_desc_ptr->numDims, sizeof(data->src_desc_ptr->numDims)));
