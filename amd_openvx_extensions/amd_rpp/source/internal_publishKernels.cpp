@@ -142,6 +142,8 @@ vx_status get_kernels_to_publish()
     STATUS_ERROR_CHECK(ADD_KERENEL(Noise_Register));
     STATUS_ERROR_CHECK(ADD_KERENEL(Blend_Register));
     STATUS_ERROR_CHECK(ADD_KERENEL(Gridmask_Register));
+    STATUS_ERROR_CHECK(ADD_KERENEL(WarpAffine_Register));
+
 
 
     

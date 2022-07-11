@@ -61,6 +61,7 @@ struct FlipLocalData
 
 static vx_status VX_CALLBACK refreshFlip(vx_node node, const vx_reference *parameters, vx_uint32 num, FlipLocalData *data)
 {
+    std::cerr<<"refreshFlip\n\n";
     vx_status status = VX_SUCCESS;
     STATUS_ERROR_CHECK(vxCopyArrayRange((vx_array)parameters[1], 0, data->nbatchSize * 4, sizeof(unsigned), data->roi_tensor_Ptr, VX_READ_ONLY, VX_MEMORY_TYPE_HOST));
     STATUS_ERROR_CHECK(vxCopyArrayRange((vx_array)parameters[3], 0, data->nbatchSize, sizeof(vx_uint32), data->h_flag, VX_READ_ONLY, VX_MEMORY_TYPE_HOST));
@@ -79,7 +80,6 @@ static vx_status VX_CALLBACK refreshFlip(vx_node node, const vx_reference *param
                 data->roi_tensor_Ptr[index + f].xywhROI.xy.y = data->roi_tensor_Ptr[n].xywhROI.xy.y;
                 data->roi_tensor_Ptr[index + f].xywhROI.roiWidth = data->roi_tensor_Ptr[n].xywhROI.roiWidth;
                 data->roi_tensor_Ptr[index + f].xywhROI.roiHeight = data->roi_tensor_Ptr[n].xywhROI.roiHeight;
-
             }
         }
     }
@@ -92,7 +92,6 @@ static vx_status VX_CALLBACK refreshFlip(vx_node node, const vx_reference *param
         STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[0], VX_TENSOR_BUFFER_HIP, &data->hip_pSrc, sizeof(data->hip_pSrc)));
         STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[2], VX_TENSOR_BUFFER_HIP, &data->hip_pDst, sizeof(data->hip_pDst)));
         hipMemcpy(data->hip_roi_tensor_Ptr, data->roi_tensor_Ptr, data->nbatchSize * sizeof(RpptROI), hipMemcpyHostToDevice);
-
 #endif
     }
     if (data->device_type == AGO_TARGET_AFFINITY_CPU)
@@ -131,11 +130,14 @@ static vx_status VX_CALLBACK refreshFlip(vx_node node, const vx_reference *param
         //     STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[3], VX_TENSOR_BUFFER_HOST, &data->pDst, sizeof(vx_float16)));
         // }
     }
+    std::cerr<<"eding \n\n";
     return status;
 }
 
 static vx_status VX_CALLBACK validateFlip(vx_node node, const vx_reference parameters[], vx_uint32 num, vx_meta_format metas[])
 {
+        std::cerr<<"validateFlip\n\n";
+
     vx_status status = VX_SUCCESS;
     vx_enum scalar_type;
     STATUS_ERROR_CHECK(vxQueryScalar((vx_scalar)parameters[5], VX_SCALAR_TYPE, &scalar_type, sizeof(scalar_type)));
@@ -174,6 +176,8 @@ static vx_status VX_CALLBACK validateFlip(vx_node node, const vx_reference param
 
 static vx_status VX_CALLBACK processFlip(vx_node node, const vx_reference *parameters, vx_uint32 num)
 {
+    std::cerr<<"processFlip\n\n";
+
     RppStatus rpp_status = RPP_SUCCESS;
     vx_status return_status = VX_SUCCESS;
     FlipLocalData *data = NULL;
@@ -182,11 +186,15 @@ static vx_status VX_CALLBACK processFlip(vx_node node, const vx_reference *param
     {
 #if ENABLE_OPENCL
         refreshFlip(node, parameters, num, data);
-        rpp_status = rppt_flip_gpu((void *)data->cl_pSrc, data->src_desc_ptr, (void *)data->cl_pDst, data->src_desc_ptr,  data->h_flag, data->v_flag, data->hip_roi_tensor_Ptr, data->roiType, data->rppHandle);
+        rpp_status = rppt_flip_gpu((void *)data->cl_pSrc, data->src_desc_ptr, (void *)data->cl_pDst, data->src_desc_ptr,  data->h_flag, data->v_flag, data->roi_tensor_Ptr, data->roiType, data->rppHandle);
         return_status = (rpp_status == RPP_SUCCESS) ? VX_SUCCESS : VX_FAILURE;
 #elif ENABLE_HIP
         refreshFlip(node, parameters, num, data);
+        std::cerr<<"gonna to call flip gpu\n\n";
+        std::cerr<<"((((((((((((((((((((((((((("<<data->h_flag[0]<<"  "<<data->v_flag[0]<<"\n";
         rpp_status = rppt_flip_gpu((void *)data->hip_pSrc, data->src_desc_ptr, (void *)data->hip_pDst, data->src_desc_ptr,  data->h_flag, data->v_flag, data->hip_roi_tensor_Ptr, data->roiType, data->rppHandle);
+
+        std::cerr<<"back from rpp\n\n";
         return_status = (rpp_status == RPP_SUCCESS) ? VX_SUCCESS : VX_FAILURE;
 #endif
     }
@@ -196,16 +204,19 @@ static vx_status VX_CALLBACK processFlip(vx_node node, const vx_reference *param
         for(int i = 0; i < data->nbatchSize; i++)
         {
             std::cerr<<"\n bbox values :: "<<data->roi_tensor_Ptr[i].xywhROI.xy.x<<" "<<data->roi_tensor_Ptr[i].xywhROI.xy.y<<" "<<data->roi_tensor_Ptr[i].xywhROI.roiWidth<<" "<<data->roi_tensor_Ptr[i].xywhROI.roiHeight;
-        }  
+        }
         rpp_status = rppt_flip_host(data->pSrc, data->src_desc_ptr, data->pDst, data->src_desc_ptr, data->h_flag, data->v_flag, data->roi_tensor_Ptr, data->roiType, data->rppHandle);
         return_status = (rpp_status == RPP_SUCCESS) ? VX_SUCCESS : VX_FAILURE;
         std::cerr<<"\n back from RPP";
     }
+    std::cerr<<"end\n\n";
     return return_status;
+    
 }
 
 static vx_status VX_CALLBACK initializeFlip(vx_node node, const vx_reference *parameters, vx_uint32 num)
 {
+    std::cerr<<"initializeFlip\n\n";
     FlipLocalData *data = new FlipLocalData;
     unsigned roiType;
     memset(data, 0, sizeof(*data));
@@ -386,7 +397,7 @@ static vx_status VX_CALLBACK initializeFlip(vx_node node, const vx_reference *pa
     if (data->device_type == AGO_TARGET_AFFINITY_GPU)
         hipMalloc(&data->hip_roi_tensor_Ptr, data->src_desc_ptr->n * sizeof(RpptROI));
 #endif
-    data->roi_tensor_Ptr = (RpptROI *) calloc(data->src_desc_ptr->n, sizeof(RpptROI));
+    data->roi_tensor_Ptr = (RpptROI *)calloc(data->src_desc_ptr->n, sizeof(RpptROI));
     data->h_flag = (vx_uint32 *)malloc(sizeof(vx_uint32) * data->src_desc_ptr->n);
     data->v_flag = (vx_uint32 *)malloc(sizeof(vx_uint32) * data->src_desc_ptr->n);
     refreshFlip(node, parameters, num, data);
@@ -406,6 +417,7 @@ static vx_status VX_CALLBACK initializeFlip(vx_node node, const vx_reference *pa
 
 static vx_status VX_CALLBACK uninitializeFlip(vx_node node, const vx_reference *parameters, vx_uint32 num)
 {
+    std::cerr<<"uninitializeFlip\n\n";
     FlipLocalData *data;
     STATUS_ERROR_CHECK(vxQueryNode(node, VX_NODE_LOCAL_DATA_PTR, &data, sizeof(data)));
 #if ENABLE_OPENCL || ENABLE_HIP

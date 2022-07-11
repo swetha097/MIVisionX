@@ -384,7 +384,7 @@ case 14:
     {
         std::cout << ">>>>>>> Running "
                   << "rocalBlend" << std::endl;
-        image2 = rocalFlip(handle, input1, tensorLayout, tensorOutputType, true);
+        image2 = rocalGamma(handle, input1, tensorLayout, tensorOutputType, true);
         image1 = rocalBlend(handle, input1,image2, tensorLayout, tensorOutputType, true);
 
     }
@@ -394,6 +394,14 @@ case 15:
         std::cout << ">>>>>>> Running "
                   << "rocalGridmask" << std::endl;
         image1 = rocalGridmask(handle, input1, tensorLayout, tensorOutputType, true);
+
+    }
+break;
+case 16:
+    {
+        std::cout << ">>>>>>> Running "
+                  << "rocalwarp_affine" << std::endl;
+        image1 = rocalWarpAffine(handle, input1, tensorLayout, tensorOutputType, true);
 
     }
 break;

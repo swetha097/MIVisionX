@@ -54,6 +54,18 @@ extern "C" RocalTensor ROCAL_API_CALL rocalResize(RocalContext context, RocalTen
                                                                   int interpolation_type,
                                                                   bool is_output);
 
+extern "C" RocalTensor ROCAL_API_CALL rocalWarpAffine(RocalContext p_context,
+                                                    RocalTensor p_input,
+                                                    RocalTensorLayout rocal_tensor_layout,
+                                                    RocalTensorOutputType rocal_tensor_output_type,
+                                                    bool is_output,
+                                                    RocalFloatParam x0=0,
+                                                    RocalFloatParam x1=0,
+                                                    RocalFloatParam y0=0,
+                                                    RocalFloatParam y1=0,
+                                                    RocalFloatParam o0=0,
+                                                    RocalFloatParam o1=0,
+                                                    int interpolation_type=0);
 
 
 extern "C" RocalTensor ROCAL_API_CALL rocalFlip(RocalContext context, RocalTensor input, RocalTensorLayout rocal_tensor_layout, RocalTensorOutputType rocal_tensor_output_type, bool is_output,

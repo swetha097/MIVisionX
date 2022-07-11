@@ -146,6 +146,8 @@ list(APPEND SOURCES
         source/tensor/Noise.cpp
         source/tensor/Blend.cpp
         source/tensor/Gridmask.cpp
+        source/tensor/WarpAffine.cpp
+
         
         source/tensor/Nop.cpp
         source/kernel_rpp.cpp

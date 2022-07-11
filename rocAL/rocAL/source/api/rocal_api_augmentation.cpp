@@ -40,6 +40,8 @@ THE SOFTWARE.
 #include "node_noise.h"
 #include "node_blend.h"
 #include "node_gridmask.h"
+#include "node_warp_affine.h"
+
 #include "commons.h"
 #include "context.h"
 #include "rocal_api.h"
@@ -816,6 +818,54 @@ rocalGridmask(RocalContext p_context,
         output = context->master_graph->create_tensor(output_info, is_output);
 
         context->master_graph->add_node<GridmaskNode>({input}, {output})->init(tileWidth, gridRatio, gridAngle,shift_x,shift_y, layout);
+    }
+    catch(const std::exception& e)
+    {
+        context->capture_error(e.what());
+        ERR(e.what())
+    }
+    return output;
+}
+
+RocalTensor
+ROCAL_API_CALL rocalWarpAffine(RocalContext p_context,
+                              RocalTensor p_input,
+                              RocalTensorLayout rocal_tensor_layout,
+                              RocalTensorOutputType rocal_tensor_output_type,
+                              bool is_output,
+                              RocalFloatParam x0,
+                              RocalFloatParam x1,
+                              RocalFloatParam y0,
+                              RocalFloatParam y1,
+                              RocalFloatParam o0,
+                              RocalFloatParam o1,
+                              int interpolation_type)
+{
+    if(!p_context || !p_input)
+        THROW("Null values passed as input")
+    rocALTensor* output = nullptr;
+    auto context = static_cast<Context*>(p_context);
+    auto input = static_cast<rocALTensor*>(p_input);
+    auto _x0 = static_cast<FloatParam*>(x0);
+    auto _x1 = static_cast<FloatParam*>(x1);
+    auto _y0 = static_cast<FloatParam*>(y0);
+    auto _y1 = static_cast<FloatParam*>(y1);
+    auto _o0 = static_cast<FloatParam*>(o0);
+    auto _o1 = static_cast<FloatParam*>(o1);
+    RocalTensorlayout op_tensorLayout;
+    RocalTensorDataType op_tensorDataType;
+    try
+    {
+        int layout=0;
+        get_rocal_tensor_layout(rocal_tensor_layout, op_tensorLayout, layout);
+        get_rocal_tensor_data_type(rocal_tensor_output_type, op_tensorDataType);
+        rocALTensorInfo output_info = input->info();
+        output_info.set_tensor_layout(op_tensorLayout);
+        output_info.set_data_type(op_tensorDataType);
+
+        output = context->master_graph->create_tensor(output_info, is_output);
+        std::cerr<<"In rocal_api_augmentation/n/n";
+        context->master_graph->add_node<WarpAffineNode>({input}, {output})->init(_x0,_x1,_y0,_y1,_o0,_o1, interpolation_type, layout);
     }
     catch(const std::exception& e)
     {

@@ -54,6 +54,9 @@ vx_status ColorJitter_Register(vx_context);
 vx_status Noise_Register(vx_context);
 vx_status Blend_Register(vx_context);
 vx_status Gridmask_Register(vx_context);
+vx_status WarpAffine_Register(vx_context);
+
+
 
 
 
@@ -168,6 +171,8 @@ vx_status WarpPerspectivebatchPD_Register(vx_context);
 #define VX_KERNEL_RPP_COLORJITTER_NAME                                       "org.rpp.ColorJitter"
 #define VX_KERNEL_RPP_NOISE_NAME                                             "org.rpp.Noise"
 #define VX_KERNEL_RPP_BLEND_NAME                                              "org.rpp.Blend"
+#define VX_KERNEL_RPP_WARPAFFINE_NAME                                         "org.rpp.WarpAffine"
+
 
 
 
