@@ -24,7 +24,7 @@ RUN yum -y install --nogpgcheck autoconf automake bzip2 bzip2-devel cmake freety
         yum -y install --nogpgcheck https://forensics.cert.org/cert-forensics-tools-release-el7.rpm && yum -y --enablerepo=forensics install --nogpgcheck fdk-aac && \
         yum -y install --nogpgcheck libass-devel && \
         export PKG_CONFIG_PATH="/usr/local/lib/pkgconfig/" && \
-        wget https://github.com/FFmpeg/FFmpeg/archive/refs/tags/n4.0.4.zip && unzip n4.0.4.zip && cd FFmpeg-n4.0.4/ && \
+        wget https://github.com/FFmpeg/FFmpeg/archive/refs/tags/n4.4.2.zip && unzip n4.4.2.zip && cd FFmpeg-n4.4.2/ && \
         ./configure --enable-shared --disable-static --enable-libx264 --enable-libx265 --enable-libfdk-aac --enable-libass --enable-gpl --enable-nonfree && \
         make -j8 && make install
 # install MIVisionX neural net dependency - Level 4
@@ -37,7 +37,7 @@ RUN yum -y install --nogpgcheck libsqlite3x-devel python-devel python3-devel pyt
         ./b2 install threading=multi link=shared --with-system --with-filesystem && \
         ./b2 stage -j16 threading=multi link=static cxxflags="-std=c++11 -fpic" cflags="-fpic" && \
         ./b2 install threading=multi link=static --with-system --with-filesystem && cd ../ && \
-        git clone -b v3.12.0 https://github.com/protocolbuffers/protobuf.git && cd protobuf && git submodule update --init --recursive && \
+        git clone -b v3.12.4 https://github.com/protocolbuffers/protobuf.git && cd protobuf && git submodule update --init --recursive && \
         ./autogen.sh && ./configure && make -j8 && make check -j8 && make install
 RUN git clone -b rocm-5.1.1 https://github.com/RadeonOpenCompute/rocm-cmake.git && cd rocm-cmake && mkdir build && cd build && \
         cmake3 ../ && make -j8 && make install && cd ../../ && \

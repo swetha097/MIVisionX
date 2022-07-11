@@ -7,9 +7,9 @@ RUN apt-get update -y
 # install mivisionx base dependencies - Level 1
 RUN DEBIAN_FRONTEND=noninteractive apt-get -y install gcc g++ cmake pkg-config git
 # install ROCm for mivisionx OpenCL/HIP dependency - Level 2
-RUN DEBIAN_FRONTEND=noninteractive apt-get -y install libnuma-dev wget sudo &&  \
-        wget https://repo.radeon.com/amdgpu-install/22.10.1/ubuntu/focal/amdgpu-install_22.10.1.50101-1_all.deb && \
-        sudo apt-get install -y ./amdgpu-install_22.10.1.50101-1_all.deb && \
+RUN DEBIAN_FRONTEND=noninteractive apt-get -y install initramfs-tools libnuma-dev wget sudo &&  \
+        wget https://repo.radeon.com/amdgpu-install/22.10.3/ubuntu/focal/amdgpu-install_22.10.3.50103-1_all.deb && \
+        sudo apt-get install -y ./amdgpu-install_22.10.3.50103-1_all.deb && \
         sudo apt-get update -y && \
         sudo amdgpu-install -y --usecase=rocm
 # install OpenCV & FFMPEG - Level 3
@@ -20,7 +20,7 @@ RUN DEBIAN_FRONTEND=noninteractive apt-get -y install build-essential libgtk2.0-
 RUN DEBIAN_FRONTEND=noninteractive apt-get -y install autoconf automake build-essential cmake git-core libass-dev libfreetype6-dev libsdl2-dev libtool libva-dev \
         libvdpau-dev libvorbis-dev libxcb1-dev libxcb-shm0-dev libxcb-xfixes0-dev pkg-config texinfo wget zlib1g-dev \
         nasm yasm libx264-dev libx265-dev libnuma-dev libfdk-aac-dev && \
-        wget https://github.com/FFmpeg/FFmpeg/archive/refs/tags/n4.0.4.zip && unzip n4.0.4.zip && cd FFmpeg-n4.0.4/ && sudo ldconfig && \
+        wget https://github.com/FFmpeg/FFmpeg/archive/refs/tags/n4.4.2.zip && unzip n4.4.2.zip && cd FFmpeg-n4.4.2/ && sudo ldconfig && \
         export PKG_CONFIG_PATH="/usr/local/lib/pkgconfig/" && \
         ./configure --enable-shared --disable-static --enable-libx264 --enable-libx265 --enable-libfdk-aac --enable-libass --enable-gpl --enable-nonfree && \
         make -j8 && sudo make install && cd
@@ -41,7 +41,7 @@ RUN DEBIAN_FRONTEND=noninteractive apt-get -y install wget libbz2-dev libssl-dev
         sudo ./b2 install threading=multi link=static --with-system --with-filesystem && cd ../ && \
         git clone -b 0.93  https://github.com/GPUOpen-ProfessionalCompute-Libraries/rpp.git && cd rpp && mkdir build && cd build && \
         cmake -DBACKEND=HIP ../ && make -j4 && sudo make install && cd ../../ && \
-        git clone -b v3.12.0 https://github.com/protocolbuffers/protobuf.git && cd protobuf && git submodule update --init --recursive && \
+        git clone -b v3.12.4 https://github.com/protocolbuffers/protobuf.git && cd protobuf && git submodule update --init --recursive && \
         ./autogen.sh && ./configure && make -j8 && make check -j8 && sudo make install && sudo ldconfig && cd
 
 WORKDIR /workspace

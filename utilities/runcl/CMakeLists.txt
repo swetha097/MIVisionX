@@ -29,7 +29,7 @@ list(APPEND SOURCES runcl.cpp)
 
 add_executable(runcl ${SOURCES})
 # install MIVisionX executables -- {ROCM_PATH}/bin
-install (TARGETS runcl DESTINATION bin)
+install (TARGETS runcl DESTINATION ${CMAKE_INSTALL_BINDIR})
 
 if(OpenCL_FOUND)
 	target_compile_definitions(runcl PUBLIC ENABLE_OPENCL=1)
@@ -39,11 +39,11 @@ else(OpenCL_FOUND)
 	target_compile_definitions(runcl PUBLIC ENABLE_OPENCL=0)
 endif(OpenCL_FOUND)
 
-if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "MSVC")
+if(WIN32)
 	set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} /MT")
 	set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} /MTd")
 else()
-	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
+	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=gnu++14")
 	find_package(OpenSSL QUIET)
 	if(OPENSSL_FOUND)
 		set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DHAVE_OpenSSL=1")
