@@ -194,48 +194,26 @@ AudioLoader::load_routine()
 
         auto load_status = LoaderModuleStatus::NO_MORE_DATA_TO_READ;
         {
-            if(tensor)
+            load_status = _audio_loader->load(data,
+                                            _decoded_img_info._image_names,
+                                            _output_tensor->info().max_dims().at(0),
+                                            _output_tensor->info().max_dims().at(1),
+                                            _decoded_img_info._roi_width,
+                                            _decoded_img_info._roi_height,
+                                            _decoded_img_info._original_width,
+                                            _decoded_img_info._original_height);
+
+            if(load_status == LoaderModuleStatus::OK)
             {
-                load_status = _audio_loader->load(data,
-                                                _decoded_img_info._image_names,
-                                                _output_tensor->info().max_dims().at(0),
-                                                _output_tensor->info().max_dims().at(1),
-                                                _decoded_img_info._roi_width,
-                                                _decoded_img_info._roi_height,
-                                                _decoded_img_info._original_width,
-                                                _decoded_img_info._original_height);
-
-                if(load_status == LoaderModuleStatus::OK)
-                {
-                    // if (_randombboxcrop_meta_data_reader)
-                    // {
-                    //     _crop_audio_info._crop_audio_coords = _audio_loader->get_batch_random_bbox_crop_coords();
-                    //     _circ_buff.set_crop_audio_info(_crop_audio_info);
-                    // }
-                    _circ_buff.set_image_info(_decoded_img_info);
-                    _circ_buff.push();
-                    _audio_counter += _output_tensor->info().batch_size();
-                }
+                // if (_randombboxcrop_meta_data_reader)
+                // {
+                //     _crop_audio_info._crop_audio_coords = _audio_loader->get_batch_random_bbox_crop_coords();
+                //     _circ_buff.set_crop_audio_info(_crop_audio_info);
+                // }
+                _circ_buff.set_image_info(_decoded_img_info);
+                _circ_buff.push();
+                _audio_counter += _output_tensor->info().batch_size();
             }
-            else
-            {
-                load_status = _audio_loader->load(data,
-                                                _decoded_img_info._image_names,
-                                                _output_tensor->info().max_dims().at(0),
-                                                _output_tensor->info().max_dims().at(1),
-                                                _decoded_img_info._roi_width,
-                                                _decoded_img_info._roi_height,
-                                                _decoded_img_info._original_width,
-                                                _decoded_img_info._original_height);
-
-                if(load_status == LoaderModuleStatus::OK)
-                {
-                    _circ_buff.set_image_info(_decoded_img_info);
-                    _circ_buff.push();
-                    _audio_counter += _output_tensor->info().batch_size();
-                }
-            }
-
         }
         if (load_status != LoaderModuleStatus::OK)
         {

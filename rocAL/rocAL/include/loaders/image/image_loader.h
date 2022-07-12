@@ -87,7 +87,6 @@ private:
     size_t _remaining_image_count;//!< How many images are there yet to be loaded
     bool _decoder_keep_original = false;
     int _device_id;
-    bool tensor = true; // for debugging should be removed
     // std::shared_ptr<RandomBBoxCrop_MetaDataReader> _randombboxcrop_meta_data_reader = nullptr;
 };
 
