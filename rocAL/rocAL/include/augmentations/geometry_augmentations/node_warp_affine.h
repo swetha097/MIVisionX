@@ -48,6 +48,7 @@ private:
     ParameterVX<float> _o1;
 
     std::vector<float> _affine;
+    
     unsigned _layout, _roi_type, _interpolation_type;
     vx_array _affine_array;
     constexpr static float COEFFICIENT_RANGE_0 [2] = {-0.35, 0.35};
