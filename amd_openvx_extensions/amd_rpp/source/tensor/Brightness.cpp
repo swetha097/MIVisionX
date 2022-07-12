@@ -355,7 +355,6 @@ static vx_status VX_CALLBACK initializeBrightness(vx_node node, const vx_referen
         data->dst_desc_ptr->strides.cStride = 1;
         data->dst_desc_ptr->layout = RpptLayout::NCHW;
     }
-
 #if ENABLE_HIP
     if (data->device_type == AGO_TARGET_AFFINITY_GPU)
         hipMalloc(&data->hip_roi_tensor_Ptr, data->src_desc_ptr->n * sizeof(RpptROI));

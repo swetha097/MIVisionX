@@ -72,7 +72,7 @@ struct CropLocalData
 */
 static vx_status VX_CALLBACK refreshCrop(vx_node node, const vx_reference *parameters, vx_uint32 num, CropLocalData *data)
 {
-
+std::cerr<<"refreshCrop\n\n\n";
     vx_status status = VX_SUCCESS;
     STATUS_ERROR_CHECK(vxCopyArrayRange((vx_array)parameters[1], 0, data->nbatchSize * 4, sizeof(unsigned), data->roi_tensor_Ptr, VX_READ_ONLY, VX_MEMORY_TYPE_HOST));
     STATUS_ERROR_CHECK(vxCopyArrayRange((vx_array)parameters[4], 0, data->nbatchSize, sizeof(vx_uint32), data->crop_w, VX_READ_ONLY, VX_MEMORY_TYPE_HOST));
@@ -160,6 +160,7 @@ static vx_status VX_CALLBACK refreshCrop(vx_node node, const vx_reference *param
 
 static vx_status VX_CALLBACK validateCrop(vx_node node, const vx_reference parameters[], vx_uint32 num, vx_meta_format metas[])
 {
+    std::cerr<<"in validateCrop\n\n ";
     vx_status status = VX_SUCCESS;
     vx_enum scalar_type;
     STATUS_ERROR_CHECK(vxQueryScalar((vx_scalar)parameters[10], VX_SCALAR_TYPE, &scalar_type, sizeof(scalar_type)));
@@ -217,7 +218,15 @@ static vx_status VX_CALLBACK processCrop(vx_node node, const vx_reference *param
 #elif ENABLE_HIP
         refreshCrop(node, parameters, num, data);
         std::cerr << "Calling crop GPU\n";
+        
         rpp_status = rppt_crop_gpu((void *)data->hip_pSrc, data->src_desc_ptr, (void *)data->hip_pDst, data->src_desc_ptr, data->hip_roi_tensor_Ptr, data->roiType, data->rppHandle);
+        if (1) {
+            float *temp1 = ((float *)calloc(100, sizeof(float)));
+            for (int i = 0; i < 100; i++) {
+                temp1[i] = (float)*((unsigned char *)(data->hip_pDst) + i);
+                std::cout << temp1[i] << " ";
+            }
+        }
         return_status = (rpp_status == RPP_SUCCESS) ? VX_SUCCESS : VX_FAILURE;
         std::cerr << "Back from RPP\n";
 #endif
@@ -242,6 +251,7 @@ static vx_status VX_CALLBACK processCrop(vx_node node, const vx_reference *param
 
 static vx_status VX_CALLBACK initializeCrop(vx_node node, const vx_reference *parameters, vx_uint32 num)
 {
+    std::cerr<<"initializeCrop\n\n\n";
     CropLocalData *data = new CropLocalData;
     unsigned roiType;
     memset(data, 0, sizeof(*data));
@@ -433,6 +443,7 @@ static vx_status VX_CALLBACK initializeCrop(vx_node node, const vx_reference *pa
 
 static vx_status VX_CALLBACK uninitializeCrop(vx_node node, const vx_reference *parameters, vx_uint32 num)
 {
+    std::cerr<<"uninitializeCrop\n\n\n\n";
     CropLocalData *data;
     STATUS_ERROR_CHECK(vxQueryNode(node, VX_NODE_LOCAL_DATA_PTR, &data, sizeof(data)));
 #if ENABLE_OPENCL || ENABLE_HIP

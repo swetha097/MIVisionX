@@ -183,8 +183,15 @@ static vx_status VX_CALLBACK processGammaCorrection(vx_node node, const vx_refer
         return_status = (rpp_status == RPP_SUCCESS) ? VX_SUCCESS : VX_FAILURE;
 #elif ENABLE_HIP
         refreshGammaCorrection(node, parameters, num, data);
-        std::cerr << "Calling Brightness GPU\n";
+        std::cerr << "Calling gamma GPU\n";
         rpp_status = rppt_gamma_correction_gpu((void *)data->hip_pSrc, data->src_desc_ptr, (void *)data->hip_pDst, data->src_desc_ptr,  data->alpha, data->hip_roi_tensor_Ptr, data->roiType, data->rppHandle);
+        if (1) {
+            float *temp1 = ((float *)calloc(100, sizeof(float)));
+            for (int i = 0; i < 100; i++) {
+                temp1[i] = (float)*((unsigned char *)(data->hip_pDst) + i);
+                std::cout << temp1[i] << " ";
+            }
+        }
         return_status = (rpp_status == RPP_SUCCESS) ? VX_SUCCESS : VX_FAILURE;
 
 #endif

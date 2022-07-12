@@ -304,7 +304,7 @@ break;
     {
          std::cout << ">>>>>>> Running "
                   << "rocalResize" << std::endl;
-        image1 = rocalResize(handle, input1, tensorLayout, tensorOutputType, 3,700 , 700, 0,true);
+        image1 = rocalResize(handle, input1, tensorLayout, tensorOutputType, 3,300 , 300, 0,true);
 
     }
     break;
@@ -427,12 +427,13 @@ break;
     printf("Remaining images %lu \n", rocalGetRemainingImages(handle));
     high_resolution_clock::time_point t1 = high_resolution_clock::now();
     int index = 0;
-
+std::cerr<<"hiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii\n\n\n";
     RocalTensorList output_tensor_list;
     auto cv_color_format = ((color_format == RocalImageColor::ROCAL_COLOR_RGB24) ?  ((tensorOutputType == RocalTensorOutputType::ROCAL_FP32) ? CV_8UC3 : CV_8UC3) : CV_8UC1);
     std::cerr<<"\n\ncv_color_format"<<cv_color_format<<"\n"<<color_format<<"\n"<<tensorOutputType;
     while (rocalGetRemainingImages(handle) >= inputBatchSize)
     {
+        std::cerr<<"hello\n\n\n";
         index++;
         if (rocalRun(handle) != 0)
             break;
@@ -483,6 +484,7 @@ break;
             break;
             case 2: //detection pipeline
             {
+                std::cerr<<"detection\n\n";
                 rocALTensorList* bbox_labels = rocalGetBoundingBoxLabel(handle);
                 rocALTensorList* bbox_coords = rocalGetBoundingBoxCords(handle);
                 for(int i = 0; i < bbox_labels->size(); i++)
@@ -531,6 +533,7 @@ break;
                 return -1;
             }
         }
+        std::cerr<<"endddddd\n\n";
         auto last_colot_temp = rocalGetIntValue(color_temp_adj);
         rocalUpdateIntParameter(last_colot_temp + 1, color_temp_adj);
 

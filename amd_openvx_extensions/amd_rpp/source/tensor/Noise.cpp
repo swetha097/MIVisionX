@@ -195,6 +195,15 @@ static vx_status VX_CALLBACK processNoise(vx_node node, const vx_reference *para
         return_status = (rpp_status == RPP_SUCCESS) ? VX_SUCCESS : VX_FAILURE;
 #elif ENABLE_HIP
         refreshNoise(node, parameters, num, data);
+        for(int i = 0; i < data->nbatchSize; i++)
+        {
+            std::cerr<<"\n bbox values :: "<<data->roi_tensor_Ptr[i].xywhROI.xy.x<<" "<<data->roi_tensor_Ptr[i].xywhROI.xy.y<<" "<<data->roi_tensor_Ptr[i].xywhROI.roiWidth<<" "<<data->roi_tensor_Ptr[i].xywhROI.roiHeight;
+            data->noise_value[i]=1.0;
+            data->noise_prob[i]=0.1;
+            data->salt_prob[i]=0.5;
+            data->salt_value[i]=0.9;
+
+        }
         rpp_status = rppt_salt_and_pepper_noise_gpu((void *)data->hip_pSrc, data->src_desc_ptr, (void *)data->hip_pDst, data->src_desc_ptr,  data->noise_prob, data->salt_prob, data->noise_value, data->salt_value, data->seed,data->hip_roi_tensor_Ptr, data->roiType, data->rppHandle);
         return_status = (rpp_status == RPP_SUCCESS) ? VX_SUCCESS : VX_FAILURE;
 #endif
@@ -205,6 +214,11 @@ static vx_status VX_CALLBACK processNoise(vx_node node, const vx_reference *para
         for(int i = 0; i < data->nbatchSize; i++)
         {
             std::cerr<<"\n bbox values :: "<<data->roi_tensor_Ptr[i].xywhROI.xy.x<<" "<<data->roi_tensor_Ptr[i].xywhROI.xy.y<<" "<<data->roi_tensor_Ptr[i].xywhROI.roiWidth<<" "<<data->roi_tensor_Ptr[i].xywhROI.roiHeight;
+            data->noise_value[i]=1.0;
+            data->noise_prob[i]=0.1;
+            data->salt_prob[i]=0.5;
+            data->salt_value[i]=0.9;
+
         }
         rpp_status = rppt_salt_and_pepper_noise_host(data->pSrc, data->src_desc_ptr, data->pDst, data->src_desc_ptr, data->noise_prob, data->salt_prob,data->noise_value, data->salt_value, 1255459, data->roi_tensor_Ptr, data->roiType, data->rppHandle);
         return_status = (rpp_status == RPP_SUCCESS) ? VX_SUCCESS : VX_FAILURE;
