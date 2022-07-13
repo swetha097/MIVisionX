@@ -55,6 +55,16 @@ vx_status Noise_Register(vx_context);
 vx_status Blend_Register(vx_context);
 vx_status Gridmask_Register(vx_context);
 vx_status WarpAffine_Register(vx_context);
+vx_status Blur_Register(vx_context);
+vx_status Vignette_Register(vx_context);
+vx_status Jitter_Register(vx_context);
+vx_status Snow_Register(vx_context);
+vx_status Fog_Register(vx_context);
+
+
+
+
+
 
 
 
@@ -170,8 +180,17 @@ vx_status WarpPerspectivebatchPD_Register(vx_context);
 #define VX_KERNEL_RPP_FLIP_NAME                                              "org.rpp.Flip"
 #define VX_KERNEL_RPP_COLORJITTER_NAME                                       "org.rpp.ColorJitter"
 #define VX_KERNEL_RPP_NOISE_NAME                                             "org.rpp.Noise"
-#define VX_KERNEL_RPP_BLEND_NAME                                              "org.rpp.Blend"
-#define VX_KERNEL_RPP_WARPAFFINE_NAME                                         "org.rpp.WarpAffine"
+#define VX_KERNEL_RPP_BLEND_NAME                                             "org.rpp.Blend"
+#define VX_KERNEL_RPP_WARPAFFINE_NAME                                        "org.rpp.WarpAffine"
+#define VX_KERNEL_RPP_BLUR_NAME                                              "org.rpp.Blur"
+#define VX_KERNEL_RPP_VIGNETTE_NAME                                          "org.rpp.Vignette"
+#define VX_KERNEL_RPP_JITTER_NAME                                            "org.rpp.Jitter"
+#define VX_KERNEL_RPP_SNOW_NAME                                              "org.rpp.Snow"
+#define VX_KERNEL_RPP_FOG_NAME                                               "org.rpp.Fog"
+
+
+
+
 
 
 

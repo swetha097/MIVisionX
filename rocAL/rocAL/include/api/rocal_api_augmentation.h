@@ -24,6 +24,42 @@ THE SOFTWARE.
 #define MIVISIONX_ROCAL_API_AUGMENTATION_H
 #include "rocal_api_types.h"
 
+extern "C" RocalTensor ROCAL_API_CALL rocalBlur(RocalContext p_context,
+                                                RocalTensor p_input,
+                                                RocalTensorLayout rocal_tensor_layout,
+                                                RocalTensorOutputType rocal_tensor_output_type,
+                                                bool is_output,
+                                                RocalIntParam p_sdev=NULL);
+
+
+extern "C" RocalTensor ROCAL_API_CALL rocalVignette(RocalContext p_context,
+                                                RocalTensor p_input,
+                                                RocalTensorLayout rocal_tensor_layout,
+                                                RocalTensorOutputType rocal_tensor_output_type,
+                                                bool is_output,
+                                                RocalFloatParam p_sdev=NULL);
+                                        
+extern "C" RocalTensor ROCAL_API_CALL rocalSnow(RocalContext p_context,
+                                                RocalTensor p_input,
+                                                RocalTensorLayout rocal_tensor_layout,
+                                                RocalTensorOutputType rocal_tensor_output_type,
+                                                bool is_output,
+                                                RocalFloatParam p_snow=NULL);
+    
+extern "C" RocalTensor ROCAL_API_CALL rocalFog(RocalContext p_context,
+                                                RocalTensor p_input,
+                                                RocalTensorLayout rocal_tensor_layout,
+                                                RocalTensorOutputType rocal_tensor_output_type,
+                                                bool is_output,
+                                                RocalFloatParam p_fog=NULL);
+
+extern "C" RocalTensor ROCAL_API_CALL rocalJitter(RocalContext p_context,
+                                                RocalTensor p_input,
+                                                RocalTensorLayout rocal_tensor_layout,
+                                                RocalTensorOutputType rocal_tensor_output_type,
+                                                bool is_output,
+                                                RocalFloatParam p_sdev=NULL);
+
 extern "C" RocalTensor ROCAL_API_CALL rocalBrightness(RocalContext context, RocalTensor input,RocalTensorLayout rocal_tensor_layout, RocalTensorOutputType rocal_tensor_output_type, bool is_output,
                                                    RocalFloatParam alpha = NULL, RocalFloatParam beta = NULL);
 

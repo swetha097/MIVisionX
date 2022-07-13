@@ -147,8 +147,14 @@ list(APPEND SOURCES
         source/tensor/Blend.cpp
         source/tensor/Gridmask.cpp
         source/tensor/WarpAffine.cpp
+        source/tensor/Blur.cpp
+        source/tensor/Vignette.cpp
+        source/tensor/Jitter.cpp
+        source/tensor/Snow.cpp
+        source/tensor/Fog.cpp
 
-        
+
+ 
         source/tensor/Nop.cpp
         source/kernel_rpp.cpp
         source/internal_publishKernels.cpp

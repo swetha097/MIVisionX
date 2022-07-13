@@ -322,18 +322,25 @@ break;
         image1 = rocalColorCast(handle, input1, tensorLayout, tensorOutputType, true);
     break;
     }
-    case 6: 
+    case 17: 
     {
         std::cout << ">>>>>>> Running "
                   << "rocalspatter" << std::endl;
         image1 = rocalSpatter(handle, input1, tensorLayout, tensorOutputType, true);
     break;
     }
-    case 7: 
+    case 24: 
     {
         std::cout << ">>>>>>> Running "
                   << "rocalColorTwist" << std::endl;
         image1 = rocalColorTwist(handle, input1, tensorLayout, tensorOutputType, true);
+    break;
+    }
+    case 7:
+    {
+        std::cout << ">>>>>>> Running "
+                  << "rocalBlur" << std::endl;
+        image1 = rocalBlur(handle, input1, tensorLayout, tensorOutputType, true);
     break;
     }
     case 8: 
@@ -359,18 +366,25 @@ break;
         image1 = rocalResizeMirrorNormalize(handle, input1, tensorLayout, tensorOutputType, 3,resize_w , resize_h, 0, mean, sdev,true);
         break;
     }
-    case 11:
+    case 6:
     {
         std::cout << ">>>>>>> Running "
                   << "rocalFlip" << std::endl;
         image1 = rocalFlip(handle, input1, tensorLayout, tensorOutputType, true);
     }
 break;
+    case 11:
+    {
+        std::cout << ">>>>>>> Running "
+                  << "rocalVignette" << std::endl;
+        image1 = rocalVignette(handle, input1, tensorLayout, tensorOutputType, true);
+    }
+break;
     case 12:
     {
         std::cout << ">>>>>>> Running "
-                  << "rocalColorJitter" << std::endl;
-        image1 = rocalColorJitter(handle, input1, tensorLayout, tensorOutputType, true);
+                  << "rocalJitter" << std::endl;
+        image1 = rocalJitter(handle, input1, tensorLayout, tensorOutputType, true);
     }
 break;
     case 13:
@@ -405,6 +419,30 @@ case 16:
 
     }
 break;
+case 18:
+    {
+        std::cout << ">>>>>>> Running "
+                  << "rocalColorJitter" << std::endl;
+        image1 = rocalColorJitter(handle, input1, tensorLayout, tensorOutputType, true);
+    }
+break;
+case 19:
+    {
+        std::cout << ">>>>>>> Running "
+                  << "rocalSnow" << std::endl;
+        image1 = rocalSnow(handle, input1, tensorLayout, tensorOutputType, true);
+    }
+break;
+
+case 20:
+    {
+        std::cout << ">>>>>>> Running "
+                  << "rocalfog" << std::endl;
+        image1 = rocalFog(handle, input1, tensorLayout, tensorOutputType, true);
+    }
+break;
+
+
     
     default:
         std::cout << "Not a valid option! Exiting!\n";

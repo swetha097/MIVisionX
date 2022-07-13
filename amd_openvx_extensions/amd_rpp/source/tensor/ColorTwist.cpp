@@ -188,7 +188,7 @@ static vx_status VX_CALLBACK processColorTwist(vx_node node, const vx_reference 
 #if ENABLE_OPENCL
         refreshColorTwist(node, parameters, num, data);
         rpp_status = rppt_color_twist_gpu((void *)data->cl_pSrc, data->src_desc_ptr, (void *)data->cl_pDst, data->src_desc_ptr,  data->alpha, data->beta, data->hue, data->sat, data->hip_roi_tensor_Ptr, data->roiType, data->rppHandle);
-        return_status = (rpp_status == RPP_SUCCESS) ? VX_SUCCESS : VX_FAILURE;
+        return_status = (rpp_status ==gi RPP_SUCCESS) ? VX_SUCCESS : VX_FAILURE;
 #elif ENABLE_HIP
         refreshColorTwist(node, parameters, num, data);
         rpp_status = rppt_color_twist_gpu((void *)data->hip_pSrc, data->src_desc_ptr, (void *)data->hip_pDst, data->src_desc_ptr,  data->alpha, data->beta, data->hue, data->sat, data->hip_roi_tensor_Ptr, data->roiType, data->rppHandle);

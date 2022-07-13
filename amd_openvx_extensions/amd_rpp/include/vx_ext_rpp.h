@@ -151,6 +151,17 @@ extern "C" SHARED_PUBLIC vx_node VX_API_CALL vxExtrppNode_Blend(vx_graph graph, 
 extern "C" SHARED_PUBLIC vx_node VX_API_CALL vxExtrppNode_Gridmask(vx_graph graph, vx_tensor pSrc, vx_array srcROI, vx_tensor pDst, vx_scalar tile_width, vx_scalar grid_ratio, vx_scalar grid_angle, vx_scalar x, vx_scalar y, vx_scalar layout, vx_scalar roiType, vx_uint32 nbatchSize);
 extern "C" SHARED_PUBLIC vx_node VX_API_CALL vxExtrppNode_Gridmask(vx_graph graph, vx_tensor pSrc, vx_array srcROI, vx_tensor pDst, vx_scalar tile_width, vx_scalar grid_ratio, vx_scalar grid_angle, vx_scalar x, vx_scalar y, vx_scalar layout, vx_scalar roiType, vx_uint32 nbatchSize);
 extern "C" SHARED_PUBLIC vx_node VX_API_CALL vxExtrppNode_WarpAffine(vx_graph graph, vx_tensor pSrc, vx_array srcROI, vx_tensor pDst, vx_array affine_array, vx_scalar interpolation_type, vx_scalar layout, vx_scalar roiType, vx_uint32 nbatchSize);
+extern "C" SHARED_PUBLIC vx_node VX_API_CALL vxExtrppNode_Blur(vx_graph graph, vx_tensor pSrc, vx_array srcROI, vx_tensor pDst, vx_array sdev, vx_scalar layout, vx_scalar roiType, vx_uint32 nbatchSize);
+extern "C" SHARED_PUBLIC vx_node VX_API_CALL vxExtrppNode_Vignette(vx_graph graph, vx_tensor pSrc, vx_array srcROI, vx_tensor pDst, vx_array sdev, vx_scalar layout, vx_scalar roiType, vx_uint32 nbatchSize);
+extern "C" SHARED_PUBLIC vx_node VX_API_CALL vxExtrppNode_Jitter(vx_graph graph, vx_tensor pSrc, vx_array srcROI, vx_tensor pDst, vx_array sdev, vx_scalar layout, vx_scalar roiType, vx_uint32 nbatchSize);
+extern "C" SHARED_PUBLIC vx_node VX_API_CALL vxExtrppNode_Snow(vx_graph graph, vx_tensor pSrc, vx_array srcROI, vx_tensor pDst, vx_array snow, vx_scalar layout, vx_scalar roiType, vx_uint32 nbatchSize);
+extern "C" SHARED_PUBLIC vx_node VX_API_CALL vxExtrppNode_Fog(vx_graph graph, vx_tensor pSrc, vx_array srcROI, vx_tensor pDst, vx_array fog, vx_scalar layout, vx_scalar roiType, vx_uint32 nbatchSize);
+
+
+
+
+
+
 
 
 
