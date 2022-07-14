@@ -196,7 +196,6 @@ VideoLoader::load_routine()
 
             if (load_status == LoaderModuleStatus::OK)
             {
-
                 _circ_buff.set_image_info(_decoded_img_info);
                 _circ_buff.push();
                 _image_counter += _output_tensor->info().batch_size();

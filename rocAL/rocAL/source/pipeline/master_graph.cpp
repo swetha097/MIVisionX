@@ -771,7 +771,7 @@ void MasterGraph::create_label_reader(const char *source_path, MetaDataReaderTyp
     info.set_tensor_layout(RocalTensorlayout::NONE);
     _meta_data_buffer_size.emplace_back(_user_batch_size * sizeof(vx_int32));
 
-    for(int i = 0; i < _user_batch_size; i++)
+    for(unsigned i = 0; i < _user_batch_size; i++)
     {
         auto tensor = new rocALTensor(info);
         _labels_tensor_list.push_back(tensor);
@@ -818,7 +818,7 @@ void MasterGraph::create_coco_meta_data_reader(const char *source_path, bool is_
     _meta_data_buffer_size.emplace_back(MAX_OBJECTS * _user_batch_size * sizeof(vx_int32));
     _meta_data_buffer_size.emplace_back(MAX_OBJECTS * BBOX_COUNT  * _user_batch_size * sizeof(vx_float32));
 
-    for(int i = 0; i < _user_batch_size; i++)
+    for(unsigned i = 0; i < _user_batch_size; i++)
     {
         auto labels_info = default_labels_info;
         auto bbox_info = default_bbox_info;
@@ -846,10 +846,10 @@ rocALTensorList * MasterGraph::labels_meta_data()
 {
     if(_ring_buffer.level() == 0)
         THROW("No meta data has been loaded")
-    auto meta_data_buffers = _ring_buffer.get_meta_read_buffers()[0]; // Get labels buffer from ring buffer
-    for(int i = 0; i < _labels_tensor_list.size(); i++)
+    auto meta_data_buffers = (unsigned char *)_ring_buffer.get_meta_read_buffers()[0]; // Get labels buffer from ring buffer
+    for(unsigned i = 0; i < _labels_tensor_list.size(); i++)
     {
-        _labels_tensor_list[i]->set_mem_handle(meta_data_buffers); // TODO - Need to update according to the metadata
+        _labels_tensor_list[i]->set_mem_handle((void *)meta_data_buffers); // TODO - Need to update according to the metadata
         meta_data_buffers += _labels_tensor_list[i]->info().data_size();
     }
 
@@ -860,13 +860,13 @@ rocALTensorList * MasterGraph::bbox_labels_meta_data()
 {
     if(_ring_buffer.level() == 0)
         THROW("No meta data has been loaded")
-    auto meta_data_buffers = _ring_buffer.get_meta_read_buffers()[0]; // Get labels buffer from ring buffer
+    auto meta_data_buffers = (unsigned char *)_ring_buffer.get_meta_read_buffers()[0]; // Get labels buffer from ring buffer
     auto labels_tensor_dims = _ring_buffer.get_meta_data_info().second.bb_labels_dims();
-    for(int i = 0; i < _labels_tensor_list.size(); i++)
+    for(unsigned i = 0; i < _labels_tensor_list.size(); i++)
     {
         std::cerr << "[" << labels_tensor_dims[i][0] << "]\n";
         _labels_tensor_list[i]->set_dims(labels_tensor_dims[i]);
-        _labels_tensor_list[i]->set_mem_handle(meta_data_buffers);
+        _labels_tensor_list[i]->set_mem_handle((void *)meta_data_buffers);
         meta_data_buffers += _labels_tensor_list[i]->info().data_size();
     }
     return &_labels_tensor_list;
@@ -876,13 +876,13 @@ rocALTensorList * MasterGraph::bbox_meta_data()
 {
     if(_ring_buffer.level() == 0)
         THROW("No meta data has been loaded")
-    auto meta_data_buffers = _ring_buffer.get_meta_read_buffers()[1]; // Get bbox buffer from ring buffer
+    auto meta_data_buffers = (unsigned char *)_ring_buffer.get_meta_read_buffers()[1]; // Get bbox buffer from ring buffer
     auto bbox_tensor_dims = _ring_buffer.get_meta_data_info().second.bb_cords_dims();
-    for(int i = 0; i < _bbox_tensor_list.size(); i++)
+    for(unsigned i = 0; i < _bbox_tensor_list.size(); i++)
     {
         // std::cerr << "[" <<  bbox_tensor_dims[i][0] << " ," <<  bbox_tensor_dims[i][1] << "]\n";
         _bbox_tensor_list[i]->set_dims(bbox_tensor_dims[i]);
-        _bbox_tensor_list[i]->set_mem_handle(meta_data_buffers);
+        _bbox_tensor_list[i]->set_mem_handle((void *)meta_data_buffers);
         meta_data_buffers += _bbox_tensor_list[i]->info().data_size();
         // if(_bbox_tensor_list[0]->info().dims().get() == _bbox_tensor_list[1]->info().dims().get())
 

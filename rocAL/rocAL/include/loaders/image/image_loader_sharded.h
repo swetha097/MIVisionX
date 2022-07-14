@@ -64,6 +64,5 @@ private:
     size_t _prefetch_queue_depth;
 
     rocALTensor *_output_tensor;
-    bool tensor = true; // for debugging purpose should be removed
     // std::shared_ptr<RandomBBoxCrop_MetaDataReader> _randombboxcrop_meta_data_reader = nullptr;
 };
