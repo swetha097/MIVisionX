@@ -291,7 +291,7 @@ namespace rali{
             py::arg("max_height") = 0);
         m.def("rocalResetLoaders",&rocalResetLoaders);
         // rocal_api_augmentation.h
-        m.def("Brightness",&rocalBrightnessTensor,
+        m.def("Brightness",&rocalBrightness,
             py::return_value_policy::reference,
             py::arg("context"),
             py::arg("input"),
