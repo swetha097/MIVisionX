@@ -46,6 +46,7 @@ THE SOFTWARE.
 #define MAX_STRING_LENGTH 100
 #define MAX_OBJECTS 50
 #define BBOX_COUNT 4
+
 class MasterGraph
 {
 public:
@@ -71,8 +72,8 @@ public:
     rocALTensor *create_loader_output_tensor(const rocALTensorInfo &info);
     rocALTensorList * get_output_tensors();
 
-    void create_label_reader(const char *source_path, MetaDataReaderType reader_type);
-    void create_coco_meta_data_reader(const char *source_path, bool is_output, MetaDataReaderType reader_type, MetaDataType label_type);
+    std::vector<rocALTensorList *> create_label_reader(const char *source_path, MetaDataReaderType reader_type);
+    std::vector<rocALTensorList *> create_coco_meta_data_reader(const char *source_path, bool is_output, MetaDataReaderType reader_type, MetaDataType label_type);
     // MetaDataBatch *create_coco_meta_data_reader(const char *source_path, bool is_output);
     // MetaDataBatch *create_tf_record_meta_data_reader(const char *source_path, MetaDataReaderType reader_type,  MetaDataType label_type, const std::map<std::string, std::string> feature_key_map);
     // MetaDataBatch *create_caffe_lmdb_record_meta_data_reader(const char *source_path, MetaDataReaderType reader_type,  MetaDataType label_type);
@@ -122,6 +123,7 @@ private:
     std::map<rocALTensor*, std::shared_ptr<Node>> _tensor_map;
 
     // Output tensorList for metadata
+    std::vector<rocALTensorList *> _metadata_output_tensor_list;
     rocALTensorList _labels_tensor_list;
     rocALTensorList _bbox_tensor_list;
     std::vector<std::vector<unsigned>> _labels_tensor_dims;

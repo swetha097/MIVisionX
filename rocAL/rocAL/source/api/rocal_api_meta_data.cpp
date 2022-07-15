@@ -29,23 +29,22 @@ THE SOFTWARE.
 #include "rocal_api.h"
 #define MAX_BUFFER 10000
 
-void
+RocalMetaData
 ROCAL_API_CALL rocalCreateLabelReader(RocalContext p_context, const char* source_path) {
     if (!p_context)
         THROW("Invalid rocal context passed to rocalCreateLabelReader")
     auto context = static_cast<Context*>(p_context);
 
-    context->master_graph->create_label_reader(source_path, MetaDataReaderType::FOLDER_BASED_LABEL_READER);
-
+    return context->master_graph->create_label_reader(source_path, MetaDataReaderType::FOLDER_BASED_LABEL_READER);
 }
 
-void
+RocalMetaData
 ROCAL_API_CALL rocalCreateCOCOReader(RocalContext p_context, const char* source_path, bool is_output){
     if (!p_context)
         THROW("Invalid rali context passed to raliCreateCOCOReader")
     auto context = static_cast<Context*>(p_context);
 
-    context->master_graph->create_coco_meta_data_reader(source_path, is_output, MetaDataReaderType::COCO_META_DATA_READER,  MetaDataType::BoundingBox);
+    return context->master_graph->create_coco_meta_data_reader(source_path, is_output, MetaDataReaderType::COCO_META_DATA_READER,  MetaDataType::BoundingBox);
 }
 
 void
@@ -84,7 +83,7 @@ ROCAL_API_CALL rocalGetImageNameLen(RocalContext p_context, int* buf)
     return size;
 }
 
-RocalMetaData
+RocalTensorList
 ROCAL_API_CALL rocalGetImageLabels(RocalContext p_context)
 {
 
@@ -94,7 +93,7 @@ ROCAL_API_CALL rocalGetImageLabels(RocalContext p_context)
     return context->master_graph->labels_meta_data();
 }
 
-RocalMetaData
+RocalTensorList
 ROCAL_API_CALL rocalGetBoundingBoxLabel(RocalContext p_context)
 {
     if (!p_context)
@@ -103,7 +102,7 @@ ROCAL_API_CALL rocalGetBoundingBoxLabel(RocalContext p_context)
     return context->master_graph->bbox_labels_meta_data();
 }
 
-RocalMetaData
+RocalTensorList
 ROCAL_API_CALL rocalGetBoundingBoxCords(RocalContext p_context)
 {
     if (!p_context)

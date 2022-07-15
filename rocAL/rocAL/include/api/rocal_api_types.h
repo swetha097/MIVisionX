@@ -41,7 +41,7 @@ typedef void * RocalFloatParam;
 typedef void * RocalIntParam;
 typedef void * RocalContext;
 typedef void * RocalImage;
-typedef rocALTensorList * RocalMetaData;
+typedef std::vector<rocALTensorList *> RocalMetaData;
 typedef rocALTensor * RocalTensor;
 typedef rocALTensorList * RocalTensorList;
 
