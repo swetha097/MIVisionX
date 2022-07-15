@@ -89,7 +89,7 @@ struct BoundingBox : public MetaData
     BoundingBox()= default;
     BoundingBox(BoundingBoxCords bb_cords,BoundingBoxLabels bb_label_ids )
     {
-        _bb_cords =std::move(bb_cords);
+        _bb_cords = std::move(bb_cords);
         _bb_label_ids = std::move(bb_label_ids);
     }
     BoundingBox(BoundingBoxCords bb_cords,BoundingBoxLabels bb_label_ids ,ImgSize img_size)
@@ -160,8 +160,8 @@ struct MetaDataBatch
     std::vector<BoundingBoxLabels>& get_bb_labels_batch() { return _bb_label_ids; }
     ImgSizes& get_img_sizes_batch() { return _img_sizes; }
     std::vector<MaskCords>& get_mask_cords_batch() { return _mask_cords; }
-    void reset_objects_count() { _objects_count = 0; }
-    void increment_object_count(int count) { _objects_count += count; }
+    void reset_objects_count() { _total_objects_count = 0; }
+    void increment_object_count(int count) { _total_objects_count += count; }
     MetaDataDimensionsBatch& get_metadata_dimensions_batch() { return _metadata_dimensions; }
 protected:
     std::vector<int> _label_id = {}; // For label use only
@@ -170,7 +170,7 @@ protected:
     ImgSizes _img_sizes = {};
     std::vector<MaskCords> _mask_cords = {};
     std::vector<unsigned> _buffer_size;
-    int _objects_count = 0;
+    int _total_objects_count = 0;
     MetaDataDimensionsBatch _metadata_dimensions;
 };
 
@@ -180,7 +180,7 @@ struct LabelBatch : public MetaDataBatch
     {
         _label_id.clear();
         _buffer_size.clear();
-        _objects_count = 0;
+        _total_objects_count = 0;
     }
     MetaDataBatch&  operator += (MetaDataBatch& other) override
     {
@@ -216,7 +216,7 @@ struct LabelBatch : public MetaDataBatch
     }
     std::vector<unsigned>& get_buffer_size() override
     {
-        _buffer_size.emplace_back(_objects_count * sizeof(int));
+        _buffer_size.emplace_back(_total_objects_count * sizeof(int));
         return _buffer_size;
     }
 };
@@ -230,7 +230,7 @@ struct BoundingBoxBatch: public MetaDataBatch
         _img_sizes.clear();
         _mask_cords.clear();
         _metadata_dimensions.clear();
-        _objects_count = 0;
+        _total_objects_count = 0;
         _buffer_size.clear();
     }
     MetaDataBatch&  operator += (MetaDataBatch& other) override
@@ -280,8 +280,8 @@ struct BoundingBoxBatch: public MetaDataBatch
     }
     std::vector<unsigned>& get_buffer_size() override
     {
-        _buffer_size.emplace_back(_objects_count * sizeof(int));
-        _buffer_size.emplace_back(_objects_count * 4 * sizeof(float));
+        _buffer_size.emplace_back(_total_objects_count * sizeof(int));
+        _buffer_size.emplace_back(_total_objects_count * 4 * sizeof(float));
         return _buffer_size;
     }
 };

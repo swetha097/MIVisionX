@@ -126,12 +126,11 @@ void VideoLoaderSharded::start_loading()
     }
 }
 
-// void VideoLoaderSharded::shut_down()
-// {
-//     for (auto &loader : _loaders)
-//       loader->shut_down();
-
-// }
+void VideoLoaderSharded::shut_down()
+{
+    for (auto &loader : _loaders)
+      loader->shut_down();
+}
 
 void VideoLoaderSharded::set_output(rocALTensor *output_tensor)
 {

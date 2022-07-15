@@ -54,6 +54,7 @@ public:
 #endif
     ~CircularBuffer();
     void init(RocalMemType output_mem_type, size_t output_mem_size, size_t buff_depth);
+    void release(); // release resources
     void sync();// Syncs device buffers with host
     void unblock_reader();// Unblocks the thread currently waiting on a call to get_read_buffer
     void unblock_writer();// Unblocks the thread currently waiting on get_write_buffer
@@ -65,8 +66,8 @@ public:
     crop_image_info& get_cropped_image_info();
     bool random_bbox_crop_flag = false;
     void* get_read_buffer_dev();
-    void* get_read_buffer_host();// blocks the caller if the buffer is empty
-    void*  get_write_buffer(); // blocks the caller if the buffer is full
+    unsigned char* get_read_buffer_host();// blocks the caller if the buffer is empty
+    unsigned char*  get_write_buffer(); // blocks the caller if the buffer is full
     size_t level();// Returns the number of elements stored
     void reset();// sets the buffer level to 0
     void block_if_empty();// blocks the caller if the buffer is empty
@@ -93,12 +94,11 @@ private:
     cl_device_id _device_id = nullptr;
 #else
     hipStream_t _hip_stream;
-    int _hip_device_id;
-    hipDeviceProp_t *_dev_prop;
+    int _hip_device_id, _hip_canMapHostMemory;
 #endif
     std::vector<void *> _dev_buffer;// Actual memory allocated on the device (in the case of GPU affinity)
-    std::vector<void*> _host_buffer_ptrs;
-    // std::vector<std::vector<void>> _actual_host_buffers;
+    std::vector<unsigned char*> _host_buffer_ptrs;
+    std::vector<std::vector<unsigned char>> _actual_host_buffers;
     std::condition_variable _wait_for_load;
     std::condition_variable _wait_for_unload;
     std::mutex _lock;

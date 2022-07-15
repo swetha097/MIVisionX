@@ -41,11 +41,19 @@ _swap_handle_time("Swap_handle_time", DBG_TIMING)
     _batch_size = 1;
     _is_initialized = false;
     _remaining_audio_count = 0;
+    _device_id = 0;
 }
 
 AudioLoader::~AudioLoader()
 {
     de_init();
+}
+
+void AudioLoader::shut_down()
+{
+    if(_internal_thread_running)
+        stop_internal_thread();
+    _circ_buff.release();
 }
 
 void AudioLoader::set_prefetch_queue_depth(size_t prefetch_queue_depth)
@@ -55,6 +63,12 @@ void AudioLoader::set_prefetch_queue_depth(size_t prefetch_queue_depth)
     _prefetch_queue_depth = prefetch_queue_depth;
 }
 
+void AudioLoader::set_gpu_device_id(int device_id)
+{
+    if(device_id < 0)
+        THROW("invalid device_id passed to loader");
+    _device_id = device_id;
+}
 
 size_t
 AudioLoader::remaining_count()
@@ -127,15 +141,23 @@ void AudioLoader::initialize(ReaderConfig reader_cfg, DecoderConfig decoder_cfg,
     _loop = reader_cfg.loop();
     _decoder_keep_original = decoder_keep_original;
     _audio_loader = std::make_shared<AudioReadAndDecode>();
+    size_t shard_count = reader_cfg.get_shard_count();
+    int device_id = reader_cfg.get_shard_id();
     try
     {
-        _audio_loader->create(reader_cfg, decoder_cfg, _batch_size);
+        // set the device_id for decoder same as shard_id for number of shards > 1
+        if (shard_count > 1)
+          _audio_loader->create(reader_cfg, decoder_cfg, _batch_size, device_id);
+        else
+          _audio_loader->create(reader_cfg, decoder_cfg, _batch_size);
     }
     catch (const std::exception &e)
     {
         de_init();
         throw;
     }
+    _max_decoded_samples = _output_tensor->info().max_dims().at(0);
+    _max_decoded_channels = _output_tensor->info().max_dims().at(1);
     _decoded_img_info._image_names.resize(_batch_size);
     _decoded_img_info._roi_height.resize(_batch_size);
     _decoded_img_info._roi_width.resize(_batch_size);
@@ -174,48 +196,26 @@ AudioLoader::load_routine()
 
         auto load_status = LoaderModuleStatus::NO_MORE_DATA_TO_READ;
         {
-            if(tensor)
+            load_status = _audio_loader->load(data,
+                                            _decoded_img_info._image_names,
+                                            _max_decoded_samples,
+                                            _max_decoded_channels,
+                                            _decoded_img_info._roi_width,
+                                            _decoded_img_info._roi_height,
+                                            _decoded_img_info._original_width,
+                                            _decoded_img_info._original_height);
+
+            if(load_status == LoaderModuleStatus::OK)
             {
-                load_status = _audio_loader->load(data,
-                                                _decoded_img_info._image_names,
-                                                _output_tensor->info().max_dims().at(0),
-                                                _output_tensor->info().max_dims().at(1),
-                                                _decoded_img_info._roi_width,
-                                                _decoded_img_info._roi_height,
-                                                _decoded_img_info._original_width,
-                                                _decoded_img_info._original_height);
-
-                if(load_status == LoaderModuleStatus::OK)
-                {
-                    // if (_randombboxcrop_meta_data_reader)
-                    // {
-                    //     _crop_audio_info._crop_audio_coords = _audio_loader->get_batch_random_bbox_crop_coords();
-                    //     _circ_buff.set_crop_audio_info(_crop_audio_info);
-                    // }
-                    _circ_buff.set_image_info(_decoded_img_info);
-                    _circ_buff.push();
-                    _audio_counter += _output_tensor->info().batch_size();
-                }
+                // if (_randombboxcrop_meta_data_reader)
+                // {
+                //     _crop_audio_info._crop_audio_coords = _audio_loader->get_batch_random_bbox_crop_coords();
+                //     _circ_buff.set_crop_audio_info(_crop_audio_info);
+                // }
+                _circ_buff.set_image_info(_decoded_img_info);
+                _circ_buff.push();
+                _audio_counter += _output_tensor->info().batch_size();
             }
-            else
-            {
-                load_status = _audio_loader->load(data,
-                                                _decoded_img_info._image_names,
-                                                _output_tensor->info().max_dims().at(0),
-                                                _output_tensor->info().max_dims().at(1),
-                                                _decoded_img_info._roi_width,
-                                                _decoded_img_info._roi_height,
-                                                _decoded_img_info._original_width,
-                                                _decoded_img_info._original_height);
-
-                if(load_status == LoaderModuleStatus::OK)
-                {
-                    _circ_buff.set_image_info(_decoded_img_info);
-                    _circ_buff.push();
-                    _audio_counter += _output_tensor->info().batch_size();
-                }
-            }
-
         }
         if (load_status != LoaderModuleStatus::OK)
         {
@@ -266,7 +266,7 @@ AudioLoader::update_output_audio()
     {
         auto data_buffer = _circ_buff.get_read_buffer_dev();
         _swap_handle_time.start();
-        if(_output_tensor->swap_handle(data_buffer)!= 0)
+        if(_output_tensor->swap_handle(data_buffer) != 0)
             return LoaderModuleStatus ::DEVICE_BUFFER_SWAP_FAILED;
         _swap_handle_time.end();
     }

@@ -27,7 +27,7 @@ THE SOFTWARE.
 RingBuffer::RingBuffer(unsigned buffer_depth):
         BUFF_DEPTH(buffer_depth),
         _dev_sub_buffer(buffer_depth),
-        _host_sub_buffers(BUFF_DEPTH)
+        _host_sub_buffers(buffer_depth)
 {
     reset();
 }
@@ -76,9 +76,6 @@ std::vector<void*> RingBuffer::get_write_buffers()
 std::vector<void*> RingBuffer::get_meta_read_buffers()
 {
     block_if_empty();
-    if((_mem_type == RocalMemType::OCL) || (_mem_type == RocalMemType::HIP))
-        return _dev_sub_buffer[_read_ptr];
-
     return _host_meta_data_buffers[_read_ptr];
 }
 
@@ -255,10 +252,35 @@ void RingBuffer::reset()
         _meta_ring_buffer.pop();
 }
 
+void RingBuffer::release_gpu_res()
+{
+#if ENABLE_HIP
+    if (_mem_type == RocalMemType::HIP) {
+        for (size_t buffIdx = 0; buffIdx < _dev_sub_buffer.size(); buffIdx++){
+            for (unsigned sub_buf_idx = 0; sub_buf_idx < _dev_sub_buffer[buffIdx].size(); sub_buf_idx++){
+                if (_dev_sub_buffer[buffIdx][sub_buf_idx])
+                    if ( hipFree((void *)_dev_sub_buffer[buffIdx][sub_buf_idx]) != hipSuccess ) {
+                        //printf("Error Freeing device buffer <%d, %d, %p>\n", buffIdx, sub_buf_idx, _dev_sub_buffer[buffIdx][sub_buf_idx]);
+                        ERR("Could not release hip memory in the ring buffer")
+                    }
+            }
+        }
+        _dev_sub_buffer.clear();
+    }
+#elif ENABLE_OPENCL
+    if (_mem_type == RocalMemType::OCL) {
+        for (size_t buffIdx = 0; buffIdx < _dev_sub_buffer.size(); buffIdx++)
+            for (unsigned sub_buf_idx = 0; sub_buf_idx < _dev_sub_buffer[buffIdx].size(); sub_buf_idx++)
+                if (_dev_sub_buffer[buffIdx][sub_buf_idx])
+                    if (clReleaseMemObject((cl_mem) _dev_sub_buffer[buffIdx][sub_buf_idx]) != CL_SUCCESS)
+                        ERR("Could not release ocl memory in the ring buffer")
+        _dev_sub_buffer.clear();
+    }
+#endif
+}
+
 RingBuffer::~RingBuffer()
 {
-     //  if(_mem_type!= RocalMemType::OCL)
-    //      return;
     if (_mem_type == RocalMemType::HOST) {
         for (unsigned buffIdx = 0; buffIdx < _host_sub_buffers.size(); buffIdx++) {
             for (unsigned sub_buf_idx = 0; sub_buf_idx < _dev_sub_buffer[buffIdx].size(); sub_buf_idx++){
@@ -271,25 +293,6 @@ RingBuffer::~RingBuffer()
         _host_sub_buffers.clear();
         _host_meta_data_buffers.clear();
     }
-#if ENABLE_HIP
-    else if (_mem_type == RocalMemType::HIP) {
-        for (size_t buffIdx = 0; buffIdx < _dev_sub_buffer.size(); buffIdx++)
-            for (unsigned sub_buf_idx = 0; sub_buf_idx < _dev_sub_buffer[buffIdx].size(); sub_buf_idx++)
-                if (_dev_sub_buffer[buffIdx][sub_buf_idx])
-                    if ( hipFree((void *)_dev_sub_buffer[buffIdx][sub_buf_idx]) != hipSuccess )
-                        ERR("Could not release hip memory in the ring buffer")
-        _dev_sub_buffer.clear();
-    }
-#else
-    else if (_mem_type == RocalMemType::OCL) {
-        for (size_t buffIdx = 0; buffIdx < _dev_sub_buffer.size(); buffIdx++)
-            for (unsigned sub_buf_idx = 0; sub_buf_idx < _dev_sub_buffer[buffIdx].size(); sub_buf_idx++)
-                if (_dev_sub_buffer[buffIdx][sub_buf_idx])
-                    if (clReleaseMemObject((cl_mem) _dev_sub_buffer[buffIdx][sub_buf_idx]) != CL_SUCCESS)
-                        ERR("Could not release ocl memory in the ring buffer")
-        _dev_sub_buffer.clear();
-    }
-#endif
 }
 
 bool RingBuffer::empty()

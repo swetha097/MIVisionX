@@ -48,6 +48,7 @@ public:
     crop_image_info get_crop_image_info() override;
     Timing timing() override;
     void set_prefetch_queue_depth(size_t prefetch_queue_depth) override;
+    void shut_down() override;
 private:
     void increment_loader_idx();
 #if ENABLE_HIP
@@ -63,6 +64,5 @@ private:
     size_t _prefetch_queue_depth;
 
     rocALTensor *_output_tensor;
-    bool tensor = true; // for debugging purpose should be removed
     // std::shared_ptr<RandomBBoxCrop_MetaDataReader> _randombboxcrop_meta_data_reader = nullptr;
 };

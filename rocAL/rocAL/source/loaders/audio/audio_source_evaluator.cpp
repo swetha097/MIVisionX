@@ -58,24 +58,24 @@ void
 AudioSourceEvaluator::find_max_dimension()
 {
     _reader->reset();
-    std::cerr<<"\n _reader->count() "<<_reader->count();
+    std::cerr<<"\n _reader->count() "<<_reader->count_items();
 
-    while( _reader->count() )
+    while( _reader->count_items() )
     {
         size_t fsize = _reader->open();
         if( (fsize) == 0 )
             continue;
-        auto file_name = _reader->path(); // shobi: have to change this to path + id
-        // std::cerr<<"\n file name inside find max dimensions:: "<<file_name;
+        // auto file_name = _reader->path(); // shobi: have to change this to path + id
+        // // std::cerr<<"\n file name inside find max dimensions:: "<<file_name;
         // _header_buff.resize(fsize);
-        // auto actual_read_size = _reader->read(_header_buff.data(), fsize);
+        // auto actual_read_size = _reader->read_data(_header_buff.data(), fsize);
         // _reader->close();
 
-        if(_decoder->initialize(file_name.c_str()) != AudioDecoder::Status::OK)
-        {
-            WRN("Could not initialize audio decoder for file : "+ _reader->id())
-            continue;
-        }
+        // if(_decoder->initialize(file_name.c_str()) != AudioDecoder::Status::OK)
+        // {
+        //     WRN("Could not initialize audio decoder for file : "+ _reader->id())
+        //     continue;
+        // }
         int samples, channels;
 
         if(_decoder->decode_info(&samples, &channels) != AudioDecoder::Status::OK)

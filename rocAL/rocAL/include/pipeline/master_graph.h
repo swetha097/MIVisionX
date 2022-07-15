@@ -46,6 +46,7 @@ THE SOFTWARE.
 #define MAX_STRING_LENGTH 100
 #define MAX_OBJECTS 50
 #define BBOX_COUNT 4
+
 class MasterGraph
 {
 public:
@@ -71,8 +72,8 @@ public:
     rocALTensor *create_loader_output_tensor(const rocALTensorInfo &info);
     rocALTensorList * get_output_tensors();
 
-    void create_label_reader(const char *source_path, MetaDataReaderType reader_type);
-    void create_coco_meta_data_reader(const char *source_path, bool is_output, MetaDataReaderType reader_type, MetaDataType label_type);
+    std::vector<rocALTensorList *> create_label_reader(const char *source_path, MetaDataReaderType reader_type);
+    std::vector<rocALTensorList *> create_coco_meta_data_reader(const char *source_path, bool is_output, MetaDataReaderType reader_type, MetaDataType label_type);
     // MetaDataBatch *create_coco_meta_data_reader(const char *source_path, bool is_output);
     // MetaDataBatch *create_tf_record_meta_data_reader(const char *source_path, MetaDataReaderType reader_type,  MetaDataType label_type, const std::map<std::string, std::string> feature_key_map);
     // MetaDataBatch *create_caffe_lmdb_record_meta_data_reader(const char *source_path, MetaDataReaderType reader_type,  MetaDataType label_type);
@@ -122,6 +123,7 @@ private:
     std::map<rocALTensor*, std::shared_ptr<Node>> _tensor_map;
 
     // Output tensorList for metadata
+    std::vector<rocALTensorList *> _metadata_output_tensor_list;
     rocALTensorList _labels_tensor_list;
     rocALTensorList _bbox_tensor_list;
     std::vector<std::vector<unsigned>> _labels_tensor_dims;
@@ -142,19 +144,18 @@ private:
     RocalAffinity _affinity;
     const int _gpu_id;//!< Defines the device id used for processing
     pLoaderModule _loader_module; //!< Keeps the loader module used to feed the input the images of the graph
-    TimingDBG _convert_time;
+    TimingDBG _convert_time, _process_time, _bencode_time;
     const size_t _user_batch_size;//!< Batch size provided by the user
     const size_t _cpu_threads;//!< Not in use
     vx_context _context;
     const RocalMemType _mem_type;//!< Is set according to the _affinity, if GPU, is set to CL, otherwise host
-    TimingDBG _process_time;
     std::shared_ptr<MetaDataReader> _meta_data_reader = nullptr;
     std::shared_ptr<MetaDataGraph> _meta_data_graph = nullptr;
     // std::shared_ptr<RandomBBoxCrop_MetaDataReader> _randombboxcrop_meta_data_reader = nullptr;
     bool _first_run = true;
     bool _processing;//!< Indicates if internal processing thread should keep processing or not
     const static unsigned OUTPUT_RING_BUFFER_DEPTH = 3;
-    const static unsigned SAMPLE_SIZE = sizeof(vx_float32);
+    const static unsigned SAMPLE_SIZE = sizeof(vx_float32); // unsigned char
     int _remaining_images_count;//!< Keeps the count of remaining images yet to be processed for the user,
     bool _loop;//!< Indicates if user wants to indefinitely loops through images or not
     static size_t compute_optimum_internal_batch_size(size_t user_batch_size, RocalAffinity affinity);
@@ -165,6 +166,7 @@ private:
     size_t _max_tensor_type_size;
     const RocalTensorDataType _out_data_type;
     bool _is_random_bbox_crop = false;
+    TimingDBG _rb_block_if_empty_time, _rb_block_if_full_time;
 };
 
 
