@@ -21,53 +21,54 @@ THE SOFTWARE.
 */
 
 #include <vx_ext_rpp.h>
-#include "node_blur.h"
+#include <VX/vx_compatibility.h>
+#include "node_color_temperature.h"
 #include "exception.h"
 
-BlurNode::BlurNode(const std::vector<rocALTensor *> &inputs, const std::vector<rocALTensor *> &outputs) :
+ColorTemperatureNode::ColorTemperatureNode(const std::vector<rocALTensor *> &inputs, const std::vector<rocALTensor *> &outputs) :
         Node(inputs, outputs),
-        _sdev(SDEV_RANGE[0], SDEV_RANGE[1])
+        _adj_value_param(ADJUSTMENT_RANGE[0], ADJUSTMENT_RANGE[1])
 {
 }
 
-void BlurNode::create_node()
+void ColorTemperatureNode::create_node()
 {
     if(_node)
         return;
-    _sdev.create_array(_graph ,VX_TYPE_UINT32, _batch_size);
+
+    _adj_value_param.create_array(_graph , VX_TYPE_INT32, _batch_size);
 
     if(_inputs[0]->info().roi_type() == RocalROIType::XYWH)
         _roi_type = 1;
     vx_scalar layout = vxCreateScalar(vxGetContext((vx_reference)_graph->get()),VX_TYPE_UINT32,&_layout);
     std::cerr<<"layouttttttttttttttttt"<<_layout<<"\n\n\n\n";
     vx_scalar roi_type = vxCreateScalar(vxGetContext((vx_reference)_graph->get()),VX_TYPE_UINT32,&_roi_type);
-    
-    _node = vxExtrppNode_Blur(_graph->get(), _inputs[0]->handle(),  _src_tensor_roi, _outputs[0]->handle(), _sdev.default_array(), layout, roi_type, _batch_size);
 
+
+    _node = vxExtrppNode_ColorTemperature(_graph->get(), _inputs[0]->handle(),  _src_tensor_roi, _outputs[0]->handle(), _adj_value_param.default_array(), layout, roi_type, _batch_size);
 
     vx_status status;
     if((status = vxGetStatus((vx_reference)_node)) != VX_SUCCESS)
-        THROW("Adding the blur (vxExtrppNode_blur) node failed: "+ TOSTR(status))
+        THROW("Adding the color temp batch (vxExtrppNode_ColorTemperaturebatchPD) node failed: "+ TOSTR(status))
 
 }
 
-void BlurNode::init(int sdev, int layout)
+void ColorTemperatureNode::init(int adjustment, int layout)
 {
-    _sdev.set_param(sdev);
+    _adj_value_param.set_param(adjustment);
     _layout=layout;
     _roi_type = 0;
-
 }
 
-void BlurNode::init(IntParam* sdev, int layout)
+void ColorTemperatureNode::init(IntParam* adjustment, int layout)
 {
-    _sdev.set_param(core(sdev));
+    _adj_value_param.set_param(core(adjustment));
     _layout=layout;
     _roi_type = 0;
-
 }
 
-void BlurNode::update_node()
+void ColorTemperatureNode::update_node()
 {
-    _sdev.update_array();
+    _adj_value_param.update_array();
 }
+

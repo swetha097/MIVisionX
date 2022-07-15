@@ -23,7 +23,7 @@ THE SOFTWARE.
 #include "internal_publishKernels.h"
 #define NUM_OF_DIMS 5
 
-struct JitterLocalData {
+struct RainLocalData {
     RPPCommonHandle handle;
     rppHandle_t rppHandle;
     Rpp32u device_type;
@@ -39,7 +39,11 @@ struct JitterLocalData {
     RppiSize maxSrcDimensions;  // TBR : Not present in tensor
     Rpp32u *srcBatch_width; // TBR : Not present in tensor
     Rpp32u *srcBatch_height;    // TBR : Not present in tensor
-    vx_uint32 *kernelSize;
+    vx_float32 *rain_percentage;
+    vx_uint32 *rain_width;
+    vx_uint32 *rain_height;
+    vx_float32 *rain_trasparency;
+
     RpptDescPtr src_desc_ptr;
     RpptDescPtr dst_desc_ptr;
     RpptDesc srcDesc;
@@ -55,11 +59,14 @@ struct JitterLocalData {
 #endif
 };
 
-static vx_status VX_CALLBACK refreshJitter(vx_node node, const vx_reference *parameters, vx_uint32 num, JitterLocalData *data) {
-    std::cerr << "refreshJitter\n\n";
+static vx_status VX_CALLBACK refreshRain(vx_node node, const vx_reference *parameters, vx_uint32 num, RainLocalData *data) {
+    std::cerr << "refreshRain\n\n";
     vx_status status = VX_SUCCESS;
     STATUS_ERROR_CHECK(vxCopyArrayRange((vx_array)parameters[1], 0, data->nbatchSize * 4, sizeof(unsigned), data->roi_tensor_Ptr, VX_READ_ONLY, VX_MEMORY_TYPE_HOST));
-    STATUS_ERROR_CHECK(vxCopyArrayRange((vx_array)parameters[3], 0, data->nbatchSize, sizeof(vx_uint32), data->kernelSize, VX_READ_ONLY, VX_MEMORY_TYPE_HOST));
+    STATUS_ERROR_CHECK(vxCopyArrayRange((vx_array)parameters[3], 0, data->nbatchSize, sizeof(vx_float32), data->rain_percentage, VX_READ_ONLY, VX_MEMORY_TYPE_HOST));
+    STATUS_ERROR_CHECK(vxCopyArrayRange((vx_array)parameters[3], 0, data->nbatchSize, sizeof(vx_uint32), data->rain_width, VX_READ_ONLY, VX_MEMORY_TYPE_HOST));
+    STATUS_ERROR_CHECK(vxCopyArrayRange((vx_array)parameters[3], 0, data->nbatchSize, sizeof(vx_uint32), data->rain_height, VX_READ_ONLY, VX_MEMORY_TYPE_HOST));
+    STATUS_ERROR_CHECK(vxCopyArrayRange((vx_array)parameters[3], 0, data->nbatchSize, sizeof(vx_float32), data->rain_trasparency, VX_READ_ONLY, VX_MEMORY_TYPE_HOST));
     if (data->layout == 0 || data->layout == 1) 
     {
         for (int i = 0; i < data->nbatchSize; i++)
@@ -73,7 +80,11 @@ static vx_status VX_CALLBACK refreshJitter(vx_node node, const vx_reference *par
         for (int n = data->nbatchSize - 1; n >= 0; n--) {
             unsigned index = n * num_of_frames;
             for (int f = 0; f < num_of_frames; f++) {
-                data->kernelSize[index + f] = data->kernelSize[n];
+                data->rain_percentage[index + f] = data->rain_percentage[n];
+                data->rain_width[index + f] = data->rain_width[n];
+                data->rain_height[index + f] = data->rain_height[n];
+                data->rain_trasparency[index + f] = data->rain_trasparency[n];
+
                 data->srcDimensions[index + f].width = data->roi_tensor_Ptr[n].xywhROI.roiWidth;
                 data->srcDimensions[index + f].height = data->roi_tensor_Ptr[n].xywhROI.roiHeight;
             }
@@ -121,21 +132,21 @@ static vx_status VX_CALLBACK refreshJitter(vx_node node, const vx_reference *par
     return status;
 }
 
-static vx_status VX_CALLBACK validateJitter(vx_node node, const vx_reference parameters[], vx_uint32 num, vx_meta_format metas[]) {
+static vx_status VX_CALLBACK validateRain(vx_node node, const vx_reference parameters[], vx_uint32 num, vx_meta_format metas[]) {
     vx_status status = VX_SUCCESS;
     vx_enum scalar_type;
-    STATUS_ERROR_CHECK(vxQueryScalar((vx_scalar)parameters[4], VX_SCALAR_TYPE, &scalar_type, sizeof(scalar_type)));
-    if (scalar_type != VX_TYPE_UINT32)
-        return ERRMSG(VX_ERROR_INVALID_TYPE, "validate: Paramter: #5 type=%d (must be size)\n", scalar_type);
-    STATUS_ERROR_CHECK(vxQueryScalar((vx_scalar)parameters[5], VX_SCALAR_TYPE, &scalar_type, sizeof(scalar_type)));
-    if (scalar_type != VX_TYPE_UINT32)
-        return ERRMSG(VX_ERROR_INVALID_TYPE, "validate: Paramter: #6 type=%d (must be size)\n", scalar_type);
-    STATUS_ERROR_CHECK(vxQueryScalar((vx_scalar)parameters[6], VX_SCALAR_TYPE, &scalar_type, sizeof(scalar_type)));
-    if (scalar_type != VX_TYPE_UINT32)
-        return ERRMSG(VX_ERROR_INVALID_TYPE, "validate: Paramter: #7 type=%d (must be size)\n", scalar_type);
     STATUS_ERROR_CHECK(vxQueryScalar((vx_scalar)parameters[7], VX_SCALAR_TYPE, &scalar_type, sizeof(scalar_type)));
     if (scalar_type != VX_TYPE_UINT32)
+        return ERRMSG(VX_ERROR_INVALID_TYPE, "validate: Paramter: #7 type=%d (must be size)\n", scalar_type);
+    STATUS_ERROR_CHECK(vxQueryScalar((vx_scalar)parameters[8], VX_SCALAR_TYPE, &scalar_type, sizeof(scalar_type)));
+    if (scalar_type != VX_TYPE_UINT32)
         return ERRMSG(VX_ERROR_INVALID_TYPE, "validate: Paramter: #8 type=%d (must be size)\n", scalar_type);
+    STATUS_ERROR_CHECK(vxQueryScalar((vx_scalar)parameters[9], VX_SCALAR_TYPE, &scalar_type, sizeof(scalar_type)));
+    if (scalar_type != VX_TYPE_UINT32)
+        return ERRMSG(VX_ERROR_INVALID_TYPE, "validate: Paramter: #9 type=%d (must be size)\n", scalar_type);
+    STATUS_ERROR_CHECK(vxQueryScalar((vx_scalar)parameters[10], VX_SCALAR_TYPE, &scalar_type, sizeof(scalar_type)));
+    if (scalar_type != VX_TYPE_UINT32)
+        return ERRMSG(VX_ERROR_INVALID_TYPE, "validate: Paramter: #10 type=%d (must be size)\n", scalar_type);
     // Check for output parameters
     vx_tensor output;
     vx_parameter output_param;
@@ -158,49 +169,60 @@ static vx_status VX_CALLBACK validateJitter(vx_node node, const vx_reference par
     return status;
 }
 
-static vx_status VX_CALLBACK processJitter(vx_node node, const vx_reference *parameters, vx_uint32 num) {
+static vx_status VX_CALLBACK processRain(vx_node node, const vx_reference *parameters, vx_uint32 num) {
     RppStatus rpp_status = RPP_SUCCESS;
     vx_status return_status = VX_SUCCESS;
-    JitterLocalData *data = NULL;
+    RainLocalData *data = NULL;
     STATUS_ERROR_CHECK(vxQueryNode(node, VX_NODE_LOCAL_DATA_PTR, &data, sizeof(data)));
     if (data->device_type == AGO_TARGET_AFFINITY_GPU)
     {
 #if ENABLE_OPENCL
-        refreshJitter(node, parameters, num, data);
+        refreshRain(node, parameters, num, data);
         // if (df_image == VX_DF_IMAGE_U8)
         // {
         //     rpp_status = rppi_blur_u8_pln1_batchPD_gpu((void *)data->cl_pSrc, data->srcDimensions, data->maxSrcDimensions, (void *)data->cl_pDst, data->kernelSize, data->nbatchSize, data->rppHandle);
         // }
         // else if (df_image == VX_DF_IMAGE_RGB)
         // {
-            rpp_status = rppi_jitter_u8_pkd3_batchPD_gpu((void *)data->cl_pSrc, data->srcDimensions, data->maxSrcDimensions, (void *)data->cl_pDst, data->kernelSize, data->nbatchSize, data->rppHandle);
+            rpp_status = rppi_rain_u8_pkd3_batchPD_gpu((void *)data->cl_pSrc, data->srcDimensions, data->maxSrcDimensions, (void *)data->cl_pDst, data->rain_percentage,data->rain_width,data->rain_height,data->rain_trasparency, data->nbatchSize, data->rppHandle);
         // }
         return_status = (rpp_status == RPP_SUCCESS) ? VX_SUCCESS : VX_FAILURE;
 #elif ENABLE_HIP
-        refreshJitter(node, parameters, num, data);
+        refreshRain(node, parameters, num, data);
         // if (df_image == VX_DF_IMAGE_U8)
         // {
         //     rpp_status = rppi_blur_u8_pln1_batchPD_gpu((void *)data->hip_pSrc, data->srcDimensions, data->maxSrcDimensions, (void *)data->hip_pDst, data->kernelSize, data->nbatchSize, data->rppHandle);
         // }
         // else if (df_image == VX_DF_IMAGE_RGB)
         // {
-            rpp_status = rppi_jitter_u8_pkd3_batchPD_gpu((void *)data->hip_pSrc, data->srcDimensions, data->maxSrcDimensions, (void *)data->hip_pDst, data->kernelSize, data->nbatchSize, data->rppHandle);
+            rpp_status = rppi_rain_u8_pkd3_batchPD_gpu((void *)data->hip_pSrc, data->srcDimensions, data->maxSrcDimensions, (void *)data->hip_pDst, data->rain_percentage,data->rain_width,data->rain_height,data->rain_trasparency, data->nbatchSize, data->rppHandle);
         // }
         return_status = (rpp_status == RPP_SUCCESS) ? VX_SUCCESS : VX_FAILURE;
 #endif
     }
     if (data->device_type == AGO_TARGET_AFFINITY_CPU)
     {
-        refreshJitter(node, parameters, num, data);
-        std::cerr<<data->kernelSize[0]<<"    yyyyyyyyyyyyyyyyyyyyyyyyyyyy\n\n\n";
-        rpp_status = rppi_jitter_u8_pkd3_batchPD_host(data->pSrc, data->srcDimensions, data->maxSrcDimensions, data->pDst, data->kernelSize, data->nbatchSize, data->rppHandle);
+        refreshRain(node, parameters, num, data);
+        vx_float32 *rain_percentage;
+    vx_uint32 *rain_width;
+    vx_uint32 *rain_height;
+    vx_float32 *rain_trasparency;
+        rpp_status = rppi_rain_u8_pkd3_batchPD_host(data->pSrc, data->srcDimensions, data->maxSrcDimensions, data->pDst, data->rain_percentage,data->rain_width,data->rain_height,data->rain_trasparency, data->nbatchSize, data->rppHandle);
+        if(rpp_status == RPP_SUCCESS)
+        {
+            std::cerr<<"sucesssssssssss\n\n\n\n";
+        }
+        else
+        {
+            std:cerr<<"failureeeeeee\n\n\n";
+        }
         return_status = (rpp_status == RPP_SUCCESS) ? VX_SUCCESS : VX_FAILURE;
     }
     return return_status;
 }
 
-static vx_status VX_CALLBACK initializeJitter(vx_node node, const vx_reference *parameters, vx_uint32 num) {
-    JitterLocalData *data = new JitterLocalData;
+static vx_status VX_CALLBACK initializeRain(vx_node node, const vx_reference *parameters, vx_uint32 num) {
+    RainLocalData *data = new RainLocalData;
     unsigned roiType;
     memset(data, 0, sizeof(*data));
 #if ENABLE_OPENCL
@@ -208,10 +230,10 @@ static vx_status VX_CALLBACK initializeJitter(vx_node node, const vx_reference *
 #elif ENABLE_HIP
     STATUS_ERROR_CHECK(vxQueryNode(node, VX_NODE_ATTRIBUTE_AMD_HIP_STREAM, &data->handle.hipstream, sizeof(data->handle.hipstream)));
 #endif
-    STATUS_ERROR_CHECK(vxCopyScalar((vx_scalar)parameters[7], &data->device_type, VX_READ_ONLY, VX_MEMORY_TYPE_HOST));
-    STATUS_ERROR_CHECK(vxReadScalarValue((vx_scalar)parameters[6], &data->nbatchSize));
-    STATUS_ERROR_CHECK(vxCopyScalar((vx_scalar)parameters[5], &roiType, VX_READ_ONLY, VX_MEMORY_TYPE_HOST));
-    STATUS_ERROR_CHECK(vxCopyScalar((vx_scalar)parameters[4], &data->layout, VX_READ_ONLY, VX_MEMORY_TYPE_HOST));
+    STATUS_ERROR_CHECK(vxCopyScalar((vx_scalar)parameters[10], &data->device_type, VX_READ_ONLY, VX_MEMORY_TYPE_HOST));
+    STATUS_ERROR_CHECK(vxReadScalarValue((vx_scalar)parameters[9], &data->nbatchSize));
+    STATUS_ERROR_CHECK(vxCopyScalar((vx_scalar)parameters[8], &roiType, VX_READ_ONLY, VX_MEMORY_TYPE_HOST));
+    STATUS_ERROR_CHECK(vxCopyScalar((vx_scalar)parameters[7], &data->layout, VX_READ_ONLY, VX_MEMORY_TYPE_HOST));
     if (roiType == 1)
         data->roiType = RpptRoiType::XYWH;
     else
@@ -387,12 +409,19 @@ static vx_status VX_CALLBACK initializeJitter(vx_node node, const vx_reference *
     //     data->dst_desc_ptr->strides.cStride = 1;
     //     data->dst_desc_ptr->layout = RpptLayout::NCHW;
     // }
+
+    
+
     data->roi_tensor_Ptr = (RpptROI *)calloc(data->src_desc_ptr->n, sizeof(RpptROI));
-    data->kernelSize = (vx_uint32 *)malloc(sizeof(vx_uint32) * data->src_desc_ptr->n);
+    data->rain_percentage = (vx_float32 *)malloc(sizeof(vx_float32) * data->src_desc_ptr->n);
+    data->rain_width = (vx_uint32 *)malloc(sizeof(vx_uint32) * data->src_desc_ptr->n);
+    data->rain_height = (vx_uint32 *)malloc(sizeof(vx_uint32) * data->src_desc_ptr->n);
+    data->rain_trasparency = (vx_float32 *)malloc(sizeof(vx_float32) * data->src_desc_ptr->n);
+
     data->srcDimensions = (RppiSize *)malloc(sizeof(RppiSize) * data->src_desc_ptr->n);
     data->srcBatch_width = (Rpp32u *)malloc(sizeof(Rpp32u) * data->src_desc_ptr->n);
     data->srcBatch_height = (Rpp32u *)malloc(sizeof(Rpp32u) * data->src_desc_ptr->n);
-    refreshJitter(node, parameters, num, data);
+    refreshRain(node, parameters, num, data);
 #if ENABLE_OPENCL
     if (data->device_type == AGO_TARGET_AFFINITY_GPU)
         rppCreateWithStreamAndBatchSize(&data->rppHandle, data->handle.cmdq, data->nbatchSize);
@@ -407,8 +436,8 @@ static vx_status VX_CALLBACK initializeJitter(vx_node node, const vx_reference *
     return VX_SUCCESS;
 }
 
-static vx_status VX_CALLBACK uninitializeJitter(vx_node node, const vx_reference *parameters, vx_uint32 num) {
-    JitterLocalData *data;
+static vx_status VX_CALLBACK uninitializeRain(vx_node node, const vx_reference *parameters, vx_uint32 num) {
+    RainLocalData *data;
     STATUS_ERROR_CHECK(vxQueryNode(node, VX_NODE_LOCAL_DATA_PTR, &data, sizeof(data)));
 #if ENABLE_OPENCL || ENABLE_HIP
     if (data->device_type == AGO_TARGET_AFFINITY_GPU)
@@ -420,7 +449,11 @@ static vx_status VX_CALLBACK uninitializeJitter(vx_node node, const vx_reference
     free(data->srcDimensions);
     free(data->srcBatch_width);
     free(data->srcBatch_height);
-    free(data->kernelSize);
+
+    free(data->rain_percentage);
+    free(data->rain_width);
+    free(data->rain_height);
+    free(data->rain_trasparency);
     delete (data);
     return VX_SUCCESS;
 }
@@ -446,16 +479,16 @@ static vx_status VX_CALLBACK query_target_support(vx_graph graph, vx_node node,
     return VX_SUCCESS;
 }
 
-vx_status Jitter_Register(vx_context context) {
+vx_status Rain_Register(vx_context context) {
     vx_status status = VX_SUCCESS;
     // Add kernel to the context with callbacks
-    vx_kernel kernel = vxAddUserKernel(context, "org.rpp.Jitter",
-                                       VX_KERNEL_RPP_JITTER,
-                                       processJitter,
-                                       8,
-                                       validateJitter,
-                                       initializeJitter,
-                                       uninitializeJitter);
+    vx_kernel kernel = vxAddUserKernel(context, "org.rpp.Rain",
+                                       VX_KERNEL_RPP_RAIN,
+                                       processRain,
+                                       11,
+                                       validateRain,
+                                       initializeRain,
+                                       uninitializeRain);
     ERROR_CHECK_OBJECT(kernel);
     AgoTargetAffinityInfo affinity;
     vxQueryContext(context, VX_CONTEXT_ATTRIBUTE_AMD_AFFINITY, &affinity, sizeof(affinity));
@@ -475,10 +508,14 @@ vx_status Jitter_Register(vx_context context) {
         PARAM_ERROR_CHECK(vxAddParameterToKernel(kernel, 1, VX_INPUT, VX_TYPE_ARRAY, VX_PARAMETER_STATE_REQUIRED));
         PARAM_ERROR_CHECK(vxAddParameterToKernel(kernel, 2, VX_OUTPUT, VX_TYPE_TENSOR, VX_PARAMETER_STATE_REQUIRED));
         PARAM_ERROR_CHECK(vxAddParameterToKernel(kernel, 3, VX_INPUT, VX_TYPE_ARRAY, VX_PARAMETER_STATE_REQUIRED));
-        PARAM_ERROR_CHECK(vxAddParameterToKernel(kernel, 4, VX_INPUT, VX_TYPE_SCALAR, VX_PARAMETER_STATE_REQUIRED));
-        PARAM_ERROR_CHECK(vxAddParameterToKernel(kernel, 5, VX_INPUT, VX_TYPE_SCALAR, VX_PARAMETER_STATE_REQUIRED));
-        PARAM_ERROR_CHECK(vxAddParameterToKernel(kernel, 6, VX_INPUT, VX_TYPE_SCALAR, VX_PARAMETER_STATE_REQUIRED));
+        PARAM_ERROR_CHECK(vxAddParameterToKernel(kernel, 4, VX_INPUT, VX_TYPE_ARRAY, VX_PARAMETER_STATE_REQUIRED));
+        PARAM_ERROR_CHECK(vxAddParameterToKernel(kernel, 5, VX_INPUT, VX_TYPE_ARRAY, VX_PARAMETER_STATE_REQUIRED));
+        PARAM_ERROR_CHECK(vxAddParameterToKernel(kernel, 6, VX_INPUT, VX_TYPE_ARRAY, VX_PARAMETER_STATE_REQUIRED));
+
         PARAM_ERROR_CHECK(vxAddParameterToKernel(kernel, 7, VX_INPUT, VX_TYPE_SCALAR, VX_PARAMETER_STATE_REQUIRED));
+        PARAM_ERROR_CHECK(vxAddParameterToKernel(kernel, 8, VX_INPUT, VX_TYPE_SCALAR, VX_PARAMETER_STATE_REQUIRED));
+        PARAM_ERROR_CHECK(vxAddParameterToKernel(kernel, 9, VX_INPUT, VX_TYPE_SCALAR, VX_PARAMETER_STATE_REQUIRED));
+        PARAM_ERROR_CHECK(vxAddParameterToKernel(kernel, 10, VX_INPUT, VX_TYPE_SCALAR, VX_PARAMETER_STATE_REQUIRED));
         PARAM_ERROR_CHECK(vxFinalizeKernel(kernel));
     }
     if (status != VX_SUCCESS) {

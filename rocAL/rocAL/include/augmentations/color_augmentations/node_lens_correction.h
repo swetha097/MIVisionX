@@ -22,15 +22,25 @@ THE SOFTWARE.
 
 #pragma once
 #include "node.h"
-#include "graph.h"
+#include "parameter_factory.h"
+#include "parameter_vx.h"
 
-class CopyNode : public Node
+
+
+class LensCorrectionNode : public Node
 {
 public:
-    CopyNode(const std::vector<rocALTensor *> &inputs, const std::vector<rocALTensor *> &outputs);
-    CopyNode() = delete;
-
+    LensCorrectionNode(const std::vector<rocALTensor *> &inputs, const std::vector<rocALTensor *> &outputs);
+    LensCorrectionNode() = delete;
+    void init(float strength, float zoom, int layout);
+    void init(FloatParam *strength, FloatParam *zoom, int layout);
 protected:
     void create_node() override;
-    void update_node() override{};
+    void update_node() override;
+private:
+    ParameterVX<float> _strength;
+    ParameterVX<float> _zoom;
+    int _layout,_roi_type;
+    constexpr static float STRENGTH_RANGE [2] = {0.05, 3.0};
+    constexpr static float   ZOOM_RANGE [2] = {1.0, 1.3};
 };

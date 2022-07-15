@@ -152,9 +152,19 @@ list(APPEND SOURCES
         source/tensor/Jitter.cpp
         source/tensor/Snow.cpp
         source/tensor/Fog.cpp
+        source/tensor/Saturation.cpp
+        source/tensor/Hue.cpp
+        source/tensor/Fisheye.cpp
+        source/tensor/ColorTemperature.cpp
+        source/tensor/Rain.cpp
+        source/tensor/LensCorrection.cpp
+        source/tensor/Pixelate.cpp
 
 
- 
+
+
+
+
         source/tensor/Nop.cpp
         source/kernel_rpp.cpp
         source/internal_publishKernels.cpp

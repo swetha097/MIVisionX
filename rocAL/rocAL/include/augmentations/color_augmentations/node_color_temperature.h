@@ -22,15 +22,24 @@ THE SOFTWARE.
 
 #pragma once
 #include "node.h"
+#include "parameter_factory.h"
+#include "parameter_vx.h"
 #include "graph.h"
 
-class CopyNode : public Node
+class ColorTemperatureNode : public Node
 {
 public:
-    CopyNode(const std::vector<rocALTensor *> &inputs, const std::vector<rocALTensor *> &outputs);
-    CopyNode() = delete;
+    ColorTemperatureNode(const std::vector<rocALTensor *> &inputs, const std::vector<rocALTensor *> &outputs);
+
+    ColorTemperatureNode() = delete;
+    void init(int adjustment, int layout);
+    void init(IntParam *adjustment, int layout);
 
 protected:
-    void create_node() override;
-    void update_node() override{};
+    void create_node() override ;
+    void update_node() override;
+private:
+    ParameterVX<int> _adj_value_param;
+    int _layout,_roi_type;
+    constexpr static int ADJUSTMENT_RANGE [2] = {-99, 99};
 };

@@ -60,6 +60,19 @@ vx_status Vignette_Register(vx_context);
 vx_status Jitter_Register(vx_context);
 vx_status Snow_Register(vx_context);
 vx_status Fog_Register(vx_context);
+vx_status Saturation_Register(vx_context);
+vx_status Hue_Register(vx_context);
+vx_status Fisheye_Register(vx_context);
+vx_status ColorTemperature_Register(vx_context);
+vx_status Rain_Register(vx_context);
+vx_status LensCorrection_Register(vx_context);
+vx_status Pixelate_Register(vx_context);
+
+
+
+
+
+
 
 
 
@@ -187,6 +200,18 @@ vx_status WarpPerspectivebatchPD_Register(vx_context);
 #define VX_KERNEL_RPP_JITTER_NAME                                            "org.rpp.Jitter"
 #define VX_KERNEL_RPP_SNOW_NAME                                              "org.rpp.Snow"
 #define VX_KERNEL_RPP_FOG_NAME                                               "org.rpp.Fog"
+#define VX_KERNEL_RPP_SATURATION_NAME                                        "org.rpp.Saturation"
+#define VX_KERNEL_RPP_HUE_NAME                                               "org.rpp.Hue"
+#define VX_KERNEL_RPP_FISHEYE_NAME                                           "org.rpp.Fisheye"
+#define VX_KERNEL_RPP_COLORTEMPERATURE_NAME                                  "org.rpp.ColorTemperature"
+#define VX_KERNEL_RPP_RAIN_NAME                                              "org.rpp.Rain"
+#define VX_KERNEL_RPP_LENSCORRECTION_NAME                                    "org.rpp.LensCorrection"
+#define VX_KERNEL_RPP_PIXELATE_NAME                                          "org.rpp.Pixelate"
+
+
+
+
+
 
 
 

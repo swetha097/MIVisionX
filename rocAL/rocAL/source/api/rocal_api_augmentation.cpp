@@ -46,6 +46,17 @@ THE SOFTWARE.
 #include "node_jitter.h"
 #include "node_snow.h"
 #include "node_fog.h"
+#include "node_saturation.h"
+#include "node_hue.h"
+#include "node_fisheye.h"
+#include "node_color_temperature.h"
+#include "node_pixelate.h"
+#include "node_lens_correction.h"
+#include "node_rain.h"
+
+
+
+
 
 
 
@@ -1024,7 +1035,7 @@ rocalSnow(
         RocalTensorLayout rocal_tensor_layout,
         RocalTensorOutputType rocal_tensor_output_type,
         bool is_output,
-        RocalIntParam p_snow)
+        RocalFloatParam p_snow)
 {
     rocALTensor* output = nullptr;
     if ((p_context == nullptr) || (p_input == nullptr)) {
@@ -1066,7 +1077,7 @@ rocalFog(
         RocalTensorLayout rocal_tensor_layout,
         RocalTensorOutputType rocal_tensor_output_type,
         bool is_output,
-        RocalIntParam p_fog)
+        RocalFloatParam p_fog)
 {
     rocALTensor* output = nullptr;
     if ((p_context == nullptr) || (p_input == nullptr)) {
@@ -1092,6 +1103,315 @@ rocalFog(
         output = context->master_graph->create_tensor(output_info, is_output);
         output->reset_tensor_roi();
         context->master_graph->add_node<FogNode>({input}, {output})->init(fog_prob, layout);
+    }
+    catch(const std::exception& e)
+    {
+        context->capture_error(e.what());
+        ERR(e.what())
+    }
+    return output;
+}
+
+
+
+RocalTensor ROCAL_API_CALL
+rocalSaturation(
+        RocalContext p_context,
+        RocalTensor p_input,
+        RocalTensorLayout rocal_tensor_layout,
+        RocalTensorOutputType rocal_tensor_output_type,
+        bool is_output,
+        RocalFloatParam p_sat)
+{
+    rocALTensor* output = nullptr;
+    if ((p_context == nullptr) || (p_input == nullptr)) {
+        ERR("Invalid ROCAL context or invalid input image")
+        return output;
+    }
+
+    auto context = static_cast<Context*>(p_context);
+    auto input = static_cast<rocALTensor*>(p_input);
+    auto sat = static_cast<FloatParam*>(p_sat);
+    RocalTensorlayout op_tensorLayout;
+    RocalTensorDataType op_tensorDataType;
+    try
+    {
+        int layout=0;
+        get_rocal_tensor_layout(rocal_tensor_layout, op_tensorLayout, layout );
+        std::cerr << " SNOW LAYOUT : " << layout << "\n";
+        get_rocal_tensor_data_type(rocal_tensor_output_type, op_tensorDataType);
+        rocALTensorInfo output_info = input->info();
+        output_info.set_tensor_layout(op_tensorLayout);
+        std::cerr<<"op_tensorDataType"<<(unsigned)op_tensorDataType;
+        output_info.set_data_type(op_tensorDataType);
+        output = context->master_graph->create_tensor(output_info, is_output);
+        output->reset_tensor_roi();
+        context->master_graph->add_node<SatNode>({input}, {output})->init(sat, layout);
+    }
+    catch(const std::exception& e)
+    {
+        context->capture_error(e.what());
+        ERR(e.what())
+    }
+    return output;
+}
+
+
+RocalTensor ROCAL_API_CALL
+rocalHue(
+        RocalContext p_context,
+        RocalTensor p_input,
+        RocalTensorLayout rocal_tensor_layout,
+        RocalTensorOutputType rocal_tensor_output_type,
+        bool is_output,
+        RocalFloatParam p_hue)
+{
+    rocALTensor* output = nullptr;
+    if ((p_context == nullptr) || (p_input == nullptr)) {
+        ERR("Invalid ROCAL context or invalid input image")
+        return output;
+    }
+
+    auto context = static_cast<Context*>(p_context);
+    auto input = static_cast<rocALTensor*>(p_input);
+    auto hue = static_cast<FloatParam*>(p_hue);
+    RocalTensorlayout op_tensorLayout;
+    RocalTensorDataType op_tensorDataType;
+    try
+    {
+        int layout=0;
+        get_rocal_tensor_layout(rocal_tensor_layout, op_tensorLayout, layout );
+        std::cerr << " HUE LAYOUT : " << layout << "\n";
+        get_rocal_tensor_data_type(rocal_tensor_output_type, op_tensorDataType);
+        rocALTensorInfo output_info = input->info();
+        output_info.set_tensor_layout(op_tensorLayout);
+        std::cerr<<"op_tensorDataType"<<(unsigned)op_tensorDataType;
+        output_info.set_data_type(op_tensorDataType);
+        output = context->master_graph->create_tensor(output_info, is_output);
+        output->reset_tensor_roi();
+        std::cerr<<"###########################innnnn\n\n";
+        context->master_graph->add_node<HueNode>({input}, {output})->init(hue, layout);
+        std::cerr<<"helloooo\n\n";
+    }
+    catch(const std::exception& e)
+    {
+        context->capture_error(e.what());
+        ERR(e.what())
+    }
+    return output;
+}
+
+RocalTensor ROCAL_API_CALL
+rocalFisheye(
+        RocalContext p_context,
+        RocalTensor p_input,
+        RocalTensorLayout rocal_tensor_layout,
+        RocalTensorOutputType rocal_tensor_output_type,
+        bool is_output)
+{
+    rocALTensor* output = nullptr;
+    if ((p_context == nullptr) || (p_input == nullptr)) {
+        ERR("Invalid ROCAL context or invalid input image")
+        return output;
+    }
+
+    auto context = static_cast<Context*>(p_context);
+    auto input = static_cast<rocALTensor*>(p_input);
+    RocalTensorlayout op_tensorLayout;
+    RocalTensorDataType op_tensorDataType;
+    try
+    {
+        int layout=0;
+        get_rocal_tensor_layout(rocal_tensor_layout, op_tensorLayout, layout );
+        std::cerr << " FISHEYE LAYOUT : " << layout << "\n";
+        get_rocal_tensor_data_type(rocal_tensor_output_type, op_tensorDataType);
+        rocALTensorInfo output_info = input->info();
+        output_info.set_tensor_layout(op_tensorLayout);
+        std::cerr<<"op_tensorDataType"<<(unsigned)op_tensorDataType;
+        output_info.set_data_type(op_tensorDataType);
+        output = context->master_graph->create_tensor(output_info, is_output);
+        output->reset_tensor_roi();
+        context->master_graph->add_node<FisheyeNode>({input}, {output})->init( layout);
+    }
+    catch(const std::exception& e)
+    {
+        context->capture_error(e.what());
+        ERR(e.what())
+    }
+    return output;
+}
+
+RocalTensor ROCAL_API_CALL
+rocalColorTemperature(
+        RocalContext p_context,
+        RocalTensor p_input,
+        RocalTensorLayout rocal_tensor_layout,
+        RocalTensorOutputType rocal_tensor_output_type,
+        bool is_output,
+        RocalIntParam p_adjust_value)
+{
+    rocALTensor* output = nullptr;
+    if ((p_context == nullptr) || (p_input == nullptr)) {
+        ERR("Invalid ROCAL context or invalid input image")
+        return output;
+    }
+
+    auto context = static_cast<Context*>(p_context);
+    auto input = static_cast<rocALTensor*>(p_input);
+    auto adjust_value = static_cast<IntParam*>(p_adjust_value);
+    RocalTensorlayout op_tensorLayout;
+    RocalTensorDataType op_tensorDataType;
+    try
+    {
+        int layout=0;
+        get_rocal_tensor_layout(rocal_tensor_layout, op_tensorLayout, layout );
+        std::cerr << " COLORTEMPERATURE LAYOUT : " << layout << "\n";
+        get_rocal_tensor_data_type(rocal_tensor_output_type, op_tensorDataType);
+        rocALTensorInfo output_info = input->info();
+        output_info.set_tensor_layout(op_tensorLayout);
+        std::cerr<<"op_tensorDataType"<<(unsigned)op_tensorDataType;
+        output_info.set_data_type(op_tensorDataType);
+        output = context->master_graph->create_tensor(output_info, is_output);
+        output->reset_tensor_roi();
+        context->master_graph->add_node<ColorTemperatureNode>({input}, {output})->init(adjust_value, layout);
+    }
+    catch(const std::exception& e)
+    {
+        context->capture_error(e.what());
+        ERR(e.what())
+    }
+    return output;
+}
+
+
+RocalTensor ROCAL_API_CALL
+rocalRain(
+        RocalContext p_context,
+        RocalTensor p_input,
+        RocalTensorLayout rocal_tensor_layout,
+        RocalTensorOutputType rocal_tensor_output_type,
+        bool is_output,
+        RocalFloatParam p_percentage,
+        RocalIntParam p_width,
+        RocalIntParam p_height,
+        RocalFloatParam p_tranparency)
+{
+    rocALTensor* output = nullptr;
+    if ((p_context == nullptr) || (p_input == nullptr)) {
+        ERR("Invalid ROCAL context or invalid input image")
+        return output;
+    }
+
+    auto context = static_cast<Context*>(p_context);
+    auto input = static_cast<rocALTensor*>(p_input);
+    auto rain_percentage = static_cast<FloatParam*>(p_percentage);
+    auto width = static_cast<IntParam*>(p_width);
+    auto height  = static_cast<IntParam*>(p_height);
+    auto rain_transpancy = static_cast<FloatParam*>(p_tranparency);
+
+
+    RocalTensorlayout op_tensorLayout;
+    RocalTensorDataType op_tensorDataType;
+    try
+    {
+        int layout=0;
+        get_rocal_tensor_layout(rocal_tensor_layout, op_tensorLayout, layout );
+        std::cerr << " RAIN LAYOUT : " << layout << "\n";
+        get_rocal_tensor_data_type(rocal_tensor_output_type, op_tensorDataType);
+        rocALTensorInfo output_info = input->info();
+        output_info.set_tensor_layout(op_tensorLayout);
+        std::cerr<<"op_tensorDataType"<<(unsigned)op_tensorDataType;
+        output_info.set_data_type(op_tensorDataType);
+        output = context->master_graph->create_tensor(output_info, is_output);
+        output->reset_tensor_roi();
+        context->master_graph->add_node<RainNode>({input}, {output})->init(rain_percentage,width,height,rain_transpancy, layout);
+    }
+    catch(const std::exception& e)
+    {
+        context->capture_error(e.what());
+        ERR(e.what())
+    }
+    return output;
+}
+
+
+
+RocalTensor ROCAL_API_CALL
+rocalLensCorrection(
+        RocalContext p_context,
+        RocalTensor p_input,
+        RocalTensorLayout rocal_tensor_layout,
+        RocalTensorOutputType rocal_tensor_output_type,
+        bool is_output,
+        RocalFloatParam p_strength,
+        RocalFloatParam p_zoom)
+{
+    rocALTensor* output = nullptr;
+    if ((p_context == nullptr) || (p_input == nullptr)) {
+        ERR("Invalid ROCAL context or invalid input image")
+        return output;
+    }
+
+    auto context = static_cast<Context*>(p_context);
+    auto input = static_cast<rocALTensor*>(p_input);
+    auto strength = static_cast<FloatParam*>(p_strength);
+    auto zoom = static_cast<FloatParam*>(p_zoom);
+    RocalTensorlayout op_tensorLayout;
+    RocalTensorDataType op_tensorDataType;
+    try
+    {
+        int layout=0;
+        get_rocal_tensor_layout(rocal_tensor_layout, op_tensorLayout, layout );
+        std::cerr << " LENSCORRECTION LAYOUT : " << layout << "\n";
+        get_rocal_tensor_data_type(rocal_tensor_output_type, op_tensorDataType);
+        rocALTensorInfo output_info = input->info();
+        output_info.set_tensor_layout(op_tensorLayout);
+        std::cerr<<"op_tensorDataType"<<(unsigned)op_tensorDataType;
+        output_info.set_data_type(op_tensorDataType);
+        output = context->master_graph->create_tensor(output_info, is_output);
+        output->reset_tensor_roi();
+        context->master_graph->add_node<LensCorrectionNode>({input}, {output})->init(strength,zoom, layout);
+    }
+    catch(const std::exception& e)
+    {
+        context->capture_error(e.what());
+        ERR(e.what())
+    }
+    return output;
+}
+
+
+RocalTensor ROCAL_API_CALL
+rocalPixelate(
+        RocalContext p_context,
+        RocalTensor p_input,
+        RocalTensorLayout rocal_tensor_layout,
+        RocalTensorOutputType rocal_tensor_output_type,
+        bool is_output)
+{
+    rocALTensor* output = nullptr;
+    if ((p_context == nullptr) || (p_input == nullptr)) {
+        ERR("Invalid ROCAL context or invalid input image")
+        return output;
+    }
+
+    auto context = static_cast<Context*>(p_context);
+    auto input = static_cast<rocALTensor*>(p_input);
+    RocalTensorlayout op_tensorLayout;
+    RocalTensorDataType op_tensorDataType;
+    try
+    {
+        int layout=0;
+        get_rocal_tensor_layout(rocal_tensor_layout, op_tensorLayout, layout );
+        std::cerr << " PIXELATE LAYOUT : " << layout << "\n";
+        get_rocal_tensor_data_type(rocal_tensor_output_type, op_tensorDataType);
+        rocALTensorInfo output_info = input->info();
+        output_info.set_tensor_layout(op_tensorLayout);
+        std::cerr<<"op_tensorDataType"<<(unsigned)op_tensorDataType;
+        output_info.set_data_type(op_tensorDataType);
+        output = context->master_graph->create_tensor(output_info, is_output);
+        output->reset_tensor_roi();
+        context->master_graph->add_node<PixelateNode>({input}, {output})->init( layout);
     }
     catch(const std::exception& e)
     {

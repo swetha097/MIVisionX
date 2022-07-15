@@ -23,6 +23,34 @@ THE SOFTWARE.
 #ifndef MIVISIONX_ROCAL_API_AUGMENTATION_H
 #define MIVISIONX_ROCAL_API_AUGMENTATION_H
 #include "rocal_api_types.h"
+extern "C" RocalTensor ROCAL_API_CALL rocalColorTemperature(RocalContext p_context,
+                                                            RocalTensor p_input,
+                                                            RocalTensorLayout rocal_tensor_layout,
+                                                            RocalTensorOutputType rocal_tensor_output_type,
+                                                            bool is_output,
+                                                            RocalIntParam p_adjust_value=NULL);
+
+extern "C" RocalTensor ROCAL_API_CALL rocalRain(
+        RocalContext p_context,
+        RocalTensor p_input,
+        RocalTensorLayout rocal_tensor_layout,
+        RocalTensorOutputType rocal_tensor_output_type,
+        bool is_output,
+        RocalFloatParam p_percentage=NULL,
+        RocalIntParam p_width=NULL,
+        RocalIntParam p_height=NULL,
+        RocalFloatParam p_tranparency=NULL);
+
+
+
+extern "C" RocalTensor ROCAL_API_CALL rocalLensCorrection(
+                                                            RocalContext p_context,
+                                                            RocalTensor p_input,
+                                                            RocalTensorLayout rocal_tensor_layout,
+                                                            RocalTensorOutputType rocal_tensor_output_type,
+                                                            bool is_output,
+                                                            RocalFloatParam p_strength=NULL,
+                                                            RocalFloatParam p_zoom=NULL);
 
 extern "C" RocalTensor ROCAL_API_CALL rocalBlur(RocalContext p_context,
                                                 RocalTensor p_input,
@@ -30,6 +58,19 @@ extern "C" RocalTensor ROCAL_API_CALL rocalBlur(RocalContext p_context,
                                                 RocalTensorOutputType rocal_tensor_output_type,
                                                 bool is_output,
                                                 RocalIntParam p_sdev=NULL);
+
+extern "C" RocalTensor ROCAL_API_CALL rocalPixelate(RocalContext p_context,
+                                                RocalTensor p_input,
+                                                RocalTensorLayout rocal_tensor_layout,
+                                                RocalTensorOutputType rocal_tensor_output_type,
+                                                bool is_output);
+
+
+extern "C" RocalTensor ROCAL_API_CALL rocalFisheye(RocalContext p_context,
+                                                RocalTensor p_input,
+                                                RocalTensorLayout rocal_tensor_layout,
+                                                RocalTensorOutputType rocal_tensor_output_type,
+                                                bool is_output);
 
 
 extern "C" RocalTensor ROCAL_API_CALL rocalVignette(RocalContext p_context,
@@ -53,12 +94,27 @@ extern "C" RocalTensor ROCAL_API_CALL rocalFog(RocalContext p_context,
                                                 bool is_output,
                                                 RocalFloatParam p_fog=NULL);
 
+
+extern "C" RocalTensor ROCAL_API_CALL rocalHue(RocalContext p_context,
+                                                RocalTensor p_input,
+                                                RocalTensorLayout rocal_tensor_layout,
+                                                RocalTensorOutputType rocal_tensor_output_type,
+                                                bool is_output,
+                                                RocalFloatParam p_hue=NULL);
+
 extern "C" RocalTensor ROCAL_API_CALL rocalJitter(RocalContext p_context,
                                                 RocalTensor p_input,
                                                 RocalTensorLayout rocal_tensor_layout,
                                                 RocalTensorOutputType rocal_tensor_output_type,
                                                 bool is_output,
                                                 RocalFloatParam p_sdev=NULL);
+            
+extern "C" RocalTensor ROCAL_API_CALL rocalSaturation(RocalContext p_context,
+                                                RocalTensor p_input,
+                                                RocalTensorLayout rocal_tensor_layout,
+                                                RocalTensorOutputType rocal_tensor_output_type,
+                                                bool is_output,
+                                                RocalFloatParam p_sat=NULL);
 
 extern "C" RocalTensor ROCAL_API_CALL rocalBrightness(RocalContext context, RocalTensor input,RocalTensorLayout rocal_tensor_layout, RocalTensorOutputType rocal_tensor_output_type, bool is_output,
                                                    RocalFloatParam alpha = NULL, RocalFloatParam beta = NULL);

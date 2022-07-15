@@ -162,7 +162,7 @@ int test(int test_case, int reader_type, int pipeline_type, const char *path, co
             if (decode_max_height <= 0 || decode_max_width <= 0)
                 input1 = rocalJpegCOCOFileSource(handle, path, json_path, color_format, num_threads, false, true, false);
             else
-                input1 = rocalJpegCOCOFileSource(handle, path, json_path, color_format, num_threads, true, true, false, ROCAL_USE_USER_GIVEN_SIZE, decode_max_width, decode_max_height);
+                input1 = rocalJpegCOCOFileSource(handle, path, json_path, color_format, num_threads, false, true, false, ROCAL_USE_USER_GIVEN_SIZE, decode_max_width, decode_max_height);
         }
         break;
 #if 0
@@ -260,7 +260,7 @@ int test(int test_case, int reader_type, int pipeline_type, const char *path, co
             if (decode_max_height <= 0 || decode_max_width <= 0)
                 input1 = rocalJpegFileSource(handle, path, color_format, num_threads, false, true);
             else
-                input1 = rocalJpegFileSource(handle, path, color_format, num_threads, true, false, false, ROCAL_USE_USER_GIVEN_SIZE, decode_max_width, decode_max_height);
+                input1 = rocalJpegFileSource(handle, path, color_format, num_threads, false, false, false, ROCAL_USE_USER_GIVEN_SIZE, decode_max_width, decode_max_height);
         }
         break;
     }
@@ -292,7 +292,7 @@ int test(int test_case, int reader_type, int pipeline_type, const char *path, co
                   << "rocalBrightness" << std::endl;
         image1 = rocalBrightness(handle, input1,tensorLayout, tensorOutputType, true);
     }
-break;
+    break;
     case 2:
     {
         std::cout << ">>>>>>> Running "
@@ -308,28 +308,28 @@ break;
 
     }
     break;
-    case 4: 
+    case 4:
     {
         std::cout << ">>>>>>> Running "
                   << "rocalExposure" << std::endl;
         image1 = rocalExposure(handle, input1, tensorLayout, tensorOutputType, true);
     break;
     }
-    case 5: 
+    case 5:
     {
         std::cout << ">>>>>>> Running "
                   << "rocalColorCast" << std::endl;
         image1 = rocalColorCast(handle, input1, tensorLayout, tensorOutputType, true);
     break;
     }
-    case 17: 
+    case 17:
     {
         std::cout << ">>>>>>> Running "
                   << "rocalspatter" << std::endl;
         image1 = rocalSpatter(handle, input1, tensorLayout, tensorOutputType, true);
     break;
     }
-    case 24: 
+    case 24:
     {
         std::cout << ">>>>>>> Running "
                   << "rocalColorTwist" << std::endl;
@@ -343,7 +343,7 @@ break;
         image1 = rocalBlur(handle, input1, tensorLayout, tensorOutputType, true);
     break;
     }
-    case 8: 
+    case 8:
     {
         std::cout << ">>>>>>> Running "
                   << "rocalCrop" << std::endl;
@@ -441,9 +441,56 @@ case 20:
         image1 = rocalFog(handle, input1, tensorLayout, tensorOutputType, true);
     }
 break;
+case 21:
+    {
+        std::cout << ">>>>>>> Running "
+                  << "rocalSaturation" << std::endl;
+        image1 = rocalSaturation(handle, input1, tensorLayout, tensorOutputType, true);
+    }
+break;
+case 22:
+    {
+        std::cout << ">>>>>>> Running "
+                  << "rocalHue" << std::endl;
+        image1 = rocalHue(handle, input1, tensorLayout, tensorOutputType, true);
+    }
+break;
 
-
-    
+case 23:
+    {
+        std::cout << ">>>>>>> Running "
+                  << "rocalFisheye" << std::endl;
+        image1 = rocalFisheye(handle, input1, tensorLayout, tensorOutputType, true);
+    }
+break;
+    case 25:
+    {
+        std::cout << ">>>>>>> Running "
+                  << "rocalColorTemperature" << std::endl;
+        image1 = rocalColorTemperature(handle, input1, tensorLayout, tensorOutputType, true);
+    }
+break;
+case 26:
+    {
+        std::cout << ">>>>>>> Running "
+                  << "rocalColorPixelate" << std::endl;
+        image1 = rocalPixelate(handle, input1, tensorLayout, tensorOutputType, true);
+    }
+break;
+case 27:
+    {
+        std::cout << ">>>>>>> Running "
+                  << "rocalLensCorrection" << std::endl;
+        image1 = rocalLensCorrection(handle, input1, tensorLayout, tensorOutputType, true);
+    }
+break;
+case 28:
+    {
+        std::cout << ">>>>>>> Running "
+                  << "rocalRain" << std::endl;
+        image1 = rocalRain(handle, input1, tensorLayout, tensorOutputType, true);
+    }
+break;
     default:
         std::cout << "Not a valid option! Exiting!\n";
         return -1;
@@ -482,13 +529,13 @@ std::cerr<<"hiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii\n\n\n";
         {
             case 1: //classification pipeline
             {
-                rocALTensorList* labels = rocalGetImageLabels(handle);
+                // rocALTensorList* labels = rocalGetImageLabels(handle);
 
-                for(int i = 0; i < labels->size(); i++)
-                {
-                    int * labels_buffer = (int *)(labels->at(i)->buffer());
-                    std::cerr << ">>>>> LABELS : " << labels_buffer[0] << "\t";
-                }
+                // for(int i = 0; i < labels->size(); i++)
+                // {
+                //     int * labels_buffer = (int *)(labels->at(i)->buffer());
+                //     std::cerr << ">>>>> LABELS : " << labels_buffer[0] << "\t";
+                // }
                 // int img_size = rocalGetImageNameLen(handle, image_name_length);
                 // char img_name[img_size];
                 // numOfClasses = num_of_classes;

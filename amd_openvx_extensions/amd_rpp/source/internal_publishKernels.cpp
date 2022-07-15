@@ -148,22 +148,13 @@ vx_status get_kernels_to_publish()
     STATUS_ERROR_CHECK(ADD_KERENEL(Jitter_Register));
     STATUS_ERROR_CHECK(ADD_KERENEL(Snow_Register));
     STATUS_ERROR_CHECK(ADD_KERENEL(Fog_Register));
-
-
-
-
-
-
-
-
-    
-
-
-
-
-
-
-
+    STATUS_ERROR_CHECK(ADD_KERENEL(Saturation_Register));
+    STATUS_ERROR_CHECK(ADD_KERENEL(Hue_Register));
+    STATUS_ERROR_CHECK(ADD_KERENEL(Fisheye_Register));
+    STATUS_ERROR_CHECK(ADD_KERENEL(ColorTemperature_Register));
+    STATUS_ERROR_CHECK(ADD_KERENEL(Rain_Register));
+    STATUS_ERROR_CHECK(ADD_KERENEL(LensCorrection_Register));
+    STATUS_ERROR_CHECK(ADD_KERENEL(Pixelate_Register));
 
 
 

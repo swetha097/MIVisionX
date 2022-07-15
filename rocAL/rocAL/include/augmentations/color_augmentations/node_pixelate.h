@@ -21,16 +21,22 @@ THE SOFTWARE.
 */
 
 #pragma once
+
 #include "node.h"
+#include "parameter_factory.h"
 #include "graph.h"
 
-class CopyNode : public Node
+
+class PixelateNode : public Node
 {
 public:
-    CopyNode(const std::vector<rocALTensor *> &inputs, const std::vector<rocALTensor *> &outputs);
-    CopyNode() = delete;
-
+    PixelateNode(const std::vector<rocALTensor *> &inputs, const std::vector<rocALTensor *> &outputs);
+    PixelateNode() = delete;
+    void init(int layout);
 protected:
     void create_node() override;
-    void update_node() override{};
+    void update_node() override;
+private:
+    int _layout,_roi_type;
+
 };

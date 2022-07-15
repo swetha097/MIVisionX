@@ -22,15 +22,22 @@ THE SOFTWARE.
 
 #pragma once
 #include "node.h"
-#include "graph.h"
+#include "parameter_factory.h"
+#include "parameter_vx.h"
 
-class CopyNode : public Node
+
+class HueNode : public Node
 {
 public:
-    CopyNode(const std::vector<rocALTensor *> &inputs, const std::vector<rocALTensor *> &outputs);
-    CopyNode() = delete;
-
+    HueNode(const std::vector<rocALTensor *> &inputs, const std::vector<rocALTensor *> &outputs);
+    HueNode() = delete;
+    void init(float hue, int layout);
+    void init(FloatParam *hue, int layout);
 protected:
     void create_node() override;
-    void update_node() override{};
+    void update_node() override;
+private:
+    ParameterVX<float> _hue;
+    int _layout,_roi_type;
+    constexpr static float HUE_RANGE [2] = {-359.0, 359.0};
 };

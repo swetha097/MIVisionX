@@ -21,16 +21,21 @@ THE SOFTWARE.
 */
 
 #pragma once
+
 #include "node.h"
 #include "graph.h"
 
-class CopyNode : public Node
+
+class FisheyeNode : public Node
 {
 public:
-    CopyNode(const std::vector<rocALTensor *> &inputs, const std::vector<rocALTensor *> &outputs);
-    CopyNode() = delete;
+    FisheyeNode(const std::vector<rocALTensor *> &inputs, const std::vector<rocALTensor *> &outputs);
+    FisheyeNode() = delete;
+    void init(int layout);
 
 protected:
     void create_node() override;
-    void update_node() override{};
+    void update_node() override;
+private:
+    int _layout,_roi_type;
 };

@@ -21,16 +21,30 @@ THE SOFTWARE.
 */
 
 #pragma once
-#include "node.h"
-#include "graph.h"
 
-class CopyNode : public Node
+#include "node.h"
+#include "parameter_factory.h"
+#include "parameter_vx.h"
+
+class RainNode : public Node
 {
 public:
-    CopyNode(const std::vector<rocALTensor *> &inputs, const std::vector<rocALTensor *> &outputs);
-    CopyNode() = delete;
-
+    RainNode(const std::vector<rocALTensor *> &inputs, const std::vector<rocALTensor *> &outputs);
+    RainNode() = delete;
+    void init(float rain_value, int rain_width, int rain_height, float rain_transparency, int layout);
+    void init(FloatParam *rain_value, IntParam *rain_width, IntParam *rain_height, FloatParam *rain_transparency, int layout); 
 protected:
     void create_node() override;
-    void update_node() override{};
+    void update_node() override;
+private:
+    ParameterVX<float> _rain_value;
+    ParameterVX<int> _rain_width;
+    ParameterVX<int> _rain_height;
+    ParameterVX<float> _rain_transparency;
+    int _layout,_roi_type;
+
+    constexpr static float RAIN_VALUE_RANGE [2] = {0.15, 0.95};
+    constexpr static int RAIN_WIDTH_RANGE [2] = {1, 2};
+    constexpr static int RAIN_HEIGHT_RANGE [2] = {15, 17};
+    constexpr static float RAIN_TRANSPARENCY_RANGE [2] = {0.2, 0.3};
 };

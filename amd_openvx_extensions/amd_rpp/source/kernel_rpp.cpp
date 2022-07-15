@@ -2585,3 +2585,173 @@ VX_API_ENTRY vx_node VX_API_CALL vxExtrppNode_Fog(vx_graph graph, vx_tensor pSrc
     }
     return node;
 }
+
+
+VX_API_ENTRY vx_node VX_API_CALL vxExtrppNode_Saturation(vx_graph graph, vx_tensor pSrc, vx_array srcROI, vx_tensor pDst, vx_array sat, vx_scalar layout, vx_scalar roiType, vx_uint32 nbatchSize)
+{
+    vx_node node = NULL;
+    vx_context context = vxGetContext((vx_reference)graph);
+    if (vxGetStatus((vx_reference)context) == VX_SUCCESS)
+    {
+        vx_uint32 dev_type = getGraphAffinity(graph);
+        vx_scalar DEV_TYPE = vxCreateScalar(vxGetContext((vx_reference)graph), VX_TYPE_UINT32, &dev_type);
+        vx_scalar NBATCHSIZE = vxCreateScalar(vxGetContext((vx_reference)graph), VX_TYPE_UINT32, &nbatchSize);
+        vx_reference params[] = {
+            (vx_reference)pSrc,
+            (vx_reference)srcROI,
+            (vx_reference)pDst,
+            (vx_reference)sat,
+            (vx_reference)layout,
+            (vx_reference)roiType,
+            (vx_reference)NBATCHSIZE,
+            (vx_reference)DEV_TYPE};
+        node = createNode(graph, VX_KERNEL_RPP_SATURATION, params, 8);
+    }
+    return node;
+}
+
+
+VX_API_ENTRY vx_node VX_API_CALL vxExtrppNode_Hue(vx_graph graph, vx_tensor pSrc, vx_array srcROI, vx_tensor pDst, vx_array hue, vx_scalar layout, vx_scalar roiType, vx_uint32 nbatchSize)
+{
+    vx_node node = NULL;
+    vx_context context = vxGetContext((vx_reference)graph);
+    if (vxGetStatus((vx_reference)context) == VX_SUCCESS)
+    {
+        vx_uint32 dev_type = getGraphAffinity(graph);
+        vx_scalar DEV_TYPE = vxCreateScalar(vxGetContext((vx_reference)graph), VX_TYPE_UINT32, &dev_type);
+        vx_scalar NBATCHSIZE = vxCreateScalar(vxGetContext((vx_reference)graph), VX_TYPE_UINT32, &nbatchSize);
+        vx_reference params[] = {
+            (vx_reference)pSrc,
+            (vx_reference)srcROI,
+            (vx_reference)pDst,
+            (vx_reference)hue,
+            (vx_reference)layout,
+            (vx_reference)roiType,
+            (vx_reference)NBATCHSIZE,
+            (vx_reference)DEV_TYPE};
+        node = createNode(graph, VX_KERNEL_RPP_HUE, params, 8);
+    }
+    return node;
+}
+
+VX_API_ENTRY vx_node VX_API_CALL vxExtrppNode_Fisheye(vx_graph graph, vx_tensor pSrc, vx_array srcROI, vx_tensor pDst, vx_scalar layout, vx_scalar roiType, vx_uint32 nbatchSize)
+{
+    vx_node node = NULL;
+    vx_context context = vxGetContext((vx_reference)graph);
+    if (vxGetStatus((vx_reference)context) == VX_SUCCESS)
+    {
+        vx_uint32 dev_type = getGraphAffinity(graph);
+        vx_scalar DEV_TYPE = vxCreateScalar(vxGetContext((vx_reference)graph), VX_TYPE_UINT32, &dev_type);
+        vx_scalar NBATCHSIZE = vxCreateScalar(vxGetContext((vx_reference)graph), VX_TYPE_UINT32, &nbatchSize);
+        vx_reference params[] = {
+            (vx_reference)pSrc,
+            (vx_reference)srcROI,
+            (vx_reference)pDst,
+            (vx_reference)layout,
+            (vx_reference)roiType,
+            (vx_reference)NBATCHSIZE,
+            (vx_reference)DEV_TYPE};
+        node = createNode(graph, VX_KERNEL_RPP_FISHEYE, params, 7);
+    }
+    return node;
+}
+
+
+
+VX_API_ENTRY vx_node VX_API_CALL vxExtrppNode_ColorTemperature(vx_graph graph, vx_tensor pSrc, vx_array srcROI, vx_tensor pDst, vx_array adjust_value, vx_scalar layout, vx_scalar roiType, vx_uint32 nbatchSize)
+{
+    vx_node node = NULL;
+    vx_context context = vxGetContext((vx_reference)graph);
+    if (vxGetStatus((vx_reference)context) == VX_SUCCESS)
+    {
+        vx_uint32 dev_type = getGraphAffinity(graph);
+        vx_scalar DEV_TYPE = vxCreateScalar(vxGetContext((vx_reference)graph), VX_TYPE_UINT32, &dev_type);
+        vx_scalar NBATCHSIZE = vxCreateScalar(vxGetContext((vx_reference)graph), VX_TYPE_UINT32, &nbatchSize);
+        vx_reference params[] = {
+            (vx_reference)pSrc,
+            (vx_reference)srcROI,
+            (vx_reference)pDst,
+            (vx_reference)adjust_value,
+            (vx_reference)layout,
+            (vx_reference)roiType,
+            (vx_reference)NBATCHSIZE,
+            (vx_reference)DEV_TYPE};
+        node = createNode(graph, VX_KERNEL_RPP_COLORTEMPERATURE, params, 8);
+    }
+    return node;
+}
+
+
+
+VX_API_ENTRY vx_node VX_API_CALL vxExtrppNode_Rain(vx_graph graph, vx_tensor pSrc, vx_array srcROI, vx_tensor pDst, vx_array rain_percentage, vx_array rain_width,vx_array rain_height,vx_array rain_transparency,  vx_scalar layout, vx_scalar roiType, vx_uint32 nbatchSize)
+{
+    vx_node node = NULL;
+    vx_context context = vxGetContext((vx_reference)graph);
+    if (vxGetStatus((vx_reference)context) == VX_SUCCESS)
+    {
+        vx_uint32 dev_type = getGraphAffinity(graph);
+        vx_scalar DEV_TYPE = vxCreateScalar(vxGetContext((vx_reference)graph), VX_TYPE_UINT32, &dev_type);
+        vx_scalar NBATCHSIZE = vxCreateScalar(vxGetContext((vx_reference)graph), VX_TYPE_UINT32, &nbatchSize);
+        vx_reference params[] = {
+            (vx_reference)pSrc,
+            (vx_reference)srcROI,
+            (vx_reference)pDst,
+            (vx_reference)rain_percentage,
+            (vx_reference)rain_width,
+            (vx_reference)rain_height,
+            (vx_reference)rain_transparency,
+            (vx_reference)layout,
+            (vx_reference)roiType,
+            (vx_reference)NBATCHSIZE,
+            (vx_reference)DEV_TYPE};
+        node = createNode(graph, VX_KERNEL_RPP_RAIN, params, 11);
+    }
+    return node;
+}
+
+
+VX_API_ENTRY vx_node VX_API_CALL vxExtrppNode_LensCorrection(vx_graph graph, vx_tensor pSrc, vx_array srcROI, vx_tensor pDst, vx_array strength, vx_array zoom, vx_scalar layout, vx_scalar roiType, vx_uint32 nbatchSize)
+{
+    vx_node node = NULL;
+    vx_context context = vxGetContext((vx_reference)graph);
+    if (vxGetStatus((vx_reference)context) == VX_SUCCESS)
+    {
+        vx_uint32 dev_type = getGraphAffinity(graph);
+        vx_scalar DEV_TYPE = vxCreateScalar(vxGetContext((vx_reference)graph), VX_TYPE_UINT32, &dev_type);
+        vx_scalar NBATCHSIZE = vxCreateScalar(vxGetContext((vx_reference)graph), VX_TYPE_UINT32, &nbatchSize);
+        vx_reference params[] = {
+            (vx_reference)pSrc,
+            (vx_reference)srcROI,
+            (vx_reference)pDst,
+            (vx_reference)strength,
+            (vx_reference)zoom,
+            (vx_reference)layout,
+            (vx_reference)roiType,
+            (vx_reference)NBATCHSIZE,
+            (vx_reference)DEV_TYPE};
+        node = createNode(graph, VX_KERNEL_RPP_LENSCORRECTION, params, 9);
+    }
+    return node;
+}
+
+VX_API_ENTRY vx_node VX_API_CALL vxExtrppNode_Pixelate(vx_graph graph, vx_tensor pSrc, vx_array srcROI, vx_tensor pDst, vx_scalar layout, vx_scalar roiType, vx_uint32 nbatchSize)
+{
+    vx_node node = NULL;
+    vx_context context = vxGetContext((vx_reference)graph);
+    if (vxGetStatus((vx_reference)context) == VX_SUCCESS)
+    {
+        vx_uint32 dev_type = getGraphAffinity(graph);
+        vx_scalar DEV_TYPE = vxCreateScalar(vxGetContext((vx_reference)graph), VX_TYPE_UINT32, &dev_type);
+        vx_scalar NBATCHSIZE = vxCreateScalar(vxGetContext((vx_reference)graph), VX_TYPE_UINT32, &nbatchSize);
+        vx_reference params[] = {
+            (vx_reference)pSrc,
+            (vx_reference)srcROI,
+            (vx_reference)pDst,
+            (vx_reference)layout,
+            (vx_reference)roiType,
+            (vx_reference)NBATCHSIZE,
+            (vx_reference)DEV_TYPE};
+        node = createNode(graph, VX_KERNEL_RPP_PIXELATE, params, 7);
+    }
+    return node;
+}

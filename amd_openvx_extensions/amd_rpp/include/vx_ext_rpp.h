@@ -156,6 +156,18 @@ extern "C" SHARED_PUBLIC vx_node VX_API_CALL vxExtrppNode_Vignette(vx_graph grap
 extern "C" SHARED_PUBLIC vx_node VX_API_CALL vxExtrppNode_Jitter(vx_graph graph, vx_tensor pSrc, vx_array srcROI, vx_tensor pDst, vx_array sdev, vx_scalar layout, vx_scalar roiType, vx_uint32 nbatchSize);
 extern "C" SHARED_PUBLIC vx_node VX_API_CALL vxExtrppNode_Snow(vx_graph graph, vx_tensor pSrc, vx_array srcROI, vx_tensor pDst, vx_array snow, vx_scalar layout, vx_scalar roiType, vx_uint32 nbatchSize);
 extern "C" SHARED_PUBLIC vx_node VX_API_CALL vxExtrppNode_Fog(vx_graph graph, vx_tensor pSrc, vx_array srcROI, vx_tensor pDst, vx_array fog, vx_scalar layout, vx_scalar roiType, vx_uint32 nbatchSize);
+extern "C" SHARED_PUBLIC vx_node VX_API_CALL vxExtrppNode_Saturation(vx_graph graph, vx_tensor pSrc, vx_array srcROI, vx_tensor pDst, vx_array sat, vx_scalar layout, vx_scalar roiType, vx_uint32 nbatchSize);
+extern "C" SHARED_PUBLIC vx_node VX_API_CALL vxExtrppNode_Hue(vx_graph graph, vx_tensor pSrc, vx_array srcROI, vx_tensor pDst, vx_array hue, vx_scalar layout, vx_scalar roiType, vx_uint32 nbatchSize);
+extern "C" SHARED_PUBLIC vx_node VX_API_CALL vxExtrppNode_Fisheye(vx_graph graph, vx_tensor pSrc, vx_array srcROI, vx_tensor pDst, vx_scalar layout, vx_scalar roiType, vx_uint32 nbatchSize);
+extern "C" SHARED_PUBLIC vx_node VX_API_CALL vxExtrppNode_ColorTemperature(vx_graph graph, vx_tensor pSrc, vx_array srcROI, vx_tensor pDst, vx_array adjust_value, vx_scalar layout, vx_scalar roiType, vx_uint32 nbatchSize);
+extern "C" SHARED_PUBLIC vx_node VX_API_CALL vxExtrppNode_Rain(vx_graph graph, vx_tensor pSrc, vx_array srcROI, vx_tensor pDst, vx_array rain_percentage,vx_array rain_width,vx_array rain_height, vx_array rain_transparency,vx_scalar layout, vx_scalar roiType, vx_uint32 nbatchSize);
+extern "C" SHARED_PUBLIC vx_node VX_API_CALL vxExtrppNode_LensCorrection(vx_graph graph, vx_tensor pSrc, vx_array srcROI, vx_tensor pDst, vx_array strength, vx_array zoom, vx_scalar layout, vx_scalar roiType, vx_uint32 nbatchSize);
+extern "C" SHARED_PUBLIC vx_node VX_API_CALL vxExtrppNode_Pixelate(vx_graph graph, vx_tensor pSrc, vx_array srcROI, vx_tensor pDst, vx_scalar layout, vx_scalar roiType, vx_uint32 nbatchSize);
+
+
+
+
+
 
 
 

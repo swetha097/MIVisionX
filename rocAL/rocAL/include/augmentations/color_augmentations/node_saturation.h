@@ -22,15 +22,22 @@ THE SOFTWARE.
 
 #pragma once
 #include "node.h"
-#include "graph.h"
+#include "parameter_factory.h"
+#include "parameter_vx.h"
 
-class CopyNode : public Node
+
+class SatNode : public Node
 {
 public:
-    CopyNode(const std::vector<rocALTensor *> &inputs, const std::vector<rocALTensor *> &outputs);
-    CopyNode() = delete;
-
+    SatNode(const std::vector<rocALTensor *> &inputs, const std::vector<rocALTensor *> &outputs);
+    SatNode() = delete;
+    void init(float sat, int layout);
+    void init(FloatParam *sat, int layout);
 protected:
     void create_node() override;
-    void update_node() override{};
+    void update_node() override;
+private:
+    ParameterVX<float> _sat; // For saturation
+    int _layout,_roi_type;
+    constexpr static float SAT_RANGE [2] = {-0.5, 0.5};
 };

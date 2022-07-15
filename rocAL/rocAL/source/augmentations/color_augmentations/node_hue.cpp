@@ -21,53 +21,54 @@ THE SOFTWARE.
 */
 
 #include <vx_ext_rpp.h>
-#include "node_blur.h"
+#include <VX/vx_compatibility.h>
+#include <graph.h>
+#include "node_hue.h"
 #include "exception.h"
 
-BlurNode::BlurNode(const std::vector<rocALTensor *> &inputs, const std::vector<rocALTensor *> &outputs) :
+
+HueNode::HueNode(const std::vector<rocALTensor *> &inputs, const std::vector<rocALTensor *> &outputs) :
         Node(inputs, outputs),
-        _sdev(SDEV_RANGE[0], SDEV_RANGE[1])
+        _hue(HUE_RANGE[0], HUE_RANGE[1])
 {
 }
 
-void BlurNode::create_node()
+void HueNode::create_node()
 {
     if(_node)
         return;
-    _sdev.create_array(_graph ,VX_TYPE_UINT32, _batch_size);
+
+    _hue.create_array(_graph , VX_TYPE_FLOAT32, _batch_size);
 
     if(_inputs[0]->info().roi_type() == RocalROIType::XYWH)
         _roi_type = 1;
     vx_scalar layout = vxCreateScalar(vxGetContext((vx_reference)_graph->get()),VX_TYPE_UINT32,&_layout);
     std::cerr<<"layouttttttttttttttttt"<<_layout<<"\n\n\n\n";
     vx_scalar roi_type = vxCreateScalar(vxGetContext((vx_reference)_graph->get()),VX_TYPE_UINT32,&_roi_type);
-    
-    _node = vxExtrppNode_Blur(_graph->get(), _inputs[0]->handle(),  _src_tensor_roi, _outputs[0]->handle(), _sdev.default_array(), layout, roi_type, _batch_size);
 
-
+    _node = vxExtrppNode_Hue(_graph->get(), _inputs[0]->handle(),  _src_tensor_roi, _outputs[0]->handle(), _hue.default_array(), layout, roi_type, _batch_size);
     vx_status status;
     if((status = vxGetStatus((vx_reference)_node)) != VX_SUCCESS)
-        THROW("Adding the blur (vxExtrppNode_blur) node failed: "+ TOSTR(status))
+        THROW("Adding the Hue (vxExtrppNode_HueCorrectionbatchPD) node failed: "+ TOSTR(status))
 
 }
 
-void BlurNode::init(int sdev, int layout)
+void HueNode::init(float hue, int layout)
 {
-    _sdev.set_param(sdev);
+    std::cerr<<"HueNode::init\n\n";
+    _hue.set_param(hue);
     _layout=layout;
     _roi_type = 0;
-
 }
 
-void BlurNode::init(IntParam* sdev, int layout)
+void HueNode::init(FloatParam* hue, int layout)
 {
-    _sdev.set_param(core(sdev));
+    _hue.set_param(core(hue));
     _layout=layout;
     _roi_type = 0;
-
 }
 
-void BlurNode::update_node()
+void HueNode::update_node()
 {
-    _sdev.update_array();
+     _hue.update_array();
 }

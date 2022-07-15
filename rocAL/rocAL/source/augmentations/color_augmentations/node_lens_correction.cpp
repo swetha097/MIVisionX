@@ -21,53 +21,61 @@ THE SOFTWARE.
 */
 
 #include <vx_ext_rpp.h>
-#include "node_blur.h"
+#include <VX/vx_compatibility.h>
+#include <graph.h>
+#include "node_lens_correction.h"
 #include "exception.h"
 
-BlurNode::BlurNode(const std::vector<rocALTensor *> &inputs, const std::vector<rocALTensor *> &outputs) :
+
+LensCorrectionNode::LensCorrectionNode(const std::vector<rocALTensor *> &inputs, const std::vector<rocALTensor *> &outputs) :
         Node(inputs, outputs),
-        _sdev(SDEV_RANGE[0], SDEV_RANGE[1])
+        _strength(STRENGTH_RANGE[0], STRENGTH_RANGE[1]),
+        _zoom(ZOOM_RANGE[0], ZOOM_RANGE[1])
 {
 }
 
-void BlurNode::create_node()
+void LensCorrectionNode::create_node()
 {
     if(_node)
         return;
-    _sdev.create_array(_graph ,VX_TYPE_UINT32, _batch_size);
 
+    _strength.create_array(_graph , VX_TYPE_FLOAT32, _batch_size);
+    _zoom.create_array(_graph , VX_TYPE_FLOAT32, _batch_size);
     if(_inputs[0]->info().roi_type() == RocalROIType::XYWH)
         _roi_type = 1;
     vx_scalar layout = vxCreateScalar(vxGetContext((vx_reference)_graph->get()),VX_TYPE_UINT32,&_layout);
     std::cerr<<"layouttttttttttttttttt"<<_layout<<"\n\n\n\n";
     vx_scalar roi_type = vxCreateScalar(vxGetContext((vx_reference)_graph->get()),VX_TYPE_UINT32,&_roi_type);
-    
-    _node = vxExtrppNode_Blur(_graph->get(), _inputs[0]->handle(),  _src_tensor_roi, _outputs[0]->handle(), _sdev.default_array(), layout, roi_type, _batch_size);
+
+    _node = vxExtrppNode_LensCorrection(_graph->get(), _inputs[0]->handle(),  _src_tensor_roi, _outputs[0]->handle(), _strength.default_array(), _zoom.default_array(), layout, roi_type, _batch_size);
 
 
     vx_status status;
     if((status = vxGetStatus((vx_reference)_node)) != VX_SUCCESS)
-        THROW("Adding the blur (vxExtrppNode_blur) node failed: "+ TOSTR(status))
+        THROW("Adding the lens correction (vxExtrppNode_LensCorrection) node failed: "+ TOSTR(status))
 
 }
 
-void BlurNode::init(int sdev, int layout)
+void LensCorrectionNode::init(float strength, float zoom, int layout)
 {
-    _sdev.set_param(sdev);
+    _strength.set_param(strength);
+    _zoom.set_param(zoom);
     _layout=layout;
     _roi_type = 0;
-
 }
 
-void BlurNode::init(IntParam* sdev, int layout)
+void LensCorrectionNode::init(FloatParam* strength, FloatParam* zoom , int layout)
 {
-    _sdev.set_param(core(sdev));
+    _strength.set_param(core(strength));
+    _zoom.set_param(core(zoom));
     _layout=layout;
     _roi_type = 0;
-
 }
 
-void BlurNode::update_node()
+void LensCorrectionNode::update_node()
 {
-    _sdev.update_array();
+    _strength.update_array();
+    _zoom.update_array();
 }
+
+
