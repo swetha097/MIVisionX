@@ -156,6 +156,8 @@ void AudioLoader::initialize(ReaderConfig reader_cfg, DecoderConfig decoder_cfg,
         de_init();
         throw;
     }
+    _max_decoded_samples = _output_tensor->info().max_dims().at(0);
+    _max_decoded_channels = _output_tensor->info().max_dims().at(1);
     _decoded_img_info._image_names.resize(_batch_size);
     _decoded_img_info._roi_height.resize(_batch_size);
     _decoded_img_info._roi_width.resize(_batch_size);
@@ -196,8 +198,8 @@ AudioLoader::load_routine()
         {
             load_status = _audio_loader->load(data,
                                             _decoded_img_info._image_names,
-                                            _output_tensor->info().max_dims().at(0),
-                                            _output_tensor->info().max_dims().at(1),
+                                            _max_decoded_samples,
+                                            _max_decoded_channels,
                                             _decoded_img_info._roi_width,
                                             _decoded_img_info._roi_height,
                                             _decoded_img_info._original_width,

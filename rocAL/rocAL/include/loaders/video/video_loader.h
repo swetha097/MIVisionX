@@ -89,5 +89,6 @@ private:
     std::vector<std::vector<size_t>> _sequence_start_framenum_vec;
     std::vector<std::vector<std::vector<float>>> _sequence_frame_timestamps_vec;
     crop_image_info _crop_img_info;
+    size_t _max_decoded_width, _max_decoded_height;
 };
 #endif
