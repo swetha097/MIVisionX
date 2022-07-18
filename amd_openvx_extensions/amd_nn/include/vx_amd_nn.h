@@ -1,16 +1,16 @@
-/*
+/* 
 Copyright (c) 2015 - 2022 Advanced Micro Devices, Inc. All rights reserved.
-
+ 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
 in the Software without restriction, including without limitation the rights
 to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
 copies of the Software, and to permit persons to whom the Software is
 furnished to do so, subject to the following conditions:
-
+ 
 The above copyright notice and this permission notice shall be included in
 all copies or substantial portions of the Software.
-
+ 
 THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL THE
@@ -148,8 +148,8 @@ VX_API_ENTRY vx_node VX_API_CALL vxReshapeLayer(vx_graph graph, vx_tensor input,
  * \param [in] graph The handle to the graph.
  * \param [in] input The input tensor data.
  * \param [in] order The required output tensor dimensions.
- * \Order takes values:
- * \ '0' : 0,1,2,3 (eg:nchw->nchw)
+ * \Order takes values: 
+ * \ '0' : 0,1,2,3 (eg:nchw->nchw) 
  * \ '1' : 0,2,3,1 (eg:nchw->nhwc)
  * \param [out] output The output tensor data. Output will have the same number of dimensions as input. Output tensor data type must be same as the inputs. The width, height, batch and channel dimensions of output can be rearranged, but value must be the same as input.
  * \return <tt> vx_node</tt>.
@@ -159,7 +159,7 @@ VX_API_ENTRY vx_node VX_API_CALL vxReshapeLayer(vx_graph graph, vx_tensor input,
 VX_API_ENTRY vx_node VX_API_CALL vxPermuteLayer(vx_graph graph, vx_tensor input, vx_array order, vx_tensor output);
 
 /*! \brief [Graph] Creates a Prior Box Layer Node.
- * \details Prior box gives the coordinates of the bounding boxes for an image.
+ * \details Prior box gives the coordinates of the bounding boxes for an image. 
  * This function supports 4D tensors as input and 3D tensor as output.
  * \param [in] graph The handle to the graph.
  * \param [in] input_1 The input tensor data (output of the previous layer)
@@ -176,20 +176,20 @@ VX_API_ENTRY vx_node VX_API_CALL vxPermuteLayer(vx_graph graph, vx_tensor input,
  * \returns A node reference <tt>\ref vx_node</tt>. Any possible errors preventing a
  * successful creation should be checked using <tt>\ref vxGetStatus</tt>.
  */
-VX_API_ENTRY vx_node VX_API_CALL vxPriorBoxLayer(vx_graph graph, vx_tensor input_1, vx_tensor input_2, vx_float32 minSize, vx_array aspect_ratio, vx_int32 flip, vx_int32 clip,
+VX_API_ENTRY vx_node VX_API_CALL vxPriorBoxLayer(vx_graph graph, vx_tensor input_1, vx_tensor input_2, vx_float32 minSize, vx_array aspect_ratio, vx_int32 flip, vx_int32 clip, 
                                                  vx_float32 offset, vx_tensor output, vx_array variance, vx_float32 maxSize);
 
 /* \brief [Graph] Creates a Crop Layer Node.
- * \details Cropping is done on the dimensions of the input vx_tensor to fit the dimensions of the reference tensor.
+ * \details Cropping is done on the dimensions of the input vx_tensor to fit the dimensions of the reference tensor. 
  * This function supports 4D tensors as input and ouput. The type of the tensor can be either float32 or float16.
  * \param [in] graph The handle to the graph.
  * \param [in] input The input tensor data.
  * \param [in] ref The reference tensor data.
  * \param [out] output The cropped tensor data.
  * \param [axis] The dimensions including and trailing 'axis' are cropped. [n x c x h x w]
- * \param [offset1] The offset to set the shift for dimension n.
- * \param [offset2] The offset to set the shift for dimension c.
- * \param [offset3] The offset to set the shift for dimension h.
+ * \param [offset1] The offset to set the shift for dimension n. 
+ * \param [offset2] The offset to set the shift for dimension c. 
+ * \param [offset3] The offset to set the shift for dimension h. 
  * \param [offset4] The offset to set the shift for dimension w.
  * \return <tt> vx_node</tt>.
  * \returns A node reference <tt>\ref vx_node</tt>. Any possible errors preventing a
@@ -221,8 +221,8 @@ VX_API_ENTRY vx_node VX_API_CALL vxCropAndResizeLayer(vx_graph graph, vx_tensor 
  * This function supports 4D tensors as input and ouput. The type of the tensor can be either float32 or float16.
  * \param [in] graph The handle to the graph.
  * \param [in] input The first input tensor data.
- * \param [in] input2 The second input tensor data. The dimensions and sizes of input2 match those of input1, unless the vx_tensor of one or more dimensions in input2 is 1.
- *                    In this case, those dimensions are treated as if this tensor was expanded to match the size of the corresponding dimension of input1, and data was duplicated on all terms in that dimension.
+ * \param [in] input2 The second input tensor data. The dimensions and sizes of input2 match those of input1, unless the vx_tensor of one or more dimensions in input2 is 1. 
+ *                    In this case, those dimensions are treated as if this tensor was expanded to match the size of the corresponding dimension of input1, and data was duplicated on all terms in that dimension. 
  *                    After this expansion, the dimensions will be equal. The data type must match the data type of input1.
  * \param [out] output The output tensor data with the same dimensions as the input tensor data.
  * \return <tt> vx_node</tt>.
@@ -235,8 +235,8 @@ VX_API_ENTRY vx_node VX_API_CALL vxTensorMinNode(vx_graph graph, vx_tensor input
  * This function supports 4D tensors as input and ouput. The type of the tensor can be either float32 or float16.
  * \param [in] graph The handle to the graph.
  * \param [in] input The first input tensor data.
- * \param [in] input2 The second input tensor data. The dimensions and sizes of input2 match those of input1, unless the vx_tensor of one or more dimensions in input2 is 1.
- *                    In this case, those dimensions are treated as if this tensor was expanded to match the size of the corresponding dimension of input1, and data was duplicated on all terms in that dimension.
+ * \param [in] input2 The second input tensor data. The dimensions and sizes of input2 match those of input1, unless the vx_tensor of one or more dimensions in input2 is 1. 
+ *                    In this case, those dimensions are treated as if this tensor was expanded to match the size of the corresponding dimension of input1, and data was duplicated on all terms in that dimension. 
  *                    After this expansion, the dimensions will be equal. The data type must match the data type of input1.
  * \param [out] output The output tensor data with the same dimensions as the input tensor data.
  * \return <tt> vx_node</tt>.
@@ -249,7 +249,7 @@ VX_API_ENTRY vx_node VX_API_CALL vxTensorMaxNode(vx_graph graph, vx_tensor input
  * This function supports three 4D tensors as input and one 4D tensor as ouput. The type of the tensor can be either float32 or float16.
  * \param [in] graph The handle to the graph.
  * \param [in] input1 The first input tensor data (location values).
- * \param [in] input2 The second input tensor data (confidence values).
+ * \param [in] input2 The second input tensor data (confidence values). 
  * \param [in] input3 The third input tensor data (prior box values).
  * \param [in] num_classes Integer value: Number of output classes. (example: tiny yolo = 20 classes)
  * \param [in] share_location Integer value: Label values change based on this
@@ -271,7 +271,7 @@ VX_API_ENTRY vx_node VX_API_CALL vxDetectionOutputLayer(vx_graph graph, vx_tenso
  * \param [in] graph The handle to the graph.
  * \param [in] input The input tensor data. Can be VX_TYPE_FLOAT32, VX_TYPE_INT32, VX_TYPE_INT64.
  * \param [in] output_data_type The required output tensor data type. Integer value between 0-13.
- * \param [out] output The output tensor data. Output will have the same number of dimensions as input. Output tensor data type will be that specified by 'to'.
+ * \param [out] output The output tensor data. Output will have the same number of dimensions as input. Output tensor data type will be that specified by 'to'. 
  * \return <tt> vx_node</tt>.
  * \returns A node reference <tt>\ref vx_node</tt>. Any possible errors preventing a
  * successful creation should be checked using <tt>\ref vxGetStatus</tt>.
@@ -318,11 +318,11 @@ VX_API_ENTRY vx_node VX_API_CALL vxNMSLayer(vx_graph graph, vx_tensor boxes, vx_
                                              vx_tensor iou_threshold, vx_tensor score_threshold);
 
 /* \brief [Graph] Creates a Gather Layer Node.
- * \details Given data tensor of rank r >= 1, and indices tensor of rank q, gather entries of the axis dimension of data (by default outer-most one as axis=0)
+ * \details Given data tensor of rank r >= 1, and indices tensor of rank q, gather entries of the axis dimension of data (by default outer-most one as axis=0) 
  * indexed by indices, and concatenates them in an output tensor of rank q + (r - 1).
  * \param [in] graph The handle to the graph.
  * \param [in] input The input tensor data to gather elements on. The type of the tensor can be either float32 or float16.
- * \param [in] indices The indices tensor containing the index data. The type of the tensor can be either int32 or int64.
+ * \param [in] indices The indices tensor containing the index data. The type of the tensor can be either int32 or int64. 
  * \param [out] output The output tensor data with the same type as the input tensor data.
  * \return <tt> vx_node</tt>.
  * \returns A node reference <tt>\ref vx_node</tt>. Any possible errors preventing a successful creation should be checked using <tt>\ref vxGetStatus</tt>.
@@ -331,7 +331,7 @@ VX_API_ENTRY vx_node VX_API_CALL vxGatherLayer(vx_graph graph, vx_tensor input, 
 
 /* \brief [Graph] Creates a TopK Layer Node.
  * \details Retrieve the top-K largest or smallest elements along a specified axis
- * This function supports 4D tensors as input and ouput.
+ * This function supports 4D tensors as input and ouput. 
  * \param [in] graph The handle to the graph.
  * \param [in] x_tensor The input tensor data.
  * \param [in] k_tensor The 1-D input tensor data containing a single positive value corresponding to the number of top elements to retrieve.
@@ -340,7 +340,7 @@ VX_API_ENTRY vx_node VX_API_CALL vxGatherLayer(vx_graph graph, vx_tensor input, 
  * \return <tt> vx_node</tt>.
  * \returns A node reference <tt>\ref vx_node</tt>. Any possible errors preventing a successful creation should be checked using <tt>\ref vxGetStatus</tt>.
  */
-VX_API_ENTRY vx_node VX_API_CALL vxTopKLayer(vx_graph graph, vx_tensor x_tensor, vx_tensor k_tensor, vx_int32 axis, vx_int32 largest, vx_int32 sorted,
+VX_API_ENTRY vx_node VX_API_CALL vxTopKLayer(vx_graph graph, vx_tensor x_tensor, vx_tensor k_tensor, vx_int32 axis, vx_int32 largest, vx_int32 sorted, 
 											vx_tensor values, vx_tensor indices);
 
 /* \brief [Graph] Creates a Reduce Min Layer Node.
@@ -373,7 +373,7 @@ VX_API_ENTRY vx_node VX_API_CALL vxTileLayer(vx_graph graph, vx_tensor input, vx
  * \param [in] input The first input tensor data.
  * \param [in] input2 The second input tensor data.
  * \param [out] output The output tensor data with the same dimensions as the input tensor data. The type of the output is constraint to boolean.
- * \param [in] mode The mode value for the comparison.
+ * \param [in] mode The mode value for the comparison. 
  *  Supports the following mode values:
  *       0 - Less than (<)
  *       1 - Greater than (>)

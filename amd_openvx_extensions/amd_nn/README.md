@@ -48,7 +48,7 @@ vx_nn is an OpenVX Neural Network extension module. This implementation supports
 
 Use the below GDF with RunVX.
 
-```
+``` 
 import vx_nn
 
 data input = image:32,32,RGB2
@@ -65,7 +65,7 @@ write output input.f32
 
 Use the below GDF with RunVX.
 
-```
+``` 
 import vx_nn
 
 data input = tensor:4,{80,80,3,1},VX_TYPE_FLOAT32,0
