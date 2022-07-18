@@ -105,6 +105,17 @@ extern "C" RocalTensor ROCAL_API_CALL rocalCropMirrorNormalize(RocalContext cont
                                                                   std::vector<float> &std_dev,
                                                                   bool is_output,
                                                                   RocalIntParam mirror = NULL);
+                                                                
+extern "C" RocalTensor ROCAL_API_CALL rocalCrop(RocalContext context, RocalTensor input,
+                                                                  RocalTensorLayout rocal_tensor_layout,
+                                                                  RocalTensorOutputType rocal_tensor_output_type,
+                                                                  unsigned crop_depth,
+                                                                  unsigned crop_height,
+                                                                  unsigned crop_width,
+                                                                  float start_x,
+                                                                  float start_y,
+                                                                  float start_z,
+                                                                  bool is_output);
 
 
 

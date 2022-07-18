@@ -269,7 +269,7 @@ int test(int test_case, int reader_type, int pipeline_type, const char *path, co
         return -1;
     }
 
-    int resize_w = width, resize_h = height; // height and width
+    int resize_w = 1000, resize_h = 30; // height and width
 
     RocalTensor image1;
 
@@ -281,7 +281,7 @@ int test(int test_case, int reader_type, int pipeline_type, const char *path, co
         std::vector<float> sdev{1, 1, 1};
         std::cout << ">>>>>>> Running "
                   << " Crop Mirror Normalize " << std::endl;
-        image1 = rocalCropMirrorNormalize(handle, input1, tensorLayout, tensorOutputType, 3, resize_w, resize_h, 0, 0, 0, mean, sdev, true);
+        image1 = rocalCropMirrorNormalize(handle, input1, tensorLayout, tensorOutputType, 3, resize_h, resize_w, 0, 0, 0, mean, sdev, true);
         break;
     }
     case 1:
@@ -296,6 +296,14 @@ int test(int test_case, int reader_type, int pipeline_type, const char *path, co
          std::cout << ">>>>>>> Running "
                   << "rocalResize" << std::endl;
         image1 = rocalResize(handle, input1, tensorLayout, tensorOutputType, 3,resize_w , resize_h, 0,true);
+
+    }
+    break;
+    case 26:
+    {
+         std::cout << ">>>>>>> Running "
+                  << "rocalcrop" << std::endl;
+        image1 = rocalCrop(handle, input1, tensorLayout, tensorOutputType, 3, resize_w, resize_h, 0, 0, 0,true);
 
     }
     break;
@@ -336,13 +344,13 @@ int test(int test_case, int reader_type, int pipeline_type, const char *path, co
         {
             case 1: //classification pipeline
             {
-                rocALTensorList* labels = rocalGetImageLabels(handle);
+                // rocALTensorList* labels = rocalGetImageLabels(handle);
 
-                for(int i = 0; i < labels->size(); i++)
-                {
-                    int * labels_buffer = (int *)(labels->at(i)->buffer());
-                    std::cerr << ">>>>> LABELS : " << labels_buffer[0] << "\t";
-                }
+                // for(int i = 0; i < labels->size(); i++)
+                // {
+                //     int * labels_buffer = (int *)(labels->at(i)->buffer());
+                //     std::cerr << ">>>>> LABELS : " << labels_buffer[0] << "\t";
+                // }
                 // int img_size = rocalGetImageNameLen(handle, image_name_length);
                 // char img_name[img_size];
                 // numOfClasses = num_of_classes;

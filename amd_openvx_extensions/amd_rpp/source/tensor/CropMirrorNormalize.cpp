@@ -61,6 +61,8 @@ struct CropMirrorNormalizeLocalData
 #elif ENABLE_HIP
     void *hip_pSrc;
     void *hip_pDst;
+    RpptROI *hip_roi_tensor_Ptr;
+
 #endif
 };
 /*
@@ -119,6 +121,8 @@ static vx_status VX_CALLBACK refreshCropMirrorNormalize(vx_node node, const vx_r
 #elif ENABLE_HIP
         STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[0], VX_TENSOR_BUFFER_HIP, &data->hip_pSrc, sizeof(data->hip_pSrc)));
         STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[2], VX_TENSOR_BUFFER_HIP, &data->hip_pDst, sizeof(data->hip_pDst)));
+        hipMemcpy(data->hip_roi_tensor_Ptr, data->roi_tensor_Ptr, data->nbatchSize * sizeof(RpptROI), hipMemcpyHostToDevice);
+
 #endif
     }
     if (data->device_type == AGO_TARGET_AFFINITY_CPU)
@@ -151,7 +155,7 @@ static vx_status VX_CALLBACK refreshCropMirrorNormalize(vx_node node, const vx_r
         // else if(in_tensor_type == vx_type_e::VX_TYPE_UINT8 && out_tensor_type == vx_type_e::VX_TYPE_FLOAT16)
         // {
         //     STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[0], VX_TENSOR_BUFFER_HOST, &data->pSrc, sizeof(vx_uint8)));
-        //     STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[3], VX_TENSOR_BUFFER_HOST, &data->pDst, sizeof(vx_float16)));
+        //     STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[2], VX_TENSOR_BUFFER_HOST, &data->pDst, sizeof(vx_float16)));
         // }
     }
     return status;
@@ -205,7 +209,23 @@ static vx_status VX_CALLBACK processCropMirrorNormalize(vx_node node, const vx_r
     Rpp32u N, C;
     N = data->nbatchSize;
     C = data->channels;
-
+    if (data->device_type == AGO_TARGET_AFFINITY_GPU)
+    {
+#if ENABLE_OPENCL
+        refreshCropMirrorNormalize(node, parameters, num, data);
+        rpp_status = rppt_crop_mirror_normalize_gpu((void *)data->cl_pSrc, data->src_desc_ptr, (void *)data->cl_pDst, data->src_desc_ptr,data->mean,data->std_dev,
+                                                     data->mirror, data->roi_tensor_Ptr, data->roiType, data->rppHandle);
+        return_status = (rpp_status == RPP_SUCCESS) ? VX_SUCCESS : VX_FAILURE;
+#elif ENABLE_HIP
+        refreshCropMirrorNormalize(node, parameters, num, data);
+        std::cerr << "Calling CROPMIRRORNORMALIZE GPU\n";
+        rpp_status = rppt_crop_mirror_normalize_gpu((void *)data->hip_pSrc, data->src_desc_ptr, (void *)data->hip_pDst, data->src_desc_ptr,data->mean,data->std_dev,
+                                                     data->mirror, data->hip_roi_tensor_Ptr, data->roiType, data->rppHandle);
+        
+        return_status = (rpp_status == RPP_SUCCESS) ? VX_SUCCESS : VX_FAILURE;
+        std::cerr << "Back from RPP\n";
+#endif
+    }
     if(data->device_type == AGO_TARGET_AFFINITY_CPU)
     {
         vxstatus = refreshCropMirrorNormalize(node, parameters, num, data);
@@ -221,6 +241,7 @@ static vx_status VX_CALLBACK processCropMirrorNormalize(vx_node node, const vx_r
                                                      data->mirror, data->roi_tensor_Ptr,data->roiType,
                                                      data->rppHandle);
         std::cerr<<"\n Back call RPP";
+        if(1){
         float *temp = ((float*)calloc( 100,sizeof(float) ));
 
         for (int i=0;i< 100;i++)
@@ -230,6 +251,7 @@ static vx_status VX_CALLBACK processCropMirrorNormalize(vx_node node, const vx_r
                     std::cout<<temp[i]<<" ";
 
                 }
+        }
         return_status = (rpp_status == RPP_SUCCESS) ? VX_SUCCESS : VX_FAILURE;
     }
     return return_status;
@@ -238,13 +260,12 @@ static vx_status VX_CALLBACK processCropMirrorNormalize(vx_node node, const vx_r
 static vx_status VX_CALLBACK initializeCropMirrorNormalize(vx_node node, const vx_reference *parameters, vx_uint32 num)
 {
     CropMirrorNormalizeLocalData *data = new CropMirrorNormalizeLocalData;
-    unsigned layout, roiType;
+    unsigned  roiType;
     memset(data, 0, sizeof(*data));
 #if ENABLE_OPENCL
     STATUS_ERROR_CHECK(vxQueryNode(node, VX_NODE_ATTRIBUTE_AMD_OPENCL_COMMAND_QUEUE, &data->handle.cmdq, sizeof(data->handle.cmdq)));
 #elif ENABLE_HIP
     STATUS_ERROR_CHECK(vxQueryNode(node, VX_NODE_ATTRIBUTE_AMD_HIP_STREAM, &data->handle.hipstream, sizeof(data->handle.hipstream)));
-
 #endif
     STATUS_ERROR_CHECK(vxCopyScalar((vx_scalar)parameters[16], &data->device_type, VX_READ_ONLY, VX_MEMORY_TYPE_HOST));
     STATUS_ERROR_CHECK(vxReadScalarValue((vx_scalar)parameters[15], &data->nbatchSize));
@@ -316,9 +337,10 @@ static vx_status VX_CALLBACK initializeCropMirrorNormalize(vx_node node, const v
     data->roi_tensor_Ptr = (RpptROI *) calloc(data->nbatchSize, sizeof(RpptROI));
 
 
-std::cerr<<"layoutttt "<<layout;
+std::cerr<<"layoutttt value "<<data->layout;
     if(data->layout == 0) // NHWC
     {
+        std::cerr<<"layout 00000000000000000000\n\n\n";
         // source_description_ptr
         data->src_desc_ptr->n = data->in_tensor_dims[0];
         data->src_desc_ptr->h = data->in_tensor_dims[1];
@@ -345,6 +367,8 @@ std::cerr<<"layoutttt "<<layout;
     }
     else if(data->layout == 1)// NCHW
     {
+                std::cerr<<"layout 11111111111\n\n\n";
+
         data->src_desc_ptr->n = data->in_tensor_dims[0];
         data->src_desc_ptr->h = data->in_tensor_dims[2];
         data->src_desc_ptr->w = data->in_tensor_dims[3];
@@ -368,6 +392,8 @@ std::cerr<<"layoutttt "<<layout;
     }
     else if(data->layout == 2) // NFHWC
     {
+                std::cerr<<"layout 2222222222222222\n\n\n";
+
         data->src_desc_ptr->n = data->in_tensor_dims[0] * data->in_tensor_dims[1];
         data->src_desc_ptr->h = data->in_tensor_dims[2];
         data->src_desc_ptr->w = data->in_tensor_dims[3];
@@ -394,7 +420,8 @@ std::cerr<<"layoutttt "<<layout;
         data->dst_desc_ptr->layout = RpptLayout::NHWC;
     }
     else if(data->layout == 3)// NFCHW
-    {
+    {        std::cerr<<"layout 3333333333333333333333\n\n\n";
+
         data->src_desc_ptr->n = data->in_tensor_dims[0] * data->in_tensor_dims[1];
         data->src_desc_ptr->h = data->in_tensor_dims[3];
         data->src_desc_ptr->w = data->in_tensor_dims[4];
@@ -416,6 +443,15 @@ std::cerr<<"layoutttt "<<layout;
         data->dst_desc_ptr->strides.cStride = 1;
         data->dst_desc_ptr->layout = RpptLayout::NCHW; 
     }
+    else
+    {
+        std::cerr<<"defaulttttttt\n\n\n";
+    }
+#if ENABLE_HIP
+    if (data->device_type == AGO_TARGET_AFFINITY_GPU)
+        hipMalloc(&data->hip_roi_tensor_Ptr, data->src_desc_ptr->n * sizeof(RpptROI));
+#endif
+
     data->mean = (vx_float32 *)malloc(sizeof(vx_float32) * data->src_desc_ptr->n*3);
     data->std_dev = (vx_float32 *)malloc(sizeof(vx_float32) * data->src_desc_ptr->n*3);
     data->mirror = (vx_uint32 *)malloc(sizeof(vx_uint32) * data->src_desc_ptr->n);
@@ -427,6 +463,9 @@ std::cerr<<"layoutttt "<<layout;
 #if ENABLE_OPENCL
     if (data->device_type == AGO_TARGET_AFFINITY_GPU)
         rppCreateWithStreamAndBatchSize(&data->rppHandle, data->handle.cmdq, data->nbatchSize);
+#elif ENABLE_HIP
+    if (data->device_type == AGO_TARGET_AFFINITY_GPU)
+        rppCreateWithStreamAndBatchSize(&data->rppHandle, data->handle.hipstream, data->nbatchSize);
 #endif
     if (data->device_type == AGO_TARGET_AFFINITY_CPU)
         rppCreateWithBatchSize(&data->rppHandle, data->nbatchSize);
@@ -452,6 +491,10 @@ static vx_status VX_CALLBACK uninitializeCropMirrorNormalize(vx_node node, const
     free(data->std_dev);
     free(data->mirror);
     free(data->roi_tensor_Ptr);
+#if ENABLE_HIP
+    if (data->device_type == AGO_TARGET_AFFINITY_GPU)
+        hipFree(data->hip_roi_tensor_Ptr);
+#endif
     delete (data);
     return VX_SUCCESS;
 }

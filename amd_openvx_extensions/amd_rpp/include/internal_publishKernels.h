@@ -42,6 +42,8 @@ vx_status CropMirrorNormalize_Register(vx_context);
 vx_status GammaCorrection_Register(vx_context);
 vx_status NopTensor_Register(vx_context);
 vx_status Resize_Register(vx_context);
+vx_status Crop_Register(vx_context);
+
 
 
 // Image registers which calls RPP Image Batch PD API's.
@@ -133,6 +135,8 @@ vx_status WarpPerspectivebatchPD_Register(vx_context);
 #define VX_KERNEL_RPP_GAMMACORRECTION_NAME                                   "org.rpp.GammaCorrection"
 #define VX_KERNEL_RPP_CROPMIRRORNORMALIZE_NAME                               "org.rpp.CropMirrorNormalize"
 #define VX_KERNEL_RPP_RESIZE_NAME                                            "org.rpp.Resize"
+#define VX_KERNEL_RPP_CROP_NAME                                              "org.rpp.Crop"
+
 
 
 // Image kernel names
