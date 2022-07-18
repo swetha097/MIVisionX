@@ -491,6 +491,15 @@ case 28:
         image1 = rocalRain(handle, input1, tensorLayout, tensorOutputType, true);
     }
 break;
+case 29:
+    {
+        std::cout << ">>>>>>> Running "
+                  << "rocalRotate" << std::endl;
+        image1 = rocalRotate(handle, input1, tensorLayout, tensorOutputType, true,300, 300,0);
+    }
+break;
+
+
     default:
         std::cout << "Not a valid option! Exiting!\n";
         return -1;

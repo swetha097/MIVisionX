@@ -96,5 +96,5 @@ void CropMirrorNormalizeNode::init(int crop_h, int crop_w, float start_x, float 
     _mean   = mean;
     _std_dev = std_dev;
     _mirror.set_param(core(mirror));
-    // _layout = (unsigned) _outputs[0]->layout();
+    _layout = (unsigned) _outputs[0]->info().layout();
 }

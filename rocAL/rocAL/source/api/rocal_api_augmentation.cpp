@@ -53,14 +53,7 @@ THE SOFTWARE.
 #include "node_pixelate.h"
 #include "node_lens_correction.h"
 #include "node_rain.h"
-
-
-
-
-
-
-
-
+#include "node_rotate.h"
 
 #include "commons.h"
 #include "context.h"
@@ -1412,6 +1405,58 @@ rocalPixelate(
         output = context->master_graph->create_tensor(output_info, is_output);
         output->reset_tensor_roi();
         context->master_graph->add_node<PixelateNode>({input}, {output})->init( layout);
+    }
+    catch(const std::exception& e)
+    {
+        context->capture_error(e.what());
+        ERR(e.what())
+    }
+    return output;
+}
+
+
+RocalTensor ROCAL_API_CALL
+rocalRotate(
+        RocalContext p_context,
+        RocalTensor p_input,
+        RocalTensorLayout rocal_tensor_layout,
+        RocalTensorOutputType rocal_tensor_output_type,
+        bool is_output,
+        unsigned dest_width,
+        unsigned dest_height,
+        int outputformat,
+        RocalFloatParam p_angle)
+{
+    rocALTensor* output = nullptr;
+    if ((p_context == nullptr) || (p_input == nullptr)) {
+        ERR("Invalid ROCAL context or invalid input image")
+        return output;
+    }
+
+    auto context = static_cast<Context*>(p_context);
+    auto input = static_cast<rocALTensor*>(p_input);
+    auto angle = static_cast<FloatParam*>(p_angle);
+    RocalTensorlayout op_tensorLayout;
+    RocalTensorDataType op_tensorDataType;
+    try
+    {
+        int layout=0;
+        get_rocal_tensor_layout(rocal_tensor_layout, op_tensorLayout, layout );
+        std::cerr << " ROTATE LAYOUT : " << layout << "\n";
+        get_rocal_tensor_data_type(rocal_tensor_output_type, op_tensorDataType);
+        rocALTensorInfo output_info = input->info();
+        output_info.set_tensor_layout(op_tensorLayout);
+        std::cerr<<"op_tensorDataType"<<(unsigned)op_tensorDataType;
+        output_info.set_data_type(op_tensorDataType);
+        output_info.set_width(dest_width);
+        output_info.set_height(dest_height);
+        output = context->master_graph->create_tensor(output_info, is_output);
+        
+        if(dest_width != 0 && dest_height != 0)
+             output->reset_tensor_roi();
+        
+
+        context->master_graph->add_node<RotateNode>({input}, {output})->init(angle,outputformat, layout);
     }
     catch(const std::exception& e)
     {

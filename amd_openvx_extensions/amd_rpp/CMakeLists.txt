@@ -159,6 +159,7 @@ list(APPEND SOURCES
         source/tensor/Rain.cpp
         source/tensor/LensCorrection.cpp
         source/tensor/Pixelate.cpp
+        source/tensor/Rotate.cpp
 
 
 

@@ -51,6 +51,17 @@ extern "C" RocalTensor ROCAL_API_CALL rocalLensCorrection(
                                                             bool is_output,
                                                             RocalFloatParam p_strength=NULL,
                                                             RocalFloatParam p_zoom=NULL);
+                                
+extern "C" RocalTensor ROCAL_API_CALL rocalRotate(RocalContext p_context,
+                                                RocalTensor p_input,
+                                                RocalTensorLayout rocal_tensor_layout,
+                                                RocalTensorOutputType rocal_tensor_output_type,
+                                                bool is_output,
+                                                
+                                                unsigned int dest_width=0,
+                                                unsigned int dest_height=0,
+                                                int outputformat=0,
+                                                RocalFloatParam p_angle=NULL);
 
 extern "C" RocalTensor ROCAL_API_CALL rocalBlur(RocalContext p_context,
                                                 RocalTensor p_input,

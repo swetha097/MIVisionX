@@ -155,7 +155,7 @@ static vx_status VX_CALLBACK refreshCropMirrorNormalize(vx_node node, const vx_r
         // else if(in_tensor_type == vx_type_e::VX_TYPE_UINT8 && out_tensor_type == vx_type_e::VX_TYPE_FLOAT16)
         // {
         //     STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[0], VX_TENSOR_BUFFER_HOST, &data->pSrc, sizeof(vx_uint8)));
-        //     STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[3], VX_TENSOR_BUFFER_HOST, &data->pDst, sizeof(vx_float16)));
+        //     STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[2], VX_TENSOR_BUFFER_HOST, &data->pDst, sizeof(vx_float16)));
         // }
     }
     return status;
@@ -240,6 +240,7 @@ static vx_status VX_CALLBACK processCropMirrorNormalize(vx_node node, const vx_r
                                                      data->mirror, data->roi_tensor_Ptr,data->roiType,
                                                      data->rppHandle);
         std::cerr<<"\n Back call RPP";
+        if(1){
         float *temp = ((float*)calloc( 100,sizeof(float) ));
 
         for (int i=0;i< 100;i++)
@@ -249,6 +250,7 @@ static vx_status VX_CALLBACK processCropMirrorNormalize(vx_node node, const vx_r
                     std::cout<<temp[i]<<" ";
 
                 }
+        }
         return_status = (rpp_status == RPP_SUCCESS) ? VX_SUCCESS : VX_FAILURE;
     }
     return return_status;
@@ -257,13 +259,11 @@ static vx_status VX_CALLBACK processCropMirrorNormalize(vx_node node, const vx_r
 static vx_status VX_CALLBACK initializeCropMirrorNormalize(vx_node node, const vx_reference *parameters, vx_uint32 num)
 {
     CropMirrorNormalizeLocalData *data = new CropMirrorNormalizeLocalData;
-    unsigned layout, roiType;
+    unsigned  roiType;
     memset(data, 0, sizeof(*data));
 #if ENABLE_OPENCL
     STATUS_ERROR_CHECK(vxQueryNode(node, VX_NODE_ATTRIBUTE_AMD_OPENCL_COMMAND_QUEUE, &data->handle.cmdq, sizeof(data->handle.cmdq)));
 #elif ENABLE_HIP
-    STATUS_ERROR_CHECK(vxQueryNode(node, VX_NODE_ATTRIBUTE_AMD_HIP_STREAM, &data->handle.hipstream, sizeof(data->handle.hipstream)));
-
     STATUS_ERROR_CHECK(vxQueryNode(node, VX_NODE_ATTRIBUTE_AMD_HIP_STREAM, &data->handle.hipstream, sizeof(data->handle.hipstream)));
 #endif
     STATUS_ERROR_CHECK(vxCopyScalar((vx_scalar)parameters[16], &data->device_type, VX_READ_ONLY, VX_MEMORY_TYPE_HOST));
@@ -336,9 +336,10 @@ static vx_status VX_CALLBACK initializeCropMirrorNormalize(vx_node node, const v
     data->roi_tensor_Ptr = (RpptROI *) calloc(data->nbatchSize, sizeof(RpptROI));
 
 
-std::cerr<<"layoutttt "<<layout;
+std::cerr<<"layoutttt value "<<data->layout;
     if(data->layout == 0) // NHWC
     {
+        std::cerr<<"layout 00000000000000000000\n\n\n";
         // source_description_ptr
         data->src_desc_ptr->n = data->in_tensor_dims[0];
         data->src_desc_ptr->h = data->in_tensor_dims[1];
@@ -365,6 +366,8 @@ std::cerr<<"layoutttt "<<layout;
     }
     else if(data->layout == 1)// NCHW
     {
+                std::cerr<<"layout 11111111111\n\n\n";
+
         data->src_desc_ptr->n = data->in_tensor_dims[0];
         data->src_desc_ptr->h = data->in_tensor_dims[2];
         data->src_desc_ptr->w = data->in_tensor_dims[3];
@@ -388,6 +391,8 @@ std::cerr<<"layoutttt "<<layout;
     }
     else if(data->layout == 2) // NFHWC
     {
+                std::cerr<<"layout 2222222222222222\n\n\n";
+
         data->src_desc_ptr->n = data->in_tensor_dims[0] * data->in_tensor_dims[1];
         data->src_desc_ptr->h = data->in_tensor_dims[2];
         data->src_desc_ptr->w = data->in_tensor_dims[3];
@@ -414,7 +419,8 @@ std::cerr<<"layoutttt "<<layout;
         data->dst_desc_ptr->layout = RpptLayout::NHWC;
     }
     else if(data->layout == 3)// NFCHW
-    {
+    {        std::cerr<<"layout 3333333333333333333333\n\n\n";
+
         data->src_desc_ptr->n = data->in_tensor_dims[0] * data->in_tensor_dims[1];
         data->src_desc_ptr->h = data->in_tensor_dims[3];
         data->src_desc_ptr->w = data->in_tensor_dims[4];
@@ -435,6 +441,10 @@ std::cerr<<"layoutttt "<<layout;
         data->dst_desc_ptr->strides.wStride = data->dst_desc_ptr->c;
         data->dst_desc_ptr->strides.cStride = 1;
         data->dst_desc_ptr->layout = RpptLayout::NCHW; 
+    }
+    else
+    {
+        std::cerr<<"defaulttttttt\n\n\n";
     }
 #if ENABLE_HIP
     if (data->device_type == AGO_TARGET_AFFINITY_GPU)
