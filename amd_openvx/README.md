@@ -32,13 +32,13 @@ The purpose is to define a minimal subset of OpenVX features that enable the con
 <table>
   <tr>
     <th>vx_reference</th>
-    <th>vx_context</th>
+    <th>vx_context</th> 
     <th>vx_graph</th>
     <th>vx_kernel</th>
   </tr>
   <tr>
     <th>vx_node</th>
-    <th>vx_parameter</th>
+    <th>vx_parameter</th> 
     <th>vx_meta_format</th>
     <th>vx_delay</th>
   </tr>
@@ -54,19 +54,19 @@ To provide a basic set of vision processing functions. This set of functions is 
 <table>
   <tr>
     <th>vx_array</th>
-    <th>vx_convolution</th>
+    <th>vx_convolution</th> 
     <th>vx_distribution</th>
     <th>vx_image</th>
   </tr>
   <tr>
     <th>vx_lut</th>
-    <th>vx_matrix</th>
+    <th>vx_matrix</th> 
     <th>vx_pyramid</th>
     <th>vx_remap</th>
   </tr>
   <tr>
     <th>vx_scalar</th>
-    <th>vx_threshold</th>
+    <th>vx_threshold</th> 
     <th>vx_object_array</th>
     <th>&nbsp; </th>
   </tr>
@@ -78,7 +78,7 @@ To provide a basic set of vision processing functions. This set of functions is 
 <table>
   <tr>
     <th>AbsDiff</th>
-    <th>Add</th>
+    <th>Add</th> 
     <th>And</th>
     <th>Box3x3</th>
     <th>CannyEdgeDetector</th>
@@ -86,7 +86,7 @@ To provide a basic set of vision processing functions. This set of functions is 
   </tr>
   <tr>
     <th>ChannelExtract</th>
-    <th>ColorConvert</th>
+    <th>ColorConvert</th> 
     <th>ConvertDepth</th>
     <th>Convolve</th>
     <th>Dilate3x3</th>
@@ -94,7 +94,7 @@ To provide a basic set of vision processing functions. This set of functions is 
   </tr>
   <tr>
     <th>Erode3x3</th>
-    <th>FastCorners</th>
+    <th>FastCorners</th> 
     <th>Gaussian3x3</th>
     <th>GaussianPyramid</th>
     <th>HarrisCorners</th>
@@ -102,7 +102,7 @@ To provide a basic set of vision processing functions. This set of functions is 
   </tr>
   <tr>
     <th>Histogram</th>
-    <th>IntegralImage</th>
+    <th>IntegralImage</th> 
     <th>LaplacianPyramid</th>
     <th>LaplacianReconstruct</th>
     <th>Magnitude</th>
@@ -110,7 +110,7 @@ To provide a basic set of vision processing functions. This set of functions is 
   </tr>
   <tr>
     <th>Median3x3</th>
-    <th>MinMaxLoc</th>
+    <th>MinMaxLoc</th> 
     <th>Multiply</th>
     <th>NonLinearFilter</th>
     <th>Not</th>
@@ -118,7 +118,7 @@ To provide a basic set of vision processing functions. This set of functions is 
   </tr>
   <tr>
     <th>Or</th>
-    <th>Phase</th>
+    <th>Phase</th> 
     <th>Remap</th>
     <th>ScaleImage</th>
     <th>Sobel3x3</th>
@@ -126,7 +126,7 @@ To provide a basic set of vision processing functions. This set of functions is 
   </tr>
   <tr>
     <th>TableLookup</th>
-    <th>Threshold</th>
+    <th>Threshold</th> 
     <th>WarpAffine</th>
     <th>WarpPerspective</th>
     <th>WeightedAverage</th>
@@ -141,7 +141,7 @@ To provide a basic set of vision processing functions. This set of functions is 
 * The code is highly optimized for both x86 CPU and OpenCL/HIP for GPU
 * Supported hardware spans the range from low power embedded APUs, laptops, desktops, and workstation graphics
 * Supports `Windows` , `Linux` , and `macOS`
-* Includes a “graph optimizer” that looks at the entire processing pipeline and removes/replaces/merges functions to improve performance and minimize bandwidth at runtime
+* Includes a “graph optimizer” that looks at the entire processing pipeline and removes/replaces/merges functions to improve performance and minimize bandwidth at runtime 
 * Scripting support with [RunVX](../utilities/runvx/README.md) allows for rapid prototyping, without re-compiling at production performance levels
 
 **NOTE:** The amd_openvx project consists of the following components: [AMD OpenVX Library](openvx/README.md)
@@ -165,7 +165,7 @@ To provide a basic set of vision processing functions. This set of functions is 
 
 ## Build Instructions
 
-Build this project to generate AMD OpenVX library
+Build this project to generate AMD OpenVX library 
 
 * Refer to [openvx/include/VX](openvx/include/VX) for Khronos OpenVX standard header files.
 * Refer to [openvx/include/vx_ext_amd.h](openvx/include/vx_ext_amd.h) for vendor extensions in AMD OpenVX library
@@ -177,7 +177,7 @@ Build this project to generate AMD OpenVX library
 * Use amd_openvx/amd_openvx.sln to build for x64 platform
 * If AMD GPU (or OpenCL) is not available, set build flag `ENABLE_OPENCL=0`in openvx/openvx.vcxproj and runvx/runvx.vcxproj
 
-**Note:** AMD GPU `HIP` backend is not supported on Windows
+**Note:** AMD GPU `HIP` backend is not supported on Windows 
 
 ### Build using CMake
 
