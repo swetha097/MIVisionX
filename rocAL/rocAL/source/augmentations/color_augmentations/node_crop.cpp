@@ -23,10 +23,13 @@ THE SOFTWARE.
 #include <vx_ext_rpp.h>
 #include <graph.h>
 #include "node_crop.h"
+#include "parameter_crop.h"
 #include "exception.h"
 
 CropNode::CropNode(const std::vector<rocALTensor *> &inputs, const std::vector<rocALTensor *> &outputs) :
-        Node(inputs, outputs)
+        Node(inputs, outputs),
+        _dest_width(_outputs[0]->info().max_dims()[0]),
+        _dest_height(_outputs[0]->info().max_dims()[1])
 {
     _crop_param = std::make_shared<RocalCropParam>(_batch_size);
 }
@@ -37,6 +40,7 @@ void CropNode::create_node()
         return;
     if(_crop_param->crop_h == 0 || _crop_param->crop_w == 0)
         THROW("Uninitialized destination dimension - Invalid Crop Sizes")
+    
     _crop_param->create_array(_graph);
    
     unsigned int chnShift = 0;
@@ -71,5 +75,17 @@ void CropNode::init(int crop_h, int crop_w, float start_x, float start_y,int lay
     _crop_param->crop_w = crop_w;
     _layout=layout; 
     // _layout = (unsigned) _outputs[0]->layout();
+}
 
+void CropNode::init(unsigned int crop_h, unsigned int crop_w, int layout)
+{
+    _crop_param->crop_w = crop_w;
+    _crop_param->crop_h = crop_h;
+    _crop_param->x1     = 0;
+    _crop_param->y1     = 0;
+    FloatParam *x_drift  = ParameterFactory::instance()->create_single_value_float_param(0.5);
+    FloatParam *y_drift  = ParameterFactory::instance()->create_single_value_float_param(0.5);
+    _crop_param->set_x_drift_factor(core(x_drift));
+    _crop_param->set_y_drift_factor(core(y_drift));
+    _layout = layout;
 }

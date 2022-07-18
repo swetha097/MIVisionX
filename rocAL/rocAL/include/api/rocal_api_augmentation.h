@@ -117,6 +117,12 @@ extern "C" RocalTensor ROCAL_API_CALL rocalCrop(RocalContext context, RocalTenso
                                                                   float start_z,
                                                                   bool is_output);
 
+extern "C" RocalImage  ROCAL_API_CALL rocalCropCenterFixed(RocalContext context, RocalImage input,
+                                                        unsigned crop_width,
+                                                        unsigned crop_height,
+                                                        unsigned crop_depth,
+                                                        bool output);
+
 
 
 extern "C" RocalTensor ROCAL_API_CALL rocalResize(RocalContext context, RocalTensor input,
