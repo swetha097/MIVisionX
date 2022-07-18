@@ -117,6 +117,12 @@ void ImageLoader::set_output (rocALTensor* output_tensor)
     _output_mem_size = _output_tensor->info().data_size();
 }
 
+void ImageLoader::set_random_bbox_data_reader(std::shared_ptr<RandomBBoxCrop_MetaDataReader> randombboxcrop_meta_data_reader)
+{
+    _randombboxcrop_meta_data_reader = randombboxcrop_meta_data_reader;
+    _circ_buff.random_bbox_crop_flag = true;
+}
+
 void ImageLoader::stop_internal_thread()
 {
     _internal_thread_running = false;
@@ -166,7 +172,7 @@ void ImageLoader::initialize(ReaderConfig reader_cfg, DecoderConfig decoder_cfg,
     _crop_image_info._crop_image_coords.resize(_batch_size);
     _circ_buff.init(_mem_type, _output_mem_size,_prefetch_queue_depth );
     _is_initialized = true;
-    // _image_loader->set_random_bbox_data_reader(_randombboxcrop_meta_data_reader);
+    _image_loader->set_random_bbox_data_reader(_randombboxcrop_meta_data_reader);
     LOG("Loader module initialized");
 }
 
@@ -207,11 +213,11 @@ ImageLoader::load_routine()
 
             if(load_status == LoaderModuleStatus::OK)
             {
-                // if (_randombboxcrop_meta_data_reader)
-                // {
-                //     _crop_image_info._crop_image_coords = _image_loader->get_batch_random_bbox_crop_coords();
-                //     _circ_buff.set_crop_image_info(_crop_image_info);
-                // }
+                if (_randombboxcrop_meta_data_reader)
+                {
+                    _crop_image_info._crop_image_coords = _image_loader->get_batch_random_bbox_crop_coords();
+                    _circ_buff.set_crop_image_info(_crop_image_info);
+                }
                 _circ_buff.set_image_info(_decoded_img_info);
                 _circ_buff.push();
                 _image_counter += _output_tensor->info().batch_size();
@@ -281,9 +287,9 @@ ImageLoader::update_output_image()
         return LoaderModuleStatus::OK;
 
     _output_decoded_img_info = _circ_buff.get_image_info();
-    // if (_randombboxcrop_meta_data_reader) {
-    //   _output_cropped_img_info = _circ_buff.get_cropped_image_info();
-    // }
+    if (_randombboxcrop_meta_data_reader) {
+      _output_cropped_img_info = _circ_buff.get_cropped_image_info();
+    }
     _output_names = _output_decoded_img_info._image_names;
     _output_tensor->update_tensor_roi(_output_decoded_img_info._roi_width, _output_decoded_img_info._roi_height);
     _circ_buff.pop();

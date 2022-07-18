@@ -21,21 +21,6 @@ THE SOFTWARE.
 */
 
 #pragma once
-#include <list>
-#include "circular_buffer.h"
-#include "meta_data.h"
-#include "parameter_factory.h"
-#include "node.h"
-#include "meta_node.h"
 #include "randombboxcrop_meta_data_reader.h"
-
-class MetaDataGraph
-{
-public:
-    virtual ~MetaDataGraph()= default;
-    virtual void process(MetaDataBatch* meta_data) = 0;
-    virtual void update_meta_data(MetaDataBatch* meta_data, decoded_image_info decoded_image_info) = 0;
-    virtual void update_random_bbox_meta_data(MetaDataBatch* meta_data, decoded_image_info decoded_image_info,crop_image_info crop_image_info) = 0;
-    std::list<std::shared_ptr<MetaNode>> _meta_nodes;
-};
-
+#include "randombboxcrop_reader.h"
+std::shared_ptr<RandomBBoxCrop_MetaDataReader> create_meta_data_reader(const RandomBBoxCrop_MetaDataConfig& config);

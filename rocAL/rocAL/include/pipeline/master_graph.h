@@ -42,7 +42,7 @@ THE SOFTWARE.
 #if ENABLE_HIP
 #include "device_manager_hip.h"
 #endif
-// #include "randombboxcrop_meta_data_reader.h"
+#include "randombboxcrop_meta_data_reader.h"
 #define MAX_STRING_LENGTH 100
 #define MAX_OBJECTS 50
 #define BBOX_COUNT 4
@@ -79,7 +79,7 @@ public:
     // MetaDataBatch *create_caffe_lmdb_record_meta_data_reader(const char *source_path, MetaDataReaderType reader_type,  MetaDataType label_type);
     // MetaDataBatch *create_caffe2_lmdb_record_meta_data_reader(const char *source_path, MetaDataReaderType reader_type,  MetaDataType label_type);
     // MetaDataBatch* create_cifar10_label_reader(const char *source_path, const char *file_prefix);
-    // void create_randombboxcrop_reader(RandomBBoxCrop_MetaDataReaderType reader_type, RandomBBoxCrop_MetaDataType label_type, bool all_boxes_overlap, bool no_crop, FloatParam* aspect_ratio, bool has_shape, int crop_width, int crop_height, int num_attempts, FloatParam* scaling, int total_num_attempts, int64_t seed=0);
+    void create_randombboxcrop_reader(RandomBBoxCrop_MetaDataReaderType reader_type, RandomBBoxCrop_MetaDataType label_type, bool all_boxes_overlap, bool no_crop, FloatParam* aspect_ratio, bool has_shape, int crop_width, int crop_height, int num_attempts, FloatParam* scaling, int total_num_attempts, int64_t seed=0);
     const std::pair<ImageNameBatch, MetaDataDimensionsBatch>& meta_data_info();
     rocALTensorList * labels_meta_data();
     rocALTensorList * bbox_labels_meta_data();
@@ -110,7 +110,7 @@ private:
     bool no_more_processed_data();
     RingBuffer _ring_buffer;//!< The queue that keeps the images that have benn processed by the internal thread (_output_thread) asynchronous to the user's thread
     MetaDataBatch* _augmented_meta_data = nullptr;//!< The output of the meta_data_graph,
-    // CropCordBatch* _random_bbox_crop_cords_data = nullptr;
+    CropCordBatch* _random_bbox_crop_cords_data = nullptr;
     std::thread _output_thread;
     rocALTensorInfo _output_tensor_info;
 
@@ -151,7 +151,7 @@ private:
     const RocalMemType _mem_type;//!< Is set according to the _affinity, if GPU, is set to CL, otherwise host
     std::shared_ptr<MetaDataReader> _meta_data_reader = nullptr;
     std::shared_ptr<MetaDataGraph> _meta_data_graph = nullptr;
-    // std::shared_ptr<RandomBBoxCrop_MetaDataReader> _randombboxcrop_meta_data_reader = nullptr;
+    std::shared_ptr<RandomBBoxCrop_MetaDataReader> _randombboxcrop_meta_data_reader = nullptr;
     bool _first_run = true;
     bool _processing;//!< Indicates if internal processing thread should keep processing or not
     const static unsigned OUTPUT_RING_BUFFER_DEPTH = 3;
