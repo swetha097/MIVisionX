@@ -474,6 +474,191 @@ rocalJpegCOCOFileSourceSingleShard(
 }
 
 RocalTensor  ROCAL_API_CALL
+rocalFusedJpegCrop(
+        RocalContext p_context,
+        const char* source_path,
+        RocalImageColor rocal_color_format,
+        unsigned internal_shard_count,
+        bool is_output,
+        bool shuffle,
+        bool loop,
+        RocalImageSizeEvaluationPolicy decode_size_policy,
+        unsigned max_width,
+        unsigned max_height,
+        RocalFloatParam p_area_factor,
+        RocalFloatParam p_aspect_ratio,
+        RocalFloatParam p_x_drift_factor,
+        RocalFloatParam p_y_drift_factor
+        )
+{
+    rocALTensor* output = nullptr;
+    auto area_factor  = static_cast<FloatParam*>(p_area_factor);
+    auto aspect_ratio = static_cast<FloatParam*>(p_aspect_ratio);
+    auto x_drift_factor = static_cast<FloatParam*>(p_x_drift_factor);
+    auto y_drift_factor = static_cast<FloatParam*>(p_y_drift_factor);
+    auto context = static_cast<Context*>(p_context);
+    try
+    {
+        bool use_input_dimension = (decode_size_policy == ROCAL_USE_USER_GIVEN_SIZE) ;
+
+        if(internal_shard_count < 1 )
+            THROW("Shard count should be bigger than 0")
+
+        if(use_input_dimension && (max_width == 0 || max_height == 0))
+        {
+            THROW("Invalid input max width and height");
+        }
+        else
+        {
+            LOG("User input size " + TOSTR(max_width) + " x " + TOSTR(max_height))
+        }
+
+        auto [width, height] = use_input_dimension? std::make_tuple(max_width, max_height):
+                               evaluate_image_data_set(decode_size_policy, StorageType::FILE_SYSTEM, DecoderType::FUSED_TURBO_JPEG, source_path, "");
+
+        auto [color_format, num_of_planes] = convert_color_format(rocal_color_format);
+
+        RocalTensorlayout tensor_format = RocalTensorlayout::NHWC;
+        RocalTensorDataType tensor_data_type = RocalTensorDataType::UINT8;
+        RocalROIType roi_type = RocalROIType::XYWH;
+        unsigned num_of_dims = 4;
+        std::vector<unsigned> dims;
+        dims.resize(4);
+        dims[0] = context->internal_batch_size();
+        dims[1] = height;
+        dims[2] = width;
+        dims[3] = num_of_planes;
+        std::cerr<<"\n dims"<<dims[0]<<dims[1]<<dims[2]<<dims[3];
+        auto info  = rocALTensorInfo(num_of_dims,
+                                std::vector<unsigned>(std::move(dims)),
+                                context->master_graph->mem_type(),
+                                tensor_data_type);
+        info.set_roi_type(roi_type);
+        info.set_color_format(color_format);
+        info.set_tensor_layout(tensor_format);
+        output = context->master_graph->create_loader_output_tensor(info);
+        context->master_graph->add_node<FusedJpegCropNode>({}, {output})->init(internal_shard_count,
+                                                                          source_path, "",
+                                                                          StorageType::FILE_SYSTEM,
+                                                                          DecoderType::FUSED_TURBO_JPEG,
+                                                                          shuffle,
+                                                                          loop,
+                                                                          context->user_batch_size(),
+                                                                          context->master_graph->mem_type(),
+                                                                          context->master_graph->meta_data_reader(),
+                                                                          area_factor, aspect_ratio, x_drift_factor, y_drift_factor);
+        context->master_graph->set_loop(loop);
+
+        if(is_output)
+        {
+            auto actual_output = context->master_graph->create_tensor(info, is_output);
+            context->master_graph->add_node<CopyNode>({output}, {actual_output});
+        }
+
+    }
+    catch(const std::exception& e)
+    {
+        context->capture_error(e.what());
+        std::cerr << e.what() << '\n';
+    }
+    return output;
+}
+
+RocalTensor  ROCAL_API_CALL
+rocalFusedJpegCropSingleShard(
+        RocalContext p_context,
+        const char* source_path,
+        RocalImageColor rocal_color_format,
+        unsigned shard_id,
+        unsigned shard_count,
+        bool is_output,
+        bool shuffle,
+        bool loop,
+        RocalImageSizeEvaluationPolicy decode_size_policy,
+        unsigned max_width,
+        unsigned max_height,
+        RocalFloatParam p_area_factor,
+        RocalFloatParam p_aspect_ratio,
+        RocalFloatParam p_x_drift_factor,
+        RocalFloatParam p_y_drift_factor
+        )
+{
+    rocALTensor* output = nullptr;
+    auto area_factor  = static_cast<FloatParam*>(p_area_factor);
+    auto aspect_ratio = static_cast<FloatParam*>(p_aspect_ratio);
+    auto x_drift_factor = static_cast<FloatParam*>(p_x_drift_factor);
+    auto y_drift_factor = static_cast<FloatParam*>(p_y_drift_factor);
+    auto context = static_cast<Context*>(p_context);
+    try
+    {
+        bool use_input_dimension = (decode_size_policy == ROCAL_USE_USER_GIVEN_SIZE) ;
+
+        if(shard_count < 1 )
+            THROW("Shard count should be bigger than 0")
+
+        if(shard_id >= shard_count)
+            THROW("Shard id should be smaller than shard count")
+
+        if(use_input_dimension && (max_width == 0 || max_height == 0))
+        {
+            THROW("Invalid input max width and height");
+        }
+        else
+        {
+            LOG("User input size " + TOSTR(max_width) + " x " + TOSTR(max_height))
+        }
+
+        auto [width, height] = use_input_dimension? std::make_tuple(max_width, max_height):
+                               evaluate_image_data_set(decode_size_policy, StorageType::FILE_SYSTEM, DecoderType::FUSED_TURBO_JPEG, source_path, "");
+
+        auto [color_format, num_of_planes] = convert_color_format(rocal_color_format);
+
+        RocalTensorlayout tensor_format = RocalTensorlayout::NHWC;
+        RocalTensorDataType tensor_data_type = RocalTensorDataType::UINT8;
+        RocalROIType roi_type = RocalROIType::XYWH;
+        unsigned num_of_dims = 4;
+        std::vector<unsigned> dims;
+        dims.resize(num_of_dims);
+        dims.at(0) = context->internal_batch_size();
+        dims.at(1) = height;
+        dims.at(2) = width;
+        dims.at(3) = num_of_planes;
+        auto info  = rocALTensorInfo(num_of_dims,
+                                std::vector<unsigned>(std::move(dims)),
+                                context->master_graph->mem_type(),
+                                tensor_data_type);
+        info.set_roi_type(roi_type);
+        info.set_color_format(color_format);
+        info.set_tensor_layout(tensor_format);
+        output = context->master_graph->create_loader_output_tensor(info);
+        context->master_graph->add_node<FusedJpegCropSingleShardNode>({}, {output})->init(shard_id, shard_count,
+                                                                          source_path, "",
+                                                                          StorageType::FILE_SYSTEM,
+                                                                          DecoderType::FUSED_TURBO_JPEG,
+                                                                          shuffle,
+                                                                          loop,
+                                                                          context->user_batch_size(),
+                                                                          context->master_graph->mem_type(),
+                                                                          context->master_graph->meta_data_reader(),
+                                                                          area_factor, aspect_ratio, x_drift_factor, y_drift_factor);
+        context->master_graph->set_loop(loop);
+
+        if(is_output)
+        {
+            auto actual_output = context->master_graph->create_tensor(info, is_output);
+            context->master_graph->add_node<CopyNode>({output}, {actual_output});
+        }
+
+    }
+    catch(const std::exception& e)
+    {
+        context->capture_error(e.what());
+        std::cerr << e.what() << '\n';
+    }
+    return output;
+}
+
+RocalTensor  ROCAL_API_CALL
 rocalAudioFileSourceSingleShard(
         RocalContext p_context,
         const char* source_path,

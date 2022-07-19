@@ -208,31 +208,3 @@ rocalUpdateIntRand(
 
     return (obj->update( values, frequencies, size) == 0) ? ROCAL_OK : ROCAL_UPDATE_PARAMETER_FAILED ;
 }
-
-RocalFloatParam  ROCAL_API_CALL
-rocalCreateFloatNormalRand(
-    float mu,
-    float sigma)
-{
-    return ParameterFactory::instance()->create_normal_float_rand_param(mu, sigma);
-}
-
-RocalStatus  ROCAL_API_CALL
-rocalUpdateFloatNormalRand(
-        float mu,
-        float sigma,
-        RocalFloatParam p_input_obj)
-{
-    auto input_obj = static_cast<FloatParam*>(p_input_obj);
-    if(!validate_normal_rand_param(input_obj)) {
-        ERR("rocalUpdateFloatNormalRand : not a normal random object!");
-        return ROCAL_INVALID_PARAMETER_TYPE;
-    }
-
-    NormalRand<float>* obj;
-    if((obj = dynamic_cast<NormalRand<float>*>(input_obj->core)) == nullptr)
-        return ROCAL_INVALID_PARAMETER_TYPE;
-
-    return (obj->update(mu, sigma) == 0) ? ROCAL_OK : ROCAL_UPDATE_PARAMETER_FAILED ;
-
-}

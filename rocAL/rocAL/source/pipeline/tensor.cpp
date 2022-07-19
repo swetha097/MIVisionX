@@ -1,3 +1,4 @@
+
 /*
 Copyright (c) 2019 - 2022 Advanced Micro Devices, Inc. All rights reserved.
 
@@ -381,10 +382,12 @@ unsigned rocALTensor::copy_data(unsigned char* user_buffer, bool sync)
 
     if (_info._mem_type == RocalMemType::HIP)
     {
+#if ENABLE_HIP
         // copy from device to host
         hipError_t status;
         if ((status = hipMemcpyDtoH((void *)user_buffer, _mem_handle, _info.data_size())))
             THROW("copy_data::hipMemcpyDtoH failed: " + TOSTR(status))
+#endif
     }
     else
     {

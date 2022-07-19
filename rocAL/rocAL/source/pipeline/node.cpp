@@ -38,13 +38,18 @@ Node::create(std::shared_ptr<Graph> graph)
 
     _graph = graph;
 
-    if(!_inputs.empty())
+    if(!_inputs.empty() && !_outputs.empty())
     {
         vx_status roi_status;
-        std::vector<uint32_t> _src_roi;
+        std::vector<uint32_t> _src_roi, _dst_roi;
         _src_roi.reserve(_batch_size * 4);
+        _dst_roi.reserve(_batch_size * 4);
         _src_tensor_roi = vxCreateArray(vxGetContext((vx_reference) _graph->get()), VX_TYPE_UINT32, _batch_size * 4);
         roi_status = vxAddArrayItems(_src_tensor_roi, _batch_size * 4, _src_roi.data(), sizeof(vx_uint32));
+        if (roi_status != 0)
+            THROW(" vxAddArrayItems failed : " + TOSTR(roi_status))
+        _dst_tensor_roi = vxCreateArray(vxGetContext((vx_reference) _graph->get()), VX_TYPE_UINT32, _batch_size * 4);
+        roi_status = vxAddArrayItems(_dst_tensor_roi, _batch_size * 4, _dst_roi.data(), sizeof(vx_uint32));
         if (roi_status != 0)
             THROW(" vxAddArrayItems failed : " + TOSTR(roi_status))
     }
@@ -62,10 +67,13 @@ Node::update_parameters()
 void
 Node::update_src_roi()
 {
-    if(_inputs[0]->info().is_image())
+    if(_inputs[0]->info().is_image() && _outputs[0]->info().is_image())
     {
         vx_status roi_status;
         roi_status = vxCopyArrayRange((vx_array)_src_tensor_roi, 0, _batch_size * 4, sizeof(vx_uint32), _inputs[0]->info().get_roi()->data(), VX_WRITE_ONLY, VX_MEMORY_TYPE_HOST);
+        if(roi_status != 0)
+            THROW(" Failed calling vxCopyArrayRange for width / height status : "+ TOSTR(roi_status))
+        roi_status = vxCopyArrayRange((vx_array)_dst_tensor_roi, 0, _batch_size * 4, sizeof(vx_uint32), _outputs[0]->info().get_roi()->data(), VX_WRITE_ONLY, VX_MEMORY_TYPE_HOST);
         if(roi_status != 0)
             THROW(" Failed calling vxCopyArrayRange for width / height status : "+ TOSTR(roi_status))
     }

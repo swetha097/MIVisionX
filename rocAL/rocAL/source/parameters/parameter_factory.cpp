@@ -70,19 +70,6 @@ bool validate_uniform_rand_param(pParam  rand_obj)
     return ret;
 }
 
-bool validate_normal_rand_param(pParam  rand_obj)
-{
-    bool ret = true;
-    std::visit(
-        [&ret](auto&& arg)
-        {
-            if(arg == nullptr || arg->type != RocalParameterType::RANDOM_NORMAL)
-                ret = false;
-        },
-        rand_obj);
-    return ret;
-}
-
 ParameterFactory::ParameterFactory()
 {
     std::random_device rd;
@@ -181,14 +168,6 @@ FloatParam* ParameterFactory::create_single_value_float_param(float value)
 {
     auto gen = new SimpleParameter<float>(value);
     auto ret = new FloatParam(gen, RocalParameterType::DETERMINISTIC);
-    _parameters.insert(gen);
-    return ret;
-}
-
-FloatParam* ParameterFactory::create_normal_float_rand_param(float mu, float sigma)
-{
-    auto gen = new NormalRand<float>(mu, sigma, _seed);
-    auto ret = new FloatParam(gen, RocalParameterType::RANDOM_NORMAL);
     _parameters.insert(gen);
     return ret;
 }

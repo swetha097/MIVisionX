@@ -51,5 +51,45 @@ extern "C" RocalTensor ROCAL_API_CALL rocalCropMirrorNormalize(RocalContext cont
                                                                   bool is_output,
                                                                   RocalIntParam mirror = NULL);
 
+extern "C" RocalTensor ROCAL_API_CALL rocalCrop(RocalContext context, RocalTensor input,
+                                                                  RocalTensorLayout rocal_tensor_layout,
+                                                                  RocalTensorOutputType rocal_tensor_output_type,
+                                                                  unsigned crop_depth,
+                                                                  unsigned crop_height,
+                                                                  unsigned crop_width,
+                                                                  float start_x,
+                                                                  float start_y,
+                                                                  float start_z,
+                                                                  bool is_output);
+
+extern "C" RocalImage  ROCAL_API_CALL rocalCropCenterFixed(RocalContext context, RocalImage input,
+                                                        unsigned crop_width,
+                                                        unsigned crop_height,
+                                                        unsigned crop_depth,
+                                                        bool output);
+
+
+
+extern "C" RocalTensor ROCAL_API_CALL rocalResize(RocalContext context, RocalTensor input,
+                                                  RocalTensorLayout rocal_tensor_layout,
+                                                  RocalTensorOutputType rocal_tensor_output_type,
+                                                  unsigned resize_depth,
+                                                  unsigned resize_height,
+                                                  unsigned resize_width,
+                                                  int interpolation_type,
+                                                  bool is_output);
+
+/// Accepts U8 and RGB24 input.
+/// \param context
+/// \param input
+/// \param size
+/// \param is_output
+/// \return
+extern "C"  RocalTensor  ROCAL_API_CALL rocalResizeSingleParam(RocalContext context, RocalTensor input,
+                                                RocalTensorLayout rocal_tensor_layout,
+                                                RocalTensorOutputType rocal_tensor_output_type,
+                                                unsigned size,
+                                                bool is_output );
+
 
 #endif //MIVISIONX_ROCAL_API_AUGMENTATION_H
