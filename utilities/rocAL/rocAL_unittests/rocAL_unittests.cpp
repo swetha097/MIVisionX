@@ -303,8 +303,15 @@ int test(int test_case, int reader_type, int pipeline_type, const char *path, co
     {
          std::cout << ">>>>>>> Running "
                   << "rocalcrop" << std::endl;
-        image1 = rocalCrop(handle, input1, tensorLayout, tensorOutputType, 3, resize_w, resize_h, 0, 0, 0,true);
+        image1 = rocalCrop(handle, input1, tensorLayout, tensorOutputType,true);
 
+    }
+    break;
+    case 51:
+    {
+         std::cout << ">>>>>>> Running "
+                  << "rocalcropfixed" << std::endl;
+        image1 = rocalCropFixed(handle, input1, tensorLayout, tensorOutputType, 3, resize_w, resize_h, 0, 0, 0,true);
     }
     break;
     default:

@@ -348,9 +348,56 @@ rocalCopyTensor(
 //     return output;
 // }
 
-
 RocalTensor ROCAL_API_CALL
 rocalCrop(RocalContext p_context, 
+          RocalTensor p_input,
+          RocalTensorLayout rocal_tensor_layout,
+          RocalTensorOutputType rocal_tensor_output_type,
+          bool is_output,
+          RocalFloatParam p_crop_width,
+          RocalFloatParam p_crop_height,
+          RocalFloatParam p_crop_depth,
+          RocalFloatParam p_crop_pox_x,
+          RocalFloatParam p_crop_pos_y,
+          RocalFloatParam p_crop_pos_z)
+{
+    std::cerr<<"in crop augmentation\n\n\n";
+    rocALTensor* output = nullptr;
+    auto context = static_cast<Context*>(p_context);
+    auto input = static_cast<rocALTensor*>(p_input);
+    auto crop_h = static_cast<FloatParam*>(p_crop_height);
+    auto crop_w = static_cast<FloatParam*>(p_crop_width);
+    auto x_drift = static_cast<FloatParam*>(p_crop_pox_x);
+    auto y_drift = static_cast<FloatParam*>(p_crop_pos_y);
+
+    RocalTensorlayout op_tensorLayout;
+    RocalTensorDataType op_tensorDataType;
+    try
+    {
+        // if(!input || !context || crop_width == 0 || crop_height == 0)
+        //     THROW("Null values passed as input")
+        int layout=0;
+        get_rocal_tensor_layout(rocal_tensor_layout, op_tensorLayout, layout);
+        get_rocal_tensor_data_type(rocal_tensor_output_type, op_tensorDataType);
+        rocALTensorInfo output_info = input->info();
+        output_info.set_tensor_layout(op_tensorLayout);
+        output_info.set_data_type(op_tensorDataType);
+
+        output = context->master_graph->create_tensor(output_info, is_output);
+        output->reset_tensor_roi();
+        context->master_graph->add_node<CropNode>({input}, {output})->init(crop_h, crop_w, x_drift, y_drift);
+    }
+    catch(const std::exception& e)
+    {
+        context->capture_error(e.what());
+        ERR(e.what());
+    }
+    return output; // Changed to input----------------IMPORTANT
+}
+
+
+RocalTensor ROCAL_API_CALL
+rocalCropFixed(RocalContext p_context, 
           RocalTensor p_input,
           RocalTensorLayout rocal_tensor_layout,
           RocalTensorOutputType rocal_tensor_output_type,
