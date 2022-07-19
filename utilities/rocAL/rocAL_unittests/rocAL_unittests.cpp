@@ -164,7 +164,6 @@ int test(int test_case, int reader_type, int pipeline_type, const char *path, co
                 input1 = rocalJpegCOCOFileSource(handle, path, json_path, color_format, num_threads, true, true, false, ROCAL_USE_USER_GIVEN_SIZE, decode_max_width, decode_max_height);
         }
         break;
-#if 0
         case 3: //coco detection partial
         {
             std::cout << ">>>>>>> Running COCO READER PARTIAL" << std::endl;
@@ -181,6 +180,7 @@ int test(int test_case, int reader_type, int pipeline_type, const char *path, co
             input1 = rocalJpegCOCOFileSourcePartial(handle, path, json_path, color_format, num_threads, false, true, false);
         }
         break;
+#if 0
         case 4: //tf classification
         {
             std::cout << ">>>>>>> Running TF CLASSIFICATION READER" << std::endl;
