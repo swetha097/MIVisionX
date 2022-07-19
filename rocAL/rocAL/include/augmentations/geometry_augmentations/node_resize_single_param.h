@@ -21,27 +21,25 @@ THE SOFTWARE.
 */
 
 #pragma once
-#include "parameter_crop.h"
+#include "node.h"
 
-class RocalRandomCropParam : public CropParam
+class ResizeSingleParamNode : public Node
 {
 public:
-    RocalRandomCropParam() = delete;
-    RocalRandomCropParam(unsigned int batch_size): CropParam(batch_size)
-    {
-        area_factor   = default_area_factor();
-        aspect_ratio  = default_aspect_ratio();
-    }
-    void set_area_factor(Parameter<float>*   crop_h_factor);
-    void set_aspect_ratio(Parameter<float>*  crop_w_factor);
-    Parameter<float> * get_area_factor() {return  area_factor;}
-    Parameter<float> * get_aspect_ratio() {return  aspect_ratio;}
-    void update_array() override;
-    void fill_crop_dims() override;
+    ResizeSingleParamNode(const std::vector<rocALTensor *> &inputs, const std::vector<rocALTensor *> &outputs);
+    ResizeSingleParamNode() = delete;
+    void init(int size);
+    unsigned int get_dst_width() { return _outputs[0]->info().max_dims()[0]; }
+    unsigned int get_dst_height() { return _outputs[0]->info().max_dims()[1]; }
+    vx_array get_src_width() { return _src_roi_width; }
+    vx_array get_src_height() { return _src_roi_height; }
+protected:
+    void create_node() override;
+    void update_node() override;
 private:
-    constexpr static float AREA_FACTOR_RANGE[2]  = {0.08, 0.99};
-    constexpr static float ASPECT_RATIO_RANGE[2] = {0.7500, 1.333};
-    Parameter<float>* default_area_factor();
-    Parameter<float>* default_aspect_ratio();
-    Parameter<float> *area_factor, *aspect_ratio;
+    vx_array  _dst_roi_width , _dst_roi_height ;
+    std::vector<uint> _dest_width_val, _dest_height_val;
+    int _size;
+    unsigned _layout, _roi_type;
+    int _interpolation_type;
 };

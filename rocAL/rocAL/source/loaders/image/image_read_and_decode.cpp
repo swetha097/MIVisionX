@@ -232,12 +232,11 @@ ImageReadAndDecode::load(unsigned char* buff,
                 _decoder[i]->set_bbox_coords(_bbox_coords[i]);
             }
 
-
             if (_decoder[i]->decode(_compressed_buff[i].data(), _compressed_image_size[i], _decompressed_buff_ptrs[i],
                                     max_decoded_width, max_decoded_height,
                                     original_width, original_height,
                                     scaledw, scaledh,
-                                    decoder_color_format, _decoder_config, keep_original) != Decoder::Status::OK) {
+                                    decoder_color_format, _decoder_config, keep_original, i) != Decoder::Status::OK) {
             }
             _actual_decoded_width[i] = scaledw;
             _actual_decoded_height[i] = scaledh;
@@ -248,6 +247,10 @@ ImageReadAndDecode::load(unsigned char* buff,
             roi_height[i] = _actual_decoded_height[i];
             actual_width[i] = _original_width[i];
             actual_height[i] = _original_height[i];
+            if(roi_width[i] > max_decoded_width)
+                std::cerr<<"\n Decoded width is greater than the max_decoded_width "<<roi_width[i]<<" max:: "<<max_decoded_width;
+            if(roi_height[i] > max_decoded_height)
+                std::cerr<<"\n Decoded height is greater than the max_decoded_height "<<roi_height[i]<<" max:: "<<max_decoded_height;
         }
     }
     _bbox_coords.clear();

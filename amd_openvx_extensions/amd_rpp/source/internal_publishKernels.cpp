@@ -129,6 +129,12 @@ vx_status get_kernels_to_publish()
     STATUS_ERROR_CHECK(ADD_KERENEL(CropMirrorNormalize_Register));
     STATUS_ERROR_CHECK(ADD_KERENEL(CopyTensor_Register));
     STATUS_ERROR_CHECK(ADD_KERENEL(NopTensor_Register));
+    STATUS_ERROR_CHECK(ADD_KERENEL(Resize_Register));
+    STATUS_ERROR_CHECK(ADD_KERENEL(Crop_Register));
+    STATUS_ERROR_CHECK(ADD_KERENEL(ColorTwist_Register));
+
+
+
     return status;
 }
 

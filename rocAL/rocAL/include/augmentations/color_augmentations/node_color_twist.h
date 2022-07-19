@@ -21,27 +21,33 @@ THE SOFTWARE.
 */
 
 #pragma once
-#include "parameter_crop.h"
+#include "node.h"
+#include "parameter_factory.h"
+#include "parameter_vx.h"
+#include "graph.h"
 
-class RocalRandomCropParam : public CropParam
+class ColorTwistNode : public Node
 {
 public:
-    RocalRandomCropParam() = delete;
-    RocalRandomCropParam(unsigned int batch_size): CropParam(batch_size)
-    {
-        area_factor   = default_area_factor();
-        aspect_ratio  = default_aspect_ratio();
-    }
-    void set_area_factor(Parameter<float>*   crop_h_factor);
-    void set_aspect_ratio(Parameter<float>*  crop_w_factor);
-    Parameter<float> * get_area_factor() {return  area_factor;}
-    Parameter<float> * get_aspect_ratio() {return  aspect_ratio;}
-    void update_array() override;
-    void fill_crop_dims() override;
+    ColorTwistNode(const std::vector<rocALTensor *> &inputs, const std::vector<rocALTensor *> &outputs);
+    ColorTwistNode() = delete;
+
+    void init( float alpha, float beta,float hue , float sat, int layout);
+    void init( FloatParam* alpha_param, FloatParam* beta_param,  FloatParam* hue_param,  FloatParam* sat_param, int layout);
+
+protected:
+    void create_node() override ;
+    void update_node() override;
 private:
-    constexpr static float AREA_FACTOR_RANGE[2]  = {0.08, 0.99};
-    constexpr static float ASPECT_RATIO_RANGE[2] = {0.7500, 1.333};
-    Parameter<float>* default_area_factor();
-    Parameter<float>* default_aspect_ratio();
-    Parameter<float> *area_factor, *aspect_ratio;
+
+    ParameterVX<float> _alpha;
+    ParameterVX<float> _beta;
+    ParameterVX<float> _hue;
+    ParameterVX<float> _sat;
+
+    unsigned _layout, _roi_type;
+    constexpr static float ALPHA_RANGE [2] = {0.1, 1.95};
+    constexpr static float   BETA_RANGE [2] = {0, 25};
+    constexpr static float HUE_RANGE [2] = {5.0, 170.0};
+    constexpr static float SAT_RANGE [2] = {0.1, 0.4};
 };

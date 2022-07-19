@@ -230,11 +230,41 @@ template<> inline std::shared_ptr<ImageLoaderNode> MasterGraph::add_node(const s
 
     return node;
 }
+
 template<> inline std::shared_ptr<ImageLoaderSingleShardNode> MasterGraph::add_node(const std::vector<rocALTensor*>& inputs, const std::vector<rocALTensor*>& outputs)
 {
     if(_loader_module)
         THROW("A loader already exists, cannot have more than one loader")
     auto node = std::make_shared<ImageLoaderSingleShardNode>(outputs[0], _device.resources());
+    _loader_module = node->get_loader_module();
+    _tensor_root_nodes.push_back(node);
+    _loader_module->set_prefetch_queue_depth(_prefetch_queue_depth);
+    // _root_nodes.push_back(node);
+    for(auto& output: outputs)
+        _tensor_map.insert(make_pair(output, node));
+
+    return node;
+}
+
+template<> inline std::shared_ptr<FusedJpegCropNode> MasterGraph::add_node(const std::vector<rocALTensor*>& inputs, const std::vector<rocALTensor*>& outputs)
+{
+    if(_loader_module)
+        THROW("A loader already exists, cannot have more than one loader")
+    auto node = std::make_shared<FusedJpegCropNode>(outputs[0], _device.resources());
+    _loader_module = node->get_loader_module();
+    _tensor_root_nodes.push_back(node);
+    _loader_module->set_prefetch_queue_depth(_prefetch_queue_depth);
+    // _root_nodes.push_back(node);
+    for(auto& output: outputs)
+        _tensor_map.insert(make_pair(output, node));
+
+    return node;
+}
+template<> inline std::shared_ptr<FusedJpegCropSingleShardNode> MasterGraph::add_node(const std::vector<rocALTensor*>& inputs, const std::vector<rocALTensor*>& outputs)
+{
+    if(_loader_module)
+        THROW("A loader already exists, cannot have more than one loader")
+    auto node = std::make_shared<FusedJpegCropSingleShardNode>(outputs[0], _device.resources());
     _loader_module = node->get_loader_module();
     _tensor_root_nodes.push_back(node);
     _loader_module->set_prefetch_queue_depth(_prefetch_queue_depth);
@@ -259,6 +289,7 @@ template<> inline std::shared_ptr<AudioLoaderNode> MasterGraph::add_node(const s
 
     return node;
 }
+
 template<> inline std::shared_ptr<AudioLoaderSingleShardNode> MasterGraph::add_node(const std::vector<rocALTensor*>& inputs, const std::vector<rocALTensor*>& outputs)
 {
     if(_loader_module)
@@ -288,6 +319,7 @@ template<> inline std::shared_ptr<VideoLoaderNode> MasterGraph::add_node(const s
 
     return node;
 }
+
 template<> inline std::shared_ptr<VideoLoaderSingleShardNode> MasterGraph::add_node(const std::vector<rocALTensor*>& inputs, const std::vector<rocALTensor*>& outputs)
 {
     if(_loader_module)
@@ -355,35 +387,3 @@ template<> inline std::shared_ptr<VideoLoaderSingleShardNode> MasterGraph::add_n
 //     // _root_nodes.push_back(node);
 //     for(auto& output: outputs)
 //         _tensor_map.insert(make_pair(output, node));
-
-//     return node;
-// }
-// template<> inline std::shared_ptr<FusedJpegCropNode> MasterGraph::add_tensor_node(const std::vector<rocALTensor*>& inputs, const std::vector<rocALTensor*>& outputs)
-// {
-//     if(_loader_module)
-//         THROW("A loader already exists, cannot have more than one loader")
-//     auto node = std::make_shared<FusedJpegCropNode>(outputs[0], _device.resources());
-//     _loader_module = node->get_loader_module();
-//     _tensor_root_nodes.push_back(node);
-//     _loader_module->set_prefetch_queue_depth(_prefetch_queue_depth);
-//     // _loader_module->set_random_bbox_data_reader(_randombboxcrop_meta_data_reader);
-//     // _root_nodes.push_back(node);
-//     for(auto& output: outputs)
-//         _tensor_map.insert(make_pair(output, node));
-//     return node;
-// }
-
-// template<> inline std::shared_ptr<FusedJpegCropTensorSingleShardNode> MasterGraph::add_tensor_node(const std::vector<rocALTensor*>& inputs, const std::vector<rocALTensor*>& outputs)
-// {
-//     if(_loader_module)
-//         THROW("A loader already exists, cannot have more than one loader")
-//     auto node = std::make_shared<FusedJpegCropTensorSingleShardNode>(outputs[0], _device.resources());
-//     _loader_module = node->get_loader_module();
-//     _tensor_root_nodes.push_back(node);
-//     _loader_module->set_prefetch_queue_depth(_prefetch_queue_depth);
-//     // _loader_module->set_random_bbox_data_reader(_randombboxcrop_meta_data_reader);
-//     // _root_nodes.push_back(node);
-//     for(auto& output: outputs)
-//         _tensor_map.insert(make_pair(output, node));
-//     return node;
-// }
