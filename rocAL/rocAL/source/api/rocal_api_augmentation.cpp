@@ -93,9 +93,7 @@ rocalBrightness(
     auto beta = static_cast<FloatParam*>(p_beta);
     try
     {
-
         output = context->master_graph->create_tensor(input->info(), is_output);
-
         context->master_graph->add_node<BrightnessNode>({input}, {output})->init(alpha, beta);
     }
     catch(const std::exception& e)

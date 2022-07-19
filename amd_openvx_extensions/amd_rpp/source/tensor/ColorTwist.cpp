@@ -56,7 +56,6 @@ struct ColorTwistLocalData
     void *hip_pSrc;
     void *hip_pDst;
     RpptROI *hip_roi_tensor_Ptr;
-
 #endif
 };
 
@@ -97,7 +96,6 @@ static vx_status VX_CALLBACK refreshColorTwist(vx_node node, const vx_reference 
         STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[0], VX_TENSOR_BUFFER_HIP, &data->hip_pSrc, sizeof(data->hip_pSrc)));
         STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[2], VX_TENSOR_BUFFER_HIP, &data->hip_pDst, sizeof(data->hip_pDst)));
         hipMemcpy(data->hip_roi_tensor_Ptr, data->roi_tensor_Ptr, data->nbatchSize * sizeof(RpptROI), hipMemcpyHostToDevice);
-
 #endif
     }
     if (data->device_type == AGO_TARGET_AFFINITY_CPU)
@@ -187,8 +185,8 @@ static vx_status VX_CALLBACK processColorTwist(vx_node node, const vx_reference 
     {
 #if ENABLE_OPENCL
         refreshColorTwist(node, parameters, num, data);
-        rpp_status = rppt_color_twist_gpu((void *)data->cl_pSrc, data->src_desc_ptr, (void *)data->cl_pDst, data->src_desc_ptr,  data->alpha, data->beta, data->hue, data->sat, data->hip_roi_tensor_Ptr, data->roiType, data->rppHandle);
-        return_status = (rpp_status ==gi RPP_SUCCESS) ? VX_SUCCESS : VX_FAILURE;
+        rpp_status = rppt_color_twist_gpu((void *)data->cl_pSrc, data->src_desc_ptr, (void *)data->cl_pDst, data->src_desc_ptr,  data->alpha, data->beta, data->hue, data->sat, data->roi_tensor_Ptr, data->roiType, data->rppHandle);
+        return_status = (rpp_status == RPP_SUCCESS) ? VX_SUCCESS : VX_FAILURE;
 #elif ENABLE_HIP
         refreshColorTwist(node, parameters, num, data);
         rpp_status = rppt_color_twist_gpu((void *)data->hip_pSrc, data->src_desc_ptr, (void *)data->hip_pDst, data->src_desc_ptr,  data->alpha, data->beta, data->hue, data->sat, data->hip_roi_tensor_Ptr, data->roiType, data->rppHandle);

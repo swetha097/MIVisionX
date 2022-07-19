@@ -288,7 +288,7 @@ int test(int test_case, int reader_type, int pipeline_type, const char *path, co
     case 1:
     {
         std::cout << ">>>>>>> Running "
-                  << "rocalCropMirrorNormalize" << std::endl;
+                  << "Brightness" << std::endl;
         image1 = rocalBrightness(handle, input1, true);
     }
     break;
@@ -297,7 +297,6 @@ int test(int test_case, int reader_type, int pipeline_type, const char *path, co
          std::cout << ">>>>>>> Running "
                   << "rocalResize" << std::endl;
         image1 = rocalResize(handle, input1, tensorLayout, tensorOutputType, 3,resize_w , resize_h, 0,true);
-
     }
     break;
     case 26:
@@ -313,8 +312,8 @@ int test(int test_case, int reader_type, int pipeline_type, const char *path, co
         std::cout << ">>>>>>> Running "
                   << "rocalColorTwist" << std::endl;
         image1 = rocalColorTwist(handle, input1, tensorLayout, tensorOutputType, true);
-    break;
     }
+    break;
     default:
         std::cout << "Not a valid option! Exiting!\n";
         return -1;
@@ -413,7 +412,6 @@ int test(int test_case, int reader_type, int pipeline_type, const char *path, co
         rocalUpdateIntParameter(last_colot_temp + 1, color_temp_adj);
 
         output_tensor_list = rocalGetOutputTensors(handle);
-
         std::vector<int> compression_params;
         compression_params.push_back(IMWRITE_PNG_COMPRESSION);
         compression_params.push_back(9);
