@@ -23,16 +23,17 @@ THE SOFTWARE.
 
 #include "node_gamma.h"
 #include "node_brightness.h"
+#include "node_resize.h"
+#include "node_resize_single_param.h"
+#include "node_color_twist.h"
 #include "node_crop_mirror_normalize.h"
+#include "node_crop.h"
 #include "node_copy.h"
 #include "node_nop.h"
 #include "meta_node_crop_mirror_normalize.h"
-#include "node_resize.h"
-#include "node_resize_single_param.h"
-#include "node_crop.h"
-#include "node_color_twist.h"
-
-
+#include "meta_node_resize.h"
+#include "meta_node_crop.h"
+#include "meta_node_ssd_random_crop.h"
 
 #include "commons.h"
 #include "context.h"

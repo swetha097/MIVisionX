@@ -199,6 +199,7 @@ ROCAL_API_CALL rocalGetImageSizes(RocalContext p_context, int* buf)
     }
 }
 #endif
+
 void ROCAL_API_CALL rocalBoxEncoder(RocalContext p_context, std::vector<float>& anchors, float criteria,
                                   std::vector<float> &means, std::vector<float> &stds, bool offset, float scale)
 {
@@ -208,38 +209,17 @@ void ROCAL_API_CALL rocalBoxEncoder(RocalContext p_context, std::vector<float>& 
     context->master_graph->box_encoder(anchors, criteria, means, stds, offset, scale);
 }
 
-void
+RocalMetaData
 ROCAL_API_CALL rocalCopyEncodedBoxesAndLables(RocalContext p_context, float* boxes_buf, int* labels_buf)
 {
     if (!p_context)
         THROW("Invalid rocal context passed to rocalCopyEncodedBoxesAndLables")
     auto context = static_cast<Context *>(p_context);
-    auto meta_data = context->master_graph->meta_data();
-    size_t meta_data_batch_size = meta_data.second->get_bb_labels_batch().size();
-    if (context->user_batch_size() != meta_data_batch_size)
-        THROW("meta data batch size is wrong " + TOSTR(meta_data_batch_size) + " != " + TOSTR(context->user_batch_size()))
-    if (!meta_data.second)
-    {
-        WRN("No encoded labels and bounding boxes has been loaded for this output image")
-        return;
-    }
-    unsigned sum = 0;
-    unsigned bb_offset[meta_data_batch_size];
-    for (unsigned i = 0; i < meta_data_batch_size; i++)
-    {
-        bb_offset[i] = sum;
-        sum += meta_data.second->get_bb_labels_batch()[i].size();
-    }
-    // copy labels buffer & bboxes buffer parallely
-    #pragma omp parallel for
-    for (unsigned i = 0; i < meta_data_batch_size; i++)
-    {
-        unsigned bb_count = meta_data.second->get_bb_labels_batch()[i].size();
-        int *temp_labels_buf = labels_buf + bb_offset[i];
-        float *temp_bbox_buf = boxes_buf + (bb_offset[i] * 4);
-        memcpy(temp_labels_buf, meta_data.second->get_bb_labels_batch()[i].data(), sizeof(int) * bb_count);
-        memcpy(temp_bbox_buf, meta_data.second->get_bb_cords_batch()[i].data(), sizeof(BoundingBoxCord) * bb_count);
-    }
+    RocalMetaData output_bbox_and_labels;
+    output_bbox_and_labels.emplace_back(context->master_graph->bbox_labels_meta_data());
+    output_bbox_and_labels.emplace_back(context->master_graph->bbox_meta_data());
+
+    return output_bbox_and_labels;
 }
 
 void
