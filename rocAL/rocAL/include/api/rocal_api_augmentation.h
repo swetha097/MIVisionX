@@ -91,5 +91,15 @@ extern "C"  RocalTensor  ROCAL_API_CALL rocalResizeSingleParam(RocalContext cont
                                                 unsigned size,
                                                 bool is_output );
 
+extern "C" RocalTensor ROCAL_API_CALL rocalColorTwist(RocalContext context,
+                                                      RocalTensor input,
+                                                      RocalTensorLayout rocal_tensor_layout,
+                                                      RocalTensorOutputType rocal_tensor_output_type,
+                                                      bool is_output,
+                                                      RocalFloatParam alpha = NULL,
+                                                      RocalFloatParam beta = NULL,
+                                                      RocalFloatParam hue = NULL,
+                                                      RocalFloatParam sat = NULL);
+
 
 #endif //MIVISIONX_ROCAL_API_AUGMENTATION_H

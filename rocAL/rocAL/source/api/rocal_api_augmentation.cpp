@@ -30,6 +30,8 @@ THE SOFTWARE.
 #include "node_resize.h"
 #include "node_resize_single_param.h"
 #include "node_crop.h"
+#include "node_color_twist.h"
+
 
 
 #include "commons.h"
@@ -379,6 +381,49 @@ rocalResizeSingleParam(
         resize_node->init(size);
         // if (context->master_graph->meta_data_graph())
         //     context->master_graph->meta_add_node<ResizeMetaNode,ResizeSingleParamNode>(resize_node);
+    }
+    catch(const std::exception& e)
+    {
+        context->capture_error(e.what());
+        ERR(e.what())
+    }
+    return output;
+}
+
+
+RocalTensor ROCAL_API_CALL
+rocalColorTwist(RocalContext p_context,
+                RocalTensor p_input,
+                RocalTensorLayout rocal_tensor_layout,
+                RocalTensorOutputType rocal_tensor_output_type,
+                bool is_output,
+                RocalFloatParam p_alpha,
+                RocalFloatParam p_beta,
+                RocalFloatParam p_hue,
+                RocalFloatParam p_sat)
+{
+    if(!p_context || !p_input)
+        THROW("Null values passed as input")
+    rocALTensor* output = nullptr;
+    auto context = static_cast<Context*>(p_context);
+    auto input = static_cast<rocALTensor*>(p_input);
+    auto alpha = static_cast<FloatParam*>(p_alpha);
+    auto beta = static_cast<FloatParam*>(p_beta);
+    auto hue = static_cast<FloatParam*>(p_hue);
+    auto sat = static_cast<FloatParam*>(p_sat);
+    RocalTensorlayout op_tensorLayout;
+    RocalTensorDataType op_tensorDataType;
+    try
+    {
+        int layout=0;
+        get_rocal_tensor_layout(rocal_tensor_layout, op_tensorLayout, layout);
+        get_rocal_tensor_data_type(rocal_tensor_output_type, op_tensorDataType);
+        rocALTensorInfo output_info = input->info();
+        output_info.set_tensor_layout(op_tensorLayout);
+        output_info.set_data_type(op_tensorDataType);
+
+        output = context->master_graph->create_tensor(output_info, is_output);
+        context->master_graph->add_node<ColorTwistNode>({input}, {output})->init(alpha, beta, hue ,sat, layout);
     }
     catch(const std::exception& e)
     {

@@ -270,7 +270,7 @@ int test(int test_case, int reader_type, int pipeline_type, const char *path, co
         return -1;
     }
 
-    int resize_w = 1000, resize_h = 30; // height and width
+    int resize_w = 100, resize_h = 300; // height and width
 
     RocalTensor image1;
 
@@ -308,6 +308,13 @@ int test(int test_case, int reader_type, int pipeline_type, const char *path, co
 
     }
     break;
+    case 50:
+    {
+        std::cout << ">>>>>>> Running "
+                  << "rocalColorTwist" << std::endl;
+        image1 = rocalColorTwist(handle, input1, tensorLayout, tensorOutputType, true);
+    break;
+    }
     default:
         std::cout << "Not a valid option! Exiting!\n";
         return -1;

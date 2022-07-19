@@ -136,6 +136,8 @@ list(APPEND SOURCES
         source/tensor/Nop.cpp
         source/tensor/Resize.cpp
         source/tensor/Crop.cpp
+        source/tensor/ColorTwist.cpp
+
 
 
         source/kernel_rpp.cpp
