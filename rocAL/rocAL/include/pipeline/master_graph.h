@@ -41,6 +41,7 @@ THE SOFTWARE.
 #include "ring_buffer.h"
 #if ENABLE_HIP
 #include "device_manager_hip.h"
+#include "box_encoder_hip.h"
 #endif
 #include "randombboxcrop_meta_data_reader.h"
 #define MAX_STRING_LENGTH 100
@@ -63,11 +64,9 @@ public:
     Timing timing();
     RocalMemType mem_type();
     void release();
-    template <typename T, typename M> std::shared_ptr<T> meta_add_node(std::shared_ptr<M> node);
-    // template <typename T>
-    // std::shared_ptr<T> add_tensor_node(const std::vector<rocALTensor *> &inputs, const std::vector<rocALTensor *> &outputs);
     template <typename T>
     std::shared_ptr<T> add_node(const std::vector<rocALTensor *> &input, const std::vector<rocALTensor *> &output);
+    template <typename T, typename M> std::shared_ptr<T> meta_add_node(std::shared_ptr<M> node);
     rocALTensor *create_tensor(const rocALTensorInfo &info, bool is_output);
     rocALTensor *create_loader_output_tensor(const rocALTensorInfo &info);
     rocALTensorList * get_output_tensors();
@@ -79,6 +78,7 @@ public:
     // MetaDataBatch *create_caffe_lmdb_record_meta_data_reader(const char *source_path, MetaDataReaderType reader_type,  MetaDataType label_type);
     // MetaDataBatch *create_caffe2_lmdb_record_meta_data_reader(const char *source_path, MetaDataReaderType reader_type,  MetaDataType label_type);
     // MetaDataBatch* create_cifar10_label_reader(const char *source_path, const char *file_prefix);
+    void box_encoder(std::vector<float> &anchors, float criteria, const std::vector<float> &means, const std::vector<float> &stds, bool offset, float scale);
     void create_randombboxcrop_reader(RandomBBoxCrop_MetaDataReaderType reader_type, RandomBBoxCrop_MetaDataType label_type, bool all_boxes_overlap, bool no_crop, FloatParam* aspect_ratio, bool has_shape, int crop_width, int crop_height, int num_attempts, FloatParam* scaling, int total_num_attempts, int64_t seed=0);
     const std::pair<ImageNameBatch, MetaDataDimensionsBatch>& meta_data_info();
     rocALTensorList * labels_meta_data();
@@ -93,6 +93,8 @@ public:
     size_t max_tensor_type_size() { return _max_tensor_type_size; }
     std::shared_ptr<MetaDataReader> meta_data_reader() { return _meta_data_reader; }
     bool is_random_bbox_crop() {return _is_random_bbox_crop; }
+    Status get_bbox_encoded_buffers(float **boxes_buf_ptr, int **labels_buf_ptr, size_t num_encoded_boxes);
+    size_t bounding_box_batch_count(int* buf, pMetaDataBatch meta_data_batch);
 private:
     Status update_node_parameters();
     Status allocate_output_tensor();
@@ -113,10 +115,8 @@ private:
     CropCordBatch* _random_bbox_crop_cords_data = nullptr;
     std::thread _output_thread;
     rocALTensorInfo _output_tensor_info;
-
-    // std::vector<rocALTensor*> _output_tensors;
-    rocALTensorList _internal_tensor_list;
     rocALTensorList _output_tensor_list;    //!< Keeps a list of ovx tensors that are used to store the augmented outputs (there is an augmentation output batch per element in the list)
+    rocALTensorList _internal_tensor_list;
     std::list<rocALTensor*> _internal_tensors;  //!< Keeps all the ovx tensors (virtual/non-virtual) either intermediate tensors, or input tensors that feed the graph
     std::list<std::shared_ptr<Node>> _tensor_nodes;
     std::list<std::shared_ptr<Node>> _tensor_root_nodes;
@@ -166,19 +166,20 @@ private:
     size_t _max_tensor_type_size;
     const RocalTensorDataType _out_data_type;
     bool _is_random_bbox_crop = false;
+    // box encoder variables
+    bool _is_box_encoder = false; //bool variable to set the box encoder
+    std::vector<float> _anchors; // Anchors to be used for encoding, as the array of floats is in the ltrb format of size 8732x4
+    size_t _num_anchors;       // number of bbox anchors
+    float _criteria = 0.5; // Threshold IoU for matching bounding boxes with anchors. The value needs to be between 0 and 1.
+    float _scale; // Rescales the box and anchor values before the offset is calculated (for example, to return to the absolute values).
+    bool _offset; // Returns normalized offsets ((encoded_bboxes*scale - anchors*scale) - mean) / stds in EncodedBBoxes that use std and the mean and scale arguments if offset="True"
+    size_t _encoded_labels_byte_size, encoded_bboxes_byte_size;
+    std::vector<float> _means, _stds; //_means:  [x y w h] mean values for normalization _stds: [x y w h] standard deviations for offset normalization.
+#if ENABLE_HIP
+    BoxEncoderGpu *_box_encoder_gpu = nullptr;
+#endif
     TimingDBG _rb_block_if_empty_time, _rb_block_if_full_time;
 };
-
-
-template <typename T, typename M>
-std::shared_ptr<T> MasterGraph::meta_add_node(std::shared_ptr<M> node)
-{
-    auto meta_node = std::make_shared<T>();
-    _meta_data_graph->_meta_nodes.push_back(meta_node);
-    meta_node->_node = node;
-    meta_node->_batch_size = _user_batch_size;
-    return meta_node;
-}
 
 template <typename T>
 std::shared_ptr<T> MasterGraph::add_node(const std::vector<rocALTensor *> &inputs, const std::vector<rocALTensor *> &outputs)
@@ -202,6 +203,19 @@ std::shared_ptr<T> MasterGraph::add_node(const std::vector<rocALTensor *> &input
     return node;
 }
 
+template <typename T, typename M>
+std::shared_ptr<T> MasterGraph::meta_add_node(std::shared_ptr<M> node)
+{
+    auto meta_node = std::make_shared<T>();
+    _meta_data_graph->_meta_nodes.push_back(meta_node);
+    meta_node->_node = node;
+    meta_node->_batch_size = _user_batch_size;
+    return meta_node;
+}
+
+/*
+ * Explicit specialization for ImageLoaderNode
+ */
 template<> inline std::shared_ptr<ImageLoaderNode> MasterGraph::add_node(const std::vector<rocALTensor*>& inputs, const std::vector<rocALTensor*>& outputs)
 {
     if(_loader_module)

@@ -142,4 +142,13 @@ extern "C" void ROCAL_API_CALL rocalGetOneHotImageLabels(RocalContext rocal_cont
 #endif
 extern "C" void ROCAL_API_CALL rocalRandomBBoxCrop(RocalContext p_context, bool all_boxes_overlap, bool no_crop, RocalFloatParam aspect_ratio = NULL, bool has_shape = false, int crop_width = 0, int crop_height = 0, int num_attempts = 1, RocalFloatParam scaling = NULL, int total_num_attempts = 0, int64_t seed = 0);
 
+/// \param anchors  Anchors to be used for encoding, as the array of floats is in the ltrb format.
+/// \param criteria Threshold IoU for matching bounding boxes with anchors.
+/// The value needs to be between 0 and 1.
+/// \param offset Returns normalized offsets ((encoded_bboxes*scale - anchors*scale) - mean) / stds in EncodedBBoxes that use std and the mean and scale arguments
+/// \param means [x y w h] mean values for normalization.
+/// \param stds [x y w h] standard deviations for offset normalization.
+/// \param scale Rescales the box and anchor values before the offset is calculated (for example, to return to the absolute values).
+extern "C" void ROCAL_API_CALL rocalBoxEncoder(RocalContext p_context, std::vector<float> &anchors, float criteria,
+                                             std::vector<float>  &means , std::vector<float>  &stds ,  bool offset = false, float scale = 1.0);
 #endif //MIVISIONX_ROCAL_API_META_DATA_H
