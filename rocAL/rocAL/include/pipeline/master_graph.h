@@ -47,6 +47,7 @@ THE SOFTWARE.
 #define MAX_STRING_LENGTH 100
 #define MAX_OBJECTS 50
 #define BBOX_COUNT 4
+#define MAX_NUM_ANCHORS 8732
 
 class MasterGraph
 {
@@ -72,7 +73,7 @@ public:
     rocALTensorList * get_output_tensors();
 
     std::vector<rocALTensorList *> create_label_reader(const char *source_path, MetaDataReaderType reader_type);
-    std::vector<rocALTensorList *> create_coco_meta_data_reader(const char *source_path, bool is_output, MetaDataReaderType reader_type, MetaDataType label_type);
+    std::vector<rocALTensorList *> create_coco_meta_data_reader(const char *source_path, bool is_output, MetaDataReaderType reader_type, MetaDataType label_type, bool is_box_encoder);
     // MetaDataBatch *create_coco_meta_data_reader(const char *source_path, bool is_output);
     // MetaDataBatch *create_tf_record_meta_data_reader(const char *source_path, MetaDataReaderType reader_type,  MetaDataType label_type, const std::map<std::string, std::string> feature_key_map);
     // MetaDataBatch *create_caffe_lmdb_record_meta_data_reader(const char *source_path, MetaDataReaderType reader_type,  MetaDataType label_type);
@@ -93,7 +94,7 @@ public:
     size_t max_tensor_type_size() { return _max_tensor_type_size; }
     std::shared_ptr<MetaDataReader> meta_data_reader() { return _meta_data_reader; }
     bool is_random_bbox_crop() {return _is_random_bbox_crop; }
-    Status get_bbox_encoded_buffers(float **boxes_buf_ptr, int **labels_buf_ptr, size_t num_encoded_boxes);
+    std::vector<rocALTensorList *> get_bbox_encoded_buffers(size_t num_encoded_boxes);
     size_t bounding_box_batch_count(int* buf, pMetaDataBatch meta_data_batch);
 private:
     Status update_node_parameters();

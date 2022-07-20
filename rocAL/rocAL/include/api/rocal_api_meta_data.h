@@ -52,7 +52,7 @@ extern "C" RocalMetaData ROCAL_API_CALL rocalCreateTFReaderDetection(RocalContex
 /// \param rocal_context
 /// \param source_path path to the coco json file
 /// \return RocalMetaData object, can be used to inquire about the rocal's output (processed) tensors
-extern "C" RocalMetaData ROCAL_API_CALL rocalCreateCOCOReader(RocalContext rocal_context, const char* source_path, bool is_output);
+extern "C" RocalMetaData ROCAL_API_CALL rocalCreateCOCOReader(RocalContext rocal_context, const char* source_path, bool is_output, bool is_box_encoder = false);
 
 #if 0 // Commented for now
 ///
@@ -151,4 +151,6 @@ extern "C" void ROCAL_API_CALL rocalRandomBBoxCrop(RocalContext p_context, bool 
 /// \param scale Rescales the box and anchor values before the offset is calculated (for example, to return to the absolute values).
 extern "C" void ROCAL_API_CALL rocalBoxEncoder(RocalContext p_context, std::vector<float> &anchors, float criteria,
                                              std::vector<float>  &means , std::vector<float>  &stds ,  bool offset = false, float scale = 1.0);
+
+extern "C" RocalMetaData ROCAL_API_CALL rocalGetEncodedBoxesAndLables(RocalContext p_context, int num_encoded_boxes);
 #endif //MIVISIONX_ROCAL_API_META_DATA_H
