@@ -671,7 +671,7 @@ rocalJpegCaffe2LMDBRecordSource(
         unsigned max_width,
         unsigned max_height)
 {
-    RocalTensor* output = nullptr;
+    rocALTensor* output = nullptr;
     auto context = static_cast<Context*>(p_context);
     try
     {
@@ -717,8 +717,6 @@ rocalJpegCaffe2LMDBRecordSource(
         info.set_color_format(color_format);
         info.set_tensor_layout(tensor_format);
         output = context->master_graph->create_loader_output_tensor(info);
-
-
 
         context->master_graph->add_node<ImageLoaderNode>({}, {output})->init(internal_shard_count,
                                                                              source_path, "",
