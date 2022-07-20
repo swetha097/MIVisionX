@@ -834,30 +834,70 @@ std::vector<rocALTensorList *> MasterGraph::create_tf_record_meta_data_reader(co
     _meta_data_reader->init(config);
     _meta_data_reader->read_all(source_path);
 
-    unsigned num_of_dims = 1;
-    std::vector<unsigned> dims;
-    dims.resize(num_of_dims);
-    dims.at(0) = 1; // Number of labels per file
-    auto default_labels_info  = rocALTensorInfo(num_of_dims,
-                                 std::vector<unsigned>(std::move(dims)),
-                                 _mem_type,
-                                 RocalTensorDataType::INT32);
-    default_labels_info.set_metadata();
-    default_labels_info.set_tensor_layout(RocalTensorlayout::NONE);
-    _meta_data_buffer_size.emplace_back(_user_batch_size * sizeof(vx_int32));
-
-    for(unsigned i = 0; i < _user_batch_size; i++)
+    if(reader_type == MetaDataReaderType::TF_META_DATA_READER)
     {
-        auto info = default_labels_info;
-        auto tensor = new rocALTensor(info);
-        _labels_tensor_list.push_back(tensor);
+        unsigned num_of_dims = 1;
+        std::vector<unsigned> dims;
+        dims.resize(num_of_dims);
+        dims.at(0) = 1; // Number of labels per file
+        auto default_labels_info  = rocALTensorInfo(num_of_dims,
+                                    std::vector<unsigned>(std::move(dims)),
+                                    _mem_type,
+                                    RocalTensorDataType::INT32);
+        default_labels_info.set_metadata();
+        default_labels_info.set_tensor_layout(RocalTensorlayout::NONE);
+        _meta_data_buffer_size.emplace_back(_user_batch_size * sizeof(vx_int32));
+
+        for(unsigned i = 0; i < _user_batch_size; i++)
+        {
+            auto info = default_labels_info;
+            auto tensor = new rocALTensor(info);
+            _labels_tensor_list.push_back(tensor);
+        }
+        _metadata_output_tensor_list.emplace_back(&_labels_tensor_list);
     }
+    else if(reader_type == MetaDataReaderType::TF_DETECTION_META_DATA_READER)
+    {
+        unsigned num_of_dims = 1;
+        std::vector<unsigned> dims;
+        dims.resize(num_of_dims);
+        dims.at(0) = MAX_OBJECTS;
+        auto default_labels_info  = rocALTensorInfo(num_of_dims,
+                                            std::vector<unsigned>(std::move(dims)),
+                                            _mem_type,
+                                            RocalTensorDataType::INT32);
+        default_labels_info.set_metadata();
+        default_labels_info.set_tensor_layout(RocalTensorlayout::NONE);
+
+        num_of_dims = 2;
+        dims.resize(num_of_dims);
+        dims.at(0) = MAX_OBJECTS;
+        dims.at(1) = BBOX_COUNT;
+        auto default_bbox_info  = rocALTensorInfo(num_of_dims,
+                                            std::vector<unsigned>(std::move(dims)),
+                                            _mem_type,
+                                            RocalTensorDataType::FP32);
+        default_bbox_info.set_metadata();
+        default_bbox_info.set_tensor_layout(RocalTensorlayout::NONE);
+        _meta_data_buffer_size.emplace_back(MAX_OBJECTS * _user_batch_size * sizeof(vx_int32));
+        _meta_data_buffer_size.emplace_back(MAX_OBJECTS * BBOX_COUNT  * _user_batch_size * sizeof(vx_float32));
+
+        for(unsigned i = 0; i < _user_batch_size; i++)
+        {
+            auto labels_info = default_labels_info;
+            auto bbox_info = default_bbox_info;
+            _labels_tensor_list.push_back(new rocALTensor(labels_info));
+            _bbox_tensor_list.push_back(new rocALTensor(bbox_info));
+        }
+        _metadata_output_tensor_list.emplace_back(&_labels_tensor_list);
+        _metadata_output_tensor_list.emplace_back(&_bbox_tensor_list);
+    }
+
     _ring_buffer.init_metadata(RocalMemType::HOST, _meta_data_buffer_size, _meta_data_buffer_size.size());
     if (_augmented_meta_data)
         THROW("Metadata can only have a single output")
     else
         _augmented_meta_data = _meta_data_reader->get_output();
-    _metadata_output_tensor_list.emplace_back(&_labels_tensor_list);
 
     return _metadata_output_tensor_list;
 }
