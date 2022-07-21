@@ -730,13 +730,13 @@ Hip_Prior_Box_layer(uint imgWidth, uint imgHeight, uint layerWidth, uint layerHe
         }
         box_width = minSize * sqrtf(ar);
         box_height = minSize / sqrtf(ar);
-        out += out_stride.y;
+        out += out_stride.y; 
         *(float *)&out[0] = (center_x - box_width * .5) / imgWidth;
-        out += out_stride.y;
+        out += out_stride.y; 
         *(float *)&out[0] = (center_y - box_height * .5) / imgHeight;
-        out += out_stride.y;
+        out += out_stride.y; 
         *(float *)&out[0] = (center_x + box_width * .5) / imgWidth;
-        out += out_stride.y;
+        out += out_stride.y; 
         *(float *)&out[0] = (center_y + box_height * .5) / imgHeight;
         if(flip == 1) {
             float ar_flip=  1 / ar;
@@ -1997,7 +1997,7 @@ Hip_tensor_compare_less_layer(uchar* in, uint in_offset, uint4 in_stride, uchar*
     T value = *(T*)&in[in_offset + x * in_stride.x + y * in_stride.y + z * in_stride.z];
     T value2 = *(T*)&in2[in2_offset + x * in2_stride.x + y * in2_stride.y + z * in2_stride.z];
     out += out_offset + x * out_stride.x + y * out_stride.y + z * out_stride.z;
-
+   
     // compare the values and write to the output\n"
     bool result = (value < value2);
    *(int *)&out[0] = result;
@@ -2015,7 +2015,7 @@ Hip_tensor_compare_greater_layer(uchar* in, uint in_offset, uint4 in_stride, uch
     T value = *(T*)&in[in_offset + x * in_stride.x + y * in_stride.y + z * in_stride.z];
     T value2 = *(T*)&in2[in2_offset + x * in2_stride.x + y * in2_stride.y + z * in2_stride.z];
     out += out_offset + x * out_stride.x + y * out_stride.y + z * out_stride.z;
-
+   
     // compare the values and write to the output\n"
     bool result = (value < value2);
    *(int *)&out[0] = result;
@@ -2033,7 +2033,7 @@ Hip_tensor_compare_less_than_layer(uchar* in, uint in_offset, uint4 in_stride, u
     T value = *(T*)&in[in_offset + x * in_stride.x + y * in_stride.y + z * in_stride.z];
     T value2 = *(T*)&in2[in2_offset + x * in2_stride.x + y * in2_stride.y + z * in2_stride.z];
     out += out_offset + x * out_stride.x + y * out_stride.y + z * out_stride.z;
-
+   
     // compare the values and write to the output\n"
     bool result = (value <= value2);
    *(int *)&out[0] = result;
@@ -2051,7 +2051,7 @@ Hip_tensor_compare_greater_than_layer(uchar* in, uint in_offset, uint4 in_stride
     T value = *(T*)&in[in_offset + x * in_stride.x + y * in_stride.y + z * in_stride.z];
     T value2 = *(T*)&in2[in2_offset + x * in2_stride.x + y * in2_stride.y + z * in2_stride.z];
     out += out_offset + x * out_stride.x + y * out_stride.y + z * out_stride.z;
-
+   
     // compare the values and write to the output\n"
     bool result = (value >= value2);
    *(int *)&out[0] = result;
@@ -2069,7 +2069,7 @@ Hip_tensor_compare_equal_layer(uchar* in, uint in_offset, uint4 in_stride, uchar
     T value = *(T*)&in[in_offset + x * in_stride.x + y * in_stride.y + z * in_stride.z];
     T value2 = *(T*)&in2[in2_offset + x * in2_stride.x + y * in2_stride.y + z * in2_stride.z];
     out += out_offset + x * out_stride.x + y * out_stride.y + z * out_stride.z;
-
+   
     // compare the values and write to the output\n"
     bool result = (value == value2);
    *(int *)&out[0] = result;
@@ -2087,7 +2087,7 @@ Hip_tensor_compare_not_equal_layer(uchar* in, uint in_offset, uint4 in_stride, u
     T value = *(T*)&in[in_offset + x * in_stride.x + y * in_stride.y + z * in_stride.z];
     T value2 = *(T*)&in2[in2_offset + x * in2_stride.x + y * in2_stride.y + z * in2_stride.z];
     out += out_offset + x * out_stride.x + y * out_stride.y + z * out_stride.z;
-
+   
     // compare the values and write to the output\n"
     bool result = (value != value2);
    *(int *)&out[0] = result;

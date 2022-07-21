@@ -277,7 +277,7 @@ CLoomIoMediaDecoder::CLoomIoMediaDecoder(vx_node node_, vx_uint32 mediaCount_, c
 #endif
 
     // initialize freq inside GetTimeInMicroseconds()
-    GetTimeInMicroseconds();
+    GetTimeInMicroseconds();    
 #if DUMP_DECODED_FRAME
     fpIn = fopen("decoder_dump.yuv", "wb");
 #endif
@@ -462,7 +462,7 @@ vx_status CLoomIoMediaDecoder::Initialize()
             vx_status status = VX_FAILURE;
             vxAddLogEntry((vx_reference)node, status, "ERROR: avformat_find_stream_info() for %s failed (%d)\n", mediaFileName, err);
             return status;
-        }
+        }        
         // find the video stream information
         err = av_find_best_stream(formatContext, AVMEDIA_TYPE_VIDEO, -1, -1, &decoder, 0);
         if (err < 0) {
@@ -701,7 +701,7 @@ void CLoomIoMediaDecoder::DecodeLoop(int mediaIndex)
 
     for (command cmd; !eof[mediaIndex] && ((cmd = PopCommand(mediaIndex)) != cmd_abort);) {
         int gotPicture = 0;
-        while (!gotPicture && !eof[mediaIndex])
+        while (!gotPicture && !eof[mediaIndex]) 
         {
             for (;;) {
                 status = av_read_frame(inputMediaFormatContext[mediaIndex], &avpkt);

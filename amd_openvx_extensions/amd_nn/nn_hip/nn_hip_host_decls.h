@@ -72,5 +72,5 @@ int HipExec_tensor_compare_layer(hipStream_t stream, dim3 globalThreads, dim3 lo
 
 int HipExec_Upsample_Nearest_layer(hipStream_t stream, dim3 globalThreads, dim3 localThreads, vx_enum type, unsigned char* in, uint in_offset,
     uint4 in_stride, unsigned char* out, uint out_offset, uint4 out_stride);
-
+    
 #endif //NN_HIP_HOST_DECLS_H

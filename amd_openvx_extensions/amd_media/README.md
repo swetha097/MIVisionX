@@ -18,12 +18,12 @@
     - [download](https://ffmpeg.org/download.html)
 * amdgpu Linux mesa driver for hardware support. Install with --no-dkms after installing ROCm.
     - [amdgpu](https://amdgpu-install.readthedocs.io/en/latest/)
-
+    
 ### Example 1: decode video with runvx using software decoder
 
 Following is an example gdf to decode 1 video stream using CPU decoder and decoded images will be written to output.yuv file
 
-```
+``` 
 import vx_amd_media
 
 # read input sequences
@@ -38,7 +38,7 @@ node com.amd.amd_media.decode vid1 nvimg NULL loop opencl_out
 
 Following is an example gdf to encode 1 video stream using hardware and decoded images will be written to output.yuv file
 
-```
+``` 
 import vx_amd_media
 
 # read input sequences
@@ -55,7 +55,7 @@ Following is an example gdf to encode to .h264 stream from a YUV input file
 
 Sample command: runvx -frames:<#framestoencode> file <encoder.gdf>
 
-```
+``` 
 import vx_amd_media
 
 # read input sequences

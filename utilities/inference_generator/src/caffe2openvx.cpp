@@ -2528,7 +2528,7 @@ void generateCode(
     ofsCodeA << std::endl;
     ofsCodeA << "    return 0;"<< std::endl;
     ofsCodeA << "}" << std::endl;
-
+   
     ofsCodeD << "find_path(OPENCL_INCLUDE_DIRS"  << std::endl;
     ofsCodeD << "NAMES OpenCL/cl.h CL/cl.h" << std::endl;
     ofsCodeD << "HINTS" << std::endl;
