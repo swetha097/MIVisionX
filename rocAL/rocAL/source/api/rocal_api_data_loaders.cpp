@@ -718,8 +718,6 @@ rocalJpegCaffe2LMDBRecordSource(
         info.set_tensor_layout(tensor_format);
         output = context->master_graph->create_loader_output_tensor(info);
 
-
-
         context->master_graph->add_node<ImageLoaderNode>({}, {output})->init(internal_shard_count,
                                                                              source_path, "",
                                                                              std::map<std::string, std::string>(),

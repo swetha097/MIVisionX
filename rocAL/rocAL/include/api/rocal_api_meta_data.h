@@ -29,14 +29,12 @@ THE SOFTWARE.
 /// \return RocalMetaData object, can be used to inquire about the rocal's output (processed) tensors
 extern "C" RocalMetaData ROCAL_API_CALL rocalCreateLabelReader(RocalContext rocal_context, const char* source_path);
 
-#if 0 // Commented for now
 ///
 /// \param rocal_context
 /// \param source_path path to the coco json file
 /// \return RocalMetaData object, can be used to inquire about the rocal's output (processed) tensors
 extern "C" RocalMetaData ROCAL_API_CALL rocalCreateTFReader(RocalContext rocal_context, const char* source_path, bool is_output,
     const char* user_key_for_label, const char* user_key_for_filename);
-
 
 ///
 /// \param rocal_context
@@ -46,7 +44,6 @@ extern "C" RocalMetaData ROCAL_API_CALL rocalCreateTFReaderDetection(RocalContex
     const char* user_key_for_label, const char* user_key_for_text,
     const char* user_key_for_xmin, const char* user_key_for_ymin, const char* user_key_for_xmax, const char* user_key_for_ymax,
     const char* user_key_for_filename);
-#endif
 
 ///
 /// \param rocal_context
