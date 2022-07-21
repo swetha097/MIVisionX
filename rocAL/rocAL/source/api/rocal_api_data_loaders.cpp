@@ -594,9 +594,8 @@ rocalAudioFileSource(
                                 context->master_graph->mem_type(),
                                 tensor_data_type);
         info.set_tensor_layout(RocalTensorlayout::NONE);
-        // std::cerr<<"\n Created tensor info with max samples and max channels:: "<<max_frames<<"\t max_channels ::"<<max_channels;
         output = context->master_graph->create_loader_output_tensor(info);
-        std::cerr<<"\n Created output tensor with max samples and max channels:: "<<max_frames<<"\t max_channels ::"<<max_channels;
+
         // TODO: Add a loader module for loading audio files from filesystem
         context->master_graph->add_node<AudioLoaderNode>({}, {output})->init(internal_shard_count,
                                                                             source_path,

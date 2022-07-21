@@ -27,15 +27,24 @@ THE SOFTWARE.
 #include <chrono>
 #include <cstdio>
 #include <unistd.h>
-#include <opencv2/opencv.hpp>
-#include <opencv/highgui.h>
 #include <vector>
 
 #include "rocal_api.h"
 
+#include "opencv2/opencv.hpp"
 using namespace cv;
 
-#define AUDIO
+#if USE_OPENCV_4
+#define CV_LOAD_IMAGE_COLOR IMREAD_COLOR
+#define CV_BGR2GRAY COLOR_BGR2GRAY
+#define CV_GRAY2RGB COLOR_GRAY2RGB
+#define CV_RGB2BGR COLOR_RGB2BGR
+#define CV_FONT_HERSHEY_SIMPLEX FONT_HERSHEY_SIMPLEX
+#define CV_FILLED FILLED
+#define CV_WINDOW_AUTOSIZE WINDOW_AUTOSIZE
+#endif
+
+#define DISPLAY 1
 
 using namespace std::chrono;
 
@@ -82,7 +91,7 @@ int main(int argc, const char **argv)
 int test(int test_case, const char *path, float sample_rate, int downmix, unsigned max_frames, unsigned max_channels, int gpu)
 {
     size_t num_threads = 1;
-    int inputBatchSize = 2;
+    int inputBatchSize = 1;
     std::cout << ">>> test case " << test_case << std::endl;
     std::cout << ">>> Running on " << (gpu ? "GPU" : "CPU") << std::endl;
 
@@ -109,94 +118,44 @@ int test(int test_case, const char *path, float sample_rate, int downmix, unsign
         std::cout << "Audio source could not initialize : " << rocalGetErrorMessage(handle) << std::endl;
         return -1;
     }
-
     rocalVerify(handle);
-
     if (rocalGetStatus(handle) != ROCAL_OK)
     {
         std::cout << "Could not verify the augmentation graph " << rocalGetErrorMessage(handle);
         return -1;
     }
 
-    std::cout << "\n\nAugmented copies count " << rocalGetAugmentationBranchCount(handle) << std::endl;
-
     /*>>>>>>>>>>>>>>>>>>> Diplay using OpenCV <<<<<<<<<<<<<<<<<*/
-    int h = rocalGetAugmentationBranchCount(handle) * rocalGetOutputHeight(handle);
-    int w = rocalGetOutputWidth(handle);
     const unsigned number_of_cols = 1; //1920 / w;
     cv::Mat mat_output, mat_input;
     RocalTensorOutputType tensorOutputType = RocalTensorOutputType::ROCAL_FP32;
-    // switch (tensorOutputType)
-    // {
-    //     case ROCAL_FP32:
-    //     {
-    //         mat_output = cv::Mat(h, w, CV_32FC3);
-    //     }
-    //     break;
-    //     case ROCAL_UINT8:
-    //     {
-    //         auto cv_color_format = ((color_format == RocalImageColor::ROCAL_COLOR_RGB24) ? CV_8UC3 : CV_8UC1);
-    //         mat_output = cv::Mat(h, w, cv_color_format);
-    //         mat_input = cv::Mat(h, w, cv_color_format);
-    //     }
-    //     break;
-    // }
 
     cv::Mat mat_color;
     int col_counter = 0;
     //cv::namedWindow("output", CV_WINDOW_AUTOSIZE);
     high_resolution_clock::time_point t1 = high_resolution_clock::now();
     int index = 0;
+    RocalTensorList output_tensor_list;
+
     while (rocalGetRemainingImages(handle) >= inputBatchSize)
     {
         std::cerr<<"\n rocalGetRemainingImages:: "<<rocalGetRemainingImages(handle)<<"\t inputBatchsize:: "<<inputBatchSize  ;
         std::cerr<<"\n index "<<index;
         index++;
         if (rocalRun(handle) != 0)
-        {
-            // sleep(2);
-            std::cerr<<"\n Inside rocAl run\n";
             break;
-        }
         std::vector<float> audio_op;
-        // audio_op.resize(1569280*3);
-        // rocalCopyToTensorOutput(handle, audio_op.data(), 1);
-        // switch (tensorOutputType)
-        // {
-        // case ROCAL_FP32:
-        //     rocalCopyToTensorOutput(handle, (float *)mat_input.data, h * w * p);
-        //     break;
-        // case ROCAL_UINT8:
-        //     rocalCopyToTensorOutput(handle, (unsigned char *)mat_input.data, h * w * p);
-        //     break;
-        // }
-        // int label_id[inputBatchSize];
-        // int image_name_length[inputBatchSize];
-        // rocalGetImageLabels(handle, label_id);
-        // int img_size = rocalGetImageNameLen(handle, image_name_length);
-        // char img_name[img_size];
-        // rocalGetImageName(handle, img_name);
-        // std::cerr << "\nPrinting image names of batch: " << img_name;
-        // if (!display)
-        //     continue;
+        output_tensor_list = rocalGetOutputTensors(handle);
+        
+        for(int idx = 0; idx < output_tensor_list->size(); idx++)
+        {
+            float * buffer = (float *)output_tensor_list->at(idx)->buffer();
+            for(int n = 0; n < output_tensor_list->at(idx)->info().data_size() / 4; n++)
+            {
+                std::cerr << buffer[n] << "\n";
+            }
+        }
 
-        // std::vector<int> compression_params;
-        // compression_params.push_back(IMWRITE_PNG_COMPRESSION);
-        // compression_params.push_back(9);
-
-        // mat_input.copyTo(mat_output(cv::Rect(col_counter * w, 0, w, h)));
-        // if (color_format == RocalImageColor::ROCAL_COLOR_RGB24)
-        // {
-        //     cv::cvtColor(mat_output, mat_color, CV_RGB2BGR);
-        //     //cv::imshow("output", mat_color);
-        //     cv::imwrite(std::to_string(index) + outName, mat_color, compression_params);
-        //     // cv::waitKey(0);
-        // }
-        // else {
-        //     //cv::imshow("output", mat_output);
-        //     cv::imwrite(std::to_string(index) + outName, mat_output, compression_params);
-        // }
-        // col_counter = (col_counter + 1) % number_of_cols;
     }
 
     high_resolution_clock::time_point t2 = high_resolution_clock::now();
@@ -208,8 +167,6 @@ int test(int test_case, const char *path, float sample_rate, int downmix, unsign
     std::cout << "Transfer time " << rocal_timing.transfer_time << std::endl;
     std::cout << ">>>>> Total Elapsed Time " << dur / 1000000 << " sec " << dur % 1000000 << " us " << std::endl;
     // rocalRelease(handle);
-    // mat_input.release();
-    // mat_output.release();
     exit(0);
     return 0;
 }

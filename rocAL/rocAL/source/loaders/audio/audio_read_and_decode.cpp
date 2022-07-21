@@ -77,6 +77,7 @@ AudioReadAndDecode::create(ReaderConfig reader_config, DecoderConfig decoder_con
     _decoder.resize(batch_size);
     _actual_read_size.resize(batch_size);
     _audio_names.resize(batch_size);
+    _audio_file_path.resize(batch_size);
     _compressed_audio_size.resize(batch_size);
     _decompressed_buff_ptrs.resize(_batch_size);
     _actual_decoded_samples.resize(_batch_size);
@@ -92,6 +93,9 @@ AudioReadAndDecode::create(ReaderConfig reader_config, DecoderConfig decoder_con
         }
     }
     _reader = create_reader(reader_config);
+    _input_path = reader_config.path();
+    if(_input_path.back() != '/')
+        _input_path = _input_path + "/";
 }
 
 void
@@ -144,7 +148,8 @@ AudioReadAndDecode::load(float* buff,
 
         // _compressed_buff[file_counter].reserve(fsize);
         // _actual_read_size[file_counter] = _reader->read(_compressed_buff[file_counter].data(), fsize);
-        // _audio_names[file_counter] = _reader->path();
+        _audio_names[file_counter] = _reader->id();
+        _audio_file_path[file_counter] = _input_path + _reader->id();
         _reader->close();
         // _compressed_audio_size[file_counter] = fsize;
         file_counter++;
@@ -165,14 +170,17 @@ AudioReadAndDecode::load(float* buff,
             _actual_decoded_channels[i] = max_decoded_channels;
 
             int original_samples, original_channels;
-            if (_decoder[i]->initialize(_audio_names[i].c_str()) != AudioDecoder::Status::OK) {
+            if (_decoder[i]->initialize(_audio_file_path[i].c_str()) != AudioDecoder::Status::OK) {
+                THROW("Decoder can't be initialized for file: " + _audio_names[i].c_str())
             }
             if (_decoder[i]->decode_info(&original_samples, &original_channels) != AudioDecoder::Status::OK) {
+                THROW("Unable to fetch decode info for file: " + _audio_names[i].c_str())
             }
             _original_channels[i] = original_channels;
             _original_samples[i] = original_samples;
 
             if (_decoder[i]->decode(_decompressed_buff_ptrs[i]) != AudioDecoder::Status::OK) {
+                THROW("Decoder failed for file: " + _audio_names[i].c_str())
             }
         }
         for (size_t i = 0; i < _batch_size; i++) {

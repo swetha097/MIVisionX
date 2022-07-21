@@ -67,6 +67,7 @@ private:
     std::vector<std::vector<float>> _compressed_buff;
     std::vector<size_t> _actual_read_size;
     std::vector<std::string> _audio_names;
+    std::vector<std::string> _audio_file_path;
     std::vector<size_t> _compressed_audio_size;
     std::vector<float*> _decompressed_buff_ptrs;
     std::vector<size_t> _actual_decoded_samples;
@@ -79,5 +80,6 @@ private:
     DecoderConfig _decoder_config;
     // std::shared_ptr<RandomBBoxCrop_MetaDataReader> _randombboxcrop_meta_data_reader = nullptr;
     // pCropCord _CropCord;
+    std::string _input_path;
 };
 

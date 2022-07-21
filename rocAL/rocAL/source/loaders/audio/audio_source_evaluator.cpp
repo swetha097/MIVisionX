@@ -48,6 +48,9 @@ AudioSourceEvaluator::create(ReaderConfig reader_cfg, DecoderConfig decoder_cfg)
 
 
     // _header_buff.resize(COMPRESSED_SIZE);
+    _input_path = reader_cfg.path();
+    if(_input_path.back() != '/')
+        _input_path = _input_path + "/";
     _decoder = create_audio_decoder(std::move(decoder_cfg));
     _reader = create_reader(std::move(reader_cfg));
     find_max_dimension();
@@ -65,17 +68,16 @@ AudioSourceEvaluator::find_max_dimension()
         size_t fsize = _reader->open();
         if( (fsize) == 0 )
             continue;
-        // auto file_name = _reader->path(); // shobi: have to change this to path + id
-        // // std::cerr<<"\n file name inside find max dimensions:: "<<file_name;
+        auto file_name = _input_path + _reader->id(); // shobi: have to change this to path + id
         // _header_buff.resize(fsize);
         // auto actual_read_size = _reader->read_data(_header_buff.data(), fsize);
         // _reader->close();
 
-        // if(_decoder->initialize(file_name.c_str()) != AudioDecoder::Status::OK)
-        // {
-        //     WRN("Could not initialize audio decoder for file : "+ _reader->id())
-        //     continue;
-        // }
+        if(_decoder->initialize(file_name.c_str()) != AudioDecoder::Status::OK)
+        {
+            WRN("Could not initialize audio decoder for file : "+ _reader->id())
+            continue;
+        }
         int samples, channels;
 
         if(_decoder->decode_info(&samples, &channels) != AudioDecoder::Status::OK)

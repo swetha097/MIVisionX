@@ -69,5 +69,6 @@ private:
     std::shared_ptr<MetaDataReader> _meta_data_reader;
     std::vector<unsigned char> _header_buff;
     static const size_t COMPRESSED_SIZE = 1024 * 1024; // 1 MB
+    std::string _input_path;
 };
 
