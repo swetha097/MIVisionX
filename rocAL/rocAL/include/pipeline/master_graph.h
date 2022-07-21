@@ -36,6 +36,7 @@ THE SOFTWARE.
 #include "node_fused_jpeg_crop_single_shard.h"
 #include "node_video_loader.h"
 #include "node_video_loader_single_shard.h"
+#include "node_cifar10_loader.h"
 #include "meta_data_reader.h"
 #include "meta_data_graph.h"
 #include "ring_buffer.h"
@@ -266,6 +267,23 @@ template<> inline std::shared_ptr<FusedJpegCropSingleShardNode> MasterGraph::add
     auto node = std::make_shared<FusedJpegCropSingleShardNode>(outputs[0], _device.resources());
     _loader_module = node->get_loader_module();
     _tensor_root_nodes.push_back(node);
+    _loader_module->set_prefetch_queue_depth(_prefetch_queue_depth);
+    // _root_nodes.push_back(node);
+    for(auto& output: outputs)
+        _tensor_map.insert(make_pair(output, node));
+
+    return node;
+}
+
+/*
+ * Explicit specialization for Cifar10LoaderNode
+ */
+template<> inline std::shared_ptr<Cifar10LoaderNode> MasterGraph::add_node(const std::vector<rocALTensor*>& inputs, const std::vector<rocALTensor*>& outputs)
+{
+    if(_loader_module)
+        THROW("A loader already exists, cannot have more than one loader")
+    auto node = std::make_shared<Cifar10LoaderNode>(outputs[0], _device.resources());
+    _loader_module = node->get_loader_module();
     _loader_module->set_prefetch_queue_depth(_prefetch_queue_depth);
     // _root_nodes.push_back(node);
     for(auto& output: outputs)
