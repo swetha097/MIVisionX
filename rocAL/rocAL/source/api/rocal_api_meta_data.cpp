@@ -67,12 +67,12 @@ ROCAL_API_CALL rocalCreateLabelReader(RocalContext p_context, const char* source
 }
 
 RocalMetaData
-ROCAL_API_CALL rocalCreateCOCOReader(RocalContext p_context, const char* source_path, bool is_output) {
+ROCAL_API_CALL rocalCreateCOCOReader(RocalContext p_context, const char* source_path, bool is_output, bool is_box_encoder) {
     if (!p_context)
         THROW("Invalid rali context passed to raliCreateCOCOReader")
     auto context = static_cast<Context*>(p_context);
 
-    return context->master_graph->create_coco_meta_data_reader(source_path, is_output, MetaDataReaderType::COCO_META_DATA_READER,  MetaDataType::BoundingBox);
+    return context->master_graph->create_coco_meta_data_reader(source_path, is_output, MetaDataReaderType::COCO_META_DATA_READER,  MetaDataType::BoundingBox, is_box_encoder);
 }
 
 RocalMetaData
@@ -256,29 +256,29 @@ void ROCAL_API_CALL rocalBoxEncoder(RocalContext p_context, std::vector<float>& 
     context->master_graph->box_encoder(anchors, criteria, means, stds, offset, scale);
 }
 
+// RocalMetaData
+// ROCAL_API_CALL rocalCopyEncodedBoxesAndLables(RocalContext p_context, float* boxes_buf, int* labels_buf)
+// {
+//     if (!p_context)
+//         THROW("Invalid rocal context passed to rocalCopyEncodedBoxesAndLables")
+//     auto context = static_cast<Context *>(p_context);
+//     RocalMetaData output_bbox_and_labels;
+//     output_bbox_and_labels.emplace_back(context->master_graph->bbox_labels_meta_data());
+//     output_bbox_and_labels.emplace_back(context->master_graph->bbox_meta_data());
+
+//     return output_bbox_and_labels;
+// }
+
 RocalMetaData
-ROCAL_API_CALL rocalCopyEncodedBoxesAndLables(RocalContext p_context, float* boxes_buf, int* labels_buf)
-{
-    if (!p_context)
-        THROW("Invalid rocal context passed to rocalCopyEncodedBoxesAndLables")
-    auto context = static_cast<Context *>(p_context);
-    RocalMetaData output_bbox_and_labels;
-    output_bbox_and_labels.emplace_back(context->master_graph->bbox_labels_meta_data());
-    output_bbox_and_labels.emplace_back(context->master_graph->bbox_meta_data());
-
-    return output_bbox_and_labels;
-}
-
-void
-ROCAL_API_CALL rocalGetEncodedBoxesAndLables(RocalContext p_context, float **boxes_buf_ptr, int **labels_buf_ptr, int num_encoded_boxes)
+ROCAL_API_CALL rocalGetEncodedBoxesAndLables(RocalContext p_context, int num_encoded_boxes)
 {
     if (!p_context) {
         WRN("rocalGetEncodedBoxesAndLables::Invalid context")
     }
     auto context = static_cast<Context *>(p_context);
-    context->master_graph->get_bbox_encoded_buffers(boxes_buf_ptr, labels_buf_ptr, num_encoded_boxes);
-    if (!*boxes_buf_ptr || !*labels_buf_ptr)
-    {
-        WRN("rocalGetEncodedBoxesAndLables::Empty tensors returned from rocAL")
-    }
+    return context->master_graph->get_bbox_encoded_buffers(num_encoded_boxes);
+    // if (!*boxes_buf_ptr || !*labels_buf_ptr)
+    // {
+    //     WRN("rocalGetEncodedBoxesAndLables::Empty tensors returned from rocAL")
+    // }
 }

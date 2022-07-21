@@ -71,7 +71,7 @@ std::pair<void*, void*> RingBuffer::get_box_encode_read_buffers()
     block_if_empty();
     if((_mem_type == RocalMemType::OCL) || (_mem_type == RocalMemType::HIP))
         return std::make_pair(_dev_bbox_buffer[_read_ptr], _dev_labels_buffer[_read_ptr]);
-    return std::make_pair(nullptr, nullptr);   // todo:: implement the same scheme for host as well
+    return std::make_pair(_host_meta_data_buffers[_read_ptr][1], _host_meta_data_buffers[_read_ptr][0]);
 }
 
 std::vector<void*> RingBuffer::get_write_buffers()
@@ -88,7 +88,7 @@ std::pair<void*, void*> RingBuffer::get_box_encode_write_buffers()
     block_if_full();
     if((_mem_type == RocalMemType::OCL) || (_mem_type == RocalMemType::HIP))
         return std::make_pair(_dev_bbox_buffer[_write_ptr], _dev_labels_buffer[_write_ptr]);
-    return std::make_pair(nullptr, nullptr);
+    return std::make_pair(_host_meta_data_buffers[_write_ptr][1], _host_meta_data_buffers[_write_ptr][0]);
 }
 
 std::vector<void*> RingBuffer::get_meta_read_buffers()
@@ -223,6 +223,7 @@ void RingBuffer::initBoxEncoderMetaData(RocalMemType mem_type, size_t encoded_bb
 #if ENABLE_HIP
     if(_mem_type == RocalMemType::HIP)
     {
+        _box_encoder_gpu = true;
         if(_devhip.hip_stream == nullptr || _devhip.device_id == -1 )
             THROW("initBoxEncoderMetaData::Error Hip Device is not initialzed");
         hipError_t err;
@@ -245,6 +246,7 @@ void RingBuffer::initBoxEncoderMetaData(RocalMemType mem_type, size_t encoded_bb
 #else
     if(mem_type== RocalMemType::OCL)
     {
+        _box_encoder_gpu = true;
         if(_dev.cmd_queue == nullptr || _dev.device_id == nullptr || _dev.context == nullptr)
             THROW("Error ocl structure needed since memory type is OCL");
 
@@ -267,7 +269,16 @@ void RingBuffer::initBoxEncoderMetaData(RocalMemType mem_type, size_t encoded_bb
     }
    else
     {
-        //todo:: for host
+        if(_meta_data_sub_buffer_count < 2)
+            THROW("Insufficient HOST metadata buffers for Box Encoder");
+        // Check if sufficient data has been allocated for the labels and bbox host buffers if not reallocate
+        for(size_t buffIdx = 0; buffIdx < BUFF_DEPTH; buffIdx++)
+        {
+            if(_meta_data_sub_buffer_size[0] != encoded_labels_size)
+                rellocate_meta_data_buffer(_host_meta_data_buffers[BUFF_DEPTH][0], _meta_data_sub_buffer_size[0], 0);
+            if(_meta_data_sub_buffer_size[1] != encoded_bbox_size)
+                rellocate_meta_data_buffer(_host_meta_data_buffers[BUFF_DEPTH][1], _meta_data_sub_buffer_size[1], 1);
+        }
     }
 #endif
 }
@@ -404,14 +415,22 @@ void RingBuffer::increment_write_ptr()
 
 void RingBuffer::set_meta_data( ImageNameBatch names, pMetaDataBatch meta_data)
 {
-    _last_image_meta_data_info = std::move(std::make_pair(std::move(names), meta_data->get_metadata_dimensions_batch()));
-    auto actual_buffer_size = meta_data->get_buffer_size();
-    for(unsigned i = 0; i < _meta_data_sub_buffer_count; i++)
+    if(meta_data == nullptr)
+        _last_image_meta_data_info = std::move(std::make_pair(std::move(names), MetaDataDimensionsBatch()));
+    else
     {
-        if(actual_buffer_size[i] > _meta_data_sub_buffer_size[i])
-            rellocate_meta_data_buffer(_host_meta_data_buffers[_write_ptr][i], actual_buffer_size[i], i);
+        _last_image_meta_data_info = std::move(std::make_pair(std::move(names), meta_data->get_metadata_dimensions_batch()));
+        if(!_box_encoder_gpu)
+        {
+            auto actual_buffer_size = meta_data->get_buffer_size();
+            for(unsigned i = 0; i < _meta_data_sub_buffer_count; i++)
+            {
+                if(actual_buffer_size[i] > _meta_data_sub_buffer_size[i])
+                    rellocate_meta_data_buffer(_host_meta_data_buffers[_write_ptr][i], actual_buffer_size[i], i);
+            }
+            meta_data->copy_data(_host_meta_data_buffers[_write_ptr]);
+        }
     }
-    meta_data->copy_data(_host_meta_data_buffers[_write_ptr]);
 }
 
 void RingBuffer::rellocate_meta_data_buffer(void * buffer, size_t buffer_size, unsigned buff_idx)
