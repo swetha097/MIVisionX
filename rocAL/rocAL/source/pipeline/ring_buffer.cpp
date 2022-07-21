@@ -415,16 +415,21 @@ void RingBuffer::increment_write_ptr()
 
 void RingBuffer::set_meta_data( ImageNameBatch names, pMetaDataBatch meta_data)
 {
-    _last_image_meta_data_info = std::move(std::make_pair(std::move(names), meta_data->get_metadata_dimensions_batch()));
-    if(!_box_encoder_gpu)
+    if(meta_data == nullptr)
+        _last_image_meta_data_info = std::move(std::make_pair(std::move(names), MetaDataDimensionsBatch()));
+    else
     {
-        auto actual_buffer_size = meta_data->get_buffer_size();
-        for(unsigned i = 0; i < _meta_data_sub_buffer_count; i++)
+        _last_image_meta_data_info = std::move(std::make_pair(std::move(names), meta_data->get_metadata_dimensions_batch()));
+        if(!_box_encoder_gpu)
         {
-            if(actual_buffer_size[i] > _meta_data_sub_buffer_size[i])
-                rellocate_meta_data_buffer(_host_meta_data_buffers[_write_ptr][i], actual_buffer_size[i], i);
+            auto actual_buffer_size = meta_data->get_buffer_size();
+            for(unsigned i = 0; i < _meta_data_sub_buffer_count; i++)
+            {
+                if(actual_buffer_size[i] > _meta_data_sub_buffer_size[i])
+                    rellocate_meta_data_buffer(_host_meta_data_buffers[_write_ptr][i], actual_buffer_size[i], i);
+            }
+            meta_data->copy_data(_host_meta_data_buffers[_write_ptr]);
         }
-        meta_data->copy_data(_host_meta_data_buffers[_write_ptr]);
     }
 }
 
