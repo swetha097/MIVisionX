@@ -122,6 +122,44 @@ ROCAL_API_CALL rocalCreateTFReaderDetection(RocalContext p_context, const char* 
     return context->master_graph->create_tf_record_meta_data_reader(source_path , MetaDataReaderType::TF_DETECTION_META_DATA_READER,  MetaDataType::BoundingBox, feature_key_map);
 }
 
+RocalMetaData ROCAL_API_CALL rocalCreateCaffeLMDBLabelReader(RocalContext p_context, const char *source_path)
+{
+    if (!p_context)
+        THROW("Invalid rocal context passed to rocalCreateCaffeLMDBLabelReader")
+    auto context = static_cast<Context *>(p_context);
+    return context->master_graph->create_caffe_lmdb_record_meta_data_reader(source_path, MetaDataReaderType::CAFFE_META_DATA_READER, MetaDataType::Label);
+}
+
+RocalMetaData ROCAL_API_CALL rocalCreateCaffeLMDBReaderDetection(RocalContext p_context, const char *source_path)
+{
+    if (!p_context)
+        THROW("Invalid rocal context passed to rocalCreateCaffeLMDBReaderDetection")
+    auto context = static_cast<Context *>(p_context);
+    return context->master_graph->create_caffe_lmdb_record_meta_data_reader(source_path, MetaDataReaderType::CAFFE_DETECTION_META_DATA_READER, MetaDataType::BoundingBox);
+}
+
+RocalMetaData
+ROCAL_API_CALL rocalCreateCaffe2LMDBLabelReader(RocalContext p_context, const char *source_path, bool is_output)
+{
+
+    if (!p_context)
+        THROW("Invalid rocal context passed to rocalCreateCaffe2LMDBLabelReader")
+
+    auto context = static_cast<Context *>(p_context);
+    return context->master_graph->create_caffe2_lmdb_record_meta_data_reader(source_path, MetaDataReaderType::CAFFE2_META_DATA_READER, MetaDataType::Label);
+}
+
+RocalMetaData
+ROCAL_API_CALL
+rocalCreateCaffe2LMDBReaderDetection(RocalContext p_context, const char *source_path, bool is_output)
+{
+    if (!p_context)
+        THROW("Invalid rocal context passed to rocalCreateCaffe2LMDBReaderDetection")
+    auto context = static_cast<Context *>(p_context);
+
+    return context->master_graph->create_caffe2_lmdb_record_meta_data_reader(source_path, MetaDataReaderType::CAFFE2_DETECTION_META_DATA_READER, MetaDataType::BoundingBox);
+}
+
 void
 ROCAL_API_CALL rocalGetImageName(RocalContext p_context,  char* buf)
 {
@@ -282,3 +320,5 @@ ROCAL_API_CALL rocalGetEncodedBoxesAndLables(RocalContext p_context, int num_enc
     //     WRN("rocalGetEncodedBoxesAndLables::Empty tensors returned from rocAL")
     // }
 }
+
+

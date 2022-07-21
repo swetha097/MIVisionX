@@ -205,7 +205,6 @@ int test(int test_case, int reader_type, int pipeline_type, const char *path, co
             input1 = rocalJpegTFRecordSource(handle, path, color_format, num_threads, false, key1, key8, false, false, ROCAL_USE_USER_GIVEN_SIZE, decode_max_width, decode_max_height);
         }
         break;
-#if 0
         case 6: //caffe classification
         {
             std::cout << ">>>>>>> Running CAFFE CLASSIFICATION READER" << std::endl;
@@ -220,6 +219,7 @@ int test(int test_case, int reader_type, int pipeline_type, const char *path, co
             input1 = rocalJpegCaffeLMDBRecordSource(handle, path, color_format, num_threads, false, false, false, ROCAL_USE_USER_GIVEN_SIZE, decode_max_width, decode_max_height);
         }
         break;
+
         case 8: //caffe2 classification
         {
             std::cout << ">>>>>>> Running CAFFE2 CLASSIFICATION READER" << std::endl;
@@ -234,6 +234,8 @@ int test(int test_case, int reader_type, int pipeline_type, const char *path, co
             input1 = rocalJpegCaffe2LMDBRecordSource(handle, path, color_format, num_threads, false, false, false, ROCAL_USE_USER_GIVEN_SIZE, decode_max_width, decode_max_height);
         }
         break;
+#if 0
+
         case 10: //coco reader keypoints
         {
             std::cout << ">>>>>>> Running COCO KEYPOINTS READER" << std::endl;

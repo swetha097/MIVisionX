@@ -25,9 +25,9 @@ THE SOFTWARE.
 
 
 #if ENABLE_HIP
-Cifar10LoaderNode::Cifar10LoaderNode(Image *output, DeviceResourcesHip device_resources):
+Cifar10LoaderNode::Cifar10LoaderNode(rocALTensor *output, DeviceResourcesHip device_resources):
 #else
-Cifar10LoaderNode::Cifar10LoaderNode(Image *output, DeviceResources device_resources):
+Cifar10LoaderNode::Cifar10LoaderNode(rocALTensor *output, DeviceResources device_resources):
 #endif
         Node({}, {output})
 {
@@ -39,7 +39,7 @@ void Cifar10LoaderNode::init(const std::string &source_path, const std::string &
 {
     if(!_loader_module)
         THROW("ERROR: loader module is not set for Cifar10LoaderNode, cannot initialize")
-    _loader_module->set_output_image(_outputs[0]);
+    _loader_module->set_output(_outputs[0]);
     // Set reader and decoder config accordingly for the Cifar10LoaderNode
     auto reader_cfg = ReaderConfig(storage_type, source_path, json_path, std::map<std::string, std::string>(), loop);
     reader_cfg.set_batch_count(load_batch_count);
