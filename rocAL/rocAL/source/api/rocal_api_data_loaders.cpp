@@ -671,7 +671,7 @@ rocalJpegCaffe2LMDBRecordSource(
         unsigned max_width,
         unsigned max_height)
 {
-    RocalTensor* output = nullptr;
+    rocALTensor* output = nullptr;
     auto context = static_cast<Context*>(p_context);
     try
     {
