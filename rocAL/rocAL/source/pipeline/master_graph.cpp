@@ -782,7 +782,7 @@ std::vector<rocALTensorList *> MasterGraph::create_coco_meta_data_reader(const c
     unsigned num_of_dims = 1;
     std::vector<unsigned> dims;
     dims.resize(num_of_dims);
-    dims.at(0) = is_box_encoder ? MAX_OBJECTS : MAX_NUM_ANCHORS;
+    dims.at(0) = is_box_encoder ? MAX_NUM_ANCHORS : MAX_OBJECTS;
     auto default_labels_info  = rocALTensorInfo(num_of_dims,
                                         std::vector<unsigned>(std::move(dims)),
                                         _mem_type,
@@ -793,7 +793,7 @@ std::vector<rocALTensorList *> MasterGraph::create_coco_meta_data_reader(const c
 
     num_of_dims = 2;
     dims.resize(num_of_dims);
-    dims.at(0) = is_box_encoder ? MAX_OBJECTS : MAX_NUM_ANCHORS;
+    dims.at(0) = is_box_encoder ? MAX_NUM_ANCHORS : MAX_OBJECTS;
     dims.at(1) = BBOX_COUNT;
     auto default_bbox_info  = rocALTensorInfo(num_of_dims,
                                         std::vector<unsigned>(std::move(dims)),
