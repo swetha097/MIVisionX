@@ -180,6 +180,10 @@ void rocALTensor::update_tensor_roi(const std::vector<uint32_t> &width, const st
 {
     if(_info.is_image())
     {
+        auto max_dims = _info.max_dims();
+        unsigned max_width = max_dims.at(0);
+        unsigned max_height = max_dims.at(1);
+
         if (width.size() != height.size())
             THROW("Batch size of Tensor height and width info does not match")
 
@@ -188,19 +192,19 @@ void rocALTensor::update_tensor_roi(const std::vector<uint32_t> &width, const st
 
         for (unsigned i = 0; i < info().batch_size(); i++)
         {
-            if (width[i] > _info.max_dims().at(0))
+            if (width[i] > max_width)
             {
-                ERR("Given ROI width is larger than buffer width for tensor[" + TOSTR(i) + "] " + TOSTR(width[i]) + " > " + TOSTR(_info.max_dims().at(0)))
-                _info.get_roi()->at(i).x2 = _info.max_dims().at(0);
+                ERR("Given ROI width is larger than buffer width for tensor[" + TOSTR(i) + "] " + TOSTR(width[i]) + " > " + TOSTR(max_width))
+                _info.get_roi()->at(i).x2 = max_width;
             }
             else
             {
                 _info.get_roi()->at(i).x2 = width[i];
             }
-            if (height[i] > _info.max_dims().at(1))
+            if (height[i] > max_height)
             {
-                ERR("Given ROI height is larger than buffer with for tensor[" + TOSTR(i) + "] " + TOSTR(height[i]) + " > " + TOSTR(_info.max_dims().at(1)))
-                _info.get_roi()->at(i).y2 = _info.max_dims().at(1);
+                ERR("Given ROI height is larger than buffer with for tensor[" + TOSTR(i) + "] " + TOSTR(height[i]) + " > " + TOSTR(max_height))
+                _info.get_roi()->at(i).y2 = max_height;
             }
             else
             {
@@ -371,23 +375,40 @@ unsigned rocALTensor::copy_data(cl_command_queue queue, cl_mem user_buffer, bool
         return _info.data_size();
     }
 #endif
-unsigned rocALTensor::copy_data(unsigned char* user_buffer, bool sync)
+unsigned rocALTensor::copy_data(void * user_buffer, bool sync)
 {
     if(_info._type != rocALTensorInfo::Type::HANDLE)
         return 0;
-
+#if ENABLE_HIP
     if (_info._mem_type == RocalMemType::HIP)
     {
 #if ENABLE_HIP
         // copy from device to host
         hipError_t status;
+        std::cerr<<"HIP to HOST copy";
         if ((status = hipMemcpyDtoH((void *)user_buffer, _mem_handle, _info.data_size())))
             THROW("copy_data::hipMemcpyDtoH failed: " + TOSTR(status))
 #endif
     }
+#endif
     else
     {
-        memcpy(user_buffer, _mem_handle, _info.data_size());
+        std::cerr<<"\n HOST memcpy ";
+        std::cerr<<"\n Size ::"<< _info.data_size();
+        unsigned char *output_tensor = static_cast<unsigned char *>(user_buffer);
+
+        for (int i =0; i<10;i++)
+            std::cerr << "\n Before : "<< (float)output_tensor[i];
+        // unsigned char * temp_buff = (unsigned char *) _mem_handle;
+        // for(int i=0;i<10;i++)
+        //     std::cerr<<"temp_buff "<<(float)temp_buff[i];
+        // unsigned char * in_buffer = (unsigned char *)malloc(_info.data_size());
+        memcpy(output_tensor, _mem_handle, _info.data_size());
+        std::cerr<<"\n After HOST memcpy";
+
+        for (int i =0; i<10;i++)
+            std::cerr << "\n After :: "<<(float)output_tensor[i];
+        // std::exit(0);
     }
     return _info.data_size();
 }

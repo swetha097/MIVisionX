@@ -749,7 +749,7 @@ void MasterGraph::stop_processing()
         _output_thread.join();
 }
 
-void MasterGraph::create_label_reader(const char *source_path, MetaDataReaderType reader_type)
+std::vector<rocALTensorList *> MasterGraph::create_label_reader(const char *source_path, MetaDataReaderType reader_type)
 {
     if(_meta_data_reader)
         THROW("A metadata reader has already been created")
@@ -757,22 +757,22 @@ void MasterGraph::create_label_reader(const char *source_path, MetaDataReaderTyp
     _meta_data_reader = create_meta_data_reader(config);
     _meta_data_reader->init(config);
     _meta_data_reader->read_all(source_path);
-    auto max_buffer_size = 1;
 
     unsigned num_of_dims = 1;
     std::vector<unsigned> dims;
     dims.resize(num_of_dims);
-    dims.at(0) = max_buffer_size;
-    auto info  = rocALTensorInfo(num_of_dims,
+    dims.at(0) = 1; // Number of labels per file
+    auto default_labels_info  = rocALTensorInfo(num_of_dims,
                                  std::vector<unsigned>(std::move(dims)),
                                  _mem_type,
                                  RocalTensorDataType::INT32);
-    info.set_metadata();
-    info.set_tensor_layout(RocalTensorlayout::NONE);
+    default_labels_info.set_metadata();
+    default_labels_info.set_tensor_layout(RocalTensorlayout::NONE);
     _meta_data_buffer_size.emplace_back(_user_batch_size * sizeof(vx_int32));
 
     for(unsigned i = 0; i < _user_batch_size; i++)
     {
+        auto info = default_labels_info;
         auto tensor = new rocALTensor(info);
         _labels_tensor_list.push_back(tensor);
     }
@@ -781,9 +781,12 @@ void MasterGraph::create_label_reader(const char *source_path, MetaDataReaderTyp
         THROW("Metadata can only have a single output")
     else
         _augmented_meta_data = _meta_data_reader->get_output();
+    _metadata_output_tensor_list.emplace_back(&_labels_tensor_list);
+
+    return _metadata_output_tensor_list;
 }
 
-void MasterGraph::create_coco_meta_data_reader(const char *source_path, bool is_output, MetaDataReaderType reader_type, MetaDataType label_type)
+std::vector<rocALTensorList *> MasterGraph::create_coco_meta_data_reader(const char *source_path, bool is_output, MetaDataReaderType reader_type, MetaDataType label_type)
 {
     if(_meta_data_reader)
         THROW("A metadata reader has already been created")
@@ -793,7 +796,6 @@ void MasterGraph::create_coco_meta_data_reader(const char *source_path, bool is_
     _meta_data_reader->init(config);
     _meta_data_reader->read_all(source_path);
 
-    // TODO - Can we predefine info somewhere else?
     unsigned num_of_dims = 1;
     std::vector<unsigned> dims;
     dims.resize(num_of_dims);
@@ -833,6 +835,10 @@ void MasterGraph::create_coco_meta_data_reader(const char *source_path, bool is_
         else
             _augmented_meta_data = _meta_data_reader->get_output();
     }
+    _metadata_output_tensor_list.emplace_back(&_labels_tensor_list);
+    _metadata_output_tensor_list.emplace_back(&_bbox_tensor_list);
+
+    return _metadata_output_tensor_list;
 }
 
 const std::pair<ImageNameBatch, MetaDataDimensionsBatch>& MasterGraph::meta_data_info()
@@ -864,7 +870,6 @@ rocALTensorList * MasterGraph::bbox_labels_meta_data()
     auto labels_tensor_dims = _ring_buffer.get_meta_data_info().second.bb_labels_dims();
     for(unsigned i = 0; i < _labels_tensor_list.size(); i++)
     {
-        std::cerr << "[" << labels_tensor_dims[i][0] << "]\n";
         _labels_tensor_list[i]->set_dims(labels_tensor_dims[i]);
         _labels_tensor_list[i]->set_mem_handle((void *)meta_data_buffers);
         meta_data_buffers += _labels_tensor_list[i]->info().data_size();
@@ -880,11 +885,9 @@ rocALTensorList * MasterGraph::bbox_meta_data()
     auto bbox_tensor_dims = _ring_buffer.get_meta_data_info().second.bb_cords_dims();
     for(unsigned i = 0; i < _bbox_tensor_list.size(); i++)
     {
-        // std::cerr << "[" <<  bbox_tensor_dims[i][0] << " ," <<  bbox_tensor_dims[i][1] << "]\n";
         _bbox_tensor_list[i]->set_dims(bbox_tensor_dims[i]);
         _bbox_tensor_list[i]->set_mem_handle((void *)meta_data_buffers);
         meta_data_buffers += _bbox_tensor_list[i]->info().data_size();
-        // if(_bbox_tensor_list[0]->info().dims().get() == _bbox_tensor_list[1]->info().dims().get())
 
     }
 

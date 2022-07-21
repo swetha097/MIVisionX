@@ -188,6 +188,7 @@ void CropMirrorNormalizeNode::create_node()
 
 }
 
+
 void CropMirrorNormalizeNode::update_node()
 {
     _crop_param->set_image_dimensions(_inputs[0]->info().get_roi());

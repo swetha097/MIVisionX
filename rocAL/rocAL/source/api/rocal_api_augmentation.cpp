@@ -75,7 +75,7 @@ void get_rocal_tensor_data_type(RocalTensorOutputType &tensor_output_type, Rocal
 
 
 RocalTensor ROCAL_API_CALL
-rocalBrightnessTensor(
+rocalBrightness(
         RocalContext p_context,
         RocalTensor p_input,
         bool is_output,
@@ -94,7 +94,7 @@ rocalBrightnessTensor(
 
         output = context->master_graph->create_tensor(input->info(), is_output);
 
-        context->master_graph->add_node<BrightnessTensorNode>({input}, {output})->init(alpha, beta);
+        context->master_graph->add_node<BrightnessNode>({input}, {output})->init(alpha, beta);
     }
     catch(const std::exception& e)
     {
@@ -323,7 +323,7 @@ rocalCopyTensor(
     return output;
 }
 
-
+// Commented for Now
 // RocalTensor  ROCAL_API_CALL
 // rocalNopTensor(
 //         RocalContext p_context,
@@ -332,9 +332,9 @@ rocalCopyTensor(
 // {
 //     if(!p_context || !p_input)
 //         THROW("Null values passed as input")
-//     Tensor* output = nullptr;
+//     rocALTensor* output = nullptr;
 //     auto context = static_cast<Context*>(p_context);
-//     auto input = static_cast<Tensor*>(p_input);
+//     auto input = static_cast<rocALTensor*>(p_input);
 //     try
 //     {
 //         output = context->master_graph->create_tensor(input->info(), is_output);
@@ -349,7 +349,7 @@ rocalCopyTensor(
 // }
 
 RocalTensor ROCAL_API_CALL
-rocalCrop(RocalContext p_context, 
+rocalCrop(RocalContext p_context,
           RocalTensor p_input,
           RocalTensorLayout rocal_tensor_layout,
           RocalTensorOutputType rocal_tensor_output_type,
@@ -397,7 +397,7 @@ rocalCrop(RocalContext p_context,
 
 
 RocalTensor ROCAL_API_CALL
-rocalCropFixed(RocalContext p_context, 
+rocalCropFixed(RocalContext p_context,
           RocalTensor p_input,
           RocalTensorLayout rocal_tensor_layout,
           RocalTensorOutputType rocal_tensor_output_type,

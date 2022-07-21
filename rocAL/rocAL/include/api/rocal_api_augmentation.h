@@ -24,11 +24,6 @@ THE SOFTWARE.
 #define MIVISIONX_ROCAL_API_AUGMENTATION_H
 #include "rocal_api_types.h"
 
-extern "C" RocalTensor ROCAL_API_CALL rocalBrightnessTensor(RocalContext context, RocalTensor input, bool is_output,
-                                                   RocalFloatParam alpha = NULL, RocalFloatParam beta = NULL);
-
-
-
 /// Accepts U8 and RGB24 inputs
 /// \param context
 /// \param input
@@ -39,44 +34,7 @@ extern "C" RocalTensor ROCAL_API_CALL rocalBrightnessTensor(RocalContext context
 extern "C" RocalTensor ROCAL_API_CALL rocalBrightness(RocalContext context, RocalTensor input, bool is_output,
                                                    RocalFloatParam alpha = NULL, RocalFloatParam beta = NULL);
 
-/// Accepts U8 and RGB24 inputs
-/// \param context
-/// \param input
-/// \param shift
-/// \param is_output
-/// \return
-extern "C" RocalTensor ROCAL_API_CALL rocalBrightnessFixed(RocalContext context, RocalTensor input,
-                                                        float alpha, float beta,
-                                                        bool is_output);
-
-/// Accepts U8 and RGB24 inputs
-/// \param context
-/// \param input
-/// \param is_output
-/// \param alpha
-/// \return
-extern "C" RocalTensor ROCAL_API_CALL rocalGamma(RocalContext context, RocalTensor input,
-                                              bool is_output,
-                                              RocalFloatParam alpha = NULL);
-
-/// Accepts U8 and RGB24 inputs
-/// \param context
-/// \param input
-/// \param alpha
-/// \param is_output
-/// \return
-
-extern "C" RocalTensor ROCAL_API_CALL rocalGammaFixed(RocalContext context, RocalTensor input, float alpha, bool is_output);
-
 extern "C" RocalTensor ROCAL_API_CALL rocalCopyTensor(RocalContext context, RocalTensor input, bool is_output);
-
-///
-/// \param context
-/// \param input
-/// \param is_output
-/// \return
-
-extern "C" RocalTensor ROCAL_API_CALL rocalNopTensor(RocalContext context, RocalTensor input, bool is_output);
 
 
 // extern "C" RocalTensor ROCAL_API_CALL rocalCropMirrorNormalize(RocalContext context, RocalTensor input,

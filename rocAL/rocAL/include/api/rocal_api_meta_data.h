@@ -27,8 +27,9 @@ THE SOFTWARE.
 /// \param rocal_context
 /// \param source_path path to the folder that contains the dataset or metadata file
 /// \return RocalMetaData object, can be used to inquire about the rocal's output (processed) tensors
-extern "C" void ROCAL_API_CALL rocalCreateLabelReader(RocalContext rocal_context, const char* source_path);
+extern "C" RocalMetaData ROCAL_API_CALL rocalCreateLabelReader(RocalContext rocal_context, const char* source_path);
 
+#if 0 // Commented for now
 ///
 /// \param rocal_context
 /// \param source_path path to the coco json file
@@ -45,13 +46,15 @@ extern "C" RocalMetaData ROCAL_API_CALL rocalCreateTFReaderDetection(RocalContex
     const char* user_key_for_label, const char* user_key_for_text,
     const char* user_key_for_xmin, const char* user_key_for_ymin, const char* user_key_for_xmax, const char* user_key_for_ymax,
     const char* user_key_for_filename);
+#endif
 
 ///
 /// \param rocal_context
 /// \param source_path path to the coco json file
 /// \return RocalMetaData object, can be used to inquire about the rocal's output (processed) tensors
-extern "C" void ROCAL_API_CALL rocalCreateCOCOReader(RocalContext rocal_context, const char* source_path, bool is_output);
+extern "C" RocalMetaData ROCAL_API_CALL rocalCreateCOCOReader(RocalContext rocal_context, const char* source_path, bool is_output);
 
+#if 0 // Commented for now
 ///
 /// \param rocal_context
 /// \param source_path path to the file that contains the metadata file
@@ -83,6 +86,7 @@ extern "C" RocalMetaData ROCAL_API_CALL rocalCreateCaffe2LMDBLabelReader(RocalCo
 /// \return RocalMetaData object, can be used to inquire about the rocal's output (processed) tensors
 
 extern "C" RocalMetaData ROCAL_API_CALL rocalCreateCaffe2LMDBReaderDetection(RocalContext rocal_context, const char* source_path, bool is_output);
+#endif
 
 ///
 /// \param rocal_context
@@ -97,7 +101,7 @@ extern "C" unsigned ROCAL_API_CALL rocalGetImageNameLen(RocalContext rocal_conte
 
 /// \param meta_data RocalMetaData object that contains info about the images and labels
 /// \param buf user's buffer that will be filled with labels. Its needs to be at least of size batch_size.
-extern "C" RocalMetaData ROCAL_API_CALL rocalGetImageLabels(RocalContext rocal_context);
+extern "C" RocalTensorList ROCAL_API_CALL rocalGetImageLabels(RocalContext rocal_context);
 
 /// \param meta_data RocalMetaData object that contains info about the images and labels
 /// \param numOfClasses the number of classes for a image dataset
@@ -107,9 +111,10 @@ extern "C" void ROCAL_API_CALL rocalGetOneHotImageLabels(RocalContext rocal_cont
 ///
 /// \param rocal_context
 /// \param buf The user's buffer that will be filled with bounding box label info for the images in the output batch. It needs to be of size returned by a call to the rocalGetBoundingBoxCount
-extern "C" RocalMetaData ROCAL_API_CALL rocalGetBoundingBoxLabel(RocalContext rocal_context);
-extern "C" RocalMetaData ROCAL_API_CALL rocalGetBoundingBoxCords(RocalContext rocal_context);
+extern "C" RocalTensorList ROCAL_API_CALL rocalGetBoundingBoxLabel(RocalContext rocal_context);
+extern "C" RocalTensorList ROCAL_API_CALL rocalGetBoundingBoxCords(RocalContext rocal_context);
 
+#if 0 // Commented for now
 ///
 /// \param rocal_context
 /// \param image_idx the imageIdx in the output batch
@@ -135,6 +140,6 @@ extern "C" RocalMetaData ROCAL_API_CALL rocalCreateTextCifar10LabelReader(RocalC
 /// \param buf user's buffer that will be filled with labels. Its needs to be at least of size batch_size.
 extern "C" void ROCAL_API_CALL rocalGetOneHotImageLabels(RocalContext rocal_context,int *buf, int numOfClasses);
 extern "C" void ROCAL_API_CALL rocalRandomBBoxCrop(RocalContext p_context, bool all_boxes_overlap, bool no_crop, RocalFloatParam aspect_ratio = NULL, bool has_shape = false, int crop_width = 0, int crop_height = 0, int num_attempts = 1, RocalFloatParam scaling = NULL, int total_num_attempts = 0, int64_t seed = 0);
-
+#endif
 
 #endif //MIVISIONX_ROCAL_API_META_DATA_H
