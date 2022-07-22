@@ -38,11 +38,12 @@ void CropNode::create_node()
 {
     if(_node)
         return;
-    if(_crop_param->crop_h == 0 || _crop_param->crop_w == 0)
-        THROW("Uninitialized destination dimension - Invalid Crop Sizes")
-    
+
+    if(_dest_width == 0 || _dest_height == 0)
+        THROW("Uninitialized destination dimension")
+
     _crop_param->create_array(_graph);
-   
+
     unsigned int chnShift = 0;
     vx_scalar  chnToggle = vxCreateScalar(vxGetContext((vx_reference)_graph->get()),VX_TYPE_UINT32,&chnShift);
     bool packed;
@@ -54,10 +55,9 @@ void CropNode::create_node()
     vx_scalar layout = vxCreateScalar(vxGetContext((vx_reference)_graph->get()),VX_TYPE_UINT32,&_layout);
     vx_scalar roi_type = vxCreateScalar(vxGetContext((vx_reference)_graph->get()),VX_TYPE_UINT32,&_roi_type);
     _node = vxExtrppNode_Crop(_graph->get(), _inputs[0]->handle(),_src_tensor_roi,_outputs[0]->handle(),_src_tensor_roi,_crop_param->cropw_arr, _crop_param->croph_arr, _crop_param->x1_arr, _crop_param->y1_arr,is_packed, chnToggle,layout, roi_type, _batch_size);
-    vx_status status = VX_SUCCESS;
-
+    vx_status status;
     if((status = vxGetStatus((vx_reference)_node)) != VX_SUCCESS)
-        THROW("Error adding the crop tensor (vxExtrppNode_CropbatchPD    ) failed: "+TOSTR(status))
+        THROW("Error adding the crop tensor (vxExtrppNode_Crop) failed: "+TOSTR(status))
 }
 
 void CropNode::update_node()
@@ -69,11 +69,17 @@ void CropNode::update_node()
     _outputs[0]->update_tensor_roi(crop_w_dims, crop_h_dims);
 }
 
-void CropNode::init(int crop_h, int crop_w, float start_x, float start_y,int layout)
+void CropNode::init(unsigned int crop_h, unsigned int crop_w, float x_drift_, float y_drift_, int layout)
 {
-    _crop_param->crop_h = crop_h;
     _crop_param->crop_w = crop_w;
-    _layout=layout; 
+    _crop_param->crop_h = crop_h;
+    _crop_param->x1     = x_drift_;
+    _crop_param->y1     = y_drift_;
+    FloatParam *x_drift  = ParameterFactory::instance()->create_single_value_float_param(x_drift_);
+    FloatParam *y_drift  = ParameterFactory::instance()->create_single_value_float_param(y_drift_);
+    _crop_param->set_x_drift_factor(core(x_drift));
+    _crop_param->set_y_drift_factor(core(y_drift));
+    _layout=layout;
     // _layout = (unsigned) _outputs[0]->layout();
 }
 
@@ -87,5 +93,16 @@ void CropNode::init(unsigned int crop_h, unsigned int crop_w, int layout)
     FloatParam *y_drift  = ParameterFactory::instance()->create_single_value_float_param(0.5);
     _crop_param->set_x_drift_factor(core(x_drift));
     _crop_param->set_y_drift_factor(core(y_drift));
+    _crop_param->set_center();
     _layout = layout;
+}
+
+void CropNode::init(FloatParam *crop_h_factor, FloatParam  *crop_w_factor, FloatParam *x_drift, FloatParam *y_drift)
+{
+    _crop_param->set_x_drift_factor(core(x_drift));
+    _crop_param->set_y_drift_factor(core(y_drift));
+    _crop_param->set_crop_height_factor(core(crop_h_factor));
+    _crop_param->set_crop_width_factor(core(crop_w_factor));
+    _crop_param->set_random();
+    _layout = (unsigned) _outputs[0]->info().layout();
 }
