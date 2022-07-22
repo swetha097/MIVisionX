@@ -330,6 +330,11 @@ void RingBuffer::increment_write_ptr()
 
 void RingBuffer::set_meta_data( ImageNameBatch names, pMetaDataBatch meta_data)
 {
+    if(meta_data == nullptr)
+    {
+        std::move(std::make_pair(std::move(names), MetaDataDimensionsBatch()));
+        return;
+    }
     _last_image_meta_data_info = std::move(std::make_pair(std::move(names), meta_data->get_metadata_dimensions_batch()));
     auto actual_buffer_size = meta_data->get_buffer_size();
     for(unsigned i = 0; i < _meta_data_sub_buffer_count; i++)

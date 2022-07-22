@@ -700,12 +700,9 @@ void MasterGraph::output_routine()
                 }
                 _graph->process();
             }
-            if(_internal_tensor_list.size() != 0)
-            {
-                _ring_buffer.set_meta_data(full_batch_image_names, full_batch_meta_data);
-                _ring_buffer.push();
-            }
-            full_batch_meta_data->clear();
+            _ring_buffer.set_meta_data(full_batch_image_names, full_batch_meta_data);
+            _ring_buffer.push();
+            // full_batch_meta_data->clear();
         }
     }
     catch (const std::exception &e)
