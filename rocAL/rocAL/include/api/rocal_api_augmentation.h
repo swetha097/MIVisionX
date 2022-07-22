@@ -37,19 +37,6 @@ extern "C" RocalTensor ROCAL_API_CALL rocalBrightness(RocalContext context, Roca
 extern "C" RocalTensor ROCAL_API_CALL rocalCopyTensor(RocalContext context, RocalTensor input, bool is_output);
 
 
-// extern "C" RocalTensor ROCAL_API_CALL rocalCropMirrorNormalize(RocalContext context, RocalTensor input,
-//                                                                   RocalTensorLayout rocal_tensor_layout,
-//                                                                   RocalTensorOutputType rocal_tensor_output_type,
-//                                                                   unsigned crop_depth,
-//                                                                   unsigned crop_height,
-//                                                                   unsigned crop_width,
-//                                                                   float start_x,
-//                                                                   float start_y,
-//                                                                   float start_z,
-//                                                                   std::vector<float> &mean,
-//                                                                   std::vector<float> &std_dev,
-//                                                                   bool is_output,
-//                                                                   RocalIntParam mirror = NULL);
 extern "C" RocalTensor ROCAL_API_CALL rocalCropMirrorNormalize(RocalContext context, RocalTensor input,
                                                                   RocalTensorLayout rocal_tensor_layout,
                                                                   RocalTensorOutputType rocal_tensor_output_type,
@@ -114,6 +101,16 @@ extern "C"  RocalTensor  ROCAL_API_CALL rocalResizeShorter(RocalContext context,
                                                 RocalTensorOutputType rocal_tensor_output_type,
                                                 unsigned size,
                                                 bool is_output );
+
+extern "C" RocalTensor ROCAL_API_CALL rocalColorTwist(RocalContext context,
+                                                      RocalTensor input,
+                                                      RocalTensorLayout rocal_tensor_layout,
+                                                      RocalTensorOutputType rocal_tensor_output_type,
+                                                      bool is_output,
+                                                      RocalFloatParam alpha = NULL,
+                                                      RocalFloatParam beta = NULL,
+                                                      RocalFloatParam hue = NULL,
+                                                      RocalFloatParam sat = NULL);
 
 
 #endif //MIVISIONX_ROCAL_API_AUGMENTATION_H

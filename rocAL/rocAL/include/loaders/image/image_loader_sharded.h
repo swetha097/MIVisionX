@@ -39,7 +39,7 @@ public:
     LoaderModuleStatus load_next() override;
     void initialize(ReaderConfig reader_cfg, DecoderConfig decoder_cfg, RocalMemType mem_type, unsigned batch_size, bool keep_orig_size=false) override;
     void set_output (rocALTensor* output_image) override;
-    // void set_random_bbox_data_reader(std::shared_ptr<RandomBBoxCrop_MetaDataReader> randombboxcrop_meta_data_reader) override;
+    void set_random_bbox_data_reader(std::shared_ptr<RandomBBoxCrop_MetaDataReader> randombboxcrop_meta_data_reader) override;
     size_t remaining_count() override;
     void reset() override;
     void start_loading() override;
@@ -64,5 +64,5 @@ private:
     size_t _prefetch_queue_depth;
 
     rocALTensor *_output_tensor;
-    // std::shared_ptr<RandomBBoxCrop_MetaDataReader> _randombboxcrop_meta_data_reader = nullptr;
+    std::shared_ptr<RandomBBoxCrop_MetaDataReader> _randombboxcrop_meta_data_reader = nullptr;
 };

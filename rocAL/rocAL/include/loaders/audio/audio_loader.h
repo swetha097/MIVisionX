@@ -44,7 +44,7 @@ public:
     void initialize(ReaderConfig reader_cfg, DecoderConfig decoder_cfg, RocalMemType mem_type, unsigned batch_size, bool keep_orig_size=false) override;
     void set_output (rocALTensor* output_audio) override;
     // void set_output_tensor(rocALTensor* output_audio) override;
-    // void set_random_bbox_data_reader(std::shared_ptr<RandomBBoxCrop_MetaDataReader> randombboxcrop_meta_data_reader) override;
+    void set_random_bbox_data_reader(std::shared_ptr<RandomBBoxCrop_MetaDataReader> randombboxcrop_meta_data_reader) override {};
     size_t remaining_count() override; // returns number of remaining items to be loaded
     void reset() override; // Resets the loader to load from the beginning of the media
     Timing timing() override;

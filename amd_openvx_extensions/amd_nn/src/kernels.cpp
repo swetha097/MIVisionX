@@ -149,7 +149,7 @@ void nn_layer_test_dumpBuffer(const char * fileNameFormat, vx_tensor tensor)
     //get dump location and file name
     char dump_location[512] = "NN_BufferDump/";
     char textBuffer[512];
-    if (getEnvironmentVariable("NN_LAYER_DUMP_LOCATION", textBuffer, sizeof(textBuffer)) > 0 )
+    if (getEnvironmentVariable("NN_LAYER_DUMP_LOCATION", textBuffer, sizeof(textBuffer)) > 0 ) 
     {
         sprintf(dump_location, "%s", textBuffer);
     }
@@ -160,7 +160,7 @@ void nn_layer_test_dumpBuffer(const char * fileNameFormat, vx_tensor tensor)
         if (stat(dump_location, &st) == -1) { mkdir(dump_location, 0700); }
     #endif
     char fileName[1024];
-    static int dumpBufferCount = 0;
+    static int dumpBufferCount = 0; 
     dumpBufferCount++;
     sprintf(fileName, strcat(dump_location, fileNameFormat), dumpBufferCount);
     FILE * fp = fopen(fileName, "wb");
@@ -178,7 +178,7 @@ void nn_layer_test_dumpBuffer(const char * fileNameFormat, vx_tensor tensor)
     vx_size stride[4];
     float * ptr;
     vx_enum usage = VX_READ_ONLY;
-
+    
     vx_size count_tensor = tensor_dims[0]*tensor_dims[1]*tensor_dims[2]*tensor_dims[3];
     status = vxMapTensorPatch(tensor, 4, nullptr, nullptr, &map_id, stride, (void **)&ptr, usage, VX_MEMORY_TYPE_HOST);
     if(status)

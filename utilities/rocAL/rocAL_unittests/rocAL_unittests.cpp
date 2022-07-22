@@ -164,7 +164,6 @@ int test(int test_case, int reader_type, int pipeline_type, const char *path, co
                 input1 = rocalJpegCOCOFileSource(handle, path, json_path, color_format, num_threads, true, true, false, ROCAL_USE_USER_GIVEN_SIZE, decode_max_width, decode_max_height);
         }
         break;
-#if 0
         case 3: //coco detection partial
         {
             std::cout << ">>>>>>> Running COCO READER PARTIAL" << std::endl;
@@ -181,6 +180,7 @@ int test(int test_case, int reader_type, int pipeline_type, const char *path, co
             input1 = rocalJpegCOCOFileSourcePartial(handle, path, json_path, color_format, num_threads, false, true, false);
         }
         break;
+#if 0
         case 4: //tf classification
         {
             std::cout << ">>>>>>> Running TF CLASSIFICATION READER" << std::endl;
@@ -270,7 +270,7 @@ int test(int test_case, int reader_type, int pipeline_type, const char *path, co
         return -1;
     }
 
-    int resize_w = 1000, resize_h = 30; // height and width
+    int resize_w = 100, resize_h = 300; // height and width
 
     RocalTensor image1;
 
@@ -297,7 +297,6 @@ int test(int test_case, int reader_type, int pipeline_type, const char *path, co
          std::cout << ">>>>>>> Running "
                   << "rocalResize" << std::endl;
         image1 = rocalResize(handle, input1, tensorLayout, tensorOutputType, 3,resize_w , resize_h, 0,true);
-
     }
     break;
     case 26:
@@ -311,12 +310,11 @@ int test(int test_case, int reader_type, int pipeline_type, const char *path, co
     case 51:
     {
          std::cout << ">>>>>>> Running "
-                  << "rocalcropfixed" << std::endl;
         image1 = rocalCropFixed(handle, input1, tensorLayout, tensorOutputType, 3, resize_w, resize_h, 0, 0, 0,true);
     }
-    break;
-    default:
-        std::cout << "Not a valid option! Exiting!\n";
+    case 50:
+    {
+        std::cout << ">>>>>>> Running "
         return -1;
     }
 
@@ -413,7 +411,6 @@ int test(int test_case, int reader_type, int pipeline_type, const char *path, co
         rocalUpdateIntParameter(last_colot_temp + 1, color_temp_adj);
 
         output_tensor_list = rocalGetOutputTensors(handle);
-
         std::vector<int> compression_params;
         compression_params.push_back(IMWRITE_PNG_COMPRESSION);
         compression_params.push_back(9);

@@ -26,12 +26,12 @@ THE SOFTWARE.
 #include "exception.h"
 
 
-ResizeSingleParamNode::ResizeSingleParamNode(const std::vector<rocALTensor *> &inputs, const std::vector<rocALTensor *> &outputs) :
+ResizeShorterNode::ResizeShorterNode(const std::vector<rocALTensor *> &inputs, const std::vector<rocALTensor *> &outputs) :
         Node(inputs, outputs)
 {
 }
 
-void ResizeSingleParamNode::create_node()
+void ResizeShorterNode::create_node()
 {
     if (_node)
         return;
@@ -69,7 +69,7 @@ void ResizeSingleParamNode::create_node()
         THROW("Adding the resize (vxExtrppNode_Resize) node failed: " + TOSTR(status))
 }
 
-void ResizeSingleParamNode::update_node()
+void ResizeShorterNode::update_node()
 {
     std::shared_ptr<std::vector<RocalROI>> src_roi = _inputs[0]->info().get_roi();
 
@@ -83,7 +83,7 @@ void ResizeSingleParamNode::update_node()
         old_short = (w <= h) ? w : h;
         old_long = (w <= h) ? h : w;
         new_short = _size;
-        new_long = int(_size * old_long / old_short);
+        new_long = static_cast<int>(_size * old_long / old_short);
 
         new_w = (w <= h) ? new_short : new_long;
         new_h = (w <= h) ? new_long : new_short;
@@ -93,9 +93,11 @@ void ResizeSingleParamNode::update_node()
     }
     vxCopyArrayRange((vx_array)_dst_roi_width, 0, _batch_size, sizeof(uint), _dest_width_val.data(), VX_WRITE_ONLY, VX_MEMORY_TYPE_HOST);
     vxCopyArrayRange((vx_array)_dst_roi_height, 0, _batch_size, sizeof(uint), _dest_height_val.data(), VX_WRITE_ONLY, VX_MEMORY_TYPE_HOST);
+
+    _outputs[0]->update_tensor_roi(_dest_width_val, _dest_height_val);
 }
 
-void ResizeSingleParamNode::init(int size)
+void ResizeShorterNode::init(int size)
 {
     _size = size;
     _interpolation_type = 1; // Default value for resize Bilinear

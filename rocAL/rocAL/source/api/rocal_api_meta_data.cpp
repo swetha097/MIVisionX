@@ -29,6 +29,34 @@ THE SOFTWARE.
 #include "rocal_api.h"
 #define MAX_BUFFER 10000
 
+void
+ROCAL_API_CALL rocalRandomBBoxCrop(RocalContext p_context, bool all_boxes_overlap, bool no_crop, RocalFloatParam p_aspect_ratio, bool has_shape, int crop_width, int crop_height, int num_attempts, RocalFloatParam p_scaling, int total_num_attempts, int64_t seed)
+{
+    if (!p_context)
+        THROW("Invalid rocal context passed to rocalRandomBBoxCrop")
+    auto context = static_cast<Context*>(p_context);
+    FloatParam *aspect_ratio;
+    FloatParam *scaling;
+    if(p_aspect_ratio == NULL)
+    {
+        aspect_ratio = ParameterFactory::instance()->create_uniform_float_rand_param(1.0, 1.0);
+    }
+    else
+    {
+
+        aspect_ratio = static_cast<FloatParam*>(p_aspect_ratio);
+    }
+    if(p_scaling == NULL)
+    {
+        scaling = ParameterFactory::instance()->create_uniform_float_rand_param(1.0, 1.0);
+    }
+    else
+    {
+        scaling = static_cast<FloatParam*>(p_scaling);
+    }
+    context->master_graph->create_randombboxcrop_reader(RandomBBoxCrop_MetaDataReaderType::RandomBBoxCropReader, RandomBBoxCrop_MetaDataType::BoundingBox, all_boxes_overlap, no_crop, aspect_ratio, has_shape, crop_width, crop_height, num_attempts, scaling, total_num_attempts, seed);
+}
+
 RocalMetaData
 ROCAL_API_CALL rocalCreateLabelReader(RocalContext p_context, const char* source_path) {
     if (!p_context)
@@ -39,12 +67,12 @@ ROCAL_API_CALL rocalCreateLabelReader(RocalContext p_context, const char* source
 }
 
 RocalMetaData
-ROCAL_API_CALL rocalCreateCOCOReader(RocalContext p_context, const char* source_path, bool is_output){
+ROCAL_API_CALL rocalCreateCOCOReader(RocalContext p_context, const char* source_path, bool is_output, bool is_box_encoder) {
     if (!p_context)
         THROW("Invalid rali context passed to raliCreateCOCOReader")
     auto context = static_cast<Context*>(p_context);
 
-    return context->master_graph->create_coco_meta_data_reader(source_path, is_output, MetaDataReaderType::COCO_META_DATA_READER,  MetaDataType::BoundingBox);
+    return context->master_graph->create_coco_meta_data_reader(source_path, is_output, MetaDataReaderType::COCO_META_DATA_READER,  MetaDataType::BoundingBox, is_box_encoder);
 }
 
 void
@@ -172,3 +200,38 @@ ROCAL_API_CALL rocalGetImageSizes(RocalContext p_context, int* buf)
 }
 #endif
 
+void ROCAL_API_CALL rocalBoxEncoder(RocalContext p_context, std::vector<float>& anchors, float criteria,
+                                  std::vector<float> &means, std::vector<float> &stds, bool offset, float scale)
+{
+    if (!p_context)
+        THROW("Invalid rocal context passed to rocalBoxEncoder")
+    auto context = static_cast<Context *>(p_context);
+    context->master_graph->box_encoder(anchors, criteria, means, stds, offset, scale);
+}
+
+// RocalMetaData
+// ROCAL_API_CALL rocalCopyEncodedBoxesAndLables(RocalContext p_context, float* boxes_buf, int* labels_buf)
+// {
+//     if (!p_context)
+//         THROW("Invalid rocal context passed to rocalCopyEncodedBoxesAndLables")
+//     auto context = static_cast<Context *>(p_context);
+//     RocalMetaData output_bbox_and_labels;
+//     output_bbox_and_labels.emplace_back(context->master_graph->bbox_labels_meta_data());
+//     output_bbox_and_labels.emplace_back(context->master_graph->bbox_meta_data());
+
+//     return output_bbox_and_labels;
+// }
+
+RocalMetaData
+ROCAL_API_CALL rocalGetEncodedBoxesAndLables(RocalContext p_context, int num_encoded_boxes)
+{
+    if (!p_context) {
+        WRN("rocalGetEncodedBoxesAndLables::Invalid context")
+    }
+    auto context = static_cast<Context *>(p_context);
+    return context->master_graph->get_bbox_encoded_buffers(num_encoded_boxes);
+    // if (!*boxes_buf_ptr || !*labels_buf_ptr)
+    // {
+    //     WRN("rocalGetEncodedBoxesAndLables::Empty tensors returned from rocAL")
+    // }
+}

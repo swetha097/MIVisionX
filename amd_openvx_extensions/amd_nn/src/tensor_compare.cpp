@@ -9,13 +9,13 @@ Supports the following mode values:
 4 - Equal to (==)
 5 - Not equal to (!=)
 */
-static vx_status VX_CALLBACK validateTensorCompare(vx_node node, const vx_reference *parameters, vx_uint32 num, vx_meta_format metas[])
+static vx_status VX_CALLBACK validateTensorCompare(vx_node node, const vx_reference *parameters, vx_uint32 num, vx_meta_format metas[]) 
 {
-    // check tensor dims
+    // check tensor dims    
     vx_enum out_type;
     vx_size num_dims;
     vx_size input_dims[4], input2_dims[4], output_dims[4];
-
+    
     ERROR_CHECK_STATUS(vxQueryTensor((vx_tensor)parameters[0], VX_TENSOR_NUMBER_OF_DIMS, &num_dims, sizeof(num_dims)));
     if (num_dims != 4) return VX_ERROR_INVALID_DIMENSION;
     ERROR_CHECK_STATUS(vxQueryTensor((vx_tensor)parameters[0], VX_TENSOR_DIMS, input_dims, sizeof(input_dims)));
@@ -23,7 +23,7 @@ static vx_status VX_CALLBACK validateTensorCompare(vx_node node, const vx_refere
     ERROR_CHECK_STATUS(vxQueryTensor((vx_tensor)parameters[1], VX_TENSOR_NUMBER_OF_DIMS, &num_dims, sizeof(num_dims)));
     if (num_dims != 4) return VX_ERROR_INVALID_DIMENSION;
     ERROR_CHECK_STATUS(vxQueryTensor((vx_tensor)parameters[1], VX_TENSOR_DIMS, input2_dims, sizeof(input2_dims)));
-
+    
     ERROR_CHECK_STATUS(vxQueryTensor((vx_tensor)parameters[2], VX_TENSOR_NUMBER_OF_DIMS, &num_dims, sizeof(num_dims)));
     if (num_dims != 4) return VX_ERROR_INVALID_DIMENSION;
     ERROR_CHECK_STATUS(vxQueryTensor((vx_tensor)parameters[2], VX_TENSOR_DIMS, output_dims, sizeof(output_dims)));
@@ -45,7 +45,7 @@ static vx_status VX_CALLBACK validateTensorCompare(vx_node node, const vx_refere
     if (mode < 0 || mode > 5) {
         return ERRMSG(VX_ERROR_INVALID_PARAMETERS, "validate: tensor_compare: mode value should be within 0-5(mode = %d)\n", mode);
     }
-
+    
     // output tensor configuration
     ERROR_CHECK_STATUS(vxSetMetaFormatAttribute(metas[2], VX_TENSOR_DATA_TYPE, &out_type, sizeof(out_type)));
     ERROR_CHECK_STATUS(vxSetMetaFormatAttribute(metas[2], VX_TENSOR_NUMBER_OF_DIMS, &num_dims, sizeof(num_dims)));

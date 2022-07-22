@@ -52,7 +52,7 @@ extern "C" RocalMetaData ROCAL_API_CALL rocalCreateTFReaderDetection(RocalContex
 /// \param rocal_context
 /// \param source_path path to the coco json file
 /// \return RocalMetaData object, can be used to inquire about the rocal's output (processed) tensors
-extern "C" RocalMetaData ROCAL_API_CALL rocalCreateCOCOReader(RocalContext rocal_context, const char* source_path, bool is_output);
+extern "C" RocalMetaData ROCAL_API_CALL rocalCreateCOCOReader(RocalContext rocal_context, const char* source_path, bool is_output, bool is_box_encoder = false);
 
 #if 0 // Commented for now
 ///
@@ -139,7 +139,18 @@ extern "C" RocalMetaData ROCAL_API_CALL rocalCreateTextCifar10LabelReader(RocalC
 /// \param numOfClasses the number of classes for a image dataset
 /// \param buf user's buffer that will be filled with labels. Its needs to be at least of size batch_size.
 extern "C" void ROCAL_API_CALL rocalGetOneHotImageLabels(RocalContext rocal_context,int *buf, int numOfClasses);
-extern "C" void ROCAL_API_CALL rocalRandomBBoxCrop(RocalContext p_context, bool all_boxes_overlap, bool no_crop, RocalFloatParam aspect_ratio = NULL, bool has_shape = false, int crop_width = 0, int crop_height = 0, int num_attempts = 1, RocalFloatParam scaling = NULL, int total_num_attempts = 0, int64_t seed = 0);
 #endif
+extern "C" void ROCAL_API_CALL rocalRandomBBoxCrop(RocalContext p_context, bool all_boxes_overlap, bool no_crop, RocalFloatParam aspect_ratio = NULL, bool has_shape = false, int crop_width = 0, int crop_height = 0, int num_attempts = 1, RocalFloatParam scaling = NULL, int total_num_attempts = 0, int64_t seed = 0);
 
+/// \param anchors  Anchors to be used for encoding, as the array of floats is in the ltrb format.
+/// \param criteria Threshold IoU for matching bounding boxes with anchors.
+/// The value needs to be between 0 and 1.
+/// \param offset Returns normalized offsets ((encoded_bboxes*scale - anchors*scale) - mean) / stds in EncodedBBoxes that use std and the mean and scale arguments
+/// \param means [x y w h] mean values for normalization.
+/// \param stds [x y w h] standard deviations for offset normalization.
+/// \param scale Rescales the box and anchor values before the offset is calculated (for example, to return to the absolute values).
+extern "C" void ROCAL_API_CALL rocalBoxEncoder(RocalContext p_context, std::vector<float> &anchors, float criteria,
+                                             std::vector<float>  &means , std::vector<float>  &stds ,  bool offset = false, float scale = 1.0);
+
+extern "C" RocalMetaData ROCAL_API_CALL rocalGetEncodedBoxesAndLables(RocalContext p_context, int num_encoded_boxes);
 #endif //MIVISIONX_ROCAL_API_META_DATA_H

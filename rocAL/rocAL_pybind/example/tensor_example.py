@@ -125,7 +125,7 @@ def main():
     image_classification_val_pipeline.build()
     imageIteratorPipeline = RALIClassificationIterator(image_classification_val_pipeline)
     cnt = 0
-    for e in range(1):
+    for e in range(3):
         for i , it in enumerate(imageIteratorPipeline):
             print("************************************** i *************************************",i)
             for img in it[0]:

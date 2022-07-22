@@ -24,15 +24,14 @@ THE SOFTWARE.
 #include "commons.h"
 #include <vector>
 #include <condition_variable>
-#if ENABLE_OPENCL
+#if !ENABLE_HIP
 #include <CL/cl.h>
-#include "device_manager.h"
-#else
-#include "device_manager_hip.h"
 #endif
 #include <queue>
 #include "meta_data.h"
+#include "device_manager.h"
 #include "commons.h"
+#include "device_manager_hip.h"
 
 using MetaDataInfoNamePair = std::pair<ImageNameBatch,MetaDataDimensionsBatch>;
 class RingBuffer
@@ -51,11 +50,14 @@ public:
 #else
     void init(RocalMemType mem_type, DeviceResources dev, std::vector<size_t> sub_buffer_size, unsigned sub_buffer_count);
 #endif
+    void initBoxEncoderMetaData(RocalMemType mem_type, size_t encoded_bbox_size, size_t encoded_labels_size);
     void init_metadata(RocalMemType mem_type, std::vector<size_t> sub_buffer_size, unsigned sub_buffer_count);
     void release_gpu_res();
     std::vector<void*> get_read_buffers();
     void* get_host_master_read_buffer();
     std::vector<void*> get_write_buffers();
+    std::pair<void*, void*> get_box_encode_write_buffers();
+    std::pair<void*, void*> get_box_encode_read_buffers();
     MetaDataInfoNamePair& get_meta_data_info();
     std::vector<void*> get_meta_read_buffers();
     void set_meta_data(ImageNameBatch names, pMetaDataBatch meta_data);
@@ -88,9 +90,10 @@ private:
     std::vector<void*> _host_master_buffers;
     std::vector<std::vector<void*>> _host_sub_buffers;
     std::vector<std::vector<void*>> _host_meta_data_buffers;
+    std::vector<void *> _dev_bbox_buffer;
+    std::vector<void *> _dev_labels_buffer;
     bool _dont_block = false;
     RocalMemType _mem_type;
-    void * _last_batch_meta_data;
 #if ENABLE_HIP
     DeviceResourcesHip _devhip;
 #else
@@ -101,4 +104,5 @@ private:
     size_t _level;
     std::mutex  _names_buff_lock;
     const size_t MEM_ALIGNMENT = 256;
+    bool _box_encoder_gpu = false;
 };

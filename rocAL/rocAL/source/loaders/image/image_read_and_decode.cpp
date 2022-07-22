@@ -106,6 +106,11 @@ ImageReadAndDecode::count()
     return _reader->count_items();
 }
 
+void ImageReadAndDecode::set_random_bbox_data_reader(std::shared_ptr<RandomBBoxCrop_MetaDataReader> randombboxcrop_meta_data_reader)
+{
+    _randombboxcrop_meta_data_reader = randombboxcrop_meta_data_reader;
+}
+
 std::vector<std::vector<float>>
 ImageReadAndDecode::get_batch_random_bbox_crop_coords()
 {
@@ -192,14 +197,12 @@ ImageReadAndDecode::load(unsigned char* buff,
             file_counter++;
         }
 
-        // if (_randombboxcrop_meta_data_reader)
-        // {
-        //     //Fetch the crop co-ordinates for a batch of images
-        //     _bbox_coords = _randombboxcrop_meta_data_reader->get_batch_crop_coords(_image_names);
-        //     set_batch_random_bbox_crop_coords(_bbox_coords);
-        // }
-
-
+        if (_randombboxcrop_meta_data_reader)
+        {
+            //Fetch the crop co-ordinates for a batch of images
+            _bbox_coords = _randombboxcrop_meta_data_reader->get_batch_crop_coords(_image_names);
+            set_batch_random_bbox_crop_coords(_bbox_coords);
+        }
     }
 
     _file_load_time.end();// Debug timing
@@ -224,10 +227,11 @@ ImageReadAndDecode::load(unsigned char* buff,
             _original_width[i] = original_width;
             // decode the image and get the actual decoded image width and height
             size_t scaledw, scaledh;
-            // if(_decoder[i]->is_partial_decoder()) // && _randombboxcrop_meta_data_reader)
-            // {
-                // _decoder[i]->set_bbox_coords(_bbox_coords[i]);
-            // }
+            if(_decoder[i]->is_partial_decoder() && _randombboxcrop_meta_data_reader)
+            {
+                _decoder[i]->set_bbox_coords(_bbox_coords[i]);
+            }
+
             if (_decoder[i]->decode(_compressed_buff[i].data(), _compressed_image_size[i], _decompressed_buff_ptrs[i],
                                     max_decoded_width, max_decoded_height,
                                     original_width, original_height,

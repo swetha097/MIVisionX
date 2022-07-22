@@ -376,7 +376,7 @@ namespace rali
               py::arg("max_height") = 0);
         m.def("FusedDecoderCropShard",&rocalFusedJpegCropSingleShard,"Reads file from the source and decodes them partially to output random crops",
             py::return_value_policy::reference);
-        m.def("Resize",&rocalResize, "Resize ",py::return_value_policy::reference);
+        m.def("Resize",&rocalResize, "Resizes the image ",py::return_value_policy::reference);
         m.def("rocalResetLoaders", &rocalResetLoaders);
         // rocal_api_augmentation.h
         m.def("Brightness", &rocalBrightness,
