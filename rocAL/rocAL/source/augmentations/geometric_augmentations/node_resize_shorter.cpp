@@ -22,7 +22,7 @@ THE SOFTWARE.
 
 #include <vx_ext_rpp.h>
 #include <graph.h>
-#include "node_resize_single_param.h"
+#include "node_resize_shorter.h"
 #include "exception.h"
 
 
@@ -83,7 +83,7 @@ void ResizeSingleParamNode::update_node()
         old_short = (w <= h) ? w : h;
         old_long = (w <= h) ? h : w;
         new_short = _size;
-        new_long = int(_size * old_long / old_short);
+        new_long = static_cast<int>(_size * old_long / old_short);
 
         new_w = (w <= h) ? new_short : new_long;
         new_h = (w <= h) ? new_long : new_short;
@@ -93,6 +93,8 @@ void ResizeSingleParamNode::update_node()
     }
     vxCopyArrayRange((vx_array)_dst_roi_width, 0, _batch_size, sizeof(uint), _dest_width_val.data(), VX_WRITE_ONLY, VX_MEMORY_TYPE_HOST);
     vxCopyArrayRange((vx_array)_dst_roi_height, 0, _batch_size, sizeof(uint), _dest_height_val.data(), VX_WRITE_ONLY, VX_MEMORY_TYPE_HOST);
+
+    _outputs[0]->update_tensor_roi(_dest_width_val, _dest_height_val);
 }
 
 void ResizeSingleParamNode::init(int size)
