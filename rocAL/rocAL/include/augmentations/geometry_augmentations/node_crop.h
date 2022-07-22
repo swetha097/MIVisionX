@@ -33,7 +33,7 @@ public:
     CropNode() = delete;
     void init(unsigned int crop_h, unsigned int crop_w, float x_drift, float y_drift, int layout);
     void init(unsigned int crop_h, unsigned int crop_w, int layout);
-    void init( FloatParam *crop_h_factor, FloatParam *crop_w_factor, FloatParam * x_drift, FloatParam * y_drift);
+    void init( FloatParam *crop_h_factor, FloatParam *crop_w_factor, FloatParam * x_drift, FloatParam * y_drift, int layout);
     unsigned int get_dst_width() { return _dest_width; }
     unsigned int get_dst_height() { return _dest_height; }
     std::shared_ptr<RocalCropParam> get_crop_param() { return _crop_param; }

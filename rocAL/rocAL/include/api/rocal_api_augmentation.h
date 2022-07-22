@@ -51,16 +51,26 @@ extern "C" RocalTensor ROCAL_API_CALL rocalCropMirrorNormalize(RocalContext cont
                                                                   bool is_output,
                                                                   RocalIntParam mirror = NULL);
 
-extern "C" RocalTensor ROCAL_API_CALL rocalCrop(RocalContext context, RocalTensor input,
-                                                                  RocalTensorLayout rocal_tensor_layout,
-                                                                  RocalTensorOutputType rocal_tensor_output_type,
-                                                                  unsigned crop_depth,
-                                                                  unsigned crop_height,
-                                                                  unsigned crop_width,
-                                                                  float start_x,
-                                                                  float start_y,
-                                                                  float start_z,
-                                                                  bool is_output);
+extern "C" RocalImage  ROCAL_API_CALL rocalCrop(RocalContext context, RocalImage input, bool is_output,
+                                                RocalTensorLayout rocal_tensor_layout,
+                                                RocalTensorOutputType rocal_tensor_output_type,
+                                                RocalFloatParam crop_width = NULL,
+                                                RocalFloatParam crop_height = NULL,
+                                                RocalFloatParam crop_depth = NULL,
+                                                RocalFloatParam crop_pox_x = NULL,
+                                                RocalFloatParam crop_pos_y = NULL,
+                                                RocalFloatParam crop_pos_z = NULL);
+
+extern "C"  RocalImage  ROCAL_API_CALL rocalCropFixed(RocalContext context, RocalImage  input,
+                                                      RocalTensorLayout rocal_tensor_layout,
+                                                      RocalTensorOutputType rocal_tensor_output_type,
+                                                      unsigned crop_width,
+                                                      unsigned crop_height,
+                                                      unsigned crop_depth,
+                                                      bool is_output,
+                                                      float crop_pox_x,
+                                                      float crop_pos_y,
+                                                      float crop_pos_z);
 
 extern "C" RocalImage  ROCAL_API_CALL rocalCropCenterFixed(RocalContext context, RocalImage input,
                                                         unsigned crop_width,
