@@ -52,13 +52,12 @@ extern "C" RocalMetaData ROCAL_API_CALL rocalCreateTFReaderDetection(RocalContex
 extern "C" RocalMetaData ROCAL_API_CALL rocalCreateCOCOReader(RocalContext rocal_context, const char* source_path, bool is_output, bool is_box_encoder = false);
 
 
-#if 0 // Commented for now
 ///
 /// \param rocal_context
 /// \param source_path path to the file that contains the metadata file
 /// \return RocalMetaData object, can be used to inquire about the rocal's output (processed) tensors
 extern "C" RocalMetaData ROCAL_API_CALL rocalCreateTextFileBasedLabelReader(RocalContext rocal_context, const char* source_path);
-#endif
+
 
 ///
 /// \param rocal_context
@@ -87,6 +86,11 @@ extern "C" RocalMetaData ROCAL_API_CALL rocalCreateCaffe2LMDBLabelReader(RocalCo
 
 extern "C" RocalMetaData ROCAL_API_CALL rocalCreateCaffe2LMDBReaderDetection(RocalContext rocal_context, const char* source_path, bool is_output);
 
+///
+/// \param rocal_context
+/// \param source_path path to the MXNet recordio files for Classification
+/// \return RocalMetaData object, can be used to inquire about the rocal's output (processed) tensors
+extern "C" RocalMetaData ROCAL_API_CALL rocalCreateMXNetReader(RocalContext rocal_context, const char* source_path, bool is_output);
 ///
 /// \param rocal_context
 /// \param buf user buffer provided to be filled with output image names for images in the output batch.
@@ -126,7 +130,7 @@ extern "C" void ROCAL_API_CALL rocalGetMaskCoordinates(RocalContext rocal_contex
 /// \param image_idx the imageIdx in the output batch
 /// \param buf The user's buffer that will be filled with bounding box info. It needs to be of size bounding box len returned by a call to the rocalGetBoundingBoxCount
 extern "C" void ROCAL_API_CALL rocalGetImageSizes(RocalContext rocal_context, int* buf, unsigned image_idx );
-
+#endif
 ///
 /// \param rocal_context
 /// \param source_path path to the file that contains the metadata file
@@ -134,6 +138,7 @@ extern "C" void ROCAL_API_CALL rocalGetImageSizes(RocalContext rocal_context, in
 /// \return RocalMetaData object, can be used to inquire about the rocal's output (processed) tensors
 extern "C" RocalMetaData ROCAL_API_CALL rocalCreateTextCifar10LabelReader(RocalContext rocal_context, const char* source_path, const char* file_prefix);
 
+#if 0
 /// \param meta_data RocalMetaData object that contains info about the images and labels
 /// \param numOfClasses the number of classes for a image dataset
 /// \param buf user's buffer that will be filled with labels. Its needs to be at least of size batch_size.

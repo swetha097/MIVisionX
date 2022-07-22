@@ -160,6 +160,28 @@ rocalCreateCaffe2LMDBReaderDetection(RocalContext p_context, const char *source_
     return context->master_graph->create_caffe2_lmdb_record_meta_data_reader(source_path, MetaDataReaderType::CAFFE2_DETECTION_META_DATA_READER, MetaDataType::BoundingBox);
 }
 
+RocalMetaData
+ROCAL_API_CALL rocalCreateTextCifar10LabelReader(RocalContext p_context, const char* source_path, const char* file_prefix) {
+
+    if (!p_context)
+        THROW("Invalid rocal context passed to rocalCreateTextCifar10LabelReader")
+    auto context = static_cast<Context*>(p_context);
+
+    return context->master_graph->create_cifar10_label_reader(source_path, file_prefix);
+
+}
+
+RocalMetaData
+ROCAL_API_CALL rocalCreateMXNetReader(RocalContext p_context, const char* source_path, bool is_output)
+{
+    if (!p_context)
+        ERR("Invalid rocal context passed to rocalCreateMXNetReader")
+    auto context = static_cast<Context*>(p_context);
+
+    return context->master_graph->create_mxnet_label_reader(source_path, is_output);
+
+}
+
 void
 ROCAL_API_CALL rocalGetImageName(RocalContext p_context,  char* buf)
 {

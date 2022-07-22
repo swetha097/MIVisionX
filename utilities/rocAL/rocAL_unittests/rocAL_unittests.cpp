@@ -254,6 +254,7 @@ int test(int test_case, int reader_type, int pipeline_type, const char *path, co
         }
         break;
 #endif
+
         default: //image pipeline
         {
             std::cout << ">>>>>>> Running IMAGE READER" << std::endl;
