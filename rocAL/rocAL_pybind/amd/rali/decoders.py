@@ -22,6 +22,31 @@ def image(*inputs, user_feature_key_map = None, path='', file_root ='', annotati
 
     return (decoded_image)
 
+def image_slice(*inputs,file_root='',path='',annotations_file='',shard_id = 0, num_shards = 1, random_shuffle = False, affine = True, axes = None, axis_names = "WH",bytes_per_sample_hint = 0, device_memory_padding = 16777216,
+                device_memory_padding_jpeg2k = 0, host_memory_padding = 8388608,
+                host_memory_padding_jpeg2k = 0, hybrid_huffman_threshold = 1000000,
+                 memory_stats = False, normalized_anchor = True, normalized_shape = True, output_type = types.RGB,
+                preserve = False, seed = 1, split_stages = False, use_chunk_allocator = False, use_fast_idct = False,device = None):
 
+    reader = Pipeline._current_pipeline._reader
+    b.setSeed(seed)
+    if reader == "labelReader":
+        kwargs_pybind = {
+            "source_path": file_root,
+            "color_format": output_type,
+            "shard_id": shard_id,
+            "num_shards": num_shards,
+            'is_output': False,
+            "shuffle": random_shuffle,
+            "loop": False,
+            "decode_size_policy": types.USER_GIVEN_SIZE,
+            "max_width": 3000,
+            "max_height":3000,
+            "area_factor": None,
+            "aspect_ratio": None,
+            "x_drift_factor": None,
+            "y_drift_factor": None}
+        image_decoder_slice = b.FusedDecoderCropShard(Pipeline._current_pipeline._handle ,*(kwargs_pybind.values()))
+    return (image_decoder_slice)
 
 

@@ -15,6 +15,7 @@ from rali_pybind.types import CPU
 #  RocalTensorOutputType
 from rali_pybind.types import FLOAT
 from rali_pybind.types import FLOAT16
+from rali_pybind.types import UINT8
 
 # RocalImageSizeEvaluationPolicy
 from rali_pybind.types import MAX_SIZE
@@ -54,6 +55,7 @@ _known_types={
     CPU : ("CPU", CPU),
 	FLOAT : ("FLOAT", FLOAT),
     FLOAT16 : ("FLOAT16", FLOAT16),
+    UINT8 : ("UINT8", UINT8),
 
 
 	MAX_SIZE : ("MAX_SIZE", MAX_SIZE),

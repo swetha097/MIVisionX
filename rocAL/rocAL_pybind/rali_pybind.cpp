@@ -257,6 +257,7 @@ namespace rali
         py::enum_<RocalTensorOutputType>(types_m, "RocalTensorOutputType", "Tensor types")
             .value("FLOAT", ROCAL_FP32)
             .value("FLOAT16", ROCAL_FP16)
+            .value("UINT8", ROCAL_UINT8)
             .export_values();
         py::enum_<RocalImageSizeEvaluationPolicy>(types_m, "RocalImageSizeEvaluationPolicy", "Decode size policies")
             .value("MAX_SIZE", ROCAL_USE_MAX_SIZE)
@@ -294,13 +295,13 @@ namespace rali
         m.def("CreateFloatUniformRand", &rocalCreateFloatUniformRand);
         m.def("CreateIntRand", [](std::vector<int> values, std::vector<double> frequencies)
               { return rocalCreateIntRand(values.data(), frequencies.data(), values.size()); });
-        // m.def("CreateFloatRand", &rocalCreateFloatRand);
-        // m.def("CreateIntParameter", &rocalCreateIntParameter);
-        // m.def("CreateFloatParameter", &rocalCreateFloatParameter);
-        // m.def("UpdateIntParameter", &rocalUpdateIntParameter);
-        // m.def("UpdateFloatParameter", &rocalUpdateFloatParameter);
-        // m.def("GetIntValue", &rocalGetIntValue);
-        // m.def("GetFloatValue", &rocalGetFloatValue);
+        m.def("CreateFloatRand", &rocalCreateFloatRand);
+        m.def("CreateIntParameter", &rocalCreateIntParameter);
+        m.def("CreateFloatParameter", &rocalCreateFloatParameter);
+        m.def("UpdateIntParameter", &rocalUpdateIntParameter);
+        m.def("UpdateFloatParameter", &rocalUpdateFloatParameter);
+        m.def("GetIntValue", &rocalGetIntValue);
+        m.def("GetFloatValue", &rocalGetFloatValue);
         // rocal_api_data_transfer.h
         // m.def("rocalGetOutputTensors",&rocalGetOutputTensors, return_value_policy::reference);
         m.def("rocalGetOutputTensors", [](RocalContext context)
@@ -373,6 +374,9 @@ namespace rali
               py::arg("decode_size_policy") = ROCAL_USE_MOST_FREQUENT_SIZE,
               py::arg("max_width") = 0,
               py::arg("max_height") = 0);
+        m.def("FusedDecoderCropShard",&rocalFusedJpegCropSingleShard,"Reads file from the source and decodes them partially to output random crops",
+            py::return_value_policy::reference);
+        m.def("Resize",&rocalResize, "Resize ",py::return_value_policy::reference);
         m.def("rocalResetLoaders", &rocalResetLoaders);
         // rocal_api_augmentation.h
         m.def("Brightness", &rocalBrightness,
@@ -382,5 +386,10 @@ namespace rali
               py::arg("is_output"),
               py::arg("alpha") = NULL,
               py::arg("beta") = NULL);
+        m.def("CropMirrorNormalize",&rocalCropMirrorNormalize, py::return_value_policy::reference);
+        // m.def("Crop", &rocalCrop, py::return_value_policy::reference);
+        m.def("ResizeShorter", &rocalResizeShorter, py::return_value_policy::reference);
+        m.def("CenterCropFixed", &rocalCropCenterFixed, py::return_value_policy::reference);
+
     }
 }

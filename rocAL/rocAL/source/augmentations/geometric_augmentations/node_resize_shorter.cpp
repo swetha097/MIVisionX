@@ -22,7 +22,7 @@ THE SOFTWARE.
 
 #include <vx_ext_rpp.h>
 #include <graph.h>
-#include "node_resize_single_param.h"
+#include "node_resize_shorter.h"
 #include "exception.h"
 
 

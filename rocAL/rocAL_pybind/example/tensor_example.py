@@ -19,9 +19,10 @@ def draw_patches(img, idx, device):
             image = img.detach().numpy()
     else:
         image = img.cpu().numpy()
+    image = image.transpose([1, 2, 0])
     print(img.shape)
     image = cv2.cvtColor(image, cv2.COLOR_RGB2BGR)
-    cv2.imwrite("OUTPUT_IMAGES_PYTHON/NEW_API/FILE_READER/" + "brightness" + "/" + str(idx)+"_"+"train"+".png", image)
+    cv2.imwrite("OUTPUT_IMAGES_PYTHON/NEW_API/FILE_READER/" + "brightness" + "/" + str(idx)+"_"+"train"+".png", image*255)
 
 def main():
     if  len(sys.argv) < 3:
@@ -54,24 +55,84 @@ def main():
     device_memory_padding = 211025920 if decoder_device == 'mixed' else 0
     host_memory_padding = 140544512 if decoder_device == 'mixed' else 0
 
-    with pipe:
+    # with pipe:
+    #     jpegs, labels = fn.readers.file(file_root=data_path)
+    #     images = fn.decoders.image(jpegs,file_root=data_path, output_type=types.RGB, shard_id=0, num_shards=1, random_shuffle=False)
+    #     brightend_images = fn.brightness(images)
+    #     # brightend_images2 = fn.brightness(brightend_images)
+
+    #     pipe.set_outputs(brightend_images)
+
+    # pipe.build()
+    # imageIterator = RALIClassificationIterator(pipe)
+    # cnt = 0
+    # for i , it in enumerate(imageIterator):
+    #     print("************************************** i *************************************",i)
+    #     for img in it[0]:
+    #         print(img.shape)
+    #         cnt = cnt + 1
+    #         draw_patches(img, cnt, "cpu")
+
+    print("*********************************************************************")
+
+    image_classification_train_pipeline = Pipeline(batch_size=batch_size, num_threads=num_threads, device_id=device_id, seed=random_seed, rocal_cpu=_rali_cpu)
+
+    with image_classification_train_pipeline:
         jpegs, labels = fn.readers.file(file_root=data_path)
-        images = fn.decoders.image(jpegs,file_root=data_path, output_type=types.RGB, shard_id=0, num_shards=1, random_shuffle=False)
-        brightend_images = fn.brightness(images)
-        # brightend_images2 = fn.brightness(brightend_images)
+        decode = fn.decoders.image_slice(jpegs, output_type=types.RGB,
+                                        file_root=data_path, shard_id=local_rank, num_shards=world_size, random_shuffle=True)
+        res = fn.resize(decode, resize_width=224, resize_height=224, rocal_tensor_layout = types.NHWC, rocal_tensor_output_type = types.UINT8)
+        flip_coin = fn.random.coin_flip(probability=0.5)
+        cmnp = fn.crop_mirror_normalize(res, device="gpu",
+                                            rocal_tensor_layout = types.NHWC,
+                                            rocal_tensor_output_type = types.UINT8,
+                                            crop=(crop, crop),
+                                            mirror=flip_coin,
+                                            image_type=types.RGB,
+                                            mean=[0.485 * 255,0.456 * 255,0.406 * 255],
+                                            std=[0.229 * 255,0.224 * 255,0.225 * 255])
+        image_classification_train_pipeline.set_outputs(cmnp)
 
-        pipe.set_outputs(brightend_images)
-
-    pipe.build()
-    imageIterator = RALIClassificationIterator(pipe)
+    image_classification_train_pipeline.build()
+    imageIteratorPipeline = RALIClassificationIterator(image_classification_train_pipeline)
     cnt = 0
-    for i , it in enumerate(imageIterator):
+    for i , it in enumerate(imageIteratorPipeline):
         print("************************************** i *************************************",i)
         for img in it[0]:
             print(img.shape)
-            # exit(0)
             cnt = cnt + 1
             draw_patches(img, cnt, "cpu")
+
+    # print("*********************************************************************")
+
+    # image_classification_val_pipeline = Pipeline(batch_size=batch_size, num_threads=num_threads, device_id=device_id, seed=random_seed, rocal_cpu=_rali_cpu)
+
+    # with image_classification_val_pipeline:
+    #     jpegs, labels = fn.readers.file(file_root=data_path)
+    #     decode = fn.decoders.image(jpegs,file_root=data_path, output_type=types.RGB, shard_id=local_rank, num_shards=world_size, random_shuffle=False)
+    #     res = fn.resize_shorter(decode, resize_size = 256)
+    #     centrecrop = fn.centre_crop(res, crop=(224, 224))
+    #     cmnp = fn.crop_mirror_normalize(centrecrop, device="gpu",
+    #                                         rocal_tensor_layout = types.NHWC,
+    #                                         rocal_tensor_output_type = types.UINT8,
+    #                                         crop=(224, 224),
+    #                                         mirror=0,
+    #                                         image_type=types.RGB,
+    #                                         mean=[0.485 * 255,0.456 * 255,0.406 * 255],
+    #                                         std=[0.229 * 255,0.224 * 255,0.225 * 255])
+    #     image_classification_val_pipeline.set_outputs(cmnp)
+
+    # image_classification_val_pipeline.build()
+    # imageIteratorPipeline = RALIClassificationIterator(image_classification_val_pipeline)
+    # cnt = 0
+    # for i , it in enumerate(imageIteratorPipeline):
+    #     print("************************************** i *************************************",i)
+    #     for img in it[0]:
+    #         print(img.shape)
+    #         cnt = cnt + 1
+    #         draw_patches(img, cnt, "cpu")
+
+
 
 
     exit(0)
