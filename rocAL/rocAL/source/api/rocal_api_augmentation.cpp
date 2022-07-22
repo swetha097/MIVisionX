@@ -24,7 +24,7 @@ THE SOFTWARE.
 #include "node_gamma.h"
 #include "node_brightness.h"
 #include "node_resize.h"
-#include "node_resize_single_param.h"
+#include "node_resize_shorter.h"
 #include "node_color_twist.h"
 #include "node_crop_mirror_normalize.h"
 #include "node_crop.h"
@@ -335,7 +335,7 @@ rocalResize(RocalContext p_context,
 }
 
 RocalTensor  ROCAL_API_CALL
-rocalResizeSingleParam(
+rocalResizeShorter(
         RocalContext p_context,
         RocalTensor p_input,
         RocalTensorLayout rocal_tensor_layout,

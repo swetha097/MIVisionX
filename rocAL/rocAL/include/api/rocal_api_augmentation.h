@@ -85,7 +85,7 @@ extern "C" RocalTensor ROCAL_API_CALL rocalResize(RocalContext context, RocalTen
 /// \param size
 /// \param is_output
 /// \return
-extern "C"  RocalTensor  ROCAL_API_CALL rocalResizeSingleParam(RocalContext context, RocalTensor input,
+extern "C"  RocalTensor  ROCAL_API_CALL rocalResizeShorter(RocalContext context, RocalTensor input,
                                                 RocalTensorLayout rocal_tensor_layout,
                                                 RocalTensorOutputType rocal_tensor_output_type,
                                                 unsigned size,
