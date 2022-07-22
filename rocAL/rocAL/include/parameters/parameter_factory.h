@@ -34,8 +34,7 @@ enum class RocalParameterType
 {
     DETERMINISTIC = 0,
     RANDOM_UNIFORM,
-    RANDOM_CUSTOM,
-    RANDOM_NORMAL
+    RANDOM_CUSTOM
 };
 
 struct IntParam
@@ -70,7 +69,6 @@ using pParamCore = std::variant<Parameter<int>*, Parameter<float>*>;
 bool validate_custom_rand_param(pParam arg);
 bool validate_uniform_rand_param(pParam  rand_obj);
 bool validate_simple_rand_param(pParam arg);
-bool validate_normal_rand_param(pParam  rand_obj);
 
 class ParameterFactory {
 public:
@@ -83,12 +81,6 @@ public:
     template<typename T>
     Parameter<T>* create_uniform_rand_param(T start, T end){
         auto gen = new UniformRand<T>(start, end, _seed);
-        _parameters.insert(gen);
-        return gen;
-    }
-    template<typename T>
-    Parameter<T>* create_normal_rand_param(T mu, T sigma){
-        auto gen = new NormalRand<T>(mu, sigma, _seed);
         _parameters.insert(gen);
         return gen;
     }
@@ -111,8 +103,6 @@ public:
     FloatParam* create_custom_float_rand_param(const float *value, const double *frequencies, size_t size);
     IntParam* create_single_value_int_param(int value);
     FloatParam* create_single_value_float_param(float value);
-    FloatParam* create_normal_float_rand_param(float mu, float sigma);
-
 private:
     long long unsigned _seed;
     std::set<pParamCore> _parameters; //<! Keeps the random generators used to randomized the augmentation parameters

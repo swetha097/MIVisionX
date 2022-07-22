@@ -45,7 +45,7 @@ using namespace cv;
 #define CV_WINDOW_AUTOSIZE WINDOW_AUTOSIZE
 #endif
 
-#define DISPLAY 0
+#define DISPLAY 0 
 using namespace std::chrono;
 
 

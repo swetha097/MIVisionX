@@ -37,7 +37,7 @@ if(GPU_SUPPORT)
     find_package(OpenCV QUIET)
 else()
     SET(BUILD_ROCAL false)
-    message("-- ${Yellow}NOTE: rocAL library requires GPU_SUPPORT=ON and BACKEND=OPENCL/HIP ${ColourReset}")
+    message("-- ${Yellow}NOTE: rocAL library requires GPU_SUPPORT=ON and BACKEND=OPENCL/HIP${ColourReset}")
 endif()
 
 if( GPU_SUPPORT AND "${BACKEND}" STREQUAL "HIP")
@@ -133,6 +133,7 @@ if(${BUILD_ROCAL})
     # rocAL uses C++ 17 features
     set(CMAKE_CXX_STANDARD 17)
     message("-- ${Green}ROCm Augmentation Library -- rocAL module added${ColourReset}")
+    # install MIVisionX scripts -- {ROCM_PATH}/libexec/mivisionx/
     install(FILES
         include/api/rocal_api.h
         include/api/rocal_api_info.h
@@ -150,6 +151,7 @@ if(${BUILD_ROCAL})
         include/pipeline/commons.h
         include/pipeline/exception.h
         include/pipeline/log.h
+        # DESTINATION include/mivisionx
         DESTINATION ${CMAKE_INSTALL_LIBEXECDIR}/mivisionx/rali/python
         )
     if(FFMPEG_FOUND)
@@ -240,13 +242,13 @@ if(${BUILD_ROCAL})
         target_link_libraries(${PROJECT_NAME} -fPIC ${PROTOBUF_LIBRARIES} lmdb boost_system boost_filesystem turbojpeg openvx vx_rpp)
     else()
         message("-- ${White}rocAL library is going to be built with video decode functionality ${ColourReset}")
-        target_compile_definitions(${PROJECT_NAME} PUBLIC -DRALI_VIDEO)
+        target_compile_definitions(${PROJECT_NAME} PUBLIC -DROCAL_VIDEO)
         target_link_libraries(${PROJECT_NAME} -fPIC ${PROTOBUF_LIBRARIES} ${FFMPEG_LIBRARIES} lmdb turbojpeg openvx vx_rpp)
     endif()
     if("${BACKEND}" STREQUAL "HIP" AND HIP_FOUND)
         target_link_libraries(${PROJECT_NAME} $<TARGET_OBJECTS:rocAL_hip>)
     endif()
-
+    # install MIVisionX libs -- {ROCM_PATH)/lib
     install(TARGETS rocal DESTINATION ${CMAKE_INSTALL_LIBDIR})
 else()
     message("-- ${Red}WARNING: rocAL module excluded ${ColourReset}")

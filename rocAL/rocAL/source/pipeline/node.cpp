@@ -21,7 +21,6 @@ THE SOFTWARE.
 */
 
 #include "node.h"
-
 Node::~Node()
 {
 

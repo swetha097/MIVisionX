@@ -4,15 +4,15 @@
 #include "graph.h"
 #include "parameter_factory.h"
 
-class FusedJpegCropTensorSingleShardNode: public Node
+class FusedJpegCropSingleShardNode: public Node
 {
 public:
 #if ENABLE_HIP
-    FusedJpegCropTensorSingleShardNode(rocALTensor *output, DeviceResourcesHip device_resources);
+    FusedJpegCropSingleShardNode(rocALTensor *output, DeviceResourcesHip device_resources);
 #else
-    FusedJpegCropTensorSingleShardNode(rocALTensor *output, DeviceResources device_resources);
+    FusedJpegCropSingleShardNode(rocALTensor *output, DeviceResources device_resources);
 #endif
-    ~FusedJpegCropTensorSingleShardNode() override;
+    ~FusedJpegCropSingleShardNode() override;
 
     /// \param user_shard_count shard count from user
     /// \param  user_shard_id shard id from user

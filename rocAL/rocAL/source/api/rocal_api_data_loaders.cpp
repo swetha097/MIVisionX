@@ -21,6 +21,12 @@ THE SOFTWARE.
 */
 
 #include <tuple>
+#include <assert.h>
+#include <boost/filesystem.hpp>
+#ifdef ROCAL_VIDEO
+#include "node_video_loader.h"
+#include "node_video_loader_single_shard.h"
+#endif
 #include "rocal_api.h"
 #include "commons.h"
 #include "context.h"
@@ -475,7 +481,7 @@ rocalVideoFileSourceSingleShard(
     auto context = static_cast<Context*>(p_context);
     try
     {
-#ifdef RALI_VIDEO
+#ifdef ROCAL_VIDEO
         if(sequence_length == 0)
             THROW("Sequence length passed should be bigger than 0")
 
@@ -573,7 +579,7 @@ rocalVideoFileSource(
     auto context = static_cast<Context*>(p_context);
     try
     {
-#ifdef RALI_VIDEO
+#ifdef ROCAL_VIDEO
         if(sequence_length == 0)
             THROW("Sequence length passed should be bigger than 0")
 
@@ -642,8 +648,8 @@ rocalVideoFileSource(
         std::cerr << e.what() << '\n';
     }
     return output;
-
 }
+
 
 RocalStatus ROCAL_API_CALL
 rocalResetLoaders(RocalContext p_context)
