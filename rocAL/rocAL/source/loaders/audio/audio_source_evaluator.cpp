@@ -61,14 +61,13 @@ void
 AudioSourceEvaluator::find_max_dimension()
 {
     _reader->reset();
-    std::cerr<<"\n _reader->count() "<<_reader->count_items();
 
     while( _reader->count_items() )
     {
         size_t fsize = _reader->open();
         if( (fsize) == 0 )
             continue;
-        auto file_name = _input_path + _reader->id(); // shobi: have to change this to path + id
+        auto file_name = _input_path + _reader->id();
         // _header_buff.resize(fsize);
         // auto actual_read_size = _reader->read_data(_header_buff.data(), fsize);
         // _reader->close();

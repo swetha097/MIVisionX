@@ -62,7 +62,6 @@ private:
     size_t _shard_count = 1;
     void fast_forward_through_empty_loaders();
     size_t _prefetch_queue_depth;
-
     rocALTensor *_output_tensor;
     // std::shared_ptr<RandomBBoxCrop_MetaDataReader> _randombboxcrop_meta_data_reader = nullptr;
 };

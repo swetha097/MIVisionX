@@ -175,7 +175,7 @@ rocALTensorInfo::rocALTensorInfo(
     // Update this only if the tensor is image
 }
 
-void rocALTensor::update_tensor_roi(const std::vector<uint32_t> &width, const std::vector<uint32_t> &height)
+void rocALTensor::update_tensor_roi(const std::vector<uint32_t> &width, const std::vector<uint32_t> &height)    // TODO - Change width and height names
 {
     if(_info.is_image())
     {

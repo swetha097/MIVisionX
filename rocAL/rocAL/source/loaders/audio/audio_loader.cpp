@@ -159,10 +159,10 @@ void AudioLoader::initialize(ReaderConfig reader_cfg, DecoderConfig decoder_cfg,
     _max_decoded_samples = _output_tensor->info().max_dims().at(0);
     _max_decoded_channels = _output_tensor->info().max_dims().at(1);
     _decoded_img_info._image_names.resize(_batch_size);
-    _decoded_img_info._roi_height.resize(_batch_size);
-    _decoded_img_info._roi_width.resize(_batch_size);
-    _decoded_img_info._original_height.resize(_batch_size);
-    _decoded_img_info._original_width.resize(_batch_size);
+    _decoded_img_info._roi_audio_samples.resize(_batch_size);
+    _decoded_img_info._roi_audio_channels.resize(_batch_size);
+    _decoded_img_info._original_audio_samples.resize(_batch_size);
+    _decoded_img_info._original_audio_channels.resize(_batch_size);
     // _crop_audio_info._crop_audio_coords.resize(_batch_size);
     _circ_buff.init(_mem_type, _output_mem_size,_prefetch_queue_depth );
     _is_initialized = true;
@@ -200,10 +200,10 @@ AudioLoader::load_routine()
                                             _decoded_img_info._image_names,
                                             _max_decoded_samples,
                                             _max_decoded_channels,
-                                            _decoded_img_info._roi_width,
-                                            _decoded_img_info._roi_height,
-                                            _decoded_img_info._original_width,
-                                            _decoded_img_info._original_height);
+                                            _decoded_img_info._roi_audio_samples,
+                                            _decoded_img_info._roi_audio_channels,
+                                            _decoded_img_info._original_audio_samples,
+                                            _decoded_img_info._original_audio_channels);
 
             if(load_status == LoaderModuleStatus::OK)
             {
@@ -287,7 +287,7 @@ AudioLoader::update_output_audio()
     //   _output_cropped_img_info = _circ_buff.get_cropped_audio_info();
     // }
     _output_names = _output_decoded_img_info._image_names;
-    // _output_tensor->update_tensor_roi(_output_decoded_img_info._roi_width, _output_decoded_img_info._roi_height);
+    _output_tensor->update_tensor_roi(_output_decoded_img_info._roi_audio_samples, _output_decoded_img_info._roi_audio_channels);
     _circ_buff.pop();
     if (!_loop)
         _remaining_audio_count -= _batch_size;
