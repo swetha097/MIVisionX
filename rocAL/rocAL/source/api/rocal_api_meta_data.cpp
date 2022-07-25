@@ -111,6 +111,23 @@ ROCAL_API_CALL rocalGetImageNameLen(RocalContext p_context, int* buf)
     return size;
 }
 
+void
+ROCAL_API_CALL rocalGetImageId(RocalContext p_context,  int* buf)
+{
+    if (!p_context)
+        THROW("Invalid rocal context passed to rocalGetImageId")
+    auto context = static_cast<Context*>(p_context);
+    auto meta_data = context->master_graph->meta_data_info();
+    size_t meta_data_batch_size = meta_data.first.size();
+    if(context->user_batch_size() != meta_data_batch_size)
+        THROW("meta data batch size is wrong " + TOSTR(meta_data_batch_size) + " != "+ TOSTR(context->user_batch_size() ))
+    for(unsigned int i = 0; i < meta_data_batch_size; i++)
+    {
+        std::string str_id = meta_data.first[i].erase(0, meta_data.first[i].find_first_not_of('0'));
+        buf[i] = stoi(str_id);
+    }
+}
+
 RocalTensorList
 ROCAL_API_CALL rocalGetImageLabels(RocalContext p_context)
 {
@@ -176,6 +193,7 @@ ROCAL_API_CALL rocalGetOneHotImageLabels(RocalContext p_context, int* buf, int n
     }
     memcpy(buf,one_hot_encoded, sizeof(int) * meta_data_batch_size * numOfClasses);
 }
+#endif
 
 void
 ROCAL_API_CALL rocalGetImageSizes(RocalContext p_context, int* buf)
@@ -183,22 +201,21 @@ ROCAL_API_CALL rocalGetImageSizes(RocalContext p_context, int* buf)
     if (!p_context)
         THROW("Invalid rocal context passed to rocalGetImageSizes")
     auto context = static_cast<Context*>(p_context);
-    auto meta_data = context->master_graph->meta_data();
-    size_t meta_data_batch_size = meta_data.second->get_img_sizes_batch().size();
+    auto img_sizes = context->master_graph->get_image_sizes();
+    size_t meta_data_batch_size = img_sizes.size();
 
 
-    if(!meta_data.second)
+    if(img_sizes.size() == 0)
     {
-        WRN("No label has been loaded for this output image")
+        WRN("No sizes has been loaded for this output image")
         return;
     }
     for(unsigned i = 0; i < meta_data_batch_size; i++)
     {
-        memcpy(buf, &(meta_data.second->get_img_sizes_batch()[i]), sizeof(ImgSize));
+        memcpy(buf, &(img_sizes[i]), sizeof(ImgSize));
         buf += 2;
     }
 }
-#endif
 
 void ROCAL_API_CALL rocalBoxEncoder(RocalContext p_context, std::vector<float>& anchors, float criteria,
                                   std::vector<float> &means, std::vector<float> &stds, bool offset, float scale)

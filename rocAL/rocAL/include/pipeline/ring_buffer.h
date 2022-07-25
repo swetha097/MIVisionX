@@ -33,7 +33,7 @@ THE SOFTWARE.
 #include "commons.h"
 #include "device_manager_hip.h"
 
-using MetaDataInfoNamePair = std::pair<ImageNameBatch,MetaDataDimensionsBatch>;
+using MetaDataInfoNamePair = std::pair<ImageNameBatch,std::pair<MetaDataDimensionsBatch,ImgSizes>>;
 class RingBuffer
 {
 public:

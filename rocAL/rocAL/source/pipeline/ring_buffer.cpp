@@ -416,10 +416,10 @@ void RingBuffer::increment_write_ptr()
 void RingBuffer::set_meta_data( ImageNameBatch names, pMetaDataBatch meta_data)
 {
     if(meta_data == nullptr)
-        _last_image_meta_data_info = std::move(std::make_pair(std::move(names), MetaDataDimensionsBatch()));
+        _last_image_meta_data_info = std::move(std::make_pair(std::move(names), std::make_pair(MetaDataDimensionsBatch(), ImgSizes())));
     else
     {
-        _last_image_meta_data_info = std::move(std::make_pair(std::move(names), meta_data->get_metadata_dimensions_batch()));
+        _last_image_meta_data_info = std::move(std::make_pair(std::move(names), std::make_pair(meta_data->get_metadata_dimensions_batch(), meta_data->get_img_sizes_batch())));
         if(!_box_encoder_gpu)
         {
             auto actual_buffer_size = meta_data->get_buffer_size();
