@@ -117,7 +117,6 @@ enum RocalDecoderType
     ROCAL_DECODER_HW_JEPG = 2,
     ROCAL_DECODER_VIDEO_FFMPEG_SW = 3,
     ROCAL_DECODER_VIDEO_FFMPEG_HW = 4,
-    ROCAL_DECODER_AUDIO_SNDFILE = 5
 };
 
 // rocal external memcpy flags

@@ -49,8 +49,8 @@ void ImageLoaderNode::init(unsigned internal_shard_count, const std::string &sou
     reader_cfg.set_file_prefix(file_prefix);
     reader_cfg.set_meta_data_reader(meta_data_reader);
     _loader_module->initialize(reader_cfg, DecoderConfig(decoder_type),
-             mem_type,
-             _batch_size, decoder_keep_orig);
+                              mem_type,
+                              _batch_size, decoder_keep_orig);
     _loader_module->start_loading();
 }
 

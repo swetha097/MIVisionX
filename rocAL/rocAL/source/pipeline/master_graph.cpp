@@ -158,9 +158,9 @@ MasterGraph::MasterGraph(size_t batch_size, RocalAffinity affinity, int gpu_id, 
                             VX_CONTEXT_ATTRIBUTE_AMD_HIP_DEVICE,
                             &hipDevice, sizeof(hipDevice)) != VX_SUCCESS))
                         THROW("vxSetContextAttribute for hipDevice(%d) failed " + TOSTR(hipDevice) + TOSTR(status))
-                }
-                else
+                }else
                     THROW("ERROR: HIP Device(%d) out of range" + TOSTR(gpu_id));
+
             }
 #endif
         }
@@ -177,7 +177,7 @@ MasterGraph::MasterGraph(size_t batch_size, RocalAffinity affinity, int gpu_id, 
             THROW("Cannot load vx_rpp extension (vx_rpp), vxLoadKernels failed " + TOSTR(status))
         else
             LOG("vx_rpp module loaded successfully")
-#ifdef RALI_VIDEO
+#ifdef ROCAL_VIDEO
         // loading video decoder modules
         if ((status = vxLoadKernels(_context, "vx_amd_media")) != VX_SUCCESS)
             WRN("Cannot load vx_amd_media extension, video decode functionality will not be available")
@@ -218,10 +218,8 @@ MasterGraph::run()
         // calling run pops the processed images that have been used by user, when user calls run() for the first time
         // they've not used anything yet, so we don't pop a batch from the _ring_buffer
         _first_run = false;
-    }
-    else
-    {
-        _ring_buffer.pop();  // Pop previously used output images and metadata from the ring buffer
+    } else {
+        _ring_buffer.pop(); // Pop previously used output images and metadata from the ring buffer
     }
 
     // If the last batch of processed imaged has been just popped from the ring_buffer it means user has previously consumed all the processed images.
@@ -239,14 +237,14 @@ void
 MasterGraph::decrease_image_count()
 {
     if(!_loop)
-        _remaining_images_count -= _user_batch_size;
+        _remaining_count -= _user_batch_size;
 }
 void
 MasterGraph::create_single_graph()
 {
     // Actual graph creating and calls into adding nodes to graph is deferred and is happening here to enable potential future optimizations
     _graph = std::make_shared<Graph>(_context, _affinity, 0, _gpu_id);
-    for(auto& node: _tensor_nodes)
+    for(auto& node: _nodes)
     {
         // Any tensor not yet created can be created as virtual tensor
         for(auto& tensor: node->output())
@@ -308,7 +306,8 @@ MasterGraph::create_loader_output_tensor(const rocALTensorInfo &info)
     return output;
 }
 
-rocALTensor * MasterGraph::create_tensor(const rocALTensorInfo &info, bool is_output)
+rocALTensor * 
+MasterGraph::create_tensor(const rocALTensorInfo &info, bool is_output)
 {
     auto* new_tensor = new rocALTensor(info);
     // if the tensor is not an output tensor, the tensor creation is deferred and later it'll be created as a virtual tensor
@@ -352,8 +351,8 @@ void MasterGraph::release()
 {
     LOG("MasterGraph release ...")
     stop_processing();
-    _tensor_nodes.clear();
-    _tensor_root_nodes.clear();
+    _nodes.clear();
+    _root_nodes.clear();
     _tensor_map.clear();
     _ring_buffer.release_gpu_res();
     _loader_module->shut_down();
@@ -383,7 +382,7 @@ MasterGraph::update_node_parameters()
     ParameterFactory::instance()->renew_parameters();
 
     // Apply renewed parameters to VX parameters used in augmentation
-    for(auto node:_tensor_nodes)
+    for(auto& node: _nodes)
         node->update_parameters();
 
     return Status::OK;
@@ -472,9 +471,9 @@ MasterGraph::reset()
 }
 
 size_t
-MasterGraph::remaining_images_count()
+MasterGraph::remaining_count()
 {
-    return (_remaining_images_count >= 0) ? _remaining_images_count:0;
+    return (_remaining_count >= 0) ? _remaining_count:0;
 }
 
 RocalMemType
@@ -594,7 +593,7 @@ ImageNameBatch& operator+=(ImageNameBatch& dest, const ImageNameBatch& src)
 
 void MasterGraph::output_routine()
 {
-    INFO("Output routine started with "+TOSTR(_remaining_images_count) + " to load");
+    INFO("Output routine started with "+TOSTR(_remaining_count) + " to load");
 #if !ENABLE_HIP
     if(processing_on_device_ocl() && _user_to_internal_batch_ratio != 1)
         THROW("Internal failure, in the GPU processing case, user and input batch size must be equal")
@@ -615,12 +614,12 @@ void MasterGraph::output_routine()
                 // processed images stored in the _ring_buffer will be consumed by the user when it calls the run() func
                 notify_user_thread();
                 // the following call is required in case the ring buffer is waiting for more data to be loaded and there is no more data to process.
-                if(_internal_tensor_list.size() != 0)
-                    _ring_buffer.release_if_empty();
+                // if(_internal_tensor_list.size() != 0)
+                _ring_buffer.release_if_empty();
                 std::this_thread::sleep_for(std::chrono::milliseconds(100));
                 continue;
             }
-
+            _process_time.start();
             // When executing on CPU the internal batch count can be smaller than the user batch count
             // In that case the user_batch_size will be an integer multiple of the _internal_batch_size
             // Multiple cycles worth of internal_batch_size images should be processed to complete a full _user_batch_size
@@ -682,7 +681,7 @@ void MasterGraph::output_routine()
                 if (!_processing)
                     break;
 
-                for(auto node: _tensor_nodes)
+                for(auto node: _nodes)
                 {
                     if(node->_is_ssd)
                     {
@@ -706,7 +705,6 @@ void MasterGraph::output_routine()
                     else
                         full_batch_meta_data = _augmented_meta_data->clone();
                 }
-                _process_time.start();
                 _graph->process();
                 _process_time.end();
             }
@@ -735,12 +733,13 @@ void MasterGraph::output_routine()
         _processing = false;
         _ring_buffer.release_all_blocked_calls();
     }
+    _process_time.end();
 }
 
 void MasterGraph::start_processing()
 {
     _processing = true;
-    _remaining_images_count = _loader_module->remaining_count();
+    _remaining_count = _loader_module->remaining_count();
     _output_thread = std::thread(&MasterGraph::output_routine, this);
 #if defined(WIN32) || defined(_WIN32) || defined(__WIN32) && !defined(__CYGWIN__)
 #else

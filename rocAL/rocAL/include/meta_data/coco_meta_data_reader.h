@@ -38,6 +38,7 @@ public:
     void print_map_contents();
     std::map<std::string, std::shared_ptr<MetaData>> &get_map_content() override{ return _map_content;}
     MetaDataBatch * get_output() override { return _output; }
+    const std::map<std::string, std::shared_ptr<MetaData>> & get_map_content() override { return _map_content;}
     COCOMetaDataReader();
     ~COCOMetaDataReader() override { delete _output; }
 private:

@@ -56,6 +56,7 @@ void ImageLoader::shut_down()
     _circ_buff.release();
 }
 
+
 void ImageLoader::set_prefetch_queue_depth(size_t prefetch_queue_depth)
 {
     if(prefetch_queue_depth <= 0)
@@ -111,7 +112,7 @@ ImageLoader::load_next()
     return update_output_image();
 }
 
-void ImageLoader::set_output (rocALTensor* output_tensor)
+void ImageLoader::set_output(rocALTensor* output_tensor)
 {
     _output_tensor = output_tensor;
     _output_mem_size = _output_tensor->info().data_size();

@@ -33,7 +33,7 @@ FusedCropTJDecoder::FusedCropTJDecoder():
 
 #if 0
     int num_avail_scalings = 0;
-    auto scaling_factors = tjGetScalingFactors	(&num_avail_scalings);
+    auto scaling_factors = tjGetScalingFactors	(&num_avail_scalings); 
     for(int i = 0; i < num_avail_scalings; i++) {
         if(scaling_factors[i].num < scaling_factors[i].denom) {
 
@@ -43,14 +43,14 @@ FusedCropTJDecoder::FusedCropTJDecoder():
 #endif
 };
 
-Decoder::Status FusedCropTJDecoder::decode_info(unsigned char* input_buffer, size_t input_size, int* width, int* height, int* color_comps)
+Decoder::Status FusedCropTJDecoder::decode_info(unsigned char* input_buffer, size_t input_size, int* width, int* height, int* color_comps) 
 {
     //TODO : Use the most recent TurboJpeg API tjDecompressHeader3 which returns the color components
     if(tjDecompressHeader2(m_jpegDecompressor,
-                            input_buffer,
-                            input_size,
-                            width,
-                            height,
+                            input_buffer, 
+                            input_size, 
+                            width, 
+                            height, 
                             color_comps) != 0)
     {
         WRN("Jpeg header decode failed " + STR(tjGetErrorStr2(m_jpegDecompressor)))
@@ -91,7 +91,7 @@ Decoder::Status FusedCropTJDecoder::decode(unsigned char *input_buffer, size_t i
     if(_bbox_coord.size() != 0)
     {
         // Random bbox crop returns normalized crop cordinates
-        // hence bringing it back to absolute cordinates
+        // hence bringing it back to absolute cordinates 
         x1 = std::lround(_bbox_coord[0] * original_image_width);
         y1 = std::lround(_bbox_coord[1] * original_image_height);
         crop_width = std::lround((_bbox_coord[2]) * original_image_width);
@@ -105,7 +105,7 @@ Decoder::Status FusedCropTJDecoder::decode(unsigned char *input_buffer, size_t i
 
         auto is_valid_crop = [](uint h, uint w, uint height, uint width)
         {
-            return (h < height && w < width);
+            return (h < height && w < width); 
         };
         int num_of_attempts = 10;
         int num_attemts_left = num_of_attempts;
@@ -127,7 +127,7 @@ Decoder::Status FusedCropTJDecoder::decode(unsigned char *input_buffer, size_t i
             }
         }
         // Fallback on Central Crop
-        if( !is_valid_crop(crop_height, crop_width, original_image_height, original_image_width))
+        if( !is_valid_crop(crop_height, crop_width, original_image_height, original_image_width)) 
         {
             float in_ratio;
             in_ratio = static_cast<float>(original_image_width) / original_image_height;
