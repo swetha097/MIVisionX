@@ -246,7 +246,6 @@ rocalJpegFileSource(
         dims[1] = height;
         dims[2] = width;
         dims[3] = num_of_planes;
-        std::cerr<<"\n dims"<<dims[0]<<dims[1]<<dims[2]<<dims[3];
         auto info  = rocALTensorInfo(num_of_dims,
                                 std::vector<unsigned>(std::move(dims)),
                                 context->master_graph->mem_type(),
@@ -332,7 +331,6 @@ rocalJpegCOCOFileSource(
         dims[1] = height;
         dims[2] = width;
         dims[3] = num_of_planes;
-        std::cerr<<"\n dims"<<dims[0]<<dims[1]<<dims[2]<<dims[3];
         auto info  = rocALTensorInfo(num_of_dims,
                                 std::vector<unsigned>(std::move(dims)),
                                 context->master_graph->mem_type(),

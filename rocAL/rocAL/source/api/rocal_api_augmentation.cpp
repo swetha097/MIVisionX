@@ -92,12 +92,10 @@ ROCAL_API_CALL rocalCropMirrorNormalize(RocalContext p_context, RocalTensor p_in
             case 0:
                 op_tensorFormat = RocalTensorlayout::NHWC;
                 layout=0;
-                std::cerr<<"RocalTensorlayout::NHWC";
                 break;
             case 1:
                 op_tensorFormat = RocalTensorlayout::NCHW;
                 layout=1;
-                std::cerr<<"RocalTensorlayout::NCHW";
 
                 break;
             default:
@@ -107,15 +105,12 @@ ROCAL_API_CALL rocalCropMirrorNormalize(RocalContext p_context, RocalTensor p_in
         switch(rocal_tensor_output_type)
         {
             case ROCAL_FP32:
-                std::cerr<<"\n Setting output type to FP32";
                 op_tensorDataType = RocalTensorDataType::FP32;
                 break;
             case ROCAL_FP16:
-                std::cerr<<"\n Setting output type to FP16";
                 op_tensorDataType = RocalTensorDataType::FP16;
                 break;
             case ROCAL_UINT8:
-                std::cerr<<"\n Setting output type to UINT8";
                 op_tensorDataType = RocalTensorDataType::UINT8;
                 break;
             default:
