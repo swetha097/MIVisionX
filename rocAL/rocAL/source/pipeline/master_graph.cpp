@@ -699,7 +699,11 @@ void MasterGraph::output_routine()
                         {
                             _meta_data_graph->update_random_bbox_meta_data(_augmented_meta_data, decode_image_info, crop_image_info);
                         }
-                        _meta_data_graph->process(_augmented_meta_data);
+                        else
+                        {
+                            _meta_data_graph->update_meta_data(_augmented_meta_data, decode_image_info, _is_segmentation);
+                        }
+                        _meta_data_graph->process(_augmented_meta_data, _is_segmentation);
                     }
                     if (full_batch_meta_data)
                         full_batch_meta_data->concatenate(_augmented_meta_data);
@@ -766,10 +770,12 @@ void MasterGraph::stop_processing()
         _output_thread.join();
 }
 
-std::vector<rocALTensorList *> MasterGraph::create_coco_meta_data_reader(const char *source_path, bool is_output, MetaDataReaderType reader_type, MetaDataType label_type, bool is_box_encoder)
+std::vector<rocALTensorList *> MasterGraph::create_coco_meta_data_reader(const char *source_path, bool is_output, bool mask, MetaDataReaderType reader_type, MetaDataType label_type, bool is_box_encoder)
 {
     if(_meta_data_reader)
         THROW("A metadata reader has already been created")
+    if(mask)
+        _is_segmentation = true;
     MetaDataConfig config(label_type, reader_type, source_path);
     _meta_data_graph = create_meta_data_graph(config);
     _meta_data_reader = create_meta_data_reader(config);
@@ -800,12 +806,33 @@ std::vector<rocALTensorList *> MasterGraph::create_coco_meta_data_reader(const c
     default_bbox_info.set_tensor_layout(RocalTensorlayout::NONE);
     _meta_data_buffer_size.emplace_back(dims.at(0) * dims.at(1)  * _user_batch_size * sizeof(vx_float32)); // TODO - replace with data size from info
 
+    rocALTensorInfo default_mask_info;
+    if(mask)
+    {
+        num_of_dims = 1;
+        dims.resize(num_of_dims);
+        dims.at(0) = MAX_MASK_BUFFER;
+        dims.at(1) = 1;
+        default_mask_info  = rocALTensorInfo(num_of_dims,
+                                            std::vector<unsigned>(std::move(dims)),
+                                            _mem_type,
+                                            RocalTensorDataType::FP32);
+        default_mask_info.set_metadata();
+        default_mask_info.set_tensor_layout(RocalTensorlayout::NONE);
+        _meta_data_buffer_size.emplace_back(dims.at(0) * dims.at(1)  * _user_batch_size * sizeof(vx_float32)); // TODO - replace with data size from info  
+    }
+
     for(unsigned i = 0; i < _user_batch_size; i++)
     {
         auto labels_info = default_labels_info;
         auto bbox_info = default_bbox_info;
         _labels_tensor_list.push_back(new rocALTensor(labels_info));
         _bbox_tensor_list.push_back(new rocALTensor(bbox_info));
+        if(mask)
+        {
+            auto mask_info = default_mask_info;
+            _mask_tensor_list.push_back(new rocALTensor(mask_info));
+        }
     }
     _ring_buffer.init_metadata(RocalMemType::HOST, _meta_data_buffer_size, _meta_data_buffer_size.size());
     if(is_output)
@@ -817,6 +844,8 @@ std::vector<rocALTensorList *> MasterGraph::create_coco_meta_data_reader(const c
     }
     _metadata_output_tensor_list.emplace_back(&_labels_tensor_list);
     _metadata_output_tensor_list.emplace_back(&_bbox_tensor_list);
+    if(mask)
+        _metadata_output_tensor_list.emplace_back(&_mask_tensor_list);
 
     return _metadata_output_tensor_list;
 }
@@ -953,6 +982,22 @@ size_t MasterGraph::bounding_box_batch_count(int *buf, pMetaDataBatch meta_data_
         size += buf[i];
     }
     return size;
+}
+
+rocALTensorList * MasterGraph::mask_meta_data()
+{
+    if(_ring_buffer.level() == 0)
+        THROW("No meta data has been loaded")
+    auto meta_data_buffers = (unsigned char *)_ring_buffer.get_meta_read_buffers()[2]; // Get bbox buffer from ring buffer
+    auto mask_tensor_dims = _ring_buffer.get_meta_data_info().second.first.mask_cords_dims();
+    for(unsigned i = 0; i < _mask_tensor_list.size(); i++)
+    {
+        _mask_tensor_list[i]->set_dims(mask_tensor_dims[i]);
+        _mask_tensor_list[i]->set_mem_handle((void *)meta_data_buffers);
+        meta_data_buffers += _mask_tensor_list[i]->info().data_size();
+    }
+
+    return &_mask_tensor_list;
 }
 
 ImgSizes& MasterGraph::get_image_sizes()

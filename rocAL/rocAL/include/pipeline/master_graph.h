@@ -48,6 +48,7 @@ THE SOFTWARE.
 #define MAX_OBJECTS 50
 #define BBOX_COUNT 4
 #define MAX_NUM_ANCHORS 8732
+#define MAX_MASK_BUFFER 10000
 
 class MasterGraph
 {
@@ -73,7 +74,7 @@ public:
     rocALTensorList * get_output_tensors();
 
     std::vector<rocALTensorList *> create_label_reader(const char *source_path, MetaDataReaderType reader_type);
-    std::vector<rocALTensorList *> create_coco_meta_data_reader(const char *source_path, bool is_output, MetaDataReaderType reader_type, MetaDataType label_type, bool is_box_encoder);
+    std::vector<rocALTensorList *> create_coco_meta_data_reader(const char *source_path, bool is_output, bool mask, MetaDataReaderType reader_type, MetaDataType label_type, bool is_box_encoder);
     // MetaDataBatch *create_coco_meta_data_reader(const char *source_path, bool is_output);
     // MetaDataBatch *create_tf_record_meta_data_reader(const char *source_path, MetaDataReaderType reader_type,  MetaDataType label_type, const std::map<std::string, std::string> feature_key_map);
     // MetaDataBatch *create_caffe_lmdb_record_meta_data_reader(const char *source_path, MetaDataReaderType reader_type,  MetaDataType label_type);
@@ -85,6 +86,7 @@ public:
     rocALTensorList * labels_meta_data();
     rocALTensorList * bbox_labels_meta_data();
     rocALTensorList * bbox_meta_data();
+    rocALTensorList * mask_meta_data();
     ImgSizes& get_image_sizes();
 
     void set_loop(bool val) { _loop = val; }
@@ -95,6 +97,7 @@ public:
     size_t max_tensor_type_size() { return _max_tensor_type_size; }
     std::shared_ptr<MetaDataReader> meta_data_reader() { return _meta_data_reader; }
     bool is_random_bbox_crop() {return _is_random_bbox_crop; }
+    bool is_segmentation() { return _is_segmentation; };
     std::vector<rocALTensorList *> get_bbox_encoded_buffers(size_t num_encoded_boxes);
     size_t bounding_box_batch_count(int* buf, pMetaDataBatch meta_data_batch);
 private:
@@ -128,8 +131,10 @@ private:
     std::vector<rocALTensorList *> _metadata_output_tensor_list;
     rocALTensorList _labels_tensor_list;
     rocALTensorList _bbox_tensor_list;
+    rocALTensorList _mask_tensor_list;
     std::vector<std::vector<unsigned>> _labels_tensor_dims;
     std::vector<std::vector<unsigned>> _bbox_tensor_dims;
+    std::vector<std::vector<unsigned>> _mask_tensor_dims;
 
     std::vector<size_t> _meta_data_buffer_size;
 
@@ -168,6 +173,7 @@ private:
     size_t _max_tensor_type_size;
     const RocalTensorDataType _out_data_type;
     bool _is_random_bbox_crop = false;
+    bool _is_segmentation = false;
     // box encoder variables
     bool _is_box_encoder = false; //bool variable to set the box encoder
     std::vector<float> _anchors; // Anchors to be used for encoding, as the array of floats is in the ltrb format of size 8732x4
