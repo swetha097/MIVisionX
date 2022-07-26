@@ -417,11 +417,11 @@ extern "C"  RocalTensor  ROCAL_API_CALL rocalRawCIFAR10Source(RocalContext conte
                                                         bool loop = false);
 
 /// Creates a video reader and decoder as a source. It allocates the resources and objects required to read and decode mp4 videos stored on the file systems.
-/// \param context Rali context
+/// \param context Rocal context
 /// \param source_path A NULL terminated char string pointing to the location on the disk.
 /// source_path can be a video file, folder containing videos or a text file
 /// \param color_format The color format the frames will be decoded to.
-/// \param rali_decode_device Enables software or hardware decoding. Currently only software decoding is supported.
+/// \param rocal_decode_device Enables software or hardware decoding. Currently only software decoding is supported.
 /// \param internal_shard_count Defines the parallelism level by internally sharding the input dataset and load/decode using multiple decoder/loader instances.
 /// \param sequence_length: The number of frames in a sequence.
 /// \param shuffle: to shuffle sequences.
@@ -434,7 +434,7 @@ extern "C"  RocalTensor  ROCAL_API_CALL rocalRawCIFAR10Source(RocalContext conte
 extern "C" RocalTensor  ROCAL_API_CALL rocalVideoFileSourceSingleShard(RocalContext context,
                                                         const char* source_path,
                                                         RocalImageColor color_format,
-                                                        RocalDecodeDevice rali_decode_device,
+                                                        RocalDecodeDevice rocal_decode_device,
                                                         unsigned internal_shard_count,
                                                         unsigned sequence_length,
                                                         bool is_output = false,
@@ -446,11 +446,11 @@ extern "C" RocalTensor  ROCAL_API_CALL rocalVideoFileSourceSingleShard(RocalCont
                                                         );
 
 /// Creates a video reader and decoder as a source. It allocates the resources and objects required to read and decode mp4 videos stored on the file systems.
-/// \param context Rali context
+/// \param context Rocal context
 /// \param source_path A NULL terminated char string pointing to the location on the disk.
 /// source_path can be a video file, folder containing videos or a text file
 /// \param color_format The color format the frames will be decoded to.
-/// \param rali_decode_device Enables software or hardware decoding. Currently only software decoding is supported.
+/// \param rocal_decode_device Enables software or hardware decoding. Currently only software decoding is supported.
 /// \param internal_shard_count Defines the parallelism level by internally sharding the input dataset and load/decode using multiple decoder/loader instances.
 /// \param sequence_length: The number of frames in a sequence.
 /// \param shuffle: to shuffle sequences.
@@ -463,7 +463,7 @@ extern "C" RocalTensor  ROCAL_API_CALL rocalVideoFileSourceSingleShard(RocalCont
 extern "C"  RocalTensor  ROCAL_API_CALL rocalVideoFileSource(RocalContext context,
                                                             const char* source_path,
                                                             RocalImageColor color_format,
-                                                            RocalDecodeDevice rali_decode_device,
+                                                            RocalDecodeDevice rocal_decode_device,
                                                             unsigned internal_shard_count,
                                                             unsigned sequence_length,
                                                             bool is_output = false,

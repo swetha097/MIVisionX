@@ -24,15 +24,14 @@ THE SOFTWARE.
 #include "commons.h"
 #include <vector>
 #include <condition_variable>
-#if ENABLE_OPENCL
+#if !ENABLE_HIP
 #include <CL/cl.h>
-#include "device_manager.h"
-#else
-#include "device_manager_hip.h"
 #endif
 #include <queue>
 #include "meta_data.h"
+#include "device_manager.h"
 #include "commons.h"
+#include "device_manager_hip.h"
 
 using MetaDataInfoNamePair = std::pair<ImageNameBatch,MetaDataDimensionsBatch>;
 class RingBuffer
@@ -90,7 +89,6 @@ private:
     std::vector<std::vector<void*>> _host_meta_data_buffers;
     bool _dont_block = false;
     RocalMemType _mem_type;
-    void * _last_batch_meta_data;
 #if ENABLE_HIP
     DeviceResourcesHip _devhip;
 #else

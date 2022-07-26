@@ -54,13 +54,11 @@ void RingBuffer:: block_if_full()
         _wait_for_unload.wait(lock);
     }
 }
-
 std::vector<void*> RingBuffer::get_read_buffers()
 {
     block_if_empty();
     if((_mem_type == RocalMemType::OCL) || (_mem_type == RocalMemType::HIP))
         return _dev_sub_buffer[_read_ptr];
-
     return _host_sub_buffers[_read_ptr];
 }
 
@@ -333,8 +331,13 @@ void RingBuffer::increment_write_ptr()
 void RingBuffer::set_meta_data( ImageNameBatch names, pMetaDataBatch meta_data)
 {
     if(meta_data == nullptr)
-        _last_image_meta_data_info = std::move(std::make_pair(std::move(names), MetaDataDimensionsBatch()));
-    else
+    {
+        std::move(std::make_pair(std::move(names), MetaDataDimensionsBatch()));
+        return;
+    }
+    _last_image_meta_data_info = std::move(std::make_pair(std::move(names), meta_data->get_metadata_dimensions_batch()));
+    auto actual_buffer_size = meta_data->get_buffer_size();
+    for(unsigned i = 0; i < _meta_data_sub_buffer_count; i++)
     {
         _last_image_meta_data_info = std::move(std::make_pair(std::move(names), meta_data->get_metadata_dimensions_batch()));
          auto actual_buffer_size = meta_data->get_buffer_size();

@@ -21,6 +21,12 @@ THE SOFTWARE.
 */
 
 #include <tuple>
+#include <assert.h>
+#include <boost/filesystem.hpp>
+#ifdef ROCAL_VIDEO
+#include "node_video_loader.h"
+#include "node_video_loader_single_shard.h"
+#endif
 #include "rocal_api.h"
 #include "commons.h"
 #include "context.h"
@@ -165,7 +171,7 @@ rocalJpegFileSourceSingleShard(
         unsigned num_of_dims = 4;
         std::vector<unsigned> dims;
         dims.resize(num_of_dims);
-        dims.at(0) = context->internal_batch_size();
+        dims.at(0) = context->user_batch_size();
         dims.at(1) = height;
         dims.at(2) = width;
         dims.at(3) = num_of_planes;
@@ -254,11 +260,10 @@ rocalJpegFileSource(
         unsigned num_of_dims = 4;
         std::vector<unsigned> dims;
         dims.resize(4);
-        dims[0] = context->internal_batch_size();
+        dims[0] = context->user_batch_size();
         dims[1] = height;
         dims[2] = width;
         dims[3] = num_of_planes;
-        std::cerr<<"\n dims"<<dims[0]<<dims[1]<<dims[2]<<dims[3];
         auto info  = rocALTensorInfo(num_of_dims,
                                 std::vector<unsigned>(std::move(dims)),
                                 context->master_graph->mem_type(),
@@ -340,11 +345,10 @@ rocalJpegCOCOFileSource(
         unsigned num_of_dims = 4;
         std::vector<unsigned> dims;
         dims.resize(4);
-        dims[0] = context->internal_batch_size();
+        dims[0] = context->user_batch_size();
         dims[1] = height;
         dims[2] = width;
         dims[3] = num_of_planes;
-        std::cerr<<"\n dims"<<dims[0]<<dims[1]<<dims[2]<<dims[3];
         auto info  = rocALTensorInfo(num_of_dims,
                                 std::vector<unsigned>(std::move(dims)),
                                 context->master_graph->mem_type(),
@@ -433,7 +437,7 @@ rocalJpegCOCOFileSourceSingleShard(
         unsigned num_of_dims = 4;
         std::vector<unsigned> dims;
         dims.resize(num_of_dims);
-        dims.at(0) = context->internal_batch_size();
+        dims.at(0) = context->user_batch_size();
         dims.at(1) = height;
         dims.at(2) = width;
         dims.at(3) = num_of_planes;
@@ -645,7 +649,7 @@ rocalVideoFileSourceSingleShard(
     auto context = static_cast<Context*>(p_context);
     try
     {
-#ifdef RALI_VIDEO
+#ifdef ROCAL_VIDEO
         if(sequence_length == 0)
             THROW("Sequence length passed should be bigger than 0")
 
@@ -677,7 +681,7 @@ rocalVideoFileSourceSingleShard(
         unsigned num_of_dims = 5;
         std::vector<unsigned> dims;
         dims.resize(num_of_dims);
-        dims.at(0) = context->internal_batch_size();
+        dims.at(0) = context->user_batch_size();
         dims.at(1) = sequence_length;
         dims.at(2) = video_prop.height;
         dims.at(3) = video_prop.width;
@@ -743,7 +747,7 @@ rocalVideoFileSource(
     auto context = static_cast<Context*>(p_context);
     try
     {
-#ifdef RALI_VIDEO
+#ifdef ROCAL_VIDEO
         if(sequence_length == 0)
             THROW("Sequence length passed should be bigger than 0")
 
@@ -767,7 +771,7 @@ rocalVideoFileSource(
         unsigned num_of_dims = 5;
         std::vector<unsigned> dims;
         dims.resize(num_of_dims);
-        dims.at(0) = context->internal_batch_size();
+        dims.at(0) = context->user_batch_size();
         dims.at(1) = sequence_length;
         dims.at(2) = video_prop.height;
         dims.at(3) = video_prop.width;
@@ -812,8 +816,8 @@ rocalVideoFileSource(
         std::cerr << e.what() << '\n';
     }
     return output;
-
 }
+
 
 RocalStatus ROCAL_API_CALL
 rocalResetLoaders(RocalContext p_context)

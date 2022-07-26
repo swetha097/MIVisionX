@@ -60,8 +60,8 @@ void RocalCropParam::fill_crop_dims()
             (crop_h > in_roi[img_idx].y2) ? (croph_arr_val[img_idx] = in_roi[img_idx].y2) : (croph_arr_val[img_idx] = crop_h);
             (x1 >= in_roi[img_idx].x2) ? (x1_arr_val[img_idx] = 0) : (x1_arr_val[img_idx] = x1);
             (y1 >= in_roi[img_idx].y2) ? (y1_arr_val[img_idx] = 0) : (y1_arr_val[img_idx] = y1);
-            std::cerr<<"\n In width:: "<<in_roi[img_idx].x2<<"\t In height:: "<<in_roi[img_idx].y2;
-            std::cerr<<"\n Crop dims:: "<<x1_arr_val[img_idx]<<" "<<y1_arr_val[img_idx]<<" "<<cropw_arr_val[img_idx]<<" "<<croph_arr_val[img_idx]<<"\n";
+            // std::cerr<<"\n In width:: "<<in_roi[img_idx].x2<<"\t In height:: "<<in_roi[img_idx].y2;
+            // std::cerr<<"\n Crop dims:: "<<x1_arr_val[img_idx]<<" "<<y1_arr_val[img_idx]<<" "<<cropw_arr_val[img_idx]<<" "<<croph_arr_val[img_idx]<<"\n";
         }
         else
         {

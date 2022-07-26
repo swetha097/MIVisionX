@@ -104,7 +104,6 @@ static vx_status VX_CALLBACK validateNopTensor(vx_node node, const vx_reference 
 
 static vx_status VX_CALLBACK processNopTensor(vx_node node, const vx_reference *parameters, vx_uint32 num)
 {
-    // std::cerr<<"\n processNopTensor";
     vx_status vxstatus;
     vx_status status = VX_SUCCESS;
     NopTensorLocalData *data = NULL;

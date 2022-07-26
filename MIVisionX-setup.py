@@ -30,7 +30,7 @@ else:
 __author__ = "Kiriti Nagesh Gowda"
 __copyright__ = "Copyright 2018 - 2022, AMD ROCm MIVisionX"
 __license__ = "MIT"
-__version__ = "2.3.3"
+__version__ = "2.3.4"
 __maintainer__ = "Kiriti Nagesh Gowda"
 __email__ = "mivisionx.support@amd.com"
 __status__ = "Shipping"
@@ -280,7 +280,7 @@ else:
         os.system('(cd '+deps_dir+'; unzip half-1.12.0.zip -d half-files )')
         os.system('sudo -v')
         os.system(
-            '(cd '+deps_dir+'; sudo cp half-files/include/half.hpp /usr/local/include/ )')
+            '(cd '+deps_dir+'; sudo mkdir -p /usr/local/include/half; sudo cp half-files/include/half.hpp /usr/local/include/half )')
         # Install ProtoBuf
         os.system('(cd '+deps_dir+'/protobuf-' +
                   ProtoBufVersion+'; ./autogen.sh )')
@@ -387,12 +387,6 @@ else:
                 '(cd '+deps_dir+'; git clone -b 2.0.6.2 https://github.com/rrawther/libjpeg-turbo.git )')
             os.system('(cd '+deps_dir+'/libjpeg-turbo; mkdir build; cd build; '+linuxCMake +
                       ' -DCMAKE_INSTALL_PREFIX=/usr -DCMAKE_BUILD_TYPE=RELEASE -DENABLE_STATIC=FALSE -DCMAKE_INSTALL_DEFAULT_LIBDIR=lib ..; make -j 4; sudo make install )')
-            #dependencies for snd file
-            os.system('sudo '+linuxFlag+' '+linuxSystemInstall+' ' +
-                      linuxSystemInstall_check+' install autogen build-essential libasound2-dev libflac-dev libogg-dev libvorbis-dev libopus-dev')
-            os.system(
-                '(cd '+deps_dir+'; git clone https://github.com/libsndfile/libsndfile.git)')
-            os.system('(cd '+deps_dir+'/libsndfile;./autogen.sh; ./configure --enable-werror; make -j 4; sudo make install )')
             # RPP
             # Remove Previous Install - RPP
             os.system('sudo -v')

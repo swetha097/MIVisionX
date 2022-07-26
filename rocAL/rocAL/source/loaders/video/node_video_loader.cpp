@@ -24,7 +24,7 @@ THE SOFTWARE.
 #include <sstream>
 #include <numeric>
 #include "node_video_loader.h"
-#ifdef RALI_VIDEO
+#ifdef ROCAL_VIDEO
 #if ENABLE_HIP
 VideoLoaderNode::VideoLoaderNode(rocALTensor *output, DeviceResourcesHip device_resources):
 #else
