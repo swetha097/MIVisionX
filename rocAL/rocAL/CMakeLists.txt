@@ -167,7 +167,7 @@ if(${BUILD_ROCAL})
                 ./include/api/
                 ./include/augmentations/color_augmentations/
                 ./include/augmentations/geometry_augmentations/
-                /include/augmentations/audio_augmentations/
+                ./include/augmentations/audio_augmentations/
                 ./include/augmentations/
                 ./include/decoders/audio/
                 ./include/decoders/image/
