@@ -636,7 +636,7 @@ void MasterGraph::output_routine()
                 auto decode_image_info = _loader_module->get_decode_image_info();
                 auto crop_image_info = _loader_module->get_crop_image_info();
 
-                std::cerr << "\nThis cycle names: " << this_cycle_names.at(0) << "\n";
+                // std::cerr << "\nThis cycle names: " << this_cycle_names.at(0) << "\n";
                 if(this_cycle_names.size() != _internal_batch_size)
                     WRN("Internal problem: names count "+ TOSTR(this_cycle_names.size()))
                 // meta_data lookup is done before _meta_data_graph->process() is called to have the new meta_data ready for processing
@@ -781,7 +781,7 @@ std::vector<rocALTensorList *> MasterGraph::create_coco_meta_data_reader(const c
     dims.resize(num_of_dims);
     dims.at(0) = is_box_encoder ? MAX_NUM_ANCHORS : MAX_OBJECTS;
     auto default_labels_info  = rocALTensorInfo(num_of_dims,
-                                        std::vector<unsigned>(std::move(dims)),
+                                        dims,
                                         _mem_type,
                                         RocalTensorDataType::INT32);
     default_labels_info.set_metadata();
@@ -793,7 +793,7 @@ std::vector<rocALTensorList *> MasterGraph::create_coco_meta_data_reader(const c
     dims.at(0) = is_box_encoder ? MAX_NUM_ANCHORS : MAX_OBJECTS;
     dims.at(1) = BBOX_COUNT;
     auto default_bbox_info  = rocALTensorInfo(num_of_dims,
-                                        std::vector<unsigned>(std::move(dims)),
+                                        dims,
                                         _mem_type,
                                         RocalTensorDataType::FP32);
     default_bbox_info.set_metadata();

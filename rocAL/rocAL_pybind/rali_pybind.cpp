@@ -288,6 +288,10 @@ namespace rali
         m.def("rocalGetTimingInfo", &rocalGetTimingInfo);
         m.def("setOutputImages", &rocalSetOutputs);
         m.def("labelReader", &rocalCreateLabelReader, py::return_value_policy::reference);
+        m.def("COCOReader", &rocalCreateCOCOReader, py::return_value_policy::reference);
+        // rocal_api_meta_data.h
+        m.def("RandomBBoxCrop", &rocalRandomBBoxCrop);
+        m.def("BoxEncoder",&rocalBoxEncoder);
         // rocal_api_parameter.h
         m.def("setSeed", &rocalSetSeed);
         m.def("getSeed", &rocalGetSeed);
@@ -317,11 +321,11 @@ namespace rali
             "rocalGetImageLabels", [](RocalContext context)
     {
             rocALTensorList *labels = rocalGetImageLabels(context);
-            std::cerr<<"LABELS SIZE ::"<<labels->size();
-            for (int i = 0; i < labels->size(); i++) {
-                int *labels_buffer = (int *)(labels->at(i)->buffer());
-                std::cerr << ">>>>> LABELS : " << labels_buffer[0] << "\t";
-            }
+            // std::cerr<<"LABELS SIZE ::"<<labels->size();
+            // for (int i = 0; i < labels->size(); i++) {
+            //     int *labels_buffer = (int *)(labels->at(i)->buffer());
+            //     std::cerr << ">>>>> LABELS : " << labels_buffer[0] << "\t";
+            // }
             return py::array(py::buffer_info(
                             (int *)(labels->at(0)->buffer()),
                             sizeof(int),
@@ -338,7 +342,7 @@ namespace rali
         // RocalTensorList output_tensor_list = rocalGetOutputTensors(context);
         // // ptr = output_tensor_list->at(0)->buffer();
 
-        // rocALTensor::copy_data((unsigned char*) ptr, 0);
+        // rocALTensor::copy_data((unsigned char *) ptr, 0);
         // // for (uint i =0; i<10; i++)
         // // {
         // //     std::cerr<<"\n TEMP ::"<< (float) (unsigned char *) ptr[i];
@@ -347,6 +351,32 @@ namespace rali
         // return py::reinterpret_borrow<py::object>(PyLong_FromVoidPtr(ptr));
         // }
         //     );
+        m.def(
+            "rocalGetEncodedBoxesAndLables", [](RocalContext context,uint batch_size, uint num_anchors)
+            {
+                auto vec_pair_labels_boxes = rocalGetEncodedBoxesAndLables(context,num_anchors);
+                auto labels_buf_ptr = (int*)(vec_pair_labels_boxes[0]->at(0)->buffer());
+                auto bboxes_buf_ptr = (float*)(vec_pair_labels_boxes[1]->at(0)->buffer());
+
+                py::array_t<int> labels_array = py::array_t<int>(py::buffer_info(
+                            labels_buf_ptr,
+                            sizeof(int),
+                            py::format_descriptor<int>::format(),
+                            2,
+                            {batch_size, num_anchors},
+                            {num_anchors*sizeof(int), sizeof(int)}));
+
+                // py::array_t<float> bboxes_array = py::array_t<float>(py::buffer_info(
+                //             bboxes_buf_ptr,
+                //             sizeof(float),
+                //             py::format_descriptor<float>::format(),
+                //             3,
+                //             {batch_size, num_anchors, 4},
+                //             {4*sizeof(float)*num_anchors, 4*sizeof(float), sizeof(float)} ));
+
+        return labels_array;
+            }
+        );
         // rocal_api_data_loaders.h
         m.def("ImageDecoder", &rocalJpegFileSource, "Reads file from the source given and decodes it according to the policy",
               py::return_value_policy::reference,
@@ -376,7 +406,9 @@ namespace rali
               py::arg("max_height") = 0);
         m.def("FusedDecoderCropShard",&rocalFusedJpegCropSingleShard,"Reads file from the source and decodes them partially to output random crops",
             py::return_value_policy::reference);
+        m.def("COCO_ImageDecoderSliceShard",&rocalJpegCOCOFileSourcePartialSingleShard,"Reads file from the source given and decodes it according to the policy");
         m.def("Resize",&rocalResize, "Resizes the image ",py::return_value_policy::reference);
+        m.def("ColorTwist",&rocalColorTwist, py::return_value_policy::reference);
         m.def("rocalResetLoaders", &rocalResetLoaders);
         // rocal_api_augmentation.h
         m.def("Brightness", &rocalBrightness,
