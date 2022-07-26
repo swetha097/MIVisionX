@@ -619,7 +619,7 @@ void MasterGraph::output_routine()
             // When executing on CPU the internal batch count can be smaller than the user batch count
             // In that case the user_batch_size will be an integer multiple of the _internal_batch_size
             // Multiple cycles worth of internal_batch_size images should be processed to complete a full _user_batch_size
-            for(unsigned cycle_idx = 0; cycle_idx < _user_to_internal_batch_ratio; cycle_idx++)
+            for(unsigned cycle_idx = 0; cycle_idx < 1; cycle_idx++) // TODO - Currently set to 1 will be changed in future
             {
                 // Swap handles on the input tensor, so that new tensor is loaded to be processed
                 auto load_ret = _loader_module->load_next();
@@ -645,7 +645,7 @@ void MasterGraph::output_routine()
                 {
                     // if(_internal_tensor_list.size() != 0)
                     auto tensor_write_buffer = _ring_buffer.get_write_buffers();
-                    size_t tensor_each_cycle_size = tensor_each_cycle_size_vec[idx] / _user_to_internal_batch_ratio; // TODO - Batch ratio calculation TO be removed
+                    size_t tensor_each_cycle_size = tensor_each_cycle_size_vec[idx]; // TODO - Batch ratio calculation TO be removed
                     if(_affinity == RocalAffinity::GPU)
                     {
                         _internal_tensor_list[idx]->swap_handle(tensor_write_buffer[idx]);
