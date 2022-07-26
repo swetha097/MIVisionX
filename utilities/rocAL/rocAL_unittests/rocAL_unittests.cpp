@@ -157,7 +157,8 @@ int test(int test_case, int reader_type, int pipeline_type, const char *path, co
                 std::cout << "\n json_path has to be set in rocal_unit test manually";
                 exit(0);
             }
-            metadata_output = rocalCreateCOCOReader(handle, json_path, true);
+            metadata_output = rocalCreateCOCOReader(handle, json_path, true, false);
+            // metadata_output = rocalCreateCOCOReader(handle, json_path, true, true);
             if (decode_max_height <= 0 || decode_max_width <= 0)
                 input1 = rocalJpegCOCOFileSource(handle, path, json_path, color_format, num_threads, false, true, false);
             else
@@ -173,7 +174,7 @@ int test(int test_case, int reader_type, int pipeline_type, const char *path, co
                 std::cout << "\n json_path has to be set in rocal_unit test manually";
                 exit(0);
             }
-            rocalCreateCOCOReader(handle, json_path, true);
+            rocalCreateCOCOReader(handle, json_path, true, false);
 #if defined RANDOMBBOXCROP
             rocalRandomBBoxCrop(handle, all_boxes_overlap, no_crop);
 #endif
@@ -303,7 +304,7 @@ int test(int test_case, int reader_type, int pipeline_type, const char *path, co
     {
          std::cout << ">>>>>>> Running "
                   << "rocalcrop" << std::endl;
-        image1 = rocalCrop(handle, input1, tensorLayout, tensorOutputType, 3, resize_w, resize_h, 0, 0, 0,true);
+        // image1 = rocalCrop(handle, input1, true, tensorLayout, tensorOutputType, resize_w, resize_h, 0, 0, 0);
 
     }
     break;
@@ -378,8 +379,49 @@ int test(int test_case, int reader_type, int pipeline_type, const char *path, co
                 }
             }
             break;
+            case 3: //detection + segmentation pipeline
+            {
+                RocalTensorList bbox_labels = rocalGetBoundingBoxLabel(handle);
+                RocalTensorList bbox_coords = rocalGetBoundingBoxCords(handle);
+                std::vector<int> mask_count;
+                std::vector<int> polygon_size;
+                unsigned total_number_of_objects_per_batch = rocalGetBoundingBoxCount(handle);
+                mask_count.resize(total_number_of_objects_per_batch);
+                int mask_size = rocalGetMaskCount(handle, mask_count.data());
+                polygon_size.resize(mask_size);
+                RocalTensorList mask_data = rocalGetMaskCoordinates(handle, polygon_size.data());
+                
+                for(int i = 0; i < bbox_labels->size(); i++)
+                {
+                    int * labels_buffer = (int *)(bbox_labels->at(i)->buffer());
+                    float *bbox_buffer = (float *)(bbox_coords->at(i)->buffer());
+                    float *mask_buffer = (float *)(mask_data->at(i)->buffer());
+                    std::cerr << "\n>>>>> BBOX LABELS : ";
+                    for(int j = 0; j < bbox_labels->at(i)->info().dims().at(0); j++)
+                        std::cerr << labels_buffer[j] << " ";
+                    std::cerr << "\n>>>>> BBOXX : " <<bbox_coords->at(i)->info().dims().at(0) << " : \n";
+                    for(int j = 0, j4 = 0; j < bbox_coords->at(i)->info().dims().at(0); j++, j4 = j * 4)
+                        std::cerr << bbox_buffer[j4] << " " << bbox_buffer[j4 + 1] << " " << bbox_buffer[j4 + 2] << " " << bbox_buffer[j4 + 3] << "\n";
+                    std::cerr << "\n>>>>>>> MASK COORDS : ";
+                    int poly_cnt = 0;
+                    for(unsigned j = 0; j < total_number_of_objects_per_batch; j++)
+                    {
+                        std::cerr << "Mask idx : " << j << "Polygons : " <<  mask_count[j] << "[" ;
+                        for(int k = 0; k < mask_count[j]; k++)
+                        {
+                            std::cerr << "[";
+                            for(int l = 0; l < polygon_size[poly_cnt]; l++)
+                                std::cerr << mask_buffer[l] << ", ";
+                            std::cerr << "]";
+                            mask_buffer += polygon_size[poly_cnt++];
+                        }
+                        std::cerr << "]\n";
+                    }
+                }
+            }
+            break;
 #if 0
-            case 3: // keypoints pipeline
+            case 4: // keypoints pipeline
             {
                 int size = inputBatchSize;
                 RocalJointsData *joints_data;

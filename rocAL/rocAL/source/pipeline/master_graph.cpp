@@ -776,7 +776,7 @@ std::vector<rocALTensorList *> MasterGraph::create_coco_meta_data_reader(const c
         THROW("A metadata reader has already been created")
     if(mask)
         _is_segmentation = true;
-    MetaDataConfig config(label_type, reader_type, source_path);
+    MetaDataConfig config(label_type, reader_type, source_path, std::map<std::string, std::string>(), std::string(), mask);
     _meta_data_graph = create_meta_data_graph(config);
     _meta_data_reader = create_meta_data_reader(config);
     _meta_data_reader->init(config);

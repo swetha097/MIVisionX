@@ -114,13 +114,22 @@ extern "C" void ROCAL_API_CALL rocalGetOneHotImageLabels(RocalContext rocal_cont
 extern "C" RocalTensorList ROCAL_API_CALL rocalGetBoundingBoxLabel(RocalContext rocal_context);
 extern "C" RocalTensorList ROCAL_API_CALL rocalGetBoundingBoxCords(RocalContext rocal_context);
 
-#if 0 // Commented for now
 ///
 /// \param rocal_context
-/// \param image_idx the imageIdx in the output batch
+/// \param buf The user's buffer that will be filled with number of object in the images.
+/// \return The size of the buffer needs to be provided by user to get bounding box info for all images in the output batch.
+extern "C" unsigned ROCAL_API_CALL rocalGetBoundingBoxCount(RocalContext rocal_context);
+
+///
+/// \param rocal_context
+/// \param buf the imageIdx in the output batch
 /// \return The size of the buffer needs to be provided by user to get mask box info associated with image_idx in the output batch.
 extern "C" unsigned ROCAL_API_CALL rocalGetMaskCount(RocalContext rocal_context, int* buf );
-extern "C" void ROCAL_API_CALL rocalGetMaskCoordinates(RocalContext rocal_context, int* bufcount, float* buf);
+
+///
+/// \param rocal_context
+/// \param bufcount The user's buffer that will be filled with poylgon size for the mask info
+extern "C" RocalTensorList ROCAL_API_CALL rocalGetMaskCoordinates(RocalContext rocal_context, int* bufcount);
 
 ///
 /// \param rocal_context
@@ -128,6 +137,7 @@ extern "C" void ROCAL_API_CALL rocalGetMaskCoordinates(RocalContext rocal_contex
 /// \param buf The user's buffer that will be filled with bounding box info. It needs to be of size bounding box len returned by a call to the rocalGetBoundingBoxCount
 extern "C" void ROCAL_API_CALL rocalGetImageSizes(RocalContext rocal_context, int* buf, unsigned image_idx );
 
+#if 0 // Commented for now
 ///
 /// \param rocal_context
 /// \param source_path path to the file that contains the metadata file

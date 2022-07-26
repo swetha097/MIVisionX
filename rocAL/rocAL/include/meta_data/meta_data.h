@@ -199,9 +199,13 @@ struct MetaDataBatch
     std::vector<MaskCords>& get_mask_cords_batch() { return _mask_cords; }
     std::vector<std::vector<int>>& get_mask_polygons_count_batch() { return _polygon_counts; }
     std::vector<std::vector<std::vector<int>>>& get_mask_vertices_count_batch() { return _vertices_counts; }
-    void reset_objects_count() { _total_objects_count = 0; }
+    void reset_objects_count() { 
+        _total_objects_count = 0;
+        _total_mask_coords_count = 0;
+    }
     void increment_object_count(int count) { _total_objects_count += count; }
     void increment_mask_coords_count(int count) { _total_mask_coords_count += count; }
+    int get_batch_object_count() { return _total_objects_count; }
     MetaDataDimensionsBatch& get_metadata_dimensions_batch() { return _metadata_dimensions; }
 protected:
     std::vector<int> _label_id = {}; // For label use only
@@ -283,6 +287,8 @@ struct BoundingBoxBatch: public MetaDataBatch
         _bb_label_ids.insert(_bb_label_ids.end(), other.get_bb_labels_batch().begin(), other.get_bb_labels_batch().end());
         _img_sizes.insert(_img_sizes.end(),other.get_img_sizes_batch().begin(), other.get_img_sizes_batch().end());
         _mask_cords.insert(_mask_cords.end(),other.get_mask_cords_batch().begin(), other.get_mask_cords_batch().end());
+        _polygon_counts.insert(_polygon_counts.end(),other.get_mask_polygons_count_batch().begin(), other.get_mask_polygons_count_batch().end());
+        _vertices_counts.insert(_vertices_counts.end(),other.get_mask_vertices_count_batch().begin(), other.get_mask_vertices_count_batch().end());
         _metadata_dimensions.insert(other.get_metadata_dimensions_batch());
         return *this;
     }
