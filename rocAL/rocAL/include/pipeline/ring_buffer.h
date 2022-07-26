@@ -33,7 +33,7 @@ THE SOFTWARE.
 #include "commons.h"
 #include "device_manager_hip.h"
 
-using MetaDataInfoNamePair = std::pair<ImageNameBatch,std::pair<MetaDataDimensionsBatch,ImgSizes>>;
+using MetaDataNamePair = std::pair<ImageNameBatch,pMetaDataBatch>;
 class RingBuffer
 {
 public:
@@ -58,7 +58,8 @@ public:
     std::vector<void*> get_write_buffers();
     std::pair<void*, void*> get_box_encode_write_buffers();
     std::pair<void*, void*> get_box_encode_read_buffers();
-    MetaDataInfoNamePair& get_meta_data_info();
+    MetaDataNamePair& get_meta_data();
+    MetaDataDimensionsBatch& get_meta_data_info();
     std::vector<void*> get_meta_read_buffers();
     void set_meta_data(ImageNameBatch names, pMetaDataBatch meta_data);
     void rellocate_meta_data_buffer(void * buffer, size_t buffer_size, unsigned buff_idx);
@@ -73,8 +74,8 @@ public:
     void block_if_full();
     void release_if_empty();
 private:
-    std::queue<MetaDataInfoNamePair> _meta_ring_buffer;
-    MetaDataInfoNamePair _last_image_meta_data_info;
+    std::queue<MetaDataNamePair> _meta_ring_buffer;
+    MetaDataNamePair _last_image_meta_data;
     void increment_read_ptr();
     void increment_write_ptr();
     bool full();

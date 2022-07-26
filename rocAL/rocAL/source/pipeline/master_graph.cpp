@@ -781,13 +781,12 @@ std::vector<rocALTensorList *> MasterGraph::create_coco_meta_data_reader(const c
     _meta_data_reader = create_meta_data_reader(config);
     _meta_data_reader->init(config);
     _meta_data_reader->read_all(source_path);
-
     unsigned num_of_dims = 1;
     std::vector<unsigned> dims;
     dims.resize(num_of_dims);
     dims.at(0) = is_box_encoder ? MAX_NUM_ANCHORS : MAX_OBJECTS;
     auto default_labels_info  = rocALTensorInfo(num_of_dims,
-                                        std::vector<unsigned>(std::move(dims)),
+                                        dims,
                                         _mem_type,
                                         RocalTensorDataType::INT32);
     default_labels_info.set_metadata();
@@ -799,7 +798,7 @@ std::vector<rocALTensorList *> MasterGraph::create_coco_meta_data_reader(const c
     dims.at(0) = is_box_encoder ? MAX_NUM_ANCHORS : MAX_OBJECTS;
     dims.at(1) = BBOX_COUNT;
     auto default_bbox_info  = rocALTensorInfo(num_of_dims,
-                                        std::vector<unsigned>(std::move(dims)),
+                                        dims,
                                         _mem_type,
                                         RocalTensorDataType::FP32);
     default_bbox_info.set_metadata();
@@ -809,12 +808,12 @@ std::vector<rocALTensorList *> MasterGraph::create_coco_meta_data_reader(const c
     rocALTensorInfo default_mask_info;
     if(mask)
     {
-        num_of_dims = 1;
+        num_of_dims = 2;
         dims.resize(num_of_dims);
         dims.at(0) = MAX_MASK_BUFFER;
         dims.at(1) = 1;
         default_mask_info  = rocALTensorInfo(num_of_dims,
-                                            std::vector<unsigned>(std::move(dims)),
+                                            dims,
                                             _mem_type,
                                             RocalTensorDataType::FP32);
         default_mask_info.set_metadata();
@@ -921,11 +920,11 @@ void MasterGraph::box_encoder(std::vector<float> &anchors, float criteria, const
     _stds = stds;
 }
 
-const std::pair<ImageNameBatch,std::pair<MetaDataDimensionsBatch,ImgSizes>>& MasterGraph::meta_data_info()
+const std::pair<ImageNameBatch,pMetaDataBatch>& MasterGraph::meta_data()
 {
     if(_ring_buffer.level() == 0)
         THROW("No meta data has been loaded")
-    return _ring_buffer.get_meta_data_info();
+    return _ring_buffer.get_meta_data();
 }
 
 rocALTensorList * MasterGraph::labels_meta_data()
@@ -947,7 +946,7 @@ rocALTensorList * MasterGraph::bbox_labels_meta_data()
     if(_ring_buffer.level() == 0)
         THROW("No meta data has been loaded")
     auto meta_data_buffers = (unsigned char *)_ring_buffer.get_meta_read_buffers()[0]; // Get labels buffer from ring buffer
-    auto labels_tensor_dims = _ring_buffer.get_meta_data_info().second.first.bb_labels_dims();
+    auto labels_tensor_dims = _ring_buffer.get_meta_data_info().bb_labels_dims();
     for(unsigned i = 0; i < _labels_tensor_list.size(); i++)
     {
         _labels_tensor_list[i]->set_dims(labels_tensor_dims[i]);
@@ -962,7 +961,7 @@ rocALTensorList * MasterGraph::bbox_meta_data()
     if(_ring_buffer.level() == 0)
         THROW("No meta data has been loaded")
     auto meta_data_buffers = (unsigned char *)_ring_buffer.get_meta_read_buffers()[1]; // Get bbox buffer from ring buffer
-    auto bbox_tensor_dims = _ring_buffer.get_meta_data_info().second.first.bb_cords_dims();
+    auto bbox_tensor_dims = _ring_buffer.get_meta_data_info().bb_cords_dims();
     for(unsigned i = 0; i < _bbox_tensor_list.size(); i++)
     {
         _bbox_tensor_list[i]->set_dims(bbox_tensor_dims[i]);
@@ -989,7 +988,7 @@ rocALTensorList * MasterGraph::mask_meta_data()
     if(_ring_buffer.level() == 0)
         THROW("No meta data has been loaded")
     auto meta_data_buffers = (unsigned char *)_ring_buffer.get_meta_read_buffers()[2]; // Get bbox buffer from ring buffer
-    auto mask_tensor_dims = _ring_buffer.get_meta_data_info().second.first.mask_cords_dims();
+    auto mask_tensor_dims = _ring_buffer.get_meta_data_info().mask_cords_dims();
     for(unsigned i = 0; i < _mask_tensor_list.size(); i++)
     {
         _mask_tensor_list[i]->set_dims(mask_tensor_dims[i]);
@@ -1004,7 +1003,7 @@ ImgSizes& MasterGraph::get_image_sizes()
 {
     if(_ring_buffer.level() == 0)
         THROW("No meta data has been loaded")
-    return _ring_buffer.get_meta_data_info().second.second;
+    return _ring_buffer.get_meta_data().second->get_img_sizes_batch();
 }
 
 

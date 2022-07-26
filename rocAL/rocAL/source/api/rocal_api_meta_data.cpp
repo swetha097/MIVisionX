@@ -81,7 +81,7 @@ ROCAL_API_CALL rocalGetImageName(RocalContext p_context,  char* buf)
     if (!p_context)
         THROW("Invalid rocal context passed to rocalGetImageName")
     auto context = static_cast<Context*>(p_context);
-    auto meta_data = context->master_graph->meta_data_info();
+    auto meta_data = context->master_graph->meta_data();
     size_t meta_data_batch_size = meta_data.first.size();
     if(context->user_batch_size() != meta_data_batch_size)
         THROW("meta data batch size is wrong " + TOSTR(meta_data_batch_size) + " != "+ TOSTR(context->user_batch_size() ))
@@ -99,7 +99,7 @@ ROCAL_API_CALL rocalGetImageNameLen(RocalContext p_context, int* buf)
     if (!p_context)
         THROW("Invalid rocal context passed to rocalGetImageNameLen")
     auto context = static_cast<Context*>(p_context);
-    auto meta_data = context->master_graph->meta_data_info();
+    auto meta_data = context->master_graph->meta_data();
     size_t meta_data_batch_size = meta_data.first.size();
     if(context->user_batch_size() != meta_data_batch_size)
         THROW("meta data batch size is wrong " + TOSTR(meta_data_batch_size) + " != "+ TOSTR(context->user_batch_size() ))
@@ -117,7 +117,7 @@ ROCAL_API_CALL rocalGetImageId(RocalContext p_context,  int* buf)
     if (!p_context)
         THROW("Invalid rocal context passed to rocalGetImageId")
     auto context = static_cast<Context*>(p_context);
-    auto meta_data = context->master_graph->meta_data_info();
+    auto meta_data = context->master_graph->meta_data();
     size_t meta_data_batch_size = meta_data.first.size();
     if(context->user_batch_size() != meta_data_batch_size)
         THROW("meta data batch size is wrong " + TOSTR(meta_data_batch_size) + " != "+ TOSTR(context->user_batch_size() ))

@@ -311,7 +311,7 @@ void RingBuffer::push()
 {
     // pushing and popping to and from image and metadata buffer should be atomic so that their level stays the same at all times
     std::unique_lock<std::mutex> lock(_names_buff_lock);
-    _meta_ring_buffer.push(_last_image_meta_data_info);
+    _meta_ring_buffer.push(_last_image_meta_data);
     increment_write_ptr();
 }
 
@@ -413,13 +413,13 @@ void RingBuffer::increment_write_ptr()
     _wait_for_load.notify_all();
 }
 
-void RingBuffer::set_meta_data( ImageNameBatch names, pMetaDataBatch meta_data)
+void RingBuffer::set_meta_data(ImageNameBatch names, pMetaDataBatch meta_data)
 {
     if(meta_data == nullptr)
-        _last_image_meta_data_info = std::move(std::make_pair(std::move(names), std::make_pair(MetaDataDimensionsBatch(), ImgSizes())));
+        _last_image_meta_data = std::move(std::make_pair(std::move(names), pMetaDataBatch()));
     else
     {
-        _last_image_meta_data_info = std::move(std::make_pair(std::move(names), std::make_pair(meta_data->get_metadata_dimensions_batch(), meta_data->get_img_sizes_batch())));
+        _last_image_meta_data = std::move(std::make_pair(std::move(names), meta_data));
         if(!_box_encoder_gpu)
         {
             auto actual_buffer_size = meta_data->get_buffer_size();
@@ -441,12 +441,21 @@ void RingBuffer::rellocate_meta_data_buffer(void * buffer, size_t buffer_size, u
     _host_meta_data_buffers[_write_ptr][buff_idx] = new_ptr;
 }
 
-MetaDataInfoNamePair& RingBuffer::get_meta_data_info()
+MetaDataNamePair& RingBuffer::get_meta_data()
 {
     block_if_empty();
     std::unique_lock<std::mutex> lock(_names_buff_lock);
     if(_level != _meta_ring_buffer.size())
         THROW("ring buffer internals error, image and metadata sizes not the same "+TOSTR(_level) + " != "+TOSTR(_meta_ring_buffer.size()))
     return  _meta_ring_buffer.front();
+}
+
+MetaDataDimensionsBatch& RingBuffer::get_meta_data_info()
+{
+    block_if_empty();
+    std::unique_lock<std::mutex> lock(_names_buff_lock);
+    if(_level != _meta_ring_buffer.size())
+        THROW("ring buffer internals error, image and metadata sizes not the same "+TOSTR(_level) + " != "+TOSTR(_meta_ring_buffer.size()))
+    return  _meta_ring_buffer.front().second->get_metadata_dimensions_batch();
 }
 
