@@ -182,8 +182,8 @@ struct MetaDataBatch
     virtual void resize(int batch_size) = 0;
     virtual int size() = 0;
     virtual int mask_size() = 0;
-    virtual void copy_data(std::vector<void*> buffer) = 0;
-    virtual std::vector<unsigned>& get_buffer_size() = 0;
+    virtual void copy_data(std::vector<void*> buffer, bool is_segmentation) = 0;
+    virtual std::vector<unsigned>& get_buffer_size(bool is_segmentation) = 0;
     virtual MetaDataBatch&  operator += (MetaDataBatch& other) = 0;
     MetaDataBatch* concatenate(MetaDataBatch* other)
     {
@@ -252,13 +252,13 @@ struct LabelBatch : public MetaDataBatch
         _label_id = std::move(labels);
     }
     LabelBatch() = default;
-    void copy_data(std::vector<void*> buffer) override
+    void copy_data(std::vector<void*> buffer, bool is_segmentation) override
     {
         if(buffer.size() < 1)
             THROW("The buffers are insufficient") // TODO -change
         mempcpy((int *)buffer[0], _label_id.data(), _label_id.size() * sizeof(int));
     }
-    std::vector<unsigned>& get_buffer_size() override
+    std::vector<unsigned>& get_buffer_size(bool is_segmentation) override
     {
         _buffer_size.emplace_back(_total_objects_count * sizeof(int));
         return _buffer_size;
@@ -308,7 +308,7 @@ struct BoundingBoxBatch: public MetaDataBatch
     {
         return std::make_shared<BoundingBoxBatch>(*this);
     }
-    void copy_data(std::vector<void*> buffer) override
+    void copy_data(std::vector<void*> buffer, bool is_segmentation) override
     {
         if(buffer.size() < 2)
             THROW("The buffers are insufficient") // TODO -change
@@ -316,7 +316,7 @@ struct BoundingBoxBatch: public MetaDataBatch
         float *bbox_buffer = (float *)buffer[1];
         auto bb_labels_dims = _metadata_dimensions.bb_labels_dims();
         auto bb_coords_dims = _metadata_dimensions.bb_cords_dims();
-        if(_mask_cords.size() != 0)
+        if(is_segmentation)
         {
             float *mask_buffer = (float *)buffer[2];
             auto mask_coords_dims = _metadata_dimensions.mask_cords_dims();
@@ -341,11 +341,11 @@ struct BoundingBoxBatch: public MetaDataBatch
             }
         }
     }
-    std::vector<unsigned>& get_buffer_size() override
+    std::vector<unsigned>& get_buffer_size(bool is_segmentation) override
     {
         _buffer_size.emplace_back(_total_objects_count * sizeof(int));
         _buffer_size.emplace_back(_total_objects_count * 4 * sizeof(float));
-        if(_mask_cords.size() != 0)
+        if(is_segmentation)
             _buffer_size.emplace_back(_total_mask_coords_count * sizeof(float));
         return _buffer_size;
     }
