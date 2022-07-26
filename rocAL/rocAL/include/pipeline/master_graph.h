@@ -262,6 +262,7 @@ template<> inline std::shared_ptr<FusedJpegCropNode> MasterGraph::add_node(const
     _loader_module = node->get_loader_module();
     _tensor_root_nodes.push_back(node);
     _loader_module->set_prefetch_queue_depth(_prefetch_queue_depth);
+    _loader_module->set_random_bbox_data_reader(_randombboxcrop_meta_data_reader);
     // _root_nodes.push_back(node);
     for(auto& output: outputs)
         _tensor_map.insert(make_pair(output, node));
@@ -276,6 +277,7 @@ template<> inline std::shared_ptr<FusedJpegCropSingleShardNode> MasterGraph::add
     _loader_module = node->get_loader_module();
     _tensor_root_nodes.push_back(node);
     _loader_module->set_prefetch_queue_depth(_prefetch_queue_depth);
+    _loader_module->set_random_bbox_data_reader(_randombboxcrop_meta_data_reader);
     // _root_nodes.push_back(node);
     for(auto& output: outputs)
         _tensor_map.insert(make_pair(output, node));
