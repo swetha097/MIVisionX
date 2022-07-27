@@ -37,6 +37,6 @@ protected:
 
 private:
     vx_array _src_samples_array, _src_channels_array;
-    std::vector<unsigned> _src_samples, _src_channels;
+    std::vector<int> _src_samples, _src_channels;
     bool _normalize_weights = false;
 };

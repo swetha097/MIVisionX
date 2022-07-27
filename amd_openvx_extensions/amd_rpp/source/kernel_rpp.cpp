@@ -1936,6 +1936,26 @@ VX_API_CALL vx_node VX_API_CALL vxExtrppNode_NopTensor(vx_graph graph, vx_tensor
     return node;
 }
 
+VX_API_ENTRY vx_node VX_API_CALL vxExtrppNode_Downmix(vx_graph graph, vx_tensor pSrc, vx_tensor pDst, vx_array srcSamples, vx_array srcChannels, vx_uint32 nbatchSize)
+{
+    vx_node node = NULL;
+    vx_context context = vxGetContext((vx_reference)graph);
+    if (vxGetStatus((vx_reference)context) == VX_SUCCESS)
+    {
+        vx_uint32 dev_type = getGraphAffinity(graph);
+        vx_scalar DEV_TYPE = vxCreateScalar(vxGetContext((vx_reference)graph), VX_TYPE_UINT32, &dev_type);
+        vx_scalar NBATCHSIZE = vxCreateScalar(vxGetContext((vx_reference)graph), VX_TYPE_UINT32, &nbatchSize);
+        vx_reference params[] = {
+            (vx_reference)pSrc,
+            (vx_reference)pDst,
+            (vx_reference)srcSamples,
+            (vx_reference)srcChannels,
+            (vx_reference)NBATCHSIZE,
+            (vx_reference)DEV_TYPE};
+        node = createNode(graph, VX_KERNEL_RPP_GAMMACORRECTION, params, 6);
+    }
+    return node;
+}
 
 // utility functions
 vx_node createNode(vx_graph graph, vx_enum kernelEnum, vx_reference params[], vx_uint32 num)
