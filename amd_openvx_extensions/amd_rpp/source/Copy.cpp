@@ -27,9 +27,10 @@ struct CopyLocalData
     RPPCommonHandle handle;
     Rpp32u device_type;
     RppPtr_t pSrc;
-    RppPtr_t pDst;                      // if true NHWC else NCHW
-    size_t in_tensor_dims[NUM_OF_DIMS]; // will have NHWC info
+    RppPtr_t pDst;
     size_t tensor_size;
+    vx_enum in_tensor_type;
+    vx_enum out_tensor_type;
 #if ENABLE_OPENCL
     cl_mem cl_pSrc;
     cl_mem cl_pDst;
@@ -54,22 +55,18 @@ static vx_status VX_CALLBACK refreshCopy(vx_node node, const vx_reference *param
     }
     if (data->device_type == AGO_TARGET_AFFINITY_CPU)
     {
-        vx_enum in_tensor_type = vx_type_e::VX_TYPE_UINT8;
-        vx_enum out_tensor_type = vx_type_e::VX_TYPE_UINT8;
-        STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[0], VX_TENSOR_DATA_TYPE, &in_tensor_type, sizeof(in_tensor_type)));
-        STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[1], VX_TENSOR_DATA_TYPE, &out_tensor_type, sizeof(out_tensor_type)));
-        if (in_tensor_type == vx_type_e::VX_TYPE_UINT8 && out_tensor_type == vx_type_e::VX_TYPE_UINT8)
+        if (data->in_tensor_type == vx_type_e::VX_TYPE_UINT8 && data->out_tensor_type == vx_type_e::VX_TYPE_UINT8)
         {
             STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[0], VX_TENSOR_BUFFER_HOST, &data->pSrc, sizeof(vx_uint8)));
             STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[1], VX_TENSOR_BUFFER_HOST, &data->pDst, sizeof(vx_uint8)));
         }
-        else if (in_tensor_type == vx_type_e::VX_TYPE_FLOAT32 && out_tensor_type == vx_type_e::VX_TYPE_FLOAT32)
+        else if (data->in_tensor_type == vx_type_e::VX_TYPE_FLOAT32 && data->out_tensor_type == vx_type_e::VX_TYPE_FLOAT32)
         {
             STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[0], VX_TENSOR_BUFFER_HOST, &data->pSrc, sizeof(vx_float32)));
             STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[1], VX_TENSOR_BUFFER_HOST, &data->pDst, sizeof(vx_float32)));
         }
         // VX_TYPE_FLOAT16 is not supported. Have to disable it once it is done.
-        // else if(in_tensor_type == vx_type_e::VX_TYPE_FLOAT16)
+        // else if (data->in_tensor_type == vx_type_e::VX_TYPE_FLOAT16 && data->out_tensor_type == vx_type_e::VX_TYPE_FLOAT16)
         // {
         //     STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[0], VX_TENSOR_BUFFER_HOST, &data->pSrc, sizeof(vx_float16)));
         //     STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[3], VX_TENSOR_BUFFER_HOST, &data->pDst, sizeof(vx_float16)));
@@ -113,10 +110,6 @@ static vx_status VX_CALLBACK processCopy(vx_node node, const vx_reference *param
     vx_status status = VX_SUCCESS;
     CopyLocalData *data = NULL;
     STATUS_ERROR_CHECK(vxQueryNode(node, VX_NODE_LOCAL_DATA_PTR, &data, sizeof(data)));
-    vx_enum in_tensor_type = vx_type_e::VX_TYPE_UINT8;
-    vx_enum out_tensor_type = vx_type_e::VX_TYPE_UINT8;
-    STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[0], VX_TENSOR_DATA_TYPE, &in_tensor_type, sizeof(in_tensor_type)));
-    STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[1], VX_TENSOR_DATA_TYPE, &out_tensor_type, sizeof(out_tensor_type)));
 
     if (data->device_type == AGO_TARGET_AFFINITY_GPU)
     {
@@ -131,19 +124,8 @@ static vx_status VX_CALLBACK processCopy(vx_node node, const vx_reference *param
     }
     if (data->device_type == AGO_TARGET_AFFINITY_CPU)
     {
-        if (in_tensor_type == vx_type_e::VX_TYPE_UINT8)
-        {
-            memcpy(data->pDst, data->pSrc, data->tensor_size);
-        }
-        else if (in_tensor_type == vx_type_e::VX_TYPE_FLOAT32)
-        {
-            memcpy(data->pDst, data->pSrc, data->tensor_size * sizeof(float));
-        }
-        // VX_TYPE_FLOAT16 is not supported. Have to disable it once it is done.
-        // else if (in_tensor_type == vx_type_e::VX_TYPE_FLOAT16)
-        // {
-        //     memcpy(data->pDst, data->pSrc, size*sizeof(float16_t));
-        // }
+        refreshCopy(node, parameters, num, data);
+        memcpy(data->pDst, data->pSrc, data->tensor_size);
     }
     return status;
 }
@@ -159,14 +141,19 @@ static vx_status VX_CALLBACK initializeCopy(vx_node node, const vx_reference *pa
 #endif
     STATUS_ERROR_CHECK(vxCopyScalar((vx_scalar)parameters[2], &data->device_type, VX_READ_ONLY, VX_MEMORY_TYPE_HOST));
     vx_size num_of_dims;
-    vx_enum tensor_type;
-    vx_size data_type_size;
+    size_t tensor_dims[NUM_OF_DIMS];
     STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[0], VX_TENSOR_NUMBER_OF_DIMS, &num_of_dims, sizeof(vx_size)));
-    STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[0], VX_TENSOR_DIMS, data->in_tensor_dims, sizeof(vx_size) * num_of_dims));
-    STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[0], VX_TENSOR_DATA_TYPE, &tensor_type, sizeof(tensor_type)));
+    STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[0], VX_TENSOR_DIMS, tensor_dims, sizeof(vx_size) * num_of_dims));
+    STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[0], VX_TENSOR_DATA_TYPE, &data->in_tensor_type, sizeof(data->in_tensor_type)));
+    STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[1], VX_TENSOR_DATA_TYPE, &data->out_tensor_type, sizeof(data->out_tensor_type)));
+    
     data->tensor_size = 1;
     for(int i = 0; i < num_of_dims; i++)
-        data->tensor_size *= data->in_tensor_dims[i];
+        data->tensor_size *= tensor_dims[i];
+
+    if (data->in_tensor_type == vx_type_e::VX_TYPE_FLOAT32 && data->out_tensor_type == vx_type_e::VX_TYPE_FLOAT32)
+        data->tensor_size *= sizeof(float);
+
     refreshCopy(node, parameters, num, data);
 
     STATUS_ERROR_CHECK(vxSetNodeAttribute(node, VX_NODE_LOCAL_DATA_PTR, &data, sizeof(data)));
