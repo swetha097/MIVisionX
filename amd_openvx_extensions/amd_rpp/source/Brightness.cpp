@@ -61,7 +61,7 @@ static vx_status VX_CALLBACK refreshBrightness(vx_node node, const vx_reference 
     STATUS_ERROR_CHECK(vxCopyArrayRange((vx_array)parameters[3], 0, data->nbatchSize, sizeof(vx_float32), data->alpha, VX_READ_ONLY, VX_MEMORY_TYPE_HOST));
     STATUS_ERROR_CHECK(vxCopyArrayRange((vx_array)parameters[4], 0, data->nbatchSize, sizeof(vx_float32), data->beta, VX_READ_ONLY, VX_MEMORY_TYPE_HOST));
     
-    if(data->layout == 2 || data->layout == 3)  // For NFCHW and NFHWC formats
+    if(data->layout == 2 || data->layout == 3) // For NFCHW and NFHWC formats
     {
         unsigned num_of_frames = data->in_tensor_dims[1]; // Num of frames 'F'
         for(int n = data->nbatchSize - 1; n >= 0; n--)
@@ -257,7 +257,7 @@ static vx_status VX_CALLBACK initializeBrightness(vx_node node, const vx_referen
         data->dst_desc_ptr->strides.cStride = 1;
         data->dst_desc_ptr->layout = RpptLayout::NHWC;
     }
-    else if(data->layout == 1)// NCHW
+    else if(data->layout == 1) // NCHW
     {
         // source_description_ptr
         data->src_desc_ptr->n = data->in_tensor_dims[0];
@@ -305,7 +305,7 @@ static vx_status VX_CALLBACK initializeBrightness(vx_node node, const vx_referen
         data->dst_desc_ptr->strides.cStride = 1;
         data->dst_desc_ptr->layout = RpptLayout::NHWC;
     }
-    else if(data->layout == 3)// NFCHW
+    else if(data->layout == 3) // NFCHW
     {
         // source_description_ptr
         data->src_desc_ptr->n = data->in_tensor_dims[0] * data->in_tensor_dims[1];
@@ -440,5 +440,6 @@ vx_status Brightness_Register(vx_context context)
         vxRemoveKernel(kernel);
         return VX_FAILURE;
     }
+
     return status;
 }

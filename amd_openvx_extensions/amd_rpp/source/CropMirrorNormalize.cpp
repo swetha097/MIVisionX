@@ -290,7 +290,7 @@ static vx_status VX_CALLBACK initializeCropMirrorNormalize(vx_node node, const v
         data->dst_desc_ptr->strides.cStride = 1;
         data->dst_desc_ptr->layout = RpptLayout::NHWC;
     }
-    else if(data->layout == 1)// NCHW
+    else if(data->layout == 1) // NCHW
     {
         // source_description_ptr
         data->src_desc_ptr->n = data->in_tensor_dims[0];
@@ -338,7 +338,7 @@ static vx_status VX_CALLBACK initializeCropMirrorNormalize(vx_node node, const v
         data->dst_desc_ptr->strides.cStride = 1;
         data->dst_desc_ptr->layout = RpptLayout::NHWC;
     }
-    else if(data->layout == 3)// NFCHW
+    else if(data->layout == 3) // NFCHW
     {
         // source_description_ptr
         data->src_desc_ptr->n = data->in_tensor_dims[0] * data->in_tensor_dims[1];
@@ -367,9 +367,9 @@ static vx_status VX_CALLBACK initializeCropMirrorNormalize(vx_node node, const v
     if (data->device_type == AGO_TARGET_AFFINITY_GPU)
         hipMalloc(&data->hip_roi_tensor_Ptr, data->src_desc_ptr->n * sizeof(RpptROI));
 #endif
-    data->roi_tensor_Ptr = (RpptROI *)calloc(data->nbatchSize, sizeof(RpptROI));
-    data->mean = (vx_float32 *)malloc(sizeof(vx_float32) * data->src_desc_ptr->n*3);
-    data->std_dev = (vx_float32 *)malloc(sizeof(vx_float32) * data->src_desc_ptr->n*3);
+    data->roi_tensor_Ptr = (RpptROI *)calloc(data->src_desc_ptr->n, sizeof(RpptROI));
+    data->mean = (vx_float32 *)malloc(sizeof(vx_float32) * data->src_desc_ptr->n * 3);
+    data->std_dev = (vx_float32 *)malloc(sizeof(vx_float32) * data->src_desc_ptr->n * 3);
     data->mirror = (vx_uint32 *)malloc(sizeof(vx_uint32) * data->src_desc_ptr->n);
     data->start_x = (vx_uint32 *)malloc(sizeof(vx_uint32) * data->src_desc_ptr->n);
     data->start_y = (vx_uint32 *)malloc(sizeof(vx_uint32) * data->src_desc_ptr->n);
@@ -400,6 +400,7 @@ static vx_status VX_CALLBACK uninitializeCropMirrorNormalize(vx_node node, const
 #endif
     if (data->device_type == AGO_TARGET_AFFINITY_CPU)
         rppDestroyHost(data->rppHandle);
+    free(data->roi_tensor_Ptr);
     free(data->start_x);
     free(data->start_y);
     free(data->crop_w);
@@ -407,7 +408,6 @@ static vx_status VX_CALLBACK uninitializeCropMirrorNormalize(vx_node node, const
     free(data->mean);
     free(data->std_dev);
     free(data->mirror);
-    free(data->roi_tensor_Ptr);
 #if ENABLE_HIP
     if (data->device_type == AGO_TARGET_AFFINITY_GPU)
         hipFree(data->hip_roi_tensor_Ptr);
@@ -462,6 +462,7 @@ vx_status CropMirrorNormalize_Register(vx_context context)
     vx_bool enableBufferAccess = vx_false_e;
 #endif
     amd_kernel_query_target_support_f query_target_support_f = query_target_support;
+
     if (kernel)
     {
         STATUS_ERROR_CHECK(vxSetKernelAttribute(kernel, VX_KERNEL_ATTRIBUTE_AMD_QUERY_TARGET_SUPPORT, &query_target_support_f, sizeof(query_target_support_f)));
@@ -490,5 +491,6 @@ vx_status CropMirrorNormalize_Register(vx_context context)
         vxRemoveKernel(kernel);
         return VX_FAILURE;
     }
+
     return status;
 }
