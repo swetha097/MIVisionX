@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2019 - 2021 Advanced Micro Devices, Inc. All rights reserved.
+Copyright (c) 2019 - 2022 Advanced Micro Devices, Inc. All rights reserved.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -21,7 +21,6 @@ THE SOFTWARE.
 */
 
 #include "internal_publishKernels.h"
-#include "vx_ext_amd.h"
 #define NUM_OF_DIMS 5
 
 struct CropMirrorNormalizeLocalData
@@ -29,11 +28,7 @@ struct CropMirrorNormalizeLocalData
     RPPCommonHandle handle;
     rppHandle_t rppHandle;
     Rpp32u device_type;
-    RpptDescPtr src_desc_ptr;
-    RpptDesc srcDesc;
-    RpptDesc dstDesc;
     Rpp32u nbatchSize;
-    RpptDescPtr dst_desc_ptr;
     RppPtr_t pSrc;
     RppPtr_t pDst;
     vx_uint32 *start_x;
@@ -43,17 +38,17 @@ struct CropMirrorNormalizeLocalData
     vx_float32 *mean;
     vx_float32 *std_dev;
     vx_uint32 *mirror;
-    vx_bool is_packed;                  // if true NHWC else NCHW
-    size_t in_tensor_dims[NUM_OF_DIMS]; // will have NHWC info
-    size_t out_tensor_dims[NUM_OF_DIMS];
-    vx_uint32 channels;
-    vx_uint32 batch_size;
+    RpptDescPtr src_desc_ptr;
+    RpptDesc srcDesc;
+    RpptDesc dstDesc;
+    RpptDescPtr dst_desc_ptr;
     RpptROI *roi_tensor_Ptr;
     RpptRoiType roiType;
-    vx_uint32 chnShift; //NHWC to NCHW
-    vx_enum in_tensor_type ;
-    vx_enum out_tensor_type;
     Rpp32u layout;
+    size_t in_tensor_dims[NUM_OF_DIMS];
+    size_t out_tensor_dims[NUM_OF_DIMS];
+    vx_enum in_tensor_type;
+    vx_enum out_tensor_type;
 #if ENABLE_OPENCL
     cl_mem cl_pSrc;
     cl_mem cl_pDst;
@@ -61,16 +56,9 @@ struct CropMirrorNormalizeLocalData
     void *hip_pSrc;
     void *hip_pDst;
     RpptROI *hip_roi_tensor_Ptr;
-
 #endif
 };
-/*
-* Number of Dims is 4
-* If is_packed is true - NHWC
-* Dims[0] = N , Dims[1] = H, Dims[2] = W, Dims[3] = C
-* If is_packed is true - NCHW
-* Dims[0] = N , Dims[1] = C, Dims[2] = H, Dims[3] = W
-*/
+
 static vx_status VX_CALLBACK refreshCropMirrorNormalize(vx_node node, const vx_reference *parameters, vx_uint32 num, CropMirrorNormalizeLocalData *data)
 {
     vx_status status = VX_SUCCESS;
@@ -79,8 +67,8 @@ static vx_status VX_CALLBACK refreshCropMirrorNormalize(vx_node node, const vx_r
     STATUS_ERROR_CHECK(vxCopyArrayRange((vx_array)parameters[5], 0, data->nbatchSize, sizeof(vx_uint32), data->crop_h, VX_READ_ONLY, VX_MEMORY_TYPE_HOST));
     STATUS_ERROR_CHECK(vxCopyArrayRange((vx_array)parameters[6], 0, data->nbatchSize, sizeof(vx_uint32), data->start_x, VX_READ_ONLY, VX_MEMORY_TYPE_HOST));
     STATUS_ERROR_CHECK(vxCopyArrayRange((vx_array)parameters[7], 0, data->nbatchSize, sizeof(vx_uint32), data->start_y, VX_READ_ONLY, VX_MEMORY_TYPE_HOST));
-    STATUS_ERROR_CHECK(vxCopyArrayRange((vx_array)parameters[8], 0, data->nbatchSize*3, sizeof(vx_float32), data->mean, VX_READ_ONLY, VX_MEMORY_TYPE_HOST));
-    STATUS_ERROR_CHECK(vxCopyArrayRange((vx_array)parameters[9], 0, data->nbatchSize*3, sizeof(vx_float32), data->std_dev, VX_READ_ONLY, VX_MEMORY_TYPE_HOST));
+    STATUS_ERROR_CHECK(vxCopyArrayRange((vx_array)parameters[8], 0, data->nbatchSize * 3, sizeof(vx_float32), data->mean, VX_READ_ONLY, VX_MEMORY_TYPE_HOST));
+    STATUS_ERROR_CHECK(vxCopyArrayRange((vx_array)parameters[9], 0, data->nbatchSize * 3, sizeof(vx_float32), data->std_dev, VX_READ_ONLY, VX_MEMORY_TYPE_HOST));
     STATUS_ERROR_CHECK(vxCopyArrayRange((vx_array)parameters[10], 0, data->nbatchSize, sizeof(vx_uint32), data->mirror, VX_READ_ONLY, VX_MEMORY_TYPE_HOST));
 
     for(int i = 0; i < data->nbatchSize; i++)
@@ -171,7 +159,7 @@ static vx_status VX_CALLBACK validateCropMirrorNormalize(vx_node node, const vx_
     vx_parameter output_param;
     size_t num_tensor_dims;
     vx_uint8 tensor_fixed_point_position;
-    size_t tensor_dims[5];
+    size_t tensor_dims[NUM_OF_DIMS];
     vx_enum tensor_type;
     output_param = vxGetParameterByIndex(node, 2);
     STATUS_ERROR_CHECK(vxQueryParameter(output_param, VX_PARAMETER_ATTRIBUTE_REF, &output, sizeof(vx_tensor)));
@@ -194,9 +182,6 @@ static vx_status VX_CALLBACK processCropMirrorNormalize(vx_node node, const vx_r
     vx_status return_status = VX_SUCCESS;
     CropMirrorNormalizeLocalData *data = NULL;
     STATUS_ERROR_CHECK(vxQueryNode(node, VX_NODE_LOCAL_DATA_PTR, &data, sizeof(data)));
-    Rpp32u N, C;
-    N = data->nbatchSize;
-    C = data->channels;
     if (data->device_type == AGO_TARGET_AFFINITY_GPU)
     {
 #if ENABLE_OPENCL
@@ -242,12 +227,12 @@ static vx_status VX_CALLBACK initializeCropMirrorNormalize(vx_node node, const v
         data->roiType = RpptRoiType::XYWH;
     else
         data->roiType = RpptRoiType::LTRB;
-    
+
     // Querying for input tensor
     data->src_desc_ptr = &data->srcDesc;
     STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[0], VX_TENSOR_NUMBER_OF_DIMS, &data->src_desc_ptr->numDims, sizeof(data->src_desc_ptr->numDims)));
     STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[0], VX_TENSOR_DIMS, &data->in_tensor_dims, sizeof(vx_size) * data->src_desc_ptr->numDims));
-    STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[0],VX_TENSOR_DATA_TYPE, &data->in_tensor_type, sizeof(data->in_tensor_type)));
+    STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[0], VX_TENSOR_DATA_TYPE, &data->in_tensor_type, sizeof(data->in_tensor_type)));
     if(data->in_tensor_type == vx_type_e::VX_TYPE_UINT8)
     {
         data->src_desc_ptr->dataType = RpptDataType::U8;
@@ -256,12 +241,12 @@ static vx_status VX_CALLBACK initializeCropMirrorNormalize(vx_node node, const v
     {
         data->src_desc_ptr->dataType = RpptDataType::F32;
     }
-    // else if (data->src_desc_ptr->dataType == vx_type_e::VX_TYPE_FLOAT16)
+    // else if (data->in_tensor_type == vx_type_e::VX_TYPE_FLOAT16)
     // {
     //     data->src_desc_ptr->dataType = RpptDataType::F16;
     // }
     data->src_desc_ptr->offsetInBytes = 0;
-    
+
     // Querying for output tensor
     data->dst_desc_ptr = &data->dstDesc;
     STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[2], VX_TENSOR_NUMBER_OF_DIMS, &data->dst_desc_ptr->numDims, sizeof(data->dst_desc_ptr->numDims)));
@@ -275,7 +260,7 @@ static vx_status VX_CALLBACK initializeCropMirrorNormalize(vx_node node, const v
     {
         data->dst_desc_ptr->dataType = RpptDataType::F32;
     }
-    // else if (data->src_desc_ptr->dataType == vx_type_e::VX_TYPE_FLOAT16)
+    // else if (data->out_tensor_type == vx_type_e::VX_TYPE_FLOAT16)
     // {
     //     data->src_desc_ptr->dataType = RpptDataType::F16;
     // }
@@ -377,11 +362,11 @@ static vx_status VX_CALLBACK initializeCropMirrorNormalize(vx_node node, const v
         data->dst_desc_ptr->strides.cStride = 1;
         data->dst_desc_ptr->layout = RpptLayout::NCHW; 
     }
+
 #if ENABLE_HIP
     if (data->device_type == AGO_TARGET_AFFINITY_GPU)
         hipMalloc(&data->hip_roi_tensor_Ptr, data->src_desc_ptr->n * sizeof(RpptROI));
 #endif
-    //declaring and pushing values to roi_tensor_Ptr
     data->roi_tensor_Ptr = (RpptROI *)calloc(data->nbatchSize, sizeof(RpptROI));
     data->mean = (vx_float32 *)malloc(sizeof(vx_float32) * data->src_desc_ptr->n*3);
     data->std_dev = (vx_float32 *)malloc(sizeof(vx_float32) * data->src_desc_ptr->n*3);
@@ -400,6 +385,7 @@ static vx_status VX_CALLBACK initializeCropMirrorNormalize(vx_node node, const v
 #endif
     if (data->device_type == AGO_TARGET_AFFINITY_CPU)
         rppCreateWithBatchSize(&data->rppHandle, data->nbatchSize);
+
     STATUS_ERROR_CHECK(vxSetNodeAttribute(node, VX_NODE_LOCAL_DATA_PTR, &data, sizeof(data)));
     return VX_SUCCESS;
 }
