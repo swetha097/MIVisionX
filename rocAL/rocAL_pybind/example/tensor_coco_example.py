@@ -81,7 +81,7 @@ class ROCALCOCOIterator(object):
         self.color_format = self.output_tensor_list[0].color_format()
 
         #NHWC default for now
-        self.output = torch.empty((self.batch_size, self.h, self.w, self.color_format,), dtype=torch.uint8)
+        self.out = torch.empty((self.bs, self.h, self.w, self.color_format,), dtype=torch.uint8)
         self.output_tensor_list[0].copy_data(ctypes.c_void_p(self.out.data_ptr()))
 
 

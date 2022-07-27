@@ -219,6 +219,9 @@ void BoundingBoxGraph::update_box_encoder_meta_data(std::vector<float> *anchors,
         BoundingBoxCords * encoded_bb_ltrb = (BoundingBoxCords*)&encoded_bb;
         full_batch_meta_data->get_bb_cords_batch()[i] = (*encoded_bb_ltrb);
         full_batch_meta_data->get_bb_labels_batch()[i] = encoded_labels;
+        full_batch_meta_data->get_metadata_dimensions_batch().bb_labels_dims()[i][0] = anchors_size;
+        full_batch_meta_data->get_metadata_dimensions_batch().bb_cords_dims()[i][0] = anchors_size;
+
         //encoded_bb.clear();
         //encoded_labels.clear();
     }
