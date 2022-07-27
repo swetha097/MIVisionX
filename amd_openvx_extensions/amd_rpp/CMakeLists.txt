@@ -131,6 +131,7 @@ list(APPEND SOURCES
         source/WarpPerspectivebatchPD.cpp
         source/Brightness.cpp
         source/Copy.cpp
+        source/CropMirrorNormalize.cpp
         source/Nop.cpp
         source/kernel_rpp.cpp
         source/internal_publishKernels.cpp
