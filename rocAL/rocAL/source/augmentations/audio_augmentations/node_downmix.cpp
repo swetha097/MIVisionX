@@ -34,10 +34,31 @@ void DownmixNode::create_node()
     if(_node)
         return;
 
-    _node = vxExtrppNode_Downmix(_graph->get(), _inputs[0]->handle(), _outputs[0]->handle());
+    auto audio_roi = _inputs[0]->info().get_roi();
+    _src_samples.resize(_batch_size);
+    _src_channels.resize(_batch_size);
+    for (uint i=0; i < _batch_size; i++ ) 
+    {
+        _src_samples[i] = audio_roi->at(i).x1;
+        _src_channels[i] = audio_roi->at(i).y1;
+    }
+    _src_samples_array = vxCreateArray(vxGetContext((vx_reference)_graph->get()), VX_TYPE_UINT32, _batch_size);
+    _src_channels_array = vxCreateArray(vxGetContext((vx_reference)_graph->get()), VX_TYPE_UINT32, _batch_size);
+    vx_status status = VX_SUCCESS;
+    status |= vxAddArrayItems(_src_samples_array, _batch_size, _src_samples.data(), sizeof(vx_uint32));
+    status |= vxAddArrayItems(_src_channels_array, _batch_size, _src_channels.data(), sizeof(vx_uint32));
 
-    vx_status status;
+    if(status != 0)
+        THROW(" vxAddArrayItems failed in the downmix node (vxExtrppNode_Downmix)  node: "+ TOSTR(status) + "  "+ TOSTR(status))
+    vx_scalar normalize_weights = vxCreateScalar(vxGetContext((vx_reference)_graph->get()), VX_TYPE_BOOL, &_normalize_weights);
+    // _node = vxExtrppNode_Downmix(_graph->get(), _inputs[0]->handle(), _outputs[0]->handle(), _src_samples_array, _src_channels_array, normalize_weights);
+
     if((status = vxGetStatus((vx_reference)_node)) != VX_SUCCESS)
         THROW("Adding the copy (vxExtrppNode_Downmix) node failed: "+ TOSTR(status))
 
+}
+
+void DownmixNode::init(bool normalize_weights)
+{
+    _normalize_weights = normalize_weights;
 }

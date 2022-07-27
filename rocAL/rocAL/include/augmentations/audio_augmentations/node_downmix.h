@@ -29,8 +29,14 @@ class DownmixNode : public Node
 public:
     DownmixNode(const std::vector<rocALTensor *> &inputs, const std::vector<rocALTensor *> &outputs);
     DownmixNode() = delete;
+    void init(bool normalize_weights);
 
 protected:
     void create_node() override;
     void update_node() override {};
+
+private:
+    vx_array _src_samples_array, _src_channels_array;
+    std::vector<unsigned> _src_samples, _src_channels;
+    bool _normalize_weights = false;
 };

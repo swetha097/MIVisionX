@@ -132,7 +132,7 @@ public:
     void set_color_format(RocalColorFormat color_format) { _color_format = color_format; }
 
     unsigned num_of_dims() const { return _num_of_dims; }
-    unsigned batch_size() const { return _batch_size; }
+    unsigned batch_size() const { return _dims.at(0); }
     unsigned data_size() const { return _data_size; }
     std::vector<unsigned> max_dims() const { return _max_dims; }
     std::vector<unsigned> dims() const { return _dims; }

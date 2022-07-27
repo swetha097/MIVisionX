@@ -143,6 +143,14 @@ void rocALTensorInfo::reallocate_tensor_roi_buffers()
             _roi->at(i).y2 = _dims.at(2);
         }
     }
+    else if(!_is_metadata)
+    {
+        for (unsigned i = 0; i < _batch_size; i++)
+        {
+            _roi->at(i).x1 = _dims.at(1);
+            _roi->at(i).y1 = _dims.at(2);
+        }
+    }
 }
 
 rocALTensorInfo::rocALTensorInfo() : _type(Type::UNKNOWN),
@@ -208,6 +216,43 @@ void rocALTensor::update_tensor_roi(const std::vector<uint32_t> &width, const st
             else
             {
                 _info.get_roi()->at(i).y2 = height[i];
+            }
+        }
+    }
+    else if(!_info.is_metadata())
+    {
+        auto max_dims = _info.max_dims();
+        unsigned max_samples = max_dims.at(0);
+        unsigned max_channels = max_dims.at(1);
+
+        auto samples = width;
+        auto channels = height;
+
+        if (samples.size() != channels.size())
+            THROW("Batch size of Tensor height and width info does not match")
+
+        if (samples.size() != info().batch_size())
+            THROW("The batch size of actual Tensor height and width different from Tensor batch size " + TOSTR(samples.size()) + " != " + TOSTR(info().batch_size()))
+
+        for (unsigned i = 0; i < info().batch_size(); i++)
+        {
+            if (samples[i] > max_samples)
+            {
+                ERR("Given ROI width is larger than buffer width for tensor[" + TOSTR(i) + "] " + TOSTR(samples[i]) + " > " + TOSTR(max_samples))
+                _info.get_roi()->at(i).x1 = max_samples;
+            }
+            else
+            {
+                _info.get_roi()->at(i).x1 = samples[i];
+            }
+            if (channels[i] > max_channels)
+            {
+                ERR("Given ROI height is larger than buffer with for tensor[" + TOSTR(i) + "] " + TOSTR(channels[i]) + " > " + TOSTR(max_channels))
+                _info.get_roi()->at(i).y1 = max_channels;
+            }
+            else
+            {
+                _info.get_roi()->at(i).y1 = channels[i];
             }
         }
     }

@@ -186,10 +186,10 @@ AudioReadAndDecode::load(float* buff,
         for (size_t i = 0; i < _batch_size; i++) {
             names[i] = _audio_names[i];
 
-            roi_samples[i] = _original_samples[i]; // TODO - Needs to be checked
-            roi_channels[i] = _original_channels[i];
-            actual_samples[i] = _actual_decoded_samples[i];
-            actual_channels[i] = _actual_decoded_channels[i];
+            actual_samples[i] = roi_samples[i] = _original_samples[i]; // TODO - Needs to be checked
+            actual_channels[i] = roi_channels[i] = _original_channels[i];
+            // actual_samples[i] = _actual_decoded_samples[i];
+            // actual_channels[i] = _actual_decoded_channels[i];
         }
     }
     _decode_time.end();// Debug timing
