@@ -129,7 +129,7 @@ static vx_status VX_CALLBACK processCopy(vx_node node, const vx_reference *param
         clEnqueueCopyBuffer(handle, data->cl_pSrc, data->cl_pDst, 0, 0, data->tensor_size, 0, NULL, NULL);
         return status;
 #elif ENABLE_HIP
-        vxstatus = refreshcopy(node, parameters, num, data);
+        vxstatus = refreshCopy(node, parameters, num, data);
         if (vxstatus != VX_SUCCESS)
             return vxstatus;
         hipMemcpy(data->hip_pDst, data->hip_pSrc, data->tensor_size, hipMemcpyDeviceToDevice);
@@ -221,7 +221,7 @@ vx_status Copy_Register(vx_context context)
     vx_status status = VX_SUCCESS;
     // Add kernel to the context with callbacks
     vx_kernel kernel = vxAddUserKernel(context, "org.rpp.Copy",
-                                       VX_KERNEL_RPP_COPYTENSOR,
+                                       VX_KERNEL_RPP_COPY,
                                        processCopy,
                                        3,
                                        validateCopy,
