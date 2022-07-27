@@ -45,6 +45,7 @@ class ROCALCOCOIterator(object):
         self.device_id = self.loader._device_id
         self.bs = self.loader._batch_size
         self.num_anchors = num_anchors
+        self.display = True
 
         #Image id of a batch of images
         self.image_id = np.zeros(self.bs, dtype="int32")
@@ -87,15 +88,27 @@ class ROCALCOCOIterator(object):
 
         # 1D labels & bboxes array
         torch_gpu_device = torch.device('cuda', self.device_id)
-        labels_array = self.loader.getEncodedBoxesAndLables(self.bs, int(self.num_anchors))
-        # self.encoded_bboxes = torch.as_tensor(boxes_array, dtype=torch.float32, device=torch_gpu_device)
+        labels_array, boxes_array = self.loader.getEncodedBoxesAndLables(self.bs, int(self.num_anchors))
+        self.encoded_bboxes = torch.as_tensor(boxes_array, dtype=torch.float32, device=torch_gpu_device)
+        self.encoded_bboxes = self.encoded_bboxes.view(self.bs, self.num_anchors, 4)
         self.encoded_labels = torch.as_tensor(labels_array, dtype=torch.int32, device=torch_gpu_device)
-        # encoded_bboxes_tensor = self.encoded_bboxes.cpu()
+        encoded_bboxes_tensor = self.encoded_bboxes.cpu()
         encodded_labels_tensor = self.encoded_labels.cpu()
 
+        # Image id of a batch of images
+        self.loader.GetImageId(self.image_id)
 
-        # image_id_tensor = torch.tensor(self.image_id)
-        # image_size_tensor = torch.tensor(self.img_size).view(-1, self.bs, 2)
+        # Image sizes of a batch
+        self.loader.GetImgSizes(self.img_size)
+
+        # print(encoded_bboxes_tensor)
+        # print(encodded_labels_tensor.shape)
+        # exit(0)
+        image_id_tensor = torch.tensor(self.image_id, device=torch_gpu_device)
+        image_size_tensor = torch.tensor(self.img_size, device=torch_gpu_device).view(-1, self.bs, 2)
+        print("Image ID :",image_id_tensor)
+        print("Image SIZE :",image_size_tensor)
+        # exit(0)
         for i in range(self.bs):
             index_list = []
             actual_bboxes = []
@@ -103,17 +116,18 @@ class ROCALCOCOIterator(object):
             for idx, x in enumerate(encodded_labels_tensor[i]):
                 if x != 0:
                     index_list.append(idx)
-                    # actual_bboxes.append(encoded_bboxes_tensor[i][idx].tolist())
+                    actual_bboxes.append(encoded_bboxes_tensor[i][idx].tolist())
                     actual_labels.append(encodded_labels_tensor[i][idx].tolist())
         print(actual_labels)
-        exit(0)
+        print(actual_bboxes)
+        # exit(0)
 
-            # if self.display:
-            #     img = self.out
-            #     draw_patches(img[i], self.image_id[i],
-            #                  actual_bboxes, self.device)
-
-        # return (self.out), encoded_bboxes_tensor, encodded_labels_tensor, image_id_tensor, image_size_tensor
+        if self.display:
+            img = self.out
+            draw_patches(img[i], self.image_id[i],
+                            actual_bboxes, self.device)
+        # exit(0)
+        return (self.out), encoded_bboxes_tensor, encodded_labels_tensor, image_id_tensor, image_size_tensor
         return self.out
 
     def reset(self):
@@ -246,10 +260,10 @@ def main():
                                             rocal_tensor_layout = types.NHWC,
                                             rocal_tensor_output_type = types.UINT8,
                                             crop=(224, 224),
-                                            mirror=flip_coin,
+                                            mirror=0,
                                             image_type=types.RGB,
-                                            mean=[0.485 * 255,0.456 * 255,0.406 * 255],
-                                            std=[0.229 * 255,0.224 * 255,0.225 * 255])
+                                            mean=[0,0,0],
+                                            std=[1,1,1])
         _, _ = fn.box_encoder(bboxes, labels,
                                   criteria=0.5,
                                   anchors=default_boxes)
@@ -260,10 +274,10 @@ def main():
     cnt = 0
     for i , it in enumerate(imageIteratorPipeline):
         print("************************************** i *************************************",i)
-        for img in it[0]:
-            print(img.shape)
-            cnt = cnt + 1
-            draw_patches(img, cnt, "cpu")
+        # for img in it[0]:
+        #     print(img.shape)
+        #     cnt = cnt + 1
+        #     draw_patches(img, cnt, "cpu")
 
     print("*********************************************************************")
 

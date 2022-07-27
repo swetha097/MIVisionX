@@ -93,6 +93,12 @@ extern "C" RocalMetaData ROCAL_API_CALL rocalCreateCaffe2LMDBReaderDetection(Roc
 /// \param buf user buffer provided to be filled with output image names for images in the output batch.
 extern "C" void ROCAL_API_CALL rocalGetImageName(RocalContext rocal_context,  char* buf);
 
+
+///
+/// \param rocal_context
+/// \param buf user buffer provided to be filled with output image names for images in the output batch.
+extern "C" void ROCAL_API_CALL rocalGetImageId(RocalContext rocal_context,  int* buf);
+
 ///
 /// \param rocal_context
 /// \param buf userbuffer provided to be filled with the length of the image names in the output batch
@@ -114,6 +120,12 @@ extern "C" void ROCAL_API_CALL rocalGetOneHotImageLabels(RocalContext rocal_cont
 extern "C" RocalTensorList ROCAL_API_CALL rocalGetBoundingBoxLabel(RocalContext rocal_context);
 extern "C" RocalTensorList ROCAL_API_CALL rocalGetBoundingBoxCords(RocalContext rocal_context);
 
+///
+/// \param rocal_context
+/// \param image_idx the imageIdx in the output batch
+/// \param buf The user's buffer that will be filled with bounding box info. It needs to be of size bounding box len returned by a call to the rocalGetBoundingBoxCount
+extern "C" void ROCAL_API_CALL rocalGetImageSizes(RocalContext rocal_context, int* buf );
+
 #if 0 // Commented for now
 ///
 /// \param rocal_context
@@ -122,11 +134,7 @@ extern "C" RocalTensorList ROCAL_API_CALL rocalGetBoundingBoxCords(RocalContext 
 extern "C" unsigned ROCAL_API_CALL rocalGetMaskCount(RocalContext rocal_context, int* buf );
 extern "C" void ROCAL_API_CALL rocalGetMaskCoordinates(RocalContext rocal_context, int* bufcount, float* buf);
 
-///
-/// \param rocal_context
-/// \param image_idx the imageIdx in the output batch
-/// \param buf The user's buffer that will be filled with bounding box info. It needs to be of size bounding box len returned by a call to the rocalGetBoundingBoxCount
-extern "C" void ROCAL_API_CALL rocalGetImageSizes(RocalContext rocal_context, int* buf, unsigned image_idx );
+
 
 ///
 /// \param rocal_context

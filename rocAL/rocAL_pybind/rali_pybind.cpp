@@ -292,6 +292,21 @@ namespace rali
         // rocal_api_meta_data.h
         m.def("RandomBBoxCrop", &rocalRandomBBoxCrop);
         m.def("BoxEncoder",&rocalBoxEncoder);
+        m.def("getImageId", [](RocalContext context, py::array_t<int> array)
+        {
+            auto buf = array.request();
+            int* ptr = (int*) buf.ptr;
+            return rocalGetImageId(context,ptr);
+        }
+        );
+        m.def("getImgSizes", [](RocalContext context, py::array_t<int> array)
+        {
+            auto buf = array.request();
+            int* ptr = (int*) buf.ptr;
+            // call pure C++ function
+            rocalGetImageSizes(context,ptr);
+        }
+        );
         // rocal_api_parameter.h
         m.def("setSeed", &rocalSetSeed);
         m.def("getSeed", &rocalGetSeed);
@@ -365,15 +380,15 @@ namespace rali
                             {batch_size, num_anchors},
                             {num_anchors*sizeof(int), sizeof(int)}));
 
-                // py::array_t<float> bboxes_array = py::array_t<float>(py::buffer_info(
-                //             bboxes_buf_ptr,
-                //             sizeof(float),
-                //             py::format_descriptor<float>::format(),
-                //             3,
-                //             {batch_size, num_anchors, 4},
-                //             {4*sizeof(float)*num_anchors, 4*sizeof(float), sizeof(float)} ));
+                py::array_t<float> bboxes_array = py::array_t<float>(py::buffer_info(
+                            bboxes_buf_ptr,
+                            sizeof(float),
+                            py::format_descriptor<float>::format(),
+                            1,
+                            {batch_size * num_anchors * 4},
+                            {sizeof(float)} ));
 
-        return labels_array;
+        return std::make_pair(labels_array, bboxes_array);
             }
         );
         // rocal_api_data_loaders.h
