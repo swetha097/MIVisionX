@@ -313,7 +313,6 @@ namespace rali
             rocALTensorList * tl = rocalGetOutputTensors(context);
             py::list list;
             unsigned int size_of_tensor_list = tl->size();
-            std::cerr<<"SIZE :: " << size_of_tensor_list;
             for (uint i =0; i< size_of_tensor_list; i++)
                 list.append(tl->at(i));
             return list; });

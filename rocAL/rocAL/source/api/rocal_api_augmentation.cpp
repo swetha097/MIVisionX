@@ -64,14 +64,12 @@ void get_rocal_tensor_data_type(RocalTensorOutputType &tensor_output_type, Rocal
     switch(tensor_output_type)
     {
         case ROCAL_FP32:
-            std::cerr<<"\n Setting output type to FP32";
             tensor_data_type = RocalTensorDataType::FP32;
             return;
         case ROCAL_FP16:
             tensor_data_type = RocalTensorDataType::FP16;
             return;
         case ROCAL_UINT8:
-            std::cerr<<"\n Setting output type to UINT8";
             tensor_data_type = RocalTensorDataType::UINT8;
             return;
         default:
@@ -365,7 +363,6 @@ rocalCrop(RocalContext p_context,
           RocalFloatParam p_crop_pos_y,
           RocalFloatParam p_crop_pos_z)
 {
-    std::cerr<<"in crop augmentation\n\n\n";
     rocALTensor* output = nullptr;
     auto context = static_cast<Context*>(p_context);
     auto input = static_cast<rocALTensor*>(p_input);
@@ -413,7 +410,6 @@ rocalCropFixed(RocalContext p_context,
           float start_z,
           bool is_output)
 {
-    std::cerr<<"in crop augmentation\n\n\n";
     rocALTensor* output = nullptr;
     auto context = static_cast<Context*>(p_context);
     auto input = static_cast<rocALTensor*>(p_input);
