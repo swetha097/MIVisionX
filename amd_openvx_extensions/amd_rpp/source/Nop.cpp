@@ -112,7 +112,6 @@ static vx_status VX_CALLBACK processNop(vx_node node, const vx_reference *parame
 {
     NopLocalData *data = NULL;
 
-    vx_status vxstatus;
     vx_status status = VX_SUCCESS;
     STATUS_ERROR_CHECK(vxQueryNode(node, VX_NODE_LOCAL_DATA_PTR, &data, sizeof(data)));
     vx_enum in_tensor_type = vx_type_e::VX_TYPE_UINT8;
@@ -123,16 +122,14 @@ static vx_status VX_CALLBACK processNop(vx_node node, const vx_reference *parame
     if (data->device_type == AGO_TARGET_AFFINITY_GPU)
     {
 #if ENABLE_OPENCL || ENABLE_HIP
-        vxstatus = refreshNop(node, parameters, num, data);
+        refreshNop(node, parameters, num, data);
         size_t size = data->in_tensor_dims[1] * data->in_tensor_dims[2] * data->in_tensor_dims[3];
-        return VX_SUCCESS;
 #endif
     }
     if (data->device_type == AGO_TARGET_AFFINITY_CPU)
     {
-        vxstatus = refreshNop(node, parameters, num, data);
+        refreshNop(node, parameters, num, data);
         size_t size = data->in_tensor_dims[1] * data->in_tensor_dims[2] * data->in_tensor_dims[3];
-        return VX_SUCCESS;
     }
     return status;
 }

@@ -110,7 +110,6 @@ static vx_status VX_CALLBACK validateCopy(vx_node node, const vx_reference param
 
 static vx_status VX_CALLBACK processCopy(vx_node node, const vx_reference *parameters, vx_uint32 num)
 {
-    vx_status vxstatus;
     vx_status status = VX_SUCCESS;
     CopyLocalData *data = NULL;
     STATUS_ERROR_CHECK(vxQueryNode(node, VX_NODE_LOCAL_DATA_PTR, &data, sizeof(data)));
@@ -123,25 +122,15 @@ static vx_status VX_CALLBACK processCopy(vx_node node, const vx_reference *param
     {
 #if ENABLE_OPENCL
         cl_command_queue handle = data->handle.cmdq;
-        vxstatus = refreshCopy(node, parameters, num, data);
-        if (vxstatus != VX_SUCCESS)
-            return vxstatus;
+        refreshCopy(node, parameters, num, data);
         clEnqueueCopyBuffer(handle, data->cl_pSrc, data->cl_pDst, 0, 0, data->tensor_size, 0, NULL, NULL);
-        return status;
 #elif ENABLE_HIP
-        vxstatus = refreshCopy(node, parameters, num, data);
-        if (vxstatus != VX_SUCCESS)
-            return vxstatus;
+        refreshCopy(node, parameters, num, data);
         hipMemcpy(data->hip_pDst, data->hip_pSrc, data->tensor_size, hipMemcpyDeviceToDevice);
-        return status;
 #endif
     }
     if (data->device_type == AGO_TARGET_AFFINITY_CPU)
     {
-        vxstatus = refreshCopy(node, parameters, num, data);
-        if (vxstatus != VX_SUCCESS)
-            return vxstatus;
-
         if (in_tensor_type == vx_type_e::VX_TYPE_UINT8)
         {
             memcpy(data->pDst, data->pSrc, data->tensor_size);
@@ -155,7 +144,6 @@ static vx_status VX_CALLBACK processCopy(vx_node node, const vx_reference *param
         // {
         //     memcpy(data->pDst, data->pSrc, size*sizeof(float16_t));
         // }
-        return status;
     }
     return status;
 }
