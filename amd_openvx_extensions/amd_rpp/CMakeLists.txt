@@ -129,6 +129,7 @@ list(APPEND SOURCES
         source/VignettebatchPD.cpp
         source/WarpAffinebatchPD.cpp
         source/WarpPerspectivebatchPD.cpp
+        source/Brightness.cpp
         source/Copy.cpp
         source/Nop.cpp
         source/kernel_rpp.cpp

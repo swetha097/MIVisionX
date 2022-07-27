@@ -115,6 +115,7 @@ vx_status ThresholdingbatchPD_Register(vx_context);
 vx_status VignettebatchPD_Register(vx_context);
 vx_status WarpAffinebatchPD_Register(vx_context);
 vx_status WarpPerspectivebatchPD_Register(vx_context);
+vx_status Brightness_Register(vx_context);
 vx_status Copy_Register(vx_context);
 vx_status Nop_Register(vx_context);
 
@@ -199,6 +200,7 @@ vx_status Nop_Register(vx_context);
 #define VX_KERNEL_RPP_CROPPD_NAME   							"org.rpp.CropPD"
 #define VX_KERNEL_RPP_RESIZECROPMIRRORPD_NAME      				"org.rpp.ResizeCropMirrorPD"
 #define VX_KERNEL_RPP_SEQUENCEREARRANGE_NAME                    "org.rpp.SequenceRearrange"
+#define VX_KERNEL_RPP_BRIGHTNESS_NAME                           "org.rpp.Brightness"
 #define VX_KERNEL_RPP_COPY_NAME                                 "org.rpp.Copy"
 #define VX_KERNEL_RPP_NOP_NAME                                  "org.rpp.Nop"
 
