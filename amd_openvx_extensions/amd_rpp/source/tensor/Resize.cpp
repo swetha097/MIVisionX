@@ -78,6 +78,13 @@ static vx_status VX_CALLBACK refreshResize(vx_node node, const vx_reference *par
         data->dstImgsize[i].width = data->resize_w[i];
         data->dstImgsize[i].height = data->resize_h[i];
     }
+    if(data->roiType == RpptRoiType::XYWH)
+    {
+    for(int i = 0; i < data->nbatchSize; i++)
+    {
+        data->roi_tensor_Ptr[i].xywhROI.roiWidth =data->resize_w[i];
+        data->roi_tensor_Ptr[i].xywhROI.roiHeight =data->resize_h[i];
+    }
     if(data->layout == 2 || data->layout == 3)
     {
         unsigned num_of_frames = data->in_tensor_dims[1]; // Num of frames 'F'
@@ -94,6 +101,31 @@ static vx_status VX_CALLBACK refreshResize(vx_node node, const vx_reference *par
                 data->roi_tensor_Ptr[index + f].xywhROI.roiHeight = data->roi_tensor_Ptr[n].xywhROI.roiHeight;
             }
         }
+    }
+    }
+    else{
+    for(int i = 0; i < data->nbatchSize; i++)
+    {
+        data->roi_tensor_Ptr[i].ltrbROI.rb.x =data->resize_w[i];
+        data->roi_tensor_Ptr[i].ltrbROI.rb.y =data->resize_h[i];
+    }
+    if(data->layout == 2 || data->layout == 3)
+    {
+        unsigned num_of_frames = data->in_tensor_dims[1]; // Num of frames 'F'
+        for(int n = data->nbatchSize - 1; n >= 0; n--)
+        {
+            unsigned index = n * num_of_frames;
+            for(int f = 0; f < num_of_frames; f++)
+            {
+                data->resize_w[index + f] = data->resize_w[n];
+                data->resize_h[index + f] = data->resize_h[n];
+                data->roi_tensor_Ptr[index + f].xywhROI.xy.x = data->roi_tensor_Ptr[n].xywhROI.xy.x;
+                data->roi_tensor_Ptr[index + f].xywhROI.xy.y = data->roi_tensor_Ptr[n].xywhROI.xy.y;
+                data->roi_tensor_Ptr[index + f].xywhROI.roiWidth = data->roi_tensor_Ptr[n].xywhROI.roiWidth;
+                data->roi_tensor_Ptr[index + f].xywhROI.roiHeight = data->roi_tensor_Ptr[n].xywhROI.roiHeight;
+            }
+        }
+    }
     }
 
     if (data->device_type == AGO_TARGET_AFFINITY_GPU)

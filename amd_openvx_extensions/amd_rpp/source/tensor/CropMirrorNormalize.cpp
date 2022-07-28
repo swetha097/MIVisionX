@@ -92,18 +92,6 @@ static vx_status VX_CALLBACK refreshCropMirrorNormalize(vx_node node, const vx_r
         data->roi_tensor_Ptr[i].xywhROI.roiWidth =data->crop_w[i];
         data->roi_tensor_Ptr[i].xywhROI.roiHeight =data->crop_h[i];
     }
-    }
-    else
-    {
-    for(int i = 0; i < data->nbatchSize; i++)
-    {
-        data->roi_tensor_Ptr[i].ltrbROI.lt.x = data->start_x[i];
-        data->roi_tensor_Ptr[i].ltrbROI.lt.y = data->start_y[i];
-        data->roi_tensor_Ptr[i].ltrbROI.rb.x =data->crop_w[i] - 1;
-        data->roi_tensor_Ptr[i].ltrbROI.rb.y =data->crop_h[i] - 1;
-    }
-    }
-
     if(data->layout == 2 || data->layout == 3)
     {
         unsigned num_of_frames = data->in_tensor_dims[1]; // Num of frames 'F'
@@ -126,6 +114,41 @@ static vx_status VX_CALLBACK refreshCropMirrorNormalize(vx_node node, const vx_r
             }
         }
     }
+    }
+    else
+    {
+    for(int i = 0; i < data->nbatchSize; i++)
+    {
+        data->roi_tensor_Ptr[i].ltrbROI.lt.x = data->start_x[i];
+        data->roi_tensor_Ptr[i].ltrbROI.lt.y = data->start_y[i];
+        data->roi_tensor_Ptr[i].ltrbROI.rb.x =data->crop_w[i] - 1;
+        data->roi_tensor_Ptr[i].ltrbROI.rb.y =data->crop_h[i] - 1;
+    }
+    if(data->layout == 2 || data->layout == 3)
+    {
+        unsigned num_of_frames = data->in_tensor_dims[1]; // Num of frames 'F'
+        for(int n = data->nbatchSize - 1; n >= 0; n--)
+        {
+            unsigned index = n * num_of_frames;
+            for(int f = 0; f < num_of_frames; f++)
+            {
+                data->start_x[index + f] = data->start_x[n];
+                data->start_y[index + f] = data->start_y[n];
+                data->crop_h[index + f] = data->crop_h[n];
+                data->crop_w[index + f] = data->crop_w[n];
+                data->mean[index + f] = data->mean[n];
+                data->std_dev[index + f] = data->std_dev[n];
+                data->mirror[index + f] = data->mirror[n];
+                data->roi_tensor_Ptr[index + f].ltrbROI.lt.x = data->roi_tensor_Ptr[n].ltrbROI.lt.x;
+                data->roi_tensor_Ptr[index + f].ltrbROI.lt.y = data->roi_tensor_Ptr[n].ltrbROI.lt.y;
+                data->roi_tensor_Ptr[index + f].ltrbROI.rb.x = data->roi_tensor_Ptr[n].ltrbROI.rb.x;
+                data->roi_tensor_Ptr[index + f].ltrbROI.rb.y = data->roi_tensor_Ptr[n].ltrbROI.rb.y;
+            }
+        }
+    }
+    }
+
+    
     if (data->device_type == AGO_TARGET_AFFINITY_GPU)
     {
 #if ENABLE_OPENCL
