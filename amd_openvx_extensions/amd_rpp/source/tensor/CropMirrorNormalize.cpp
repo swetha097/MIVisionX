@@ -83,7 +83,8 @@ static vx_status VX_CALLBACK refreshCropMirrorNormalize(vx_node node, const vx_r
     STATUS_ERROR_CHECK(vxCopyArrayRange((vx_array)parameters[8], 0, data->nbatchSize*3, sizeof(vx_float32), data->mean, VX_READ_ONLY, VX_MEMORY_TYPE_HOST));
     STATUS_ERROR_CHECK(vxCopyArrayRange((vx_array)parameters[9], 0, data->nbatchSize*3, sizeof(vx_float32), data->std_dev, VX_READ_ONLY, VX_MEMORY_TYPE_HOST));
     STATUS_ERROR_CHECK(vxCopyArrayRange((vx_array)parameters[10], 0, data->nbatchSize, sizeof(vx_uint32), data->mirror, VX_READ_ONLY, VX_MEMORY_TYPE_HOST));
-
+    if(data->roiType == RpptRoiType::XYWH)
+    {
     for(int i = 0; i < data->nbatchSize; i++)
     {
         data->roi_tensor_Ptr[i].xywhROI.xy.x = data->start_x[i];
@@ -91,6 +92,18 @@ static vx_status VX_CALLBACK refreshCropMirrorNormalize(vx_node node, const vx_r
         data->roi_tensor_Ptr[i].xywhROI.roiWidth =data->crop_w[i];
         data->roi_tensor_Ptr[i].xywhROI.roiHeight =data->crop_h[i];
     }
+    }
+    else
+    {
+    for(int i = 0; i < data->nbatchSize; i++)
+    {
+        data->roi_tensor_Ptr[i].ltrbROI.lt.x = data->start_x[i];
+        data->roi_tensor_Ptr[i].ltrbROI.lt.y = data->start_y[i];
+        data->roi_tensor_Ptr[i].ltrbROI.rb.x =data->crop_w[i] - 1;
+        data->roi_tensor_Ptr[i].ltrbROI.rb.y =data->crop_h[i] - 1;
+    }
+    }
+
     if(data->layout == 2 || data->layout == 3)
     {
         unsigned num_of_frames = data->in_tensor_dims[1]; // Num of frames 'F'
@@ -224,13 +237,17 @@ static vx_status VX_CALLBACK processCropMirrorNormalize(vx_node node, const vx_r
     {
         vxstatus = refreshCropMirrorNormalize(node, parameters, num, data);
 
-
+        // for( int i=0 ;i<data->nbatchSize;i++)
+        // {
+        //     data->mirror[i]=0;
+        //     std::cerr<<"data->mirror[i] "<<data->mirror[i]<<"\n";
+        // }
         rpp_status = rppt_crop_mirror_normalize_host(data->pSrc, data->src_desc_ptr,
                                                      data->pDst, data->dst_desc_ptr,
                                                      data->mean,data->std_dev,
                                                      data->mirror, data->roi_tensor_Ptr,data->roiType,
                                                      data->rppHandle);
-        if(1){
+        if(0){
         float *temp = ((float*)calloc( 100,sizeof(float) ));
 
         for (int i=0;i< 100;i++)
@@ -261,9 +278,13 @@ static vx_status VX_CALLBACK initializeCropMirrorNormalize(vx_node node, const v
     STATUS_ERROR_CHECK(vxCopyScalar((vx_scalar)parameters[13], &data->layout, VX_READ_ONLY, VX_MEMORY_TYPE_HOST));
     STATUS_ERROR_CHECK(vxCopyScalar((vx_scalar)parameters[14], &roiType, VX_READ_ONLY, VX_MEMORY_TYPE_HOST));
     if(roiType == 1)
+    {
         data->roiType = RpptRoiType::XYWH;
+    }
     else
+    {
         data->roiType = RpptRoiType::LTRB;
+    }
     // Querying for output tensor
     data->src_desc_ptr = &data->srcDesc;
     STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[0], VX_TENSOR_NUMBER_OF_DIMS, &data->src_desc_ptr->numDims, sizeof(data->src_desc_ptr->numDims)));

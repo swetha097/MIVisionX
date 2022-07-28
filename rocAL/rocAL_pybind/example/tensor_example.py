@@ -110,16 +110,16 @@ def main():
     with image_classification_val_pipeline:
         jpegs, labels = fn.readers.file(file_root=data_path)
         decode = fn.decoders.image(jpegs,file_root=data_path, output_type=types.RGB, shard_id=local_rank, num_shards=world_size, random_shuffle=False)
-        res = fn.resize_shorter(decode, resize_size = 256)
-        centrecrop = fn.centre_crop(res, crop=(224, 224))
-        cmnp = fn.crop_mirror_normalize(centrecrop, device="gpu",
+        # res = fn.resize_shorter(decode, resize_size = 256)
+        # centrecrop = fn.centre_crop(res, crop=(224, 224))
+        cmnp = fn.crop_mirror_normalize(decode, device="gpu",
                                             rocal_tensor_layout = types.NHWC,
                                             rocal_tensor_output_type = types.UINT8,
-                                            crop=(224, 224),
+                                            crop=(800, 800),
                                             mirror=0,
                                             image_type=types.RGB,
                                             mean=[0.485 * 255,0.456 * 255,0.406 * 255],
-                                            std=[0.229 * 255,0.224 * 255,0.225 * 255])
+                                            std=[0.1 * 255,0.1 * 255,0.1 * 255])
         image_classification_val_pipeline.set_outputs(cmnp)
 
     image_classification_val_pipeline.build()

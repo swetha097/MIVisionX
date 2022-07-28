@@ -270,9 +270,9 @@ int test(int test_case, int reader_type, int pipeline_type, const char *path, co
         return -1;
     }
 
-    int resize_w = 100, resize_h = 300; // height and width
+    int resize_w = 200, resize_h = 300; // height and width
 
-    RocalTensor image1;
+    RocalTensor image1, image2;
 
     switch (test_case)
     {
@@ -297,6 +297,7 @@ int test(int test_case, int reader_type, int pipeline_type, const char *path, co
          std::cout << ">>>>>>> Running "
                   << "rocalResize" << std::endl;
         image1 = rocalResize(handle, input1, tensorLayout, tensorOutputType, 3,resize_w , resize_h, 0,true);
+        image2= rocalCropCenterFixed(handle, image1, tensorLayout,tensorOutputType,300,150, 3,true);
     }
     break;
     case 26:
@@ -309,15 +310,15 @@ int test(int test_case, int reader_type, int pipeline_type, const char *path, co
     break;
     case 51:
     {
-         std::cout << ">>>>>>> Running "
+         std::cout << ">>>>>>> Running ";
         image1 = rocalCropFixed(handle, input1, tensorLayout, tensorOutputType, 3, resize_w, resize_h, 0, 0, 0,true);
     }
     case 50:
     {
-        std::cout << ">>>>>>> Running "
+        std::cout << ">>>>>>> Running ";
         return -1;
     }
-
+    }
     // Calling the API to verify and build the augmentation graph
     rocalVerify(handle);
     if (rocalGetStatus(handle) != ROCAL_OK)

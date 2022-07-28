@@ -260,7 +260,7 @@ def main():
                                             rocal_tensor_layout = types.NHWC,
                                             rocal_tensor_output_type = types.UINT8,
                                             crop=(224, 224),
-                                            mirror=0,
+                                            mirror=1,
                                             image_type=types.RGB,
                                             mean=[0,0,0],
                                             std=[1,1,1])
