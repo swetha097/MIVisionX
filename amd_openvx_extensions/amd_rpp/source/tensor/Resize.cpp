@@ -106,8 +106,8 @@ static vx_status VX_CALLBACK refreshResize(vx_node node, const vx_reference *par
     else{
     for(int i = 0; i < data->nbatchSize; i++)
     {
-        data->roi_tensor_Ptr[i].ltrbROI.rb.x =data->resize_w[i];
-        data->roi_tensor_Ptr[i].ltrbROI.rb.y =data->resize_h[i];
+        data->roi_tensor_Ptr[i].ltrbROI.rb.x =data->resize_w[i]-1;
+        data->roi_tensor_Ptr[i].ltrbROI.rb.y =data->resize_h[i]-1;
     }
     if(data->layout == 2 || data->layout == 3)
     {
@@ -119,10 +119,10 @@ static vx_status VX_CALLBACK refreshResize(vx_node node, const vx_reference *par
             {
                 data->resize_w[index + f] = data->resize_w[n];
                 data->resize_h[index + f] = data->resize_h[n];
-                data->roi_tensor_Ptr[index + f].xywhROI.xy.x = data->roi_tensor_Ptr[n].xywhROI.xy.x;
-                data->roi_tensor_Ptr[index + f].xywhROI.xy.y = data->roi_tensor_Ptr[n].xywhROI.xy.y;
-                data->roi_tensor_Ptr[index + f].xywhROI.roiWidth = data->roi_tensor_Ptr[n].xywhROI.roiWidth;
-                data->roi_tensor_Ptr[index + f].xywhROI.roiHeight = data->roi_tensor_Ptr[n].xywhROI.roiHeight;
+                data->roi_tensor_Ptr[index + f].ltrbROI.lt.x = data->roi_tensor_Ptr[n].ltrbROI.lt.x;
+                data->roi_tensor_Ptr[index + f].ltrbROI.lt.y = data->roi_tensor_Ptr[n].ltrbROI.lt.y;
+                data->roi_tensor_Ptr[index + f].ltrbROI.rb.x = data->roi_tensor_Ptr[n].ltrbROI.rb.x;
+                data->roi_tensor_Ptr[index + f].ltrbROI.rb.y = data->roi_tensor_Ptr[n].ltrbROI.rb.y;
             }
         }
     }
