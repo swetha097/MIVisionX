@@ -84,7 +84,7 @@ auto convert_color_format = [](RocalImageColor color_format)
             return std::make_tuple(RocalColorFormat::RGB_PLANAR, 3);
 
         default:
-            THROW("Unsupported Image type" + TOSTR(color_format))
+            THROW("Unsupported image type" + TOSTR(color_format))
     }
 };
 
@@ -272,6 +272,187 @@ rocalJpegFileSource(
         {
             auto actual_output = context->master_graph->create_tensor(info, is_output);
             context->master_graph->add_node<CopyNode>({output}, {actual_output}); // Have to add copy tensor node
+        }
+
+    }
+    catch(const std::exception& e)
+    {
+        context->capture_error(e.what());
+        std::cerr << e.what() << '\n';
+    }
+    return output;
+}
+
+RocalTensor  ROCAL_API_CALL
+rocalSequenceReader(
+        RocalContext p_context,
+        const char* source_path,
+        RocalImageColor rocal_color_format,
+        unsigned internal_shard_count,
+        unsigned sequence_length,
+        bool is_output,
+        bool shuffle,
+        bool loop,
+        unsigned step,
+        unsigned stride)
+{
+    rocALTensor* output = nullptr;
+    if (p_context == nullptr) {
+        ERR("Invalid ROCAL context or invalid input image")
+        return output;
+    }
+    auto context = static_cast<Context*>(p_context);
+    try
+    {
+        if(sequence_length == 0)
+            THROW("Sequence length passed should be bigger than 0")
+        // // Set sequence batch size and batch ratio in master graph as it varies according to sequence length
+        // context->master_graph->set_sequence_reader_output();
+        // context->master_graph->set_sequence_batch_size(sequence_length);
+        // context->master_graph->set_sequence_batch_ratio();
+        bool decoder_keep_original = true;
+
+        // This has been introduced to support variable width and height video frames in future.
+        RocalImageSizeEvaluationPolicy decode_size_policy = ROCAL_USE_MAX_SIZE_RESTRICTED;
+
+        if(internal_shard_count < 1 )
+            THROW("Shard count should be bigger than 0")
+
+        // Set default step and stride values if 0 is passed
+        step = (step == 0)? 1 : step;
+        stride = (stride == 0)? 1 : stride;
+
+        // FILE_SYSTEM is used here only to evaluate the width and height of the frames.
+        auto [width, height] = evaluate_image_data_set(decode_size_policy, StorageType::FILE_SYSTEM, DecoderType::TURBO_JPEG, source_path, "");
+        auto [color_format, num_of_planes] = convert_color_format(rocal_color_format);
+
+        INFO("Internal buffer size width = "+ TOSTR(width)+ " height = "+ TOSTR(height) + " depth = "+ TOSTR(num_of_planes))
+
+        RocalTensorlayout tensor_format = RocalTensorlayout::NFHWC;
+        RocalTensorDataType tensor_data_type = RocalTensorDataType::UINT8;
+        RocalROIType roi_type = RocalROIType::XYWH;
+        unsigned num_of_dims = 5;
+        std::vector<unsigned> dims;
+        dims.resize(5);
+        dims[0] = context->user_batch_size();
+        dims[1] = sequence_length;
+        dims[2] = height;
+        dims[3] = width;
+        dims[4] = num_of_planes;
+        auto info  = rocALTensorInfo(num_of_dims,
+                                std::vector<unsigned>(std::move(dims)),
+                                context->master_graph->mem_type(),
+                                tensor_data_type);
+        info.set_roi_type(roi_type);
+        info.set_color_format(color_format);
+        info.set_tensor_layout(tensor_format);
+        output = context->master_graph->create_loader_output_tensor(info);
+
+        context->master_graph->add_node<ImageLoaderNode>({}, {output})->init(internal_shard_count,
+                                                                            source_path, "",
+                                                                            std::map<std::string, std::string>(),
+                                                                            StorageType::SEQUENCE_FILE_SYSTEM,
+                                                                            DecoderType::TURBO_JPEG,
+                                                                            shuffle,
+                                                                            loop,
+                                                                            context->user_batch_size(),
+                                                                            context->master_graph->mem_type(),
+                                                                            context->master_graph->meta_data_reader(),
+                                                                            decoder_keep_original, "",
+                                                                            sequence_length,
+                                                                            step, stride);
+        context->master_graph->set_loop(loop);
+
+        if(is_output)
+        {
+            auto actual_output = context->master_graph->create_image(info, is_output);
+            context->master_graph->add_node<CopyNode>({output}, {actual_output});
+        }
+
+    }
+    catch(const std::exception& e)
+    {
+        context->capture_error(e.what());
+        std::cerr << e.what() << '\n';
+    }
+    return output;
+}
+
+RocalTensor  ROCAL_API_CALL
+rocalSequenceReaderSingleShard(
+        RocalContext p_context,
+        const char* source_path,
+        RocalImageColor rocal_color_format,
+        unsigned shard_id,
+        unsigned shard_count,
+        unsigned sequence_length,
+        bool is_output,
+        bool shuffle,
+        bool loop,
+        unsigned step,
+        unsigned stride)
+{
+    rocALTensor* output = nullptr;
+    if (p_context == nullptr) {
+        ERR("Invalid ROCAL context or invalid input image")
+        return output;
+    }
+    auto context = static_cast<Context*>(p_context);
+    try
+    {
+        if(sequence_length == 0)
+            THROW("Sequence length passed should be bigger than 0")
+        // Set sequence batch size and batch ratio in master graph as it varies according to sequence length
+        context->master_graph->set_sequence_reader_output();
+        context->master_graph->set_sequence_batch_size(sequence_length);
+        context->master_graph->set_sequence_batch_ratio();
+        bool decoder_keep_original = true;
+
+        // This has been introduced to support variable width and height video frames in future.
+        RocalImageSizeEvaluationPolicy decode_size_policy = ROCAL_USE_MAX_SIZE_RESTRICTED;
+
+        if(shard_count < 1 )
+            THROW("Shard count should be bigger than 0")
+
+        if(shard_id >= shard_count)
+            THROW("Shard id should be smaller than shard count")
+
+        // Set default step and stride values if 0 is passed
+        step = (step == 0)? 1 : step;
+        stride = (stride == 0)? 1 : stride;
+
+        // FILE_SYSTEM is used here only to evaluate the width and height of the frames.
+        auto [width, height] = evaluate_image_data_set(decode_size_policy, StorageType::FILE_SYSTEM, DecoderType::TURBO_JPEG, source_path, "");
+        auto [color_format, num_of_planes] = convert_color_format(rocal_color_format);
+
+        INFO("Internal buffer size width = "+ TOSTR(width)+ " height = "+ TOSTR(height) + " depth = "+ TOSTR(num_of_planes))
+
+        auto info = ImageInfo(width, height,
+                              context->internal_batch_size(),
+                              num_of_planes,
+                              context->master_graph->mem_type(),
+                              color_format );
+        output = context->master_graph->create_loader_output_image(info);
+
+        context->master_graph->add_node<ImageLoaderSingleShardNode>({}, {output})->init(shard_id, shard_count,
+                                                                                        source_path, "",
+                                                                                        StorageType::SEQUENCE_FILE_SYSTEM,
+                                                                                        DecoderType::TURBO_JPEG,
+                                                                                        shuffle,
+                                                                                        loop,
+                                                                                        context->master_graph->sequence_batch_size(),
+                                                                                        context->master_graph->mem_type(),
+                                                                                        context->master_graph->meta_data_reader(),
+                                                                                        decoder_keep_original,
+                                                                                        std::map<std::string, std::string>(),
+                                                                                        sequence_length,
+                                                                                        step, stride);
+        context->master_graph->set_loop(loop);
+
+        if(is_output)
+        {
+            auto actual_output = context->master_graph->create_image(info, is_output);
+            context->master_graph->add_node<CopyNode>({output}, {actual_output});
         }
 
     }
