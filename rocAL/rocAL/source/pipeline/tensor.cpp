@@ -158,7 +158,6 @@ rocALTensorInfo::rocALTensorInfo(
     RocalTensorDataType data_type) : _type(Type::UNKNOWN),
                                 _num_of_dims(num_of_dims),
                                 _dims(dims),
-                                _batch_size(dims.at(0)),
                                 _mem_type(mem_type),
                                 _data_type(data_type)
 {
@@ -171,6 +170,9 @@ rocALTensorInfo::rocALTensorInfo(
     }
     if(_num_of_dims <= 3)
         _is_image = false;
+    _batch_size = _dims.at(0);
+    // if(_num_of_dims == 5)
+    //     _batch_size *= _dims.at(1); // TODO - Fix for sequence reader need to check how we can check if it not video reader and update
     // initializing each Tensor dimension in the batch with the maximum Tensor size, they'll get updated later during the runtime
     // Update this only if the tensor is image
 }
