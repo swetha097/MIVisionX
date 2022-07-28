@@ -26,11 +26,52 @@ THE SOFTWARE.
 #include "node_crop_mirror_normalize.h"
 #include "node_copy.h"
 #include "node_nop.h"
+#include "node_sequence_rearrange.h"
 #include "meta_node_crop_mirror_normalize.h"
 
 #include "commons.h"
 #include "context.h"
 #include "rocal_api.h"
+
+RocalTensor  ROCAL_API_CALL
+rocalSequenceRearrange(
+            RocalContext p_context,
+            RocalTensor input,
+            unsigned int* new_order,
+            unsigned int  new_sequence_length,
+            unsigned int sequence_length,
+            bool is_output )
+{
+    rocALTensor* output = nullptr;
+
+    if ((p_context == nullptr) || (input == nullptr)) {
+        ERR("Invalid ROCAL context or invalid input image")
+        return output;
+    }
+    auto context = static_cast<Context*>(p_context);
+    try
+    {
+
+        if(sequence_length == 0)
+            THROW("sequence_length passed should be bigger than 0")
+
+        rocALTensorInfo output_info = input->info();
+        std::vector<unsigned> new_dims;
+        new_dims = output_info.dims();
+        new_dims[1] = new_sequence_length;
+        output_info.set_dims(new_dims);
+
+        output = context->master_graph->create_tensor(output_info, is_output);
+        std::shared_ptr<SequenceRearrangeNode> sequence_rearrange_node =  context->master_graph->add_node<SequenceRearrangeNode>({input}, {output});
+        sequence_rearrange_node->init(new_order, new_sequence_length, sequence_length, context->user_batch_size());
+    }
+    catch(const std::exception& e)
+    {
+        context->capture_error(e.what());
+        ERR(e.what())
+    }
+    return output;
+}
 
 RocalTensor ROCAL_API_CALL
 rocalBrightness(

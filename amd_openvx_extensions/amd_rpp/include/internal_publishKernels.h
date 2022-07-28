@@ -41,6 +41,7 @@ vx_status CopyTensor_Register(vx_context);
 vx_status CropMirrorNormalize_Register(vx_context);
 vx_status GammaCorrection_Register(vx_context);
 vx_status NopTensor_Register(vx_context);
+vx_status SequenceRearrange_Register(vx_context);
 
 // Image registers which calls RPP Image Batch PD API's.
 vx_status AbsoluteDifferencebatchPD_Register(vx_context);
@@ -130,6 +131,7 @@ vx_status WarpPerspectivebatchPD_Register(vx_context);
 #define VX_KERNEL_RPP_BRIGHTNESS_NAME                                        "org.rpp.Brightness"
 #define VX_KERNEL_RPP_GAMMACORRECTION_NAME                                   "org.rpp.GammaCorrection"
 #define VX_KERNEL_RPP_CROPMIRRORNORMALIZE_NAME                               "org.rpp.CropMirrorNormalize"
+#define VX_KERNEL_RPP_SEQUENCEREARRANGE_NAME                                 "org.rpp.SequenceRearrange"
 
 // Image kernel names
 #define VX_KERNEL_RPP_NOP_NAME                                                "org.rpp.Nop"
@@ -211,6 +213,6 @@ vx_status WarpPerspectivebatchPD_Register(vx_context);
 #define VX_KERNEL_RPP_CROPMIRRORNORMALIZEBATCHPD_NAME                         "org.rpp.CropMirrorNormalizebatchPD"
 #define VX_KERNEL_RPP_CROPPD_NAME                                             "org.rpp.CropPD"
 #define VX_KERNEL_RPP_RESIZECROPMIRRORPD_NAME                                 "org.rpp.ResizeCropMirrorPD"
-#define VX_KERNEL_RPP_SEQUENCEREARRANGEBATCHPD_NAME                                  "org.rpp.SequenceRearrange"
+#define VX_KERNEL_RPP_SEQUENCEREARRANGEBATCHPD_NAME                           "org.rpp.SequenceRearrangebatchPD"
 
 #endif //_AMDVX_EXT__PUBLISH_KERNELS_H_
