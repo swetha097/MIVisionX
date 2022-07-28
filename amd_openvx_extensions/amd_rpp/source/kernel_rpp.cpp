@@ -1800,7 +1800,7 @@ VX_API_CALL vx_node VX_API_CALL vxExtrppNode_Nop(vx_graph graph, vx_image pSrc, 
     return node;
 }
 
-VX_API_CALL vx_node VX_API_CALL  vxExtrppNode_SequenceRearrange(vx_graph graph,vx_image pSrc,vx_image pDst, vx_array newOrder, vx_uint32 newSequenceLength, vx_uint32 sequenceLength, vx_uint32 sequenceCount)
+VX_API_CALL vx_node VX_API_CALL  vxExtrppNode_SequenceRearrangebatchPD(vx_graph graph,vx_image pSrc,vx_image pDst, vx_array newOrder, vx_uint32 newSequenceLength, vx_uint32 sequenceLength, vx_uint32 sequenceCount)
 {
     vx_node node = NULL;
     vx_context context = vxGetContext((vx_reference)graph);
@@ -1819,7 +1819,7 @@ VX_API_CALL vx_node VX_API_CALL  vxExtrppNode_SequenceRearrange(vx_graph graph,v
             (vx_reference) SEQUENCECOUNT,
             (vx_reference) DEV_TYPE
         };
-         node = createNode(graph, VX_KERNEL_RPP_SEQUENCEREARRANGE, params, 7);
+         node = createNode(graph, VX_KERNEL_RPP_SEQUENCEREARRANGEBATCHPD, params, 7);
     }
     return node;
 }
