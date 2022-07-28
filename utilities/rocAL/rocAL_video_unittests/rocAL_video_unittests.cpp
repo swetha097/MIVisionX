@@ -206,13 +206,13 @@ int main(int argc, const char **argv)
         //     input1 = rocalVideoFileResize(handle, source_path, color_format, decoder_mode, shard_count, sequence_length, resize_width, resize_height, shuffle, is_output, false, frame_step, frame_stride, file_list_frame_num);
         //     break;
         // }
-        // case 3:
-        // {
-        //     std::cout << "\n>>>> SEQUENCE READER\n";
-        //     enable_framenumbers = enable_timestamps = 0;
-        //     input1 = rocalSequenceReader(handle, source_path, color_format, shard_count, sequence_length, is_output, shuffle, false, frame_step, frame_stride);
-        //     break;
-        // }
+        case 3:
+        {
+            std::cout << "\n>>>> SEQUENCE READER\n";
+            enable_framenumbers = enable_timestamps = 0;
+            input1 = rocalSequenceReader(handle, source_path, color_format, shard_count, sequence_length, is_output, shuffle, false, frame_step, frame_stride);
+            break;
+        }
     }
     // if (enable_sequence_rearrange)
     // {
@@ -266,7 +266,7 @@ int main(int argc, const char **argv)
             std::string batch_path = "output_images/" + std::to_string(count);
             int status = mkdir(batch_path.c_str(), S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
             if (status) continue;
-            for(int idx = 0; idx < output_tensor_list->size(); idx++)
+            for(unsigned idx = 0; idx < output_tensor_list->size(); idx++)
             {
                 RocalTensor output_tensor = output_tensor_list->at(idx);
                 int h = output_tensor->info().max_dims().at(1);
@@ -275,18 +275,22 @@ int main(int argc, const char **argv)
                 if(output_tensor->info().num_of_dims() < 5)
                     THROW("Number of dims in Video tensor is lesser than 5")
                 
-                mat_input = cv::Mat(h * input_batch_size * output_tensor_list->at(idx)->info().dims()[1], w, cv_color_format);
+                mat_input = cv::Mat(h * input_batch_size * frames, w, cv_color_format);
                 mat_output = cv::Mat(h, w, cv_color_format);
-                    
+
                 unsigned char *out_tensor_buffer;
-                if(output_tensor_list->at(idx)->info().mem_type() == RocalMemType::HOST)
+                if(output_tensor_list->at(idx)->info().mem_type() == RocalMemType::HIP)
+                {
+                    out_tensor_buffer = (unsigned char *)malloc(output_tensor_list->at(idx)->info().data_size());
+                    output_tensor_list->at(idx)->copy_data(out_tensor_buffer, false);
+                }
+                else if(output_tensor_list->at(idx)->info().mem_type() == RocalMemType::HOST)
                     out_tensor_buffer = (unsigned char *)(output_tensor_list->at(idx)->buffer());
                 
                 mat_input.data = out_tensor_buffer;
                 for(unsigned b = 0; b < input_batch_size; b++) // Iterates over each sequence in the batch
                 {
-                
-                    std::string seq_path = batch_path + "/seq_" + std::to_string(b);
+                    std::string seq_path = batch_path + "/" + std::to_string(idx) + "_seq_" + std::to_string(b);
                     std::string save_video_path = seq_path + "_output_video.avi" ;
 
                     int frame_width = static_cast<int>(w); //get the width of frames of the video
