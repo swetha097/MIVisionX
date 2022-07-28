@@ -233,7 +233,7 @@ void
 MasterGraph::decrease_image_count()
 {
     if(!_loop)
-        _remaining_count -= _user_batch_size;
+        _remaining_count -= (_is_sequence_reader_output ? _sequence_batch_size : _user_batch_size);
 }
 void
 MasterGraph::create_single_graph()
@@ -384,6 +384,19 @@ MasterGraph::update_node_parameters()
     return Status::OK;
 }
 
+void
+MasterGraph::sequence_start_frame_number(std::vector<size_t> &sequence_start_framenum)
+{
+    sequence_start_framenum = _sequence_start_framenum_vec.back();
+    _sequence_start_framenum_vec.pop_back();
+}
+
+void
+MasterGraph::sequence_frame_timestamps(std::vector<std::vector<float>> &sequence_frame_timestamp)
+{
+    sequence_frame_timestamp = _sequence_frame_timestamps_vec.back();
+    _sequence_frame_timestamps_vec.pop_back();
+}
 
 MasterGraph::Status // TO be removed
 MasterGraph::allocate_output_tensor()
@@ -453,6 +466,8 @@ MasterGraph::reset()
     if(_output_thread.joinable())
         _output_thread.join();
     _ring_buffer.reset();
+    _sequence_start_framenum_vec.clear();
+    _sequence_frame_timestamps_vec.clear();
     // clearing meta ring buffer
     // if random_bbox meta reader is used: read again to get different crops
     // if (_randombboxcrop_meta_data_reader != nullptr)
@@ -590,21 +605,25 @@ ImageNameBatch& operator+=(ImageNameBatch& dest, const ImageNameBatch& src)
 void MasterGraph::output_routine()
 {
     INFO("Output routine started with "+TOSTR(_remaining_count) + " to load");
+    size_t batch_ratio = _is_sequence_reader_output ? _sequence_batch_ratio : _user_to_internal_batch_ratio;
+    if(!_is_sequence_reader_output) 
+    {
 #if !ENABLE_HIP
-    if(processing_on_device_ocl() && _user_to_internal_batch_ratio != 1)
+    if(processing_on_device_ocl() && batch_ratio != 1)
         THROW("Internal failure, in the GPU processing case, user and input batch size must be equal")
 #else
-    if(processing_on_device_hip() && _user_to_internal_batch_ratio != 1)
+    if(processing_on_device_hip() && batch_ratio != 1)
         THROW("Internal failure, in the GPU processing case, user and input batch size must be equal")
 #endif
+    }
     try {
         while (_processing)
         {
-            std::vector<size_t> tensor_each_cycle_size_vec = tensor_output_byte_size(); // /_user_to_internal_batch_ratio;
+            std::vector<size_t> tensor_each_cycle_size_vec = tensor_output_byte_size(); // /batch_ratio;
             ImageNameBatch full_batch_image_names = {};
             pMetaDataBatch full_batch_meta_data = nullptr;
             pMetaDataBatch augmented_batch_meta_data = nullptr;
-            if (_loader_module->remaining_count() < _user_batch_size)
+            if (_loader_module->remaining_count() < (_is_sequence_reader_output ? _sequence_batch_size : _user_batch_size))
             {
                 // If the internal process routine ,output_routine(), has finished processing all the images, and last
                 // processed images stored in the _ring_buffer will be consumed by the user when it calls the run() func

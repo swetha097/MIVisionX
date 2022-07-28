@@ -305,10 +305,10 @@ rocalSequenceReader(
     {
         if(sequence_length == 0)
             THROW("Sequence length passed should be bigger than 0")
-        // // Set sequence batch size and batch ratio in master graph as it varies according to sequence length
-        // context->master_graph->set_sequence_reader_output();
-        // context->master_graph->set_sequence_batch_size(sequence_length);
-        // context->master_graph->set_sequence_batch_ratio();
+        // Set sequence batch size and batch ratio in master graph as it varies according to sequence length
+        context->master_graph->set_sequence_reader_output();
+        context->master_graph->set_sequence_batch_size(sequence_length);
+        context->master_graph->set_sequence_batch_ratio();
         bool decoder_keep_original = true;
 
         // This has been introduced to support variable width and height video frames in future.
@@ -354,7 +354,7 @@ rocalSequenceReader(
                                                                             DecoderType::TURBO_JPEG,
                                                                             shuffle,
                                                                             loop,
-                                                                            context->user_batch_size(),
+                                                                            context->master_graph->sequence_batch_size(),
                                                                             context->master_graph->mem_type(),
                                                                             context->master_graph->meta_data_reader(),
                                                                             decoder_keep_original, "",
@@ -364,7 +364,7 @@ rocalSequenceReader(
 
         if(is_output)
         {
-            auto actual_output = context->master_graph->create_image(info, is_output);
+            auto actual_output = context->master_graph->create_tensor(info, is_output);
             context->master_graph->add_node<CopyNode>({output}, {actual_output});
         }
 
@@ -426,12 +426,25 @@ rocalSequenceReaderSingleShard(
 
         INFO("Internal buffer size width = "+ TOSTR(width)+ " height = "+ TOSTR(height) + " depth = "+ TOSTR(num_of_planes))
 
-        auto info = ImageInfo(width, height,
-                              context->internal_batch_size(),
-                              num_of_planes,
-                              context->master_graph->mem_type(),
-                              color_format );
-        output = context->master_graph->create_loader_output_image(info);
+        RocalTensorlayout tensor_format = RocalTensorlayout::NFHWC;
+        RocalTensorDataType tensor_data_type = RocalTensorDataType::UINT8;
+        RocalROIType roi_type = RocalROIType::XYWH;
+        unsigned num_of_dims = 5;
+        std::vector<unsigned> dims;
+        dims.resize(5);
+        dims[0] = context->user_batch_size();
+        dims[1] = sequence_length;
+        dims[2] = height;
+        dims[3] = width;
+        dims[4] = num_of_planes;
+        auto info  = rocALTensorInfo(num_of_dims,
+                                std::vector<unsigned>(std::move(dims)),
+                                context->master_graph->mem_type(),
+                                tensor_data_type);
+        info.set_roi_type(roi_type);
+        info.set_color_format(color_format);
+        info.set_tensor_layout(tensor_format);
+        output = context->master_graph->create_loader_output_tensor(info);
 
         context->master_graph->add_node<ImageLoaderSingleShardNode>({}, {output})->init(shard_id, shard_count,
                                                                                         source_path, "",
@@ -450,7 +463,7 @@ rocalSequenceReaderSingleShard(
 
         if(is_output)
         {
-            auto actual_output = context->master_graph->create_image(info, is_output);
+            auto actual_output = context->master_graph->create_tensor(info, is_output);
             context->master_graph->add_node<CopyNode>({output}, {actual_output});
         }
 

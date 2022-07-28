@@ -25,12 +25,21 @@ THE SOFTWARE.
 #include "reader_factory.h"
 #include "file_source_reader.h"
 #include "coco_file_source_reader.h"
+#include "sequence_file_source_reader.h"
 
 std::shared_ptr<Reader> create_reader(ReaderConfig config) {
     switch(config.type()) {
         case StorageType ::FILE_SYSTEM:
         {
             auto ret = std::make_shared<FileSourceReader>();
+            if(ret->initialize(config) != Reader::Status::OK)
+                throw std::runtime_error("File reader cannot access the storage");
+            return ret;
+        }
+        break;
+        case StorageType ::SEQUENCE_FILE_SYSTEM:
+        {
+            auto ret = std::make_shared<SequenceFileSourceReader>();
             if(ret->initialize(config) != Reader::Status::OK)
                 throw std::runtime_error("File reader cannot access the storage");
             return ret;

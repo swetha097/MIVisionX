@@ -56,6 +56,8 @@ public:
     MasterGraph::Status copy_output(std::vector<void *> &out_ptr);
     Status copy_output(void* out_ptr, size_t out_size);
     std::vector<size_t> tensor_output_byte_size();
+    void sequence_start_frame_number(std::vector<size_t> &sequence_start_framenum); // Returns the starting frame number of the sequences
+    void sequence_frame_timestamps(std::vector<std::vector<float>> &sequence_frame_timestamp); // Returns the timestamps of the frames in the sequences
     Status build();
     Status run();
     Timing timing();
@@ -82,11 +84,16 @@ public:
 
     void set_loop(bool val) { _loop = val; }
     void set_output(rocALTensor* output_image);
-    bool empty() { return (remaining_count() < _user_batch_size); }
+    bool empty() { return (remaining_count() < (_is_sequence_reader_output ? _sequence_batch_size : _user_batch_size)); }
     size_t internal_batch_size() { return _internal_batch_size; }
+    size_t sequence_batch_size() { return _sequence_batch_size; }
     std::shared_ptr<MetaDataGraph> meta_data_graph() { return _meta_data_graph; }
     std::shared_ptr<MetaDataReader> meta_data_reader() { return _meta_data_reader; }
     bool is_random_bbox_crop() {return _is_random_bbox_crop; }
+    bool is_sequence_reader_output() {return _is_sequence_reader_output; }
+    void set_sequence_reader_output() { _is_sequence_reader_output = true; }
+    void set_sequence_batch_size(size_t sequence_length) { _sequence_batch_size = _user_batch_size * sequence_length; }
+    void set_sequence_batch_ratio() { _sequence_batch_ratio = _sequence_batch_size / _internal_batch_size; }
 private:
     Status update_node_parameters();
     Status allocate_output_tensor();
@@ -155,6 +162,11 @@ private:
     bool _output_routine_finished_processing = false;
     const RocalTensorDataType _out_data_type;
     bool _is_random_bbox_crop = false;
+    std::vector<std::vector<size_t>> _sequence_start_framenum_vec; //!< Stores the starting frame number of the sequences.
+    std::vector<std::vector<std::vector<float>>>_sequence_frame_timestamps_vec; //!< Stores the timestamps of the frames in a sequences.
+    size_t _sequence_batch_size = 0; //!< Indicates the _user_batch_size when sequence reader outputs are required
+    size_t _sequence_batch_ratio; //!< Indicates the _user_to_internal_batch_ratio when sequence reader outputs are required
+    bool _is_sequence_reader_output = false; //!< Set to true if Sequence Reader is invoked.
     TimingDBG _rb_block_if_empty_time, _rb_block_if_full_time;
 };
 
@@ -187,6 +199,7 @@ std::shared_ptr<T> MasterGraph::meta_add_node(std::shared_ptr<M> node)
     _meta_data_graph->_meta_nodes.push_back(meta_node);
     meta_node->_node = node;
     meta_node->_batch_size = _user_batch_size;
+    // meta_node->_batch_size = _is_sequence_reader_output ? _sequence_batch_size : _user_batch_size;
     return meta_node;
 }
 
