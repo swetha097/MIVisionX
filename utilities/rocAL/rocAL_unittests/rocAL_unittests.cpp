@@ -296,7 +296,8 @@ int test(int test_case, int reader_type, int pipeline_type, const char *path, co
     {
          std::cout << ">>>>>>> Running "
                   << "rocalResize" << std::endl;
-        image1 = rocalResize(handle, input1, tensorLayout, tensorOutputType, 3,resize_w , resize_h, 0,true);
+        image1 = rocalResize(handle, input1, tensorLayout, tensorOutputType, 3,300 , 300, 0,true);
+        image2= rocalCropCenterFixed(handle, image1, tensorLayout,tensorOutputType,100,100, 3,true);
     }
     break;
     case 26:

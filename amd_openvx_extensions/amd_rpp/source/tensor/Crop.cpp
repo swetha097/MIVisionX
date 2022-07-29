@@ -106,6 +106,40 @@ static vx_status VX_CALLBACK refreshCrop(vx_node node, const vx_reference *param
             }
         }
     }
+
+    }
+    else
+    {
+    for(int i = 0; i < data->nbatchSize; i++)
+    {
+    std::cerr<<"**************************************************  "<<data->start_x[i]<<"  "<<data->start_y[i]<<"    "<<data->crop_h[i]<<"   "<<data->crop_w[i];
+
+        data->roi_tensor_Ptr[i].ltrbROI.lt.x = data->start_x[i];
+        data->roi_tensor_Ptr[i].ltrbROI.lt.y = data->start_y[i];
+        data->roi_tensor_Ptr[i].ltrbROI.rb.x =data->crop_w[i] - 1;
+        data->roi_tensor_Ptr[i].ltrbROI.rb.y =data->crop_h[i] - 1;
+    }
+    if(data->layout == 2 || data->layout == 3)
+    {
+        unsigned num_of_frames = data->in_tensor_dims[1]; // Num of frames 'F'
+        for(int n = data->nbatchSize - 1; n >= 0; n--)
+        {
+            unsigned index = n * num_of_frames;
+            for(int f = 0; f < num_of_frames; f++)
+            {
+                data->crop_h[index + f] = data->crop_h[n];
+                data->crop_w[index + f] = data->crop_w[n];
+                data->start_x[index + f] = data->start_x[n];
+                data->start_y[index + f] = data->start_y[n];
+                data->roi_tensor_Ptr[index + f].ltrbROI.lt.x = data->roi_tensor_Ptr[n].ltrbROI.lt.x;
+                data->roi_tensor_Ptr[index + f].ltrbROI.lt.y = data->roi_tensor_Ptr[n].ltrbROI.lt.y;
+                data->roi_tensor_Ptr[index + f].ltrbROI.rb.x = data->roi_tensor_Ptr[n].ltrbROI.rb.x;
+                data->roi_tensor_Ptr[index + f].ltrbROI.rb.y = data->roi_tensor_Ptr[n].ltrbROI.rb.y;
+            }
+        }
+    }
+    }
+
     if (data->device_type == AGO_TARGET_AFFINITY_GPU)
     {
 #if ENABLE_OPENCL
@@ -225,7 +259,7 @@ static vx_status VX_CALLBACK processCrop(vx_node node, const vx_reference *param
     if(data->device_type == AGO_TARGET_AFFINITY_CPU)
     {
         vxstatus = refreshCrop(node, parameters, num, data);
-        
+        std::cerr<<"\n\n\n\nprocesssssssss";
         rpp_status = rppt_crop_host(data->pSrc, data->src_desc_ptr,
                                     data->pDst, data->dst_desc_ptr,
                                     data->roi_tensor_Ptr,data->roiType,
