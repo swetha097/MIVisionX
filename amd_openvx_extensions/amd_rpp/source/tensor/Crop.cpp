@@ -113,6 +113,8 @@ static vx_status VX_CALLBACK refreshCrop(vx_node node, const vx_reference *param
     {
     for(int i = 0; i < data->nbatchSize; i++)
     {
+    std::cerr<<"**************************************************  "<<data->start_x[i]<<"  "<<data->start_y[i]<<"    "<<data->crop_h[i]<<"   "<<data->crop_w[i];
+
         data->roi_tensor_Ptr[i].ltrbROI.lt.x = data->start_x[i];
         data->roi_tensor_Ptr[i].ltrbROI.lt.y = data->start_y[i];
         data->roi_tensor_Ptr[i].ltrbROI.rb.x =data->crop_w[i] - 1;
@@ -258,7 +260,7 @@ static vx_status VX_CALLBACK processCrop(vx_node node, const vx_reference *param
     if(data->device_type == AGO_TARGET_AFFINITY_CPU)
     {
         vxstatus = refreshCrop(node, parameters, num, data);
-        
+        std::cerr<<"\n\n\n\nprocesssssssss";
         rpp_status = rppt_crop_host(data->pSrc, data->src_desc_ptr,
                                     data->pDst, data->dst_desc_ptr,
                                     data->roi_tensor_Ptr,data->roiType,

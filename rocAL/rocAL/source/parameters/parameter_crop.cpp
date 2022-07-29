@@ -100,6 +100,8 @@ void CropParam::update_crop_array()
     if(status != VX_SUCCESS)
         WRN("ERROR: vxCopyArrayRange x1_arr failed " +TOSTR(status));
 
+    std::cerr<<"\n\nx1_arrrrrrrrrrr"<<x1_arr_val[0];
+
 }
 
 Parameter<float> *CropParam::default_x_drift_factor()
