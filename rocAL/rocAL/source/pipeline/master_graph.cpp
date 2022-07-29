@@ -639,7 +639,7 @@ void MasterGraph::output_routine()
                 std::this_thread::sleep_for(std::chrono::milliseconds(100));
                 continue;
             }
-
+            _process_time.start();
             // When executing on CPU the internal batch count can be smaller than the user batch count
             // In that case the user_batch_size will be an integer multiple of the _internal_batch_size
             // Multiple cycles worth of internal_batch_size images should be processed to complete a full _user_batch_size
@@ -673,6 +673,7 @@ void MasterGraph::output_routine()
                     // _ring_buffer.get_write_buffers() is blocking and blocks here until user uses processed image by calling run() and frees space in the ring_buffer
                     auto tensor_write_buffer = _ring_buffer.get_write_buffers();
                     _rb_block_if_full_time.end();
+
                     size_t tensor_each_cycle_size = tensor_each_cycle_size_vec[idx]; // TODO - Batch ratio calculation TO be removed
                     if(_affinity == RocalAffinity::GPU)
                     {
@@ -729,7 +730,7 @@ void MasterGraph::output_routine()
                     else
                         full_batch_meta_data = _augmented_meta_data->clone();
                 }
-                _process_time.start();
+
                 // get roi width and height of output image
                 std::vector<uint32_t> temp_width_arr;
                 std::vector<uint32_t> temp_height_arr;
@@ -741,7 +742,6 @@ void MasterGraph::output_routine()
                 _resize_width.insert(_resize_width.begin(), temp_width_arr);
                 _resize_height.insert(_resize_height.begin(), temp_height_arr);
                 _graph->process();
-                _process_time.end();
             }
             _bencode_time.start();
             if(_is_box_encoder )
@@ -761,6 +761,7 @@ void MasterGraph::output_routine()
             _ring_buffer.push();
             // full_batch_meta_data->clear();
         }
+        _process_time.end();
     }
     catch (const std::exception &e)
     {
