@@ -228,6 +228,7 @@ class rocALTensorList
 public:
     unsigned size() { return _tensor_list.size(); }
     bool empty() { return _tensor_list.empty(); }
+    rocALTensor* front() { return _tensor_list.front(); }
     void push_back(rocALTensor * tensor)
     {
         _tensor_list.emplace_back(tensor);

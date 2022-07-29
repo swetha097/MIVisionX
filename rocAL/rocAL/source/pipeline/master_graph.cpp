@@ -267,7 +267,7 @@ MasterGraph::build()
         THROW("No output images or tensors are there, cannot create the pipeline")
 
     // Verify all output images have the same dimension, otherwise creating a unified tensor from them is not supported
-    // _output_tensor_info = _internal_tensor_list.front()->info();
+    _output_tensor_info = _internal_tensor_list.front()->info();
     // _max_tensor_type_size = _output_tensor_info.data_type_size();
     // for(auto&& output_tensor : _internal_tensor_list)
     // {
@@ -389,6 +389,23 @@ MasterGraph::update_node_parameters()
     return Status::OK;
 }
 
+std::vector<uint32_t>
+MasterGraph::output_resize_width()
+{
+    std::vector<uint32_t> resize_width_vector;
+    resize_width_vector = _resize_width.back();
+    _resize_width.pop_back();
+    return resize_width_vector;
+}
+
+std::vector<uint32_t>
+MasterGraph::output_resize_height()
+{
+    std::vector<uint32_t> resize_height_vector;
+    resize_height_vector = _resize_height.back();
+    _resize_height.pop_back();
+    return resize_height_vector;
+}
 
 MasterGraph::Status // TO be removed
 MasterGraph::allocate_output_tensor()
@@ -467,6 +484,8 @@ MasterGraph::reset()
     // restart processing of the images
     _first_run = true;
     _output_routine_finished_processing = false;
+    _resize_width.clear();
+    _resize_height.clear();
     start_processing();
     return Status::OK;
 }
@@ -711,6 +730,16 @@ void MasterGraph::output_routine()
                         full_batch_meta_data = _augmented_meta_data->clone();
                 }
                 _process_time.start();
+                // get roi width and height of output image
+                std::vector<uint32_t> temp_width_arr;
+                std::vector<uint32_t> temp_height_arr;
+                for (unsigned int i = 0; i < _internal_batch_size; i++)
+                {
+                    temp_width_arr.push_back(_output_tensor_info.get_roi()->at(i).x2);
+                    temp_height_arr.push_back(_output_tensor_info.get_roi()->at(i).y2);
+                }
+                _resize_width.insert(_resize_width.begin(), temp_width_arr);
+                _resize_height.insert(_resize_height.begin(), temp_height_arr);
                 _graph->process();
                 _process_time.end();
             }

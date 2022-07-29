@@ -60,6 +60,8 @@ public:
     size_t remaining_images_count();
     MasterGraph::Status copy_output(std::vector<void *> &out_ptr);
     Status copy_output(void* out_ptr, size_t out_size);
+    std::vector<uint32_t> output_resize_width();
+    std::vector<uint32_t> output_resize_height();
     std::vector<size_t> tensor_output_byte_size();
     Status build();
     Status run();
@@ -174,6 +176,8 @@ private:
     const RocalTensorDataType _out_data_type;
     bool _is_random_bbox_crop = false;
     bool _is_segmentation = false;
+    std::vector<std::vector<uint32_t>> _resize_width;
+    std::vector<std::vector<uint32_t>> _resize_height;
     // box encoder variables
     bool _is_box_encoder = false; //bool variable to set the box encoder
     std::vector<float> _anchors; // Anchors to be used for encoding, as the array of floats is in the ltrb format of size 8732x4
