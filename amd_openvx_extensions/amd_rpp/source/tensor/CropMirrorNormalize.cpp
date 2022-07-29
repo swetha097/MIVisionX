@@ -235,7 +235,7 @@ static vx_status VX_CALLBACK processCropMirrorNormalize(vx_node node, const vx_r
 
         for (int i=0;i< 100;i++)
                 {
-                    temp[i]=*((float *)(data->pDst) + i);
+                    temp[i]=*((float *)(unsigned char *)(data->pDst) + i);
                     // *((float *)(data->pDst) + i)=*((float *)(data->pDst) + i)*255;
                     std::cout<<temp[i]<<" ";
 

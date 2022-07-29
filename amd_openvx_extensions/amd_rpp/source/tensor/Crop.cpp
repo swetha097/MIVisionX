@@ -80,44 +80,46 @@ static vx_status VX_CALLBACK refreshCrop(vx_node node, const vx_reference *param
     STATUS_ERROR_CHECK(vxCopyArrayRange((vx_array)parameters[7], 0, data->nbatchSize, sizeof(vx_uint32), data->start_y, VX_READ_ONLY, VX_MEMORY_TYPE_HOST));
     STATUS_ERROR_CHECK(vxReadScalarValue((vx_scalar)parameters[8], &data->is_packed));
     STATUS_ERROR_CHECK(vxReadScalarValue((vx_scalar)parameters[9], &data->chnShift));
-    for(int i = 0; i < data->nbatchSize; i++)
-    {
-        data->roi_tensor_Ptr[i].xywhROI.xy.x = data->start_x[i];
-        data->roi_tensor_Ptr[i].xywhROI.xy.y = data->start_y[i];
-        data->roi_tensor_Ptr[i].xywhROI.roiWidth =data->crop_w[i];
-        data->roi_tensor_Ptr[i].xywhROI.roiHeight =data->crop_h[i];
-    }
-    if(data->layout == 2 || data->layout == 3)
-    {
-        unsigned num_of_frames = data->in_tensor_dims[1]; // Num of frames 'F'
-        for(int n = data->nbatchSize - 1; n >= 0; n--)
-        {
-            unsigned index = n * num_of_frames;
-            for(int f = 0; f < num_of_frames; f++)
-            {
-                data->crop_h[index + f] = data->crop_h[n];
-                data->crop_w[index + f] = data->crop_w[n];
-                data->start_x[index + f] = data->start_x[n];
-                data->start_y[index + f] = data->start_y[n];
-                data->roi_tensor_Ptr[index + f].xywhROI.xy.x = data->roi_tensor_Ptr[n].xywhROI.xy.x;
-                data->roi_tensor_Ptr[index + f].xywhROI.xy.y = data->roi_tensor_Ptr[n].xywhROI.xy.y;
-                data->roi_tensor_Ptr[index + f].xywhROI.roiWidth = data->roi_tensor_Ptr[n].xywhROI.roiWidth;
-                data->roi_tensor_Ptr[index + f].xywhROI.roiHeight = data->roi_tensor_Ptr[n].xywhROI.roiHeight;
-            }
-        }
-    }
-
-    }
-    else
-    {
+    // if(data->roiType == RpptRoiType::XYWH)
+    // {
+    // for(int i = 0; i < data->nbatchSize; i++)
+    // {
+    //     data->roi_tensor_Ptr[i].xywhROI.xy.x = data->start_x[i];
+    //     data->roi_tensor_Ptr[i].xywhROI.xy.y = data->start_y[i];
+    //     data->roi_tensor_Ptr[i].xywhROI.roiWidth =data->crop_w[i];
+    //     data->roi_tensor_Ptr[i].xywhROI.roiHeight =data->crop_h[i];
+    // }
+    // if(data->layout == 2 || data->layout == 3)
+    // {
+    //     unsigned num_of_frames = data->in_tensor_dims[1]; // Num of frames 'F'
+    //     for(int n = data->nbatchSize - 1; n >= 0; n--)
+    //     {
+    //         unsigned index = n * num_of_frames;
+    //         for(int f = 0; f < num_of_frames; f++)
+    //         {
+    //             data->crop_h[index + f] = data->crop_h[n];
+    //             data->crop_w[index + f] = data->crop_w[n];
+    //             data->start_x[index + f] = data->start_x[n];
+    //             data->start_y[index + f] = data->start_y[n];
+    //             data->roi_tensor_Ptr[index + f].xywhROI.xy.x = data->roi_tensor_Ptr[n].xywhROI.xy.x;
+    //             data->roi_tensor_Ptr[index + f].xywhROI.xy.y = data->roi_tensor_Ptr[n].xywhROI.xy.y;
+    //             data->roi_tensor_Ptr[index + f].xywhROI.roiWidth = data->roi_tensor_Ptr[n].xywhROI.roiWidth;
+    //             data->roi_tensor_Ptr[index + f].xywhROI.roiHeight = data->roi_tensor_Ptr[n].xywhROI.roiHeight;
+    //         }
+    //     }
+    // }
+    // }
+    // else
+    // {
     for(int i = 0; i < data->nbatchSize; i++)
     {
     std::cerr<<"**************************************************  "<<data->start_x[i]<<"  "<<data->start_y[i]<<"    "<<data->crop_h[i]<<"   "<<data->crop_w[i];
 
         data->roi_tensor_Ptr[i].ltrbROI.lt.x = data->start_x[i];
         data->roi_tensor_Ptr[i].ltrbROI.lt.y = data->start_y[i];
-        data->roi_tensor_Ptr[i].ltrbROI.rb.x =data->crop_w[i] - 1;
-        data->roi_tensor_Ptr[i].ltrbROI.rb.y =data->crop_h[i] - 1;
+        data->roi_tensor_Ptr[i].ltrbROI.rb.x =data->start_x[i]+data->crop_w[i];
+        data->roi_tensor_Ptr[i].ltrbROI.rb.y =data->start_y[i]+data->crop_h[i] ;
+
     }
     if(data->layout == 2 || data->layout == 3)
     {
@@ -138,7 +140,7 @@ static vx_status VX_CALLBACK refreshCrop(vx_node node, const vx_reference *param
             }
         }
     }
-    }
+    // }
 
     if (data->device_type == AGO_TARGET_AFFINITY_GPU)
     {
@@ -245,7 +247,7 @@ static vx_status VX_CALLBACK processCrop(vx_node node, const vx_reference *param
         refreshCrop(node, parameters, num, data);
 
         rpp_status = rppt_crop_gpu((void *)data->hip_pSrc, data->src_desc_ptr, (void *)data->hip_pDst, data->src_desc_ptr, data->hip_roi_tensor_Ptr, data->roiType, data->rppHandle);
-        if (1) {
+        if (0) {
             float *temp1 = ((float *)calloc(100, sizeof(float)));
             for (int i = 0; i < 100; i++) {
                 temp1[i] = (float)*((unsigned char *)(data->hip_pDst) + i);
@@ -260,10 +262,19 @@ static vx_status VX_CALLBACK processCrop(vx_node node, const vx_reference *param
     {
         vxstatus = refreshCrop(node, parameters, num, data);
         std::cerr<<"\n\n\n\nprocesssssssss";
+
         rpp_status = rppt_crop_host(data->pSrc, data->src_desc_ptr,
                                     data->pDst, data->dst_desc_ptr,
                                     data->roi_tensor_Ptr,data->roiType,
                                     data->rppHandle);
+        std::cerr<<"\n";
+        if (1) {
+            float *temp1 = ((float *)calloc(100, sizeof(float)));
+            for (int i = 0; i < 100; i++) {
+                temp1[i] = (float)*((unsigned char *)(data->pSrc) + i);
+                std::cout << temp1[i] << " ";
+            }
+        }
         return_status = (rpp_status == RPP_SUCCESS) ? VX_SUCCESS : VX_FAILURE;
     }
     return return_status;
@@ -332,6 +343,7 @@ static vx_status VX_CALLBACK initializeCrop(vx_node node, const vx_reference *pa
     data->roi_tensor_Ptr = (RpptROI *) calloc(data->nbatchSize, sizeof(RpptROI));
     if(data->layout == 0) // NHWC
     {
+        std::cerr<<"NHWCCCCCC\n\n";
         // source_description_ptr
         data->src_desc_ptr->n = data->in_tensor_dims[0];
         data->src_desc_ptr->h = data->in_tensor_dims[1];
@@ -356,6 +368,7 @@ static vx_status VX_CALLBACK initializeCrop(vx_node node, const vx_reference *pa
     }
     else if(data->layout == 1) // NCHW
     {
+        std::cerr<<"NCHWwwwwww\n\n";
         data->src_desc_ptr->n = data->in_tensor_dims[0];
         data->src_desc_ptr->h = data->in_tensor_dims[2];
         data->src_desc_ptr->w = data->in_tensor_dims[3];
@@ -378,6 +391,7 @@ static vx_status VX_CALLBACK initializeCrop(vx_node node, const vx_reference *pa
     }
     else if(data->layout == 2) // NFHWC
     {
+        std::cerr<<"layaout==22222222222222222222222\n\n";
         data->src_desc_ptr->n = data->in_tensor_dims[0] * data->in_tensor_dims[1];
         data->src_desc_ptr->h = data->in_tensor_dims[2];
         data->src_desc_ptr->w = data->in_tensor_dims[3];
@@ -400,6 +414,7 @@ static vx_status VX_CALLBACK initializeCrop(vx_node node, const vx_reference *pa
     }
     else if(data->layout == 3)// NFCHW
     {
+        std::cerr<<"layout=33333333333\n\n";
         data->src_desc_ptr->n = data->in_tensor_dims[0] * data->in_tensor_dims[1];
         data->src_desc_ptr->h = data->in_tensor_dims[3];
         data->src_desc_ptr->w = data->in_tensor_dims[4];
