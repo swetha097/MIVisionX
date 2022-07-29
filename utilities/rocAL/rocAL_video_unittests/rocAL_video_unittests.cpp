@@ -163,28 +163,28 @@ int main(int argc, const char **argv)
         std::cout << "Could not create the Rocal contex\n";
         return -1;
     }
-    // if (reader_case == 3)
-    // {
-    //     if (check_extension(source_path) < 0)
-    //     {
-    //         std::cerr << "\n[ERR]   Text file/ Video File passed as input to SEQUENCE READER\n";
-    //         return -1;
-    //     }
-    //     if (enable_metadata)
-    //     {
-    //         std::cout << "METADATA cannot be enabled for SEQUENCE READER";
-    //         enable_metadata = false;
-    //     }
-    //     if (enable_framenumbers)
-    //         enable_framenumbers = false;
-    //     if (enable_timestamps)
-    //         enable_timestamps = false;
-    // }
-    // else if (enable_metadata)
-    // {
-    //     std::cout << "\n>>>> META DATA READER\n";
-    //     RocalMetaData meta_data = rocalCreateVideoLabelReader(handle, source_path, sequence_length, frame_step, frame_stride, file_list_frame_num);
-    // }
+    if (reader_case == 3)
+    {
+        if (check_extension(source_path) < 0)
+        {
+            std::cerr << "\n[ERR]   Text file/ Video File passed as input to SEQUENCE READER\n";
+            return -1;
+        }
+        if (enable_metadata)
+        {
+            std::cout << "METADATA cannot be enabled for SEQUENCE READER";
+            enable_metadata = false;
+        }
+        if (enable_framenumbers)
+            enable_framenumbers = false;
+        if (enable_timestamps)
+            enable_timestamps = false;
+    }
+    else if (enable_metadata)
+    {
+        std::cout << "\n>>>> META DATA READER\n";
+        RocalMetaData meta_data = rocalCreateVideoLabelReader(handle, source_path, sequence_length, frame_step, frame_stride, file_list_frame_num);
+    }
 
     RocalTensor input1;
     switch (reader_case)
@@ -214,14 +214,15 @@ int main(int argc, const char **argv)
             break;
         }
     }
-    // if (enable_sequence_rearrange)
-    // {
-    //     std::cout << "\n>>>> ENABLE SEQUENCE REARRANGE\n";
-    //     unsigned int new_order[] = {0, 0, 1, 1, 0}; // The integers in new order should range only from 0 to sequence_length - 1
-    //     unsigned new_sequence_length = sizeof(new_order) / sizeof(new_order[0]);
-    //     ouput_frames_per_sequence = new_sequence_length;
-    //     input1 = rocalSequenceRearrange(handle, input1, new_order, new_sequence_length, sequence_length, true);
-    // }
+
+    if (enable_sequence_rearrange)
+    {
+        std::cout << "\n>>>> ENABLE SEQUENCE REARRANGE\n";
+        unsigned int new_order[] = {0, 1}; // The integers in new order should range only from 0 to sequence_length - 1
+        unsigned new_sequence_length = sizeof(new_order) / sizeof(new_order[0]);
+        ouput_frames_per_sequence = new_sequence_length;
+        input1 = rocalSequenceRearrange(handle, input1, new_order, new_sequence_length, sequence_length, true);
+    }
     RocalIntParam color_temp_adj = rocalCreateIntParameter(0);
 
     // Calling the API to verify and build the augmentation graph
@@ -329,23 +330,23 @@ int main(int argc, const char **argv)
                 mat_output.release();
             }
         }
-        // if (enable_metadata)
-        // {
-        //     int label_id[input_batch_size];
-        //     int image_name_length[input_batch_size];
-        //     rocalGetImageLabels(handle, label_id);
-        //     int img_size = rocalGetImageNameLen(handle, image_name_length);
-        //     char img_name[img_size];
-        //     rocalGetImageName(handle, img_name);
+        if (enable_metadata)
+        {
+            int image_name_length[input_batch_size];
+            int img_size = rocalGetImageNameLen(handle, image_name_length);
+            char img_name[img_size];
+            rocalGetImageName(handle, img_name);
 
-        //     std::cout << "\nPrinting image names of batch: " << img_name << "\n";
-        //     std::cout << "\t Printing label_id : ";
-        //     for (unsigned i = 0; i < input_batch_size; i++)
-        //     {
-        //         std::cout << label_id[i] << "\t";
-        //     }
-        //     std::cout << std::endl;
-        // }
+            std::cout << "\nPrinting image names of batch: " << img_name << "\n";
+            RocalTensorList labels = rocalGetImageLabels(handle);
+
+            for(int i = 0; i < labels->size(); i++)
+            {
+                int * labels_buffer = (int *)(labels->at(i)->buffer());
+                std::cerr << ">>>>> LABELS : " << labels_buffer[0] << "\t";
+            }
+            std::cout << std::endl;
+        }
         // if (enable_framenumbers || enable_timestamps)
         // {
         //     unsigned int start_frame_num[input_batch_size];

@@ -798,6 +798,48 @@ std::vector<rocALTensorList *> MasterGraph::create_label_reader(const char *sour
     return _metadata_output_tensor_list;
 }
 
+std::vector<rocALTensorList *> MasterGraph::create_video_label_reader(const char *source_path, MetaDataReaderType reader_type, unsigned sequence_length, unsigned frame_step, unsigned frame_stride, bool file_list_frame_num)
+{
+    if( _meta_data_reader)
+        THROW("A metadata reader has already been created")
+    MetaDataConfig config(MetaDataType::Label, reader_type, source_path, std::map<std::string, std::string>(), std::string(), false, sequence_length, frame_step, frame_stride);
+    _meta_data_reader = create_meta_data_reader(config);
+    _meta_data_reader->init(config);
+    if(!file_list_frame_num)
+    {
+        _meta_data_reader->set_timestamp_mode();
+    }
+
+    unsigned num_of_dims = 1;
+    std::vector<unsigned> dims;
+    dims.resize(num_of_dims);
+    dims.at(0) = 1; // Number of labels per file
+    auto default_labels_info  = rocALTensorInfo(num_of_dims,
+                                 std::vector<unsigned>(std::move(dims)),
+                                 _mem_type,
+                                 RocalTensorDataType::INT32);
+    default_labels_info.set_metadata();
+    default_labels_info.set_tensor_layout(RocalTensorlayout::NONE);
+    _meta_data_buffer_size.emplace_back(_user_batch_size * sizeof(vx_int32));
+
+    for(unsigned i = 0; i < _user_batch_size; i++)
+    {
+        auto info = default_labels_info;
+        auto tensor = new rocALTensor(info);
+        _labels_tensor_list.push_back(tensor);
+    }
+    _ring_buffer.init_metadata(RocalMemType::HOST, _meta_data_buffer_size, _meta_data_buffer_size.size());
+
+    _meta_data_reader->read_all(source_path);
+    if (_augmented_meta_data)
+        THROW("Metadata can only have a single output")
+    else
+        _augmented_meta_data = _meta_data_reader->get_output();
+    _metadata_output_tensor_list.emplace_back(&_labels_tensor_list);
+
+    return _metadata_output_tensor_list;
+}
+
 std::vector<rocALTensorList *> MasterGraph::create_coco_meta_data_reader(const char *source_path, bool is_output, MetaDataReaderType reader_type, MetaDataType label_type)
 {
     if(_meta_data_reader)

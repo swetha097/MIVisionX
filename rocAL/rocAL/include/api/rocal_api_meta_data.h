@@ -29,6 +29,17 @@ THE SOFTWARE.
 /// \return RocalMetaData object, can be used to inquire about the rocal's output (processed) tensors
 extern "C" RocalMetaData ROCAL_API_CALL rocalCreateLabelReader(RocalContext rocal_context, const char* source_path);
 
+///
+/// \param rocal_context
+/// \param source_path path to the folder that contains the dataset or metadata file
+/// \param sequence_length The number of frames in a sequence.
+/// \param frame_step Frame interval between each sequence.
+/// \param frame_stride Frame interval between frames in a sequence.
+/// \param file_list_frame_num True : when the inputs from text file is to be considered as frame numbers.
+/// False : when the inputs from text file is to considered as timestamps.
+/// \return RocalMetaData object, can be used to inquire about the rocal's output (processed) tensors
+extern "C" RocalMetaData ROCAL_API_CALL rocalCreateVideoLabelReader(RocalContext rocal_context, const char* source_path, unsigned sequence_length, unsigned frame_step, unsigned frame_stride, bool file_list_frame_num = true);
+
 #if 0 // Commented for now
 ///
 /// \param rocal_context

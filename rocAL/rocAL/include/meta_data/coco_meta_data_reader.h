@@ -36,6 +36,7 @@ public:
     void release(std::string image_name);
     void release() override;
     void print_map_contents();
+    bool set_timestamp_mode() override { return false; }
     MetaDataBatch * get_output() override { return _output; }
     const std::map<std::string, std::shared_ptr<MetaData>> & get_map_content() override { return _map_content;}
     COCOMetaDataReader();

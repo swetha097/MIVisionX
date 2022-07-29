@@ -70,6 +70,7 @@ public:
     rocALTensor *create_loader_output_tensor(const rocALTensorInfo &info);
     rocALTensorList * get_output_tensors();
     std::vector<rocALTensorList *> create_label_reader(const char *source_path, MetaDataReaderType reader_type);
+    std::vector<rocALTensorList *> create_video_label_reader(const char *source_path, MetaDataReaderType reader_type, unsigned sequence_length, unsigned frame_step, unsigned frame_stride, bool file_list_frame_num = true);
     std::vector<rocALTensorList *> create_coco_meta_data_reader(const char *source_path, bool is_output, MetaDataReaderType reader_type, MetaDataType label_type);
     // MetaDataBatch *create_coco_meta_data_reader(const char *source_path, bool is_output);
     // MetaDataBatch *create_tf_record_meta_data_reader(const char *source_path, MetaDataReaderType reader_type,  MetaDataType label_type, const std::map<std::string, std::string> feature_key_map);
