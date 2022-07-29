@@ -622,6 +622,8 @@ void MasterGraph::output_routine()
         THROW("Internal failure, in the GPU processing case, user and input batch size must be equal")
 #endif
     try {
+
+        _process_time.start();
         while (_processing)
         {
             std::vector<size_t> tensor_each_cycle_size_vec = tensor_output_byte_size(); // /_user_to_internal_batch_ratio;
@@ -639,7 +641,11 @@ void MasterGraph::output_routine()
                 std::this_thread::sleep_for(std::chrono::milliseconds(100));
                 continue;
             }
-            _process_time.start();
+            _rb_block_if_full_time.start();
+            // _ring_buffer.get_write_buffers() is blocking and blocks here until user uses processed image by calling run() and frees space in the ring_buffer
+            auto tensor_write_buffer = _ring_buffer.get_write_buffers();
+            _rb_block_if_full_time.end();
+
             // When executing on CPU the internal batch count can be smaller than the user batch count
             // In that case the user_batch_size will be an integer multiple of the _internal_batch_size
             // Multiple cycles worth of internal_batch_size images should be processed to complete a full _user_batch_size
@@ -669,11 +675,6 @@ void MasterGraph::output_routine()
                 for (size_t idx = 0; idx < _internal_tensor_list.size(); idx++)
                 {
                     // if(_internal_tensor_list.size() != 0)
-                    _rb_block_if_full_time.start();
-                    // _ring_buffer.get_write_buffers() is blocking and blocks here until user uses processed image by calling run() and frees space in the ring_buffer
-                    auto tensor_write_buffer = _ring_buffer.get_write_buffers();
-                    _rb_block_if_full_time.end();
-
                     size_t tensor_each_cycle_size = tensor_each_cycle_size_vec[idx]; // TODO - Batch ratio calculation TO be removed
                     if(_affinity == RocalAffinity::GPU)
                     {
