@@ -164,7 +164,7 @@ static vx_status VX_CALLBACK validateCropMirrorNormalize(vx_node node, const vx_
     STATUS_ERROR_CHECK(vxQueryTensor(input, VX_TENSOR_NUMBER_OF_DIMS, &in_num_tensor_dims, sizeof(in_num_tensor_dims)));
     if(in_num_tensor_dims < 4)
     {
-        return ERRMSG(VX_ERROR_INVALID_DIMENSION, "validate: CropMirrorNormalize: tensor: #0 dimensions=%d (must be greater than or equal to 4)\n", in_num_tensor_dims);
+        return ERRMSG(VX_ERROR_INVALID_DIMENSION, "validate: CropMirrorNormalize: tensor: #0 dimensions=%lu (must be greater than or equal to 4)\n", in_num_tensor_dims);
     }
     
     // Check for output parameters
