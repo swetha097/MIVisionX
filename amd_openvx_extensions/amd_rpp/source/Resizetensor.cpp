@@ -163,7 +163,7 @@ static vx_status VX_CALLBACK processResizetensor(vx_node node, const vx_referenc
     if (data->device_type == AGO_TARGET_AFFINITY_CPU)
     {
         refreshResizetensor(node, parameters, num, data);
-        // rpp_status = rppt_resize_host(data->pSrc, data->srcDescPtr, data->pDst, data->dstDescPtr, data->dstImgSize, RpptInterpolationType::TRIANGULAR, data->roiTensorPtrSrc, data->roiType, data->rppHandle);
+        rpp_status = rppt_resize_host(data->pSrc, data->srcDescPtr, data->pDst, data->dstDescPtr, data->dstImgSize, RpptInterpolationType::TRIANGULAR, data->roiTensorPtrSrc, data->roiType, data->rppHandle);
         // commenting the above line till tensor resize calls are merged with rpp TOT
         return_status = (rpp_status == RPP_SUCCESS) ? VX_SUCCESS : VX_FAILURE;
     }

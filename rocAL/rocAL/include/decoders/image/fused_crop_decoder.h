@@ -24,6 +24,8 @@ THE SOFTWARE.
 #include "decoder.h"
 #include <turbojpeg.h>
 #include <random>
+#include "parameter_factory.h"
+
 
 // todo:: move this to common header
 template<typename T = std::mt19937, std::size_t state_size = T::state_size>
@@ -58,6 +60,8 @@ private:
     std::vector<T> _rngs;
     int _batch_size;
 };
+
+
 
 class FusedCropTJDecoder : public Decoder {
 public:
@@ -120,4 +124,20 @@ private:
     bool _is_partial_decoder = true;
     std::vector <float> _bbox_coord;
     SeededRNG<std::mt19937, 4> _rngs;     // setting the state_size to 4 for 4 random parameters.
+    std::mt19937 rand_gen_;
+    int64_t seed;
+    int64_t getseed()
+    {
+      return ParameterFactory::instance()->get_seed();
+    }
+    void generate_rngs(int64_t seed_, int N)
+{
+ std::seed_seq seq{seed_};
+  std::vector<int64_t> seeds(N);
+  seq.generate(seeds.begin(), seeds.end());
+
+  for (std::size_t i = 0; i < N; i++) {
+    rand_gen_.seed(seeds[i]);
+  }
+}
 };

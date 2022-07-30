@@ -41,6 +41,10 @@ FusedCropTJDecoder::FusedCropTJDecoder():
         }
     }
 #endif
+    //generate BatchSize of RNG's- Using a random seed for now
+    int64_t seed = getseed();
+    std::cerr<<"\n seed value set to :: "<< seed;
+    generate_rngs(seed, 256);
 };
 
 Decoder::Status FusedCropTJDecoder::decode_info(unsigned char* input_buffer, size_t input_size, int* width, int* height, int* color_comps)
@@ -110,15 +114,15 @@ Decoder::Status FusedCropTJDecoder::decode(unsigned char *input_buffer, size_t i
         {
             std::uniform_real_distribution<double> area_dis(AREA_RANGE[0], AREA_RANGE[1]);
             std::uniform_real_distribution<double> log_ratio_dist(std::log(ASPECT_RATIO_RANGE[0]), std::log(ASPECT_RATIO_RANGE[1]));
-            double scale = area_dis(_rngs[sample_idx]);
+            double scale = area_dis(rand_gen_);
             double target_area  = scale * original_image_width * original_image_height;
-            double aspect_ratio = std::exp(log_ratio_dist(_rngs[sample_idx]));
+            double aspect_ratio = std::exp(log_ratio_dist(rand_gen_));
             crop_width  = static_cast<size_t>(std::round(std::sqrt(target_area * aspect_ratio)));
             crop_height = static_cast<size_t>(std::round(std::sqrt(target_area * (1 / aspect_ratio))));
             if(is_valid_crop(crop_height, crop_width, original_image_height, original_image_width))
             {
-                x1 = std::uniform_int_distribution<int>(0, original_image_width - crop_width)(_rngs[sample_idx]);
-                y1 = std::uniform_int_distribution<int>(0, original_image_height - crop_height)(_rngs[sample_idx]);
+                x1 = std::uniform_int_distribution<int>(0, original_image_width - crop_width)(rand_gen_);
+                y1 = std::uniform_int_distribution<int>(0, original_image_height - crop_height)(rand_gen_);
                 break ;
             }
         }
