@@ -131,7 +131,6 @@ static vx_status VX_CALLBACK validateCopyTensor(vx_node node, const vx_reference
 
 static vx_status VX_CALLBACK processCopyTensor(vx_node node, const vx_reference *parameters, vx_uint32 num)
 {
-    // std::cerr<<"\n processCopy";
     vx_status vxstatus;
     vx_status status = VX_SUCCESS;
     CopyTensorLocalData *data = NULL;

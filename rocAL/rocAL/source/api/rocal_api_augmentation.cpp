@@ -61,14 +61,12 @@ void get_rocal_tensor_data_type(RocalTensorOutputType &tensor_output_type, Rocal
     switch(tensor_output_type)
     {
         case ROCAL_FP32:
-            std::cerr<<"\n Setting output type to FP32";
             tensor_data_type = RocalTensorDataType::FP32;
             return;
         case ROCAL_FP16:
             tensor_data_type = RocalTensorDataType::FP16;
             return;
         case ROCAL_UINT8:
-            std::cerr<<"\n Setting output type to UINT8";
             tensor_data_type = RocalTensorDataType::UINT8;
             return;
         default:

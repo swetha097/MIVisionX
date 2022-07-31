@@ -661,7 +661,7 @@ void MasterGraph::output_routine()
                 auto decode_image_info = _loader_module->get_decode_image_info();
                 auto crop_image_info = _loader_module->get_crop_image_info();
 
-                std::cerr << "\nThis cycle names: " << this_cycle_names.at(0) << "\n";
+                // std::cerr << "\nThis cycle names: " << this_cycle_names.at(0) << "\n";
                 if(this_cycle_names.size() != _internal_batch_size)
                     WRN("Internal problem: names count "+ TOSTR(this_cycle_names.size()))
                 // meta_data lookup is done before _meta_data_graph->process() is called to have the new meta_data ready for processing
