@@ -166,7 +166,7 @@ rocALTensorInfo::rocALTensorInfo(
     RocalTensorDataType data_type) : _type(Type::UNKNOWN),
                                 _num_of_dims(num_of_dims),
                                 _dims(dims),
-                                _batch_size(dims.at(0)),
+                                _batch_size(_dims.at(0)),
                                 _mem_type(mem_type),
                                 _data_type(data_type)
 {
@@ -175,7 +175,7 @@ rocALTensorInfo::rocALTensorInfo(
     _data_size = data_size;
     for(unsigned i = 0; i < _num_of_dims; i++)
     {
-        _data_size *= dims.at(i);
+        _data_size *= _dims.at(i);
     }
     if(_num_of_dims <= 3)
         _is_image = false;
@@ -426,10 +426,12 @@ unsigned rocALTensor::copy_data(unsigned char* user_buffer, bool sync)
 
     if (_info._mem_type == RocalMemType::HIP)
     {
+#if ENABLE_HIP
         // copy from device to host
         hipError_t status;
         if ((status = hipMemcpyDtoH((void *)user_buffer, _mem_handle, _info.data_size())))
             THROW("copy_data::hipMemcpyDtoH failed: " + TOSTR(status))
+#endif
     }
     else
     {

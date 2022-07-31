@@ -81,6 +81,7 @@ public:
     void set_tensor_layout(RocalTensorlayout layout)
     {
         _max_dims.resize(3);
+        _layout = layout;
         if(layout != RocalTensorlayout::NONE)
         {
             _is_image = true;
@@ -106,14 +107,13 @@ public:
                 _max_dims[1] = _dims.at(3);
                 _max_dims[2] = _dims.at(1);
             }
-            reallocate_tensor_roi_buffers();
         }
         else if(!_is_metadata)
         {
             _max_dims[0] = _dims.at(1);
             _max_dims[1] = _dims.at(2);
         }
-        _layout = layout;
+        reallocate_tensor_roi_buffers();
     }
     void set_dims(std::vector<unsigned> &new_dims)
     {
@@ -132,7 +132,7 @@ public:
     void set_color_format(RocalColorFormat color_format) { _color_format = color_format; }
 
     unsigned num_of_dims() const { return _num_of_dims; }
-    unsigned batch_size() const { return _dims.at(0); }
+    unsigned batch_size() const { return _batch_size; }
     unsigned data_size() const { return _data_size; }
     std::vector<unsigned> max_dims() const { return _max_dims; }
     std::vector<unsigned> dims() const { return _dims; }

@@ -612,16 +612,19 @@ rocalAudioFileSource(
                                                                             context->master_graph->meta_data_reader()
                                                                             );
         context->master_graph->set_loop(loop);
-        
         if(downmix)
         {
             // For the resize node, user can create an image with a different width and height
             rocALTensorInfo output_info = info;
-            auto output_dims = info.dims();
-            output_dims[2] = 1;
-            info.set_dims(output_dims);
+            std::vector<unsigned> output_dims;
+            output_dims.resize(3);
+            output_dims.at(0) = context->user_batch_size();
+            output_dims.at(1) = info.dims()[1];
+            output_dims.at(2) = 1;
+            output_info.set_dims(output_dims);
+            output_info.set_tensor_layout(RocalTensorlayout::NONE);
 
-            auto downmixed_output = context->master_graph->create_tensor(output_info, false);
+            auto downmixed_output = context->master_graph->create_tensor(output_info, true);
             std::shared_ptr<DownmixNode> downmix_node = context->master_graph->add_node<DownmixNode>({output}, {downmixed_output});
 
             // For the nodes that user provides the output size the dimension of all the images after this node will be fixed and equal to that size

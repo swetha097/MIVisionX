@@ -1952,7 +1952,7 @@ VX_API_ENTRY vx_node VX_API_CALL vxExtrppNode_Downmix(vx_graph graph, vx_tensor 
             (vx_reference)srcChannels,
             (vx_reference)NBATCHSIZE,
             (vx_reference)DEV_TYPE};
-        node = createNode(graph, VX_KERNEL_RPP_GAMMACORRECTION, params, 6);
+        node = createNode(graph, VX_KERNEL_RPP_DOWNMIX, params, 6);
     }
     return node;
 }

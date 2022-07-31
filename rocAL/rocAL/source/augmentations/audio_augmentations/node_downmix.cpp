@@ -51,7 +51,7 @@ void DownmixNode::create_node()
     if(status != 0)
         THROW(" vxAddArrayItems failed in the downmix node (vxExtrppNode_Downmix)  node: "+ TOSTR(status) + "  "+ TOSTR(status))
     vx_scalar normalize_weights = vxCreateScalar(vxGetContext((vx_reference)_graph->get()), VX_TYPE_BOOL, &_normalize_weights);
-    _node = vxExtrppNode_Downmix(_graph->get(), _inputs[0]->handle(), _outputs[0]->handle(), _src_samples_array, _src_channels_array, normalize_weights);
+    _node = vxExtrppNode_Downmix(_graph->get(), _inputs[0]->handle(), _outputs[0]->handle(), _src_samples_array, _src_channels_array, _batch_size);
 
     if((status = vxGetStatus((vx_reference)_node)) != VX_SUCCESS)
         THROW("Adding the copy (vxExtrppNode_Downmix) node failed: "+ TOSTR(status))
