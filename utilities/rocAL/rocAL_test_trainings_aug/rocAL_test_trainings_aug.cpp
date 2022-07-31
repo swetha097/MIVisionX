@@ -32,9 +32,9 @@ THE SOFTWARE.
 #include<string>
 
 #include "rocal_api.h"
-// #define CLASSIFICATION_TRAIN 1
+#define CLASSIFICATION_TRAIN 1
 // #define CLASSIFICATION_VAL 1
-#define SSD 1
+// #define SSD 1
 #define RANDOMBBOXCROP
 
 #include "opencv2/opencv.hpp"
@@ -168,9 +168,12 @@ int main(int argc, const char ** argv)
 #if CLASSIFICATION_TRAIN
     std::vector<float> mean{0.485 * 255, 0.456 * 255, 0.406 * 255};
     std::vector<float> sdev{0.229 * 255, 0.224 * 255, 0.225 * 255};
+    std::vector<int> values = {0, 1};
+    std::vector<double> frequencies = {0.5, 0.5};
+    RocalIntParam mirror = rocalCreateIntRand(values.data(), frequencies.data(), values.size());
 
     image1 = rocalResize(handle, input1, tensorLayout, tensorOutputType, 3, 224 , 224, 0, false);
-    image2 = rocalCropMirrorNormalize(handle, image1, tensorLayout, RocalTensorOutputType::ROCAL_FP32, 3, 224, 224, 0, 0, 0, mean, sdev, true);
+    image2 = rocalCropMirrorNormalize(handle, image1, tensorLayout, RocalTensorOutputType::ROCAL_FP32, 3, 224, 224, 0, 0, 0, mean, sdev, true, mirror);
 #elif CLASSIFICATION_VAL
     std::vector<float> mean{0.485 * 255, 0.456 * 255, 0.406 * 255};
     std::vector<float> sdev{0.229 * 255, 0.224 * 255, 0.225 * 255};
@@ -184,11 +187,13 @@ int main(int argc, const char ** argv)
     RocalFloatParam contrast = rocalCreateFloatUniformRand(0.5, 1.5);
     RocalFloatParam brightness = rocalCreateFloatUniformRand(0.875, 1.125);
     RocalFloatParam hue = rocalCreateFloatUniformRand(0.5, -0.5);
-
+    std::vector<int> values = {0, 1};
+    std::vector<double> frequencies = {0.5, 0.5};
+    RocalIntParam mirror = rocalCreateIntRand(values.data(), frequencies.data(), values.size());
+    
     image1 = rocalResize(handle, input1, tensorLayout, tensorOutputType, 3, 224 , 224, 0, false);
     image2 = rocalColorTwist(handle, image1, tensorLayout, tensorOutputType, false, brightness, contrast, saturation, hue);
-    auto image3 = rocalCropMirrorNormalize(handle, image2, tensorLayout, RocalTensorOutputType::ROCAL_FP32, 3, 224, 224, 0, 0, 0, mean, sdev, true);
-    image1 = rocalResize(handle, image3, tensorLayout, RocalTensorOutputType::ROCAL_FP32, 3, 400 , 400, 0, true);
+    auto image3 = rocalCropMirrorNormalize(handle, image2, tensorLayout, RocalTensorOutputType::ROCAL_FP32, 3, 224, 224, 0, 0, 0, mean, sdev, true, mirror);
 
 #else
     image1 = rocalBrightness(handle, input1, true);
