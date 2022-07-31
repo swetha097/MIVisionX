@@ -439,7 +439,7 @@ rocalResizeShorter(
         output_info.set_dims(out_dims);
         output = context->master_graph->create_tensor(output_info, is_output);
         output->reset_tensor_roi();
-        std::shared_ptr<ResizeSingleParamNode> resize_node =  context->master_graph->add_node<ResizeSingleParamNode>({input}, {output});
+        std::shared_ptr<ResizeShorterNode> resize_node =  context->master_graph->add_node<ResizeShorterNode>({input}, {output});
         resize_node->init(size);
         // if (context->master_graph->meta_data_graph())
         //     context->master_graph->meta_add_node<ResizeMetaNode,ResizeSingleParamNode>(resize_node);

@@ -32,8 +32,10 @@ THE SOFTWARE.
 #include<string>
 
 #include "rocal_api.h"
-#define CLASSIFICATION 1
-// #define SSD 1
+// #define CLASSIFICATION_TRAIN 1
+// #define CLASSIFICATION_VAL 1
+#define SSD 1
+#define RANDOMBBOXCROP
 
 #include "opencv2/opencv.hpp"
 using namespace cv;
@@ -50,6 +52,14 @@ using namespace cv;
 #define DISPLAY 1
 
 using namespace std::chrono;
+
+void convert_float_to_uchar_buffer(float * input_float_buffer, unsigned char * output_uchar_buffer, size_t data_size)
+{
+    for(size_t i = 0; i < data_size; i++)
+    {
+        output_uchar_buffer[i] = (unsigned char)(*(input_float_buffer + i) * 255);
+    }
+}
 
 int main(int argc, const char ** argv)
 {
@@ -107,13 +117,38 @@ int main(int argc, const char ** argv)
     RocalMetaData metadata_output;
     RocalTensor image1, image2;
 
-#if CLASSIFICATION
-    std::cout << ">>>>>>> Running CLASSIFICATION" << std::endl;
-    metadata_output = rocalCreateLabelReader(handle, folderPath1);
-    input1 = rocalFusedJpegCropSingleShard(handle, folderPath1,  color_format, 0, 1, true, false, false,
-                                ROCAL_USE_USER_GIVEN_SIZE, 2000, 2000);    
-#elif SSD
+    RocalTensorLayout tensorLayout = RocalTensorLayout::ROCAL_NHWC;
+    RocalTensorOutputType tensorOutputType = RocalTensorOutputType::ROCAL_UINT8;
 
+#if CLASSIFICATION_TRAIN
+    std::cout << ">>>>>>> Running CLASSIFICATION TRAIN" << std::endl;
+    metadata_output = rocalCreateLabelReader(handle, folderPath1);
+    input1 = rocalFusedJpegCropSingleShard(handle, folderPath1,  color_format, 0, 1, false, false, false,
+                                ROCAL_USE_USER_GIVEN_SIZE, 2000, 2000); 
+#elif CLASSIFICATION_VAL
+    std::cout << ">>>>>>> Running CLASSIFICATION VAL" << std::endl;
+    metadata_output = rocalCreateLabelReader(handle, folderPath1);
+    input1 = rocalJpegFileSourceSingleShard(handle, folderPath1,  color_format, 0, 1, false, false, false);
+#elif SSD
+    char const *json_path = "/data/coco_10_img/coco2017/annotations/instances_train2017.json";
+#if defined RANDOMBBOXCROP
+    bool all_boxes_overlap = true;
+    bool no_crop = false;
+#endif
+    if (strcmp(json_path, "") == 0)
+    {
+        std::cout << "\n json_path has to be set in rocal_unit test manually";
+        exit(0);
+    }
+    rocalCreateCOCOReader(handle, json_path, true, false);
+#if defined RANDOMBBOXCROP
+    RocalFloatParam aspect_ratio = rocalCreateFloatUniformRand(0.5, 2.0);
+    RocalFloatParam scaling = rocalCreateFloatUniformRand(0.3, 1.0);
+
+    // rocalRandomBBoxCrop(handle, all_boxes_overlap, no_crop);
+    rocalRandomBBoxCrop(handle, all_boxes_overlap, no_crop, aspect_ratio, false, 0, 0, 50, scaling);
+#endif
+    input1 = rocalJpegCOCOFileSourcePartialSingleShard(handle, folderPath1, json_path, color_format, 0, 1, false, false, false);
 #else
     std::cout << ">>>>>>> Running IMAGE READER" << std::endl;
     metadata_output = rocalCreateLabelReader(handle, folderPath1);
@@ -130,15 +165,31 @@ int main(int argc, const char ** argv)
         std::cout << "JPEG source could not initialize : "<<rocalGetErrorMessage(handle) << std::endl;
         return -1;
     }
-#if CLASSIFICATION
-    RocalTensorLayout tensorLayout = RocalTensorLayout::ROCAL_NHWC;
-    RocalTensorOutputType tensorOutputType = RocalTensorOutputType::ROCAL_UINT8;
-    std::vector<float> mean{0.485, 0.456, 0.406};
-    std::vector<float> sdev{0.229, 0.224, 0.225};
+#if CLASSIFICATION_TRAIN
+    std::vector<float> mean{0.485 * 255, 0.456 * 255, 0.406 * 255};
+    std::vector<float> sdev{0.229 * 255, 0.224 * 255, 0.225 * 255};
 
-    image1 = rocalResize(handle, input1, tensorLayout, tensorOutputType, 3, 224 , 224, 0, true);
-    image2 = rocalCropMirrorNormalize(handle, image1, tensorLayout, tensorOutputType, 3, 224, 224, 0, 0, 0, mean, sdev, true);
+    image1 = rocalResize(handle, input1, tensorLayout, tensorOutputType, 3, 224 , 224, 0, false);
+    image2 = rocalCropMirrorNormalize(handle, image1, tensorLayout, RocalTensorOutputType::ROCAL_FP32, 3, 224, 224, 0, 0, 0, mean, sdev, true);
+#elif CLASSIFICATION_VAL
+    std::vector<float> mean{0.485 * 255, 0.456 * 255, 0.406 * 255};
+    std::vector<float> sdev{0.229 * 255, 0.224 * 255, 0.225 * 255};
+    image1 = rocalResizeShorter(handle, input1, tensorLayout, tensorOutputType, 256, true);
+    image2 = rocalCropCenterFixed(handle, image1, tensorLayout, tensorOutputType, 224, 224, 3, false);
+    image1 = rocalCropMirrorNormalize(handle, image2, tensorLayout, RocalTensorOutputType::ROCAL_FP32, 3, 224, 224, 0, 0, 0, mean, sdev, true);
 #elif SSD
+    std::vector<float> mean{0, 0, 0};
+    std::vector<float> sdev{1, 1, 1};
+    RocalFloatParam saturation = rocalCreateFloatUniformRand(0.5, 1.5);
+    RocalFloatParam contrast = rocalCreateFloatUniformRand(0.5, 1.5);
+    RocalFloatParam brightness = rocalCreateFloatUniformRand(0.875, 1.125);
+    RocalFloatParam hue = rocalCreateFloatUniformRand(0.5, -0.5);
+
+    image1 = rocalResize(handle, input1, tensorLayout, tensorOutputType, 3, 224 , 224, 0, false);
+    image2 = rocalColorTwist(handle, image1, tensorLayout, tensorOutputType, false, brightness, contrast, saturation, hue);
+    auto image3 = rocalCropMirrorNormalize(handle, image2, tensorLayout, RocalTensorOutputType::ROCAL_FP32, 3, 224, 224, 0, 0, 0, mean, sdev, true);
+    image1 = rocalResize(handle, image3, tensorLayout, RocalTensorOutputType::ROCAL_FP32, 3, 400 , 400, 0, true);
+
 #else
     image1 = rocalBrightness(handle, input1, true);
 #endif
@@ -170,7 +221,7 @@ int main(int argc, const char ** argv)
         index++;
         if (rocalRun(handle) != 0)
             break;
-#if CLASSIFICATION
+#if CLASSIFICATION_TRAIN || CLASSIFICATION_VAL
         RocalTensorList labels = rocalGetImageLabels(handle);
 
         for(int i = 0; i < labels->size(); i++)
@@ -179,6 +230,20 @@ int main(int argc, const char ** argv)
             std::cerr << ">>>>> LABELS : " << labels_buffer[0] << "\t";
         }
 #elif SSD
+        RocalTensorList bbox_labels = rocalGetBoundingBoxLabel(handle);
+        RocalTensorList bbox_coords = rocalGetBoundingBoxCords(handle);
+        for(int i = 0; i < bbox_labels->size(); i++)
+        {
+            int * labels_buffer = (int *)(bbox_labels->at(i)->buffer());
+            float *bbox_buffer = (float *)(bbox_coords->at(i)->buffer());
+            std::cerr << "\n>>>>> BBOX LABELS : ";
+            for(int j = 0; j < bbox_labels->at(i)->info().dims().at(0); j++)
+                std::cerr << labels_buffer[j] << " ";
+            std::cerr << "\n>>>>> BBOXX : " <<bbox_coords->at(i)->info().dims().at(0) << " : \n";
+            for(int j = 0, j4 = 0; j < bbox_coords->at(i)->info().dims().at(0); j++, j4 = j * 4)
+                std::cerr << bbox_buffer[j4] << " " << bbox_buffer[j4 + 1] << " " << bbox_buffer[j4 + 2] << " " << bbox_buffer[j4 + 3] << "\n";
+
+        }
 #else
         RocalTensorList labels = rocalGetImageLabels(handle);
 
@@ -203,15 +268,34 @@ int main(int argc, const char ** argv)
             mat_input = cv::Mat(h, w, cv_color_format);
             mat_output = cv::Mat(h, w, cv_color_format);
 
-            if(output_tensor_list->at(idx)->info().mem_type() == RocalMemType::HIP)
+            if(output_tensor_list->at(idx)->info().data_type() == RocalTensorDataType::FP32)
             {
                 unsigned char *out_buffer;
-                out_buffer = (unsigned char *)malloc(output_tensor_list->at(idx)->info().data_size());
-                output_tensor_list->at(idx)->copy_data(out_buffer, false);
+                float * out_f_buffer;
+                if(output_tensor_list->at(idx)->info().mem_type() == RocalMemType::HIP)
+                {
+                    out_f_buffer = (float *)malloc(output_tensor_list->at(idx)->info().data_size());
+                    output_tensor_list->at(idx)->copy_data(out_f_buffer, false);
+                }
+                else if(output_tensor_list->at(idx)->info().mem_type() == RocalMemType::HOST)
+                    out_f_buffer = (float *)output_tensor_list->at(idx)->buffer();
+
+                out_buffer = (unsigned char *)malloc(output_tensor_list->at(idx)->info().data_size() / 4);
+                convert_float_to_uchar_buffer(out_f_buffer, out_buffer, output_tensor_list->at(idx)->info().data_size() / 4);
                 mat_input.data = (unsigned char *)out_buffer;
             }
-            else if(output_tensor_list->at(idx)->info().mem_type() == RocalMemType::HOST)
-                mat_input.data = (unsigned char *)(output_tensor_list->at(idx)->buffer());
+            else
+            {
+                if(output_tensor_list->at(idx)->info().mem_type() == RocalMemType::HIP)
+                {
+                    unsigned char *out_buffer;
+                    out_buffer = (unsigned char *)malloc(output_tensor_list->at(idx)->info().data_size());
+                    output_tensor_list->at(idx)->copy_data(out_buffer, false);
+                    mat_input.data = (unsigned char *)out_buffer;
+                }
+                else if(output_tensor_list->at(idx)->info().mem_type() == RocalMemType::HOST)
+                    mat_input.data = (unsigned char *)(output_tensor_list->at(idx)->buffer());
+            }
             mat_input.copyTo(mat_output(cv::Rect(0, 0, w, h)));
 
             std::string out_filename = std::string(outName) + ".png";   // in case the user specifies non png filename

@@ -83,10 +83,14 @@ std::cerr<<"refreshCrop\n\n\n";
     STATUS_ERROR_CHECK(vxReadScalarValue((vx_scalar)parameters[9], &data->chnShift));
     for(int i = 0; i < data->nbatchSize; i++)
     {
-        data->roi_tensor_Ptr[i].xywhROI.xy.x = data->start_x[i];
-        data->roi_tensor_Ptr[i].xywhROI.xy.y = data->start_y[i];
-        data->roi_tensor_Ptr[i].xywhROI.roiWidth =data->crop_w[i];
-        data->roi_tensor_Ptr[i].xywhROI.roiHeight =data->crop_h[i];
+        // data->roi_tensor_Ptr[i].xywhROI.xy.x = data->start_x[i];
+        // data->roi_tensor_Ptr[i].xywhROI.xy.y = data->start_y[i];
+        // data->roi_tensor_Ptr[i].xywhROI.roiWidth =data->crop_w[i];
+        // data->roi_tensor_Ptr[i].xywhROI.roiHeight =data->crop_h[i];
+        data->roi_tensor_Ptr[i].ltrbROI.lt.x = data->start_x[i];
+        data->roi_tensor_Ptr[i].ltrbROI.lt.y = data->start_y[i];
+        data->roi_tensor_Ptr[i].ltrbROI.rb.x = data->start_x[i] + data->crop_w[i];
+        data->roi_tensor_Ptr[i].ltrbROI.rb.y = data->start_y[i] + data->crop_h[i];
     }
     if(data->layout == 2 || data->layout == 3)
     {

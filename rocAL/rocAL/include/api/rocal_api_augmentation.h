@@ -73,6 +73,8 @@ extern "C"  RocalTensor  ROCAL_API_CALL rocalCropFixed(RocalContext context, Roc
                                                       float crop_pos_z);
 
 extern "C" RocalTensor  ROCAL_API_CALL rocalCropCenterFixed(RocalContext context, RocalTensor input,
+                                                        RocalTensorLayout rocal_tensor_layout,
+                                                        RocalTensorOutputType rocal_tensor_output_type,
                                                         unsigned crop_width,
                                                         unsigned crop_height,
                                                         unsigned crop_depth,

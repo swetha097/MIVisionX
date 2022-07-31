@@ -23,11 +23,11 @@ THE SOFTWARE.
 #pragma once
 #include "node.h"
 
-class ResizeSingleParamNode : public Node
+class ResizeShorterNode : public Node
 {
 public:
-    ResizeSingleParamNode(const std::vector<rocALTensor *> &inputs, const std::vector<rocALTensor *> &outputs);
-    ResizeSingleParamNode() = delete;
+    ResizeShorterNode(const std::vector<rocALTensor *> &inputs, const std::vector<rocALTensor *> &outputs);
+    ResizeShorterNode() = delete;
     void init(int size);
     unsigned int get_dst_width() { return _outputs[0]->info().max_dims()[0]; }
     unsigned int get_dst_height() { return _outputs[0]->info().max_dims()[1]; }
