@@ -187,8 +187,18 @@ rocalCrop(RocalContext p_context,
         rocALTensorInfo output_info = input->info();
         output_info.set_tensor_layout(op_tensorLayout);
         output_info.set_data_type(op_tensorDataType);
-        // output_info.width(input->info().width());
-        // output_info.height(input->info().height_single());
+        // std::vector<unsigned> out_dims = output_info.dims();
+        // if(op_tensorLayout == RocalTensorlayout::NHWC)
+        // {
+        //     out_dims[1] = crop_h;
+        //     out_dims[2] = crop_w;
+        // }
+        // else if(op_tensorLayout == RocalTensorlayout::NCHW)
+        // {
+        //     out_dims[2] = crop_h;
+        //     out_dims[3] = crop_w;
+        // }
+        // output_info.set_dims(out_dims);
         output = context->master_graph->create_tensor(output_info, is_output);
         output->reset_tensor_roi();
         std::shared_ptr<CropNode> crop_node = context->master_graph->add_node<CropNode>({input}, {output});
@@ -234,8 +244,18 @@ rocalCropFixed(
         rocALTensorInfo output_info = input->info();
         output_info.set_tensor_layout(op_tensorLayout);
         output_info.set_data_type(op_tensorDataType);
-        // output_info.width(input->info().width());
-        // output_info.height(input->info().height_single());
+        std::vector<unsigned> out_dims = output_info.dims();
+        if(op_tensorLayout == RocalTensorlayout::NHWC)
+        {
+            out_dims[1] = crop_height;
+            out_dims[2] = crop_width;
+        }
+        else if(op_tensorLayout == RocalTensorlayout::NCHW)
+        {
+            out_dims[2] = crop_height;
+            out_dims[3] = crop_width;
+        }
+        output_info.set_dims(out_dims);
         output = context->master_graph->create_tensor(output_info, is_output);
         output->reset_tensor_roi();
         std::shared_ptr<CropNode> crop_node =  context->master_graph->add_node<CropNode>({input}, {output});
@@ -283,8 +303,18 @@ rocalCropCenterFixed(
         output_info.set_tensor_layout(op_tensorLayout);
         output_info.set_data_type(op_tensorDataType);
 
-        // output_info.width(crop_width);
-        // output_info.height(crop_height);
+        std::vector<unsigned> out_dims = output_info.dims();
+        if(op_tensorLayout == RocalTensorlayout::NHWC)
+        {
+            out_dims[1] = crop_height;
+            out_dims[2] = crop_width;
+        }
+        else if(op_tensorLayout == RocalTensorlayout::NCHW)
+        {
+            out_dims[2] = crop_height;
+            out_dims[3] = crop_width;
+        }
+        output_info.set_dims(out_dims);
         output = context->master_graph->create_tensor(output_info, is_output);
         output->reset_tensor_roi();
         std::shared_ptr<CropNode> crop_node = context->master_graph->add_node<CropNode>({input}, {output});
@@ -325,6 +355,18 @@ ROCAL_API_CALL rocalCropMirrorNormalize(RocalContext p_context, RocalTensor p_in
         rocALTensorInfo output_info = input->info();
         output_info.set_tensor_layout(op_tensorLayout);
         output_info.set_data_type(op_tensorDataType);
+        std::vector<unsigned> out_dims = output_info.dims();
+        if(op_tensorLayout == RocalTensorlayout::NHWC)
+        {
+            out_dims[1] = crop_height;
+            out_dims[2] = crop_width;
+        }
+        else if(op_tensorLayout == RocalTensorlayout::NCHW)
+        {
+            out_dims[2] = crop_height;
+            out_dims[3] = crop_width;
+        }
+        output_info.set_dims(out_dims);
         output = context->master_graph->create_tensor(output_info, is_output);
         output->reset_tensor_roi();
         std::shared_ptr<CropMirrorNormalizeNode> cmn_node = context->master_graph->add_node<CropMirrorNormalizeNode>({input}, {output});
