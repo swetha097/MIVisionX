@@ -60,7 +60,6 @@ void ColorTwistNode::init( FloatParam* alpha, FloatParam* beta, FloatParam* hue,
     _sat.set_param(core(sat));
     _layout = _roi_type = 0;
     // _layout = (unsigned) _outputs[0]->layout();
-
 }
 
 

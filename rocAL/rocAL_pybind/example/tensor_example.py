@@ -55,23 +55,23 @@ def main():
     device_memory_padding = 211025920 if decoder_device == 'mixed' else 0
     host_memory_padding = 140544512 if decoder_device == 'mixed' else 0
 
-    # with pipe:
-    #     jpegs, labels = fn.readers.file(file_root=data_path)
-    #     images = fn.decoders.image(jpegs,file_root=data_path, output_type=types.RGB, shard_id=0, num_shards=1, random_shuffle=False)
-    #     brightend_images = fn.brightness(images)
-    #     # brightend_images2 = fn.brightness(brightend_images)
+    with pipe:
+        jpegs, labels = fn.readers.file(file_root=data_path)
+        images = fn.decoders.image(jpegs,file_root=data_path, output_type=types.RGB, shard_id=0, num_shards=1, random_shuffle=False)
+        brightend_images = fn.brightness(images)
+        # brightend_images2 = fn.brightness(brightend_images)
 
-    #     pipe.set_outputs(brightend_images)
+        pipe.set_outputs(brightend_images)
 
-    # pipe.build()
-    # imageIterator = RALIClassificationIterator(pipe)
-    # cnt = 0
-    # for i , it in enumerate(imageIterator):
-    #     print("************************************** i *************************************",i)
-    #     for img in it[0]:
-    #         print(img.shape)
-    #         cnt = cnt + 1
-    #         draw_patches(img, cnt, "cpu")
+    pipe.build()
+    imageIterator = RALIClassificationIterator(pipe)
+    cnt = 0
+    for i , it in enumerate(imageIterator):
+        print("************************************** i *************************************",i)
+        for img in it[0]:
+            print(img.shape)
+            cnt = cnt + 1
+            draw_patches(img, cnt, "cpu")
 
     print("*********************************************************************")
 
@@ -105,34 +105,34 @@ def main():
 
     # print("*********************************************************************")
 
-    image_classification_val_pipeline = Pipeline(batch_size=batch_size, num_threads=num_threads, device_id=device_id, seed=random_seed, rocal_cpu=_rali_cpu)
+    # image_classification_val_pipeline = Pipeline(batch_size=batch_size, num_threads=num_threads, device_id=device_id, seed=random_seed, rocal_cpu=_rali_cpu)
 
-    with image_classification_val_pipeline:
-        jpegs, labels = fn.readers.file(file_root=data_path)
-        decode = fn.decoders.image(jpegs,file_root=data_path, output_type=types.RGB, shard_id=local_rank, num_shards=world_size, random_shuffle=False)
-        res = fn.resize_shorter(decode, resize_size = 256)
-        centrecrop = fn.centre_crop(res, crop=(224, 224))
-        cmnp = fn.crop_mirror_normalize(centrecrop, device="gpu",
-                                            rocal_tensor_layout = types.NHWC,
-                                            rocal_tensor_output_type = types.UINT8,
-                                            crop=(224, 224),
-                                            mirror=0,
-                                            image_type=types.RGB,
-                                            mean=[0.485 * 255,0.456 * 255,0.406 * 255],
-                                            std=[0.229 * 255,0.224 * 255,0.225 * 255])
-        image_classification_val_pipeline.set_outputs(cmnp)
+    # with image_classification_val_pipeline:
+    #     jpegs, labels = fn.readers.file(file_root=data_path)
+    #     decode = fn.decoders.image(jpegs,file_root=data_path, output_type=types.RGB, shard_id=local_rank, num_shards=world_size, random_shuffle=False)
+    #     res = fn.resize_shorter(decode, resize_size = 256)
+    #     centrecrop = fn.centre_crop(res, crop=(224, 224))
+    #     cmnp = fn.crop_mirror_normalize(centrecrop, device="gpu",
+    #                                         rocal_tensor_layout = types.NHWC,
+    #                                         rocal_tensor_output_type = types.UINT8,
+    #                                         crop=(224, 224),
+    #                                         mirror=0,
+    #                                         image_type=types.RGB,
+    #                                         mean=[0.485 * 255,0.456 * 255,0.406 * 255],
+    #                                         std=[0.229 * 255,0.224 * 255,0.225 * 255])
+    #     image_classification_val_pipeline.set_outputs(cmnp)
 
-    image_classification_val_pipeline.build()
-    imageIteratorPipeline = RALIClassificationIterator(image_classification_val_pipeline)
-    cnt = 0
-    for e in range(3):
-        for i , it in enumerate(imageIteratorPipeline):
-            print("************************************** i *************************************",i)
-            for img in it[0]:
-                print(img.shape)
-                cnt = cnt + 1
-                draw_patches(img, cnt, "cpu")
-        imageIteratorPipeline.reset()
+    # image_classification_val_pipeline.build()
+    # imageIteratorPipeline = RALIClassificationIterator(image_classification_val_pipeline)
+    # cnt = 0
+    # for e in range(3):
+    #     for i , it in enumerate(imageIteratorPipeline):
+    #         print("************************************** i *************************************",i)
+    #         for img in it[0]:
+    #             print(img.shape)
+    #             cnt = cnt + 1
+    #             draw_patches(img, cnt, "cpu")
+    #     imageIteratorPipeline.reset()
 
 
 

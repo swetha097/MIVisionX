@@ -39,12 +39,12 @@ void BrightnessNode::create_node()
     _alpha.create_array(_graph , VX_TYPE_FLOAT32, _batch_size);
     _beta.create_array(_graph , VX_TYPE_FLOAT32, _batch_size);
 
-    if(_inputs[0]->info().layout() == RocalTensorlayout::NCHW)
-        _layout = 1;
-    else if(_inputs[0]->info().layout() == RocalTensorlayout::NFHWC)
-        _layout = 2;
-    else if(_inputs[0]->info().layout() == RocalTensorlayout::NFCHW)
-        _layout = 3;
+    // if(_inputs[0]->info().layout() == RocalTensorlayout::NCHW)
+    //     _layout = 1;
+    // else if(_inputs[0]->info().layout() == RocalTensorlayout::NFHWC)
+    //     _layout = 2;
+    // else if(_inputs[0]->info().layout() == RocalTensorlayout::NFCHW)
+    //     _layout = 3;
 
     if(_inputs[0]->info().roi_type() == RocalROIType::XYWH)
         _roi_type = 1;
@@ -58,18 +58,23 @@ void BrightnessNode::create_node()
         THROW("Adding the brightness_batch (vxExtrppNode_BrightnessbatchPD) node failed: "+ TOSTR(status))
 }
 
-void BrightnessNode::init( float alpha, float beta)
+void BrightnessNode::init( float alpha, float beta, int layout )
 {
     _alpha.set_param(alpha);
     _beta.set_param(beta);
-    _layout = _roi_type = 0;
+    _layout = layout;
+    _roi_type = 0;
+    // _layout = (unsigned) _outputs[0]->layout();
+    
 }
 
-void BrightnessNode::init( FloatParam* alpha, FloatParam* beta)
+void BrightnessNode::init( FloatParam* alpha, FloatParam* beta, int layout)
 {
     _alpha.set_param(core(alpha));
     _beta.set_param(core(beta));
-    _layout = _roi_type = 0;
+    _layout =layout;
+    _roi_type = 0;
+    // _layout = (unsigned) _outputs[0]->layout();
 }
 
 

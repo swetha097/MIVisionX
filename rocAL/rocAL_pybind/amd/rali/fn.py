@@ -11,8 +11,8 @@ from amd.rali.pipeline import Pipeline
 
 
 def brightness(*inputs, brightness=1.0, bytes_per_sample_hint=0, image_type=0,
-               preserve=False, seed=-1, device=None):
-    kwargs_pybind = {"input_image0": inputs[0], "is_output": False, "alpha": None, "beta": None}
+               preserve=False, seed=-1, device=None, rocal_tensor_layout =types.NCHW, rocal_tensor_output_type = types.FLOAT,output_layout=types.NCHW,):
+    kwargs_pybind = {"input_image0": inputs[0], "is_output": False, "rocal_tensor_layout" : rocal_tensor_layout, "rocal_tensor_output_type" : rocal_tensor_output_type, "alpha": None, "beta": None}
     brightness_image = b.Brightness(Pipeline._current_pipeline._handle ,*(kwargs_pybind.values()))
     return (brightness_image)
 

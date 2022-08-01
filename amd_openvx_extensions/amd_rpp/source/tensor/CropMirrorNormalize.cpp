@@ -1,16 +1,13 @@
 /*
 Copyright (c) 2019 - 2021 Advanced Micro Devices, Inc. All rights reserved.
-
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
 in the Software without restriction, including without limitation the rights
 to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
 copies of the Software, and to permit persons to whom the Software is
 furnished to do so, subject to the following conditions:
-
 The above copyright notice and this permission notice shall be included in
 all copies or substantial portions of the Software.
-
 THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL THE
@@ -129,21 +126,25 @@ static vx_status VX_CALLBACK refreshCropMirrorNormalize(vx_node node, const vx_r
     {
         if (data->in_tensor_type == vx_type_e::VX_TYPE_UINT8 && data->out_tensor_type == vx_type_e::VX_TYPE_UINT8)
         {
+            std::cerr<<"UINT8888888888\n";
             STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[0], VX_TENSOR_BUFFER_HOST, &data->pSrc, sizeof(vx_uint8)));
             STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[2], VX_TENSOR_BUFFER_HOST, &data->pDst, sizeof(vx_uint8)));
         }
         else if (data->in_tensor_type == vx_type_e::VX_TYPE_FLOAT32 && data->out_tensor_type == vx_type_e::VX_TYPE_FLOAT32)
         {
+            std::cerr<<"FLOAT32222222\n";
             STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[0], VX_TENSOR_BUFFER_HOST, &data->pSrc, sizeof(vx_float32)));
             STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[2], VX_TENSOR_BUFFER_HOST, &data->pDst, sizeof(vx_float32)));
         }
         else if (data->in_tensor_type == vx_type_e::VX_TYPE_INT8 && data->out_tensor_type == vx_type_e::VX_TYPE_INT8)
         {
+            std::cerr<<"INT888888888888888\n";
             STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[0], VX_TENSOR_BUFFER_HOST, &data->pSrc, sizeof(vx_int8)));
             STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[2], VX_TENSOR_BUFFER_HOST, &data->pDst, sizeof(vx_int8)));
         }
         else if (data->in_tensor_type == vx_type_e::VX_TYPE_UINT8 && data->out_tensor_type == vx_type_e::VX_TYPE_FLOAT32)
         {
+            std::cerr<<"UIN8 TO FLOAT32\n";
             STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[0], VX_TENSOR_BUFFER_HOST, &data->pSrc, sizeof(vx_uint8)));
             STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[2], VX_TENSOR_BUFFER_HOST, &data->pDst, sizeof(vx_float32)));
         }
@@ -214,28 +215,34 @@ static vx_status VX_CALLBACK processCropMirrorNormalize(vx_node node, const vx_r
         return_status = (rpp_status == RPP_SUCCESS) ? VX_SUCCESS : VX_FAILURE;
 #elif ENABLE_HIP
         refreshCropMirrorNormalize(node, parameters, num, data);
+        std::cerr << "Calling CROPMIRRORNORMALIZE GPU\n";
         rpp_status = rppt_crop_mirror_normalize_gpu((void *)data->hip_pSrc, data->src_desc_ptr, (void *)data->hip_pDst, data->src_desc_ptr,data->mean,data->std_dev,
                                                      data->mirror, data->hip_roi_tensor_Ptr, data->roiType, data->rppHandle);
-
         return_status = (rpp_status == RPP_SUCCESS) ? VX_SUCCESS : VX_FAILURE;
+        std::cerr << "Back from RPP\n";
 #endif
     }
     if(data->device_type == AGO_TARGET_AFFINITY_CPU)
     {
         vxstatus = refreshCropMirrorNormalize(node, parameters, num, data);
 
-
+        for(int i = 0; i < data->nbatchSize; i++)
+        {
+            std::cerr<<"\n data->roi_tensor_Ptr values :: "<<data->roi_tensor_Ptr[i].xywhROI.xy.x<<" "<<data->roi_tensor_Ptr[i].xywhROI.xy.y<<" "<<data->roi_tensor_Ptr[i].xywhROI.roiWidth<<" "<<data->roi_tensor_Ptr[i].xywhROI.roiHeight;
+        }
+        std::cerr<<"\n Gonna call RPP";
         rpp_status = rppt_crop_mirror_normalize_host(data->pSrc, data->src_desc_ptr,
                                                      data->pDst, data->dst_desc_ptr,
                                                      data->mean,data->std_dev,
                                                      data->mirror, data->roi_tensor_Ptr,data->roiType,
                                                      data->rppHandle);
+        std::cerr<<"\n Back call RPP";
         if(1){
         float *temp = ((float*)calloc( 100,sizeof(float) ));
 
         for (int i=0;i< 100;i++)
                 {
-                    temp[i]=*((float *)(unsigned char *)(data->pDst) + i);
+                    temp[i]=*((float *)(data->pDst) + i);
                     // *((float *)(data->pDst) + i)=*((float *)(data->pDst) + i)*255;
                     std::cout<<temp[i]<<" ";
 
@@ -271,10 +278,13 @@ static vx_status VX_CALLBACK initializeCropMirrorNormalize(vx_node node, const v
     STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[0],VX_TENSOR_DATA_TYPE, &data->in_tensor_type, sizeof(data->in_tensor_type)));
     if(data->in_tensor_type == vx_type_e::VX_TYPE_UINT8)
     {
+        std::cerr<<"UUUUUUNIT8\n";
         data->src_desc_ptr->dataType = RpptDataType::U8;
     }
     else if (data->in_tensor_type == vx_type_e::VX_TYPE_FLOAT32)
     {
+        std::cerr<<"FFFFFFFLOST\n";
+
         data->src_desc_ptr->dataType = RpptDataType::F32;
     }
     // else if (data->src_desc_ptr->dataType == vx_type_e::VX_TYPE_FLOAT16)
@@ -283,6 +293,8 @@ static vx_status VX_CALLBACK initializeCropMirrorNormalize(vx_node node, const v
     // }
     else if (data->in_tensor_type == vx_type_e::VX_TYPE_INT8)
     {
+        std::cerr<<"IIIIIIIIIINTTTT\n";
+
         data->src_desc_ptr->dataType = RpptDataType::I8;
     }
      data->src_desc_ptr->offsetInBytes = 0;
@@ -293,10 +305,14 @@ static vx_status VX_CALLBACK initializeCropMirrorNormalize(vx_node node, const v
     STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[2],VX_TENSOR_DATA_TYPE, &data->out_tensor_type, sizeof(data->out_tensor_type)));
     if(data->out_tensor_type == vx_type_e::VX_TYPE_UINT8)
     {
+        std::cerr<<"ooooooooooooooooooUUUUUUNIT8\n";
+
         data->dst_desc_ptr->dataType= RpptDataType::U8;
     }
     else if (data->out_tensor_type == vx_type_e::VX_TYPE_FLOAT32)
     {
+        std::cerr<<"ooooooooooooooFFFFFFFLOST\n";
+
         data->dst_desc_ptr->dataType = RpptDataType::F32;
 
     }
@@ -306,6 +322,10 @@ static vx_status VX_CALLBACK initializeCropMirrorNormalize(vx_node node, const v
     // }
     else if (data->out_tensor_type == vx_type_e::VX_TYPE_INT8)
     {
+        std::cerr<<"ooooooooooooIIIIIIIIIINTTTT\n";
+
+        std::cerr<<"dst datatype check INT8";
+
         data->dst_desc_ptr->dataType = RpptDataType::I8;
     }
      data->dst_desc_ptr->offsetInBytes = 0;
@@ -313,13 +333,16 @@ static vx_status VX_CALLBACK initializeCropMirrorNormalize(vx_node node, const v
     data->roi_tensor_Ptr = (RpptROI *) calloc(data->nbatchSize, sizeof(RpptROI));
 
 
+std::cerr<<"layoutttt value "<<data->layout;
     if(data->layout == 0) // NHWC
     {
+        std::cerr<<"layout 00000000000000000000\n\n\n";
         // source_description_ptr
         data->src_desc_ptr->n = data->in_tensor_dims[0];
         data->src_desc_ptr->h = data->in_tensor_dims[1];
         data->src_desc_ptr->w = data->in_tensor_dims[2];
         data->src_desc_ptr->c = data->in_tensor_dims[3];
+        std::cerr<<"\n n h w c "<<data->src_desc_ptr->n<<" "<<data->src_desc_ptr->h<<" "<<data->src_desc_ptr->w<<" "<<data->src_desc_ptr->c;
         data->src_desc_ptr->strides.nStride = data->src_desc_ptr->c * data->src_desc_ptr->w * data->src_desc_ptr->h;
         data->src_desc_ptr->strides.hStride = data->src_desc_ptr->c * data->src_desc_ptr->w;
         data->src_desc_ptr->strides.wStride = data->src_desc_ptr->c;
@@ -331,6 +354,7 @@ static vx_status VX_CALLBACK initializeCropMirrorNormalize(vx_node node, const v
         data->dst_desc_ptr->h = data->out_tensor_dims[1];
         data->dst_desc_ptr->w = data->out_tensor_dims[2];
         data->dst_desc_ptr->c = data->out_tensor_dims[3];
+        std::cerr<<"\n dest n h w c "<<data->dst_desc_ptr->n<<" "<<data->dst_desc_ptr->h<<" "<<data->dst_desc_ptr->w<<" "<<data->dst_desc_ptr->c;
         data->dst_desc_ptr->strides.nStride = data->dst_desc_ptr->c * data->dst_desc_ptr->w * data->dst_desc_ptr->h;
         data->dst_desc_ptr->strides.hStride = data->dst_desc_ptr->c * data->dst_desc_ptr->w;
         data->dst_desc_ptr->strides.wStride = data->dst_desc_ptr->c;
@@ -339,6 +363,8 @@ static vx_status VX_CALLBACK initializeCropMirrorNormalize(vx_node node, const v
     }
     else if(data->layout == 1)// NCHW
     {
+                std::cerr<<"layout 11111111111\n\n\n";
+
         data->src_desc_ptr->n = data->in_tensor_dims[0];
         data->src_desc_ptr->h = data->in_tensor_dims[2];
         data->src_desc_ptr->w = data->in_tensor_dims[3];
@@ -353,6 +379,7 @@ static vx_status VX_CALLBACK initializeCropMirrorNormalize(vx_node node, const v
         data->dst_desc_ptr->h = data->out_tensor_dims[2];
         data->dst_desc_ptr->w = data->out_tensor_dims[3];
         data->dst_desc_ptr->c = data->out_tensor_dims[1];
+        std::cerr<<"\ndest n h w c "<<data->dst_desc_ptr->n<<" "<<data->dst_desc_ptr->h<<" "<<data->dst_desc_ptr->w<<" "<<data->dst_desc_ptr->c;
         data->dst_desc_ptr->strides.nStride = data->dst_desc_ptr->c * data->dst_desc_ptr->w * data->dst_desc_ptr->h;
         data->dst_desc_ptr->strides.cStride = data->dst_desc_ptr->w * data->dst_desc_ptr->h;
         data->dst_desc_ptr->strides.hStride = data->dst_desc_ptr->w;
@@ -361,21 +388,27 @@ static vx_status VX_CALLBACK initializeCropMirrorNormalize(vx_node node, const v
     }
     else if(data->layout == 2) // NFHWC
     {
+                std::cerr<<"layout 2222222222222222\n\n\n";
+
         data->src_desc_ptr->n = data->in_tensor_dims[0] * data->in_tensor_dims[1];
         data->src_desc_ptr->h = data->in_tensor_dims[2];
         data->src_desc_ptr->w = data->in_tensor_dims[3];
         data->src_desc_ptr->c = data->in_tensor_dims[4];
+        std::cerr<<"\n n h w c "<<data->src_desc_ptr->n<<" "<<data->src_desc_ptr->h<<" "<<data->src_desc_ptr->w<<" "<<data->src_desc_ptr->c;
         data->src_desc_ptr->strides.nStride = data->src_desc_ptr->c * data->src_desc_ptr->w * data->src_desc_ptr->h;
         data->src_desc_ptr->strides.hStride = data->src_desc_ptr->c * data->src_desc_ptr->w;
         data->src_desc_ptr->strides.wStride = data->src_desc_ptr->c;
         data->src_desc_ptr->strides.cStride = 1;
         data->src_desc_ptr->layout = RpptLayout::NHWC;
+        std::cerr<<"\n Setting layout "<<data->src_desc_ptr->layout;
+        std::cerr<<"\n Setting data type "<<data->src_desc_ptr->dataType;
 
         //destination_description_ptr
         data->dst_desc_ptr->n = data->out_tensor_dims[0] * data->in_tensor_dims[1];
         data->dst_desc_ptr->h = data->out_tensor_dims[1];
         data->dst_desc_ptr->w = data->out_tensor_dims[2];
         data->dst_desc_ptr->c = data->out_tensor_dims[3];
+        std::cerr<<"\n dest n h w c "<<data->dst_desc_ptr->n<<" "<<data->dst_desc_ptr->h<<" "<<data->dst_desc_ptr->w<<" "<<data->dst_desc_ptr->c;
         data->dst_desc_ptr->strides.nStride = data->dst_desc_ptr->c * data->dst_desc_ptr->w * data->dst_desc_ptr->h;
         data->dst_desc_ptr->strides.hStride = data->dst_desc_ptr->c * data->dst_desc_ptr->w;
         data->dst_desc_ptr->strides.wStride = data->dst_desc_ptr->c;
@@ -383,7 +416,8 @@ static vx_status VX_CALLBACK initializeCropMirrorNormalize(vx_node node, const v
         data->dst_desc_ptr->layout = RpptLayout::NHWC;
     }
     else if(data->layout == 3)// NFCHW
-    {
+    {        std::cerr<<"layout 3333333333333333333333\n\n\n";
+
         data->src_desc_ptr->n = data->in_tensor_dims[0] * data->in_tensor_dims[1];
         data->src_desc_ptr->h = data->in_tensor_dims[3];
         data->src_desc_ptr->w = data->in_tensor_dims[4];
@@ -398,11 +432,16 @@ static vx_status VX_CALLBACK initializeCropMirrorNormalize(vx_node node, const v
         data->dst_desc_ptr->h = data->out_tensor_dims[1];
         data->dst_desc_ptr->w = data->out_tensor_dims[2];
         data->dst_desc_ptr->c = data->out_tensor_dims[3];
+        std::cerr<<"\n dest n h w c "<<data->dst_desc_ptr->n<<" "<<data->dst_desc_ptr->h<<" "<<data->dst_desc_ptr->w<<" "<<data->dst_desc_ptr->c;
         data->dst_desc_ptr->strides.nStride = data->dst_desc_ptr->c * data->dst_desc_ptr->w * data->dst_desc_ptr->h;
         data->dst_desc_ptr->strides.hStride = data->dst_desc_ptr->c * data->dst_desc_ptr->w;
         data->dst_desc_ptr->strides.wStride = data->dst_desc_ptr->c;
         data->dst_desc_ptr->strides.cStride = 1;
-        data->dst_desc_ptr->layout = RpptLayout::NCHW;
+        data->dst_desc_ptr->layout = RpptLayout::NCHW; 
+    }
+    else
+    {
+        std::cerr<<"defaulttttttt\n\n\n";
     }
 #if ENABLE_HIP
     if (data->device_type == AGO_TARGET_AFFINITY_GPU)

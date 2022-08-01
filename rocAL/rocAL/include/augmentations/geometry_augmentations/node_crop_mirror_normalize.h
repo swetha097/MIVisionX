@@ -41,7 +41,7 @@ protected:
 private:
     std::shared_ptr<RocalCropParam> _crop_param;
     std::vector<vx_float32> _mean_vx, _std_dev_vx;
-    vx_array _mean_array, _std_dev_array,_mirror_array;
+    vx_array _mean_array, _std_dev_array,_mirror_array,_src_roi_width,_src_roi_height;
     std::vector<float> _mean;
     std::vector<float> _std_dev;
     unsigned _layout, _roi_type;

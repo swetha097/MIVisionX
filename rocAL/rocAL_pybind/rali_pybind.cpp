@@ -437,5 +437,6 @@ namespace rali
         m.def("ResizeShorter", &rocalResizeShorter, py::return_value_policy::reference);
         m.def("CenterCropFixed", &rocalCropCenterFixed, py::return_value_policy::reference);
 
+
     }
 }
