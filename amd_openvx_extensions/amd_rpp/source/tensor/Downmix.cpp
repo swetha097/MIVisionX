@@ -135,7 +135,7 @@ static vx_status VX_CALLBACK processDownmix(vx_node node, const vx_reference *pa
     if (data->device_type == AGO_TARGET_AFFINITY_CPU)
     {
         refreshDownmix(node, parameters, num, data);
-        rpp_status = rppt_down_mixing_host(data->pSrc, data->src_desc_ptr, data->pDst, data->samples, data->channels, false);
+        rpp_status = rppt_down_mixing_host((float *)data->pSrc, data->src_desc_ptr, (float *)data->pDst, data->samples, data->channels, false);
         return_status = (rpp_status == RPP_SUCCESS) ? VX_SUCCESS : VX_FAILURE;
     }
     return return_status;
@@ -167,7 +167,7 @@ static vx_status VX_CALLBACK initializeDownmix(vx_node node, const vx_reference 
     // data->dst_desc_ptr = &data->dstDesc;
     // STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[1], VX_TENSOR_NUMBER_OF_DIMS, &data->dst_desc_ptr->numDims, sizeof(data->dst_desc_ptr->numDims)));
     // STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[1], VX_TENSOR_DIMS, &data->out_tensor_dims, sizeof(vx_size) * data->dst_desc_ptr->numDims));
-    // STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[1],VX_TENSOR_DATA_TYPE, &data->out_tensor_type, sizeof(data->out_tensor_type)));
+    STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[1],VX_TENSOR_DATA_TYPE, &data->out_tensor_type, sizeof(data->out_tensor_type)));
     // if (data->out_tensor_type == vx_type_e::VX_TYPE_FLOAT32)
     //     data->dst_desc_ptr->dataType = RpptDataType::F32;
     // data->dst_desc_ptr->offsetInBytes = 0;

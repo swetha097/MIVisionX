@@ -111,7 +111,7 @@ int test(int test_case, const char *path, float sample_rate, int downmix, unsign
     rocalSetSeed(0);
 
     RocalTensor input1;
-    input1 = rocalAudioFileSource(handle, path, num_threads, true, false, false);
+    input1 = rocalAudioFileSource(handle, path, num_threads, true, false, false, max_frames, downmix);
 
     if (rocalGetStatus(handle) != ROCAL_OK)
     {

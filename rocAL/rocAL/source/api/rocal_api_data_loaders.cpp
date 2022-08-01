@@ -624,15 +624,15 @@ rocalAudioFileSource(
             output_info.set_dims(output_dims);
             output_info.set_tensor_layout(RocalTensorlayout::NONE);
 
-            auto downmixed_output = context->master_graph->create_tensor(output_info, true);
+            auto downmixed_output = context->master_graph->create_tensor(output_info, false);
             std::shared_ptr<DownmixNode> downmix_node = context->master_graph->add_node<DownmixNode>({output}, {downmixed_output});
 
             // For the nodes that user provides the output size the dimension of all the images after this node will be fixed and equal to that size
-            downmixed_output->reset_tensor_roi();
+            // downmixed_output->reset_tensor_roi();
             if(is_output)
             {
-                auto actual_output = context->master_graph->create_tensor(info, is_output);
-                context->master_graph->add_node<CopyNode>({output}, {actual_output}); // Have to add copy tensor node
+                auto actual_output = context->master_graph->create_tensor(output_info, is_output);
+                context->master_graph->add_node<CopyNode>({downmixed_output}, {actual_output}); // Have to add copy tensor node
             }
         }
         else
