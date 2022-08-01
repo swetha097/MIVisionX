@@ -102,40 +102,33 @@ namespace rali
             .def_readwrite("process_time", &TimingInfo::process_time)
             .def_readwrite("transfer_time", &TimingInfo::transfer_time);
         py::class_<rocALTensor>(m, "rocALTensor")
-                .def(
+            .def(
                 "batch_height",
-                [](rocALTensor &output_tensor)
-                {
+                [](rocALTensor &output_tensor) {
                     return output_tensor.info().max_dims().at(1);
                 },
                 R"code(
                 Returns a tensor buffer's height.
-                )code"
-            )
+                )code")
             .def(
                 "batch_width",
-                [](rocALTensor &output_tensor)
-                {
+                [](rocALTensor &output_tensor) {
                     return output_tensor.info().max_dims().at(0);
                 },
                 R"code(
                 Returns a tensor buffer's width.
-                )code"
-            )
+                )code")
             .def(
                 "batch_size",
-                [](rocALTensor &output_tensor)
-                {
+                [](rocALTensor &output_tensor) {
                     return output_tensor.info().dims().at(0);
                 },
                 R"code(
                 Returns a tensor batch size.
-                )code"
-            )
+                )code")
             .def(
                 "color_format",
-                [](rocALTensor &output_tensor)
-                {
+                [](rocALTensor &output_tensor) {
                     if ((output_tensor.info().color_format() == RocalColorFormat::RGB24) || (output_tensor.info().color_format() == RocalColorFormat::BGR24))
                         return 3;
                     else
@@ -143,19 +136,19 @@ namespace rali
                 },
                 R"code(
                 Returns a tensor batch size.
-                )code"
-            )
+                )code")
             .def(
-            "copy_data", [](rocALTensor &output_tensor, py::object p)
-            {
-            auto ptr = ctypes_void_ptr(p);
-            output_tensor.copy_data(ptr, 0);
-            }
-            )
+                "copy_data", [](rocALTensor &output_tensor, py::object p) {
+                    auto ptr = ctypes_void_ptr(p);
+                    output_tensor.copy_data(ptr, 0);
+                })
+            .def("copy_data", [](rocALTensor &output_tensor, py::array_t<unsigned char> array) {
+                auto buf = array.request();
+                unsigned char *ptr = (unsigned char *)buf.ptr;
+                output_tensor.copy_data(ptr, 0);
+            })
             .def(
-                "at",
-                [](rocALTensor &output_tensor, uint idx)
-                {
+                "at", [](rocALTensor &output_tensor, uint idx) {
                     uint h = output_tensor.info().max_dims().at(1);
                     uint w = output_tensor.info().max_dims().at(0);
 
@@ -425,13 +418,31 @@ namespace rali
         m.def("ColorTwist",&rocalColorTwist, py::return_value_policy::reference);
         m.def("rocalResetLoaders", &rocalResetLoaders);
         // rocal_api_augmentation.h
-        m.def("Brightness", &rocalBrightness,
-              py::return_value_policy::reference,
-              py::arg("context"),
-              py::arg("input"),
-              py::arg("is_output"),
-              py::arg("alpha") = NULL,
-              py::arg("beta") = NULL);
+        // m.def("Brightness", &rocalBrightness,
+        //       py::return_value_policy::reference,
+        //       py::arg("context"),
+        //       py::arg("input"),
+        //       py::arg("is_output"),
+        //       py::arg("alpha") = NULL,
+        //       py::arg("beta") = NULL);
+        m.def("Brightness", &rocalBrightness, py::return_value_policy::reference);
+        m.def("Gamma", &rocalGamma, py::return_value_policy::reference);
+        m.def("Blur", &rocalBlur, py::return_value_policy::reference);
+        m.def("Hue", &rocalHue, py::return_value_policy::reference);
+        m.def("Contrast", &rocalContrast, py::return_value_policy::reference);
+        m.def("flip", &rocalFlip, py::return_value_policy::reference);
+        m.def("Jitter", &rocalJitter, py::return_value_policy::reference);
+        m.def("pixelate", &rocalPixelate, py::return_value_policy::reference);
+        m.def("Rain", &rocalRain, py::return_value_policy::reference);
+        m.def("Rotate", &rocalRotate, py::return_value_policy::reference);
+        m.def("Saturation", &rocalSaturation, py::return_value_policy::reference);
+        m.def("warp_affine", &rocalWarpAffine, py::return_value_policy::reference);
+        m.def("Vignette", &rocalVignette, py::return_value_policy::reference);
+        m.def("ColorTemp", &rocalBlur, py::return_value_policy::reference);
+        m.def("snp_noise", &rocalNoise, py::return_value_policy::reference);
+
+        // m.def("Hue", &rocalHue, py::return_value_policy::reference);
+
         m.def("CropMirrorNormalize",&rocalCropMirrorNormalize, py::return_value_policy::reference);
         // m.def("Crop", &rocalCrop, py::return_value_policy::reference);
         m.def("ResizeShorter", &rocalResizeShorter, py::return_value_policy::reference);

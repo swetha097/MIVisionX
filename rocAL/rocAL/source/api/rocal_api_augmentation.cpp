@@ -543,6 +543,110 @@ rocalColorJitter(RocalContext p_context,
 //     }
 //     return output; // Changed to input----------------IMPORTANT
 // }
+RocalTensor  ROCAL_API_CALL
+rocalResizeShorter(
+        RocalContext p_context,
+        RocalTensor p_input,
+        RocalTensorLayout rocal_tensor_layout,
+        RocalTensorOutputType rocal_tensor_output_type,
+        unsigned size,
+        bool is_output)
+{
+    rocALTensor* output = nullptr;
+    auto context = static_cast<Context*>(p_context);
+    auto input = static_cast<rocALTensor*>(p_input);
+    RocalTensorlayout op_tensorLayout;
+    RocalTensorDataType op_tensorDataType;
+    try
+    {
+        if(!input || !context)
+            THROW("Null values passed as input")
+        // For the resize node, user can create an image with a different width and height
+        int layout=0;
+        get_rocal_tensor_layout(rocal_tensor_layout, op_tensorLayout, layout);
+        get_rocal_tensor_data_type(rocal_tensor_output_type, op_tensorDataType);
+        rocALTensorInfo output_info = input->info();
+        output_info.set_tensor_layout(op_tensorLayout);
+        output_info.set_data_type(op_tensorDataType);
+        if (size == 0) size = input->info().max_dims()[0];
+        if (size == 0) size = input->info().max_dims()[1];
+        std::vector<unsigned> out_dims = output_info.dims();
+        int size_dim = size * 10;
+        if(op_tensorLayout == RocalTensorlayout::NHWC)
+        {
+            out_dims[1] = size_dim;
+            out_dims[2] = size_dim;
+        }
+        else if(op_tensorLayout == RocalTensorlayout::NCHW)
+        {
+            out_dims[2] = size_dim;
+            out_dims[3] = size_dim;
+        }
+        output_info.set_dims(out_dims);
+        output = context->master_graph->create_tensor(output_info, is_output);
+        output->reset_tensor_roi();
+        std::shared_ptr<ResizeShorterNode> resize_node =  context->master_graph->add_node<ResizeShorterNode>({input}, {output});
+        resize_node->init(size);
+        // if (context->master_graph->meta_data_graph())
+        //     context->master_graph->meta_add_node<ResizeMetaNode,ResizeShorterNode>(resize_node);
+    }
+    catch(const std::exception& e)
+    {
+        context->capture_error(e.what());
+        ERR(e.what())
+    }
+    return output;
+}
+
+
+RocalTensor  ROCAL_API_CALL
+rocalCropCenterFixed(
+        RocalContext p_context,
+        RocalTensor p_input,
+        RocalTensorLayout rocal_tensor_layout,
+        RocalTensorOutputType rocal_tensor_output_type,
+        unsigned crop_width,
+        unsigned crop_height,
+        unsigned crop_depth,
+        bool is_output)
+{
+    rocALTensor* output = nullptr;
+    if ((p_context == nullptr) || (p_input == nullptr)) {
+        ERR("Invalid ROCAL context or invalid input image")
+        return output;
+    }
+    auto context = static_cast<Context*>(p_context);
+    auto input = static_cast<rocALTensor*>(p_input);
+    RocalTensorlayout op_tensorLayout;
+    RocalTensorDataType op_tensorDataType;
+    try
+    {
+        if(crop_width == 0 || crop_height == 0 || crop_depth == 0)
+            THROW("Crop node needs tp receive non-zero destination dimensions")
+        // For the crop node, user can create an image with a different width and height
+        int layout=0;
+        get_rocal_tensor_layout(rocal_tensor_layout, op_tensorLayout, layout);
+        get_rocal_tensor_data_type(rocal_tensor_output_type, op_tensorDataType);
+        rocALTensorInfo output_info = input->info();
+        output_info.set_tensor_layout(op_tensorLayout);
+        output_info.set_data_type(op_tensorDataType);
+
+        // output_info.width(crop_width);
+        // output_info.height(crop_height);
+        output = context->master_graph->create_tensor(output_info, is_output);
+        output->reset_tensor_roi();
+        context->master_graph->add_node<CropNode>({input}, {output})->init(crop_height, crop_width, layout);
+        // if (context->master_graph->meta_data_graph())
+        //     context->master_graph->meta_add_node<CropMetaNode,CropNode>(crop_node);
+    }
+
+    catch(const std::exception& e)
+    {
+        context->capture_error(e.what());
+        ERR(e.what())
+    }
+    return output;
+}
 
 
 RocalTensor

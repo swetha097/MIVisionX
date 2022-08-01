@@ -11,8 +11,8 @@ from amd.rali.pipeline import Pipeline
 
 
 def brightness(*inputs, brightness=1.0, bytes_per_sample_hint=0, image_type=0,
-               preserve=False, seed=-1, device=None, rocal_tensor_layout =types.NCHW, rocal_tensor_output_type = types.FLOAT,output_layout=types.NCHW,):
-    kwargs_pybind = {"input_image0": inputs[0], "is_output": False, "rocal_tensor_layout" : rocal_tensor_layout, "rocal_tensor_output_type" : rocal_tensor_output_type, "alpha": None, "beta": None}
+               preserve=False, seed=-1, device=None, rocal_tensor_layout =types.NCHW, rocal_tensor_output_type = types.FLOAT):
+    kwargs_pybind = {"input_image0": inputs[0], "rocal_tensor_layout" : rocal_tensor_layout, "rocal_tensor_output_type" : rocal_tensor_output_type,  "is_output": False,"alpha": None, "beta": None}
     brightness_image = b.Brightness(Pipeline._current_pipeline._handle ,*(kwargs_pybind.values()))
     return (brightness_image)
 
@@ -97,6 +97,136 @@ def centre_crop(*inputs, bytes_per_sample_hint=0, crop=[100, 100], crop_d=1, cro
     centre_cropped_image = b.CenterCropFixed(Pipeline._current_pipeline._handle ,*(kwargs_pybind.values()))
     return (centre_cropped_image)
 
+def gamma_correction(*inputs, gamma=0.5, device=None, rocal_tensor_layout =types.NCHW, rocal_tensor_output_type = types.FLOAT):
+    # pybind call arguments
+    gamma = b.CreateFloatParameter(gamma) if isinstance(gamma, float) else gamma
+    kwargs_pybind = {"input_image0": inputs[0],"rocal_tensor_layout" : rocal_tensor_layout, "rocal_tensor_output_type" : rocal_tensor_output_type,
+                     "is_output": False, "gamma": gamma}
+    gamma_correction_image = b.Gamma(Pipeline._current_pipeline._handle ,*(kwargs_pybind.values()))
+    return (gamma_correction_image)
+
+def blur(*inputs, blur=3, device=None, rocal_tensor_layout =types.NCHW, rocal_tensor_output_type = types.FLOAT):
+    # pybind call arguments
+    kwargs_pybind = {"input_image0": inputs[0],"rocal_tensor_layout" : rocal_tensor_layout, "rocal_tensor_output_type" : rocal_tensor_output_type, "is_output": False, "sdev": None,}
+    blur_image = b.Blur(Pipeline._current_pipeline._handle ,*(kwargs_pybind.values()))
+    return (blur_image)
+
+
+
+def contrast(*inputs, bytes_per_sample_hint=0, contrast=1.0, image_type=0, min_contrast=None, max_contrast=None,
+             preserve=False, seed=-1, device=None, rocal_tensor_layout =types.NCHW, rocal_tensor_output_type = types.FLOAT):
+    # pybind call arguments
+    kwargs_pybind = {"input_image0": inputs[0],"rocal_tensor_layout" : rocal_tensor_layout, "rocal_tensor_output_type" : rocal_tensor_output_type,
+                     "is_output": False, "min": min_contrast, "max": max_contrast}
+    contrast_image = b.Contrast(Pipeline._current_pipeline._handle ,*(kwargs_pybind.values()))
+    return (contrast_image)
+
+def flip(*inputs, flip=0, device=None, rocal_tensor_layout =types.NCHW, rocal_tensor_output_type = types.FLOAT):
+    # pybind call arguments
+    kwargs_pybind = {"input_image0": inputs[0],"rocal_tensor_layout" : rocal_tensor_layout, "rocal_tensor_output_type" : rocal_tensor_output_type,
+                     "is_output": False, "h_flag": None,"v_flag":None}
+    flip_image = b.flip(Pipeline._current_pipeline._handle ,*(kwargs_pybind.values()))
+    return (flip_image)
+
+def jitter(*inputs, bytes_per_sample_hint=0, fill_value=0.0, interp_type= 0, rocal_tensor_layout =types.NCHW, rocal_tensor_output_type = types.FLOAT,
+        mask = 1, nDegree = 2, kernel_size=None, preserve = False, seed = -1, device = None):
+    # pybind call arguments
+    kwargs_pybind = {"input_image0": inputs[0],"rocal_tensor_layout" : rocal_tensor_layout, "rocal_tensor_output_type" : rocal_tensor_output_type,
+                     "is_output": False, "kernel_size": kernel_size}
+    jitter_image = b.Jitter(Pipeline._current_pipeline._handle ,*(kwargs_pybind.values()))
+    return (jitter_image)
+
+def pixelate(*inputs,  device = None,rocal_tensor_layout =types.NCHW, rocal_tensor_output_type = types.FLOAT):
+    # pybind call arguments
+    kwargs_pybind = {"input_image0": inputs[0],"rocal_tensor_layout" : rocal_tensor_layout, "rocal_tensor_output_type" : rocal_tensor_output_type,
+                     "is_output": False}
+    pixelate_image = b.pixelate(Pipeline._current_pipeline._handle ,*(kwargs_pybind.values()))
+    return (pixelate_image)
+
+def rain(*inputs, rain=None, rain_width = None, rain_height = None, rain_transparency = None, rocal_tensor_layout =types.NCHW, rocal_tensor_output_type = types.FLOAT, device = None):
+    # pybind call arguments
+    rain = b.CreateFloatParameter(rain) if isinstance(rain, float) else rain
+    rain_width = b.CreateIntParameter(rain_width) if isinstance(rain_width, float) else rain_width
+    rain_height = b.CreateIntParameter(rain_height) if isinstance(rain_height, float) else rain_height
+    rain_transparency = b.CreateFloatParameter(rain_transparency) if isinstance(rain_transparency, float) else rain_transparency
+
+    kwargs_pybind = {"input_image0": inputs[0],"rocal_tensor_layout" : rocal_tensor_layout, "rocal_tensor_output_type" : rocal_tensor_output_type,"is_output": False, "rain_value": rain, "rain_width": rain_width, "rain_height": rain_height, "rain_transparency": rain_transparency}
+    rain_image = b.Rain(Pipeline._current_pipeline._handle ,*(kwargs_pybind.values()))
+    return (rain_image)
+
+def rotate(*inputs, angle=None, axis=None, bytes_per_sample_hint= 0, fill_value = 0.0, interp_type = 1, keep_size = False,
+            output_dtype = -1, preserve = False, seed = -1, size = None, device = None, rocal_tensor_layout =types.NCHW, rocal_tensor_output_type = types.FLOAT):
+   
+    # pybind call arguments
+    angle = b.CreateFloatParameter(angle) if isinstance(angle, float) else angle
+    kwargs_pybind = {"input_image0": inputs[0],"rocal_tensor_layout" : rocal_tensor_layout, "rocal_tensor_output_type" : rocal_tensor_output_type,"is_output": False,
+                     "dest_width": 0, "dest_height": 0,"outputformat": 0,"angle": angle}
+    rotated_image = b.Rotate(Pipeline._current_pipeline._handle ,*(kwargs_pybind.values()))
+    return (rotated_image)
+
+def saturation(*inputs, bytes_per_sample_hint=0,  saturation=1.0, image_type=0, preserve=False, seed = -1, rocal_tensor_layout =types.NCHW, rocal_tensor_output_type = types.FLOAT, device = None):
+    
+    # pybind call arguments
+    saturation = b.CreateFloatParameter(saturation) if isinstance(saturation, float) else saturation
+    kwargs_pybind = {"input_image0": inputs[0],"rocal_tensor_layout" : rocal_tensor_layout, "rocal_tensor_output_type" : rocal_tensor_output_type,
+                     "is_output": False, "sat": saturation}
+    saturated_image = b.Saturation(Pipeline._current_pipeline._handle ,*(kwargs_pybind.values()))
+    return (saturated_image)
+
+
+# def warp_affine(*inputs, bytes_per_sample_hint=0, fill_value=0.0, interp_type = 1, matrix = None, output_dtype = -1, preserve = False, seed = -1, size = None, rocal_tensor_layout =types.NCHW, rocal_tensor_output_type = types.FLOAT device = None):
+#      # pybind call arguments
+#     kwargs_pybind = {"input_image0": inputs[0],"rocal_tensor_layout" : rocal_tensor_layout, "rocal_tensor_output_type" : rocal_tensor_output_type,"is_output": False,"dest_width": 0, "dest_height": 0, "x0": None, "x1": None, "y0": None, "y1": None, "o0": None, "o1": None}
+#     warp_affine_outputcolor_temp_output = b.WarpAffine(Pipeline._current_pipeline._handle ,*(kwargs_pybind.values()))
+#     return (warp_affine_outputcolor_temp_output)
+
+def vignette(*inputs, vignette=0.5, rocal_tensor_layout =types.NCHW, rocal_tensor_output_type = types.FLOAT, device=None):
+    # pybind call arguments
+    vignette = b.CreateFloatParameter(vignette) if isinstance(vignette, float) else vignette
+    kwargs_pybind = {"input_image0": inputs[0],"rocal_tensor_layout" : rocal_tensor_layout, "rocal_tensor_output_type" : rocal_tensor_output_type,"is_output": False, "sdev": vignette}
+    vignette_outputcolor_temp_output = b.Vignette(Pipeline._current_pipeline._handle ,*(kwargs_pybind.values()))
+    return (vignette_outputcolor_temp_output)
+
+def color_temp(*inputs, adjustment_value=50, rocal_tensor_layout =types.NCHW, rocal_tensor_output_type = types.FLOAT, device=None, preserve = False):
+    # pybind call arguments
+    adjustment_value = b.CreateIntParameter(adjustment_value) if isinstance(adjustment_value, int) else adjustment_value
+    kwargs_pybind = {"input_image0": inputs[0],"rocal_tensor_layout" : rocal_tensor_layout, "rocal_tensor_output_type" : rocal_tensor_output_type,"is_output": False, "adjustment_value": adjustment_value}
+    color_temp_output = b.ColorTemp(Pipeline._current_pipeline._handle ,*(kwargs_pybind.values()))
+    return (color_temp_output)
+
+# def snp_noise(*inputs, snpNoise=None, device=None, preserve = False, rocal_tensor_layout =types.NCHW, rocal_tensor_output_type = types.FLOAT):
+#     # pybind call arguments
+#     snpNoise = b.CreateFloatParameter(snpNoise) if isinstance(snpNoise, float) else snpNoise
+#     kwargs_pybind = {"input_image0":inputs[0],"rocal_tensor_layout" : rocal_tensor_layout, "rocal_tensor_output_type" : rocal_tensor_output_type, "is_output":False ,"snpNoise": snpNoise}
+#     snp_noise_added_image = b.noise(Pipeline._current_pipeline._handle ,*(kwargs_pybind.values()))
+#     return (snp_noise_added_image)
+
+
+def hue(*inputs, bytes_per_sample_hint=0,  hue=None, image_type=0,rocal_tensor_layout =types.NCHW, rocal_tensor_output_type = types.FLOAT,
+        preserve=False, seed = -1, device = None):
+
+    # pybind call arguments
+    hue = b.CreateFloatParameter(hue) if isinstance(hue, float) else hue
+    kwargs_pybind = {"input_image0": inputs[0],"rocal_tensor_layout" : rocal_tensor_layout, "rocal_tensor_output_type" : rocal_tensor_output_type,
+                     "is_output": False, "hue": hue}
+    hue_image = b.Hue(Pipeline._current_pipeline._handle ,*(kwargs_pybind.values()))
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    return (hue_image)
 def random_bbox_crop(*inputs,all_boxes_above_threshold = True, allow_no_crop =True, aspect_ratio = None, bbox_layout = "", bytes_per_sample_hint = 0,
                 crop_shape = None, input_shape = None, ltrb = True, num_attempts = 1 ,scaling =  None,  preserve = False, seed = 1, shape_layout = "",
                 threshold_type ="iou", thresholds = None, total_num_attempts = 0, device = None, labels = None ):

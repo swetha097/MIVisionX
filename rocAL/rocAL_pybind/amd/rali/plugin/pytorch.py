@@ -95,7 +95,7 @@ class RALIGenericIterator(object):
         #     self.out = torch.empty((self.batch_size, self.color_format, self.h, self.w, ), dtype=torch.uint8)
         # next
         self.output_tensor_list[0].copy_data(ctypes.c_void_p(self.out.data_ptr()))
-        self.labels = self.loader.rocalGetImageLabels()
+        self.labels = self.loader.rocalGetImageLabels()#numpy
         self.labels_tensor = torch.from_numpy(self.labels).type(torch.LongTensor)
 
         if self.tensor_dtype == types.FLOAT:
