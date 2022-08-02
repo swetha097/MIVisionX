@@ -186,9 +186,9 @@ static vx_status VX_CALLBACK processWarpAffine(vx_node node, const vx_reference 
     }
     if (data->device_type == AGO_TARGET_AFFINITY_CPU) {
         refreshWarpAffine(node, parameters, num, data);
-        for (int i = 0; i < data->nbatchSize; i++) {
-            std::cerr << "\n bbox values :: " << data->roi_tensor_Ptr[i].xywhROI.xy.x << " " << data->roi_tensor_Ptr[i].xywhROI.xy.y << " " << data->roi_tensor_Ptr[i].xywhROI.roiWidth << " " << data->roi_tensor_Ptr[i].xywhROI.roiHeight;
-        }
+        // for (int i = 0; i < data->nbatchSize; i++) {
+        //     std::cerr << "\n bbox values :: " << data->roi_tensor_Ptr[i].xywhROI.xy.x << " " << data->roi_tensor_Ptr[i].xywhROI.xy.y << " " << data->roi_tensor_Ptr[i].xywhROI.roiWidth << " " << data->roi_tensor_Ptr[i].xywhROI.roiHeight;
+        // }
         std::cerr << "hello\n\n";
         if (0) {
             float *temp1 = ((float *)calloc(100, sizeof(float)));

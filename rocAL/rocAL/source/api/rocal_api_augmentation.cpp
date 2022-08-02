@@ -308,7 +308,7 @@ rocalExposure(RocalContext p_context,
 }
 
 RocalTensor ROCAL_API_CALL
-rocalCrop(RocalContext p_context, 
+rocalCropFixed(RocalContext p_context, 
           RocalTensor p_input,
           RocalTensorLayout rocal_tensor_layout,
           RocalTensorOutputType rocal_tensor_output_type,
