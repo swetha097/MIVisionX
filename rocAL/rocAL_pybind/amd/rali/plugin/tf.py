@@ -199,11 +199,11 @@ import amd.rali.types as types
 class RALIGenericImageIterator(object):
     def __init__(self, pipeline):
         self.loader = pipeline
-        # self.w = b.getOutputWidth(self.loader._handle)
-        # self.h = b.getOutputHeight(self.loader._handle)
-        # self.n = b.getOutputImageCount(self.loader._handle)
-        # color_format = b.getOutputColorFormat(self.loader._handle)
-        # self.p = (1 if (color_format == int(types.GRAY)) else 3)
+        self.w = b.getOutputWidth(self.loader._handle)
+        self.h = b.getOutputHeight(self.loader._handle)
+        self.n = b.getOutputImageCount(self.loader._handle)
+        color_format = b.getOutputColorFormat(self.loader._handle)
+        self.p = (1 if (color_format == int(types.GRAY)) else 3)
         height = self.h*self.n
         self.out_tensor = None
         self.out_image = np.zeros((height, self.w, self.p), dtype = "uint8")
@@ -216,32 +216,9 @@ class RALIGenericImageIterator(object):
         if b.getRemainingImages(self.loader._handle) < self.bs:
             raise StopIteration
 
-        if self.loader.rocalRun() != 0:
+        if self.loader.run() != 0:
             raise StopIteration
-        else:
-            self.output_tensor_list = self.loader.rocalGetOutputTensors()
-        
-        #From init
 
-        print(self.output_tensor_list)
-        self.augmentation_count = len(self.output_tensor_list)
-        # print("AUG COUNT", self.augmentation_count)
-        self.w = self.output_tensor_list[0].batch_width()
-        self.h = self.output_tensor_list[0].batch_height()
-        self.batch_size = self.output_tensor_list[0].batch_size()
-        print("\n Batch Size",self.batch_size)
-        self.color_format = self.output_tensor_list[0].color_format()
-        print(self.color_format)
-        print(self.batch_size * self.h * self.color_format * self.w)
-       
-       ############check it 
-        self.output = torch.empty((self.batch_size, self.h, self.w, self.color_format,), dtype=torch.uint8)
-        self.out = torch.permute(self.output, (0,3,1,2))
-        
-        self.output_tensor_list[0].copy_data(ctypes.c_void_p(self.out.data_ptr()))
-        self.labels = self.loader.rocalGetImageLabels()#numpy
-        self.labels_tensor = torch.from_numpy(self.labels).type(torch.LongTensor)
-################
         self.loader.copyImage(self.out_image)
         return self.out_image , self.out_tensor
 
@@ -259,18 +236,8 @@ class RALIGenericIteratorDetection(object):
         self.offset = offset
         self.reverse_channels = reverse_channels
         self.tensor_dtype = tensor_dtype
-        self.w = b.getOutputWidth(self.loader._handle)
-        self.h = b.getOutputHeight(self.loader._handle)
-        self.n = b.getOutputImageCount(self.loader._handle)
-        self.bs = pipeline._batch_size
-        color_format = b.getOutputColorFormat(self.loader._handle)
-        self.p = (1 if (color_format == int(types.GRAY)) else 3)
-
-        if self.tensor_dtype == types.FLOAT:
-            self.out = np.zeros(( self.bs*self.n, self.p, int(self.h/self.bs), self.w,), dtype = "float32")
-        elif self.tensor_dtype == types.FLOAT16:
-            self.out = np.zeros(( self.bs*self.n, self.p, int(self.h/self.bs), self.w,), dtype = "float16")
-        # self.labels = np.zeros((self.bs),dtype = "int32")
+        
+        self.labels = np.zeros((self.bs),dtype = "unit8")
 
     def next(self):
         return self.__next__()
@@ -286,77 +253,29 @@ class RALIGenericIteratorDetection(object):
 
         if self.loader.run() != 0:
             raise StopIteration
-
-        if(types.NCHW == self.tensor_format):
-            self.loader.copyToTensorNCHW(self.out, self.multiplier, self.offset, self.reverse_channels, int(self.tensor_dtype))
         else:
-            self.loader.copyToTensorNHWC(self.out, self.multiplier, self.offset, self.reverse_channels, int(self.tensor_dtype))
-        
-        if(self.loader._name == "TFRecordReaderDetection"):
-            self.bbox_list =[]
-            self.label_list=[]
-            self.num_bboxes_list=[]
-            #Count of labels/ bboxes in a batch
-            self.bboxes_label_count = np.zeros(self.bs, dtype="int32")
-            self.count_batch = self.loader.GetBoundingBoxCount(self.bboxes_label_count)
-            self.num_bboxes_list = self.bboxes_label_count.tolist()
-            # 1D labels array in a batch
-            self.labels = np.zeros(self.count_batch, dtype="int32")
-            self.loader.GetBBLabels(self.labels)
-            # 1D bboxes array in a batch
-            self.bboxes = np.zeros((self.count_batch*4), dtype="float32")
-            self.loader.GetBBCords(self.bboxes)
-            #1D Image sizes array of image in a batch
-            self.img_size = np.zeros((self.bs * 2),dtype = "int32")
-            self.loader.GetImgSizes(self.img_size)
-            count =0 # number of bboxes per image
-            sum_count=0 # sum of the no. of the bboxes
-            for i in range(self.bs):
-                count = self.bboxes_label_count[i]
-                self.label_2d_numpy = (self.labels[sum_count : sum_count+count])
-                self.label_2d_numpy = np.reshape(self.label_2d_numpy, (-1, 1)).tolist()
-                self.bb_2d_numpy = (self.bboxes[sum_count*4 : (sum_count+count)*4])
-                self.bb_2d_numpy = np.reshape(self.bb_2d_numpy, (-1, 4)).tolist()
-                self.label_list.append(self.label_2d_numpy)
-                self.bbox_list.append(self.bb_2d_numpy)
-                sum_count = sum_count +count
+            self.output_tensor_list = self.loader.rocalGetOutputTensors()
 
-            self.target = self.bbox_list
-            self.target1 = self.label_list
-            max_cols = max([len(row) for batch in self.target for row in batch])
-            # max_rows = max([len(batch) for batch in self.target])
-            max_rows = 100
-            bb_padded = [batch + [[0] * (max_cols)] * (max_rows - len(batch)) for batch in self.target]
-            bb_padded_1=[row + [0] * (max_cols - len(row)) for batch in bb_padded for row in batch]
-            arr = np.asarray(bb_padded_1)
-            self.res = np.reshape(arr, (-1, max_rows, max_cols))
-            max_cols = max([len(row) for batch in self.target1 for row in batch])
-            # max_rows = max([len(batch) for batch in self.target1])
-            max_rows = 100
-            lab_padded = [batch + [[0] * (max_cols)] * (max_rows - len(batch)) for batch in self.target1]
-            lab_padded_1=[row + [0] * (max_cols - len(row)) for batch in lab_padded for row in batch]
-            labarr = np.asarray(lab_padded_1)
-            self.l = np.reshape(labarr, (-1, max_rows, max_cols))
-            self.num_bboxes_arr = np.array(self.num_bboxes_list)
-
-            if self.tensor_dtype == types.FLOAT:
-                return self.out.astype(np.float32), self.res, self.l, self.num_bboxes_arr
-            elif self.tensor_dtype == types.FLOAT16:
-                return self.out.astype(np.float16), self.res, self.l, self.num_bboxes_arr
-        elif (self.loader._name == "TFRecordReaderClassification"):
-            if(self.loader._oneHotEncoding == True):
-                self.labels = np.zeros((self.bs)*(self.loader._numOfClasses),dtype = "int32")
-                self.loader.GetOneHotEncodedLabels(self.labels)
-                self.labels = np.reshape(self.labels, (-1, self.bs, self.loader._numOfClasses))
-            else:
-                self.labels = np.zeros((self.bs),dtype = "int32")
-                self.loader.getImageLabels(self.labels)
+        print(self.output_tensor_list)
+        self.augmentation_count = len(self.output_tensor_list)
+        # print("AUG COUNT", self.augmentation_count)
+        self.w = self.output_tensor_list[0].batch_width()
+        self.h = self.output_tensor_list[0].batch_height()
+        self.batch_size = self.output_tensor_list[0].batch_size()
+        print("\n Batch Size",self.batch_size)
+        self.color_format = self.output_tensor_list[0].color_format()
+        print(self.color_format)
+        print(self.batch_size * self.h * self.color_format * self.w)
         
-            if self.tensor_dtype == types.FLOAT:
-                return self.out.astype(np.float32), self.labels
-            elif self.tensor_dtype == types.TensorDataType.FLOAT16:
-                return self.out.astype(np.float16), self.labels
+        self.out = np.zeros(( self.bs*self.n, self.p, int(self.h/self.bs), self.w,), dtype = "float32")
+        # self.output = torch.empty((self.batch_size, self.h, self.w, self.color_format,), dtype=torch.uint8)
+        # self.out = torch.permute(self.output, (0,3,1,2))
         
+        if (self.loader._name == "TFRecordReaderClassification"):
+            self.output_tensor_list[0].copy_data( self.out)
+            self.labels = self.loader.rocalGetImageLabels()#numpy
+            # self.labels_tensor = torch.from_numpy(self.labels).type(torch.LongTensor)
+            return (self.out.astype(np.unit8)), self.labels
     def reset(self):
         b.raliResetLoaders(self.loader._handle)
 

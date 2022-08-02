@@ -66,6 +66,23 @@ ROCAL_API_CALL rocalCreateLabelReader(RocalContext p_context, const char* source
     return context->master_graph->create_label_reader(source_path, MetaDataReaderType::FOLDER_BASED_LABEL_READER);
 }
 
+// RocalMetaData
+// ROCAL_API_CALL rocalCreateTFReader(RocalContext p_context, const char* source_path, bool is_output,const char* user_key_for_label, const char* user_key_for_filename)
+// {
+//     if (!p_context)
+//         THROW("Invalid rocal context passed to rocalCreateTFReader")
+//     auto context = static_cast<Context*>(p_context);
+//     std::string user_key_for_label_str(user_key_for_label);
+//     std::string user_key_for_filename_str(user_key_for_filename);
+
+
+//     std::map<std::string, std::string> feature_key_map = {
+//         {"image/class/label", user_key_for_label_str},
+//         {"image/filename",user_key_for_filename_str}
+//     };
+//     return context->master_graph->create_tf_record_meta_data_reader(source_path , MetaDataReaderType::TF_META_DATA_READER , MetaDataType::Label, feature_key_map);}
+
+
 RocalMetaData
 ROCAL_API_CALL rocalCreateCOCOReader(RocalContext p_context, const char* source_path, bool is_output, bool is_box_encoder) {
     if (!p_context)

@@ -12,6 +12,8 @@
 #include "api/rocal_api_augmentation.h"
 #include "api/rocal_api_data_transfer.h"
 #include "api/rocal_api_info.h"
+
+
 namespace py = pybind11;
 
 using float16 = half_float::half;
@@ -283,6 +285,9 @@ namespace rali
         m.def("labelReader", &rocalCreateLabelReader, py::return_value_policy::reference);
         m.def("COCOReader", &rocalCreateCOCOReader, py::return_value_policy::reference);
         // rocal_api_meta_data.h
+        // m.def("TFReader",&rocalCreateTFReader);
+        // m.def("TFReaderDetection",&rocalCreateTFReaderDetection);
+
         m.def("RandomBBoxCrop", &rocalRandomBBoxCrop);
         m.def("BoxEncoder",&rocalBoxEncoder);
         m.def("getImageId", [](RocalContext context, py::array_t<int> array)
