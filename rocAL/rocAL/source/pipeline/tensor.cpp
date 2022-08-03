@@ -375,40 +375,23 @@ unsigned rocALTensor::copy_data(cl_command_queue queue, cl_mem user_buffer, bool
         return _info.data_size();
     }
 #endif
-unsigned rocALTensor::copy_data(void * user_buffer, bool sync)
+unsigned rocALTensor::copy_data(void* user_buffer, bool sync)
 {
     if(_info._type != rocALTensorInfo::Type::HANDLE)
         return 0;
-#if ENABLE_HIP
+
     if (_info._mem_type == RocalMemType::HIP)
     {
 #if ENABLE_HIP
         // copy from device to host
         hipError_t status;
-        std::cerr<<"HIP to HOST copy";
         if ((status = hipMemcpyDtoH((void *)user_buffer, _mem_handle, _info.data_size())))
             THROW("copy_data::hipMemcpyDtoH failed: " + TOSTR(status))
 #endif
     }
-#endif
     else
     {
-        std::cerr<<"\n HOST memcpy ";
-        std::cerr<<"\n Size ::"<< _info.data_size();
-        // unsigned char *output_tensor = static_cast<unsigned char *>(user_buffer);
-
-        // for (int i =0; i<10;i++)
-        //     std::cerr << "\n Before : "<< (float)user_buffer[i];
-        // unsigned char * temp_buff = (unsigned char *) _mem_handle;
-        // for(int i=0;i<10;i++)
-        //     std::cerr<<"temp_buff "<<(float)temp_buff[i];
-        // unsigned char * in_buffer = (unsigned char *)malloc(_info.data_size());
         memcpy(user_buffer, _mem_handle, _info.data_size());
-        std::cerr<<"\n After HOST memcpy";
-
-        // for (int i =0; i<10;i++)
-        //     std::cerr << "\n After :: "<<(float)user_buffer[i];
-        // std::exit(0);
     }
     return _info.data_size();
 }

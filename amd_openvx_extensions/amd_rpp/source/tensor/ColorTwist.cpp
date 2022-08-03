@@ -107,7 +107,6 @@ static vx_status VX_CALLBACK refreshColorTwist(vx_node node, const vx_reference 
         }
         else if (data->in_tensor_type == vx_type_e::VX_TYPE_FLOAT32 && data->out_tensor_type == vx_type_e::VX_TYPE_FLOAT32)
         {
-
             STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[0], VX_TENSOR_BUFFER_HOST, &data->pSrc, sizeof(vx_float32)));
             STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[2], VX_TENSOR_BUFFER_HOST, &data->pDst, sizeof(vx_float32)));
         }
@@ -118,7 +117,6 @@ static vx_status VX_CALLBACK refreshColorTwist(vx_node node, const vx_reference 
         }
         else if (data->in_tensor_type == vx_type_e::VX_TYPE_UINT8 && data->out_tensor_type == vx_type_e::VX_TYPE_FLOAT32)
         {
-
             STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[0], VX_TENSOR_BUFFER_HOST, &data->pSrc, sizeof(vx_uint8)));
             STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[2], VX_TENSOR_BUFFER_HOST, &data->pDst, sizeof(vx_float32)));
         }
@@ -247,7 +245,6 @@ static vx_status VX_CALLBACK initializeColorTwist(vx_node node, const vx_referen
     if (data->out_tensor_type == vx_type_e::VX_TYPE_FLOAT32)
     {
         data->dst_desc_ptr->dataType = RpptDataType::F32;
-
     }
     else if(data->out_tensor_type == vx_type_e::VX_TYPE_UINT8)
     {
@@ -265,7 +262,9 @@ static vx_status VX_CALLBACK initializeColorTwist(vx_node node, const vx_referen
     {
         data->dst_desc_ptr->dataType = RpptDataType::I8;
     }
-     data->src_desc_ptr->offsetInBytes = 0;
+    data->src_desc_ptr->offsetInBytes = 0;
+    data->dst_desc_ptr->offsetInBytes = 0;
+
     if(data->layout == 0) // NHWC
     {
         data->src_desc_ptr->n = data->in_tensor_dims[0];

@@ -205,19 +205,11 @@ static vx_status VX_CALLBACK processCrop(vx_node node, const vx_reference *param
     {
 #if ENABLE_OPENCL
         refreshCrop(node, parameters, num, data);
-        rpp_status = rppt_crop_gpu((void *)data->cl_pSrc, data->src_desc_ptr, (void *)data->cl_pDst, data->src_desc_ptr, data->roi_tensor_Ptr, data->roiType, data->rppHandle);
+        rpp_status = rppt_crop_gpu((void *)data->cl_pSrc, data->src_desc_ptr, (void *)data->cl_pDst, data->dst_desc_ptr, data->roi_tensor_Ptr, data->roiType, data->rppHandle);
         return_status = (rpp_status == RPP_SUCCESS) ? VX_SUCCESS : VX_FAILURE;
 #elif ENABLE_HIP
         refreshCrop(node, parameters, num, data);
-
-        rpp_status = rppt_crop_gpu((void *)data->hip_pSrc, data->src_desc_ptr, (void *)data->hip_pDst, data->src_desc_ptr, data->hip_roi_tensor_Ptr, data->roiType, data->rppHandle);
-        if (1) {
-            float *temp1 = ((float *)calloc(100, sizeof(float)));
-            for (int i = 0; i < 100; i++) {
-                temp1[i] = (float)*((unsigned char *)(data->hip_pDst) + i);
-                std::cout << temp1[i] << " ";
-            }
-        }
+        rpp_status = rppt_crop_gpu((void *)data->hip_pSrc, data->src_desc_ptr, (void *)data->hip_pDst, data->dst_desc_ptr, data->hip_roi_tensor_Ptr, data->roiType, data->rppHandle);
         return_status = (rpp_status == RPP_SUCCESS) ? VX_SUCCESS : VX_FAILURE;
 #endif
     }
@@ -225,7 +217,6 @@ static vx_status VX_CALLBACK processCrop(vx_node node, const vx_reference *param
     if(data->device_type == AGO_TARGET_AFFINITY_CPU)
     {
         vxstatus = refreshCrop(node, parameters, num, data);
-        
         rpp_status = rppt_crop_host(data->pSrc, data->src_desc_ptr,
                                     data->pDst, data->dst_desc_ptr,
                                     data->roi_tensor_Ptr,data->roiType,
@@ -249,10 +240,10 @@ static vx_status VX_CALLBACK initializeCrop(vx_node node, const vx_reference *pa
     STATUS_ERROR_CHECK(vxReadScalarValue((vx_scalar)parameters[12], &data->nbatchSize));
     STATUS_ERROR_CHECK(vxCopyScalar((vx_scalar)parameters[10], &data->layout, VX_READ_ONLY, VX_MEMORY_TYPE_HOST));
     STATUS_ERROR_CHECK(vxCopyScalar((vx_scalar)parameters[11], &roiType, VX_READ_ONLY, VX_MEMORY_TYPE_HOST));
-    if(roiType == 1)
+    // if(roiType == 1)
         data->roiType = RpptRoiType::XYWH;
-    else
-        data->roiType = RpptRoiType::LTRB;
+    // else
+        // data->roiType = RpptRoiType::LTRB;
 
     // Querying for input tensor
     data->src_desc_ptr = &data->srcDesc;
@@ -353,7 +344,7 @@ static vx_status VX_CALLBACK initializeCrop(vx_node node, const vx_reference *pa
         data->src_desc_ptr->strides.wStride = data->src_desc_ptr->c;
         data->src_desc_ptr->strides.cStride = 1;
         data->src_desc_ptr->layout = RpptLayout::NHWC;
-
+    
         data->dst_desc_ptr->n = data->out_tensor_dims[0] * data->in_tensor_dims[1];
         data->dst_desc_ptr->h = data->out_tensor_dims[2];
         data->dst_desc_ptr->w = data->out_tensor_dims[3];

@@ -54,7 +54,7 @@ private:
     std::string _path;
     std::map<std::string, std::string> _feature_key_map;
     std::string _file_prefix;           // if we want to read only filenames with prefix (needed for cifar10 meta data)
-    int _mask;
+    bool _mask;
 public:
     MetaDataConfig(const MetaDataType& type, const MetaDataReaderType& reader_type, const std::string& path, const std::map<std::string, std::string> &feature_key_map=std::map<std::string, std::string>(), const std::string file_prefix=std::string(), const bool mask = 0)
                     :_type(type), _reader_type(reader_type),  _path(path), _feature_key_map(feature_key_map), _file_prefix(file_prefix), _mask(mask){}

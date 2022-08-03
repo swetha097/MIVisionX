@@ -208,7 +208,7 @@ static vx_status VX_CALLBACK processResize(vx_node node, const vx_reference *par
         return_status = (rpp_status == RPP_SUCCESS) ? VX_SUCCESS : VX_FAILURE;
 #elif ENABLE_HIP
         refreshResize(node, parameters, num, data);
-        // rpp_status = rppt_resize_gpu((void *)data->hip_pSrc, data->src_desc_ptr, (void *)data->hip_pDst, data->dst_desc_ptr, data->hip_dstImgSize, RpptInterpolationType::BILINEAR, data->hip_roiTensorPtrSrc, data->roiType, data->rppHandle);
+        rpp_status = rppt_resize_gpu((void *)data->hip_pSrc, data->src_desc_ptr, (void *)data->hip_pDst, data->dst_desc_ptr, data->hip_dstImgSize, RpptInterpolationType::BILINEAR, data->hip_roiTensorPtrSrc, data->roiType, data->rppHandle);
         return_status = (rpp_status == RPP_SUCCESS) ? VX_SUCCESS : VX_FAILURE;
 #endif
     }
@@ -236,13 +236,14 @@ static vx_status VX_CALLBACK initializeResize(vx_node node, const vx_reference *
     STATUS_ERROR_CHECK(vxReadScalarValue((vx_scalar)parameters[11], &data->nbatchSize));
     STATUS_ERROR_CHECK(vxCopyScalar((vx_scalar)parameters[9], &layout, VX_READ_ONLY, VX_MEMORY_TYPE_HOST));
     STATUS_ERROR_CHECK(vxCopyScalar((vx_scalar)parameters[10], &roiType, VX_READ_ONLY, VX_MEMORY_TYPE_HOST));
-    if (roiType == 1)
-    {
-        data->roiType = RpptRoiType::XYWH;
-    }
-    else {
-        data->roiType = RpptRoiType::LTRB;
-    }
+    data->roiType = RpptRoiType::XYWH;
+    // if (roiType == 1)
+    // {
+        // data->roiType = RpptRoiType::XYWH;
+    // }
+    // else {
+        // data->roiType = RpptRoiType::LTRB; // LTRB is passed
+    // }
     // Querying for input tensor
     data->src_desc_ptr = &data->srcDesc;
     STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[0], VX_TENSOR_NUMBER_OF_DIMS, &data->src_desc_ptr->numDims, sizeof(data->src_desc_ptr->numDims)));
