@@ -209,12 +209,12 @@ static vx_status VX_CALLBACK processCropMirrorNormalize(vx_node node, const vx_r
     {
 #if ENABLE_OPENCL
         refreshCropMirrorNormalize(node, parameters, num, data);
-        rpp_status = rppt_crop_mirror_normalize_gpu((void *)data->cl_pSrc, data->src_desc_ptr, (void *)data->cl_pDst, data->src_desc_ptr,data->mean,data->std_dev,
+        rpp_status = rppt_crop_mirror_normalize_gpu((void *)data->cl_pSrc, data->src_desc_ptr, (void *)data->cl_pDst, data->dst_desc_ptr,data->mean,data->std_dev,
                                                      data->mirror, data->roi_tensor_Ptr, data->roiType, data->rppHandle);
         return_status = (rpp_status == RPP_SUCCESS) ? VX_SUCCESS : VX_FAILURE;
 #elif ENABLE_HIP
         refreshCropMirrorNormalize(node, parameters, num, data);
-        rpp_status = rppt_crop_mirror_normalize_gpu((void *)data->hip_pSrc, data->src_desc_ptr, (void *)data->hip_pDst, data->src_desc_ptr,data->mean,data->std_dev,
+        rpp_status = rppt_crop_mirror_normalize_gpu((void *)data->hip_pSrc, data->src_desc_ptr, (void *)data->hip_pDst, data->dst_desc_ptr,data->mean,data->std_dev,
                                                      data->mirror, data->hip_roi_tensor_Ptr, data->roiType, data->rppHandle);
         
         return_status = (rpp_status == RPP_SUCCESS) ? VX_SUCCESS : VX_FAILURE;
@@ -247,10 +247,10 @@ static vx_status VX_CALLBACK initializeCropMirrorNormalize(vx_node node, const v
     STATUS_ERROR_CHECK(vxReadScalarValue((vx_scalar)parameters[15], &data->nbatchSize));
     STATUS_ERROR_CHECK(vxCopyScalar((vx_scalar)parameters[13], &data->layout, VX_READ_ONLY, VX_MEMORY_TYPE_HOST));
     STATUS_ERROR_CHECK(vxCopyScalar((vx_scalar)parameters[14], &roiType, VX_READ_ONLY, VX_MEMORY_TYPE_HOST));
-    if(roiType == 1)
-        data->roiType = RpptRoiType::XYWH;
-    else
-        data->roiType = RpptRoiType::LTRB;
+    // if(roiType == 1)
+    data->roiType = RpptRoiType::XYWH;
+    // else
+        // data->roiType = RpptRoiType::LTRB;
     // Querying for output tensor
     data->src_desc_ptr = &data->srcDesc;
     STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[0], VX_TENSOR_NUMBER_OF_DIMS, &data->src_desc_ptr->numDims, sizeof(data->src_desc_ptr->numDims)));
@@ -262,7 +262,6 @@ static vx_status VX_CALLBACK initializeCropMirrorNormalize(vx_node node, const v
     }
     else if (data->in_tensor_type == vx_type_e::VX_TYPE_FLOAT32)
     {
-
         data->src_desc_ptr->dataType = RpptDataType::F32;
     }
     // else if (data->src_desc_ptr->dataType == vx_type_e::VX_TYPE_FLOAT16)
