@@ -256,7 +256,7 @@ def main():
         ct_images = fn.color_twist(
             res, saturation=saturation, contrast=contrast, brightness=brightness, hue=hue)
         flip_coin = fn.random.coin_flip(probability=0.5)
-        cmnp = fn.crop_mirror_normalize(ct_images, device="gpu",
+        cmnp = fn.crop_mirror_normalize(images_decoded, device="gpu",
                                             rocal_tensor_layout = types.NHWC,
                                             rocal_tensor_output_type = types.UINT8,
                                             crop=(224, 224),

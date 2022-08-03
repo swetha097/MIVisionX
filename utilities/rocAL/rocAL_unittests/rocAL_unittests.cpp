@@ -134,7 +134,7 @@ int test(int test_case, int reader_type, int pipeline_type, const char *path, co
 
     RocalTensor input1;
     RocalTensorLayout tensorLayout = RocalTensorLayout::ROCAL_NHWC;
-    RocalTensorOutputType tensorOutputType = RocalTensorOutputType::ROCAL_UINT8;
+    RocalTensorOutputType tensorOutputType = RocalTensorOutputType::ROCAL_FP32;
 
     // The jpeg file loader can automatically select the best size to decode all images to that size
     // User can alternatively set the size or change the policy that is used to automatically find the size
@@ -165,7 +165,6 @@ int test(int test_case, int reader_type, int pipeline_type, const char *path, co
                 input1 = rocalJpegCOCOFileSource(handle, path, json_path, color_format, num_threads, false, true, false, ROCAL_USE_USER_GIVEN_SIZE, decode_max_width, decode_max_height);
         }
         break;
-#if 0
         case 3: //coco detection partial
         {
             std::cout << ">>>>>>> Running COCO READER PARTIAL" << std::endl;
@@ -221,6 +220,7 @@ int test(int test_case, int reader_type, int pipeline_type, const char *path, co
             input1 = rocalJpegCaffeLMDBRecordSource(handle, path, color_format, num_threads, false, false, false, ROCAL_USE_USER_GIVEN_SIZE, decode_max_width, decode_max_height);
         }
         break;
+
         case 8: //caffe2 classification
         {
             std::cout << ">>>>>>> Running CAFFE2 CLASSIFICATION READER" << std::endl;
@@ -235,6 +235,8 @@ int test(int test_case, int reader_type, int pipeline_type, const char *path, co
             input1 = rocalJpegCaffe2LMDBRecordSource(handle, path, color_format, num_threads, false, false, false, ROCAL_USE_USER_GIVEN_SIZE, decode_max_width, decode_max_height);
         }
         break;
+#if 0
+
         case 10: //coco reader keypoints
         {
             std::cout << ">>>>>>> Running COCO KEYPOINTS READER" << std::endl;
@@ -253,6 +255,7 @@ int test(int test_case, int reader_type, int pipeline_type, const char *path, co
         }
         break;
 #endif
+
         default: //image pipeline
         {
             std::cout << ">>>>>>> Running IMAGE READER" << std::endl;
@@ -279,8 +282,8 @@ int test(int test_case, int reader_type, int pipeline_type, const char *path, co
     {
     case 0:
     {
-        std::vector<float> mean{0, 0, 0};
-        std::vector<float> sdev{1, 1, 1};
+        std::vector<float> mean{0.485 , 0.456 , 0.406 };
+        std::vector<float> sdev{0.229, 0.224, 0.225 };
         std::cout << ">>>>>>> Running "
                   << " Crop Mirror Normalize " << std::endl;
         image1 = rocalCropMirrorNormalize(handle, input1, tensorLayout, tensorOutputType, 3, resize_w, resize_h, 0, 0, 0, mean, sdev, true);
@@ -654,7 +657,7 @@ break;
         //     rocalCopyToTensorOutput(handle, mat_input.data, h * w * p);
         //     break;
         // }
-        if(0)
+        if(1)
         {
             float * tempo= ( float *)(output_tensor_list->at(idx)->buffer());
             for(int j=0;j<(h*w*3);j++)

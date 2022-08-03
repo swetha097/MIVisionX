@@ -191,6 +191,7 @@ static vx_status VX_CALLBACK validateResize(vx_node node, const vx_reference par
 
 static vx_status VX_CALLBACK processResize(vx_node node, const vx_reference *parameters, vx_uint32 num)
 {
+    std::cerr<<"ProcessResizezzzzzzzzzz\n\n\n";
     vx_status vxstatus;
     RppStatus rpp_status = RPP_SUCCESS;
     vx_status return_status = VX_SUCCESS;
@@ -427,6 +428,7 @@ static vx_status VX_CALLBACK initializeResize(vx_node node, const vx_reference *
     data->resize_h = (vx_uint32 *)malloc(sizeof(vx_uint32) * data->src_desc_ptr->n);
 
     refreshResize(node, parameters, num, data);
+    std::cerr<<"endof initailize\n\n";
 #if ENABLE_OPENCL
     if (data->device_type == AGO_TARGET_AFFINITY_GPU)
         rppCreateWithStreamAndBatchSize(&data->rppHandle, data->handle.cmdq, data->nbatchSize);

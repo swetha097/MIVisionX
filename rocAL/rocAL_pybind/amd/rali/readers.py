@@ -57,4 +57,3 @@ def tfrecord(*inputs, path, user_feature_key_map, features, index_path="", reade
     features["image/class/label"] = labels
     return features
 
-

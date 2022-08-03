@@ -141,13 +141,15 @@ namespace rali
                 )code")
             .def(
                 "copy_data", [](rocALTensor &output_tensor, py::object p) {
+                    std::cerr << "COOPY DATA PY";
                     auto ptr = ctypes_void_ptr(p);
                     output_tensor.copy_data(ptr, 0);
                 })
             .def("copy_data", [](rocALTensor &output_tensor, py::array_t<unsigned char> array) {
                 auto buf = array.request();
                 unsigned char *ptr = (unsigned char *)buf.ptr;
-                output_tensor.copy_data(ptr, 0);
+                std::cerr << "COOPpppY DATA PY";
+                output_tensor.copy_data((void *)ptr, 0);
             })
             .def(
                 "at", [](rocALTensor &output_tensor, uint idx) {
@@ -280,13 +282,13 @@ namespace rali
         m.def("isEmpty", &rocalIsEmpty);
         m.def("getStatus", rocalGetStatus);
         m.def("rocalGetErrorMessage", &rocalGetErrorMessage);
-        m.def("rocalGetTimingInfo", &rocalGetTimingInfo);
+        m.def("getTimingInfo", &rocalGetTimingInfo);
         m.def("setOutputImages", &rocalSetOutputs);
         m.def("labelReader", &rocalCreateLabelReader, py::return_value_policy::reference);
         m.def("COCOReader", &rocalCreateCOCOReader, py::return_value_policy::reference);
         // rocal_api_meta_data.h
-        // m.def("TFReader",&rocalCreateTFReader);
-        // m.def("TFReaderDetection",&rocalCreateTFReaderDetection);
+        m.def("TFReader",&rocalCreateTFReader);
+        m.def("TFReaderDetection",&rocalCreateTFReaderDetection);
 
         m.def("RandomBBoxCrop", &rocalRandomBBoxCrop);
         m.def("BoxEncoder",&rocalBoxEncoder);
@@ -419,6 +421,20 @@ namespace rali
         m.def("FusedDecoderCropShard",&rocalFusedJpegCropSingleShard,"Reads file from the source and decodes them partially to output random crops",
             py::return_value_policy::reference);
         m.def("COCO_ImageDecoderSliceShard",&rocalJpegCOCOFileSourcePartialSingleShard,"Reads file from the source given and decodes it according to the policy");
+        m.def("TF_ImageDecoder",&rocalJpegTFRecordSource,"Reads file from the source given and decodes it according to the policy only for TFRecords",
+            py::return_value_policy::reference,
+            py::arg("p_context"),
+            py::arg("source_path"),
+            py::arg("rocal_color_format"),
+            py::arg("internal_shard_count"),
+            py::arg("is_output"),
+            py::arg("user_key_for_encoded"),
+            py::arg("user_key_for_filename"),
+            py::arg("shuffle") = false,
+            py::arg("loop") = false,
+            py::arg("decode_size_policy") = ROCAL_USE_MOST_FREQUENT_SIZE,
+            py::arg("max_width") = 0,
+            py::arg("max_height") = 0);
         m.def("Resize",&rocalResize, "Resizes the image ",py::return_value_policy::reference);
         m.def("ColorTwist",&rocalColorTwist, py::return_value_policy::reference);
         m.def("rocalResetLoaders", &rocalResetLoaders);

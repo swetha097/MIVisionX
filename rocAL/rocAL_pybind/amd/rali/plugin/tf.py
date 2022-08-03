@@ -223,7 +223,7 @@ class RALIGenericImageIterator(object):
         return self.out_image , self.out_tensor
 
     def reset(self):
-        b.raliResetLoaders(self.loader._handle)
+        b.rocalResetLoaders(self.loader._handle)
 
     def __iter__(self):
         return self
@@ -236,8 +236,12 @@ class RALIGenericIteratorDetection(object):
         self.offset = offset
         self.reverse_channels = reverse_channels
         self.tensor_dtype = tensor_dtype
+        print("INIT THE ITERATOR!!!!")
+        self.len = b.getRemainingImages(self.loader._handle)
+        print(self.len)
+        if self.loader._name is None:
+            self.loader._name = self.loader._reader
         
-        self.labels = np.zeros((self.bs),dtype = "unit8")
 
     def next(self):
         return self.__next__()
@@ -251,33 +255,39 @@ class RALIGenericIteratorDetection(object):
             print("Transfer time ::",timing_info.transfer_time)
             raise StopIteration
 
-        if self.loader.run() != 0:
+        if self.loader.rocalRun() != 0:
             raise StopIteration
         else:
             self.output_tensor_list = self.loader.rocalGetOutputTensors()
 
         print(self.output_tensor_list)
         self.augmentation_count = len(self.output_tensor_list)
-        # print("AUG COUNT", self.augmentation_count)
+        print("AUG COUNT", self.augmentation_count)
         self.w = self.output_tensor_list[0].batch_width()
         self.h = self.output_tensor_list[0].batch_height()
         self.batch_size = self.output_tensor_list[0].batch_size()
+        
         print("\n Batch Size",self.batch_size)
         self.color_format = self.output_tensor_list[0].color_format()
         print(self.color_format)
-        print(self.batch_size * self.h * self.color_format * self.w)
-        
-        self.out = np.zeros(( self.bs*self.n, self.p, int(self.h/self.bs), self.w,), dtype = "float32")
+        print(self.batch_size , self.h , self.color_format , self.w)
+        self.out = np.zeros(( self.batch_size * self.augmentation_count, self.color_format, self.h, self.w))
         # self.output = torch.empty((self.batch_size, self.h, self.w, self.color_format,), dtype=torch.uint8)
         # self.out = torch.permute(self.output, (0,3,1,2))
-        
-        if (self.loader._name == "TFRecordReaderClassification"):
-            self.output_tensor_list[0].copy_data( self.out)
-            self.labels = self.loader.rocalGetImageLabels()#numpy
+        if(self.loader._name == "TFRecordReaderDetection"):
+            print("DETECTION ITERATOR")
+            
+            pass
+        elif (self.loader._name == "TFRecordReaderClassification"):
+            print("CLASSIFICATION ITERATOR")
+            print(self.output_tensor_list)
+            
+            self.output_tensor_list[0].copy_data(self.out)
+            # self.labels = self.loader.rocalGetImageLabels()#numpy
             # self.labels_tensor = torch.from_numpy(self.labels).type(torch.LongTensor)
-            return (self.out.astype(np.unit8)), self.labels
+            return (self.out.astype(np))
     def reset(self):
-        b.raliResetLoaders(self.loader._handle)
+        b.rocalResetLoaders(self.loader._handle)
 
     def __iter__(self):
         return self
