@@ -198,7 +198,8 @@ class Pipeline(object):
 
     def set_outputs(self, *output_list):
         self._output_list_length = len(output_list)
-        b.setOutputImages(self._handle,len(output_list),output_list)
+        print('OUT LIST LEN : ', len(output_list))
+        b.setOutputImages(self._handle, len(output_list), output_list)
 
     def __enter__(self):
         Pipeline._current_pipeline = self
@@ -298,6 +299,15 @@ class Pipeline(object):
     def Timing_Info(self):
         return b.getTimingInfo(self._handle)
 
+    def rocalGetImageLabels(self):
+        return b.rocalGetImageLabels(self._handle)
+
+    def copy_out_data_ptr(self, data_ptr):
+        return b.copy_data_ptr(self._handle, data_ptr)
+
+    def rocalGetOutputTensors(self):
+        return b.rocalGetOutputTensors(self._handle)
+
     def run(self):
         """
         It rises StopIteration if data set reached its end.
@@ -306,8 +316,11 @@ class Pipeline(object):
         A list of `rocALTensorList` objects for respective pipeline outputs.
         """
         try:
+            print("getRemainingImages :", self.getRemainingImages())
             if self.getRemainingImages() > 0:
                 self.rocalRun()
                 return b.rocalGetOutputTensors(self._handle)
         except:
-            raise StopIteration
+                print("Raise stop iter")
+                raise StopIteration
+

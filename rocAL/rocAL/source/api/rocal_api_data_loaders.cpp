@@ -525,7 +525,6 @@ rocalFusedJpegCrop(
         dims[1] = height;
         dims[2] = width;
         dims[3] = num_of_planes;
-        std::cerr<<"\n dims"<<dims[0]<<dims[1]<<dims[2]<<dims[3];
         auto info  = rocALTensorInfo(num_of_dims,
                                 std::vector<unsigned>(std::move(dims)),
                                 context->master_graph->mem_type(),
@@ -951,7 +950,6 @@ rocalAudioFileSource(
         // TODO: Add evaluate_audio_data_set function to get the largest audio sample length in a batch
         auto [max_frames, max_channels] = evaluate_audio_data_set(StorageType::FILE_SYSTEM, DecoderType::SNDFILE,
                                                        source_path, "");
-        std::cerr<<"\n Completed the evaluation of audio data set max_frame:: "<<max_frames<<"\t max_channels ::"<<max_channels;
         INFO("Internal buffer size for audio frames = "+ TOSTR(max_frames))
 
         // RocalTensorlayout tensor_format = RocalTensorlayout::NONE;
@@ -970,7 +968,6 @@ rocalAudioFileSource(
         info.set_tensor_layout(RocalTensorlayout::NONE);
         // std::cerr<<"\n Created tensor info with max samples and max channels:: "<<max_frames<<"\t max_channels ::"<<max_channels;
         output = context->master_graph->create_loader_output_tensor(info);
-        std::cerr<<"\n Created output tensor with max samples and max channels:: "<<max_frames<<"\t max_channels ::"<<max_channels;
         // TODO: Add a loader module for loading audio files from filesystem
         context->master_graph->add_node<AudioLoaderNode>({}, {output})->init(internal_shard_count,
                                                                             source_path,
@@ -983,7 +980,6 @@ rocalAudioFileSource(
                                                                             context->master_graph->meta_data_reader()
                                                                             );
         context->master_graph->set_loop(loop);
-        std::cerr<<"\n add node of audio reader";
         if(is_output)
         {
             auto actual_output = context->master_graph->create_tensor(info, is_output);

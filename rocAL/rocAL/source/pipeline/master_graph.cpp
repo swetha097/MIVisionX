@@ -1121,13 +1121,15 @@ MasterGraph::get_bbox_encoded_buffers(size_t num_encoded_boxes)
         auto encoded_boxes_and_lables = _ring_buffer.get_box_encode_read_buffers();
         unsigned char *boxes_buf_ptr = (unsigned char *) encoded_boxes_and_lables.first;
         unsigned char *labels_buf_ptr = (unsigned char *) encoded_boxes_and_lables.second;
+        auto labels_tensor_dims = _ring_buffer.get_meta_data_info().second.first.bb_labels_dims();
+        auto bbox_tensor_dims = _ring_buffer.get_meta_data_info().second.first.bb_cords_dims();
 
         if(_bbox_tensor_list.size() != _labels_tensor_list.size())
             THROW("The number of tensors between bbox and bbox_labels do not match")
         for(unsigned i = 0; i < _bbox_tensor_list.size(); i++)
         {
-            _labels_tensor_list[i]->set_dims(_labels_tensor_dims[i]);
-            _bbox_tensor_list[i]->set_dims(_bbox_tensor_dims[i]);
+            _labels_tensor_list[i]->set_dims(labels_tensor_dims[i]);
+            _bbox_tensor_list[i]->set_dims(bbox_tensor_dims[i]);
             _labels_tensor_list[i]->set_mem_handle((void *)labels_buf_ptr);
             _bbox_tensor_list[i]->set_mem_handle((void *)boxes_buf_ptr);
             labels_buf_ptr += _labels_tensor_list[i]->info().data_size();

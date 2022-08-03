@@ -289,7 +289,7 @@ int test(int test_case, int reader_type, int pipeline_type, const char *path, co
     case 1:
     {
         std::cout << ">>>>>>> Running "
-                  << "Brightness" << std::endl;
+                  << "rocalBrightness" << std::endl;
         image1 = rocalBrightness(handle, input1, true);
     }
     break;
@@ -304,19 +304,18 @@ int test(int test_case, int reader_type, int pipeline_type, const char *path, co
     {
          std::cout << ">>>>>>> Running "
                   << "rocalcrop" << std::endl;
-        // image1 = rocalCrop(handle, input1, true, tensorLayout, tensorOutputType, resize_w, resize_h, 0, 0, 0);
+        image1 = rocalCrop(handle, input1, tensorLayout, tensorOutputType,true);
 
     }
     break;
+    case 51:
+    {
+         std::cout << ">>>>>>> Running "
+        image1 = rocalCropFixed(handle, input1, tensorLayout, tensorOutputType, 3, resize_w, resize_h, 0, 0, 0,true);
+    }
     case 50:
     {
         std::cout << ">>>>>>> Running "
-                  << "rocalColorTwist" << std::endl;
-        image1 = rocalColorTwist(handle, input1, tensorLayout, tensorOutputType, true);
-    }
-    break;
-    default:
-        std::cout << "Not a valid option! Exiting!\n";
         return -1;
     }
 

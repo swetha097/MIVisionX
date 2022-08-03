@@ -216,7 +216,7 @@ static vx_status VX_CALLBACK processCropMirrorNormalize(vx_node node, const vx_r
         refreshCropMirrorNormalize(node, parameters, num, data);
         rpp_status = rppt_crop_mirror_normalize_gpu((void *)data->hip_pSrc, data->src_desc_ptr, (void *)data->hip_pDst, data->dst_desc_ptr,data->mean,data->std_dev,
                                                      data->mirror, data->hip_roi_tensor_Ptr, data->roiType, data->rppHandle);
-        
+
         return_status = (rpp_status == RPP_SUCCESS) ? VX_SUCCESS : VX_FAILURE;
 #endif
     }
@@ -370,7 +370,6 @@ static vx_status VX_CALLBACK initializeCropMirrorNormalize(vx_node node, const v
     }
     else if(data->layout == 3)// NFCHW
     {
-
         data->src_desc_ptr->n = data->in_tensor_dims[0] * data->in_tensor_dims[1];
         data->src_desc_ptr->h = data->in_tensor_dims[3];
         data->src_desc_ptr->w = data->in_tensor_dims[4];
@@ -389,7 +388,7 @@ static vx_status VX_CALLBACK initializeCropMirrorNormalize(vx_node node, const v
         data->dst_desc_ptr->strides.hStride = data->dst_desc_ptr->c * data->dst_desc_ptr->w;
         data->dst_desc_ptr->strides.wStride = data->dst_desc_ptr->c;
         data->dst_desc_ptr->strides.cStride = 1;
-        data->dst_desc_ptr->layout = RpptLayout::NCHW; 
+        data->dst_desc_ptr->layout = RpptLayout::NCHW;
     }
 
 #if ENABLE_HIP

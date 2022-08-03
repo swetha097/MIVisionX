@@ -263,6 +263,7 @@ static vx_status VX_CALLBACK initializeColorTwist(vx_node node, const vx_referen
         data->dst_desc_ptr->dataType = RpptDataType::I8;
     }
     data->src_desc_ptr->offsetInBytes = 0;
+    data->dst_desc_ptr->offsetInBytes = 0;
 
     if(data->layout == 0) // NHWC
     {

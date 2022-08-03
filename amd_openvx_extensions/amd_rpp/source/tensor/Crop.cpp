@@ -134,13 +134,11 @@ static vx_status VX_CALLBACK refreshCrop(vx_node node, const vx_reference *param
         }
         else if (data->in_tensor_type == vx_type_e::VX_TYPE_INT8 && data->out_tensor_type == vx_type_e::VX_TYPE_INT8)
         {
-
             STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[0], VX_TENSOR_BUFFER_HOST, &data->pSrc, sizeof(vx_int8)));
             STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[2], VX_TENSOR_BUFFER_HOST, &data->pDst, sizeof(vx_int8)));
         }
         else if (data->in_tensor_type == vx_type_e::VX_TYPE_UINT8 && data->out_tensor_type == vx_type_e::VX_TYPE_FLOAT32)
         {
-
             STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[0], VX_TENSOR_BUFFER_HOST, &data->pSrc, sizeof(vx_uint8)));
             STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[2], VX_TENSOR_BUFFER_HOST, &data->pDst, sizeof(vx_float32)));
         }
@@ -200,7 +198,7 @@ static vx_status VX_CALLBACK processCrop(vx_node node, const vx_reference *param
     vx_status return_status = VX_SUCCESS;
     CropLocalData *data = NULL;
     STATUS_ERROR_CHECK(vxQueryNode(node, VX_NODE_LOCAL_DATA_PTR, &data, sizeof(data)));
-   
+
     Rpp32u N, C;
     N = data->nbatchSize;
     C = data->channels;
@@ -403,7 +401,7 @@ static vx_status VX_CALLBACK initializeCrop(vx_node node, const vx_reference *pa
     return VX_SUCCESS;
 }
 
-   
+
 
 static vx_status VX_CALLBACK uninitializeCrop(vx_node node, const vx_reference *parameters, vx_uint32 num)
 {
