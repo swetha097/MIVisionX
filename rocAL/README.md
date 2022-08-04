@@ -94,4 +94,4 @@ sudo apt-get install libgflags-dev libgoogle-glog-dev liblmdb-dev
 ## Sample and test applications
 
 *  [Image augmentation application](../apps/image_augmentation) demonstrates how rocAL's C API can be used to load jpeg images from the disk, decode them and augment the loaded images with a variety of modifications.
-*  [Augmentation unit tests](../utilities/rali/rali_unittests) can be used to test rocAL's API individually.
+*  [Augmentation unit tests](../utilities/rocAL/rocAL_unittests) can be used to test rocAL's API individually.
