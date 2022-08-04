@@ -58,7 +58,6 @@ void
 AudioSourceEvaluator::find_max_dimension()
 {
     _reader->reset();
-    std::cerr<<"\n _reader->count() "<<_reader->count_items();
 
     while( _reader->count_items() )
     {

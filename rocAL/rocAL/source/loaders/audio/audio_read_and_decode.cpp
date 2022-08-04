@@ -128,8 +128,6 @@ AudioReadAndDecode::load(float* buff,
     // const auto ret = interpret_color_format(output_color_format);
     // const Decoder::ColorFormat decoder_color_format = std::get<0>(ret);
     const size_t audio_size = max_decoded_samples * max_decoded_channels;
-    std::cerr<<"\n max_decoded_samples * max_decoded_channels * sizeof(float) :: "<<max_decoded_samples<<"\t "<<max_decoded_channels<<"\t "<<sizeof(float);
-    std::cerr<<"\n audio size :: "<<audio_size;
     // exit(0);
     // Decode with the channels and size equal to a single audio
     // File read is done serially since I/O parallelization does not work very well.

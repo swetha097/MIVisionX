@@ -82,14 +82,10 @@ static vx_status VX_CALLBACK refreshCrop(vx_node node, const vx_reference *param
     STATUS_ERROR_CHECK(vxReadScalarValue((vx_scalar)parameters[9], &data->chnShift));
     for(int i = 0; i < data->nbatchSize; i++)
     {
-        // data->roi_tensor_Ptr[i].xywhROI.xy.x = data->start_x[i];
-        // data->roi_tensor_Ptr[i].xywhROI.xy.y = data->start_y[i];
-        // data->roi_tensor_Ptr[i].xywhROI.roiWidth =data->crop_w[i];
-        // data->roi_tensor_Ptr[i].xywhROI.roiHeight =data->crop_h[i];
-        data->roi_tensor_Ptr[i].ltrbROI.lt.x = data->start_x[i];
-        data->roi_tensor_Ptr[i].ltrbROI.lt.y = data->start_y[i];
-        data->roi_tensor_Ptr[i].ltrbROI.rb.x = data->start_x[i] + data->crop_w[i];
-        data->roi_tensor_Ptr[i].ltrbROI.rb.y = data->start_y[i] + data->crop_h[i];
+        data->roi_tensor_Ptr[i].xywhROI.xy.x = data->start_x[i];
+        data->roi_tensor_Ptr[i].xywhROI.xy.y = data->start_y[i];
+        data->roi_tensor_Ptr[i].xywhROI.roiWidth =data->crop_w[i];
+        data->roi_tensor_Ptr[i].xywhROI.roiHeight =data->crop_h[i];
     }
     if(data->layout == 2 || data->layout == 3)
     {
@@ -103,10 +99,11 @@ static vx_status VX_CALLBACK refreshCrop(vx_node node, const vx_reference *param
                 data->crop_w[index + f] = data->crop_w[n];
                 data->start_x[index + f] = data->start_x[n];
                 data->start_y[index + f] = data->start_y[n];
-                data->roi_tensor_Ptr[index + f].ltrbROI.lt.x = data->roi_tensor_Ptr[n].ltrbROI.lt.x;
-                data->roi_tensor_Ptr[index + f].ltrbROI.lt.y = data->roi_tensor_Ptr[n].ltrbROI.lt.y;
-                data->roi_tensor_Ptr[index + f].ltrbROI.rb.x = data->roi_tensor_Ptr[n].ltrbROI.rb.x;
-                data->roi_tensor_Ptr[index + f].ltrbROI.rb.y = data->roi_tensor_Ptr[n].ltrbROI.rb.y;
+                // TODO - TO BE CHANGED TO XYWH FORMAT
+                data->roi_tensor_Ptr[index + f].xywhROI.xy.x = data->roi_tensor_Ptr[n].xywhROI.xy.x;
+                data->roi_tensor_Ptr[index + f].xywhROI.xy.y = data->roi_tensor_Ptr[n].xywhROI.xy.y;
+                data->roi_tensor_Ptr[index + f].xywhROI.roiWidth = data->roi_tensor_Ptr[n].xywhROI.roiWidth;
+                data->roi_tensor_Ptr[index + f].xywhROI.roiHeight = data->roi_tensor_Ptr[n].xywhROI.roiHeight;
             }
         }
     }
@@ -137,13 +134,11 @@ static vx_status VX_CALLBACK refreshCrop(vx_node node, const vx_reference *param
         }
         else if (data->in_tensor_type == vx_type_e::VX_TYPE_INT8 && data->out_tensor_type == vx_type_e::VX_TYPE_INT8)
         {
-
             STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[0], VX_TENSOR_BUFFER_HOST, &data->pSrc, sizeof(vx_int8)));
             STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[2], VX_TENSOR_BUFFER_HOST, &data->pDst, sizeof(vx_int8)));
         }
         else if (data->in_tensor_type == vx_type_e::VX_TYPE_UINT8 && data->out_tensor_type == vx_type_e::VX_TYPE_FLOAT32)
         {
-
             STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[0], VX_TENSOR_BUFFER_HOST, &data->pSrc, sizeof(vx_uint8)));
             STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[2], VX_TENSOR_BUFFER_HOST, &data->pDst, sizeof(vx_float32)));
         }
@@ -203,7 +198,7 @@ static vx_status VX_CALLBACK processCrop(vx_node node, const vx_reference *param
     vx_status return_status = VX_SUCCESS;
     CropLocalData *data = NULL;
     STATUS_ERROR_CHECK(vxQueryNode(node, VX_NODE_LOCAL_DATA_PTR, &data, sizeof(data)));
-   
+
     Rpp32u N, C;
     N = data->nbatchSize;
     C = data->channels;
@@ -211,11 +206,11 @@ static vx_status VX_CALLBACK processCrop(vx_node node, const vx_reference *param
     {
 #if ENABLE_OPENCL
         refreshCrop(node, parameters, num, data);
-        rpp_status = rppt_crop_gpu((void *)data->cl_pSrc, data->src_desc_ptr, (void *)data->cl_pDst, data->src_desc_ptr, data->roi_tensor_Ptr, data->roiType, data->rppHandle);
+        rpp_status = rppt_crop_gpu((void *)data->cl_pSrc, data->src_desc_ptr, (void *)data->cl_pDst, data->dst_desc_ptr, data->roi_tensor_Ptr, data->roiType, data->rppHandle);
         return_status = (rpp_status == RPP_SUCCESS) ? VX_SUCCESS : VX_FAILURE;
 #elif ENABLE_HIP
         refreshCrop(node, parameters, num, data);
-        rpp_status = rppt_crop_gpu((void *)data->hip_pSrc, data->src_desc_ptr, (void *)data->hip_pDst, data->src_desc_ptr, data->hip_roi_tensor_Ptr, data->roiType, data->rppHandle);
+        rpp_status = rppt_crop_gpu((void *)data->hip_pSrc, data->src_desc_ptr, (void *)data->hip_pDst, data->dst_desc_ptr, data->hip_roi_tensor_Ptr, data->roiType, data->rppHandle);
         return_status = (rpp_status == RPP_SUCCESS) ? VX_SUCCESS : VX_FAILURE;
 #endif
     }
@@ -246,10 +241,10 @@ static vx_status VX_CALLBACK initializeCrop(vx_node node, const vx_reference *pa
     STATUS_ERROR_CHECK(vxReadScalarValue((vx_scalar)parameters[12], &data->nbatchSize));
     STATUS_ERROR_CHECK(vxCopyScalar((vx_scalar)parameters[10], &data->layout, VX_READ_ONLY, VX_MEMORY_TYPE_HOST));
     STATUS_ERROR_CHECK(vxCopyScalar((vx_scalar)parameters[11], &roiType, VX_READ_ONLY, VX_MEMORY_TYPE_HOST));
-    if(roiType == 1)
+    // if(roiType == 1)
         data->roiType = RpptRoiType::XYWH;
-    else
-        data->roiType = RpptRoiType::LTRB;
+    // else
+        // data->roiType = RpptRoiType::LTRB;
 
     // Querying for input tensor
     data->src_desc_ptr = &data->srcDesc;
@@ -406,7 +401,7 @@ static vx_status VX_CALLBACK initializeCrop(vx_node node, const vx_reference *pa
     return VX_SUCCESS;
 }
 
-   
+
 
 static vx_status VX_CALLBACK uninitializeCrop(vx_node node, const vx_reference *parameters, vx_uint32 num)
 {

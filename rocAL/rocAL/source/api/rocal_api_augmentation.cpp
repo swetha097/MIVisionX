@@ -31,6 +31,9 @@ THE SOFTWARE.
 #include "node_copy.h"
 #include "node_nop.h"
 #include "meta_node_crop_mirror_normalize.h"
+#include "node_resize.h"
+#include "node_crop.h"
+
 #include "meta_node_resize.h"
 #include "meta_node_crop.h"
 #include "meta_node_ssd_random_crop.h"
@@ -154,7 +157,6 @@ rocalCopyTensor(
 //     return output;
 // }
 
-
 RocalTensor ROCAL_API_CALL
 rocalCrop(RocalContext p_context,
           RocalTensor p_input,
@@ -168,7 +170,6 @@ rocalCrop(RocalContext p_context,
           RocalFloatParam p_crop_pos_y,
           RocalFloatParam p_crop_pos_z)
 {
-    std::cerr<<"in crop augmentation\n\n\n";
     rocALTensor* output = nullptr;
     auto context = static_cast<Context*>(p_context);
     auto input = static_cast<rocALTensor*>(p_input);
@@ -532,7 +533,7 @@ rocalResizeShorter(
         std::shared_ptr<ResizeShorterNode> resize_node =  context->master_graph->add_node<ResizeShorterNode>({input}, {output});
         resize_node->init(size);
         // if (context->master_graph->meta_data_graph())
-        //     context->master_graph->meta_add_node<ResizeMetaNode,ResizeSingleParamNode>(resize_node);
+        //     context->master_graph->meta_add_node<ResizeMetaNode,ResizeShorterNode>(resize_node);
     }
     catch(const std::exception& e)
     {
