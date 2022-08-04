@@ -315,6 +315,15 @@ int test(int test_case, int reader_type, int pipeline_type, const char *path, co
         image1 = rocalColorTwist(handle, input1, tensorLayout, tensorOutputType, true);
     }
     break;
+    case 10:
+    {
+        std::vector<float> mean{0, 0, 0};
+        std::vector<float> sdev{1, 1, 1};
+        std::cout << ">>>>>>> Running "
+                  << " Resize Mirror Normalize " << std::endl;
+        image1 = rocalResizeMirrorNormalize(handle, input1, tensorLayout, tensorOutputType, 3,resize_w , resize_h, 0, mean, sdev,true);
+        break;
+    }
     default:
         std::cout << "Not a valid option! Exiting!\n";
         return -1;

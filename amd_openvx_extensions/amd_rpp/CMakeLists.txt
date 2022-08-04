@@ -137,6 +137,7 @@ list(APPEND SOURCES
         source/tensor/Resize.cpp
         source/tensor/Crop.cpp
         source/tensor/ColorTwist.cpp
+        source/tensor/ResizeMirrorNormalize.cpp
 
 
 

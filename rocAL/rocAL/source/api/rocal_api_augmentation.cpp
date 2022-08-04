@@ -34,6 +34,8 @@ THE SOFTWARE.
 #include "meta_node_resize.h"
 #include "meta_node_crop.h"
 #include "meta_node_ssd_random_crop.h"
+#include "node_resize_mirror_normalize.h"
+
 
 #include "commons.h"
 #include "context.h"
@@ -213,6 +215,54 @@ rocalCrop(RocalContext p_context,
     }
     return output; // Changed to input----------------IMPORTANT
 }
+
+//resizemirrornormalize
+RocalTensor
+ROCAL_API_CALL rocalResizeMirrorNormalize(RocalContext p_context, 
+                                          RocalTensor p_input,
+                                          RocalTensorLayout rocal_tensor_layout,
+                                          RocalTensorOutputType rocal_tensor_output_type,
+                                          unsigned resize_depth,
+                                          unsigned resize_height,
+                                          unsigned resize_width,
+                                          int interpolation_type,
+                                          std::vector<float> &mean,
+                                          std::vector<float> &std_dev,
+                                          bool is_output,
+                                          RocalIntParam p_mirror)
+{
+    rocALTensor* output = nullptr;
+    auto context = static_cast<Context*>(p_context);
+    auto input = static_cast<rocALTensor*>(p_input);
+    auto mirror = static_cast<IntParam *>(p_mirror);
+    RocalTensorlayout op_tensorLayout;
+    RocalTensorDataType op_tensorDataType;
+    try
+    {
+        if(!input || !context || resize_width == 0 || resize_height == 0)
+            THROW("Null values passed as input")
+        int layout=0;
+        get_rocal_tensor_layout(rocal_tensor_layout, op_tensorLayout, layout);
+        get_rocal_tensor_data_type(rocal_tensor_output_type, op_tensorDataType);
+        rocALTensorInfo output_info = input->info();
+        output_info.set_tensor_layout(op_tensorLayout);
+        output_info.set_data_type(op_tensorDataType);
+
+        output_info.set_width(resize_width);
+        output_info.set_height(resize_height);
+        output = context->master_graph->create_tensor(output_info, is_output);
+        output->reset_tensor_roi();
+        context->master_graph->add_node<ResizeMirrorNormalizeNode>({input}, {output})->init( interpolation_type, mean,std_dev , mirror, layout);
+    }
+    catch(const std::exception& e)
+    {
+        context->capture_error(e.what());
+        ERR(e.what());
+    }
+
+    return output; // Changed to input----------------IMPORTANT
+}
+
 
 RocalTensor  ROCAL_API_CALL
 rocalCropFixed(
