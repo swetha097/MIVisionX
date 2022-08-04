@@ -86,7 +86,7 @@ Decoder::Status FusedCropTJDecoder::decode(unsigned char *input_buffer, size_t i
     // You need get the output of random bbox crop
     // check the vector size for bounding box. If its more than zero go for random bbox crop
     // else go to random crop
-    unsigned int crop_width, crop_height, x1, y1, x1_diff, crop_width_diff;
+    unsigned int crop_width, crop_height, x1 = 0, y1 = 0, x1_diff, crop_width_diff;
     if(_bbox_coord.size() != 0)
     {
         // Random bbox crop returns normalized crop cordinates
