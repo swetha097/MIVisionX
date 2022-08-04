@@ -126,7 +126,6 @@ extern "C" RocalTensorList ROCAL_API_CALL rocalGetBoundingBoxCords(RocalContext 
 /// \param buf The user's buffer that will be filled with bounding box info. It needs to be of size bounding box len returned by a call to the rocalGetBoundingBoxCount
 extern "C" void ROCAL_API_CALL rocalGetImageSizes(RocalContext rocal_context, int* buf );
 
-#if 0 // Commented for now
 ///
 /// \param rocal_context
 /// \param buf The user's buffer that will be filled with number of object in the images.

@@ -1121,8 +1121,8 @@ MasterGraph::get_bbox_encoded_buffers(size_t num_encoded_boxes)
         auto encoded_boxes_and_lables = _ring_buffer.get_box_encode_read_buffers();
         unsigned char *boxes_buf_ptr = (unsigned char *) encoded_boxes_and_lables.first;
         unsigned char *labels_buf_ptr = (unsigned char *) encoded_boxes_and_lables.second;
-        auto labels_tensor_dims = _ring_buffer.get_meta_data_info().second.first.bb_labels_dims();
-        auto bbox_tensor_dims = _ring_buffer.get_meta_data_info().second.first.bb_cords_dims();
+        auto labels_tensor_dims = _ring_buffer.get_meta_data_info().bb_labels_dims();
+        auto bbox_tensor_dims = _ring_buffer.get_meta_data_info().bb_cords_dims();
 
         if(_bbox_tensor_list.size() != _labels_tensor_list.size())
             THROW("The number of tensors between bbox and bbox_labels do not match")
