@@ -145,7 +145,7 @@ namespace rali
                     auto ptr = ctypes_void_ptr(p);
                     output_tensor.copy_data(ptr, 0);
                 })
-            .def("copy_data", [](rocALTensor &output_tensor, py::array_t<unsigned char> array) {
+            .def("copy_data_numpy", [](rocALTensor &output_tensor, py::array_t<unsigned char> array) {
                 auto buf = array.request();
                 unsigned char *ptr = (unsigned char *)buf.ptr;
                 std::cerr << "COOPpppY DATA PY";

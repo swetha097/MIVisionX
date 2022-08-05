@@ -254,7 +254,7 @@ class RALIGenericIteratorDetection(object):
             print("Process  time ::",timing_info.process_time)
             print("Transfer time ::",timing_info.transfer_time)
             raise StopIteration
-
+        print("IN NEXT FUNCTION !!!")
         if self.loader.rocalRun() != 0:
             raise StopIteration
         else:
@@ -282,10 +282,10 @@ class RALIGenericIteratorDetection(object):
             print("CLASSIFICATION ITERATOR")
             print(self.output_tensor_list)
             
-            self.output_tensor_list[0].copy_data(self.out)
-            # self.labels = self.loader.rocalGetImageLabels()#numpy
+            self.output_tensor_list[0].copy_data_numpy(self.out)
+            self.labels = self.loader.rocalGetImageLabels()#numpy
             # self.labels_tensor = torch.from_numpy(self.labels).type(torch.LongTensor)
-            return (self.out.astype(np))
+            return (self.out.astype(np)),self.labels
     def reset(self):
         b.rocalResetLoaders(self.loader._handle)
 

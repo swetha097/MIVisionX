@@ -49,6 +49,10 @@ if(GPU_SUPPORT)
     find_package(HIP QUIET)
     if(HIP_FOUND)
         message(STATUS "Found HIP: " ${HIP_PATH} " version: " ${HIP_VERSION})
+        message("-- ${Yellow}rocAL pybind requires HIP, FFFFound${ColourReset}")
+        execute_process(COMMAND ${CMAKE_COMMAND} -E cmake_echo_color --red --bold hello)
+
+
     else()
         message("-- ${Yellow}rocAL pybind requires HIP, Not Found${ColourReset}")
     endif()

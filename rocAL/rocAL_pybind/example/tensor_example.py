@@ -120,7 +120,7 @@ def main():
                                             # image_type=types.RGB,
                                             # mean=[0.485 * 255,0.456 * 255,0.406 * 255],
                                             # std=[0.229 * 255,0.224 * 255,0.225 * 255])
-        brightend_images = fn.color_temp(decode, rocal_tensor_layout=types.NHWC, rocal_tensor_output_type=types.UINT8)
+        brightend_images = fn.flip(decode, rocal_tensor_layout=types.NHWC, rocal_tensor_output_type=types.UINT8)
         
         image_classification_val_pipeline.set_outputs(brightend_images)
 
