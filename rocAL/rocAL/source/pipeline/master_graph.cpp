@@ -31,6 +31,7 @@ THE SOFTWARE.
 #include "parameter_factory.h"
 #include "ocl_setup.h"
 #include "log.h"
+#include <omp.h>
 #include "meta_data_reader_factory.h"
 #include "meta_data_graph_factory.h"
 #include "randombboxcrop_meta_data_reader_factory.h"
@@ -683,7 +684,8 @@ MasterGraph::copy_out_tensor(void *out_ptr, RocalTensorFormat format, float mult
         for( auto&& out_image: output_buffers)
         {
             unsigned int single_image_size = w * c * h;
-            #pragma omp parallel for
+            omp_set_dynamic(0);
+            #pragma omp parallel for num_threads(8)
             for(unsigned int batchCount = 0; batchCount < n; batchCount ++)
             {
                 size_t dest_buf_offset = dest_buf_offset_start + single_image_size*batchCount;
