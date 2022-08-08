@@ -263,29 +263,26 @@ class RALIGenericIteratorDetection(object):
         print(self.output_tensor_list)
         self.augmentation_count = len(self.output_tensor_list)
         print("AUG COUNT", self.augmentation_count)
-        self.w = self.output_tensor_list[0].batch_width()
-        self.h = self.output_tensor_list[0].batch_height()
-        self.batch_size = self.output_tensor_list[0].batch_size()
+        self.w = self.output_tensor_list[0].batch_width() #2000
+        self.h = self.output_tensor_list[0].batch_height()  #2000
+        self.batch_size = self.output_tensor_list[0].batch_size()  # 1
         
-        print("\n Batch Size",self.batch_size)
-        self.color_format = self.output_tensor_list[0].color_format()
+        self.color_format = self.output_tensor_list[0].color_format()  # 3
         print(self.color_format)
         print(self.batch_size , self.h , self.color_format , self.w)
-        self.out = np.zeros(( self.batch_size * self.augmentation_count, self.color_format, self.h, self.w))
+        self.out = np.zeros(( self.batch_size * self.augmentation_count, self.h, self.w, self.color_format),dtype="uint8")
         # self.output = torch.empty((self.batch_size, self.h, self.w, self.color_format,), dtype=torch.uint8)
         # self.out = torch.permute(self.output, (0,3,1,2))
         if(self.loader._name == "TFRecordReaderDetection"):
             print("DETECTION ITERATOR")
-            
             pass
         elif (self.loader._name == "TFRecordReaderClassification"):
             print("CLASSIFICATION ITERATOR")
             print(self.output_tensor_list)
-            
             self.output_tensor_list[0].copy_data_numpy(self.out)
             self.labels = self.loader.rocalGetImageLabels()#numpy
             # self.labels_tensor = torch.from_numpy(self.labels).type(torch.LongTensor)
-            return (self.out.astype(np)),self.labels
+            return (self.out),self.labels
     def reset(self):
         b.rocalResetLoaders(self.loader._handle)
 

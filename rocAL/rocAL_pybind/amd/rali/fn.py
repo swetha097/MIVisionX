@@ -11,7 +11,7 @@ from amd.rali.pipeline import Pipeline
 
 
 def brightness(*inputs, brightness=1.0, bytes_per_sample_hint=0, image_type=0,
-               preserve=False, seed=-1, device=None, rocal_tensor_layout =types.NCHW, rocal_tensor_output_type = types.FLOAT):
+               preserve=False, seed=-1, device=None, rocal_tensor_layout =types.NHWC, rocal_tensor_output_type = types.UINT8):
     kwargs_pybind = {"input_image0": inputs[0], "rocal_tensor_layout" : rocal_tensor_layout, "rocal_tensor_output_type" : rocal_tensor_output_type,  "is_output": False,"alpha": None, "beta": None}
     brightness_image = b.Brightness(Pipeline._current_pipeline._handle ,*(kwargs_pybind.values()))
     return (brightness_image)
@@ -25,7 +25,7 @@ def brightness_fixed(*inputs, alpha=None, beta=None, seed=-1, device=None):
 
 def resize(*inputs, bytes_per_sample_hint=0, image_type=0, interp_type=1, mag_filter= 1, max_size = [0.0, 0.0], min_filter = 1,
             minibatch_size=32, preserve=False, resize_longer=0.0, resize_shorter= 0.0, resize_depth = 0, resize_width = 0, resize_height = 0,
-            save_attrs=False, seed=1, rocal_tensor_layout=types.NCHW, rocal_tensor_output_type=types.FLOAT, interpolation_type = 4, temp_buffer_hint=0, device = None):
+            save_attrs=False, seed=1, rocal_tensor_layout=types.NHWC, rocal_tensor_output_type=types.UINT8, interpolation_type = 4, temp_buffer_hint=0, device = None):
     # pybind call arguments
     kwargs_pybind = {"input_image0": inputs[0], "rocal_tensor_layout" : rocal_tensor_layout, "rocal_tensor_output_type" : rocal_tensor_output_type,  "resize_depth:" : resize_depth , "resize_height": resize_height, "resize_width": resize_width, "interpolation_type" : interpolation_type,
                      "is_output": False}
@@ -97,7 +97,7 @@ def centre_crop(*inputs, bytes_per_sample_hint=0, crop=[100, 100], crop_d=1, cro
     centre_cropped_image = b.CenterCropFixed(Pipeline._current_pipeline._handle ,*(kwargs_pybind.values()))
     return (centre_cropped_image)
 
-def gamma_correction(*inputs, gamma=0.5, device=None, rocal_tensor_layout =types.NCHW, rocal_tensor_output_type = types.FLOAT):
+def gamma_correction(*inputs, gamma=0.5, device=None, rocal_tensor_layout =types.NHWC, rocal_tensor_output_type = types.UINT8):
     # pybind call arguments
     gamma = b.CreateFloatParameter(gamma) if isinstance(gamma, float) else gamma
     kwargs_pybind = {"input_image0": inputs[0],"rocal_tensor_layout" : rocal_tensor_layout, "rocal_tensor_output_type" : rocal_tensor_output_type,
@@ -105,7 +105,7 @@ def gamma_correction(*inputs, gamma=0.5, device=None, rocal_tensor_layout =types
     gamma_correction_image = b.Gamma(Pipeline._current_pipeline._handle ,*(kwargs_pybind.values()))
     return (gamma_correction_image)
 
-def blur(*inputs, blur=3, device=None, rocal_tensor_layout =types.NCHW, rocal_tensor_output_type = types.FLOAT):
+def blur(*inputs, blur=3, device=None, rocal_tensor_layout =types.NHWC, rocal_tensor_output_type = types.UINT8):
     # pybind call arguments
     kwargs_pybind = {"input_image0": inputs[0],"rocal_tensor_layout" : rocal_tensor_layout, "rocal_tensor_output_type" : rocal_tensor_output_type, "is_output": False, "sdev": None,}
     blur_image = b.Blur(Pipeline._current_pipeline._handle ,*(kwargs_pybind.values()))
@@ -180,7 +180,7 @@ def saturation(*inputs, bytes_per_sample_hint=0,  saturation=1.0, image_type=0, 
 #     warp_affine_outputcolor_temp_output = b.WarpAffine(Pipeline._current_pipeline._handle ,*(kwargs_pybind.values()))
 #     return (warp_affine_outputcolor_temp_output)
 
-def vignette(*inputs, vignette=0.5, rocal_tensor_layout =types.NCHW, rocal_tensor_output_type = types.FLOAT, device=None):
+def vignette(*inputs, vignette=0.5, rocal_tensor_layout =types.NHWC, rocal_tensor_output_type = types.UINT8, device=None):
     # pybind call arguments
     vignette = b.CreateFloatParameter(vignette) if isinstance(vignette, float) else vignette
     kwargs_pybind = {"input_image0": inputs[0],"rocal_tensor_layout" : rocal_tensor_layout, "rocal_tensor_output_type" : rocal_tensor_output_type,"is_output": False, "sdev": vignette}

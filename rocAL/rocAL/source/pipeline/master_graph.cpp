@@ -287,7 +287,7 @@ MasterGraph::build()
     _ring_buffer.init(_mem_type, _device.resources(), _internal_tensor_list.data_size(), _internal_tensor_list.size()); // TODO - Tensorlist change here
     if (_is_box_encoder) _ring_buffer.initBoxEncoderMetaData(_mem_type, _user_batch_size*_num_anchors*4*sizeof(float), _user_batch_size*_num_anchors*sizeof(int));
 #endif
-    _output_tensor_list = _internal_tensor_list;
+    // _output_tensor_list = _internal_tensor_list;
     create_single_graph();
     start_processing();
     return Status::OK;
@@ -345,6 +345,10 @@ MasterGraph::set_output(rocALTensor* output_tensor)
         // Decoder case only
         auto actual_output = create_tensor(output_tensor->info(), true);
         add_node<CopyNode>({output_tensor}, {actual_output});
+        if (output->create_from_handle(_context) != 0)
+                THROW("Cannot create the tensor from handle")
+
+        _output_tensor_list.push_back(output);
     }
 }
 
