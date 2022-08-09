@@ -155,7 +155,7 @@ static vx_status VX_CALLBACK processResizetensor(vx_node node, const vx_referenc
         return_status = (rpp_status == RPP_SUCCESS) ? VX_SUCCESS : VX_FAILURE;
 #elif ENABLE_HIP
         refreshResizetensor(node, parameters, num, data);
-        rpp_status = rppt_resize_gpu(data->hip_pSrc, data->srcDescPtr, data->hip_pDst, data->dstDescPtr, data->hip_dstImgSize, RpptInterpolationType::TRIANGULAR, data->hip_roiTensorPtrSrc, data->roiType, data->rppHandle);
+        // rpp_status = rppt_resize_gpu(data->hip_pSrc, data->srcDescPtr, data->hip_pDst, data->dstDescPtr, data->hip_dstImgSize, RpptInterpolationType::TRIANGULAR, data->hip_roiTensorPtrSrc, data->roiType, data->rppHandle);
         // commenting the above line till tensor resize calls are merged with rpp TOT
         return_status = (rpp_status == RPP_SUCCESS) ? VX_SUCCESS : VX_FAILURE;
 #endif

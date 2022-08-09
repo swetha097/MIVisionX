@@ -48,6 +48,11 @@ Node::create(std::shared_ptr<Graph> graph)
         height_status = vxAddArrayItems(_src_roi_height, _batch_size, roi_height.data(), sizeof(vx_uint32));
         if (width_status != 0 || height_status != 0)
             THROW(" vxAddArrayItems failed : " + TOSTR(width_status) + "  " + TOSTR(height_status))
+        // std::cerr << "\nINPUT w ::" << _inputs[0]->info().width();
+        // std::cerr << "\nINPUT h ::" << _inputs[0]->info().height_single();
+
+        // std::cerr << "\nOUTPUT w ::" << _outputs[0]->info().width();
+        // std::cerr << "\nOUTPUT h ::" << _outputs[0]->info().height_single();
     }
 
     create_node();
