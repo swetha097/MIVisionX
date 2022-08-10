@@ -27,8 +27,10 @@ if [[ $# -eq 1 ]]; then
   echo "${blue}Running setup.py with $1 ${reset}"
 
   if [[ "$1" == "--backend_ocl" ]] || [[ "$1" == "--backend_hip" ]]; then
-    sudo "$DEFAULT_PYTHON" setup.py build $1
-    sudo "$DEFAULT_PYTHON" setup.py install $1
+  sudo "$DEFAULT_PYTHON" setup.py bdist_wheel $1
+  pip$PYTHON_VERSION install ./dist/amd_rocal-1.1.0-cp39-cp39-linux_x86_64.whl --force-reinstall #to remove existing whl file and reinstall it
+    # sudo "$DEFAULT_PYTHON" setup.py build $1
+    # sudo "$DEFAULT_PYTHON" setup.py install $1
   else
     echo
     echo "The run.sh bash script runs the setup.py with OCL / HIP backends"
@@ -41,6 +43,8 @@ if [[ $# -eq 1 ]]; then
 else
   # Default Backend: --backend_hip
   echo "${blue}Running setup.py with --backend_hip ${reset}"
-  sudo "$DEFAULT_PYTHON" setup.py build --backend_hip
-  sudo "$DEFAULT_PYTHON" setup.py install --backend_hip
+  sudo "$DEFAULT_PYTHON" setup.py bdist_wheel --backend_hip
+  pip$PYTHON_VERSION install ./dist/amd_rocal-1.1.0-cp39-cp39-linux_x86_64.whl --force-reinstall #to remove existing whl file and reinstall it
+  # sudo "$DEFAULT_PYTHON" setup.py build --backend_hip
+  # sudo "$DEFAULT_PYTHON" setup.py install --backend_hip
 fi
