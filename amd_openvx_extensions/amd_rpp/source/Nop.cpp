@@ -28,10 +28,7 @@ struct NopLocalData
     Rpp32u device_type;
     RppPtr_t pSrc;
     RppPtr_t pDst;
-#if ENABLE_OPENCL
-    cl_mem cl_pSrc;
-    cl_mem cl_pDst;
-#elif ENABLE_HIP
+#if ENABLE_HIP
     void *hip_pSrc;
     void *hip_pDst;
 #endif
@@ -42,15 +39,12 @@ static vx_status VX_CALLBACK refreshNop(vx_node node, const vx_reference *parame
     vx_status status = VX_SUCCESS;
     if (data->device_type == AGO_TARGET_AFFINITY_GPU)
     {
-#if ENABLE_OPENCL
-        STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[0], VX_TENSOR_BUFFER_OPENCL, &data->cl_pSrc, sizeof(data->cl_pSrc)));
-        STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[1], VX_TENSOR_BUFFER_OPENCL, &data->cl_pDst, sizeof(data->cl_pDst)));
-#elif ENABLE_HIP
+#if ENABLE_HIP
         STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[0], VX_TENSOR_BUFFER_HIP, &data->hip_pSrc, sizeof(data->hip_pSrc)));
         STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[1], VX_TENSOR_BUFFER_HIP, &data->hip_pDst, sizeof(data->hip_pDst)));
 #endif
     }
-    if (data->device_type == AGO_TARGET_AFFINITY_CPU)
+    else if (data->device_type == AGO_TARGET_AFFINITY_CPU)
     {
         vx_enum in_tensor_type = vx_type_e::VX_TYPE_UINT8;
         vx_enum out_tensor_type = vx_type_e::VX_TYPE_UINT8;
@@ -109,11 +103,11 @@ static vx_status VX_CALLBACK processNop(vx_node node, const vx_reference *parame
     STATUS_ERROR_CHECK(vxQueryNode(node, VX_NODE_LOCAL_DATA_PTR, &data, sizeof(data)));
     if (data->device_type == AGO_TARGET_AFFINITY_GPU)
     {
-#if ENABLE_OPENCL || ENABLE_HIP
+#if ENABLE_HIP
         refreshNop(node, parameters, num, data);
 #endif
     }
-    if (data->device_type == AGO_TARGET_AFFINITY_CPU)
+    else if (data->device_type == AGO_TARGET_AFFINITY_CPU)
     {
         refreshNop(node, parameters, num, data);
     }
@@ -125,7 +119,7 @@ static vx_status VX_CALLBACK initializeNop(vx_node node, const vx_reference *par
     NopLocalData *data = new NopLocalData;
     memset(data, 0, sizeof(*data));
 #if ENABLE_OPENCL
-    STATUS_ERROR_CHECK(vxQueryNode(node, VX_NODE_ATTRIBUTE_AMD_OPENCL_COMMAND_QUEUE, &data->handle.cmdq, sizeof(data->handle.cmdq)));
+    THROW("initialize : Nop, OpenCL backend is not supported")
 #elif ENABLE_HIP
     STATUS_ERROR_CHECK(vxQueryNode(node, VX_NODE_ATTRIBUTE_AMD_HIP_STREAM, &data->handle.hipstream, sizeof(data->handle.hipstream)));
 #endif
@@ -160,11 +154,6 @@ static vx_status VX_CALLBACK query_target_support(vx_graph graph, vx_node node,
     else
         supported_target_affinity = AGO_TARGET_AFFINITY_CPU;
 
-// hardcode the affinity to  CPU for OpenCL backend to avoid VerifyGraph failure since there is no codegen callback for amd_rpp nodes
-#if ENABLE_OPENCL
-    supported_target_affinity = AGO_TARGET_AFFINITY_CPU;
-#endif
-
     return VX_SUCCESS;
 }
 
@@ -182,7 +171,7 @@ vx_status Nop_Register(vx_context context)
     ERROR_CHECK_OBJECT(kernel);
     AgoTargetAffinityInfo affinity;
     vxQueryContext(context, VX_CONTEXT_ATTRIBUTE_AMD_AFFINITY, &affinity, sizeof(affinity));
-#if ENABLE_OPENCL || ENABLE_HIP
+#if ENABLE_HIP
     // enable OpenCL buffer access since the kernel_f callback uses OpenCL buffers instead of host accessible buffers
     vx_bool enableBufferAccess = vx_true_e;
     if (affinity.device_type == AGO_TARGET_AFFINITY_GPU)
