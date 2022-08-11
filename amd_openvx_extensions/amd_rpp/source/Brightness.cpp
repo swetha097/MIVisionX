@@ -101,12 +101,6 @@ static vx_status VX_CALLBACK refreshBrightness(vx_node node, const vx_reference 
             STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[0], VX_TENSOR_BUFFER_HOST, &data->pSrc, sizeof(vx_float32)));
             STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[2], VX_TENSOR_BUFFER_HOST, &data->pDst, sizeof(vx_float32)));
         }
-        // VX_TYPE_FLOAT16 is not supported. Have to enable it once support is added.
-        // else if(data->in_tensor_type == vx_type_e::VX_TYPE_FLOAT16 && data->out_tensor_type == vx_type_e::VX_TYPE_FLOAT16)
-        // {
-        //     STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[0], VX_TENSOR_BUFFER_HOST, &data->pSrc, sizeof(vx_float16)));
-        //     STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[3], VX_TENSOR_BUFFER_HOST, &data->pDst, sizeof(vx_float16)));
-        // }
     }
     return status;
 }
@@ -223,18 +217,13 @@ static vx_status VX_CALLBACK initializeBrightness(vx_node node, const vx_referen
     {
         data->src_desc_ptr->dataType = RpptDataType::F32;
     }
-    // VX_TYPE_FLOAT16 is not supported. Have to enable it once support is added.
-    // else if (data->in_tensor_type == vx_type_e::VX_TYPE_FLOAT16)
-    // {
-    //     data->src_desc_ptr->dataType = RpptDataType::F16;
-    // }
     data->src_desc_ptr->offsetInBytes = 0;
 
     // Querying for output tensor
     data->dst_desc_ptr = &data->dstDesc;
     STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[2], VX_TENSOR_NUMBER_OF_DIMS, &data->dst_desc_ptr->numDims, sizeof(data->dst_desc_ptr->numDims)));
     STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[2], VX_TENSOR_DIMS, &data->out_tensor_dims, sizeof(vx_size) * data->dst_desc_ptr->numDims));
-    STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[2],VX_TENSOR_DATA_TYPE, &data->out_tensor_type, sizeof(data->out_tensor_type)));
+    STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[2], VX_TENSOR_DATA_TYPE, &data->out_tensor_type, sizeof(data->out_tensor_type)));
     if(data->out_tensor_type == vx_type_e::VX_TYPE_UINT8)
     {
         data->dst_desc_ptr->dataType= RpptDataType::U8;
@@ -243,11 +232,6 @@ static vx_status VX_CALLBACK initializeBrightness(vx_node node, const vx_referen
     {
         data->dst_desc_ptr->dataType = RpptDataType::F32;
     }
-    // VX_TYPE_FLOAT16 is not supported. Have to enable it once support is added.
-    // else if (data->out_tensor_type == vx_type_e::VX_TYPE_FLOAT16)
-    // {
-    //     data->src_desc_ptr->dataType = RpptDataType::F16;
-    // }
     data->dst_desc_ptr->offsetInBytes = 0;
 
     if(data->layout == 0) // NHWC

@@ -128,12 +128,6 @@ static vx_status VX_CALLBACK refreshCropMirrorNormalize(vx_node node, const vx_r
             STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[0], VX_TENSOR_BUFFER_HOST, &data->pSrc, sizeof(vx_uint8)));
             STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[2], VX_TENSOR_BUFFER_HOST, &data->pDst, sizeof(vx_float32)));
         }
-        // VX_TYPE_FLOAT16 is not supported. Have to enable it once support is added.
-        // else if(in_tensor_type == vx_type_e::VX_TYPE_UINT8 && out_tensor_type == vx_type_e::VX_TYPE_FLOAT16)
-        // {
-        //     STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[0], VX_TENSOR_BUFFER_HOST, &data->pSrc, sizeof(vx_uint8)));
-        //     STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[2], VX_TENSOR_BUFFER_HOST, &data->pDst, sizeof(vx_float16)));
-        // }
     }
     return status;
 }
@@ -254,11 +248,6 @@ static vx_status VX_CALLBACK initializeCropMirrorNormalize(vx_node node, const v
     {
         data->src_desc_ptr->dataType = RpptDataType::F32;
     }
-    // VX_TYPE_FLOAT16 is not supported. Have to enable it once support is added.
-    // else if (data->in_tensor_type == vx_type_e::VX_TYPE_FLOAT16)
-    // {
-    //     data->src_desc_ptr->dataType = RpptDataType::F16;
-    // }
     data->src_desc_ptr->offsetInBytes = 0;
 
     // Querying for output tensor
@@ -274,11 +263,6 @@ static vx_status VX_CALLBACK initializeCropMirrorNormalize(vx_node node, const v
     {
         data->dst_desc_ptr->dataType = RpptDataType::F32;
     }
-    // VX_TYPE_FLOAT16 is not supported. Have to enable it once support is added.
-    // else if (data->out_tensor_type == vx_type_e::VX_TYPE_FLOAT16)
-    // {
-    //     data->src_desc_ptr->dataType = RpptDataType::F16;
-    // }
     data->dst_desc_ptr->offsetInBytes = 0;
 
     if(data->layout == 0) // NHWC
