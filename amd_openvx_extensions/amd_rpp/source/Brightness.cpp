@@ -189,10 +189,7 @@ static vx_status VX_CALLBACK initializeBrightness(vx_node node, const vx_referen
     STATUS_ERROR_CHECK(vxCopyScalar((vx_scalar)parameters[6], &roiType, VX_READ_ONLY, VX_MEMORY_TYPE_HOST));
     STATUS_ERROR_CHECK(vxReadScalarValue((vx_scalar)parameters[7], &data->nbatchSize));
     STATUS_ERROR_CHECK(vxCopyScalar((vx_scalar)parameters[8], &data->device_type, VX_READ_ONLY, VX_MEMORY_TYPE_HOST));
-    if(roiType == 1)
-        data->roiType = RpptRoiType::XYWH;
-    else
-        data->roiType = RpptRoiType::LTRB;
+    data->roiType = (roiType == 0) ? RpptRoiType::XYWH : RpptRoiType::LTRB;
 
     // Querying for input tensor
     data->src_desc_ptr = &data->srcDesc;
