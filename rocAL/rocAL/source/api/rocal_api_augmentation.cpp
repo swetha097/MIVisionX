@@ -563,7 +563,7 @@ rocalResizeShorter(
         if (size == 0)
             THROW("Size passed must be greater than 0")
 
-        unsigned int buffer_size = size * 10;
+        unsigned int buffer_size = size * 3.75;
         output_info.width(buffer_size);
         output_info.height(buffer_size);
         output = context->master_graph->create_image(output_info, is_output);
