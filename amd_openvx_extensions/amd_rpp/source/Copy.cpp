@@ -32,8 +32,8 @@ struct CopyLocalData
     vx_enum in_tensor_type;
     vx_enum out_tensor_type;
 #if ENABLE_HIP
-    void *hip_pSrc;
-    void *hip_pDst;
+    void *pSrc_dev;
+    void *pDst_dev;
 #endif
 };
 
@@ -43,8 +43,8 @@ static vx_status VX_CALLBACK refreshCopy(vx_node node, const vx_reference *param
     if (data->device_type == AGO_TARGET_AFFINITY_GPU)
     {
 #if ENABLE_HIP
-        STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[0], VX_TENSOR_BUFFER_HIP, &data->hip_pSrc, sizeof(data->hip_pSrc)));
-        STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[1], VX_TENSOR_BUFFER_HIP, &data->hip_pDst, sizeof(data->hip_pDst)));
+        STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[0], VX_TENSOR_BUFFER_HIP, &data->pSrc_dev, sizeof(data->pSrc_dev)));
+        STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[1], VX_TENSOR_BUFFER_HIP, &data->pDst_dev, sizeof(data->pDst_dev)));
 #endif
     }
     else if (data->device_type == AGO_TARGET_AFFINITY_CPU)
@@ -103,7 +103,7 @@ static vx_status VX_CALLBACK processCopy(vx_node node, const vx_reference *param
     {
 #if ENABLE_HIP
         refreshCopy(node, parameters, num, data);
-        hipMemcpy(data->hip_pDst, data->hip_pSrc, data->tensor_size, hipMemcpyDeviceToDevice);
+        hipMemcpy(data->pDst_dev, data->pSrc_dev, data->tensor_size, hipMemcpyDeviceToDevice);
 #endif
     }
     else if (data->device_type == AGO_TARGET_AFFINITY_CPU)
