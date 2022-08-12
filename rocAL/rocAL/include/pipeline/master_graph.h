@@ -35,6 +35,7 @@ THE SOFTWARE.
 #include "node_fused_jpeg_crop_single_shard.h"
 #include "node_video_loader.h"
 #include "node_video_loader_single_shard.h"
+#include "node_cifar10_loader.h"
 #include "meta_data_reader.h"
 #include "meta_data_graph.h"
 #if ENABLE_HIP
@@ -73,12 +74,13 @@ public:
     rocALTensor *create_loader_output_tensor(const rocALTensorInfo &info);
     rocALTensorList * get_output_tensors();
     std::vector<rocALTensorList *> create_label_reader(const char *source_path, MetaDataReaderType reader_type);
-    std::vector<rocALTensorList *> create_coco_meta_data_reader(const char *source_path, bool is_output, bool mask, MetaDataReaderType reader_type, MetaDataType label_type, bool is_box_encoder);
-    // MetaDataBatch *create_coco_meta_data_reader(const char *source_path, bool is_output);
-    // MetaDataBatch *create_tf_record_meta_data_reader(const char *source_path, MetaDataReaderType reader_type,  MetaDataType label_type, const std::map<std::string, std::string> feature_key_map);
-    // MetaDataBatch *create_caffe_lmdb_record_meta_data_reader(const char *source_path, MetaDataReaderType reader_type,  MetaDataType label_type);
-    // MetaDataBatch *create_caffe2_lmdb_record_meta_data_reader(const char *source_path, MetaDataReaderType reader_type,  MetaDataType label_type);
-    // MetaDataBatch* create_cifar10_label_reader(const char *source_path, const char *file_prefix);
+    std::vector<rocALTensorList *> create_coco_meta_data_reader(const char *source_path, bool is_output, bool mask, MetaDataReaderType reader_type, MetaDataType label_type, bool is_box_encoder = false);
+    std::vector<rocALTensorList *> create_tf_record_meta_data_reader(const char *source_path, MetaDataReaderType reader_type,  MetaDataType label_type, const std::map<std::string, std::string> feature_key_map);
+    std::vector<rocALTensorList *> create_caffe_lmdb_record_meta_data_reader(const char *source_path, MetaDataReaderType reader_type,  MetaDataType label_type);
+    std::vector<rocALTensorList *> create_caffe2_lmdb_record_meta_data_reader(const char *source_path, MetaDataReaderType reader_type,  MetaDataType label_type);
+    std::vector<rocALTensorList *> create_cifar10_label_reader(const char *source_path, const char *file_prefix);
+    std::vector<rocALTensorList *> create_mxnet_label_reader(const char *source_path, bool is_output);
+
     void box_encoder(std::vector<float> &anchors, float criteria, const std::vector<float> &means, const std::vector<float> &stds, bool offset, float scale);
     void create_randombboxcrop_reader(RandomBBoxCrop_MetaDataReaderType reader_type, RandomBBoxCrop_MetaDataType label_type, bool all_boxes_overlap, bool no_crop, FloatParam* aspect_ratio, bool has_shape, int crop_width, int crop_height, int num_attempts, FloatParam* scaling, int total_num_attempts, int64_t seed=0);
     const std::pair<ImageNameBatch,pMetaDataBatch>& meta_data();
@@ -272,6 +274,23 @@ template<> inline std::shared_ptr<FusedJpegCropSingleShardNode> MasterGraph::add
     _loader_module = node->get_loader_module();
     _loader_module->set_prefetch_queue_depth(_prefetch_queue_depth);
     _root_nodes.push_back(node);
+    for(auto& output: outputs)
+        _tensor_map.insert(make_pair(output, node));
+
+    return node;
+}
+
+/*
+ * Explicit specialization for Cifar10LoaderNode
+ */
+template<> inline std::shared_ptr<Cifar10LoaderNode> MasterGraph::add_node(const std::vector<rocALTensor*>& inputs, const std::vector<rocALTensor*>& outputs)
+{
+    if(_loader_module)
+        THROW("A loader already exists, cannot have more than one loader")
+    auto node = std::make_shared<Cifar10LoaderNode>(outputs[0], _device.resources());
+    _loader_module = node->get_loader_module();
+    _loader_module->set_prefetch_queue_depth(_prefetch_queue_depth);
+    // _root_nodes.push_back(node);
     for(auto& output: outputs)
         _tensor_map.insert(make_pair(output, node));
 
