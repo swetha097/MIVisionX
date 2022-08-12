@@ -56,12 +56,23 @@ void RocalCropParam::fill_crop_dims()
         if(!(_random))
         {
             // Evaluating user given crop
-            (crop_w > in_roi[img_idx].x2) ? (cropw_arr_val[img_idx] = in_roi[img_idx].x2) : (cropw_arr_val[img_idx] = crop_w);
-            (crop_h > in_roi[img_idx].y2) ? (croph_arr_val[img_idx] = in_roi[img_idx].y2) : (croph_arr_val[img_idx] = crop_h);
-            (x1 >= in_roi[img_idx].x2) ? (x1_arr_val[img_idx] = 0) : (x1_arr_val[img_idx] = x1);
-            (y1 >= in_roi[img_idx].y2) ? (y1_arr_val[img_idx] = 0) : (y1_arr_val[img_idx] = y1);
-            std::cerr<<"\n In width:: "<<in_roi[img_idx].x2<<"\t In height:: "<<in_roi[img_idx].y2;
-            std::cerr<<"\n Crop dims:: "<<x1_arr_val[img_idx]<<" "<<y1_arr_val[img_idx]<<" "<<cropw_arr_val[img_idx]<<" "<<croph_arr_val[img_idx]<<"\n";
+            cropw_arr_val[img_idx] = (crop_w > in_roi[img_idx].x2) ? in_roi[img_idx].x2 : crop_w;
+            croph_arr_val[img_idx] = (crop_h > in_roi[img_idx].y2) ? in_roi[img_idx].y2 : crop_h;
+            if(_is_center_crop)
+            {
+                float x_drift, y_drift;
+                x_drift = x_drift_factor->get();
+                y_drift = y_drift_factor->get();
+                x1_arr_val[img_idx] = static_cast<size_t>(x_drift * (in_roi[img_idx].x2 - cropw_arr_val[img_idx]));
+                y1_arr_val[img_idx] = static_cast<size_t>(y_drift * (in_roi[img_idx].y2 - croph_arr_val[img_idx]));
+            }
+            else
+            {
+                x1_arr_val[img_idx] = (x1 >= in_roi[img_idx].x2) ? 0 : x1;
+                y1_arr_val[img_idx] = (y1 >= in_roi[img_idx].y2) ? 0 : y1;
+            }
+            // std::cerr<<"\n In width:: "<<in_roi[img_idx].x2<<"\t In height:: "<<in_roi[img_idx].y2;
+            // std::cerr<<"\n Crop dims:: "<<x1_arr_val[img_idx]<<" "<<y1_arr_val[img_idx]<<" "<<cropw_arr_val[img_idx]<<" "<<croph_arr_val[img_idx]<<"\n";
         }
         else
         {

@@ -153,7 +153,7 @@ rocalJpegFileSourceSingleShard(
         unsigned num_of_dims = 4;
         std::vector<unsigned> dims;
         dims.resize(num_of_dims);
-        dims.at(0) = context->internal_batch_size();
+        dims.at(0) = context->user_batch_size();
         dims.at(1) = height;
         dims.at(2) = width;
         dims.at(3) = num_of_planes;
@@ -242,11 +242,10 @@ rocalJpegFileSource(
         unsigned num_of_dims = 4;
         std::vector<unsigned> dims;
         dims.resize(4);
-        dims[0] = context->internal_batch_size();
+        dims[0] = context->user_batch_size();
         dims[1] = height;
         dims[2] = width;
         dims[3] = num_of_planes;
-        std::cerr<<"\n dims"<<dims[0]<<dims[1]<<dims[2]<<dims[3];
         auto info  = rocALTensorInfo(num_of_dims,
                                 std::vector<unsigned>(std::move(dims)),
                                 context->master_graph->mem_type(),
@@ -328,7 +327,7 @@ rocalJpegCOCOFileSource(
         unsigned num_of_dims = 4;
         std::vector<unsigned> dims;
         dims.resize(4);
-        dims[0] = context->internal_batch_size();
+        dims[0] = context->user_batch_size();
         dims[1] = height;
         dims[2] = width;
         dims[3] = num_of_planes;
@@ -419,7 +418,7 @@ rocalJpegCOCOFileSourceSingleShard(
         unsigned num_of_dims = 4;
         std::vector<unsigned> dims;
         dims.resize(num_of_dims);
-        dims.at(0) = context->internal_batch_size();
+        dims.at(0) = context->user_batch_size();
         dims.at(1) = height;
         dims.at(2) = width;
         dims.at(3) = num_of_planes;
@@ -510,11 +509,10 @@ rocalFusedJpegCrop(
         unsigned num_of_dims = 4;
         std::vector<unsigned> dims;
         dims.resize(4);
-        dims[0] = context->internal_batch_size();
+        dims[0] = context->user_batch_size();
         dims[1] = height;
         dims[2] = width;
         dims[3] = num_of_planes;
-        std::cerr<<"\n dims"<<dims[0]<<dims[1]<<dims[2]<<dims[3];
         auto info  = rocALTensorInfo(num_of_dims,
                                 std::vector<unsigned>(std::move(dims)),
                                 context->master_graph->mem_type(),
@@ -605,7 +603,7 @@ rocalFusedJpegCropSingleShard(
         unsigned num_of_dims = 4;
         std::vector<unsigned> dims;
         dims.resize(num_of_dims);
-        dims.at(0) = context->internal_batch_size();
+        dims.at(0) = context->user_batch_size();
         dims.at(1) = height;
         dims.at(2) = width;
         dims.at(3) = num_of_planes;
@@ -698,7 +696,7 @@ rocalJpegCOCOFileSourcePartial(
         unsigned num_of_dims = 4;
         std::vector<unsigned> dims;
         dims.resize(4);
-        dims[0] = context->internal_batch_size();
+        dims[0] = context->user_batch_size();
         dims[1] = height;
         dims[2] = width;
         dims[3] = num_of_planes;
@@ -795,7 +793,7 @@ rocalJpegCOCOFileSourcePartialSingleShard(
         unsigned num_of_dims = 4;
         std::vector<unsigned> dims;
         dims.resize(4);
-        dims[0] = context->internal_batch_size();
+        dims[0] = context->user_batch_size();
         dims[1] = height;
         dims[2] = width;
         dims[3] = num_of_planes;
@@ -888,7 +886,7 @@ rocalVideoFileSourceSingleShard(
         unsigned num_of_dims = 5;
         std::vector<unsigned> dims;
         dims.resize(num_of_dims);
-        dims.at(0) = context->internal_batch_size();
+        dims.at(0) = context->user_batch_size();
         dims.at(1) = sequence_length;
         dims.at(2) = video_prop.height;
         dims.at(3) = video_prop.width;
@@ -978,7 +976,7 @@ rocalVideoFileSource(
         unsigned num_of_dims = 5;
         std::vector<unsigned> dims;
         dims.resize(num_of_dims);
-        dims.at(0) = context->internal_batch_size();
+        dims.at(0) = context->user_batch_size();
         dims.at(1) = sequence_length;
         dims.at(2) = video_prop.height;
         dims.at(3) = video_prop.width;

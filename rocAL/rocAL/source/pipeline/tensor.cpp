@@ -375,7 +375,7 @@ unsigned rocALTensor::copy_data(cl_command_queue queue, cl_mem user_buffer, bool
         return _info.data_size();
     }
 #endif
-unsigned rocALTensor::copy_data(unsigned char* user_buffer, bool sync)
+unsigned rocALTensor::copy_data(void* user_buffer, bool sync)
 {
     if(_info._type != rocALTensorInfo::Type::HANDLE)
         return 0;

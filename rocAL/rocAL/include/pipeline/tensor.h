@@ -199,7 +199,7 @@ public:
 #elif ENABLE_HIP
     unsigned copy_data(hipStream_t stream, void* host_memory, bool sync);
 #endif
-    unsigned copy_data(unsigned char* user_buffer, bool sync);
+    unsigned copy_data(void* user_buffer, bool sync);
     //! Default destructor
     /*! Releases the OpenVX Tensor object */
     ~rocALTensor();
@@ -228,6 +228,7 @@ class rocALTensorList
 public:
     unsigned size() { return _tensor_list.size(); }
     bool empty() { return _tensor_list.empty(); }
+    rocALTensor* front() { return _tensor_list.front(); }
     void push_back(rocALTensor * tensor)
     {
         _tensor_list.emplace_back(tensor);

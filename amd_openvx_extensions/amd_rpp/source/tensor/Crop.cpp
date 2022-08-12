@@ -72,7 +72,6 @@ struct CropLocalData
 */
 static vx_status VX_CALLBACK refreshCrop(vx_node node, const vx_reference *parameters, vx_uint32 num, CropLocalData *data)
 {
-std::cerr<<"refreshCrop\n\n\n";
     vx_status status = VX_SUCCESS;
     STATUS_ERROR_CHECK(vxCopyArrayRange((vx_array)parameters[1], 0, data->nbatchSize * 4, sizeof(unsigned), data->roi_tensor_Ptr, VX_READ_ONLY, VX_MEMORY_TYPE_HOST));
     STATUS_ERROR_CHECK(vxCopyArrayRange((vx_array)parameters[4], 0, data->nbatchSize, sizeof(vx_uint32), data->crop_w, VX_READ_ONLY, VX_MEMORY_TYPE_HOST));
@@ -100,6 +99,7 @@ std::cerr<<"refreshCrop\n\n\n";
                 data->crop_w[index + f] = data->crop_w[n];
                 data->start_x[index + f] = data->start_x[n];
                 data->start_y[index + f] = data->start_y[n];
+                // TODO - TO BE CHANGED TO XYWH FORMAT
                 data->roi_tensor_Ptr[index + f].xywhROI.xy.x = data->roi_tensor_Ptr[n].xywhROI.xy.x;
                 data->roi_tensor_Ptr[index + f].xywhROI.xy.y = data->roi_tensor_Ptr[n].xywhROI.xy.y;
                 data->roi_tensor_Ptr[index + f].xywhROI.roiWidth = data->roi_tensor_Ptr[n].xywhROI.roiWidth;
@@ -123,28 +123,22 @@ std::cerr<<"refreshCrop\n\n\n";
     {
         if (data->in_tensor_type == vx_type_e::VX_TYPE_UINT8 && data->out_tensor_type == vx_type_e::VX_TYPE_UINT8)
         {
-            std::cerr<<"UINT8888888888\n";
             STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[0], VX_TENSOR_BUFFER_HOST, &data->pSrc, sizeof(vx_uint8)));
             STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[2], VX_TENSOR_BUFFER_HOST, &data->pDst, sizeof(vx_uint8)));
         }
         else if (data->in_tensor_type == vx_type_e::VX_TYPE_FLOAT32 && data->out_tensor_type == vx_type_e::VX_TYPE_FLOAT32)
         {
-            std::cerr<<"FLOAT32222222\n";
 
             STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[0], VX_TENSOR_BUFFER_HOST, &data->pSrc, sizeof(vx_float32)));
             STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[2], VX_TENSOR_BUFFER_HOST, &data->pDst, sizeof(vx_float32)));
         }
         else if (data->in_tensor_type == vx_type_e::VX_TYPE_INT8 && data->out_tensor_type == vx_type_e::VX_TYPE_INT8)
         {
-            std::cerr<<"INT888888888888888\n";
-
             STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[0], VX_TENSOR_BUFFER_HOST, &data->pSrc, sizeof(vx_int8)));
             STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[2], VX_TENSOR_BUFFER_HOST, &data->pDst, sizeof(vx_int8)));
         }
         else if (data->in_tensor_type == vx_type_e::VX_TYPE_UINT8 && data->out_tensor_type == vx_type_e::VX_TYPE_FLOAT32)
         {
-            std::cerr<<"UINt8 TO FLOAT32\n";
-
             STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[0], VX_TENSOR_BUFFER_HOST, &data->pSrc, sizeof(vx_uint8)));
             STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[2], VX_TENSOR_BUFFER_HOST, &data->pDst, sizeof(vx_float32)));
         }
@@ -160,7 +154,6 @@ std::cerr<<"refreshCrop\n\n\n";
 
 static vx_status VX_CALLBACK validateCrop(vx_node node, const vx_reference parameters[], vx_uint32 num, vx_meta_format metas[])
 {
-    std::cerr<<"in validateCrop\n\n ";
     vx_status status = VX_SUCCESS;
     vx_enum scalar_type;
     STATUS_ERROR_CHECK(vxQueryScalar((vx_scalar)parameters[10], VX_SCALAR_TYPE, &scalar_type, sizeof(scalar_type)));
@@ -205,7 +198,7 @@ static vx_status VX_CALLBACK processCrop(vx_node node, const vx_reference *param
     vx_status return_status = VX_SUCCESS;
     CropLocalData *data = NULL;
     STATUS_ERROR_CHECK(vxQueryNode(node, VX_NODE_LOCAL_DATA_PTR, &data, sizeof(data)));
-   
+
     Rpp32u N, C;
     N = data->nbatchSize;
     C = data->channels;
@@ -213,33 +206,18 @@ static vx_status VX_CALLBACK processCrop(vx_node node, const vx_reference *param
     {
 #if ENABLE_OPENCL
         refreshCrop(node, parameters, num, data);
-        rpp_status = rppt_crop_gpu((void *)data->cl_pSrc, data->src_desc_ptr, (void *)data->cl_pDst, data->src_desc_ptr, data->roi_tensor_Ptr, data->roiType, data->rppHandle);
+        rpp_status = rppt_crop_gpu((void *)data->cl_pSrc, data->src_desc_ptr, (void *)data->cl_pDst, data->dst_desc_ptr, data->roi_tensor_Ptr, data->roiType, data->rppHandle);
         return_status = (rpp_status == RPP_SUCCESS) ? VX_SUCCESS : VX_FAILURE;
 #elif ENABLE_HIP
         refreshCrop(node, parameters, num, data);
-        std::cerr << "Calling crop GPU\n";
-        
-        rpp_status = rppt_crop_gpu((void *)data->hip_pSrc, data->src_desc_ptr, (void *)data->hip_pDst, data->src_desc_ptr, data->hip_roi_tensor_Ptr, data->roiType, data->rppHandle);
-        if (1) {
-            float *temp1 = ((float *)calloc(100, sizeof(float)));
-            for (int i = 0; i < 100; i++) {
-                temp1[i] = (float)*((unsigned char *)(data->hip_pDst) + i);
-                std::cout << temp1[i] << " ";
-            }
-        }
+        rpp_status = rppt_crop_gpu((void *)data->hip_pSrc, data->src_desc_ptr, (void *)data->hip_pDst, data->dst_desc_ptr, data->hip_roi_tensor_Ptr, data->roiType, data->rppHandle);
         return_status = (rpp_status == RPP_SUCCESS) ? VX_SUCCESS : VX_FAILURE;
-        std::cerr << "Back from RPP\n";
 #endif
     }
 
     if(data->device_type == AGO_TARGET_AFFINITY_CPU)
     {
         vxstatus = refreshCrop(node, parameters, num, data);
-        for(int i = 0; i < data->nbatchSize; i++)
-        {
-            std::cerr<<"\n data->roi_tensor_Ptr values :: "<<data->roi_tensor_Ptr[i].xywhROI.xy.x<<" "<<data->roi_tensor_Ptr[i].xywhROI.xy.y<<" "<<data->roi_tensor_Ptr[i].xywhROI.roiWidth<<" "<<data->roi_tensor_Ptr[i].xywhROI.roiHeight;
-        }
-        std::cerr<<"\n Gonna call RPP";
         rpp_status = rppt_crop_host(data->pSrc, data->src_desc_ptr,
                                     data->pDst, data->dst_desc_ptr,
                                     data->roi_tensor_Ptr,data->roiType,
@@ -251,7 +229,6 @@ static vx_status VX_CALLBACK processCrop(vx_node node, const vx_reference *param
 
 static vx_status VX_CALLBACK initializeCrop(vx_node node, const vx_reference *parameters, vx_uint32 num)
 {
-    std::cerr<<"initializeCrop\n\n\n";
     CropLocalData *data = new CropLocalData;
     unsigned roiType;
     memset(data, 0, sizeof(*data));
@@ -264,10 +241,10 @@ static vx_status VX_CALLBACK initializeCrop(vx_node node, const vx_reference *pa
     STATUS_ERROR_CHECK(vxReadScalarValue((vx_scalar)parameters[12], &data->nbatchSize));
     STATUS_ERROR_CHECK(vxCopyScalar((vx_scalar)parameters[10], &data->layout, VX_READ_ONLY, VX_MEMORY_TYPE_HOST));
     STATUS_ERROR_CHECK(vxCopyScalar((vx_scalar)parameters[11], &roiType, VX_READ_ONLY, VX_MEMORY_TYPE_HOST));
-    if(roiType == 1)
+    // if(roiType == 1)
         data->roiType = RpptRoiType::XYWH;
-    else
-        data->roiType = RpptRoiType::LTRB;
+    // else
+        // data->roiType = RpptRoiType::LTRB;
 
     // Querying for input tensor
     data->src_desc_ptr = &data->srcDesc;
@@ -276,19 +253,16 @@ static vx_status VX_CALLBACK initializeCrop(vx_node node, const vx_reference *pa
     STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[0],VX_TENSOR_DATA_TYPE, &data->in_tensor_type, sizeof(data->in_tensor_type)));
     if(data->in_tensor_type == vx_type_e::VX_TYPE_UINT8)
     {
-        std::cerr<<"datatype check UINT8";
         data->src_desc_ptr->dataType = RpptDataType::U8;
     }
     else if (data->in_tensor_type == vx_type_e::VX_TYPE_FLOAT32)
     {
-        std::cerr<<"datatype check FLOAT32";
         data->src_desc_ptr->dataType = RpptDataType::F32;
     }
     // else if (data->src_desc_ptr->dataType == vx_type_e::VX_TYPE_FLOAT16)
     //     data->src_desc_ptr->dataType = RpptDataType::F16;
     else if (data->in_tensor_type == vx_type_e::VX_TYPE_INT8)
     {
-        std::cerr<<"datatype check INT8";
         data->src_desc_ptr->dataType = RpptDataType::I8;
     }
      data->src_desc_ptr->offsetInBytes = 0;
@@ -301,17 +275,13 @@ static vx_status VX_CALLBACK initializeCrop(vx_node node, const vx_reference *pa
     if(data->out_tensor_type == vx_type_e::VX_TYPE_UINT8)
     {
         data->dst_desc_ptr->dataType= RpptDataType::U8;
-         std::cerr<<"dst datatype check UINT8";
     }
     else if (data->out_tensor_type == vx_type_e::VX_TYPE_FLOAT32)
     {
         data->dst_desc_ptr->dataType = RpptDataType::F32;
-        std::cerr<<"dst datatype check FLOAT32";
     }
     else if (data->out_tensor_type == vx_type_e::VX_TYPE_INT8)
     {
-        std::cerr<<"dst datatype check INT8";
-
         data->dst_desc_ptr->dataType = RpptDataType::I8;
     }
      data->dst_desc_ptr->offsetInBytes = 0;
@@ -325,7 +295,6 @@ static vx_status VX_CALLBACK initializeCrop(vx_node node, const vx_reference *pa
         data->src_desc_ptr->h = data->in_tensor_dims[1];
         data->src_desc_ptr->w = data->in_tensor_dims[2];
         data->src_desc_ptr->c = data->in_tensor_dims[3];
-        std::cerr<<"\n n h w c "<<data->src_desc_ptr->n<<" "<<data->src_desc_ptr->h<<" "<<data->src_desc_ptr->w<<" "<<data->src_desc_ptr->c;
         data->src_desc_ptr->strides.nStride = data->src_desc_ptr->c * data->src_desc_ptr->w * data->src_desc_ptr->h;
         data->src_desc_ptr->strides.hStride = data->src_desc_ptr->c * data->src_desc_ptr->w;
         data->src_desc_ptr->strides.wStride = data->src_desc_ptr->c;
@@ -337,7 +306,6 @@ static vx_status VX_CALLBACK initializeCrop(vx_node node, const vx_reference *pa
         data->dst_desc_ptr->h = data->out_tensor_dims[1];
         data->dst_desc_ptr->w = data->out_tensor_dims[2];
         data->dst_desc_ptr->c = data->out_tensor_dims[3];
-        std::cerr<<"\n dest n h w c "<<data->dst_desc_ptr->n<<" "<<data->dst_desc_ptr->h<<" "<<data->dst_desc_ptr->w<<" "<<data->dst_desc_ptr->c;
         data->dst_desc_ptr->strides.nStride = data->dst_desc_ptr->c * data->dst_desc_ptr->w * data->dst_desc_ptr->h;
         data->dst_desc_ptr->strides.hStride = data->dst_desc_ptr->c * data->dst_desc_ptr->w;
         data->dst_desc_ptr->strides.wStride = data->dst_desc_ptr->c;
@@ -360,7 +328,6 @@ static vx_status VX_CALLBACK initializeCrop(vx_node node, const vx_reference *pa
         data->dst_desc_ptr->h = data->out_tensor_dims[2];
         data->dst_desc_ptr->w = data->out_tensor_dims[3];
         data->dst_desc_ptr->c = data->out_tensor_dims[1];
-        std::cerr<<"\ndest n h w c "<<data->dst_desc_ptr->n<<" "<<data->dst_desc_ptr->h<<" "<<data->dst_desc_ptr->w<<" "<<data->dst_desc_ptr->c;
         data->dst_desc_ptr->strides.nStride = data->dst_desc_ptr->c * data->dst_desc_ptr->w * data->dst_desc_ptr->h;
         data->dst_desc_ptr->strides.cStride = data->dst_desc_ptr->w * data->dst_desc_ptr->h;
         data->dst_desc_ptr->strides.hStride = data->dst_desc_ptr->w;
@@ -373,20 +340,16 @@ static vx_status VX_CALLBACK initializeCrop(vx_node node, const vx_reference *pa
         data->src_desc_ptr->h = data->in_tensor_dims[2];
         data->src_desc_ptr->w = data->in_tensor_dims[3];
         data->src_desc_ptr->c = data->in_tensor_dims[4];
-        std::cerr<<"\n n h w c "<<data->src_desc_ptr->n<<" "<<data->src_desc_ptr->h<<" "<<data->src_desc_ptr->w<<" "<<data->src_desc_ptr->c;
         data->src_desc_ptr->strides.nStride = data->src_desc_ptr->c * data->src_desc_ptr->w * data->src_desc_ptr->h;
         data->src_desc_ptr->strides.hStride = data->src_desc_ptr->c * data->src_desc_ptr->w;
         data->src_desc_ptr->strides.wStride = data->src_desc_ptr->c;
         data->src_desc_ptr->strides.cStride = 1;
         data->src_desc_ptr->layout = RpptLayout::NHWC;
-        std::cerr<<"\n Setting layout "<<data->src_desc_ptr->layout;
-        std::cerr<<"\n Setting data type "<<data->src_desc_ptr->dataType;
     
         data->dst_desc_ptr->n = data->out_tensor_dims[0] * data->in_tensor_dims[1];
         data->dst_desc_ptr->h = data->out_tensor_dims[2];
         data->dst_desc_ptr->w = data->out_tensor_dims[3];
         data->dst_desc_ptr->c = data->out_tensor_dims[1];
-        std::cerr<<"\ndest n h w c "<<data->dst_desc_ptr->n<<" "<<data->dst_desc_ptr->h<<" "<<data->dst_desc_ptr->w<<" "<<data->dst_desc_ptr->c;
         data->dst_desc_ptr->strides.nStride = data->dst_desc_ptr->c * data->dst_desc_ptr->w * data->dst_desc_ptr->h;
         data->dst_desc_ptr->strides.cStride = data->dst_desc_ptr->w * data->dst_desc_ptr->h;
         data->dst_desc_ptr->strides.hStride = data->dst_desc_ptr->w;
@@ -409,7 +372,6 @@ static vx_status VX_CALLBACK initializeCrop(vx_node node, const vx_reference *pa
         data->dst_desc_ptr->h = data->out_tensor_dims[2];
         data->dst_desc_ptr->w = data->out_tensor_dims[3];
         data->dst_desc_ptr->c = data->out_tensor_dims[1];
-        std::cerr<<"\ndest n h w c "<<data->dst_desc_ptr->n<<" "<<data->dst_desc_ptr->h<<" "<<data->dst_desc_ptr->w<<" "<<data->dst_desc_ptr->c;
         data->dst_desc_ptr->strides.nStride = data->dst_desc_ptr->c * data->dst_desc_ptr->w * data->dst_desc_ptr->h;
         data->dst_desc_ptr->strides.cStride = data->dst_desc_ptr->w * data->dst_desc_ptr->h;
         data->dst_desc_ptr->strides.hStride = data->dst_desc_ptr->w;
@@ -439,11 +401,10 @@ static vx_status VX_CALLBACK initializeCrop(vx_node node, const vx_reference *pa
     return VX_SUCCESS;
 }
 
-   
+
 
 static vx_status VX_CALLBACK uninitializeCrop(vx_node node, const vx_reference *parameters, vx_uint32 num)
 {
-    std::cerr<<"uninitializeCrop\n\n\n\n";
     CropLocalData *data;
     STATUS_ERROR_CHECK(vxQueryNode(node, VX_NODE_LOCAL_DATA_PTR, &data, sizeof(data)));
 #if ENABLE_OPENCL || ENABLE_HIP

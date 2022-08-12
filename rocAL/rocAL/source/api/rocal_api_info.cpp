@@ -63,10 +63,24 @@ ROCAL_API_CALL rocalGetTimingInfo(RocalContext p_context)
 {
     auto context = static_cast<Context *>(p_context);
     auto info = context->timing();
-    // INFO("shuffle time "+ TOSTR(info.shuffle_time)); to display time taken for shuffling dataset
-    // INFO("bbencode time "+ TOSTR(info.bb_process_time)); //to display time taken for bbox encoder
+    //INFO("shuffle time "+ TOSTR(info.shuffle_time)); to display time taken for shuffling dataset
+    //INFO("bbencode time "+ TOSTR(info.bb_process_time)); //to display time taken for bbox encoder
 
     return {info.image_read_time, info.image_decode_time, info.image_process_time, info.copy_to_output};
+}
+
+void ROCAL_API_CALL rocalGetOutputResizeWidth(RocalContext p_context, unsigned int *buf)
+{
+    auto context = static_cast<Context *>(p_context);
+    std::vector<uint32_t> resize_width_vec = context->master_graph->output_resize_width();
+    memcpy(buf, resize_width_vec.data(), resize_width_vec.size() * sizeof(uint32_t));
+}
+
+void ROCAL_API_CALL rocalGetOutputResizeHeight(RocalContext p_context, unsigned int *buf)
+{
+    auto context = static_cast<Context *>(p_context);
+    std::vector<uint32_t> resize_height_vec = context->master_graph->output_resize_height();
+    memcpy(buf, resize_height_vec.data(), resize_height_vec.size() * sizeof(uint32_t));
 }
 
 size_t ROCAL_API_CALL rocalIsEmpty(RocalContext p_context)

@@ -186,9 +186,9 @@ Timing VideoLoaderSharded::timing()
         max_decode_time = (info.video_decode_time > max_decode_time) ? info.video_decode_time : max_decode_time;
         swap_handle_time += info.video_process_time;
     }
-    t.video_decode_time = max_decode_time;
-    t.video_read_time = max_read_time;
-    t.video_process_time = swap_handle_time;
+    t.image_decode_time = max_decode_time;
+    t.image_read_time = max_read_time;
+    t.image_process_time = swap_handle_time;
     return t;
 }
 #endif

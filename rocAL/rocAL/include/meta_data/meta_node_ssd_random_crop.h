@@ -33,7 +33,7 @@ class SSDRandomCropMetaNode : public MetaNode
 {
 public:
     SSDRandomCropMetaNode(){};
-    void update_parameters(MetaDataBatch *input_meta_data) override;
+    void update_parameters(MetaDataBatch *input_meta_data, bool segmentation) override;
     std::shared_ptr<SSDRandomCropNode> _node = nullptr;
     void set_threshold(float threshold) { _threshold = threshold; }
     void set_num_of_attempts(int num_of_attempts){_num_of_attempts = num_of_attempts;}
