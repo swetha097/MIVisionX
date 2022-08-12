@@ -30,12 +30,21 @@ THE SOFTWARE.
 #include "caffe2_lmdb_record_reader.h"
 #include "cifar10_data_reader.h"
 #include "mxnet_recordio_reader.h"
+#include "sequence_file_source_reader.h"
 
 std::shared_ptr<Reader> create_reader(ReaderConfig config) {
     switch(config.type()) {
         case StorageType ::FILE_SYSTEM:
         {
             auto ret = std::make_shared<FileSourceReader>();
+            if(ret->initialize(config) != Reader::Status::OK)
+                throw std::runtime_error("File reader cannot access the storage");
+            return ret;
+        }
+        break;
+        case StorageType ::SEQUENCE_FILE_SYSTEM:
+        {
+            auto ret = std::make_shared<SequenceFileSourceReader>();
             if(ret->initialize(config) != Reader::Status::OK)
                 throw std::runtime_error("File reader cannot access the storage");
             return ret;

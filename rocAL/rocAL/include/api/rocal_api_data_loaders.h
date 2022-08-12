@@ -72,6 +72,54 @@ extern "C"  RocalTensor  ROCAL_API_CALL rocalJpegFileSourceSingleShard(RocalCont
                                                                    RocalImageSizeEvaluationPolicy decode_size_policy = ROCAL_USE_MOST_FREQUENT_SIZE,
                                                                    unsigned max_width = 0, unsigned max_height = 0);
 
+/// Creates JPEG image reader and decoder. Reads [Frames] sequences from a directory representing a collection of streams.
+/// \param context Rocal context
+/// \param source_path A NULL terminated char string pointing to the location on the disk
+/// \param rocal_color_format The color format the images in a sequence will be decoded to.
+/// \param internal_shard_count Defines the parallelism level by internally sharding the input dataset and load/decode using multiple decoder/loader instances.
+/// \param sequence_length: The number of frames in a sequence.
+/// \param is_output Determines if the user wants the loaded sequences to be part of the output or not.
+/// \param shuffle Determines if the user wants to shuffle the sequences or not.
+/// \param loop Determines if the user wants to indefinitely loops through images or not.
+/// \param step: Frame interval between each sequence.
+/// \param stride: Frame interval between frames in a sequence.
+/// \return Reference to the output image.
+extern "C"  RocalTensor  ROCAL_API_CALL rocalSequenceReader(RocalContext context,
+                                                        const char* source_path,
+                                                        RocalImageColor rocal_color_format,
+                                                        unsigned internal_shard_count,
+                                                        unsigned sequence_length,
+                                                        bool is_output,
+                                                        bool shuffle = false,
+                                                        bool loop = false,
+                                                        unsigned step = 0,
+                                                        unsigned stride = 0);
+
+/// Creates JPEG image reader and decoder. Reads [Frames] sequences from a directory representing a collection of streams. It accepts external sharding information to load a singe shard only.
+/// \param context Rocal context
+/// \param source_path A NULL terminated char string pointing to the location on the disk
+/// \param rocal_color_format The color format the images in a sequence will be decoded to.
+/// \param shard_id Shard id for this loader
+/// \param shard_count Total shard count
+/// \param sequence_length: The number of frames in a sequence.
+/// \param is_output Determines if the user wants the loaded sequences to be part of the output or not.
+/// \param shuffle Determines if the user wants to shuffle the dataset or not.
+/// \param loop Determines if the user wants to indefinitely loops through images or not.
+/// \param step: Frame interval between each sequence.
+/// \param stride: Frame interval between frames in a sequence.
+/// \return Reference to the output image
+extern "C"  RocalTensor  ROCAL_API_CALL rocalSequenceReaderSingleShard(RocalContext context,
+                                                                   const char* source_path,
+                                                                   RocalImageColor rocal_color_format,
+                                                                   unsigned shard_id,
+                                                                   unsigned shard_count,
+                                                                   unsigned sequence_length,
+                                                                   bool is_output,
+                                                                   bool shuffle = false,
+                                                                   bool loop = false,
+                                                                   unsigned step = 0,
+                                                                   unsigned stride = 0);
+
 /// Creates JPEG image reader and decoder. It allocates the resources and objects required to read and decode COCO Jpeg images stored on the file systems. It has internal sharding capability to load/decode in parallel is user wants.
 /// If images are not Jpeg compressed they will be ignored.
 /// \param rocal_context Rocal context
@@ -436,11 +484,11 @@ extern "C"  RocalTensor  ROCAL_API_CALL rocalRawCIFAR10Source(RocalContext conte
                                                         bool loop = false);
 
 /// Creates a video reader and decoder as a source. It allocates the resources and objects required to read and decode mp4 videos stored on the file systems.
-/// \param context Rali context
+/// \param context Rocal context
 /// \param source_path A NULL terminated char string pointing to the location on the disk.
 /// source_path can be a video file, folder containing videos or a text file
 /// \param color_format The color format the frames will be decoded to.
-/// \param rali_decode_device Enables software or hardware decoding. Currently only software decoding is supported.
+/// \param rocal_decode_device Enables software or hardware decoding. Currently only software decoding is supported.
 /// \param internal_shard_count Defines the parallelism level by internally sharding the input dataset and load/decode using multiple decoder/loader instances.
 /// \param sequence_length: The number of frames in a sequence.
 /// \param shuffle: to shuffle sequences.
@@ -453,7 +501,7 @@ extern "C"  RocalTensor  ROCAL_API_CALL rocalRawCIFAR10Source(RocalContext conte
 extern "C" RocalTensor  ROCAL_API_CALL rocalVideoFileSourceSingleShard(RocalContext context,
                                                         const char* source_path,
                                                         RocalImageColor color_format,
-                                                        RocalDecodeDevice rali_decode_device,
+                                                        RocalDecodeDevice rocal_decode_device,
                                                         unsigned internal_shard_count,
                                                         unsigned sequence_length,
                                                         bool is_output = false,
@@ -465,11 +513,11 @@ extern "C" RocalTensor  ROCAL_API_CALL rocalVideoFileSourceSingleShard(RocalCont
                                                         );
 
 /// Creates a video reader and decoder as a source. It allocates the resources and objects required to read and decode mp4 videos stored on the file systems.
-/// \param context Rali context
+/// \param context Rocal context
 /// \param source_path A NULL terminated char string pointing to the location on the disk.
 /// source_path can be a video file, folder containing videos or a text file
 /// \param color_format The color format the frames will be decoded to.
-/// \param rali_decode_device Enables software or hardware decoding. Currently only software decoding is supported.
+/// \param rocal_decode_device Enables software or hardware decoding. Currently only software decoding is supported.
 /// \param internal_shard_count Defines the parallelism level by internally sharding the input dataset and load/decode using multiple decoder/loader instances.
 /// \param sequence_length: The number of frames in a sequence.
 /// \param shuffle: to shuffle sequences.
@@ -482,7 +530,7 @@ extern "C" RocalTensor  ROCAL_API_CALL rocalVideoFileSourceSingleShard(RocalCont
 extern "C"  RocalTensor  ROCAL_API_CALL rocalVideoFileSource(RocalContext context,
                                                             const char* source_path,
                                                             RocalImageColor color_format,
-                                                            RocalDecodeDevice rali_decode_device,
+                                                            RocalDecodeDevice rocal_decode_device,
                                                             unsigned internal_shard_count,
                                                             unsigned sequence_length,
                                                             bool is_output = false,

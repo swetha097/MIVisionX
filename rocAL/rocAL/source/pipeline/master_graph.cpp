@@ -237,7 +237,7 @@ void
 MasterGraph::decrease_image_count()
 {
     if(!_loop)
-        _remaining_count -= _user_batch_size;
+        _remaining_count -= (_is_sequence_reader_output ? _sequence_batch_size : _user_batch_size);
 }
 void
 MasterGraph::create_single_graph()
@@ -411,6 +411,20 @@ MasterGraph::output_resize_height()
     return resize_height_vector;
 }
 
+void
+MasterGraph::sequence_start_frame_number(std::vector<size_t> &sequence_start_framenum)
+{
+    sequence_start_framenum = _sequence_start_framenum_vec.back();
+    _sequence_start_framenum_vec.pop_back();
+}
+
+void
+MasterGraph::sequence_frame_timestamps(std::vector<std::vector<float>> &sequence_frame_timestamp)
+{
+    sequence_frame_timestamp = _sequence_frame_timestamps_vec.back();
+    _sequence_frame_timestamps_vec.pop_back();
+}
+
 MasterGraph::Status // TO be removed
 MasterGraph::allocate_output_tensor()
 {
@@ -479,6 +493,8 @@ MasterGraph::reset()
     if(_output_thread.joinable())
         _output_thread.join();
     _ring_buffer.reset();
+    _sequence_start_framenum_vec.clear();
+    _sequence_frame_timestamps_vec.clear();
     // clearing meta ring buffer
     // if random_bbox meta reader is used: read again to get different crops
     if (_randombboxcrop_meta_data_reader != nullptr)
@@ -618,23 +634,27 @@ ImageNameBatch& operator+=(ImageNameBatch& dest, const ImageNameBatch& src)
 void MasterGraph::output_routine()
 {
     INFO("Output routine started with "+TOSTR(_remaining_count) + " to load");
+    size_t batch_ratio = _is_sequence_reader_output ? _sequence_batch_ratio : _user_to_internal_batch_ratio;
+    if(!_is_sequence_reader_output) 
+    {
 #if !ENABLE_HIP
-    if(processing_on_device_ocl() && _user_to_internal_batch_ratio != 1)
+    if(processing_on_device_ocl() && batch_ratio != 1)
         THROW("Internal failure, in the GPU processing case, user and input batch size must be equal")
 #else
-    if(processing_on_device_hip() && _user_to_internal_batch_ratio != 1)
+    if(processing_on_device_hip() && batch_ratio != 1)
         THROW("Internal failure, in the GPU processing case, user and input batch size must be equal")
 #endif
+    }
     try {
 
         _process_time.start();
         while (_processing)
         {
-            std::vector<size_t> tensor_each_cycle_size_vec = tensor_output_byte_size(); // /_user_to_internal_batch_ratio;
+            std::vector<size_t> tensor_each_cycle_size_vec = tensor_output_byte_size(); // /batch_ratio;
             ImageNameBatch full_batch_image_names = {};
             pMetaDataBatch full_batch_meta_data = nullptr;
             pMetaDataBatch augmented_batch_meta_data = nullptr;
-            if (_loader_module->remaining_count() < _user_batch_size)
+            if (_loader_module->remaining_count() < (_is_sequence_reader_output ? _sequence_batch_size : _user_batch_size))
             {
                 // If the internal process routine ,output_routine(), has finished processing all the images, and last
                 // processed images stored in the _ring_buffer will be consumed by the user when it calls the run() func
@@ -665,7 +685,6 @@ void MasterGraph::output_routine()
                 auto decode_image_info = _loader_module->get_decode_image_info();
                 auto crop_image_info = _loader_module->get_crop_image_info();
 
-                // std::cerr << "\nThis cycle names: " << this_cycle_names.at(0) << "\n";
                 if(this_cycle_names.size() != _internal_batch_size)
                     WRN("Internal problem: names count "+ TOSTR(this_cycle_names.size()))
                 // meta_data lookup is done before _meta_data_graph->process() is called to have the new meta_data ready for processing
@@ -881,6 +900,49 @@ std::vector<rocALTensorList *> MasterGraph::create_cifar10_label_reader(const ch
         _augmented_meta_data = _meta_data_reader->get_output();
     return _metadata_output_tensor_list;
 }
+
+std::vector<rocALTensorList *> MasterGraph::create_video_label_reader(const char *source_path, MetaDataReaderType reader_type, unsigned sequence_length, unsigned frame_step, unsigned frame_stride, bool file_list_frame_num)
+{
+    if( _meta_data_reader)
+        THROW("A metadata reader has already been created")
+    MetaDataConfig config(MetaDataType::Label, reader_type, source_path, std::map<std::string, std::string>(), std::string(), false, sequence_length, frame_step, frame_stride);
+    _meta_data_reader = create_meta_data_reader(config);
+    _meta_data_reader->init(config);
+    if(!file_list_frame_num)
+    {
+        _meta_data_reader->set_timestamp_mode();
+    }
+
+    unsigned num_of_dims = 1;
+    std::vector<unsigned> dims;
+    dims.resize(num_of_dims);
+    dims.at(0) = 1; // Number of labels per file
+    auto default_labels_info  = rocALTensorInfo(num_of_dims,
+                                 std::vector<unsigned>(std::move(dims)),
+                                 _mem_type,
+                                 RocalTensorDataType::INT32);
+    default_labels_info.set_metadata();
+    default_labels_info.set_tensor_layout(RocalTensorlayout::NONE);
+    _meta_data_buffer_size.emplace_back(_user_batch_size * sizeof(vx_int32));
+
+    for(unsigned i = 0; i < _user_batch_size; i++)
+    {
+        auto info = default_labels_info;
+        auto tensor = new rocALTensor(info);
+        _labels_tensor_list.push_back(tensor);
+    }
+    _ring_buffer.init_metadata(RocalMemType::HOST, _meta_data_buffer_size, _meta_data_buffer_size.size());
+
+    _meta_data_reader->read_all(source_path);
+    if (_augmented_meta_data)
+        THROW("Metadata can only have a single output")
+    else
+        _augmented_meta_data = _meta_data_reader->get_output();
+    _metadata_output_tensor_list.emplace_back(&_labels_tensor_list);
+
+    return _metadata_output_tensor_list;
+}
+
 std::vector<rocALTensorList *> MasterGraph::create_coco_meta_data_reader(const char *source_path, bool is_output, bool mask, MetaDataReaderType reader_type, MetaDataType label_type, bool is_box_encoder)
 {
     if(_meta_data_reader)

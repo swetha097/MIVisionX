@@ -35,6 +35,7 @@ THE SOFTWARE.
 #include "caffe2_meta_data_reader_detection.h"
 #include "tf_meta_data_reader_detection.h"
 #include "mxnet_meta_data_reader.h"
+#include "video_label_reader.h"
 
 std::shared_ptr<MetaDataReader> create_meta_data_reader(const MetaDataConfig& config) {
     switch(config.reader_type()) {
@@ -65,6 +66,17 @@ std::shared_ptr<MetaDataReader> create_meta_data_reader(const MetaDataConfig& co
             return ret;
         }
         break;
+#ifdef ROCAL_VIDEO
+        case MetaDataReaderType::VIDEO_LABEL_READER:
+        {
+            if(config.type() != MetaDataType::Label)
+                THROW("FOLDER_BASED_LABEL_READER can only be used to load labels")
+            auto ret = std::make_shared<VideoLabelReader>();
+            ret->init(config);
+            return ret;
+        }
+            break;
+#endif
         case MetaDataReaderType::COCO_META_DATA_READER:
         {
             if(config.type() != MetaDataType::BoundingBox)

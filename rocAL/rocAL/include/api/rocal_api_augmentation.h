@@ -24,6 +24,11 @@ THE SOFTWARE.
 #define MIVISIONX_ROCAL_API_AUGMENTATION_H
 #include "rocal_api_types.h"
 
+RocalTensor  ROCAL_API_CALL
+rocalSequenceRearrange(
+            RocalContext p_context, RocalTensor input, unsigned int* new_order, 
+            unsigned int  new_sequence_length, unsigned int sequence_length, bool is_output );
+
 /// Accepts U8 and RGB24 inputs
 /// \param context
 /// \param input

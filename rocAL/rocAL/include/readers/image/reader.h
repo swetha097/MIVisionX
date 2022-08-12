@@ -41,6 +41,7 @@ enum class StorageType
     COCO_FILE_SYSTEM = 5,
     VIDEO_FILE_SYSTEM = 6,
     MXNET_RECORDIO = 7,
+    SEQUENCE_FILE_SYSTEM = 8,
 };
 
 #ifdef ROCAL_VIDEO
@@ -75,16 +76,16 @@ struct ReaderConfig
     size_t get_shard_id() { return _shard_id; }
     size_t get_batch_size() { return _batch_count; }
     std::string path() { return _path; }
-#ifdef ROCAL_VIDEO
     void set_sequence_length(unsigned sequence_length) { _sequence_length = sequence_length; }
-    void set_frame_step(unsigned step) { _video_frame_step = step; }
-    void set_frame_stride(unsigned stride) { _video_frame_stride = stride; }
-    void set_total_frames_count(size_t total) { _total_frames_count = total; }
-    void set_video_properties(VideoProperties video_prop) { _video_prop = video_prop;}
+    void set_frame_step(unsigned step) { _sequence_frame_step = step; }
+    void set_frame_stride(unsigned stride) { _sequence_frame_stride = stride; }
     size_t get_sequence_length() { return _sequence_length; }
-    size_t get_frame_step() { return _video_frame_step; }
-    size_t get_frame_stride() { return _video_frame_stride; }
-    size_t get_total_frames_count() { return _total_frames_count; }
+    size_t get_frame_step() { return _sequence_frame_step; }
+    size_t get_frame_stride() { return _sequence_frame_stride; }
+#ifdef ROCAL_VIDEO
+    // void set_total_frames_count(size_t total) { _total_frames_count = total; }
+    void set_video_properties(VideoProperties video_prop) { _video_prop = video_prop;}
+    // size_t get_total_frames_count() { return _total_frames_count; }
     VideoProperties get_video_properties() { return _video_prop; }
 #endif
     std::string json_path() { return _json_path; }
@@ -104,12 +105,12 @@ private:
     bool _loop = false;
     std::string _file_prefix = ""; //!< to read only files with prefix. supported only for cifar10_data_reader and tf_record_reader
     std::shared_ptr<MetaDataReader> _meta_data_reader = nullptr;
-#ifdef ROCAL_VIDEO
     size_t _sequence_length = 1; // Video reader module sequence length
-    size_t _video_frame_step;
-    size_t _video_frame_stride = 1;
+    size_t _sequence_frame_step;
+    size_t _sequence_frame_stride = 1;
+#ifdef ROCAL_VIDEO
     VideoProperties _video_prop;
-    size_t _total_frames_count;
+    // size_t _total_frames_count;
 #endif
 };
 

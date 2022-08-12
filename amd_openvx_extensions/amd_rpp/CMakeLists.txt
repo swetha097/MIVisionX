@@ -116,7 +116,7 @@ list(APPEND SOURCES
         source/image/RotatebatchPD.cpp
         source/image/SaturationbatchPD.cpp
         source/image/ScalebatchPD.cpp
-        source/image/SequenceRearrange.cpp
+        source/image/SequenceRearrangebatchPD.cpp
         source/image/SnowbatchPD.cpp
         source/image/SobelbatchPD.cpp
         source/image/SubtractbatchPD.cpp
@@ -138,8 +138,7 @@ list(APPEND SOURCES
         source/tensor/Crop.cpp
         source/tensor/ColorTwist.cpp
         source/tensor/ResizeMirrorNormalize.cpp
-
-
+        source/tensor/SequenceRearrange.cpp
 
         source/kernel_rpp.cpp
         source/internal_publishKernels.cpp
@@ -183,5 +182,7 @@ if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "MSVC")
     set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} /MTd")
 else()
     target_link_libraries(openvx)
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fdata-sections")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fdata-sections -std=gnu++14")
 endif()
+
+message("-- ${White}vx_rpp -- CMAKE_CXX_FLAGS:${CMAKE_CXX_FLAGS}")
