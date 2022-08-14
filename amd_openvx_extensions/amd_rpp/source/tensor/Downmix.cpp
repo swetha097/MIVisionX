@@ -37,7 +37,7 @@ struct DownmixLocalData
     RpptDescPtr src_desc_ptr;
     RpptDesc srcDesc;
     RpptDesc dstDesc;
-    // RpptDescPtr dst_desc_ptr;
+    RpptDescPtr dst_desc_ptr;
     // RpptROI *roi_tensor_Ptr;
     // RpptRoiType roiType;
     // Rpp32u layout;
@@ -135,7 +135,7 @@ static vx_status VX_CALLBACK processDownmix(vx_node node, const vx_reference *pa
     if (data->device_type == AGO_TARGET_AFFINITY_CPU)
     {
         refreshDownmix(node, parameters, num, data);
-        rpp_status = rppt_down_mixing_host((float *)data->pSrc, data->src_desc_ptr, (float *)data->pDst, data->samples, data->channels, false);
+        rpp_status = rppt_down_mixing_host((float *)data->pSrc, data->src_desc_ptr, (float *)data->pDst, data->dst_desc_ptr, data->samples, data->channels, false);
         return_status = (rpp_status == RPP_SUCCESS) ? VX_SUCCESS : VX_FAILURE;
     }
     return return_status;
@@ -163,14 +163,14 @@ static vx_status VX_CALLBACK initializeDownmix(vx_node node, const vx_reference 
         data->src_desc_ptr->dataType = RpptDataType::F32;
     data->src_desc_ptr->offsetInBytes = 0;
 
-    // // Querying for output tensor
-    // data->dst_desc_ptr = &data->dstDesc;
-    // STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[1], VX_TENSOR_NUMBER_OF_DIMS, &data->dst_desc_ptr->numDims, sizeof(data->dst_desc_ptr->numDims)));
-    // STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[1], VX_TENSOR_DIMS, &data->out_tensor_dims, sizeof(vx_size) * data->dst_desc_ptr->numDims));
+    // Querying for output tensor
+    data->dst_desc_ptr = &data->dstDesc;
+    STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[1], VX_TENSOR_NUMBER_OF_DIMS, &data->dst_desc_ptr->numDims, sizeof(data->dst_desc_ptr->numDims)));
+    STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[1], VX_TENSOR_DIMS, &data->out_tensor_dims, sizeof(vx_size) * data->dst_desc_ptr->numDims));
     STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[1],VX_TENSOR_DATA_TYPE, &data->out_tensor_type, sizeof(data->out_tensor_type)));
-    // if (data->out_tensor_type == vx_type_e::VX_TYPE_FLOAT32)
-    //     data->dst_desc_ptr->dataType = RpptDataType::F32;
-    // data->dst_desc_ptr->offsetInBytes = 0;
+    if (data->out_tensor_type == vx_type_e::VX_TYPE_FLOAT32)
+        data->dst_desc_ptr->dataType = RpptDataType::F32;
+    data->dst_desc_ptr->offsetInBytes = 0;
 
     // source_description_ptr
     data->src_desc_ptr->n = data->in_tensor_dims[0];
@@ -182,6 +182,17 @@ static vx_status VX_CALLBACK initializeDownmix(vx_node node, const vx_reference 
     data->src_desc_ptr->strides.wStride = data->src_desc_ptr->c;
     data->src_desc_ptr->strides.cStride = 1;
     data->src_desc_ptr->numDims = 4;
+
+    // source_description_ptr
+    data->dst_desc_ptr->n = data->in_tensor_dims[0];
+    data->dst_desc_ptr->w = data->in_tensor_dims[1];
+    data->dst_desc_ptr->h = 1;
+    data->dst_desc_ptr->c = 1;
+    data->dst_desc_ptr->strides.nStride = data->dst_desc_ptr->c * data->dst_desc_ptr->w * data->dst_desc_ptr->h;
+    data->dst_desc_ptr->strides.hStride = data->dst_desc_ptr->c * data->dst_desc_ptr->w;
+    data->dst_desc_ptr->strides.wStride = data->dst_desc_ptr->c;
+    data->dst_desc_ptr->strides.cStride = 1;
+    data->dst_desc_ptr->numDims = 4;
 
 // #if ENABLE_HIP
 //     if (data->device_type == AGO_TARGET_AFFINITY_GPU)

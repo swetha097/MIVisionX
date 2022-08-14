@@ -620,7 +620,7 @@ rocalAudioFileSource(
             output_dims.resize(3);
             output_dims.at(0) = context->user_batch_size();
             output_dims.at(1) = info.dims()[1];
-            output_dims.at(2) = 1;
+            // output_dims.at(2) = 1;
             output_info.set_dims(output_dims);
             output_info.set_tensor_layout(RocalTensorlayout::NONE);
 
