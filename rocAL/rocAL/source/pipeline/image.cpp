@@ -132,7 +132,7 @@ ImageInfo::ImageInfo(
         _height(height_),
         _color_planes(planes),
         _batch_size(batches),
-        _data_size(width_ * height_ * _batch_size * planes),
+        _data_size((uint64_t)width_ * height_ * _batch_size * planes),
         _mem_type(mem_type_),
         _color_fmt(col_fmt_)
         {
@@ -164,7 +164,7 @@ void Image::update_image_roi(const std::vector<uint32_t> &width, const std::vect
 
         if(height[i] > _info.height_single())
         {
-            ERR("Given ROI height is larger than buffer with for image[" + TOSTR(i) + "] " + TOSTR(height[i]) +" > " + TOSTR(_info.height_single()))
+            ERR("Given ROI height is larger than buffer height for image[" + TOSTR(i) + "] " + TOSTR(height[i]) +" > " + TOSTR(_info.height_single()))
             _info._roi_height->at(i) = _info.height_single();
         }
         else
@@ -215,7 +215,11 @@ int Image::create_virtual(vx_context context, vx_graph graph)
         return -1;
 
     _context = context;
+    std::cerr << "Virual INPUT w ::" << _info.width();
+    std::cerr << "Virtual INPUT h ::" << _info.height_single();
 
+        // std::cerr << "OUTPUT w ::" << _outputs[0]->info().width();
+        // std::cerr << "OUTPUT h ::" << _outputs[0]->info().height_single();
     // create a virtual image as the output image for this node
     vx_handle = vxCreateVirtualImage(graph, _info.width(), _info.height_batch(), VX_DF_IMAGE_VIRT);
     vx_status status;
@@ -268,7 +272,7 @@ int Image::create_from_handle(vx_context context)
         THROW("Error: vxCreateImageFromHandle(input:[" + TOSTR(_info.width()) + "x" + TOSTR(_info.height_batch()) + "]): failed " + TOSTR(status))
 
     _info._type = ImageInfo::Type::HANDLE;
-    _info._data_size = size;
+    // _info._data_size = size;
     return 0;
 }
 int Image::create(vx_context context)

@@ -81,7 +81,7 @@ else()
 endif()
 
 
-include_directories (${ROCM_PATH}/libexec/mivisionx/rali/python//)
+include_directories (${ROCM_PATH}/libexec/mivisionx/rocAL/)
 link_directories    (${ROCM_PATH}/lib/)
 
 add_executable(${PROJECT_NAME} ./rocAL_dataloader_mt.cpp)
@@ -109,26 +109,3 @@ target_link_libraries(${PROJECT_NAME} rocal)
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3 -mf16c -Wall -pthread")
 
 install(TARGETS ${PROJECT_NAME} DESTINATION ${CMAKE_INSTALL_BINDIR})
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

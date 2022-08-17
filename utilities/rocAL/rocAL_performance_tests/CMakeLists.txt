@@ -34,7 +34,7 @@ list(APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/../amd_openvx/cmake)
 find_package(OpenCV QUIET)
 find_package(AMDRPP QUIET)
 
-include_directories(${ROCM_PATH}/libexec/mivisionx/rali/python/)
+include_directories(${ROCM_PATH}/libexec/mivisionx/rocAL/)
 link_directories(${ROCM_PATH}/lib/)
 file(GLOB My_Source_Files ./*.cpp)
 add_executable(${PROJECT_NAME} ${My_Source_Files})
@@ -60,26 +60,3 @@ target_link_libraries(${PROJECT_NAME} rocal)
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3 -mf16c -Wall ")
 
 install(TARGETS ${PROJECT_NAME} DESTINATION ${CMAKE_INSTALL_BINDIR})
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
