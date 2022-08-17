@@ -61,6 +61,34 @@ void convert_float_to_uchar_buffer(float * input_float_buffer, unsigned char * o
     }
 }
 
+void convert_nchw_to_nhwc(unsigned char * input_chw, unsigned char * output_hwc, int n, int h, int w, int c)
+{
+    int image_stride = h * w * c;
+    int channel_stride = h * w;
+    for(size_t idx = 0; idx < n; idx++)
+    {
+        unsigned char * input_image = input_chw + idx * image_stride;
+        unsigned char * plane_R = input_image;
+        unsigned char * plane_G = input_image + channel_stride;
+        unsigned char * plane_B = input_image + channel_stride;
+
+        unsigned char * output_image = output_hwc;
+        for(size_t i = 0; i < h; i++)
+        {
+            for(size_t j = 0; j < w; j++)
+            {
+                *output_image++ = *plane_R;
+                *output_image++ = *plane_G;
+                *output_image++ = *plane_B;
+                plane_R++;
+                plane_G++;
+                plane_B++;
+            }
+        }
+        output_hwc += image_stride;
+    }
+}
+
 int main(int argc, const char ** argv)
 {
     // check command-line usage
@@ -273,9 +301,9 @@ int main(int argc, const char ** argv)
             mat_input = cv::Mat(h, w, cv_color_format);
             mat_output = cv::Mat(h, w, cv_color_format);
 
+            unsigned char *out_buffer;
             if(output_tensor_list->at(idx)->info().data_type() == RocalTensorDataType::FP32)
             {
-                unsigned char *out_buffer;
                 float * out_f_buffer;
                 if(output_tensor_list->at(idx)->info().mem_type() == RocalMemType::HIP)
                 {
@@ -287,20 +315,29 @@ int main(int argc, const char ** argv)
 
                 out_buffer = (unsigned char *)malloc(output_tensor_list->at(idx)->info().data_size() / 4);
                 convert_float_to_uchar_buffer(out_f_buffer, out_buffer, output_tensor_list->at(idx)->info().data_size() / 4);
-                mat_input.data = (unsigned char *)out_buffer;
             }
             else
             {
                 if(output_tensor_list->at(idx)->info().mem_type() == RocalMemType::HIP)
                 {
-                    unsigned char *out_buffer;
                     out_buffer = (unsigned char *)malloc(output_tensor_list->at(idx)->info().data_size());
                     output_tensor_list->at(idx)->copy_data(out_buffer, false);
-                    mat_input.data = (unsigned char *)out_buffer;
                 }
                 else if(output_tensor_list->at(idx)->info().mem_type() == RocalMemType::HOST)
-                    mat_input.data = (unsigned char *)(output_tensor_list->at(idx)->buffer());
+                    out_buffer = (unsigned char *)(output_tensor_list->at(idx)->buffer());
             }
+
+            if(output_tensor_list->at(idx)->info().layout() == RocalTensorlayout::NCHW)
+            {
+                // cv::Mat mat_input_nchw = cv::Mat(cv_color_format, h, w);
+                // mat_input_nchw = (unsigned char *)out_buffer;
+                // cv::transposeND(mat_input_nchw, {0, 3, 1, 2}, mat_input); // Can be enabled only with OpenCV 4.6.0
+                convert_nchw_to_nhwc(out_buffer, mat_input.data, output_tensor_list->at(idx)->info().dims().at(0), output_tensor_list->at(idx)->info().dims().at(2),
+                                     output_tensor_list->at(idx)->info().dims().at(3), output_tensor_list->at(idx)->info().dims().at(1));            
+            }
+            else
+                mat_input.data = (unsigned char *)out_buffer;
+
             mat_input.copyTo(mat_output(cv::Rect(0, 0, w, h)));
 
             std::string out_filename = std::string(outName) + ".png";   // in case the user specifies non png filename
