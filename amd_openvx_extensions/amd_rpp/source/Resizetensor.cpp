@@ -43,6 +43,7 @@ struct ResizetensorLocalData
     RpptRoiType roiType;
     RpptImagePatchPtr dstImgSize;
     RpptDesc srcDesc, dstDesc;
+    RpptInterpolationType interpolation_type;
 #if ENABLE_OPENCL
     cl_mem cl_pSrc;
     cl_mem cl_pDst;
@@ -95,11 +96,14 @@ static vx_status VX_CALLBACK validateResizetensor(vx_node node, const vx_referen
     vx_status status = VX_SUCCESS;
     vx_enum scalar_type;
     STATUS_ERROR_CHECK(vxQueryScalar((vx_scalar)parameters[6], VX_SCALAR_TYPE, &scalar_type, sizeof(scalar_type)));
-    if (scalar_type != VX_TYPE_UINT32)
+    if (scalar_type != VX_TYPE_INT32)
         return ERRMSG(VX_ERROR_INVALID_TYPE, "validate: Paramter: #6 type=%d (must be size)\n", scalar_type);
     STATUS_ERROR_CHECK(vxQueryScalar((vx_scalar)parameters[7], VX_SCALAR_TYPE, &scalar_type, sizeof(scalar_type)));
     if (scalar_type != VX_TYPE_UINT32)
         return ERRMSG(VX_ERROR_INVALID_TYPE, "validate: Paramter: #7 type=%d (must be size)\n", scalar_type);
+    STATUS_ERROR_CHECK(vxQueryScalar((vx_scalar)parameters[8], VX_SCALAR_TYPE, &scalar_type, sizeof(scalar_type)));
+    if (scalar_type != VX_TYPE_UINT32)
+        return ERRMSG(VX_ERROR_INVALID_TYPE, "validate: Paramter: #8 type=%d (must be size)\n", scalar_type);
     // Check for input parameters
     vx_parameter input_param;
     vx_image input;
@@ -155,7 +159,7 @@ static vx_status VX_CALLBACK processResizetensor(vx_node node, const vx_referenc
         return_status = (rpp_status == RPP_SUCCESS) ? VX_SUCCESS : VX_FAILURE;
 #elif ENABLE_HIP
         refreshResizetensor(node, parameters, num, data);
-        // rpp_status = rppt_resize_gpu(data->hip_pSrc, data->srcDescPtr, data->hip_pDst, data->dstDescPtr, data->hip_dstImgSize, RpptInterpolationType::TRIANGULAR, data->hip_roiTensorPtrSrc, data->roiType, data->rppHandle);
+        // rpp_status = rppt_resize_gpu(data->hip_pSrc, data->srcDescPtr, data->hip_pDst, data->dstDescPtr, data->hip_dstImgSize, data->interpolation_type, data->hip_roiTensorPtrSrc, data->roiType, data->rppHandle);
         // commenting the above line till tensor resize calls are merged with rpp TOT
         return_status = (rpp_status == RPP_SUCCESS) ? VX_SUCCESS : VX_FAILURE;
 #endif
@@ -163,7 +167,7 @@ static vx_status VX_CALLBACK processResizetensor(vx_node node, const vx_referenc
     if (data->device_type == AGO_TARGET_AFFINITY_CPU)
     {
         refreshResizetensor(node, parameters, num, data);
-        rpp_status = rppt_resize_host(data->pSrc, data->srcDescPtr, data->pDst, data->dstDescPtr, data->dstImgSize, RpptInterpolationType::TRIANGULAR, data->roiTensorPtrSrc, data->roiType, data->rppHandle);
+        rpp_status = rppt_resize_host(data->pSrc, data->srcDescPtr, data->pDst, data->dstDescPtr, data->dstImgSize, data->interpolation_type, data->roiTensorPtrSrc, data->roiType, data->rppHandle);
         // commenting the above line till tensor resize calls are merged with rpp TOT
         return_status = (rpp_status == RPP_SUCCESS) ? VX_SUCCESS : VX_FAILURE;
     }
@@ -179,8 +183,10 @@ static vx_status VX_CALLBACK initializeResizetensor(vx_node node, const vx_refer
 #elif ENABLE_HIP
     STATUS_ERROR_CHECK(vxQueryNode(node, VX_NODE_ATTRIBUTE_AMD_HIP_STREAM, &data->handle.hipstream, sizeof(data->handle.hipstream)));
 #endif
-    STATUS_ERROR_CHECK(vxCopyScalar((vx_scalar)parameters[7], &data->device_type, VX_READ_ONLY, VX_MEMORY_TYPE_HOST));
-    STATUS_ERROR_CHECK(vxReadScalarValue((vx_scalar)parameters[6], &data->nbatchSize));
+    STATUS_ERROR_CHECK(vxCopyScalar((vx_scalar)parameters[8], &data->device_type, VX_READ_ONLY, VX_MEMORY_TYPE_HOST));
+    STATUS_ERROR_CHECK(vxReadScalarValue((vx_scalar)parameters[7], &data->nbatchSize));
+    int interpolation_type;
+    STATUS_ERROR_CHECK(vxCopyScalar((vx_scalar)parameters[6], &interpolation_type, VX_READ_ONLY, VX_MEMORY_TYPE_HOST));
     data->srcDimensions = (RppiSize *)malloc(sizeof(RppiSize) * data->nbatchSize);
     data->dstDimensions = (RppiSize *)malloc(sizeof(RppiSize) * data->nbatchSize);
     data->srcBatch_width = (Rpp32u *)malloc(sizeof(Rpp32u) * data->nbatchSize);
@@ -200,6 +206,29 @@ static vx_status VX_CALLBACK initializeResizetensor(vx_node node, const vx_refer
     vx_df_image df_image = VX_DF_IMAGE_VIRT;
     STATUS_ERROR_CHECK(vxQueryImage((vx_image)parameters[0], VX_IMAGE_ATTRIBUTE_FORMAT, &df_image, sizeof(df_image)));
     uint ip_channel = (df_image == VX_DF_IMAGE_RGB) ? 3 : 1;
+
+    // Set interpolation type
+    switch(interpolation_type)
+    {
+        case 0:
+            data->interpolation_type = RpptInterpolationType::NEAREST_NEIGHBOR;
+            break;
+        case 1:
+            data->interpolation_type = RpptInterpolationType::BILINEAR;
+            break;
+        case 2:
+            data->interpolation_type = RpptInterpolationType::BICUBIC;
+            break;
+        case 3:
+            data->interpolation_type = RpptInterpolationType::LANCZOS;
+            break;
+        case 4:
+            data->interpolation_type = RpptInterpolationType::TRIANGULAR;
+            break;
+        case 5:
+            data->interpolation_type = RpptInterpolationType::GAUSSIAN;
+            break;
+    }
 
     // Initializing tensor config parameters.
     data->srcDescPtr = &data->srcDesc;
@@ -329,7 +358,7 @@ vx_status Resizetensor_Register(vx_context context)
     vx_kernel kernel = vxAddUserKernel(context, "org.rpp.Resizetensor",
                                        VX_KERNEL_RPP_RESIZETENSOR,
                                        processResizetensor,
-                                       8,
+                                       9,
                                        validateResizetensor,
                                        initializeResizetensor,
                                        uninitializeResizetensor);
@@ -357,6 +386,7 @@ vx_status Resizetensor_Register(vx_context context)
         PARAM_ERROR_CHECK(vxAddParameterToKernel(kernel, 5, VX_INPUT, VX_TYPE_ARRAY, VX_PARAMETER_STATE_REQUIRED));
         PARAM_ERROR_CHECK(vxAddParameterToKernel(kernel, 6, VX_INPUT, VX_TYPE_SCALAR, VX_PARAMETER_STATE_REQUIRED));
         PARAM_ERROR_CHECK(vxAddParameterToKernel(kernel, 7, VX_INPUT, VX_TYPE_SCALAR, VX_PARAMETER_STATE_REQUIRED));
+        PARAM_ERROR_CHECK(vxAddParameterToKernel(kernel, 8, VX_INPUT, VX_TYPE_SCALAR, VX_PARAMETER_STATE_REQUIRED));
         PARAM_ERROR_CHECK(vxFinalizeKernel(kernel));
     }
     if (status != VX_SUCCESS)

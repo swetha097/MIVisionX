@@ -850,7 +850,7 @@ VX_API_ENTRY vx_node VX_API_CALL vxExtrppNode_ResizebatchPD(vx_graph graph, vx_i
     return node;
 }
 
-VX_API_ENTRY vx_node VX_API_CALL vxExtrppNode_Resizetensor(vx_graph graph, vx_image pSrc, vx_array srcImgWidth, vx_array srcImgHeight, vx_image pDst, vx_array dstImgWidth, vx_array dstImgHeight, vx_uint32 nbatchSize)
+VX_API_ENTRY vx_node VX_API_CALL vxExtrppNode_Resizetensor(vx_graph graph, vx_image pSrc, vx_array srcImgWidth, vx_array srcImgHeight, vx_image pDst, vx_array dstImgWidth, vx_array dstImgHeight, vx_int32 interpolation_type, vx_uint32 nbatchSize)
 {
     vx_node node = NULL;
     vx_context context = vxGetContext((vx_reference)graph);
@@ -859,6 +859,7 @@ VX_API_ENTRY vx_node VX_API_CALL vxExtrppNode_Resizetensor(vx_graph graph, vx_im
         vx_uint32 dev_type = getGraphAffinity(graph);
         vx_scalar DEV_TYPE = vxCreateScalar(vxGetContext((vx_reference)graph), VX_TYPE_UINT32, &dev_type);
         vx_scalar NBATCHSIZE = vxCreateScalar(vxGetContext((vx_reference)graph), VX_TYPE_UINT32, &nbatchSize);
+        vx_scalar INTERPOLATION_TYPE = vxCreateScalar(vxGetContext((vx_reference)graph), VX_TYPE_INT32, &interpolation_type);
         vx_reference params[] = {
             (vx_reference)pSrc,
             (vx_reference)srcImgWidth,
@@ -866,9 +867,10 @@ VX_API_ENTRY vx_node VX_API_CALL vxExtrppNode_Resizetensor(vx_graph graph, vx_im
             (vx_reference)pDst,
             (vx_reference)dstImgWidth,
             (vx_reference)dstImgHeight,
+            (vx_reference)INTERPOLATION_TYPE,
             (vx_reference)NBATCHSIZE,
             (vx_reference)DEV_TYPE};
-        node = createNode(graph, VX_KERNEL_RPP_RESIZETENSOR, params, 8);
+        node = createNode(graph, VX_KERNEL_RPP_RESIZETENSOR, params, 9);
     }
     return node;
 }
