@@ -142,7 +142,8 @@ void ImageLoader::initialize(ReaderConfig reader_cfg, DecoderConfig decoder_cfg,
 
     if (_output_mem_size == 0)
         THROW("output image size is 0, set_output_image() should be called before initialize for loader modules")
-
+    _reader_config = reader_cfg;
+    _decoder_config = decoder_cfg;
     _mem_type = mem_type;
     _batch_size = batch_size;
     _loop = reader_cfg.loop();
