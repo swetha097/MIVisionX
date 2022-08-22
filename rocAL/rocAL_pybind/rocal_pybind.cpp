@@ -147,8 +147,8 @@ namespace rocal{
         // }
 
         py::array_t<int> labels_array = py::array_t<int>(
-                                                          {batch_size, 1},
-                                                          {sizeof(int), sizeof(int)},
+                                                          {batch_size},
+                                                          {sizeof(int)},
                                                           labels_buf_ptr,
                                                           py::cast<py::none>(Py_None));
 
