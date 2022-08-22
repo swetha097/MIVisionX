@@ -222,6 +222,15 @@ ROCAL_API_CALL rocalGetImageLabels_Ptr(RocalContext p_context, int** labels_buf_
     auto context = static_cast<Context*>(p_context);
     auto meta_data = context->master_graph->meta_data();
     *labels_buf_ptr = (int *) meta_data.second->get_label_batch().data();
+
+     size_t meta_data_batch_size = meta_data.second->get_label_batch().size();
+    //  for(uint i=0; i<meta_data_batch_size; i++)
+    //  {
+    //     // std::cout<<"\n LABELSSSS in C++ : "<<meta_data.second->get_label_batch()[i];
+    //     std::cout<<"\n LABELS from ptr:"<<(*labels_buf_ptr)[i];
+    //  }
+    // std::exit(0);
+
 }
 
 void

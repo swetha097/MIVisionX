@@ -125,13 +125,13 @@ namespace rocal{
         return py::cast<py::none>(Py_None);
     }
 
-    // py::object wrapper_label_copy(RocalContext context, py::object p)
-    // {
-    //     auto ptr = ctypes_void_ptr(p);
-    //     // call pure C++ function
-    //     rocalGetImageLabels(context,ptr);
-    //     return py::cast<py::none>(Py_None);
-    // }
+    py::object wrapper_label_copy(RocalContext context, py::object p)
+    {
+        auto ptr = ctypes_void_ptr(p);
+        // call pure C++ function
+        rocalGetImageLabels(context,ptr);
+        return py::cast<py::none>(Py_None);
+    }
 
     py::array_t<int> wrapper_label_copy_ptr(RocalContext context, int batch_size)
     {
@@ -356,7 +356,7 @@ namespace rocal{
         m.def("RandomBBoxCrop",&wrapper_random_bbox_crop);
         m.def("COCOReader",&rocalCreateCOCOReader);
         m.def("VideoMetaDataReader",&rocalCreateVideoLabelReader);
-        m.def("getImageLabels",&wrapper_label_copy_ptr);
+        m.def("getImageLabels",&wrapper_label_copy);
         m.def("getBBLabels",&wrapper_BB_label_copy);
         m.def("getBBCords",&wrapper_BB_cord_copy);
         m.def("rocalCopyEncodedBoxesAndLables",&wrapper_encoded_bbox_label);

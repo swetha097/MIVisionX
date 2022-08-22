@@ -36,7 +36,7 @@ void ResizeNode::create_node()
 {
     if(_node)
         return;
-    
+
     _crop_param->create_array(_graph);
 
     std::vector<uint32_t> dst_roi_width(_batch_size,_outputs[0]->info().width());
@@ -73,8 +73,6 @@ void ResizeNode::update_node()
         _dst_roi_size[0] = _dest_width;
         _dst_roi_size[1] = _dest_height;
         adjust_out_roi_size();
-        _dst_roi_size[0] = _dst_roi_size[0] > _outputs[0]->info().width() ? _outputs[0]->info().width() : _dst_roi_size[0];
-        _dst_roi_size[1] = _dst_roi_size[1] > _outputs[0]->info().height_single() ? _outputs[0]->info().height_single() : _dst_roi_size[1];
         _dst_roi_width_vec.push_back(_dst_roi_size[0]);
         _dst_roi_height_vec.push_back(_dst_roi_size[1]);
     }
