@@ -10,7 +10,32 @@ tf.compat.v1.disable_v2_behavior()
 import numpy as np
 import tensorflow_hub as hub
 
+# def draw_patches(img, idx):
+#     print("DRAW PATCHES!!")
+#     #image is expected as a tensor, bboxes as numpy
+#     import cv2 
+#     image =img
+#     print(image)
+#     # image = img.transpose([0,2,3,1])
+#     image = img.transpose([2, 1, 0])
+    
+#     image =image.astype(np.uint8)
+    
+#     # print(image.dtype)
+#     print(image.shape)
+#     image1 = cv2.cvtColor(image, cv2.COLOR_RGB2BGR)
+#     print("printiiiiiiiiiiiiii\n\n")
+#     cv2.imwrite("train.png", image1 )
 
+def draw_patches(img, idx):
+    # print("DRAW PATCHES!!")
+    #image is expected as a tensor, bboxes as numpy
+    import cv2 
+    image =img
+    print(image.shape)
+    image =image.astype(np.uint8)
+    image1 = cv2.cvtColor(image, cv2.COLOR_RGB2BGR)
+    cv2.imwrite("output/"+str(idx)+"_""tr"+".jpg", image1 )
 
 
 
@@ -116,9 +141,9 @@ def main():
 		jpegs = inputs["image/encoded"]
 		images = fn.decoders.image(jpegs, user_feature_key_map=featureKeyMap, output_type=types.RGB, path=TRAIN_RECORDS_DIR)
 		resized = fn.resize(images, resize_x=crop_size[0], resize_y=crop_size[1])
-		flip_coin = fn.random.coin_flip(probability=0.5)
-		cmn_images = fn.crop_mirror_normalize(resized, crop=(crop_size[1], crop_size[0]), mean=[0,0,0], std=[255,255,255], mirror=flip_coin, output_dtype=types.FLOAT, output_layout=types.NCHW, pad_output=False)
-		trainPipe.set_outputs(cmn_images)
+		# flip_coin = fn.random.coin_flip(probability=0.5)
+		# cmn_images = fn.crop_mirror_normalize(resized, crop=(crop_size[1], crop_size[0]), mean=[0,0,0], std=[255,255,255], mirror=flip_coin, output_dtype=types.FLOAT, output_layout=types.NCHW, pad_output=False)
+		trainPipe.set_outputs(resized)
 	trainPipe.build()
 
 	valPipe = Pipeline(batch_size=TRAIN_BATCH_SIZE, num_threads=1, rocal_cpu=RUN_ON_HOST)
@@ -139,46 +164,55 @@ def main():
 	valPipe.build()
 
 	trainIterator = ROCALIterator(trainPipe)
-	valIterator = ROCALIterator(valPipe)
+	# valIterator = ROCALIterator(valPipe)
+	cnt = 0
+	for e in range(3):
+		for i , it in enumerate(trainIterator):
+			print("************************************** i *************************************",i)
+			for img in it[0]:
+				cnt = cnt + 1
+				draw_patches(img, cnt)
+			# print("name ", it[2])
+		trainIterator.reset()
 
 
-	i = 0
-	with tf.compat.v1.Session(graph = train_graph) as sess:
-		sess.run(tf.compat.v1.global_variables_initializer())
-		while i < NUM_TRAIN_STEPS:
+	# i = 0
+	# with tf.compat.v1.Session(graph = train_graph) as sess:
+	# 	sess.run(tf.compat.v1.global_variables_initializer())
+	# 	while i < NUM_TRAIN_STEPS:
 
-			for t, (train_image_ndArray, train_label_ndArray) in enumerate(trainIterator, 0):
-				train_image_ndArray_transposed = np.transpose(train_image_ndArray, [0, 2, 3, 1])
-				train_label_one_hot_list = get_label_one_hot(train_label_ndArray)
-				train_loss, _, train_accuracy = sess.run(
-					[cross_entropy_mean, train_op, accuracy],
-					feed_dict={decoded_images: train_image_ndArray_transposed, labels: train_label_one_hot_list})
-				print ("Step :: %s\tTrain Loss :: %.2f\tTrain Accuracy :: %.2f%%\t" % (i, train_loss, (train_accuracy * 100)))
-				is_final_step = (i == (NUM_TRAIN_STEPS - 1))
-				if i % EVAL_EVERY == 0 or is_final_step:
-					mean_acc = 0
-					mean_loss = 0
-					print("\n\n-------------------------------------------------------------------------------- BEGIN VALIDATION --------------------------------------------------------------------------------")
-					for j, (val_image_ndArray, val_label_ndArray) in enumerate(valIterator, 0):
-						val_image_ndArray_transposed = np.transpose(val_image_ndArray, [0, 2, 3, 1])
-						val_label_one_hot_list = get_label_one_hot(val_label_ndArray)
-						val_loss, val_accuracy, val_prediction, val_target, correct_predicate = sess.run(
-							[cross_entropy_mean, accuracy, prediction, correct_label, correct_prediction],
-							feed_dict={decoded_images: val_image_ndArray_transposed, labels: val_label_one_hot_list})
-						mean_acc += val_accuracy
-						mean_loss += val_loss
-						num_correct_predicate = 0
-						for predicate in correct_predicate:
-							if predicate == True:
-								num_correct_predicate += 1
-						print ("Step :: %s\tTarget :: %s\tPrediction :: %s\tCorrect Predictions :: %s/%s\tValidation Loss :: %.2f\tValidation Accuracy :: %.2f%%\t" % (j, val_target, val_prediction, num_correct_predicate, len(correct_predicate), val_loss, (val_accuracy * 100)))
-					mean_acc = (mean_acc * 100) / j
-					print("\nSUMMARY:\nMean Loss :: %.2f\tMean Accuracy :: %.2f%%" % (mean_loss, mean_acc))
-					print("\n-------------------------------------------------------------------------------- END VALIDATION --------------------------------------------------------------------------------\n\n")
+	# 		for t, (train_image_ndArray, train_label_ndArray) in enumerate(trainIterator, 0):
+	# 			train_image_ndArray_transposed = np.transpose(train_image_ndArray, [0, 2, 3, 1])
+	# 			train_label_one_hot_list = get_label_one_hot(train_label_ndArray)
+	# 			train_loss, _, train_accuracy = sess.run(
+	# 				[cross_entropy_mean, train_op, accuracy],
+	# 				feed_dict={decoded_images: train_image_ndArray_transposed, labels: train_label_one_hot_list})
+	# 			print ("Step :: %s\tTrain Loss :: %.2f\tTrain Accuracy :: %.2f%%\t" % (i, train_loss, (train_accuracy * 100)))
+	# 			is_final_step = (i == (NUM_TRAIN_STEPS - 1))
+	# 			if i % EVAL_EVERY == 0 or is_final_step:
+	# 				mean_acc = 0
+	# 				mean_loss = 0
+	# 				print("\n\n-------------------------------------------------------------------------------- BEGIN VALIDATION --------------------------------------------------------------------------------")
+	# 				for j, (val_image_ndArray, val_label_ndArray) in enumerate(valIterator, 0):
+	# 					val_image_ndArray_transposed = np.transpose(val_image_ndArray, [0, 2, 3, 1])
+	# 					val_label_one_hot_list = get_label_one_hot(val_label_ndArray)
+	# 					val_loss, val_accuracy, val_prediction, val_target, correct_predicate = sess.run(
+	# 						[cross_entropy_mean, accuracy, prediction, correct_label, correct_prediction],
+	# 						feed_dict={decoded_images: val_image_ndArray_transposed, labels: val_label_one_hot_list})
+	# 					mean_acc += val_accuracy
+	# 					mean_loss += val_loss
+	# 					num_correct_predicate = 0
+	# 					for predicate in correct_predicate:
+	# 						if predicate == True:
+	# 							num_correct_predicate += 1
+	# 					print ("Step :: %s\tTarget :: %s\tPrediction :: %s\tCorrect Predictions :: %s/%s\tValidation Loss :: %.2f\tValidation Accuracy :: %.2f%%\t" % (j, val_target, val_prediction, num_correct_predicate, len(correct_predicate), val_loss, (val_accuracy * 100)))
+	# 				mean_acc = (mean_acc * 100) / j
+	# 				print("\nSUMMARY:\nMean Loss :: %.2f\tMean Accuracy :: %.2f%%" % (mean_loss, mean_acc))
+	# 				print("\n-------------------------------------------------------------------------------- END VALIDATION --------------------------------------------------------------------------------\n\n")
 
-				i = i + 1
-				if i >= NUM_TRAIN_STEPS:
-					break
+	# 			i = i + 1
+	# 			if i >= NUM_TRAIN_STEPS:
+	# 				break
 
 
 if __name__ == '__main__':

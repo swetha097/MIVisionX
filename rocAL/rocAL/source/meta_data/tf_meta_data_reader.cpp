@@ -129,7 +129,7 @@ void TFMetaDataReader::read_record(std::ifstream &file_contents, uint file_size,
     uint label;
     single_feature = feature.at(user_label_key);
     label = single_feature.int64_list().value()[0];
-    //std::cout << "TFMeta read record <name, label>" << fname << " " << label << std::endl;
+    std::cout << "TFMeta read record <name, label>" << fname << " " << label << std::endl;
     add(fname, label);
     file_contents.read((char *)&data_crc, sizeof(data_crc));
     if(!file_contents)

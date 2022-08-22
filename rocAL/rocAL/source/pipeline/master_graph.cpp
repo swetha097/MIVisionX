@@ -1348,8 +1348,8 @@ MetaDataBatch * MasterGraph::create_cifar10_label_reader(const char *source_path
 
 const std::pair<ImageNameBatch,pMetaDataBatch>& MasterGraph::meta_data()
 {
-    if(_ring_buffer.level() == 0)
-        THROW("No meta data has been loaded")
+    // if(_ring_buffer.level() == 0)
+    //     THROW("No meta data has been loaded")
     return _ring_buffer.get_meta_data();
 }
 

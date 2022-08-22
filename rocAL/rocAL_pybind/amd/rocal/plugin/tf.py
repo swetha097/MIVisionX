@@ -3,6 +3,7 @@ import rocal_pybind as b
 import amd.rocal.types as types
 class ROCALGenericImageIterator(object):
     def __init__(self, pipeline):
+        print("ROCALGenericImageIteratorrrrrrrrrrrr")
         self.loader = pipeline
         self.w = b.getOutputWidth(self.loader._handle)
         self.h = b.getOutputHeight(self.loader._handle)
@@ -35,6 +36,7 @@ class ROCALGenericImageIterator(object):
 
 class ROCALGenericIteratorDetection(object):
     def __init__(self, pipeline, tensor_layout = types.NCHW, reverse_channels = False, multiplier = [1.0,1.0,1.0], offset = [0.0, 0.0, 0.0], tensor_dtype=types.FLOAT):
+        print("ROCALGenericIteratorDetectionnnnnnnnnnn")
         self.loader = pipeline
         self.tensor_format =tensor_layout
         self.multiplier = multiplier
@@ -49,9 +51,16 @@ class ROCALGenericIteratorDetection(object):
             self.loader._name = self.loader._reader
         color_format = b.getOutputColorFormat(self.loader._handle)
         self.p = (1 if (color_format == int(types.GRAY)) else 3)
-
-        self.out = np.zeros(( self.bs*self.n, self.p, int(self.h/self.bs), self.w,), dtype = "uint8")
-
+        self.image_id = np.zeros(self.bs, dtype='int32')
+        self.out = np.zeros(( self.bs*self.n, int(self.h/self.bs), self.w,self.p,), dtype = "uint8")
+        print("self.loader._name   ",self.loader._name)
+    def get_input_name(self):
+        self.img_names_length = np.empty(self.bs, dtype="int32")
+        self.img_names_size = self.loader.GetImageNameLen(self.img_names_length)
+        # Images names of a batch
+        self.Img_name = self.loader.GetImageName(self.img_names_size)
+        return self.Img_name.decode()
+    
     def next(self):
         return self.__next__()
 
@@ -64,14 +73,16 @@ class ROCALGenericIteratorDetection(object):
             print("Transfer time ::",timing_info.transfer_time)
             self.reset()
             raise StopIteration
-
+        
         if self.loader.run() != 0:
             self.reset()
             raise StopIteration
-
+        
+        # self.image_id = self.get_input_name()
         self.loader.copyImage(self.out)
-
+        # self.loader.GetImageId(self.image_id)
         if(self.loader._name == "TFRecordReaderDetection"):
+            print("detectionnnnnnnnnnnnnnnnnn")
             self.bbox_list =[]
             self.label_list=[]
             self.num_bboxes_list=[]
@@ -123,14 +134,16 @@ class ROCALGenericIteratorDetection(object):
             elif self.tensor_dtype == types.FLOAT16:
                 return self.out.astype(np.float16), self.res, self.l, self.num_bboxes_arr
         elif (self.loader._name == "TFRecordReaderClassification"):
+            print("classificationnnnnnnnnnnnnnnnnnnnn")
             if(self.loader._oneHotEncoding == True):
                 self.labels = np.zeros((self.bs)*(self.loader._numOfClasses),dtype = "int32")
                 self.loader.GetOneHotEncodedLabels_TF(self.labels)
                 self.labels = np.reshape(self.labels, (-1, self.bs, self.loader._numOfClasses))
             else:
+                
                 self.labels = np.zeros((self.bs),dtype = "int32")
                 self.loader.GetImageLabels(self.labels)
-
+            
             if self.tensor_dtype == types.FLOAT:
                 return self.out.astype(np.float32), self.labels
             elif self.tensor_dtype == types.TensorDataType.FLOAT16:
@@ -164,6 +177,7 @@ class ROCALIterator(ROCALGenericIteratorDetection):
                  dynamic_shape=False,
                  last_batch_padded=False):
         pipe = pipelines
+        print("in ROCALIterator")
         super(ROCALIterator, self).__init__(pipe, tensor_layout = pipe._tensor_layout, tensor_dtype = pipe._tensor_dtype,
                                                             multiplier=pipe._multiplier, offset=pipe._offset)
 
