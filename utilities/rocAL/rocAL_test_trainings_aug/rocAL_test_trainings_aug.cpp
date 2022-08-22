@@ -35,7 +35,8 @@ THE SOFTWARE.
 #define CLASSIFICATION_TRAIN 1
 // #define CLASSIFICATION_VAL 1
 // #define SSD 1
-#define RANDOMBBOXCROP
+// #define MASK 1
+// #define RANDOMBBOXCROP
 
 #include "opencv2/opencv.hpp"
 using namespace cv;
@@ -158,7 +159,7 @@ int main(int argc, const char ** argv)
     metadata_output = rocalCreateLabelReader(handle, folderPath1);
     input1 = rocalJpegFileSourceSingleShard(handle, folderPath1,  color_format, 0, 1, false, false, false);
 #elif SSD
-    char const *json_path = "/data/coco_10_img/coco2017/annotations/instances_train2017.json";
+    char const *json_path = "/media/coco_10_img/coco2017/annotations/instances_train2017.json";
 #if defined RANDOMBBOXCROP
     bool all_boxes_overlap = true;
     bool no_crop = false;
@@ -176,6 +177,15 @@ int main(int argc, const char ** argv)
     // rocalRandomBBoxCrop(handle, all_boxes_overlap, no_crop);
     rocalRandomBBoxCrop(handle, all_boxes_overlap, no_crop, aspect_ratio, false, 0, 0, 50, scaling);
 #endif
+    input1 = rocalJpegCOCOFileSourcePartialSingleShard(handle, folderPath1, json_path, color_format, 0, 1, false, false, false);
+#elif MASK
+    char const *json_path = "/media/coco_10_img/coco2017/annotations/instances_train2017.json";
+    if (strcmp(json_path, "") == 0)
+    {
+        std::cout << "\n json_path has to be set in rocal_unit test manually";
+        exit(0);
+    }
+    rocalCreateCOCOReader(handle, json_path, true, true);
     input1 = rocalJpegCOCOFileSourcePartialSingleShard(handle, folderPath1, json_path, color_format, 0, 1, false, false, false);
 #else
     std::cout << ">>>>>>> Running IMAGE READER" << std::endl;
@@ -222,7 +232,13 @@ int main(int argc, const char ** argv)
     image1 = rocalResize(handle, input1, tensorLayout, tensorOutputType, 3, 224 , 224, 0, false);
     image2 = rocalColorTwist(handle, image1, tensorLayout, tensorOutputType, false, brightness, contrast, saturation, hue);
     auto image3 = rocalCropMirrorNormalize(handle, image2, tensorLayout, RocalTensorOutputType::ROCAL_FP32, 3, 224, 224, 0, 0, 0, mean, sdev, true, mirror);
-
+#elif MASK
+    std::vector<float> mean{102.9801, 115.9465, 122.7717};
+    std::vector<float> sdev{1.0f, 1.0f, 1.0f};
+    std::vector<int> values = {0, 1};
+    std::vector<double> frequencies = {0.5, 0.5};
+    RocalIntParam mirror = rocalCreateIntRand(values.data(), frequencies.data(), values.size());
+    image1 = rocalResizeMirrorNormalize(handle, input1, tensorLayout, RocalTensorOutputType::ROCAL_UINT8, 3, 1344, 1344, 1, mean, sdev, true, mirror);
 #else
     image1 = rocalBrightness(handle, input1, true);
 #endif
@@ -276,6 +292,44 @@ int main(int argc, const char ** argv)
             for(int j = 0, j4 = 0; j < bbox_coords->at(i)->info().dims().at(0); j++, j4 = j * 4)
                 std::cerr << bbox_buffer[j4] << " " << bbox_buffer[j4 + 1] << " " << bbox_buffer[j4 + 2] << " " << bbox_buffer[j4 + 3] << "\n";
 
+        }
+#elif MASK
+        RocalTensorList bbox_labels = rocalGetBoundingBoxLabel(handle);
+        RocalTensorList bbox_coords = rocalGetBoundingBoxCords(handle);
+        std::vector<int> mask_count;
+        std::vector<int> polygon_size;
+        unsigned total_number_of_objects_per_batch = rocalGetBoundingBoxCount(handle);
+        mask_count.resize(total_number_of_objects_per_batch);
+        int mask_size = rocalGetMaskCount(handle, mask_count.data());
+        polygon_size.resize(mask_size);
+        RocalTensorList mask_data = rocalGetMaskCoordinates(handle, polygon_size.data());
+        
+        for(int i = 0; i < bbox_labels->size(); i++)
+        {
+            int * labels_buffer = (int *)(bbox_labels->at(i)->buffer());
+            float *bbox_buffer = (float *)(bbox_coords->at(i)->buffer());
+            float *mask_buffer = (float *)(mask_data->at(i)->buffer());
+            std::cerr << "\n>>>>> BBOX LABELS : ";
+            for(int j = 0; j < bbox_labels->at(i)->info().dims().at(0); j++)
+                std::cerr << labels_buffer[j] << " ";
+            std::cerr << "\n>>>>> BBOXX : " <<bbox_coords->at(i)->info().dims().at(0) << " : \n";
+            for(int j = 0, j4 = 0; j < bbox_coords->at(i)->info().dims().at(0); j++, j4 = j * 4)
+                std::cerr << bbox_buffer[j4] << " " << bbox_buffer[j4 + 1] << " " << bbox_buffer[j4 + 2] << " " << bbox_buffer[j4 + 3] << "\n";
+            std::cerr << "\n>>>>>>> MASK COORDS : ";
+            int poly_cnt = 0;
+            for(unsigned j = 0; j < total_number_of_objects_per_batch; j++)
+            {
+                std::cerr << "Mask idx : " << j << "Polygons : " <<  mask_count[j] << "[" ;
+                for(int k = 0; k < mask_count[j]; k++)
+                {
+                    std::cerr << "[";
+                    for(int l = 0; l < polygon_size[poly_cnt]; l++)
+                        std::cerr << mask_buffer[l] << ", ";
+                    std::cerr << "]";
+                    mask_buffer += polygon_size[poly_cnt++];
+                }
+                std::cerr << "]\n";
+            }
         }
 #else
         RocalTensorList labels = rocalGetImageLabels(handle);
