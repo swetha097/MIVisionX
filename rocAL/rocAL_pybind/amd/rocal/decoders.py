@@ -74,9 +74,9 @@ def image(*inputs, user_feature_key_map=None, path='', file_root='', annotations
             'is_output': False,
             "shuffle": random_shuffle,
             "loop": False,
-            "decode_size_policy": types.USER_GIVEN_SIZE,
-            "max_width": 512,
-            "max_height":512,
+            "decode_size_policy": types.MAX_SIZE,
+            "max_width": 0,
+            "max_height":0,
             "dec_type":types.DECODER_TJPEG}
         decoded_image = b.ImageDecoderShard(Pipeline._current_pipeline._handle ,*(kwargs_pybind.values()))
 

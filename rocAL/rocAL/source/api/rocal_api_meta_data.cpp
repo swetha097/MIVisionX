@@ -215,6 +215,15 @@ ROCAL_API_CALL rocalGetImageId(RocalContext p_context,  int* buf)
     }
 }
 
+
+void
+ROCAL_API_CALL rocalGetImageLabels_Ptr(RocalContext p_context, int** labels_buf_ptr)
+{
+    auto context = static_cast<Context*>(p_context);
+    auto meta_data = context->master_graph->meta_data();
+    *labels_buf_ptr = (int *) meta_data.second->get_label_batch().data();
+}
+
 void
 ROCAL_API_CALL rocalGetImageLabels(RocalContext p_context, void* buf, unsigned int flags)
 {

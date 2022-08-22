@@ -180,10 +180,10 @@ class ROCALGenericIterator(object):
                     for i in range(self.bs):
                         img = (self.out)
                         draw_patches(img[i], i, 0)
-                self.loader.getImageLabels(self.labels)
-                self.labels_tensor = self.labels.long()
+                self.labels = self.loader.getImageLabels()
+                self.labels_tensor = torch.as_tensor(self.labels, dtype=torch.long)
 
-            return self.out, self.labels_tensor
+            return self.out, self.labels
 
     def reset(self):
         b.rocalResetLoaders(self.loader._handle)

@@ -250,8 +250,8 @@ class Pipeline(object):
     def GetBBCords(self, array):
         return b.getBBCords(self._handle, array)
 
-    def getImageLabels(self, array):
-        b.getImageLabels(self._handle, ctypes.c_void_p(array.data_ptr()))
+    def getImageLabels(self):
+        return b.getImageLabels(self._handle, self._batch_size)
 
     def copyEncodedBoxesAndLables(self, bbox_array, label_array):
         b.rocalCopyEncodedBoxesAndLables(self._handle, bbox_array, label_array)

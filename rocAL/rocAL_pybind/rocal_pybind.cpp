@@ -125,13 +125,37 @@ namespace rocal{
         return py::cast<py::none>(Py_None);
     }
 
-    py::object wrapper_label_copy(RocalContext context, py::object p)
+    // py::object wrapper_label_copy(RocalContext context, py::object p)
+    // {
+    //     auto ptr = ctypes_void_ptr(p);
+    //     // call pure C++ function
+    //     rocalGetImageLabels(context,ptr);
+    //     return py::cast<py::none>(Py_None);
+    // }
+
+    py::array_t<int> wrapper_label_copy_ptr(RocalContext context, int batch_size)
     {
-        auto ptr = ctypes_void_ptr(p);
+        // auto ptr = ctypes_void_ptr(p);
         // call pure C++ function
-        rocalGetImageLabels(context,ptr);
-        return py::cast<py::none>(Py_None);
+        int* labels_buf_ptr;
+        // call pure C++ function
+        // rocalGetEncodedBoxesAndLables(context, &bboxes_buf_ptr, &labels_buf_ptr, num_anchors*batch_size);
+        rocalGetImageLabels_Ptr(context, &labels_buf_ptr);
+        // for(uint i=0; i<batch_size;i++)
+        // {
+        //     std::cout<<"\n LABELS in PYBIND :: "<<labels_buf_ptr[i];
+        // }
+
+        py::array_t<int> labels_array = py::array_t<int>(
+                                                          {batch_size, 1},
+                                                          {sizeof(int), sizeof(int)},
+                                                          labels_buf_ptr,
+                                                          py::cast<py::none>(Py_None));
+
+        return labels_array;
     }
+
+
 
     py::object wrapper_image_id(RocalContext context, py::array_t<int> array)
     {
@@ -332,7 +356,7 @@ namespace rocal{
         m.def("RandomBBoxCrop",&wrapper_random_bbox_crop);
         m.def("COCOReader",&rocalCreateCOCOReader);
         m.def("VideoMetaDataReader",&rocalCreateVideoLabelReader);
-        m.def("getImageLabels",&wrapper_label_copy);
+        m.def("getImageLabels",&wrapper_label_copy_ptr);
         m.def("getBBLabels",&wrapper_BB_label_copy);
         m.def("getBBCords",&wrapper_BB_cord_copy);
         m.def("rocalCopyEncodedBoxesAndLables",&wrapper_encoded_bbox_label);
