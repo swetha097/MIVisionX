@@ -31,7 +31,7 @@ FusedCropTJDecoder::FusedCropTJDecoder()
 
 #if 0
     int num_avail_scalings = 0;
-    auto scaling_factors = tjGetScalingFactors (&num_avail_scalings);
+    auto scaling_factors = tjGetScalingFactors (&num_avail_scalings);	
     for(int i = 0; i < num_avail_scalings; i++) {
         if(scaling_factors[i].num < scaling_factors[i].denom) {
 
@@ -48,10 +48,10 @@ Decoder::Status FusedCropTJDecoder::decode_info(unsigned char* input_buffer, siz
 {
     //TODO : Use the most recent TurboJpeg API tjDecompressHeader3 which returns the color components
     if(tjDecompressHeader2(m_jpegDecompressor,
-                            input_buffer,
-                            input_size,
-                            width,
-                            height,
+                            input_buffer, 
+                            input_size, 
+                            width, 
+                            height,  
                             color_comps) != 0)
     {
         WRN("Jpeg header decode failed " + STR(tjGetErrorStr2(m_jpegDecompressor)))
@@ -187,7 +187,7 @@ Decoder::Status FusedCropTJDecoder::decode(unsigned char *input_buffer, size_t i
                       max_decoded_height,
                       tjpf,
                       TJFLAG_FASTDCT, &x1_diff, &crop_width_diff,
-                          x1, y1, crop_width, crop_height) != 0)
+                           x1, y1, crop_width, crop_height) != 0)
 
     {
         WRN("Jpeg image decode failed " + STR(tjGetErrorStr2(m_jpegDecompressor)))
