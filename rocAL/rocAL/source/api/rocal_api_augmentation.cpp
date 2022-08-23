@@ -249,8 +249,18 @@ ROCAL_API_CALL rocalResizeMirrorNormalize(RocalContext p_context,
         output_info.set_tensor_layout(op_tensorLayout);
         output_info.set_data_type(op_tensorDataType);
 
-        output_info.set_width(resize_width);
-        output_info.set_height(resize_height);
+        std::vector<unsigned> out_dims = output_info.dims();
+        if(op_tensorLayout == RocalTensorlayout::NHWC)
+        {
+            out_dims[1] = resize_height;
+            out_dims[2] = resize_width;
+        }
+        else if(op_tensorLayout == RocalTensorlayout::NCHW)
+        {
+            out_dims[2] = resize_height;
+            out_dims[3] = resize_width;
+        }
+        output_info.set_dims(out_dims);
         output = context->master_graph->create_tensor(output_info, is_output);
         output->reset_tensor_roi();
         context->master_graph->add_node<ResizeMirrorNormalizeNode>({input}, {output})->init( interpolation_type, mean,std_dev , mirror, layout);
