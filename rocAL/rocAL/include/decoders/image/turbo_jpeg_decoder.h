@@ -38,7 +38,7 @@ public:
      \param color_comps pointer to the user's buffer to write the number of color components of the compressed image to 
     */
     Status decode_info(unsigned char* input_buffer, size_t input_size, int* width, int* height, int* color_comps) override;
-	
+    
     //! Decodes the actual image data
     /*! 
       \param input_buffer  User provided buffer containig the encoded image
