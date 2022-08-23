@@ -24,10 +24,8 @@ THE SOFTWARE.
 #include <commons.h>
 #include <string.h>
 #include "fused_crop_decoder.h"
-#include <random>
 
-FusedCropTJDecoder::FusedCropTJDecoder():
-    _rngs(256)
+FusedCropTJDecoder::FusedCropTJDecoder()
 {
     m_jpegDecompressor = tjInitDecompress();
 
@@ -41,9 +39,8 @@ FusedCropTJDecoder::FusedCropTJDecoder():
         }
     }
 #endif
-    //generate BatchSize of RNG's- Using a random seed for now
+    //generate BatchSize of RNG's- Using a random seed
     int64_t seed = getseed();
-    std::cerr<<"\n seed value set to :: "<< seed;
     generate_rngs(seed, 256);
 };
 
@@ -118,17 +115,15 @@ Decoder::Status FusedCropTJDecoder::decode(unsigned char *input_buffer, size_t i
         int num_attempts_left = num_of_attempts;
   // detect two impossible cases early
   if (original_image_height * maxW < min_area) {  // image too wide
-    // crop.SetShape({H, maxW});
     crop_width = original_image_height;
     crop_height = maxW;
-    x1 = std::uniform_int_distribution<int>(0, original_image_width - crop_width)(rand_gen_);
-    y1 = std::uniform_int_distribution<int>(0, original_image_height - crop_height)(rand_gen_);
+    x1 = std::uniform_int_distribution<int>(0, original_image_width - crop_width)(_rand_gen);
+    y1 = std::uniform_int_distribution<int>(0, original_image_height - crop_height)(_rand_gen);
   } else if (original_image_width * maxH < min_area) {  // image too tall
-    // crop.SetShape({maxH, W});
     crop_width = maxH;
     crop_height = original_image_width;
-    x1 = std::uniform_int_distribution<int>(0, original_image_width - crop_width)(rand_gen_);
-    y1 = std::uniform_int_distribution<int>(0, original_image_height - crop_height)(rand_gen_);
+    x1 = std::uniform_int_distribution<int>(0, original_image_width - crop_width)(_rand_gen);
+    y1 = std::uniform_int_distribution<int>(0, original_image_height - crop_height)(_rand_gen);
   }
         else
         {
@@ -137,15 +132,15 @@ Decoder::Status FusedCropTJDecoder::decode(unsigned char *input_buffer, size_t i
         {
             std::uniform_real_distribution<double> area_dis(AREA_RANGE[0], AREA_RANGE[1]);
             std::uniform_real_distribution<double> log_ratio_dist(std::log(ASPECT_RATIO_RANGE[0]), std::log(ASPECT_RATIO_RANGE[1]));
-            double scale = area_dis(rand_gen_);
+            double scale = area_dis(_rand_gen);
             double target_area  = scale * original_image_width * original_image_height;
-            double aspect_ratio = std::exp(log_ratio_dist(rand_gen_));
+            double aspect_ratio = std::exp(log_ratio_dist(_rand_gen));
             crop_width  = static_cast<size_t>(std::round(std::sqrt(target_area * aspect_ratio)));
             crop_height = static_cast<size_t>(std::round(std::sqrt(target_area * (1 / aspect_ratio))));
             if(is_valid_crop(crop_height, crop_width, original_image_height, original_image_width))
             {
-                x1 = std::uniform_int_distribution<int>(0, original_image_width - crop_width)(rand_gen_);
-                y1 = std::uniform_int_distribution<int>(0, original_image_height - crop_height)(rand_gen_);
+                x1 = std::uniform_int_distribution<int>(0, original_image_width - crop_width)(_rand_gen);
+                y1 = std::uniform_int_distribution<int>(0, original_image_height - crop_height)(_rand_gen);
                 break ;
             }
         }}
@@ -174,8 +169,8 @@ Decoder::Status FusedCropTJDecoder::decode(unsigned char *input_buffer, size_t i
             double scale = std::min(1.0f, max_area / (crop_width * crop_height));
             crop_width = std::max<int>(1, crop_width * std::sqrt(scale));
             crop_height = std::max<int>(1, crop_height * std::sqrt(scale));
-            x1 = std::uniform_int_distribution<int>(0, original_image_width - crop_width)(rand_gen_);
-            y1 = std::uniform_int_distribution<int>(0, original_image_height - crop_height)(rand_gen_);
+            x1 = std::uniform_int_distribution<int>(0, original_image_width - crop_width)(_rand_gen);
+            y1 = std::uniform_int_distribution<int>(0, original_image_height - crop_height)(_rand_gen);
         }
     }
     if(crop_width > max_decoded_width)

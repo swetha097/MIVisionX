@@ -215,11 +215,6 @@ int Image::create_virtual(vx_context context, vx_graph graph)
         return -1;
 
     _context = context;
-    std::cerr << "Virual INPUT w ::" << _info.width();
-    std::cerr << "Virtual INPUT h ::" << _info.height_single();
-
-        // std::cerr << "OUTPUT w ::" << _outputs[0]->info().width();
-        // std::cerr << "OUTPUT h ::" << _outputs[0]->info().height_single();
     // create a virtual image as the output image for this node
     vx_handle = vxCreateVirtualImage(graph, _info.width(), _info.height_batch(), VX_DF_IMAGE_VIRT);
     vx_status status;
@@ -272,7 +267,7 @@ int Image::create_from_handle(vx_context context)
         THROW("Error: vxCreateImageFromHandle(input:[" + TOSTR(_info.width()) + "x" + TOSTR(_info.height_batch()) + "]): failed " + TOSTR(status))
 
     _info._type = ImageInfo::Type::HANDLE;
-    // _info._data_size = size;
+    _info._data_size = size;
     return 0;
 }
 int Image::create(vx_context context)

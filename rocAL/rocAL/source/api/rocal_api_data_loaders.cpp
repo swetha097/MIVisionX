@@ -39,7 +39,6 @@ THE SOFTWARE.
 #include "node_fused_jpeg_crop.h"
 #include "node_fused_jpeg_crop_single_shard.h"
 #include "node_resize.h"
-#include "node_resize_shorter.h"
 #include "meta_node_resize.h"
 
 namespace filesys = boost::filesystem;
@@ -155,7 +154,8 @@ rocalJpegFileSourceSingleShard(
         auto [color_format, num_of_planes] = convert_color_format(rocal_color_format);
 
         INFO("Internal buffer size width = "+ TOSTR(width)+ " height = "+ TOSTR(height) + " depth = "+ TOSTR(num_of_planes))
-
+        std::cerr<<" \n width in rocalJpegFileSourceSingleShard : "<<width;
+        std::cerr<<" \n height in rocalJpegFileSourceSingleShard : "<<height;
         auto info = ImageInfo(width, height,
                               context->internal_batch_size(),
                               num_of_planes,

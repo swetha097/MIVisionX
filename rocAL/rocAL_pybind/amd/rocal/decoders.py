@@ -32,7 +32,7 @@ def image(*inputs, user_feature_key_map=None, path='', file_root='', annotations
             "user_key_for_filename": user_feature_key_map["image/filename"],
             "shuffle": random_shuffle,
             "loop": False,
-            "decode_size_policy": types.USER_GIVEN_SIZE,
+            "decode_size_policy": types.USER_GIVEN_SIZE_ORIG,
             "max_width": 2000,
             "max_height": 2000}
         decoded_image   = b.TF_ImageDecoder(Pipeline._current_pipeline._handle ,*(kwargs_pybind.values()))
@@ -137,7 +137,7 @@ def image_random_crop(*inputs,user_feature_key_map=None ,path = '', file_root= '
             "user_key_for_filename": user_feature_key_map["image/filename"],
             "shuffle": random_shuffle,
             "loop": False,
-            "decode_size_policy": types.USER_GIVEN_SIZE,
+            "decode_size_policy": types.USER_GIVEN_SIZE_ORIG,
             "max_width": 2000,
             "max_height": 2000}
         image_decoder_output_image   = b.TF_ImageDecoder(Pipeline._current_pipeline._handle ,*(kwargs_pybind.values()))
@@ -179,7 +179,7 @@ def image_random_crop(*inputs,user_feature_key_map=None ,path = '', file_root= '
             'is_output': False,
             "shuffle": random_shuffle,
             "loop": False,
-            "decode_size_policy": types.USER_GIVEN_SIZE,
+            "decode_size_policy": types.USER_GIVEN_SIZE_ORIG,
             "max_width": 2000,
             "max_height":2000}
         image_decoder_output_image = b.ImageDecoderShard(Pipeline._current_pipeline._handle ,*(kwargs_pybind.values()))

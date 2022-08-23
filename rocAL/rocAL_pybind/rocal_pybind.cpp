@@ -133,30 +133,6 @@ namespace rocal{
         return py::cast<py::none>(Py_None);
     }
 
-    py::array_t<int> wrapper_label_copy_ptr(RocalContext context, int batch_size)
-    {
-        // auto ptr = ctypes_void_ptr(p);
-        // call pure C++ function
-        int* labels_buf_ptr;
-        // call pure C++ function
-        // rocalGetEncodedBoxesAndLables(context, &bboxes_buf_ptr, &labels_buf_ptr, num_anchors*batch_size);
-        rocalGetImageLabels_Ptr(context, &labels_buf_ptr);
-        // for(uint i=0; i<batch_size;i++)
-        // {
-        //     std::cout<<"\n LABELS in PYBIND :: "<<labels_buf_ptr[i];
-        // }
-
-        py::array_t<int> labels_array = py::array_t<int>(
-                                                          {batch_size},
-                                                          {sizeof(int)},
-                                                          labels_buf_ptr,
-                                                          py::cast<py::none>(Py_None));
-
-        return labels_array;
-    }
-
-
-
     py::object wrapper_image_id(RocalContext context, py::array_t<int> array)
     {
         auto buf = array.request();
@@ -637,12 +613,6 @@ namespace rocal{
             py::arg("crop_pos_y") = NULL,
             py::arg("num_of_attempts") = 20);
         m.def("Resize",&rocalResize, py::return_value_policy::reference);
-        m.def("ResizeShorter",&rocalResizeShorter,
-            py::return_value_policy::reference,
-            py::arg("context"),
-            py::arg("input"),
-            py::arg("size"),
-            py::arg("is_output"));
         m.def("CropResize",&rocalCropResize,
             py::return_value_policy::reference,
             py::arg("context"),

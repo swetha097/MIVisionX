@@ -60,15 +60,6 @@ extern "C"  RocalImage  ROCAL_API_CALL rocalResize(RocalContext context, RocalIm
                                                 unsigned resize_longer = 0,
                                                 RocalResizeInterpolationType interpolation_type = ROCAL_LINEAR_INTERPOLATION);
 
-/// Accepts U8 and RGB24 input.
-/// \param context
-/// \param input
-/// \param size
-/// \param is_output
-/// \return
-extern "C"  RocalImage  ROCAL_API_CALL rocalResizeShorter(RocalContext context, RocalImage input,
-                                                unsigned size,
-                                                bool is_output);
 
 /// Accepts U8 and RGB24 input.
 /// \param context

@@ -42,7 +42,6 @@ THE SOFTWARE.
 #include "node_fisheye.h"
 #include "node_blend.h"
 #include "node_resize.h"
-#include "node_resize_shorter.h"
 #include "node_rotate.h"
 #include "node_color_twist.h"
 #include "node_hue.h"
@@ -631,6 +630,8 @@ rocalResize(
 
         // set the width and height in the output info
         // For the resize node, user can create an image with a different width and height
+        std::cerr<<" \n width in resize : "<<output_info_size[0];
+        std::cerr<<" \n height in resize : "<<output_info_size[1];
         output_info.width(output_info_size[0]);
         output_info.height(output_info_size[1]);
         output = context->master_graph->create_image(output_info, is_output);
@@ -642,47 +643,6 @@ rocalResize(
         resize_node->init(dst_width, dst_height, resize_scaling_mode, maximum_size, interpolation_type);
         if (context->master_graph->meta_data_graph())
             context->master_graph->meta_add_node<ResizeMetaNode,ResizeNode>(resize_node);
-    }
-    catch(const std::exception& e)
-    {
-        context->capture_error(e.what());
-        ERR(e.what())
-    }
-    return output;
-}
-
-RocalImage  ROCAL_API_CALL
-rocalResizeShorter(
-        RocalContext p_context,
-        RocalImage p_input,
-        unsigned size,
-        bool is_output)
-{
-    Image* output = nullptr;
-    if ((p_context == nullptr) || (p_input == nullptr)) {
-        ERR("Invalid ROCAL context or invalid input image")
-        return output;
-    }
-
-    auto context = static_cast<Context*>(p_context);
-    auto input = static_cast<Image*>(p_input);
-    try
-    {
-        // For the resize node, user can create an image with a different width and height
-        ImageInfo output_info = input->info();
-        if (size == 0)
-            THROW("Size passed must be greater than 0")
-
-        unsigned int buffer_size = size * 3.75;
-        output_info.width(buffer_size);
-        output_info.height(buffer_size);
-        output = context->master_graph->create_image(output_info, is_output);
-
-        // For the nodes that user provides the output size the dimension of all the images after this node will be fixed and equal to that size
-        output->reset_image_roi();
-
-        std::shared_ptr<ResizeShorterNode> resize_node =  context->master_graph->add_node<ResizeShorterNode>({input}, {output});
-        resize_node->init(size);
     }
     catch(const std::exception& e)
     {
