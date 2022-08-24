@@ -51,9 +51,11 @@ class ROCALGenericIteratorDetection(object):
             self.loader._name = self.loader._reader
         color_format = b.getOutputColorFormat(self.loader._handle)
         self.p = (1 if (color_format == int(types.GRAY)) else 3)
-        self.image_id = np.zeros(self.bs, dtype='int32')
-        self.out = np.zeros(( self.bs*self.n, int(self.h/self.bs), self.w,self.p,), dtype = "uint8")
-        print("self.loader._name   ",self.loader._name)
+        self.image_id = np.zeros(self.bs , dtype="int32")
+        self.out = np.zeros(( self.bs*self.n, int(self.h/self.bs), self.w, self.p), dtype = "uint8")
+        # print("self.out.shape()11    ",len(self.out))
+        
+        # print("self.loader._name   ",self.loader._name)
     def get_input_name(self):
         self.img_names_length = np.empty(self.bs, dtype="int32")
         self.img_names_size = self.loader.GetImageNameLen(self.img_names_length)
@@ -80,7 +82,9 @@ class ROCALGenericIteratorDetection(object):
         
         # self.image_id = self.get_input_name()
         self.loader.copyImage(self.out)
+        # print("self.out.shape()    ",self.out[0].shape())
         # self.loader.GetImageId(self.image_id)
+        
         if(self.loader._name == "TFRecordReaderDetection"):
             print("detectionnnnnnnnnnnnnnnnnn")
             self.bbox_list =[]
@@ -140,10 +144,9 @@ class ROCALGenericIteratorDetection(object):
                 self.loader.GetOneHotEncodedLabels_TF(self.labels)
                 self.labels = np.reshape(self.labels, (-1, self.bs, self.loader._numOfClasses))
             else:
-                
                 self.labels = np.zeros((self.bs),dtype = "int32")
                 self.loader.GetImageLabels(self.labels)
-            
+            print("self.image_id    ",self.image_id)
             if self.tensor_dtype == types.FLOAT:
                 return self.out.astype(np.float32), self.labels
             elif self.tensor_dtype == types.TensorDataType.FLOAT16:
