@@ -254,9 +254,12 @@ ROCAL_API_CALL rocalResizeMirrorNormalize(RocalContext p_context,
         {
             out_dims[1] = resize_height;
             out_dims[2] = resize_width;
+            out_dims[3] = 3;
+
         }
         else if(op_tensorLayout == RocalTensorlayout::NCHW)
         {
+            out_dims[1] = 3;
             out_dims[2] = resize_height;
             out_dims[3] = resize_width;
         }
@@ -421,9 +424,11 @@ ROCAL_API_CALL rocalCropMirrorNormalize(RocalContext p_context, RocalTensor p_in
         {
             out_dims[1] = crop_height;
             out_dims[2] = crop_width;
+            out_dims[3] = 3;
         }
         else if(op_tensorLayout == RocalTensorlayout::NCHW)
         {
+            out_dims[1] = 3;
             out_dims[2] = crop_height;
             out_dims[3] = crop_width;
         }
