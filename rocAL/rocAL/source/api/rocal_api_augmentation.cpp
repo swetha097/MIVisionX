@@ -649,6 +649,7 @@ rocalResize(
         context->capture_error(e.what());
         ERR(e.what())
     }
+    std::cerr<<"comes out";
     return output;
 }
 
@@ -1718,6 +1719,7 @@ ROCAL_API_CALL rocalCropMirrorNormalize(RocalContext p_context, RocalImage p_inp
                                     unsigned crop_width, float start_x, float start_y, float start_z, std::vector<float> &mean,
                                     std::vector<float> &std_dev, bool is_output, RocalIntParam p_mirror)
 {
+    std::cerr<<"\n ROCAL CMN";
     Image* output = nullptr;
     if ((p_context == nullptr) || (p_input == nullptr)) {
         ERR("Invalid ROCAL context or invalid input image")
@@ -1758,6 +1760,7 @@ ROCAL_API_CALL rocalCropMirrorNormalize(RocalContext p_context, RocalImage p_inp
         context->capture_error(e.what());
         ERR(e.what())
     }
+    std::cerr<<"\n EXITS CMN";
     return output;
 }
 

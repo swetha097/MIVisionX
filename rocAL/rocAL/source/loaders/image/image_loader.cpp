@@ -192,6 +192,7 @@ LoaderModuleStatus
 ImageLoader::load_routine()
 {
     LOG("Started the internal loader thread");
+    std::cerr<<"\n Started the internal loader thread";
     LoaderModuleStatus last_load_status = LoaderModuleStatus::OK;
     // Initially record number of all the images that are going to be loaded, this is used to know how many still there
 

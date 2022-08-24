@@ -112,7 +112,7 @@ MasterGraph::~MasterGraph()
     release();
 }
 
-MasterGraph::MasterGraph(size_t batch_size, RocalAffinity affinity, int gpu_id, size_t prefetch_queue_depth, RocalTensorDataType output_tensor_data_type):
+MasterGraph::MasterGraph(size_t batch_size, RocalAffinity affinity, int gpu_id,size_t cpu_threads, size_t prefetch_queue_depth, RocalTensorDataType output_tensor_data_type):
         _ring_buffer(prefetch_queue_depth),
         _output_tensor(nullptr),
         _graph(nullptr),
@@ -257,6 +257,7 @@ MasterGraph::decrease_image_count()
 void
 MasterGraph::create_single_graph()
 {
+    std::cerr<<"\n Graph is created";
     // Actual graph creating and calls into adding nodes to graph is deferred and is happening here to enable potential future optimizations
     _graph = std::make_shared<Graph>(_context, _affinity, 0, _gpu_id);
     for(auto& node: _nodes)
@@ -270,7 +271,9 @@ MasterGraph::create_single_graph()
             }
         node->create(_graph);
     }
+    std::cerr<<"\n Graph is going to be verified";
     _graph->verify();
+    std::cerr<<"\n Graph is verified";
 }
 
 MasterGraph::Status
@@ -284,7 +287,7 @@ MasterGraph::build()
     for(auto&& output_image : _output_images)
         if(!(output_image->info() == _output_image_info))
             THROW("Dimension of the output images do not match")
-
+    std::cerr<<"BUILD";
     allocate_output_tensor();
 #if ENABLE_HIP
     _ring_buffer.initHip(_mem_type, _device.resources(), output_byte_size(), _output_images.size());
@@ -295,6 +298,7 @@ MasterGraph::build()
 #endif
     create_single_graph();
     start_processing();
+    std::cerr<<"\n Start processing";
     return Status::OK;
 }
 Image *
@@ -1021,6 +1025,7 @@ MasterGraph::copy_output(unsigned char *out_ptr)
 void MasterGraph::output_routine()
 {
     INFO("Output routine started with "+TOSTR(_remaining_count) + " to load");
+    std::cerr<<"Output routine started with "<<TOSTR(_remaining_count)<<" to load\n";
     size_t batch_ratio = _is_sequence_reader_output ? _sequence_batch_ratio : _user_to_internal_batch_ratio;
     if(!_is_sequence_reader_output) // _sequence_batch_ratio and _user_to_internal_batch_ratio is different. Will be removed in TensorSupport.
     {
@@ -1035,6 +1040,8 @@ void MasterGraph::output_routine()
     try {
         while (_processing)
         {
+            std::cerr<<"\n Processing ...";
+            std::cerr<<"\n _loader_module->remaining_count() :: "<<_loader_module->remaining_count();
             const size_t each_cycle_size = output_byte_size()/batch_ratio;
 
             ImageNameBatch full_batch_image_names = {};
@@ -1143,7 +1150,7 @@ void MasterGraph::output_routine()
             _ring_buffer.push(); // Image data and metadata is now stored in output the ring_buffer, increases it's level by 1
         }
         _process_time.end();
-
+std::cerr<<"Graph process ended";
     }
     catch (const std::exception &e)
     {
@@ -1275,6 +1282,7 @@ void MasterGraph::output_routine_video()
 
 void MasterGraph::start_processing()
 {
+    std::cerr<<"\n Gonna start processing";
     _processing = true;
 #ifdef ROCAL_VIDEO
     if(_is_video_loader)

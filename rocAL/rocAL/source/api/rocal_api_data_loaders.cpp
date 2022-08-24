@@ -1885,6 +1885,7 @@ rocalFusedJpegCropSingleShard(
         RocalFloatParam p_y_drift_factor
         )
 {
+    std::cerr<<"\n Decode size policy"<<decode_size_policy;
     Image* output = nullptr;
     auto area_factor  = static_cast<FloatParam*>(p_area_factor);
     auto aspect_ratio = static_cast<FloatParam*>(p_aspect_ratio);

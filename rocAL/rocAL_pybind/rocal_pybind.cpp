@@ -232,16 +232,10 @@ namespace rocal{
         m.doc() = "Python bindings for the C++ portions of ROCAL";
         // rocal_api.h
         m.def("rocalCreate",&rocalCreate,"Creates context with the arguments sent and returns it",
-                py::return_value_policy::reference,
-                py::arg("batch_size"),
-                py::arg("affinity"),
-                py::arg("gpu_id") = 0,
-                py::arg("cpu_thread_count") = 1,
-                py::arg("prefetch_queue_depth") = 3,
-                py::arg("output_data_type") = 0);
-        m.def("rocalVerify",&rocalVerify);
-        m.def("rocalRun",&rocalRun);
-        m.def("rocalRelease",&rocalRelease);
+                py::return_value_policy::reference);
+        m.def("rocalVerify",&rocalVerify,  py::return_value_policy::reference);
+        m.def("rocalRun",&rocalRun,  py::return_value_policy::reference);
+        m.def("rocalRelease",&rocalRelease,  py::return_value_policy::reference);
         // rocal_api_types.h
         py::class_<TimingInfo>(m, "TimingInfo")
             .def_readwrite("load_time",&TimingInfo::load_time)

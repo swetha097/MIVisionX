@@ -54,10 +54,22 @@ def main():
     # Use pipeline instance to make calls to reader, decoder & augmentation's
     with pipe:
         jpegs, _ = fn.readers.file(file_root=data_path, shard_id=local_rank, num_shards=world_size, random_shuffle=True)
-        images = fn.decoders.image(jpegs, file_root=data_path, device=decoder_device, output_type=types.RGB, shard_id=0, num_shards=1, random_shuffle=True)
+        # images = fn.decoders.image(jpegs, file_root=data_path, device=decoder_device, output_type=types.RGB, shard_id=0, num_shards=1, random_shuffle=True)
+        images = fn.decoders.image_slice(jpegs, output_type=types.RGB,
+                                                        file_root=data_path, shard_id=local_rank, num_shards=world_size, random_shuffle=True, seed=local_rank+10)
 
         if augmentation_name == "resize":
-            output = fn.resize(images, device=rocal_device, resize_x=300, resize_y=300, scaling_mode=types.SCALING_MODE_NOT_SMALLER, interpolation_type=types.TRIANGULAR_INTERPOLATION)
+            res = fn.resize(images, resize_x=224, resize_y=224, seed=local_rank+10)
+            flip_coin = fn.random.coin_flip(probability=0.5)
+            output = fn.crop_mirror_normalize(res, device="gpu",
+                                                output_dtype=types.FLOAT,
+                                                output_layout=types.NCHW,
+                                                crop=(300, 300),
+                                                mirror=flip_coin,
+                                                image_type=types.RGB,
+                                                mean=[0.485 * 255,0.456 * 255,0.406 * 255],
+                                                std=[0.229 * 255,0.224 * 255,0.225 * 255], seed=local_rank+10)
+            # output = images
         if augmentation_name == "resize_shorter":
             output = fn.resize(images,scaling_mode=types.SCALING_MODE_NOT_SMALLER, interpolation_type=types.TRIANGULAR_INTERPOLATION, resize_shorter=256)
         elif augmentation_name == "rotate":

@@ -48,7 +48,7 @@ class MasterGraph
 {
 public:
     enum class Status { OK = 0,  NOT_RUNNING = 1, NO_MORE_DATA = 2, NOT_IMPLEMENTED = 3, INVALID_ARGUMENTS };
-    MasterGraph(size_t batch_size, RocalAffinity affinity, int gpu_id, size_t prefetch_queue_depth, RocalTensorDataType output_tensor_data_type);
+    MasterGraph(size_t batch_size, RocalAffinity affinity, int gpu_id, size_t cpu_thread_count,size_t prefetch_queue_depth, RocalTensorDataType output_tensor_data_type);
     ~MasterGraph();
     Status reset();
     size_t remaining_count();
@@ -171,6 +171,7 @@ private:
     static size_t compute_optimum_internal_batch_size(size_t user_batch_size, RocalAffinity affinity);
     const size_t _internal_batch_size;//!< In the host processing case , internal batch size can be different than _user_batch_size. This batch size used internally throughout.
     const size_t _user_to_internal_batch_ratio;
+    size_t _cpu_threads;
     size_t _prefetch_queue_depth;
     bool _output_routine_finished_processing = false;
     const RocalTensorDataType _out_data_type;
