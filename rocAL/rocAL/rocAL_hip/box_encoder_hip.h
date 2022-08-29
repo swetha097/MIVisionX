@@ -32,9 +32,9 @@ THE SOFTWARE.
 #define HIP_ERROR_CHECK_STATUS(call) { hipError_t err = (call); if(err != hipSuccess){ THROW("ERROR: Hip call failed with status " + TOSTR(err))}}
 
 struct BoxEncoderSampleDesc {
-  float4 *boxes_out;
+  double4 *boxes_out;
   int *labels_out;
-  const float4 *boxes_in;
+  const double4 *boxes_in;
   const int *labels_in;
   int in_box_count;
 };
@@ -42,7 +42,7 @@ struct BoxEncoderSampleDesc {
 class BoxEncoderGpu {
 public:
     static constexpr int BlockSize = 256;   // hip kernel blocksize
-    explicit BoxEncoderGpu(int batch_size, std::vector<float> &anchors, float criteria, const std::vector<float> &means, const std::vector<float> &stds, bool offset, float scale, const hipStream_t &stream, bool pinnedMem):
+    explicit BoxEncoderGpu(int batch_size, std::vector<double> &anchors, double criteria, const std::vector<double> &means, const std::vector<double> &stds, bool offset, double scale, const hipStream_t &stream, bool pinnedMem):
                           _anchors(anchors), _criteria(criteria), _means(means), _stds(stds), _offset(offset), _scale(scale), _stream(stream), _pinnedMem(pinnedMem)
     {
         if (criteria < 0.f || criteria > 1.f || means.size() != 4 || stds.size() != 4)
@@ -51,7 +51,7 @@ public:
          prepare_anchors(_anchors);
          prepare_mean_std(_means, _stds);
     }
-    void Run(pMetaDataBatch full_batch_meta_data, float *encoded_boxes_data, int *encoded_labels_data);
+    void Run(pMetaDataBatch full_batch_meta_data, double *encoded_boxes_data, int *encoded_labels_data);
 
     virtual ~BoxEncoderGpu() { UnInitialize();};
 
@@ -75,19 +75,19 @@ protected:
             THROW("hipMalloc failed for BoxEncoderSampleDesc" + TOSTR(err));
         }
         // allocate  _anchors_data_dev and _anchors_as_center_wh_data for device
-        err = hipMalloc((void **)&_anchors_data_dev, _anchor_count * 4 * sizeof(float));
-        err = hipMalloc((void **)&_anchors_as_center_wh_data_dev, _anchor_count * 4 * sizeof(float));
-        err = hipMalloc((void **)&_means_dev, 4 * sizeof(float));
-        err = hipMalloc((void **)&_stds_dev, 4 * sizeof(float));
+        err = hipMalloc((void **)&_anchors_data_dev, _anchor_count * 4 * sizeof(double));
+        err = hipMalloc((void **)&_anchors_as_center_wh_data_dev, _anchor_count * 4 * sizeof(double));
+        err = hipMalloc((void **)&_means_dev, 4 * sizeof(double));
+        err = hipMalloc((void **)&_stds_dev, 4 * sizeof(double));
 
         if(err != hipSuccess || !_anchors_data_dev || !_anchors_as_center_wh_data_dev || !_means_dev || !_stds_dev )
         {
             THROW("hipMalloc failed for BoxEncoderGPU" + TOSTR(err));
         }
         HIP_ERROR_CHECK_STATUS(hipMalloc(&_labels_in_dev, MAX_NUM_BOXES_TOTAL*sizeof(int)));
-        HIP_ERROR_CHECK_STATUS(hipMalloc(&_boxes_in_dev, MAX_NUM_BOXES_TOTAL*sizeof(float)*4));
+        HIP_ERROR_CHECK_STATUS(hipMalloc(&_boxes_in_dev, MAX_NUM_BOXES_TOTAL*sizeof(double)*4));
         HIP_ERROR_CHECK_STATUS(hipMalloc(&_best_box_idx_dev, _best_box_idx.size()*sizeof(int)));
-        HIP_ERROR_CHECK_STATUS(hipMalloc(&_best_box_iou_dev, _best_box_iou.size()*sizeof(float)));
+        HIP_ERROR_CHECK_STATUS(hipMalloc(&_best_box_iou_dev, _best_box_iou.size()*sizeof(double)));
     }
 
     void UnInitialize() {
@@ -104,34 +104,34 @@ protected:
     }
 
 private:
-    void prepare_anchors(const std::vector<float> &anchors);
-    void prepare_mean_std(const std::vector<float> &means, const std::vector<float> &stds);
-    void WriteAnchorsToOutput(float* encoded_boxes);
+    void prepare_anchors(const std::vector<double> &anchors);
+    void prepare_mean_std(const std::vector<double> &means, const std::vector<double> &stds);
+    void WriteAnchorsToOutput(double* encoded_boxes);
     void ResetLabels(int *encoded_labels_out);
-    void ClearOutput(float* encoded_boxes);
-    std::pair<int*, float*> ResetBuffers();
+    void ClearOutput(double* encoded_boxes);
+    std::pair<int*, double*> ResetBuffers();
 
     int _cur_batch_size;
-    std::vector<float> _anchors;
-    const float _criteria;
-    std::vector<float>  _means;
-    std::vector<float>  _stds;
+    std::vector<double> _anchors;
+    const double _criteria;
+    std::vector<double>  _means;
+    std::vector<double>  _stds;
     bool  _offset;
-    float  _scale;
+    double  _scale;
     const hipStream_t _stream;
     bool  _pinnedMem;
 
     int _anchor_count;
     int *_labels_in_dev;
-    float *_boxes_in_dev;
+    double *_boxes_in_dev;
     std::vector<int>  _best_box_idx;
-    std::vector<float> _best_box_iou;
+    std::vector<double> _best_box_iou;
     int *_best_box_idx_dev;
-    float *_best_box_iou_dev;
+    double *_best_box_iou_dev;
     std::vector<BoxEncoderSampleDesc *> _samples;
     BoxEncoderSampleDesc *_samples_host_buf, *_samples_dev_buf;
-    float4 *_anchors_data_dev, *_anchors_as_center_wh_data_dev;
-    float* _means_dev, * _stds_dev;
+    double4 *_anchors_data_dev, *_anchors_as_center_wh_data_dev;
+    double* _means_dev, * _stds_dev;
     std::vector<std::vector<size_t>> _output_shape;
 
 };

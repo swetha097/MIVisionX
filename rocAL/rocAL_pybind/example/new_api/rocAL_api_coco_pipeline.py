@@ -98,7 +98,7 @@ class ROCALCOCOIterator(object):
             raise StopIteration
         self.lis = []  # Empty list for bboxes
         self.lis_lab = []  # Empty list of labels
-
+        print("HERE")
         self.loader.copyToTensor(
             self.out, self.multiplier, self.offset, self.reverse_channels, self.tensor_format, self.tensor_dtype)
 
@@ -111,7 +111,7 @@ class ROCALCOCOIterator(object):
             self.bboxes_label_count)
         # 1D labels & bboxes array
         if self.device == "cpu":
-          self.encoded_bboxes = np.zeros((self.count_batch*4), dtype="float32")
+          self.encoded_bboxes = np.zeros((self.count_batch*4), dtype="float64")
           self.encoded_labels = np.zeros(self.count_batch, dtype="int32")
           self.loader.copyEncodedBoxesAndLables(self.encoded_bboxes, self.encoded_labels)
           encoded_bboxes_tensor = torch.tensor(self.encoded_bboxes).view(self.bs, -1, 4).contiguous()
@@ -119,7 +119,7 @@ class ROCALCOCOIterator(object):
         else:
           torch_gpu_device = torch.device('cuda', self.device_id)
           boxes_array, labels_array = self.loader.getEncodedBoxesAndLables(self.bs, int(self.num_anchors))
-          self.encoded_bboxes = torch.as_tensor(boxes_array, dtype=torch.float32, device=torch_gpu_device)
+          self.encoded_bboxes = torch.as_tensor(boxes_array, dtype=torch.float16, device=torch_gpu_device)
           self.encoded_labels = torch.as_tensor(labels_array, dtype=torch.int32, device=torch_gpu_device)
           encoded_bboxes_tensor = self.encoded_bboxes.cpu()
           encodded_labels_tensor = self.encoded_labels.cpu()
@@ -136,12 +136,10 @@ class ROCALCOCOIterator(object):
                     actual_bboxes.append(encoded_bboxes_tensor[i][idx].tolist())
                     actual_labels.append(encodded_labels_tensor[i][idx].tolist())
 
-            if self.display:
-                img = self.out
-                draw_patches(img[i], self.image_id[i],
-                             actual_bboxes, self.device)
+        img = self.out
+        draw_patches(img[i], self.image_id[i], actual_bboxes, self.device)
 
-        return (self.out), encoded_bboxes_tensor, encodded_labels_tensor, image_id_tensor, image_size_tensor
+        return (self.out), encoded_bboxes_tensor.type(torch.float32), encodded_labels_tensor, image_id_tensor, image_size_tensor
 
     def reset(self):
         self.loader.rocalResetLoaders()
@@ -313,16 +311,15 @@ def main():
     for epoch in range(int(args.num_epochs)):
         print("EPOCH:::::", epoch)
         for i, it in enumerate(data_loader, 0):
-            if i == 0:
-                print("**************", i, "*******************")
-                print("**************starts*******************")
-                print("\n IMAGES : \n", it[0])
-                print("\nBBOXES:\n", it[1])
-                print("\nLABELS:\n", it[2])
-                print("\nIMAGE ID:\n", it[3])
-                print("\nIMAGE SIZE:\n", it[4])
-                print("**************ends*******************")
-                print("**************", i, "*******************")
+            print("**************", i, "*******************")
+            print("**************starts*******************")
+            print("\n IMAGES : \n", it[0])
+            print("\nBBOXES:\n", it[1])
+            print("\nLABELS:\n", it[2])
+            print("\nIMAGE ID:\n", it[3])
+            print("\nIMAGE SIZE:\n", it[4])
+            print("**************ends*******************")
+            print("**************", i, "*******************")
         data_loader.reset()
     #Your statements here
     stop = timeit.default_timer()

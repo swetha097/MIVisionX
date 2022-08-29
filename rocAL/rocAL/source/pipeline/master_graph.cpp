@@ -1096,7 +1096,7 @@ void MasterGraph::output_routine()
                 if(_mem_type == RocalMemType::HIP){
                     // get bbox encoder read buffers
                     auto bbox_encode_write_buffers = _ring_buffer.get_box_encode_write_buffers();
-                    if (_box_encoder_gpu) _box_encoder_gpu->Run(full_batch_meta_data, (float *)bbox_encode_write_buffers.first, (int *)bbox_encode_write_buffers.second);
+                    if (_box_encoder_gpu) _box_encoder_gpu->Run(full_batch_meta_data, (double *)bbox_encode_write_buffers.first, (int *)bbox_encode_write_buffers.second);
                     //_meta_data_graph->update_box_encoder_meta_data_gpu(_anchors_gpu_buf, num_anchors, full_batch_meta_data, _criteria, _offset, _scale, _means, _stds);
                 }else
 #endif
@@ -1382,11 +1382,11 @@ void MasterGraph::create_randombboxcrop_reader(RandomBBoxCrop_MetaDataReaderType
         _random_bbox_crop_cords_data = _randombboxcrop_meta_data_reader->get_output();
 }
 
-void MasterGraph::box_encoder(std::vector<float> &anchors, float criteria, const std::vector<float> &means, const std::vector<float> &stds, bool offset, float scale)
+void MasterGraph::box_encoder(std::vector<double> &anchors, double criteria, const std::vector<double> &means, const std::vector<double> &stds, bool offset, double scale)
 {
     _is_box_encoder = true;
     _num_anchors = anchors.size() / 4;
-    std::vector<float> inv_stds = {(float)(1./stds[0]), (float)(1./stds[1]), (float)(1./stds[2]), (float)(1./stds[3])};
+    std::vector<double> inv_stds = {(double)(1./stds[0]), (double)(1./stds[1]), (double)(1./stds[2]), (double)(1./stds[3])};
 
 #if ENABLE_HIP
     // Intialize gpu box encoder if _mem_type is HIP
@@ -1698,14 +1698,14 @@ MasterGraph::copy_out_tensor_planar(void *out_ptr, RocalTensorFormat format, flo
 }
 
 MasterGraph::Status
-MasterGraph::get_bbox_encoded_buffers(float **boxes_buf_ptr, int **labels_buf_ptr, size_t num_encoded_boxes)
+MasterGraph::get_bbox_encoded_buffers(double **boxes_buf_ptr, int **labels_buf_ptr, size_t num_encoded_boxes)
 {
     if (_is_box_encoder) {
       if (num_encoded_boxes != _user_batch_size*_num_anchors) {
           THROW("num_encoded_boxes is not correct");
       }
       auto encoded_boxes_and_lables = _ring_buffer.get_box_encode_read_buffers();
-      *boxes_buf_ptr = (float *) encoded_boxes_and_lables.first;
+      *boxes_buf_ptr = (double *) encoded_boxes_and_lables.first;
       *labels_buf_ptr = (int *) encoded_boxes_and_lables.second;
     }
     return Status::OK;

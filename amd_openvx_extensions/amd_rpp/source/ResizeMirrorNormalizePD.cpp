@@ -162,14 +162,14 @@ static vx_status VX_CALLBACK processResizeMirrorNormalizebatchPD(vx_node node, c
         else if (df_image == VX_DF_IMAGE_RGB)
         {
             // status = rppi_resize_mirror_normalize_u8_pkd3_batchPD_gpu((void *)data->hip_pSrc, data->srcDimensions, data->maxSrcDimensions, (void *)data->hip_pDst, data->dstDimensions, data->maxDstDimensions, data->mean, data->std_dev, data->mirror, data->chnShift, data->nbatchSize, data->rppHandle);
-			status = rppt_resize_mirror_normalize_gpu((void *)data->hip_pSrc, data->srcDescPtr, (void *)data->hip_pDst, data->dstDescPtr, data->d_dstImgSize, RpptInterpolationType::BILINEAR, data->mean, data->std_dev, data->mirror, data->d_roiTensorPtrSrc, data->roiType, data->rppHandle);
+			// status = rppt_resize_mirror_normalize_gpu((void *)data->hip_pSrc, data->srcDescPtr, (void *)data->hip_pDst, data->dstDescPtr, data->d_dstImgSize, RpptInterpolationType::BILINEAR, data->mean, data->std_dev, data->mirror, data->d_roiTensorPtrSrc, data->roiType, data->rppHandle);
         }
         return status;
 #endif
 	}
 	if(data->device_type == AGO_TARGET_AFFINITY_CPU) {
 		refreshResizeMirrorNormalizebatchPD(node, parameters, num, data);
-		status = rppt_resize_mirror_normalize_host(data->pSrc, data->srcDescPtr, data->pDst, data->dstDescPtr, data->dstImgSize, RpptInterpolationType::BILINEAR, data->mean, data->std_dev, data->mirror, data->roiTensorPtrSrc, data->roiType, data->rppHandle);
+		// status = rppt_resize_mirror_normalize_host(data->pSrc, data->srcDescPtr, data->pDst, data->dstDescPtr, data->dstImgSize, RpptInterpolationType::BILINEAR, data->mean, data->std_dev, data->mirror, data->roiTensorPtrSrc, data->roiType, data->rppHandle);
 		return status;
 	}
 }
@@ -231,7 +231,7 @@ static vx_status VX_CALLBACK initializeResizeMirrorNormalizebatchPD(vx_node node
     data->dstDescPtr->h = data->maxDstDimensions.height;
     data->dstDescPtr->w = data->maxDstDimensions.width;
     data->dstDescPtr->c = ip_channel;
-   
+
 	data->srcDescPtr->layout = RpptLayout::NHWC;
 	data->dstDescPtr->layout = RpptLayout::NHWC;
 

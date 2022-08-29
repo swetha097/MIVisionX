@@ -118,13 +118,13 @@ void BoundingBoxGraph::update_random_bbox_meta_data(MetaDataBatch *input_meta_da
     }
 }
 
-inline void calculate_ious_for_box(float *ious, BoundingBoxCord &box, BoundingBoxCord *anchors, unsigned int num_anchors)
+inline void calculate_ious_for_box(double *ious, BoundingBoxCord &box, BoundingBoxCord *anchors, unsigned int num_anchors)
 {
-    float box_area = (box.b - box.t) * (box.r - box.l);
+    double box_area = (box.b - box.t) * (box.r - box.l);
     ious[0] = ssd_BBoxIntersectionOverUnion(box, box_area, anchors[0]);
 
     int best_idx = 0;
-    float best_iou = ious[0];
+    double best_iou = ious[0];
     for (unsigned int anchor_idx = 1; anchor_idx < num_anchors; anchor_idx++)
     {
         ious[anchor_idx] = ssd_BBoxIntersectionOverUnion(box, box_area, anchors[anchor_idx]);
@@ -139,10 +139,10 @@ inline void calculate_ious_for_box(float *ious, BoundingBoxCord &box, BoundingBo
     ious[best_idx] = 2.;
 }
 
-inline int find_best_box_for_anchor(unsigned anchor_idx, const std::vector<float> &ious, unsigned num_boxes, unsigned anchors_size)
+inline int find_best_box_for_anchor(unsigned anchor_idx, const std::vector<double> &ious, unsigned num_boxes, unsigned anchors_size)
 {
     unsigned best_idx = 0;
-    float best_iou = ious[anchor_idx];
+    double best_iou = ious[anchor_idx];
     for (unsigned bbox_idx = 1; bbox_idx < num_boxes; ++bbox_idx)
     {
         if (ious[bbox_idx * anchors_size + anchor_idx] >= best_iou)
@@ -154,7 +154,7 @@ inline int find_best_box_for_anchor(unsigned anchor_idx, const std::vector<float
     return best_idx;
 }
 
-void BoundingBoxGraph::update_box_encoder_meta_data(std::vector<float> *anchors, pMetaDataBatch full_batch_meta_data, float criteria, bool offset, float scale, std::vector<float>& means, std::vector<float>& stds)
+void BoundingBoxGraph::update_box_encoder_meta_data(std::vector<double> *anchors, pMetaDataBatch full_batch_meta_data, double criteria, bool offset, double scale, std::vector<double>& means, std::vector<double>& stds)
 {
     #pragma omp parallel for
     for (int i = 0; i < full_batch_meta_data->size(); i++)
@@ -171,7 +171,7 @@ void BoundingBoxGraph::update_box_encoder_meta_data(std::vector<float> *anchors,
         unsigned anchors_size = anchors->size() / 4; // divide the anchors_size by 4 to get the total number of anchors
         //Calculate Ious
         //ious size - bboxes count x anchors count
-        std::vector<float> ious(bb_count * anchors_size);
+        std::vector<double> ious(bb_count * anchors_size);
         encoded_bb.resize(anchors_size);
         encoded_labels.resize(anchors_size);
         for (uint bb_idx = 0; bb_idx < bb_count; bb_idx++)
@@ -179,8 +179,8 @@ void BoundingBoxGraph::update_box_encoder_meta_data(std::vector<float> *anchors,
             auto iou_rows = ious.data() + (bb_idx * (anchors_size));
             calculate_ious_for_box(iou_rows, bb_coords[bb_idx], bbox_anchors, anchors_size);
         }
-        float inv_stds[4] = {(float)(1./stds[0]), (float)(1./stds[1]), (float)(1./stds[2]), (float)(1./stds[3])};
-        float half_scale = 0.5 * scale;
+        double inv_stds[4] = {(double)(1./stds[0]), (double)(1./stds[1]), (double)(1./stds[2]), (double)(1./stds[3])};
+        double half_scale = 0.5 * scale;
         // Depending on the matches ->place the best bbox instead of the corresponding anchor_idx in anchor
         for (unsigned anchor_idx = 0; anchor_idx < anchors_size; anchor_idx++)
         {

@@ -85,7 +85,7 @@ fi
 CURRENTDATE=`date +"%Y-%m-%d-%T"`
 
 # Mention Batch Size
-batch_size=10
+batch_size=1
 
 # python version
 ver=$(python -V 2>&1 | sed 's/.* \([0-9]\).\([0-9]\).*/\1\.\2/')
@@ -94,13 +94,13 @@ ver=$(python -V 2>&1 | sed 's/.* \([0-9]\).\([0-9]\).*/\1\.\2/')
 ####################################################################################################################################
 # USER TO MAKE CHANGES HERE FOR TEST
 # Make the respective " Pipeline " to test equal to 1
-rocAL_api_python_unittest=1
+rocAL_api_python_unittest=0
 rocAL_api_coco_pipeline=1
-rocAL_api_caffe_reader=1
-rocAL_api_caffe2_reader=1
-rocAL_api_tf_classification_reader=1
-rocAL_api_tf_detection_pipeline=1
-rocAL_api_video_pipeline=1
+rocAL_api_caffe_reader=0
+rocAL_api_caffe2_reader=0
+rocAL_api_tf_classification_reader=0
+rocAL_api_tf_detection_pipeline=0
+rocAL_api_video_pipeline=0
 ####################################################################################################################################
 
 

@@ -413,7 +413,7 @@ ROCAL_API_CALL rocalGetMaskCoordinates(RocalContext p_context, int *bufcount, fl
         unsigned object_count = meta_data.second->get_bb_labels_batch()[image_idx].size();
         for(unsigned int i = 0; i < object_count; i++)
         {
-            auto mask_data_ptr = meta_data.second->get_mask_cords_batch()[image_idx].data(); 
+            auto mask_data_ptr = meta_data.second->get_mask_cords_batch()[image_idx].data();
             unsigned polygon_count = meta_data.second->get_mask_polygons_count_batch()[image_idx][i];
             for(unsigned int j = 0; j < polygon_count; j++)
             {
@@ -486,8 +486,8 @@ ROCAL_API_CALL rocalGetSequenceFrameTimestamps(RocalContext p_context,  float* b
     }
 }
 
-void ROCAL_API_CALL rocalBoxEncoder(RocalContext p_context, std::vector<float>& anchors, float criteria,
-                                  std::vector<float> &means, std::vector<float> &stds, bool offset, float scale)
+void ROCAL_API_CALL rocalBoxEncoder(RocalContext p_context, std::vector<double>& anchors, double criteria,
+                                  std::vector<double> &means, std::vector<double> &stds, bool offset, double scale)
 {
     if (!p_context)
         THROW("Invalid rocal context passed to rocalBoxEncoder")
@@ -530,7 +530,7 @@ ROCAL_API_CALL rocalCopyEncodedBoxesAndLables(RocalContext p_context, double* bo
 }
 
 void
-ROCAL_API_CALL rocalGetEncodedBoxesAndLables(RocalContext p_context, float **boxes_buf_ptr, int **labels_buf_ptr, int num_encoded_boxes)
+ROCAL_API_CALL rocalGetEncodedBoxesAndLables(RocalContext p_context, double **boxes_buf_ptr, int **labels_buf_ptr, int num_encoded_boxes)
 {
     if (!p_context) {
         WRN("rocalGetEncodedBoxesAndLables::Invalid context")

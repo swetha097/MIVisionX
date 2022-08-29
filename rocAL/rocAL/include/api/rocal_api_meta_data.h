@@ -183,8 +183,8 @@ extern "C" void ROCAL_API_CALL rocalGetSequenceFrameTimestamps(RocalContext roca
 /// \param means [x y w h] mean values for normalization.
 /// \param stds [x y w h] standard deviations for offset normalization.
 /// \param scale Rescales the box and anchor values before the offset is calculated (for example, to return to the absolute values).
-extern "C" void ROCAL_API_CALL rocalBoxEncoder(RocalContext p_context, std::vector<float> &anchors, float criteria,
-                                             std::vector<float>  &means , std::vector<float>  &stds ,  bool offset = false, float scale = 1.0);
+extern "C" void ROCAL_API_CALL rocalBoxEncoder(RocalContext p_context, std::vector<double> &anchors, double criteria,
+                                             std::vector<double>  &means , std::vector<double>  &stds ,  bool offset = false, double scale = 1.0);
 
 /// \param boxes_buf  user's buffer that will be filled with encoded bounding boxes . Its needs to be at least of size batch_size.
 /// \param labels_buf  user's buffer that will be filled with encoded labels . Its needs to be at least of size batch_size.
@@ -192,7 +192,7 @@ extern "C" void ROCAL_API_CALL rocalCopyEncodedBoxesAndLables(RocalContext p_con
 
 /// \param boxes_buf  ptr to user's buffer that will be filled with encoded bounding boxes . Its needs to be at least of size batch_size.
 /// \param labels_buf  user's buffer that will be filled with encoded labels . Its needs to be at least of size batch_size.
-extern "C" void ROCAL_API_CALL rocalGetEncodedBoxesAndLables(RocalContext p_context, float **boxes_buf_ptr, int **labels_buf_ptr, int num_encoded_boxes);
+extern "C" void ROCAL_API_CALL rocalGetEncodedBoxesAndLables(RocalContext p_context, double **boxes_buf_ptr, int **labels_buf_ptr, int num_encoded_boxes);
 
 ///
 /// \param rocal_context
