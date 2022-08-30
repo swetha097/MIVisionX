@@ -220,7 +220,7 @@ ROCAL_API_CALL rocalGetImageLabels(RocalContext p_context, void* buf, unsigned i
 {
 
     if (!p_context)
-        THROW("Invalid rocal context passed to rocalGetImageLabels") 
+        THROW("Invalid rocal context passed to rocalGetImageLabels")
     auto context = static_cast<Context*>(p_context);
     auto meta_data = context->master_graph->meta_data();
     if(!meta_data.second) {
