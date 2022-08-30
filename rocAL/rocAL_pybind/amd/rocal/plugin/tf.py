@@ -36,7 +36,6 @@ class ROCALGenericImageIterator(object):
 
 class ROCALGenericIteratorDetection(object):
     def __init__(self, pipeline, tensor_layout = types.NCHW, reverse_channels = False, multiplier = [1.0,1.0,1.0], offset = [0.0, 0.0, 0.0], tensor_dtype=types.FLOAT):
-        print("ROCALGenericIteratorDetectionnnnnnnnnnn")
         self.loader = pipeline
         self.tensor_format =tensor_layout
         self.multiplier = multiplier
@@ -52,10 +51,9 @@ class ROCALGenericIteratorDetection(object):
         color_format = b.getOutputColorFormat(self.loader._handle)
         self.p = (1 if (color_format == int(types.GRAY)) else 3)
         self.image_id = np.zeros(self.bs , dtype="int32")
-        self.out = np.zeros(( self.bs*self.n, int(self.h/self.bs), self.w, self.p), dtype = "uint8")
-        # print("self.out.shape()11    ",len(self.out))
+        # print("self.tensor_dtype")
+        self.out = np.zeros(( self.bs*self.n,  int(self.h/self.bs), self.w,self.p, ), dtype = "float32")
         
-        # print("self.loader._name   ",self.loader._name)
     def get_input_name(self):
         self.img_names_length = np.empty(self.bs, dtype="int32")
         self.img_names_size = self.loader.GetImageNameLen(self.img_names_length)
@@ -81,7 +79,9 @@ class ROCALGenericIteratorDetection(object):
             raise StopIteration
         
         # self.image_id = self.get_input_name()
-        self.loader.copyImage(self.out)
+        # self.loader.copyImage(self.out)
+        # print("self.out, self.multiplier, self.offset, self.reverse_channels, int(self.tensor_dtype)  ", self.out, self.multiplier, self.offset, self.reverse_channels, int(self.tensor_dtype))
+        self.loader.copyToTensorNHWC(self.out, self.multiplier, self.offset, self.reverse_channels, int(self.tensor_dtype))
         # print("self.out.shape()    ",self.out[0].shape())
         # self.loader.GetImageId(self.image_id)
         
@@ -138,7 +138,6 @@ class ROCALGenericIteratorDetection(object):
             elif self.tensor_dtype == types.FLOAT16:
                 return self.out.astype(np.float16), self.res, self.l, self.num_bboxes_arr
         elif (self.loader._name == "TFRecordReaderClassification"):
-            print("classificationnnnnnnnnnnnnnnnnnnnn")
             if(self.loader._oneHotEncoding == True):
                 self.labels = np.zeros((self.bs)*(self.loader._numOfClasses),dtype = "int32")
                 self.loader.GetOneHotEncodedLabels_TF(self.labels)
