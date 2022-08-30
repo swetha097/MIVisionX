@@ -20,7 +20,6 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 #include "bounding_box_graph.h"
-#include <omp.h>
 
 void BoundingBoxGraph::process(MetaDataBatch *meta_data)
 {
@@ -134,8 +133,7 @@ inline int find_best_box_for_anchor(unsigned anchor_idx, const std::vector<float
 
 void BoundingBoxGraph::update_box_encoder_meta_data(std::vector<float> *anchors, pMetaDataBatch full_batch_meta_data, float criteria, bool offset, float scale, std::vector<float>& means, std::vector<float>& stds)
 {
-    omp_set_dynamic(0);
-    #pragma omp parallel for num_threads(full_batch_meta_data->size())
+    #pragma omp parallel for
     for (int i = 0; i < full_batch_meta_data->size(); i++)
     {
         BoundingBoxCord *bbox_anchors = reinterpret_cast<BoundingBoxCord *>(anchors->data());
