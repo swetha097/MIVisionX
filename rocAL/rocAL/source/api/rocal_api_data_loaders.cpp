@@ -153,6 +153,8 @@ rocalJpegFileSourceSingleShard(
                                                        source_path, "");
         auto [color_format, num_of_planes] = convert_color_format(rocal_color_format);
 
+
+
         INFO("Internal buffer size width = "+ TOSTR(width)+ " height = "+ TOSTR(height) + " depth = "+ TOSTR(num_of_planes))
 
         auto info = ImageInfo(width, height,
