@@ -3,7 +3,6 @@ import rocal_pybind as b
 import amd.rocal.types as types
 class ROCALGenericImageIterator(object):
     def __init__(self, pipeline):
-        print("ROCALGenericImageIteratorrrrrrrrrrrr")
         self.loader = pipeline
         self.w = b.getOutputWidth(self.loader._handle)
         self.h = b.getOutputHeight(self.loader._handle)
@@ -35,7 +34,7 @@ class ROCALGenericImageIterator(object):
         return self
 
 class ROCALGenericIteratorDetection(object):
-    def __init__(self, pipeline, tensor_layout = types.NCHW, reverse_channels = False, multiplier = [1.0,1.0,1.0], offset = [0.0, 0.0, 0.0], tensor_dtype=types.FLOAT):
+    def __init__(self, pipeline, tensor_layout , reverse_channels = False, multiplier = [1.0,1.0,1.0], offset = [0.0, 0.0, 0.0], tensor_dtype=types.FLOAT):
         self.loader = pipeline
         self.tensor_format =tensor_layout
         self.multiplier = multiplier
@@ -51,8 +50,17 @@ class ROCALGenericIteratorDetection(object):
         color_format = b.getOutputColorFormat(self.loader._handle)
         self.p = (1 if (color_format == int(types.GRAY)) else 3)
         self.image_id = np.zeros(self.bs , dtype="int32")
-        # print("self.tensor_dtype")
-        self.out = np.zeros(( self.bs*self.n,  int(self.h/self.bs), self.w,self.p, ), dtype = "float32")
+        if self.tensor_dtype == types.FLOAT:
+            if(types.NHWC == self.tensor_format):
+                self.out = np.zeros(( self.bs*self.n,  int(self.h/self.bs), self.w,self.p,), dtype = "float32")
+            else: 
+                self.out = np.zeros(( self.bs*self.n,self.p, int(self.h/self.bs), self.w,), dtype = "float32")
+                
+        elif self.tensor_dtype == types.FLOAT16:
+            if(types.NHWC == self.tensor_format):
+                self.out = np.zeros(( self.bs*self.n,  int(self.h/self.bs), self.w,self.p,), dtype = "float16")
+            else: 
+                self.out = np.zeros(( self.bs*self.n,self.p, int(self.h/self.bs), self.w,), dtype = "float16")
         
     def get_input_name(self):
         self.img_names_length = np.empty(self.bs, dtype="int32")
@@ -78,15 +86,12 @@ class ROCALGenericIteratorDetection(object):
             self.reset()
             raise StopIteration
         
-        # self.image_id = self.get_input_name()
-        # self.loader.copyImage(self.out)
-        # print("self.out, self.multiplier, self.offset, self.reverse_channels, int(self.tensor_dtype)  ", self.out, self.multiplier, self.offset, self.reverse_channels, int(self.tensor_dtype))
-        self.loader.copyToTensorNHWC(self.out, self.multiplier, self.offset, self.reverse_channels, int(self.tensor_dtype))
-        # print("self.out.shape()    ",self.out[0].shape())
-        # self.loader.GetImageId(self.image_id)
+        if(types.NCHW == self.tensor_format):
+            self.loader.copyToTensorNCHW(self.out, self.multiplier, self.offset, self.reverse_channels, int(self.tensor_dtype))
+        else:
+            self.loader.copyToTensorNHWC(self.out, self.multiplier, self.offset, self.reverse_channels, int(self.tensor_dtype))
         
         if(self.loader._name == "TFRecordReaderDetection"):
-            print("detectionnnnnnnnnnnnnnnnnn")
             self.bbox_list =[]
             self.label_list=[]
             self.num_bboxes_list=[]
@@ -145,7 +150,6 @@ class ROCALGenericIteratorDetection(object):
             else:
                 self.labels = np.zeros((self.bs),dtype = "int32")
                 self.loader.GetImageLabels(self.labels)
-            print("self.image_id    ",self.image_id)
             if self.tensor_dtype == types.FLOAT:
                 return self.out.astype(np.float32), self.labels
             elif self.tensor_dtype == types.TensorDataType.FLOAT16:
@@ -179,7 +183,6 @@ class ROCALIterator(ROCALGenericIteratorDetection):
                  dynamic_shape=False,
                  last_batch_padded=False):
         pipe = pipelines
-        print("in ROCALIterator")
         super(ROCALIterator, self).__init__(pipe, tensor_layout = pipe._tensor_layout, tensor_dtype = pipe._tensor_dtype,
                                                             multiplier=pipe._multiplier, offset=pipe._offset)
 

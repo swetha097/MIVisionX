@@ -3,7 +3,7 @@ from amd.rocal.plugin.tf import ROCALIterator
 from amd.rocal.pipeline import Pipeline
 import amd.rocal.fn as fn
 import amd.rocal.types as types
-import cv2 
+# import cv2 
 
 import tensorflow as tf
 # tf.compat.v1.disable_v2_behavior()
@@ -11,19 +11,6 @@ import tensorflow as tf
 import numpy as np
 import tensorflow_hub as hub
 
-
-def draw_patches(img, idx):
-    import cv2 
-    image =img*255
-    image =image.astype(np.uint8)
-    image1 = cv2.cvtColor(image, cv2.COLOR_RGB2BGR)
-    cv2.imwrite("output/"+str(idx)+"_""aa__new_train"+".jpg", image1 )
-
-def draw_patches1(img, idx):
-    image =img*255
-    image =image.astype(np.uint8)
-    image1 = cv2.cvtColor(image, cv2.COLOR_RGB2BGR)
-    cv2.imwrite("output/"+str(idx)+"_""aa_new_val"+".jpg", image1 )
 ############################### CHANGE THESE GLOBAL VARIABLES APPROPRIATELY ###############################
 
 RECORDS_DIR = 'tfr/'
@@ -65,7 +52,6 @@ def get_label_one_hot(label_ndArray):
 	for label in label_ndArray:
 		one_hot_vector = np.zeros(NUM_CLASSES)
 		np.put(one_hot_vector, label - 1, 1)
-		# print("label.... ",label)
 		one_hot_vector_list.append(one_hot_vector)
 	return one_hot_vector_list
 
@@ -127,9 +113,8 @@ def main():
 		jpegs = inputs["image/encoded"]
 		images = fn.decoders.image(jpegs, user_feature_key_map=featureKeyMap, output_type=types.RGB, path=TRAIN_RECORDS_DIR)
 		resized = fn.resize(images, resize_x=crop_size[0], resize_y=crop_size[1])
-		# rotated= fn.rotate(resized, angle=90.0)
 		flip_coin = fn.random.coin_flip(probability=0.5)
-		cmn_images = fn.crop_mirror_normalize(resized, crop=(crop_size[1], crop_size[0]), mean=[0,0,0], std=[255,255,255], mirror=0, output_dtype=types.FLOAT, output_layout=types.NCHW, pad_output=False)
+		cmn_images = fn.crop_mirror_normalize(resized, crop=(crop_size[1], crop_size[0]), mean=[0,0,0], std=[255,255,255], mirror=0, output_dtype=types.FLOAT, output_layout=types.NHWC, pad_output=False)
 		trainPipe.set_outputs(cmn_images)
 	trainPipe.build()
 
@@ -145,26 +130,14 @@ def main():
 		jpegs = inputs["image/encoded"]
 		images = fn.decoders.image(jpegs, user_feature_key_map=featureKeyMap, output_type=types.RGB, path=VAL_RECORDS_DIR)
 		resized = fn.resize(images, resize_x=crop_size[0], resize_y=crop_size[1])
-		# rotated= fn.rotate(resized, angle=90.0)
 		flip_coin = fn.random.coin_flip(probability=0.5)
-		cmn_images = fn.crop_mirror_normalize(resized, crop=(crop_size[1], crop_size[0]), mean=[0,0,0], std=[255,255,255], mirror=0, output_dtype=types.FLOAT, output_layout=types.NCHW, pad_output=False)
+		cmn_images = fn.crop_mirror_normalize(resized, crop=(crop_size[1], crop_size[0]), mean=[0,0,0], std=[255,255,255], mirror=0, output_dtype=types.FLOAT, output_layout=types.NHWC, pad_output=False)
 
 		valPipe.set_outputs(cmn_images)
 	valPipe.build()
 
 	trainIterator = ROCALIterator(trainPipe)
 	valIterator = ROCALIterator(valPipe)
-	# cnt = 0
-	# for e in range(3):
-	# 	for i , it in enumerate(trainIterator):
-	# 		print("************************************** i *************************************",i)
-	# 		for img in it[0]:
-	# 			cnt = cnt + 1
-	# 			draw_patches(img, cnt)
-	# 		# print("name  ",it[2])
-	# 		print("label ", it[1])
-	# 	trainIterator.reset()
-	# ss
 
 	i = 0
 	with tf.compat.v1.Session(graph = train_graph) as sess:
@@ -172,21 +145,9 @@ def main():
 		while i < NUM_TRAIN_STEPS:
 			cnts=0
 			for t, (train_image_ndArray, train_label_ndArray) in enumerate(trainIterator, 0):
-				print("train_image_ndArray     ",train_image_ndArray.shape)
-				# train_image_ndArray_transposed = np.transpose(train_image_ndArray, [0, 3, 2, 1])
-
 				train_image_ndArray_transposed = train_image_ndArray
-				print("train_image_ndArray     ",train_image_ndArray_transposed.shape)
-
-				print("train_label_ndArray",train_label_ndArray)
+				# train_image_ndArray_transposed = np.transpose(train_image_ndArray, [0, 2, 3, 1]) //uncomment for NCHW
 				train_label_one_hot_list = get_label_one_hot(train_label_ndArray)
-				# print("train_label_one_hot_list  ", train_label_one_hot_list)
-
-				#Dumping the image    //uncomment to dump the dump the images
-				for img in train_image_ndArray_transposed:
-					cnts= cnts + 1
-					draw_patches(img, cnts)
-    
 				train_loss, _, train_label, train_accuracy = sess.run(
 					[cross_entropy_mean, train_op, correct_label, accuracy],
 					feed_dict={decoded_images: train_image_ndArray_transposed, labels: train_label_one_hot_list})
@@ -198,19 +159,9 @@ def main():
 					mean_loss = 0
 					print("\n\n-------------------------------------------------------------------------------- BEGIN VALIDATION --------------------------------------------------------------------------------")
 					for j, (val_image_ndArray, val_label_ndArray) in enumerate(valIterator, 0):
-						
-						# val_image_ndArray_transposed = np.transpose(val_image_ndArray, [0, 2, 3, 1])
-						# print("val_label_ndArray",val_label_ndArray)
 						val_image_ndArray_transposed =val_image_ndArray
+						# val_image_ndArray_transposed = np.transpose(val_image_ndArray, [0, 2, 3, 1]) //uncomment for NCHW
 						val_label_one_hot_list = get_label_one_hot(val_label_ndArray)
-						# print("val_label_one_hot_list   ",val_label_one_hot_list)
-      
-						#dumping the image                //uncomment to dump the image 
-						for img in val_image_ndArray_transposed:
-							cnts= cnts + 1
-							draw_patches1(img, cnts)
-      
-						# print("correct_label",val_label_one_hot_list)
 						val_loss, val_accuracy, val_prediction, val_target, correct_predicate = sess.run(
 							[cross_entropy_mean, accuracy, prediction, correct_label, correct_prediction],
 							feed_dict={decoded_images: val_image_ndArray_transposed, labels: val_label_one_hot_list})
