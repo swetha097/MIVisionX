@@ -29,7 +29,7 @@ int handleError( int status, const char* func_name,
             int line, void* userdata )
 {
     //TODO: add proper error handling here
-     return 0;   	
+    return 0;  	
 }
 
 CVDecoder::CVDecoder() {
