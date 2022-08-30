@@ -51,7 +51,7 @@ Decoder::Status FusedCropTJDecoder::decode_info(unsigned char* input_buffer, siz
                             input_buffer, 
                             input_size, 
                             width, 
-                            height,  
+                            height,
                             color_comps) != 0)
     {
         WRN("Jpeg header decode failed " + STR(tjGetErrorStr2(m_jpegDecompressor)))
@@ -84,14 +84,14 @@ Decoder::Status FusedCropTJDecoder::decode(unsigned char *input_buffer, size_t i
     };
     actual_decoded_width = max_decoded_width;
     actual_decoded_height = max_decoded_height;
-    // You need get the output of random bbox crop
+    // You need get the output of random bbox crop 
     // check the vector size for bounding box. If its more than zero go for random bbox crop
     // else go to random crop
     unsigned int crop_width, crop_height, x1, y1, x1_diff, crop_width_diff;
     if(_bbox_coord.size() != 0)
     {
         // Random bbox crop returns normalized crop cordinates
-        // hence bringing it back to absolute cordinates
+        // hence bringing it back to absolute cordinates 
         x1 = std::lround(_bbox_coord[0] * original_image_width);
         y1 = std::lround(_bbox_coord[1] * original_image_height);
         crop_width = std::lround((_bbox_coord[2]) * original_image_width);
@@ -103,7 +103,7 @@ Decoder::Status FusedCropTJDecoder::decode(unsigned char *input_buffer, size_t i
         constexpr static double AREA_RANGE[2] = {0.08, 1.0};
         auto is_valid_crop = [](uint h, uint w, uint height, uint width)
         {
-            return (0 < h && h <= height && 0 < w && w <= width);
+            return (0 < h && h <= height && 0 < w && w <= width); 
         };
   float min_wh_ratio = ASPECT_RATIO_RANGE[0];
   float max_wh_ratio = ASPECT_RATIO_RANGE[1];
@@ -187,8 +187,7 @@ Decoder::Status FusedCropTJDecoder::decode(unsigned char *input_buffer, size_t i
                       max_decoded_height,
                       tjpf,
                       TJFLAG_FASTDCT, &x1_diff, &crop_width_diff,
-                           x1, y1, crop_width, crop_height) != 0)
-
+ 		                  x1, y1, crop_width, crop_height) != 0)
     {
         WRN("Jpeg image decode failed " + STR(tjGetErrorStr2(m_jpegDecompressor)))
         return Status::CONTENT_DECODE_FAILED;
