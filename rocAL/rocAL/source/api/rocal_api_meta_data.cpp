@@ -486,8 +486,8 @@ ROCAL_API_CALL rocalGetSequenceFrameTimestamps(RocalContext p_context,  float* b
     }
 }
 
-void ROCAL_API_CALL rocalBoxEncoder(RocalContext p_context, std::vector<double>& anchors, double criteria,
-                                  std::vector<double> &means, std::vector<double> &stds, bool offset, double scale)
+void ROCAL_API_CALL rocalBoxEncoder(RocalContext p_context, std::vector<double>& anchors, float criteria,
+                                  std::vector<float> &means, std::vector<float> &stds, bool offset, float scale)
 {
     if (!p_context)
         THROW("Invalid rocal context passed to rocalBoxEncoder")

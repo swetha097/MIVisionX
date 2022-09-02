@@ -154,7 +154,7 @@ inline int find_best_box_for_anchor(unsigned anchor_idx, const std::vector<doubl
     return best_idx;
 }
 
-void BoundingBoxGraph::update_box_encoder_meta_data(std::vector<double> *anchors, pMetaDataBatch full_batch_meta_data, double criteria, bool offset, double scale, std::vector<double>& means, std::vector<double>& stds)
+void BoundingBoxGraph::update_box_encoder_meta_data(std::vector<double> *anchors, pMetaDataBatch full_batch_meta_data, float criteria, bool offset, float scale, std::vector<float>& means, std::vector<float>& stds)
 {
     #pragma omp parallel for
     for (int i = 0; i < full_batch_meta_data->size(); i++)
@@ -179,8 +179,8 @@ void BoundingBoxGraph::update_box_encoder_meta_data(std::vector<double> *anchors
             auto iou_rows = ious.data() + (bb_idx * (anchors_size));
             calculate_ious_for_box(iou_rows, bb_coords[bb_idx], bbox_anchors, anchors_size);
         }
-        double inv_stds[4] = {(double)(1./stds[0]), (double)(1./stds[1]), (double)(1./stds[2]), (double)(1./stds[3])};
-        double half_scale = 0.5 * scale;
+        float inv_stds[4] = {(float)(1./stds[0]), (float)(1./stds[1]), (float)(1./stds[2]), (float)(1./stds[3])};
+        float half_scale = 0.5 * scale;
         // Depending on the matches ->place the best bbox instead of the corresponding anchor_idx in anchor
         for (unsigned anchor_idx = 0; anchor_idx < anchors_size; anchor_idx++)
         {
@@ -242,8 +242,6 @@ void BoundingBoxGraph::update_box_encoder_meta_data(std::vector<double> *anchors
         BoundingBoxCords * encoded_bb_ltrb = (BoundingBoxCords*)&encoded_bb;
         full_batch_meta_data->get_bb_cords_batch()[i] = (*encoded_bb_ltrb);
         full_batch_meta_data->get_bb_labels_batch()[i] = encoded_labels;
-        //encoded_bb.clear();
-        //encoded_labels.clear();
     }
 }
 

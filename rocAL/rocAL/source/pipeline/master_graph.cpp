@@ -288,10 +288,10 @@ MasterGraph::build()
     allocate_output_tensor();
 #if ENABLE_HIP
     _ring_buffer.initHip(_mem_type, _device.resources(), output_byte_size(), _output_images.size());
-    if (_is_box_encoder) _ring_buffer.initBoxEncoderMetaData(_mem_type, _user_batch_size*_num_anchors*4*sizeof(float), _user_batch_size*_num_anchors*sizeof(int));
+    if (_is_box_encoder) _ring_buffer.initBoxEncoderMetaData(_mem_type, _user_batch_size*_num_anchors*4*sizeof(double), _user_batch_size*_num_anchors*sizeof(int));
 #else
     _ring_buffer.init(_mem_type, _device.resources(), output_byte_size(), _output_images.size());
-    if (_is_box_encoder) _ring_buffer.initBoxEncoderMetaData(_mem_type, _user_batch_size*_num_anchors*4*sizeof(float), _user_batch_size*_num_anchors*sizeof(int));
+    if (_is_box_encoder) _ring_buffer.initBoxEncoderMetaData(_mem_type, _user_batch_size*_num_anchors*4*sizeof(double), _user_batch_size*_num_anchors*sizeof(int));
 #endif
     create_single_graph();
     start_processing();
@@ -1385,11 +1385,11 @@ void MasterGraph::create_randombboxcrop_reader(RandomBBoxCrop_MetaDataReaderType
         _random_bbox_crop_cords_data = _randombboxcrop_meta_data_reader->get_output();
 }
 
-void MasterGraph::box_encoder(std::vector<double> &anchors, double criteria, const std::vector<double> &means, const std::vector<double> &stds, bool offset, double scale)
+void MasterGraph::box_encoder(std::vector<double> &anchors, float criteria, const std::vector<float> &means, const std::vector<float> &stds, bool offset, float scale)
 {
     _is_box_encoder = true;
     _num_anchors = anchors.size() / 4;
-    std::vector<double> inv_stds = {(double)(1./stds[0]), (double)(1./stds[1]), (double)(1./stds[2]), (double)(1./stds[3])};
+    std::vector<float> inv_stds = {(float)(1./stds[0]), (float)(1./stds[1]), (float)(1./stds[2]), (float)(1./stds[3])};
 
 #if ENABLE_HIP
     // Intialize gpu box encoder if _mem_type is HIP

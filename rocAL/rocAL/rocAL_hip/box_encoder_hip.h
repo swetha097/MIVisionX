@@ -42,7 +42,7 @@ struct BoxEncoderSampleDesc {
 class BoxEncoderGpu {
 public:
     static constexpr int BlockSize = 256;   // hip kernel blocksize
-    explicit BoxEncoderGpu(int batch_size, std::vector<double> &anchors, double criteria, const std::vector<double> &means, const std::vector<double> &stds, bool offset, double scale, const hipStream_t &stream, bool pinnedMem):
+    explicit BoxEncoderGpu(int batch_size, std::vector<double> &anchors, float criteria, const std::vector<float> &means, const std::vector<float> &stds, bool offset, float scale, const hipStream_t &stream, bool pinnedMem):
                           _anchors(anchors), _criteria(criteria), _means(means), _stds(stds), _offset(offset), _scale(scale), _stream(stream), _pinnedMem(pinnedMem)
     {
         if (criteria < 0.f || criteria > 1.f || means.size() != 4 || stds.size() != 4)
@@ -105,7 +105,7 @@ protected:
 
 private:
     void prepare_anchors(const std::vector<double> &anchors);
-    void prepare_mean_std(const std::vector<double> &means, const std::vector<double> &stds);
+    void prepare_mean_std(const std::vector<float> &means, const std::vector<float> &stds);
     void WriteAnchorsToOutput(double* encoded_boxes);
     void ResetLabels(int *encoded_labels_out);
     void ClearOutput(double* encoded_boxes);
@@ -113,11 +113,11 @@ private:
 
     int _cur_batch_size;
     std::vector<double> _anchors;
-    const double _criteria;
-    std::vector<double>  _means;
-    std::vector<double>  _stds;
+    const float _criteria;
+    std::vector<float>  _means;
+    std::vector<float>  _stds;
     bool  _offset;
-    double  _scale;
+    float  _scale;
     const hipStream_t _stream;
     bool  _pinnedMem;
 
@@ -131,7 +131,7 @@ private:
     std::vector<BoxEncoderSampleDesc *> _samples;
     BoxEncoderSampleDesc *_samples_host_buf, *_samples_dev_buf;
     double4 *_anchors_data_dev, *_anchors_as_center_wh_data_dev;
-    double* _means_dev, * _stds_dev;
+    float* _means_dev, * _stds_dev;
     std::vector<std::vector<size_t>> _output_shape;
 
 };

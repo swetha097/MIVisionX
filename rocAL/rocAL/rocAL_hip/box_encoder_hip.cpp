@@ -31,7 +31,7 @@ __host__ __device__ inline double4 ToBoxCenterWH(const double4 &box) {
       box.w - box.y};
 }
 
-__device__ double4 MatchOffsets(double4 box, double4 anchor, const double *means, const double *inv_stds, double scale) {
+__device__ double4 MatchOffsets(double4 box, double4 anchor, const float *means, const float *inv_stds, float scale) {
 
     double4 box_out;
     box.x *= scale; box.y *= scale; box.z *= scale; box.w *= scale;
@@ -78,7 +78,7 @@ __device__ inline void FindBestMatch(const int N, volatile double *vals, volatil
 
 __device__ void WriteMatchesToOutput(unsigned int anchor_count, double criteria, int *labels_out, const int *labels_in,
                                     double4 *boxes_out, const double4 *boxes_in, volatile int *best_box_idx, volatile double *best_box_iou,
-                                    bool offset, const double* means, const double* inv_stds, double scale, const double4 *anchors_as_cwh) {
+                                    bool offset, const float* means, const float* inv_stds, float scale, const double4 *anchors_as_cwh) {
 
     for (unsigned int anchor = threadIdx.x; anchor < anchor_count; anchor += blockDim.x) {
         if (best_box_iou[anchor] > criteria) {
@@ -123,7 +123,7 @@ template <int BLOCK_SIZE>
 __global__ void __attribute__((visibility("default")))
 BoxEncode(const BoxEncoderSampleDesc *samples, const int anchor_cnt, const double4 *anchors,
           const double criteria, int *box_idx_buffer, double *box_iou_buffer, bool offset,
-          const double *means, const double *inv_stds, double scale, const double4 *anchors_as_cwh) {
+          const float *means, const float *inv_stds, float scale, const double4 *anchors_as_cwh) {
     // printf("\n In Box Encoder kernel");
     // printf("\n invs_stds1:%f",inv_stds[0]);
 
@@ -196,11 +196,11 @@ void BoxEncoderGpu::prepare_anchors(const std::vector<double> &anchors) {
     HIP_ERROR_CHECK_STATUS(hipMemcpy((void *)_anchors_as_center_wh_data_dev, anchors_as_center_wh.data(), anchor_data_size, hipMemcpyHostToDevice));
 }
 
-void BoxEncoderGpu::prepare_mean_std(const std::vector<double> &means, const std::vector<double> &stds) {
+void BoxEncoderGpu::prepare_mean_std(const std::vector<float> &means, const std::vector<float> &stds) {
 
-    int data_size = 4 * sizeof(double);
-    auto means_data_cpu = reinterpret_cast<const double *>(means.data());
-    auto stds_data_cpu = reinterpret_cast<const double *>(stds.data());
+    int data_size = 4 * sizeof(float);
+    auto means_data_cpu = reinterpret_cast<const float *>(means.data());
+    auto stds_data_cpu = reinterpret_cast<const float *>(stds.data());
 
     HIP_ERROR_CHECK_STATUS(hipMemcpy((void *)_means_dev, means_data_cpu, data_size, hipMemcpyHostToDevice));
     HIP_ERROR_CHECK_STATUS(hipMemcpy((void *)_stds_dev, stds_data_cpu, data_size, hipMemcpyHostToDevice));
