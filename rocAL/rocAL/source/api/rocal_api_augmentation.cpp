@@ -190,7 +190,7 @@ rocalCrop(RocalContext p_context,
         rocALTensorInfo output_info = input->info();
         output_info.set_tensor_layout(op_tensorLayout);
         output_info.set_data_type(op_tensorDataType);
-        // std::vector<unsigned> out_dims = output_info.dims();
+        // std::vector<size_t> out_dims = output_info.dims();
         // if(op_tensorLayout == RocalTensorlayout::NHWC)
         // {
         //     out_dims[1] = crop_h;
@@ -249,7 +249,7 @@ ROCAL_API_CALL rocalResizeMirrorNormalize(RocalContext p_context,
         output_info.set_tensor_layout(op_tensorLayout);
         output_info.set_data_type(op_tensorDataType);
 
-        std::vector<unsigned> out_dims = output_info.dims();
+        std::vector<size_t> out_dims = output_info.dims();
         if(op_tensorLayout == RocalTensorlayout::NHWC)
         {
             out_dims[1] = resize_height;
@@ -308,7 +308,7 @@ rocalCropFixed(
         rocALTensorInfo output_info = input->info();
         output_info.set_tensor_layout(op_tensorLayout);
         output_info.set_data_type(op_tensorDataType);
-        std::vector<unsigned> out_dims = output_info.dims();
+        std::vector<size_t> out_dims = output_info.dims();
         if(op_tensorLayout == RocalTensorlayout::NHWC)
         {
             out_dims[1] = crop_height;
@@ -367,7 +367,7 @@ rocalCropCenterFixed(
         output_info.set_tensor_layout(op_tensorLayout);
         output_info.set_data_type(op_tensorDataType);
 
-        std::vector<unsigned> out_dims = output_info.dims();
+        std::vector<size_t> out_dims = output_info.dims();
         if(op_tensorLayout == RocalTensorlayout::NHWC)
         {
             out_dims[1] = crop_height;
@@ -419,7 +419,7 @@ ROCAL_API_CALL rocalCropMirrorNormalize(RocalContext p_context, RocalTensor p_in
         rocALTensorInfo output_info = input->info();
         output_info.set_tensor_layout(op_tensorLayout);
         output_info.set_data_type(op_tensorDataType);
-        std::vector<unsigned> out_dims = output_info.dims();
+        std::vector<size_t> out_dims = output_info.dims();
         if(op_tensorLayout == RocalTensorlayout::NHWC)
         {
             out_dims[1] = crop_height;
@@ -476,7 +476,7 @@ rocalResize(RocalContext p_context,
         rocALTensorInfo output_info = input->info();
         output_info.set_tensor_layout(op_tensorLayout);
         output_info.set_data_type(op_tensorDataType);
-        std::vector<unsigned> out_dims = output_info.dims();
+        std::vector<size_t> out_dims = output_info.dims();
         if(op_tensorLayout == RocalTensorlayout::NHWC)
         {
             out_dims[1] = resize_height;
@@ -530,7 +530,7 @@ rocalResizeShorter(
         output_info.set_data_type(op_tensorDataType);
         if (size == 0) size = input->info().max_dims()[0];
         if (size == 0) size = input->info().max_dims()[1];
-        std::vector<unsigned> out_dims = output_info.dims();
+        std::vector<size_t> out_dims = output_info.dims();
         int size_dim = size * 10;
         if(op_tensorLayout == RocalTensorlayout::NHWC)
         {

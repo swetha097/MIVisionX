@@ -818,11 +818,10 @@ std::vector<rocALTensorList *> MasterGraph::create_coco_meta_data_reader(const c
     _meta_data_reader->init(config);
     _meta_data_reader->read_all(source_path);
     unsigned num_of_dims = 1;
-    std::vector<unsigned> dims;
+    std::vector<size_t> dims;
     dims.resize(num_of_dims);
     dims.at(0) = is_box_encoder ? MAX_NUM_ANCHORS : MAX_OBJECTS;
-    auto default_labels_info  = rocALTensorInfo(num_of_dims,
-                                        dims,
+    auto default_labels_info  = rocALTensorInfo(dims,
                                         _mem_type,
                                         RocalTensorDataType::INT32);
     default_labels_info.set_metadata();
@@ -833,8 +832,7 @@ std::vector<rocALTensorList *> MasterGraph::create_coco_meta_data_reader(const c
     dims.resize(num_of_dims);
     dims.at(0) = is_box_encoder ? MAX_NUM_ANCHORS : MAX_OBJECTS;
     dims.at(1) = BBOX_COUNT;
-    auto default_bbox_info  = rocALTensorInfo(num_of_dims,
-                                        dims,
+    auto default_bbox_info  = rocALTensorInfo(dims,
                                         _mem_type,
                                         RocalTensorDataType::FP32);
     default_bbox_info.set_metadata();
@@ -848,8 +846,7 @@ std::vector<rocALTensorList *> MasterGraph::create_coco_meta_data_reader(const c
         dims.resize(num_of_dims);
         dims.at(0) = MAX_MASK_BUFFER;
         dims.at(1) = 1;
-        default_mask_info  = rocALTensorInfo(num_of_dims,
-                                            dims,
+        default_mask_info  = rocALTensorInfo(dims,
                                             _mem_type,
                                             RocalTensorDataType::FP32);
         default_mask_info.set_metadata();
@@ -895,11 +892,10 @@ std::vector<rocALTensorList *> MasterGraph::create_label_reader(const char *sour
     _meta_data_reader->read_all(source_path);
 
     unsigned num_of_dims = 1;
-    std::vector<unsigned> dims;
+    std::vector<size_t> dims;
     dims.resize(num_of_dims);
     dims.at(0) = 1; // Number of labels per file
-    auto default_labels_info  = rocALTensorInfo(num_of_dims,
-                                 std::vector<unsigned>(std::move(dims)),
+    auto default_labels_info  = rocALTensorInfo(std::vector<size_t>(std::move(dims)),
                                  _mem_type,
                                  RocalTensorDataType::INT32);
     default_labels_info.set_metadata();
