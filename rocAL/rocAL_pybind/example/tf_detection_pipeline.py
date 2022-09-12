@@ -87,7 +87,7 @@ def main():
         exit(0)
     imagePath = sys.argv[1]
     numClasses = int(sys.argv[2])
-    if(sys.argv[3] == "cpu"):
+    if(sys.argv[3] == 0):
         raliCPU = True
     else:
         raliCPU = False
@@ -108,7 +108,7 @@ def main():
     }
 
     pipe = HybridPipe(feature_key_map=featureKeyMap, tfrecordreader_type=TFRecordReaderType,
-                      batch_size=bs, num_threads=nt, device_id=di, data_dir=imagePath, crop=cropSize, rali_cpu=raliCPU)
+                      batch_size=bs, num_threads=nt, device_id=di, data_dir=imagePath, crop=cropSize, rali_cpu=rali_cpu)
     pipe.build()
 
     imageIterator = RALIIterator(pipe)

@@ -20,9 +20,10 @@ def draw_patches(img, idx, device):
     else:
         image = img.cpu().numpy()
     image = image.transpose([1, 2, 0])
-    print(img.shape)
+    print("hello")
+    print(image.shape)
     image = cv2.cvtColor(image, cv2.COLOR_RGB2BGR)
-    cv2.imwrite("OUTPUT_IMAGES_PYTHON/NEW_API/FILE_READER/" + "brightness" + "/" + str(idx)+"_"+"train"+".png", image )
+    cv2.imwrite("OUTPUT_IMAGES_PYTHON/NEW_API/FILE_READER/"  + str(idx)+"_"+"sample"+".png", image )
 
 def main():
     if  len(sys.argv) < 3:
@@ -120,7 +121,7 @@ def main():
                                             # image_type=types.RGB,
                                             # mean=[0.485 * 255,0.456 * 255,0.406 * 255],
                                             # std=[0.229 * 255,0.224 * 255,0.225 * 255])
-        brightend_images = fn.flip(decode, rocal_tensor_layout=types.NHWC, rocal_tensor_output_type=types.UINT8)
+        brightend_images = fn.resize(decode, rocal_tensor_layout=types.NHWC, rocal_tensor_output_type=types.UINT8,resize_width=300,resize_height=300)
         
         image_classification_val_pipeline.set_outputs(brightend_images)
 

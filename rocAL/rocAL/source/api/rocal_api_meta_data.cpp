@@ -125,7 +125,7 @@ ROCAL_API_CALL rocalCreateTFReaderDetection(RocalContext p_context, const char* 
     std::string user_key_for_xmax_str(user_key_for_xmax);
     std::string user_key_for_ymax_str(user_key_for_ymax);
     std::string user_key_for_filename_str(user_key_for_filename);
-
+    std::cerr<<"user_key_for_label_str "<<user_key_for_label_str;
     std::map<std::string, std::string> feature_key_map = {
         {"image/class/label", user_key_for_label_str},
         {"image/class/text", user_key_for_text_str},

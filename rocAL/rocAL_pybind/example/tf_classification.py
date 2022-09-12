@@ -42,7 +42,9 @@ def draw_patches(img, idx, device):
     print(image.shape)
     for i in range (image.shape[0]):
         image1 = cv2.cvtColor(image[i], cv2.COLOR_RGB2BGR)
-        cv2.imwrite("OUTPUT_IMAGES_PYTHON/NEW_API/FILE_READER/" + "brightness" + "/" + str(idx)+"_"+"train"+".png", image1 )
+        cv2.imwrite("OUTPUT_IMAGES_PYTHON/NEW_API/FILE_READER/" + "brightness" + "/" + str(idx)+"_"+"training"+".png", image1 )
+        
+        
 def main():
     if  len(sys.argv) < 1:
         print ('Please pass image_folder cpu/gpu batch_size')

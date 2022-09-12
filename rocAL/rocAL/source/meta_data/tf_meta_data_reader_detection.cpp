@@ -210,6 +210,7 @@ void TFMetaDataReaderDetection::read_record(std::ifstream &file_contents, uint f
 
 void TFMetaDataReaderDetection::read_all(const std::string &path)
 {
+    std::cerr<<"in TFMetaDataReaderDetection\n\n";
     std::string label_key = "image/class/label";
     std::string text_key = "image/class/text";
     std::string xmin_key = "image/object/bbox/xmin";

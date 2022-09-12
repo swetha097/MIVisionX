@@ -379,7 +379,7 @@ unsigned rocALTensor::copy_data(void * user_buffer, bool sync)
 {
     if(_info._type != rocALTensorInfo::Type::HANDLE)
         return 0;
-        std::cerr << "COOPY DATA PC++";
+        // std::cerr << "COOPY DATA PC++";
 #if ENABLE_HIP
     if (_info._mem_type == RocalMemType::HIP)
     {
