@@ -269,13 +269,93 @@ class RALIGenericIteratorDetection(object):
         
         self.color_format = self.output_tensor_list[0].color_format()  # 3
         print(self.color_format)
-        print(self.batch_size , self.h , self.color_format , self.w)
+        print(self.batch_size , self.h , self.w, self.color_format )
         self.out = np.zeros(( self.batch_size * self.augmentation_count, self.h, self.w, self.color_format),dtype="uint8")
         # self.output = torch.empty((self.batch_size, self.h, self.w, self.color_format,), dtype=torch.uint8)
         # self.out = torch.permute(self.output, (0,3,1,2))
         if(self.loader._name == "TFRecordReaderDetection"):
-            print("DETECTION ITERATOR")
-            pass
+            self.bbox_list =[]
+            self.label_list=[]
+            self.num_bboxes_list=[]
+            
+            # std::cerr<<"self.output_tensor_list[0] "<<self.output_tensor_list[0];
+            print("self.output_tensor_list[0]  ",self.output_tensor_list[0])
+            self.output_tensor_list[0].copy_data_numpy(self.out)
+            print("after copy_data_numpy")
+            #Count of labels/ bboxes in a batch
+            self.labels=self.loader.rocalGetBoundingBoxLabel()
+            print("labels    ", self.labels)
+            # print("labels    ", len(self.labels[0]))
+            # print("labels    ", self.labels[1].shape)
+            # print("labels    ", self.labels[2].shape)
+            
+            self.bboxes =self.loader.rocalGetBoundingBoxCords()
+            print("bbox_list    ", self.bboxes)
+            self.img_size = np.zeros((self.batch_size * 2),dtype = "int32")
+            self.loader.GetImgSizes(self.img_size)
+            print("self.img_size",self.img_size)
+            exit(0)
+            # self.bboxes_label_count = np.zeros(self.bs, dtype="int32")
+            # self.count_batch = self.loader.GetBoundingBoxCount(self.bboxes_label_count)
+            # self.num_bboxes_list = self.bboxes_label_count.tolist()
+            # # 1D labels array in a batch
+            # self.labels = np.zeros(self.count_batch, dtype="int32")
+            # self.loader.GetBBLabels(self.labels)
+            # # 1D bboxes array in a batch
+            # self.bboxes = np.zeros((self.count_batch*4), dtype="float32")
+            # self.loader.GetBBCords(self.bboxes)
+            # #1D Image sizes array of image in a batch
+            # self.img_size = np.zeros((self.bs * 2),dtype = "int32")
+            # self.loader.GetImgSizes(self.img_size)
+            count =0 # number of bboxes per image
+            lab_list=[]
+            sum_count=0 # sum of the no. of the bboxes
+            # print("self.batch_size",self.batch_size)
+            for i in range(self.batch_size):
+                count = len(self.labels[i])
+                lab_list.append(count)
+                self.label_2d_numpy = self.labels[i]
+                
+                # print("self.label_2d_numpy",self.label_2d_numpy)                
+                self.label_2d_numpy = np.reshape(self.label_2d_numpy, (-1, 1)).tolist()
+                # print("self.label_2d_numpy",self.label_2d_numpy)                 
+                self.bb_2d_numpy = (self.bboxes[i])
+                # print("self.bb_2d_numpy",self.bb_2d_numpy)
+                self.bb_2d_numpy = np.reshape(self.bb_2d_numpy, (-1, 4)).tolist()
+                # print("self.bb_2d_numpy",self.bb_2d_numpy)
+                
+                self.label_list.append(self.label_2d_numpy)
+                self.bbox_list.append(self.bb_2d_numpy)
+                sum_count = sum_count +count
+                # print("&&&",count)
+            # print("sum_count",lab_list)
+            self.target = self.bbox_list
+            self.target1 = self.label_list
+            max_cols = max([len(row) for batch in self.target for row in batch])
+            # max_rows = max([len(batch) for batch in self.target])
+            max_rows = 100
+            bb_padded = [batch + [[0] * (max_cols)] * (max_rows - len(batch)) for batch in self.target]
+            bb_padded_1=[row + [0] * (max_cols - len(row)) for batch in bb_padded for row in batch]
+            arr = np.asarray(bb_padded_1)
+            self.res = np.reshape(arr, (-1, max_rows, max_cols))
+            max_cols = max([len(row) for batch in self.target1 for row in batch])
+            # max_rows = max([len(batch) for batch in self.target1])
+            max_rows = 100
+            lab_padded = [batch + [[0] * (max_cols)] * (max_rows - len(batch)) for batch in self.target1]
+            lab_padded_1=[row + [0] * (max_cols - len(row)) for batch in lab_padded for row in batch]
+            labarr = np.asarray(lab_padded_1)
+            label_list= np.array(lab_list)
+            self.l = np.reshape(labarr, (-1, max_rows, max_cols))
+            # self.num_bboxes_arr = np.array(self.num_bboxes_list)
+            # print("self.res",self.res)
+            # print("self.l",self.l)
+            # print("label_list",label_list)
+        
+            # print("SELF.OUT",self.out)
+            if self.tensor_dtype == types.FLOAT:
+                return self.out.astype(np.float32), self.res, self.l,label_list
+            elif self.tensor_dtype == types.FLOAT16:
+                return self.out.astype(np.float16), self.res, self.l,label_list
         elif (self.loader._name == "TFRecordReaderClassification"):
             print("CLASSIFICATION ITERATOR")
             print(self.output_tensor_list)

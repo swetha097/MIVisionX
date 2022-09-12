@@ -268,6 +268,11 @@ class Pipeline(object):
     def GetImageLabels(self, array):
         return b.getImageLabels(self._handle, array)
 
+    def rocalGetBoundingBoxLabel(self ):
+        return b.rocalGetBoundingBoxLabel(self._handle)
+    
+    def rocalGetBoundingBoxCords(self ):
+        return b.rocalGetBoundingBoxCords(self._handle)
 
     def GetBoundingBox(self,array):
         return array
