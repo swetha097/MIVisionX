@@ -196,7 +196,7 @@ static vx_status VX_CALLBACK processBlend(vx_node node, const vx_reference *para
     {
 #if ENABLE_OPENCL
         refreshBlend(node, parameters, num, data);
-        rpp_status = rppt_blend_gpu((void *)data->cl_pSrc,(void *)data->hip_pSrc1, data->src_desc_ptr, (void *)data->cl_pDst, data->src_desc_ptr,  data->alpha,  data->hip_roi_tensor_Ptr, data->roiType, data->rppHandle);
+        // rpp_status = rppt_blend_gpu((void *)data->cl_pSrc,(void *)data->hip_pSrc1, data->src_desc_ptr, (void *)data->cl_pDst, data->src_desc_ptr,  data->alpha,  data->hip_roi_tensor_Ptr, data->roiType, data->rppHandle);
         return_status = (rpp_status == RPP_SUCCESS) ? VX_SUCCESS : VX_FAILURE;
 #elif ENABLE_HIP
         refreshBlend(node, parameters, num, data);

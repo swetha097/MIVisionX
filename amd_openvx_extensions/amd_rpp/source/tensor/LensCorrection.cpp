@@ -172,7 +172,7 @@ static vx_status VX_CALLBACK processLensCorrection(vx_node node, const vx_refere
     if (data->device_type == AGO_TARGET_AFFINITY_GPU)
     {
 #if ENABLE_OPENCL
-        [[refresh]]LensCorrection(node, parameters, num, data);
+        refreshLensCorrection(node, parameters, num, data);
         // if (df_image == VX_DF_IMAGE_U8)
         // {
         //     rpp_status = rppi_blur_u8_pln1_batchPD_gpu((void *)data->cl_pSrc, data->srcDimensions, data->maxSrcDimensions, (void *)data->cl_pDst, data->kernelSize, data->nbatchSize, data->rppHandle);

@@ -180,7 +180,7 @@ static vx_status VX_CALLBACK processContrast(vx_node node, const vx_reference *p
     {
 #if ENABLE_OPENCL
         refreshContrast(node, parameters, num, data);
-        rpp_status = rppt_contrast_gpu((void *)data->cl_pSrc, data->src_desc_ptr, (void *)data->cl_pDst, data->src_desc_ptr,  data->c_factor, data->c_centre, data->hip_roi_tensor_Ptr, data->roiType, data->rppHandle);
+        // rpp_status = rppt_contrast_gpu((void *)data->cl_pSrc, data->src_desc_ptr, (void *)data->cl_pDst, data->src_desc_ptr,  data->c_factor, data->c_centre, data->hip_roi_tensor_Ptr, data->roiType, data->rppHandle);
         return_status = (rpp_status == RPP_SUCCESS) ? VX_SUCCESS : VX_FAILURE;
 #elif ENABLE_HIP
         refreshContrast(node, parameters, num, data);

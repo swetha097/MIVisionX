@@ -185,7 +185,7 @@ static vx_status VX_CALLBACK processSpatter(vx_node node, const vx_reference *pa
     {
 #if ENABLE_OPENCL
         refreshSpatter(node, parameters, num, data);
-        rpp_status = rppt_spatter_gpu((void *)data->cl_pSrc, data->src_desc_ptr, (void *)data->cl_pDst, data->src_desc_ptr, data->rgbTensor, data->hip_roi_tensor_Ptr, data->roiType, data->rppHandle);
+        // rpp_status = rppt_spatter_gpu((void *)data->cl_pSrc, data->src_desc_ptr, (void *)data->cl_pDst, data->src_desc_ptr, data->rgbTensor, data->hip_roi_tensor_Ptr, data->roiType, data->rppHandle);
         return_status = (rpp_status == RPP_SUCCESS) ? VX_SUCCESS : VX_FAILURE;
 #elif ENABLE_HIP
         refreshSpatter(node, parameters, num, data);

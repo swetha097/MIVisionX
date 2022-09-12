@@ -166,7 +166,7 @@ static vx_status VX_CALLBACK processVignette(vx_node node, const vx_reference *p
     if (data->device_type == AGO_TARGET_AFFINITY_GPU)
     {
 #if ENABLE_OPENCL
-        [[refresh]]Vignette(node, parameters, num, data);
+        refreshVignette(node, parameters, num, data);
         // if (df_image == VX_DF_IMAGE_U8)
         // {
         //     rpp_status = rppi_blur_u8_pln1_batchPD_gpu((void *)data->cl_pSrc, data->srcDimensions, data->maxSrcDimensions, (void *)data->cl_pDst, data->kernelSize, data->nbatchSize, data->rppHandle);
