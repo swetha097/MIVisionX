@@ -294,7 +294,6 @@ class RALIGenericIteratorDetection(object):
             self.img_size = np.zeros((self.batch_size * 2),dtype = "int32")
             self.loader.GetImgSizes(self.img_size)
             print("self.img_size",self.img_size)
-            exit(0)
             # self.bboxes_label_count = np.zeros(self.bs, dtype="int32")
             # self.count_batch = self.loader.GetBoundingBoxCount(self.bboxes_label_count)
             # self.num_bboxes_list = self.bboxes_label_count.tolist()

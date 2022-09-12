@@ -287,8 +287,8 @@ namespace rali
         m.def("labelReader", &rocalCreateLabelReader, py::return_value_policy::reference);
         m.def("COCOReader", &rocalCreateCOCOReader, py::return_value_policy::reference);
         // rocal_api_meta_data.h
-        m.def("TFReader",&rocalCreateTFReader);
-        m.def("TFReaderDetection",&rocalCreateTFReaderDetection);
+        m.def("TFReader",&rocalCreateTFReader, py::return_value_policy::reference);
+        m.def("TFReaderDetection",&rocalCreateTFReaderDetection, py::return_value_policy::reference);
 
         m.def("RandomBBoxCrop", &rocalRandomBBoxCrop);
         m.def("BoxEncoder",&rocalBoxEncoder);

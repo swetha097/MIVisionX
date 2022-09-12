@@ -23,26 +23,54 @@ import numpy as np
 from PIL import Image as im
 
 
+def get_onehot(image_labels_array, numClasses):
+    one_hot_vector_list = []
+    for label in image_labels_array:
+        one_hot_vector = np.zeros(numClasses)
+        if label[0] != 0:
+            np.put(one_hot_vector, label[0] - 1, 1)
+        one_hot_vector_list.append(one_hot_vector)
+
+    one_hot_vector_array = np.array(one_hot_vector_list)
+
+    return one_hot_vector_array
+
+def get_weights(num_bboxes):
+    weights_array = np.zeros(100)
+    for pos in list(range(num_bboxes)):
+        np.put(weights_array, pos, 1)
+
+    return weights_array
 
 
-def draw_patches(img, idx, device):
-    print("DRAW PATCHES!!")
+def draw_patches(img, idx, bboxes):
     #image is expected as a tensor, bboxes as numpy
-    import cv2 
-    print("IN DRAW_PATCH  ",img.shape)
-    # print(type(img))
-    
-    # image = img.transpose([1, 2, 0])
-    # image = img.transpose([0,2,3,1])
-    
-    
-    image =img
-    print(image)
-    # print(image.dtype)
+    import cv2
+    # image = img.detach().numpy()
+    print("*************************************draw_patches**********************************")
+    image = img.transpose([0, 2, 1])
     print(image.shape)
-    for i in range (image.shape[0]):
-        image1 = cv2.cvtColor(image[i], cv2.COLOR_RGB2BGR)
-        cv2.imwrite("OUTPUT_IMAGES_PYTHON/NEW_API/FILE_READER/" + "brightness" + "/" + str(idx)+"_"+"train"+".png", image1 )
+    print(image.dtype)
+    # image =image.astype(int)
+    
+    image = cv2.cvtColor(image, cv2.COLOR_RGB2BGR)
+    cv2.imwrite("OUTPUT_IMAGES_PYTHON/NEW_API/TF_READER/DETECTION/"+str(idx)+"_"+"DETE"+".png", image)
+
+    # image = cv2.normalize(image, None, alpha = 0, beta = 255, norm_type = cv2.NORM_MINMAX, dtype = cv2.CV_32F)
+    htot, wtot ,_ = image.shape
+    print("shape",htot,wtot)
+    print("bboxes",bboxes)
+
+    for (l, t, r, b) in bboxes:
+        loc_ = [l, t, r, b]
+        print("loc_",loc_)
+        color = (255, 0, 0)
+        thickness = 2
+        image = cv2.UMat(image).get()
+        print("valuessssss",loc_[0]*wtot,loc_[1] * htot,loc_[2] * wtot,loc_[3] * htot,color,thickness)
+        image = cv2.rectangle(image, (int(loc_[0]*wtot), int(loc_[1] * htot)), (int(
+            (loc_[2] * wtot)), int((loc_[3] * htot))), color, thickness)
+        cv2.imwrite("/media/swetha4/MIVisionX/rocAL/rocAL_pybind/example/OUTPUT_IMAGES_PYTHON/NEW_API/FILE_READER/brightness/"+str(idx)+"_"+"detection"+".png", image)
 def main():
     if  len(sys.argv) < 1:
         print ('Please pass image_folder cpu/gpu batch_size')
@@ -73,6 +101,8 @@ def main():
     }
     num_threads = 1
     device_id = 0
+    numClasses = 91     
+    
     random_seed = random.SystemRandom().randint(0, 2**32 - 1)
     crop=300
 
@@ -111,23 +141,37 @@ def main():
         # Dataloader
         imageIterator = RALIIterator(pipe)
         cnt = 0
-        for i, (images_array) in enumerate(imageIterator):
-            print("INSIDE ITERATOR")
-            # print(images_array.size())
-            # images_array = np.transpose(images_array, [0, 3, 1, 2])
-            # images_array = np.transpose(images_array, [ 2, 0, 1])
-            
-            # # print("\n",i)
-            # # print("lables_array",labels_array)
-            # print("\n\nPrinted first batch with", (batch_size), "images!")
-            for element in list(range(batch_size)):
-                cnt = cnt + 1
-                print("size of image_Array   ",images_array[element].__sizeof__())
-                draw_patches(images_array[element],cnt,"cpu")
-                break
-        imageIterator.reset()
+        print("imageIterator   ",imageIterator)
+        for i, (images_array, bboxes_array, labels_array,num_bboxes_array) in enumerate(imageIterator, 0):
+            print("images_array",images_array)
+            images_array = np.transpose(images_array, [0, 2, 3, 1])
+        print("ROCAL augmentation pipeline - Processing batch %d....." % i)
 
-    print("###############################################    TF CLASSIFICATION    ###############################################")
+        for element in list(range(batch_size)):
+            cnt = cnt + 1
+            # if args.print_tensor:
+            print("Processing image %d....." % element)
+            features_dict = {
+                "image": images_array[element],
+                "true_image_shape": np.array([len(images_array[element]), len(images_array[element, 0]), len(images_array[element, 0, 0])])
+            }
+            draw_patches(images_array[element],cnt,bboxes_array[element])
+
+            labels_dict = {
+                "num_groundtruth_boxes": num_bboxes_array[element],
+                "groundtruth_boxes": bboxes_array[element],
+                "groundtruth_classes": get_onehot(labels_array[element], numClasses),
+                "groundtruth_weights": get_weights(num_bboxes_array[element])
+            }
+            processed_tensors = (features_dict, labels_dict)
+            # if args.print_tensor:
+            #     print("\nPROCESSED_TENSORS:\n", processed_tensors)
+            draw_patches(images_array[element],cnt,bboxes_array[element])
+        print("\n\nPrinted first batch with", (batch_size), "images!")
+        # break
+    imageIterator.reset()
+
+    print("###############################################    TF DETECTION    ###############################################")
     print("###############################################    SUCCESS              ###############################################")
 
     #     jpegs, labels = fn.readers.file(file_root=data_path)
