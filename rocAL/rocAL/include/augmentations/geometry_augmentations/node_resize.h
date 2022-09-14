@@ -29,19 +29,13 @@ public:
     ResizeNode(const std::vector<rocALTensor *> &inputs, const std::vector<rocALTensor *> &outputs);
     ResizeNode() = delete;
     void init(int interpolation_type, int layout);
-
-    unsigned int get_dst_width() { return 100; }
-    unsigned int get_dst_height() { return 100; }
-    vx_array get_src_width() { return _src_roi_width; }
-    vx_array get_src_height() { return _src_roi_height; }
+    unsigned int get_dst_width() { return _outputs[0]->info().max_dims()[0]; }
+    unsigned int get_dst_height() { return _outputs[0]->info().max_dims()[1]; }
 protected:
-    void create_node() override ;
+    void create_node() override;
     void update_node() override;
 private:
-    vx_array  _dst_roi_width , _dst_roi_height,_src_roi_width, _src_roi_height;
+    vx_array  _dst_roi_width , _dst_roi_height;
     unsigned _layout, _roi_type;
-
     int _interpolation_type;
-    RocalTensorlayout _rocal_tensor_layout;
-
 };

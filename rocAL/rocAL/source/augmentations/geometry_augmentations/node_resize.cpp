@@ -27,13 +27,13 @@ ResizeNode::ResizeNode(const std::vector<rocALTensor *> &inputs, const std::vect
         Node(inputs, outputs)
 {
 }
-    
+
 void ResizeNode::create_node()
 {
     if(_node)
         return;
-    std::vector<uint32_t> dst_roi_width(_batch_size,_outputs[0]->info().get_width());
-    std::vector<uint32_t> dst_roi_height(_batch_size, _outputs[0]->info().get_height());
+    std::vector<uint32_t> dst_roi_width(_batch_size,_outputs[0]->info().max_dims()[0]);
+    std::vector<uint32_t> dst_roi_height(_batch_size, _outputs[0]->info().max_dims()[1]);
 
     _dst_roi_width = vxCreateArray(vxGetContext((vx_reference)_graph->get()), VX_TYPE_UINT32, _batch_size);
     _dst_roi_height = vxCreateArray(vxGetContext((vx_reference)_graph->get()), VX_TYPE_UINT32, _batch_size);
@@ -42,8 +42,7 @@ void ResizeNode::create_node()
 
     width_status = vxAddArrayItems(_dst_roi_width, _batch_size, dst_roi_width.data(), sizeof(vx_uint32));
     height_status = vxAddArrayItems(_dst_roi_height, _batch_size, dst_roi_height.data(), sizeof(vx_uint32));
-    std::cerr<<"dst_roi_height "<<dst_roi_height[0]<<"  "<<dst_roi_width[0];
-     if(width_status != 0 || height_status != 0)
+    if(width_status != 0 || height_status != 0)
         THROW(" vxAddArrayItems failed in the resize (vxExtrppNode_ResizebatchPD) node: "+ TOSTR(width_status) + "  "+ TOSTR(height_status));
     bool packed;
     vx_scalar interpolation = vxCreateScalar(vxGetContext((vx_reference)_graph->get()),VX_TYPE_UINT32,&_interpolation_type);
@@ -56,21 +55,21 @@ void ResizeNode::create_node()
     vx_scalar roi_type = vxCreateScalar(vxGetContext((vx_reference)_graph->get()),VX_TYPE_UINT32,&_roi_type);
 
    _node = vxExtrppNode_Resize(_graph->get(), _inputs[0]->handle(),
-                                                   _src_tensor_roi,_outputs[0]->handle(),_src_tensor_roi,_dst_roi_width,_dst_roi_height,interpolation,
+                                                   _src_tensor_roi, _outputs[0]->handle(), _dst_tensor_roi, _dst_roi_width, _dst_roi_height, interpolation,
                                                  is_packed, chnToggle,layout, roi_type, _batch_size);
 
     vx_status status;
     if((status = vxGetStatus((vx_reference)_node)) != VX_SUCCESS)
-        THROW("Adding the resize (vxExtrppNode_ResizebatchPD) node failed: "+ TOSTR(status))
-
+        THROW("Adding the resize (vxExtrppNode_Resize) node failed: "+ TOSTR(status))
 }
 void ResizeNode::update_node()
 {
+
 }
+
 void ResizeNode::init(int interpolation_type, int layout)
 {
   _interpolation_type=interpolation_type;
   _layout=layout;
     // _layout = (unsigned) _outputs[0]->layout();
-
 }

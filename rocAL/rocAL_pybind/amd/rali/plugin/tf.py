@@ -266,7 +266,6 @@ class RALIGenericIteratorDetection(object):
         self.w = self.output_tensor_list[0].batch_width() #2000
         self.h = self.output_tensor_list[0].batch_height()  #2000
         self.batch_size = self.output_tensor_list[0].batch_size()  # 1
-        
         self.color_format = self.output_tensor_list[0].color_format()  # 3
         print(self.color_format)
         print(self.batch_size , self.h , self.w, self.color_format )
@@ -279,21 +278,22 @@ class RALIGenericIteratorDetection(object):
             self.num_bboxes_list=[]
             
             # std::cerr<<"self.output_tensor_list[0] "<<self.output_tensor_list[0];
-            print("self.output_tensor_list[0]  ",self.output_tensor_list[0])
+            # print("self.output_tensor_list[0]  ",self.output_tensor_list[0])
             self.output_tensor_list[0].copy_data_numpy(self.out)
-            print("after copy_data_numpy")
+            print("self.out", self.out)
+            # print("after copy_data_numpy")
             #Count of labels/ bboxes in a batch
             self.labels=self.loader.rocalGetBoundingBoxLabel()
-            print("labels    ", self.labels)
+            # print("labels    ", self.labels)
             # print("labels    ", len(self.labels[0]))
             # print("labels    ", self.labels[1].shape)
             # print("labels    ", self.labels[2].shape)
             
             self.bboxes =self.loader.rocalGetBoundingBoxCords()
-            print("bbox_list    ", self.bboxes)
+            # print("bbox_list    ", self.bboxes)
             self.img_size = np.zeros((self.batch_size * 2),dtype = "int32")
             self.loader.GetImgSizes(self.img_size)
-            print("self.img_size",self.img_size)
+            # print("self.img_size",self.img_size)
             # self.bboxes_label_count = np.zeros(self.bs, dtype="int32")
             # self.count_batch = self.loader.GetBoundingBoxCount(self.bboxes_label_count)
             # self.num_bboxes_list = self.bboxes_label_count.tolist()
@@ -350,7 +350,7 @@ class RALIGenericIteratorDetection(object):
             # print("self.l",self.l)
             # print("label_list",label_list)
         
-            # print("SELF.OUT",self.out)
+            print("SELF.OUT",self.out)
             if self.tensor_dtype == types.FLOAT:
                 return self.out.astype(np.float32), self.res, self.l,label_list
             elif self.tensor_dtype == types.FLOAT16:

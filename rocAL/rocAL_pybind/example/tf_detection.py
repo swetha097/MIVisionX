@@ -48,29 +48,38 @@ def draw_patches(img, idx, bboxes):
     import cv2
     # image = img.detach().numpy()
     print("*************************************draw_patches**********************************")
-    image = img.transpose([0, 2, 1])
+    # image = img.transpose([0, 2, 1])
+    image =img
     print(image.shape)
     print(image.dtype)
+    print("image",image)
     # image =image.astype(int)
     
     image = cv2.cvtColor(image, cv2.COLOR_RGB2BGR)
-    cv2.imwrite("OUTPUT_IMAGES_PYTHON/NEW_API/TF_READER/DETECTION/"+str(idx)+"_"+"DETE"+".png", image)
+    cv2.imwrite("/media/swetha4/MIVisionX/rocAL/rocAL_pybind/example/OUTPUT_IMAGES_PYTHON/NEW_API/FILE_READER/brightness/"+str(idx)+"_"+"haha"+".png", image)
 
     # image = cv2.normalize(image, None, alpha = 0, beta = 255, norm_type = cv2.NORM_MINMAX, dtype = cv2.CV_32F)
     htot, wtot ,_ = image.shape
+    # htot, wtot =300,300
     print("shape",htot,wtot)
-    print("bboxes",bboxes)
+    # print("bboxes",bboxes)
 
     for (l, t, r, b) in bboxes:
         loc_ = [l, t, r, b]
-        print("loc_",loc_)
+        # print("loc_",loc_)
+        print("ch1")
         color = (255, 0, 0)
         thickness = 2
-        image = cv2.UMat(image).get()
+        print("ch2")
+        
+        # image = cv2.UMat(image).get()
+        print("ch3")
+        
         print("valuessssss",loc_[0]*wtot,loc_[1] * htot,loc_[2] * wtot,loc_[3] * htot,color,thickness)
         image = cv2.rectangle(image, (int(loc_[0]*wtot), int(loc_[1] * htot)), (int(
             (loc_[2] * wtot)), int((loc_[3] * htot))), color, thickness)
-        cv2.imwrite("/media/swetha4/MIVisionX/rocAL/rocAL_pybind/example/OUTPUT_IMAGES_PYTHON/NEW_API/FILE_READER/brightness/"+str(idx)+"_"+"detection"+".png", image)
+        cv2.imwrite("/media/swetha4/MIVisionX/rocAL/rocAL_pybind/example/OUTPUT_IMAGES_PYTHON/NEW_API/FILE_READER/brightness/"+str(idx)+"_"+"haha"+".png", image)
+        print("end of draw_patch")
 def main():
     if  len(sys.argv) < 1:
         print ('Please pass image_folder cpu/gpu batch_size')
@@ -131,9 +140,10 @@ def main():
         )
         jpegs = inputs["image/encoded"]
         images = fn.decoders.image(jpegs, user_feature_key_map=featureKeyMap, output_type=types.RGB, path=data_path)
-        resized = fn.resize(images, resize_width=300, resize_height=300)
-        bright = fn .blur(images)
-        pipe.set_outputs(images)
+        resized = fn.resize(images, resize_width=600, resize_height=600)
+        # bright = fn .blur(images)
+
+        pipe.set_outputs(resized)
         # pipe.set_outputs(images)
 
         # Build the pipeline
@@ -144,17 +154,20 @@ def main():
         print("imageIterator   ",imageIterator)
         for i, (images_array, bboxes_array, labels_array,num_bboxes_array) in enumerate(imageIterator, 0):
             print("images_array",images_array)
-            images_array = np.transpose(images_array, [0, 2, 3, 1])
+            # images_array = np.transpose(images_array, [0, 2, 3, 1])
+            print("images_array1",images_array)
         print("ROCAL augmentation pipeline - Processing batch %d....." % i)
 
         for element in list(range(batch_size)):
             cnt = cnt + 1
+            print("image shape ",images_array[element].shape)
             # if args.print_tensor:
             print("Processing image %d....." % element)
             features_dict = {
                 "image": images_array[element],
                 "true_image_shape": np.array([len(images_array[element]), len(images_array[element, 0]), len(images_array[element, 0, 0])])
             }
+            
             draw_patches(images_array[element],cnt,bboxes_array[element])
 
             labels_dict = {
