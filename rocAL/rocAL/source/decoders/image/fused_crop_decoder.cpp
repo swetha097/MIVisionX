@@ -24,16 +24,13 @@ THE SOFTWARE.
 #include <commons.h>
 #include <string.h>
 #include "fused_crop_decoder.h"
-#include <random>
 
-FusedCropTJDecoder::FusedCropTJDecoder():
-    _rngs(256)
-{
+FusedCropTJDecoder::FusedCropTJDecoder(){
     m_jpegDecompressor = tjInitDecompress();
 
 #if 0
     int num_avail_scalings = 0;
-    auto scaling_factors = tjGetScalingFactors (&num_avail_scalings);
+    auto scaling_factors = tjGetScalingFactors	(&num_avail_scalings);
     for(int i = 0; i < num_avail_scalings; i++) {
         if(scaling_factors[i].num < scaling_factors[i].denom) {
 
@@ -98,32 +95,27 @@ Decoder::Status FusedCropTJDecoder::decode(unsigned char *input_buffer, size_t i
     }
     else
     {
-        constexpr static double ASPECT_RATIO_RANGE[2] = {3.0/4.0, 4.0/3.0};
-        constexpr static double AREA_RANGE[2] = {0.08, 1.0};
+        std::vector<float> crop_mul_param =  decoder_config.get_crop_param();
         auto is_valid_crop = [](uint h, uint w, uint height, uint width)
         {
             return (0 < h && h <= height && 0 < w && w <= width);
         };
         int num_of_attempts = 10;
-        int num_attempts_left = num_of_attempts;
-        for(; num_attempts_left > 0; num_attempts_left--)
+        for(int i = 0; i < num_of_attempts; i++)
         {
-            std::uniform_real_distribution<double> area_dis(AREA_RANGE[0], AREA_RANGE[1]);
-            std::uniform_real_distribution<double> log_ratio_dist(std::log(ASPECT_RATIO_RANGE[0]), std::log(ASPECT_RATIO_RANGE[1]));
-            double scale = area_dis(_rngs[sample_idx]);
-            double target_area  = scale * original_image_width * original_image_height;
-            double aspect_ratio = std::exp(log_ratio_dist(_rngs[sample_idx]));
-            crop_width  = static_cast<size_t>(std::round(std::sqrt(target_area * aspect_ratio)));
-            crop_height = static_cast<size_t>(std::round(std::sqrt(target_area * (1 / aspect_ratio))));
+            double target_area  = crop_mul_param[0] * original_image_width * original_image_height;
+            crop_width  = static_cast<size_t>(std::sqrt(target_area * crop_mul_param[1]));
+            crop_height = static_cast<size_t>(std::sqrt(target_area * (1 / crop_mul_param[1])));
             if(is_valid_crop(crop_height, crop_width, original_image_height, original_image_width))
             {
-                x1 = std::uniform_int_distribution<int>(0, original_image_width - crop_width)(_rngs[sample_idx]);
-                y1 = std::uniform_int_distribution<int>(0, original_image_height - crop_height)(_rngs[sample_idx]);
+                x1 = static_cast<size_t>(crop_mul_param[2] * (original_image_width  - crop_width));
+                y1 = static_cast<size_t>(crop_mul_param[3] * (original_image_height - crop_height));
                 break ;
             }
         }
+        constexpr static double ASPECT_RATIO_RANGE[2] = {0.75, 1.33};
         // Fallback on Central Crop
-        if(!is_valid_crop(crop_height, crop_width, original_image_height, original_image_width))
+        if( !is_valid_crop(crop_height, crop_width, original_image_height, original_image_width))
         {
             double in_ratio;
             in_ratio = static_cast<double>(original_image_width) / original_image_height;
@@ -137,7 +129,7 @@ Decoder::Status FusedCropTJDecoder::decode(unsigned char *input_buffer, size_t i
                 crop_height = original_image_height;
                 crop_width  = static_cast<size_t>(std::round(crop_height * ASPECT_RATIO_RANGE[1]));
             }
-            else // Whole Image
+            else
             {
                 crop_height = original_image_height;
                 crop_width  = original_image_width;
@@ -146,10 +138,12 @@ Decoder::Status FusedCropTJDecoder::decode(unsigned char *input_buffer, size_t i
             y1 =  (original_image_height - crop_height) / 2;
         }
     }
+
     if(crop_width > max_decoded_width)
         crop_width = max_decoded_width;
     if(crop_height > max_decoded_height)
         crop_height = max_decoded_height;
+   // std::cout<<"Fused Crop Decoder <x,y, w, h>: " << x1 << " " << y1 << " " << crop_width << " " << crop_height << std::endl;
     //TODO : Turbo Jpeg supports multiple color packing and color formats, add more as an option to the API TJPF_RGB, TJPF_BGR, TJPF_RGBX, TJPF_BGRX, TJPF_RGBA, TJPF_GRAY, TJPF_CMYK , ...
     if( tjDecompress2_partial(m_jpegDecompressor,
                       input_buffer,
@@ -160,7 +154,8 @@ Decoder::Status FusedCropTJDecoder::decode(unsigned char *input_buffer, size_t i
                       max_decoded_height,
                       tjpf,
                       TJFLAG_FASTDCT, &x1_diff, &crop_width_diff,
-                          x1, y1, crop_width, crop_height) != 0)
+		                  x1, y1, crop_width, crop_height) != 0)
+
     {
         WRN("Jpeg image decode failed " + STR(tjGetErrorStr2(m_jpegDecompressor)))
         return Status::CONTENT_DECODE_FAILED;
