@@ -26,9 +26,9 @@ THE SOFTWARE.
 #include "node_video_loader.h"
 #ifdef RALI_VIDEO
 #if ENABLE_HIP
-VideoLoaderNode::VideoLoaderNode(rocALTensor *output, DeviceResourcesHip device_resources):
+VideoLoaderNode::VideoLoaderNode(rocalTensor *output, DeviceResourcesHip device_resources):
 #else
-VideoLoaderNode::VideoLoaderNode(rocALTensor *output, DeviceResources device_resources):
+VideoLoaderNode::VideoLoaderNode(rocalTensor *output, DeviceResources device_resources):
 #endif
 	Node({}, {output})
 {

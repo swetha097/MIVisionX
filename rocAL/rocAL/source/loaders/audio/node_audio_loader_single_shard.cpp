@@ -25,9 +25,9 @@ THE SOFTWARE.
 
 
 #if ENABLE_HIP
-AudioLoaderSingleShardNode::AudioLoaderSingleShardNode(rocALTensor *output, DeviceResourcesHip device_resources):
+AudioLoaderSingleShardNode::AudioLoaderSingleShardNode(rocalTensor *output, DeviceResourcesHip device_resources):
 #else
-AudioLoaderSingleShardNode::AudioLoaderSingleShardNode(rocALTensor *output, DeviceResources device_resources):
+AudioLoaderSingleShardNode::AudioLoaderSingleShardNode(rocalTensor *output, DeviceResources device_resources):
 #endif
         Node({}, {output})
 {

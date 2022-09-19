@@ -3,7 +3,7 @@
 #include "node_ssd_random_crop.h"
 #include "exception.h"
 
-SSDRandomCropNode::SSDRandomCropNode(const std::vector<rocALTensor *> &inputs, const std::vector<rocALTensor *> &outputs) : Node(inputs, outputs),
+SSDRandomCropNode::SSDRandomCropNode(const std::vector<rocalTensor *> &inputs, const std::vector<rocalTensor *> &outputs) : Node(inputs, outputs),
                                                                                                           _dest_width(_outputs[0]->info().max_dims()[0]),
                                                                                                           _dest_height(_outputs[0]->info().max_dims()[1])
 {

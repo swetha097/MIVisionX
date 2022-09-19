@@ -8,9 +8,9 @@ class FusedJpegCropSingleShardNode: public Node
 {
 public:
 #if ENABLE_HIP
-    FusedJpegCropSingleShardNode(rocALTensor *output, DeviceResourcesHip device_resources);
+    FusedJpegCropSingleShardNode(rocalTensor *output, DeviceResourcesHip device_resources);
 #else
-    FusedJpegCropSingleShardNode(rocALTensor *output, DeviceResources device_resources);
+    FusedJpegCropSingleShardNode(rocalTensor *output, DeviceResources device_resources);
 #endif
     ~FusedJpegCropSingleShardNode() override;
 

@@ -30,9 +30,9 @@ class AudioLoaderSingleShardNode: public Node
 {
 public:
 #if ENABLE_HIP
-    AudioLoaderSingleShardNode(rocALTensor *output, DeviceResourcesHip device_resources);
+    AudioLoaderSingleShardNode(rocalTensor *output, DeviceResourcesHip device_resources);
 #else
-    AudioLoaderSingleShardNode(rocALTensor *output, DeviceResources device_resources);
+    AudioLoaderSingleShardNode(rocalTensor *output, DeviceResources device_resources);
 #endif
     ~AudioLoaderSingleShardNode() override;
 

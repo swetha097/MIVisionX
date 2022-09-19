@@ -24,9 +24,9 @@ THE SOFTWARE.
 #include "exception.h"
 
 #if ENABLE_HIP
-AudioLoaderNode::AudioLoaderNode(rocALTensor *output, DeviceResourcesHip device_resources):
+AudioLoaderNode::AudioLoaderNode(rocalTensor *output, DeviceResourcesHip device_resources):
 #else
-AudioLoaderNode::AudioLoaderNode(rocALTensor *output, DeviceResources device_resources):
+AudioLoaderNode::AudioLoaderNode(rocalTensor *output, DeviceResources device_resources):
 #endif
         Node({}, {output})
 {

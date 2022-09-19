@@ -90,9 +90,9 @@ rocalBrightness(
 {
     if(!p_input || !p_context)
         THROW("Null values passed as input")
-    rocALTensor* output = nullptr;
+    rocalTensor* output = nullptr;
     auto context = static_cast<Context*>(p_context);
-    auto input = static_cast<rocALTensor*>(p_input);
+    auto input = static_cast<rocalTensor*>(p_input);
     auto alpha = static_cast<FloatParam*>(p_alpha);
     auto beta = static_cast<FloatParam*>(p_beta);
     try
@@ -116,9 +116,9 @@ rocalCopyTensor(
 {
     if(!p_context || !p_input)
         THROW("Null values passed as input")
-    rocALTensor* output = nullptr;
+    rocalTensor* output = nullptr;
     auto context = static_cast<Context*>(p_context);
-    auto input = static_cast<rocALTensor*>(p_input);
+    auto input = static_cast<rocalTensor*>(p_input);
     try
     {
         output = context->master_graph->create_tensor(input->info(), is_output);
@@ -141,9 +141,9 @@ rocalCopyTensor(
 // {
 //     if(!p_context || !p_input)
 //         THROW("Null values passed as input")
-//     rocALTensor* output = nullptr;
+//     rocalTensor* output = nullptr;
 //     auto context = static_cast<Context*>(p_context);
-//     auto input = static_cast<rocALTensor*>(p_input);
+//     auto input = static_cast<rocalTensor*>(p_input);
 //     try
 //     {
 //         output = context->master_graph->create_tensor(input->info(), is_output);
@@ -170,9 +170,9 @@ rocalCrop(RocalContext p_context,
           RocalFloatParam p_crop_pos_y,
           RocalFloatParam p_crop_pos_z)
 {
-    rocALTensor* output = nullptr;
+    rocalTensor* output = nullptr;
     auto context = static_cast<Context*>(p_context);
-    auto input = static_cast<rocALTensor*>(p_input);
+    auto input = static_cast<rocalTensor*>(p_input);
     auto crop_h = static_cast<FloatParam*>(p_crop_height);
     auto crop_w = static_cast<FloatParam*>(p_crop_width);
     auto x_drift = static_cast<FloatParam*>(p_crop_pox_x);
@@ -187,7 +187,7 @@ rocalCrop(RocalContext p_context,
         int layout=0;
         get_rocal_tensor_layout(rocal_tensor_layout, op_tensorLayout, layout);
         get_rocal_tensor_data_type(rocal_tensor_output_type, op_tensorDataType);
-        rocALTensorInfo output_info = input->info();
+        rocalTensorInfo output_info = input->info();
         output_info.set_tensor_layout(op_tensorLayout);
         output_info.set_data_type(op_tensorDataType);
         // std::vector<size_t> out_dims = output_info.dims();
@@ -232,9 +232,9 @@ ROCAL_API_CALL rocalResizeMirrorNormalize(RocalContext p_context,
                                           bool is_output,
                                           RocalIntParam p_mirror)
 {
-    rocALTensor* output = nullptr;
+    rocalTensor* output = nullptr;
     auto context = static_cast<Context*>(p_context);
-    auto input = static_cast<rocALTensor*>(p_input);
+    auto input = static_cast<rocalTensor*>(p_input);
     auto mirror = static_cast<IntParam *>(p_mirror);
     RocalTensorlayout op_tensorLayout;
     RocalTensorDataType op_tensorDataType;
@@ -245,7 +245,7 @@ ROCAL_API_CALL rocalResizeMirrorNormalize(RocalContext p_context,
         int layout=0;
         get_rocal_tensor_layout(rocal_tensor_layout, op_tensorLayout, layout);
         get_rocal_tensor_data_type(rocal_tensor_output_type, op_tensorDataType);
-        rocALTensorInfo output_info = input->info();
+        rocalTensorInfo output_info = input->info();
         output_info.set_tensor_layout(op_tensorLayout);
         output_info.set_data_type(op_tensorDataType);
 
@@ -292,9 +292,9 @@ rocalCropFixed(
         float crop_pos_y,
         float crop_pos_z)
 {
-    rocALTensor* output = nullptr;
+    rocalTensor* output = nullptr;
     auto context = static_cast<Context*>(p_context);
-    auto input = static_cast<rocALTensor*>(p_input);
+    auto input = static_cast<rocalTensor*>(p_input);
     RocalTensorlayout op_tensorLayout;
     RocalTensorDataType op_tensorDataType;
     try
@@ -305,7 +305,7 @@ rocalCropFixed(
         int layout=0;
         get_rocal_tensor_layout(rocal_tensor_layout, op_tensorLayout, layout);
         get_rocal_tensor_data_type(rocal_tensor_output_type, op_tensorDataType);
-        rocALTensorInfo output_info = input->info();
+        rocalTensorInfo output_info = input->info();
         output_info.set_tensor_layout(op_tensorLayout);
         output_info.set_data_type(op_tensorDataType);
         std::vector<size_t> out_dims = output_info.dims();
@@ -346,13 +346,13 @@ rocalCropCenterFixed(
         unsigned crop_depth,
         bool is_output)
 {
-    rocALTensor* output = nullptr;
+    rocalTensor* output = nullptr;
     if ((p_context == nullptr) || (p_input == nullptr)) {
         ERR("Invalid ROCAL context or invalid input image")
         return output;
     }
     auto context = static_cast<Context*>(p_context);
-    auto input = static_cast<rocALTensor*>(p_input);
+    auto input = static_cast<rocalTensor*>(p_input);
     RocalTensorlayout op_tensorLayout;
     RocalTensorDataType op_tensorDataType;
     try
@@ -363,7 +363,7 @@ rocalCropCenterFixed(
         int layout=0;
         get_rocal_tensor_layout(rocal_tensor_layout, op_tensorLayout, layout);
         get_rocal_tensor_data_type(rocal_tensor_output_type, op_tensorDataType);
-        rocALTensorInfo output_info = input->info();
+        rocalTensorInfo output_info = input->info();
         output_info.set_tensor_layout(op_tensorLayout);
         output_info.set_data_type(op_tensorDataType);
 
@@ -403,9 +403,9 @@ ROCAL_API_CALL rocalCropMirrorNormalize(RocalContext p_context, RocalTensor p_in
                                     unsigned crop_width, float start_x, float start_y, float start_z, std::vector<float> &mean,
                                     std::vector<float> &std_dev, bool is_output, RocalIntParam p_mirror)
 {
-    rocALTensor* output = nullptr;
+    rocalTensor* output = nullptr;
     auto context = static_cast<Context*>(p_context);
-    auto input = static_cast<rocALTensor*>(p_input);
+    auto input = static_cast<rocalTensor*>(p_input);
     auto mirror = static_cast<IntParam *>(p_mirror);
     RocalTensorlayout op_tensorLayout;
     RocalTensorDataType op_tensorDataType;
@@ -416,7 +416,7 @@ ROCAL_API_CALL rocalCropMirrorNormalize(RocalContext p_context, RocalTensor p_in
         int layout=0;
         get_rocal_tensor_layout(rocal_tensor_layout, op_tensorLayout, layout);
         get_rocal_tensor_data_type(rocal_tensor_output_type, op_tensorDataType);
-        rocALTensorInfo output_info = input->info();
+        rocalTensorInfo output_info = input->info();
         output_info.set_tensor_layout(op_tensorLayout);
         output_info.set_data_type(op_tensorDataType);
         std::vector<size_t> out_dims = output_info.dims();
@@ -460,9 +460,9 @@ rocalResize(RocalContext p_context,
             int interpolation_type,
             bool is_output)
 {
-    rocALTensor* output = nullptr;
+    rocalTensor* output = nullptr;
     auto context = static_cast<Context*>(p_context);
-    auto input = static_cast<rocALTensor*>(p_input);
+    auto input = static_cast<rocalTensor*>(p_input);
     RocalTensorlayout op_tensorLayout;
     RocalTensorDataType op_tensorDataType;
     try
@@ -473,7 +473,7 @@ rocalResize(RocalContext p_context,
         int layout=0;
         get_rocal_tensor_layout(rocal_tensor_layout, op_tensorLayout, layout);
         get_rocal_tensor_data_type(rocal_tensor_output_type, op_tensorDataType);
-        rocALTensorInfo output_info = input->info();
+        rocalTensorInfo output_info = input->info();
         output_info.set_tensor_layout(op_tensorLayout);
         output_info.set_data_type(op_tensorDataType);
         std::vector<size_t> out_dims = output_info.dims();
@@ -512,9 +512,9 @@ rocalResizeShorter(
         unsigned size,
         bool is_output)
 {
-    rocALTensor* output = nullptr;
+    rocalTensor* output = nullptr;
     auto context = static_cast<Context*>(p_context);
-    auto input = static_cast<rocALTensor*>(p_input);
+    auto input = static_cast<rocalTensor*>(p_input);
     RocalTensorlayout op_tensorLayout;
     RocalTensorDataType op_tensorDataType;
     try
@@ -525,7 +525,7 @@ rocalResizeShorter(
         int layout=0;
         get_rocal_tensor_layout(rocal_tensor_layout, op_tensorLayout, layout);
         get_rocal_tensor_data_type(rocal_tensor_output_type, op_tensorDataType);
-        rocALTensorInfo output_info = input->info();
+        rocalTensorInfo output_info = input->info();
         output_info.set_tensor_layout(op_tensorLayout);
         output_info.set_data_type(op_tensorDataType);
         if (size == 0) size = input->info().max_dims()[0];
@@ -572,9 +572,9 @@ rocalColorTwist(RocalContext p_context,
 {
     if(!p_context || !p_input)
         THROW("Null values passed as input")
-    rocALTensor* output = nullptr;
+    rocalTensor* output = nullptr;
     auto context = static_cast<Context*>(p_context);
-    auto input = static_cast<rocALTensor*>(p_input);
+    auto input = static_cast<rocalTensor*>(p_input);
     auto alpha = static_cast<FloatParam*>(p_alpha);
     auto beta = static_cast<FloatParam*>(p_beta);
     auto hue = static_cast<FloatParam*>(p_hue);
@@ -586,7 +586,7 @@ rocalColorTwist(RocalContext p_context,
         int layout=0;
         get_rocal_tensor_layout(rocal_tensor_layout, op_tensorLayout, layout);
         get_rocal_tensor_data_type(rocal_tensor_output_type, op_tensorDataType);
-        rocALTensorInfo output_info = input->info();
+        rocalTensorInfo output_info = input->info();
         output_info.set_tensor_layout(op_tensorLayout);
         output_info.set_data_type(op_tensorDataType);
 

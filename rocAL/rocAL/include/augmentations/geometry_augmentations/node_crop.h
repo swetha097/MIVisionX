@@ -29,7 +29,7 @@ THE SOFTWARE.
 class CropNode : public Node
 {
 public:
-    CropNode(const std::vector<rocALTensor *> &inputs, const std::vector<rocALTensor *> &outputs);
+    CropNode(const std::vector<rocalTensor *> &inputs, const std::vector<rocalTensor *> &outputs);
     CropNode() = delete;
     void init(unsigned int crop_h, unsigned int crop_w, float x_drift, float y_drift, int layout);
     void init(unsigned int crop_h, unsigned int crop_w, int layout);

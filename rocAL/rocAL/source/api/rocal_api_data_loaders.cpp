@@ -130,7 +130,7 @@ rocalJpegFileSourceSingleShard(
         unsigned max_width,
         unsigned max_height)
 {
-    rocALTensor* output = nullptr;
+    rocalTensor* output = nullptr;
     auto context = static_cast<Context*>(p_context);
     try
     {
@@ -169,7 +169,7 @@ rocalJpegFileSourceSingleShard(
         dims.at(1) = height;
         dims.at(2) = width;
         dims.at(3) = num_of_planes;
-        auto info  = rocALTensorInfo(std::vector<size_t>(std::move(dims)),
+        auto info  = rocalTensorInfo(std::vector<size_t>(std::move(dims)),
                                 context->master_graph->mem_type(),
                                 tensor_data_type);
         info.set_roi_type(roi_type);
@@ -219,7 +219,7 @@ rocalJpegFileSource(
         unsigned max_height,
         RocalDecoderType dec_type)
 {
-    rocALTensor* output = nullptr;
+    rocalTensor* output = nullptr;
     auto context = static_cast<Context*>(p_context);
     try
     {
@@ -257,7 +257,7 @@ rocalJpegFileSource(
         dims[1] = height;
         dims[2] = width;
         dims[3] = num_of_planes;
-        auto info  = rocALTensorInfo(std::vector<size_t>(std::move(dims)),
+        auto info  = rocalTensorInfo(std::vector<size_t>(std::move(dims)),
                                 context->master_graph->mem_type(),
                                 tensor_data_type);
         info.set_roi_type(roi_type);
@@ -306,7 +306,7 @@ rocalJpegCOCOFileSource(
         unsigned max_width,
         unsigned max_height)
 {
-    rocALTensor* output = nullptr;
+    rocalTensor* output = nullptr;
     auto context = static_cast<Context*>(p_context);
     try
     {
@@ -341,7 +341,7 @@ rocalJpegCOCOFileSource(
         dims[1] = height;
         dims[2] = width;
         dims[3] = num_of_planes;
-        auto info  = rocALTensorInfo(std::vector<size_t>(std::move(dims)),
+        auto info  = rocalTensorInfo(std::vector<size_t>(std::move(dims)),
                                 context->master_graph->mem_type(),
                                 tensor_data_type);
         info.set_roi_type(roi_type);
@@ -393,7 +393,7 @@ rocalJpegCOCOFileSourceSingleShard(
         unsigned max_width,
         unsigned max_height)
 {
-    rocALTensor* output = nullptr;
+    rocalTensor* output = nullptr;
     auto context = static_cast<Context*>(p_context);
     try
     {
@@ -431,7 +431,7 @@ rocalJpegCOCOFileSourceSingleShard(
         dims.at(1) = height;
         dims.at(2) = width;
         dims.at(3) = num_of_planes;
-        auto info  = rocALTensorInfo(std::vector<size_t>(std::move(dims)),
+        auto info  = rocalTensorInfo(std::vector<size_t>(std::move(dims)),
                                 context->master_graph->mem_type(),
                                 tensor_data_type);
         info.set_roi_type(roi_type);
@@ -484,7 +484,7 @@ rocalFusedJpegCrop(
         RocalFloatParam p_y_drift_factor
         )
 {
-    rocALTensor* output = nullptr;
+    rocalTensor* output = nullptr;
     auto area_factor  = static_cast<FloatParam*>(p_area_factor);
     auto aspect_ratio = static_cast<FloatParam*>(p_aspect_ratio);
     auto x_drift_factor = static_cast<FloatParam*>(p_x_drift_factor);
@@ -521,7 +521,7 @@ rocalFusedJpegCrop(
         dims[1] = height;
         dims[2] = width;
         dims[3] = num_of_planes;
-        auto info  = rocALTensorInfo(std::vector<size_t>(std::move(dims)),
+        auto info  = rocalTensorInfo(std::vector<size_t>(std::move(dims)),
                                 context->master_graph->mem_type(),
                                 tensor_data_type);
         info.set_roi_type(roi_type);
@@ -574,7 +574,7 @@ rocalFusedJpegCropSingleShard(
         RocalFloatParam p_y_drift_factor
         )
 {
-    rocALTensor* output = nullptr;
+    rocalTensor* output = nullptr;
     auto area_factor  = static_cast<FloatParam*>(p_area_factor);
     auto aspect_ratio = static_cast<FloatParam*>(p_aspect_ratio);
     auto x_drift_factor = static_cast<FloatParam*>(p_x_drift_factor);
@@ -614,7 +614,7 @@ rocalFusedJpegCropSingleShard(
         dims.at(1) = height;
         dims.at(2) = width;
         dims.at(3) = num_of_planes;
-        auto info  = rocALTensorInfo(std::vector<size_t>(std::move(dims)),
+        auto info  = rocalTensorInfo(std::vector<size_t>(std::move(dims)),
                                 context->master_graph->mem_type(),
                                 tensor_data_type);
         info.set_roi_type(roi_type);
@@ -666,7 +666,7 @@ rocalJpegCOCOFileSourcePartial(
         RocalFloatParam p_x_drift_factor,
         RocalFloatParam p_y_drift_factor )
 {
-    rocALTensor* output = nullptr;
+    rocalTensor* output = nullptr;
     auto area_factor  = static_cast<FloatParam*>(p_area_factor);
     auto aspect_ratio = static_cast<FloatParam*>(p_aspect_ratio);
     auto x_drift_factor = static_cast<FloatParam*>(p_x_drift_factor);
@@ -706,7 +706,7 @@ rocalJpegCOCOFileSourcePartial(
         dims[1] = height;
         dims[2] = width;
         dims[3] = num_of_planes;
-        auto info  = rocALTensorInfo(std::vector<size_t>(std::move(dims)),
+        auto info  = rocalTensorInfo(std::vector<size_t>(std::move(dims)),
                                 context->master_graph->mem_type(),
                                 tensor_data_type);
         info.set_roi_type(roi_type);
@@ -761,7 +761,7 @@ rocalJpegCOCOFileSourcePartialSingleShard(
         RocalFloatParam p_x_drift_factor,
         RocalFloatParam p_y_drift_factor )
 {
-    rocALTensor* output = nullptr;
+    rocalTensor* output = nullptr;
     auto area_factor  = static_cast<FloatParam*>(p_area_factor);
     auto aspect_ratio = static_cast<FloatParam*>(p_aspect_ratio);
     auto x_drift_factor = static_cast<FloatParam*>(p_x_drift_factor);
@@ -802,7 +802,7 @@ rocalJpegCOCOFileSourcePartialSingleShard(
         dims[1] = height;
         dims[2] = width;
         dims[3] = num_of_planes;
-        auto info  = rocALTensorInfo(std::vector<size_t>(std::move(dims)),
+        auto info  = rocalTensorInfo(std::vector<size_t>(std::move(dims)),
                                 context->master_graph->mem_type(),
                                 tensor_data_type);
         info.set_roi_type(roi_type);
@@ -852,7 +852,7 @@ rocalAudioFileSourceSingleShard(
         unsigned max_frames,
         unsigned max_channels)
 {
-    rocALTensor* output = nullptr;
+    rocalTensor* output = nullptr;
     auto context = static_cast<Context*>(p_context);
     try
     {
@@ -877,7 +877,7 @@ rocalAudioFileSourceSingleShard(
         dims.at(0) = context->user_batch_size();
         dims.at(1) = max_frames;
         dims.at(2) = max_channels;
-        auto info  = rocALTensorInfo(std::vector<size_t>(std::move(dims)),
+        auto info  = rocalTensorInfo(std::vector<size_t>(std::move(dims)),
                                 context->master_graph->mem_type(),
                                 tensor_data_type);
         output = context->master_graph->create_loader_output_tensor(info);
@@ -921,7 +921,7 @@ rocalAudioFileSource(
         unsigned max_frames,
         unsigned max_channels)
 {
-    rocALTensor* output = nullptr;
+    rocalTensor* output = nullptr;
     auto context = static_cast<Context*>(p_context);
     try
     {
@@ -952,7 +952,7 @@ rocalAudioFileSource(
         dims.at(0) = context->user_batch_size();
         dims.at(1) = max_frames;
         dims.at(2) = max_channels;
-        auto info  = rocALTensorInfo(std::vector<size_t>(std::move(dims)),
+        auto info  = rocalTensorInfo(std::vector<size_t>(std::move(dims)),
                                 context->master_graph->mem_type(),
                                 tensor_data_type);
         info.set_tensor_layout(RocalTensorlayout::NONE);
@@ -1002,7 +1002,7 @@ rocalVideoFileSourceSingleShard(
         unsigned stride,
         bool file_list_frame_num)
 {
-    rocALTensor* output = nullptr;
+    rocalTensor* output = nullptr;
     auto context = static_cast<Context*>(p_context);
     try
     {
@@ -1044,7 +1044,7 @@ rocalVideoFileSourceSingleShard(
         dims.at(3) = video_prop.width;
         dims.at(4) = num_of_planes;
 
-        auto info  = rocALTensorInfo(std::vector<size_t>(std::move(dims)),
+        auto info  = rocalTensorInfo(std::vector<size_t>(std::move(dims)),
                                      context->master_graph->mem_type(),
                                      tensor_data_type);
         info.set_roi_type(roi_type);
@@ -1099,7 +1099,7 @@ rocalVideoFileSource(
         unsigned stride,
         bool file_list_frame_num)
 {
-    rocALTensor* output = nullptr;
+    rocalTensor* output = nullptr;
     auto context = static_cast<Context*>(p_context);
     try
     {
@@ -1133,7 +1133,7 @@ rocalVideoFileSource(
         dims.at(3) = video_prop.width;
         dims.at(4) = num_of_planes;
 
-        auto info  = rocALTensorInfo(std::vector<size_t>(std::move(dims)),
+        auto info  = rocalTensorInfo(std::vector<size_t>(std::move(dims)),
                                      context->master_graph->mem_type(),
                                      tensor_data_type);
 

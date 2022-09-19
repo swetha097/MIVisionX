@@ -24,9 +24,9 @@ THE SOFTWARE.
 #include "exception.h"
 #ifdef RALI_VIDEO
 #if ENABLE_HIP
-VideoLoaderSingleShardNode::VideoLoaderSingleShardNode(rocALTensor *output, DeviceResourcesHip device_resources):
+VideoLoaderSingleShardNode::VideoLoaderSingleShardNode(rocalTensor *output, DeviceResourcesHip device_resources):
 #else
-VideoLoaderSingleShardNode::VideoLoaderSingleShardNode(rocALTensor *output, DeviceResources device_resources):
+VideoLoaderSingleShardNode::VideoLoaderSingleShardNode(rocalTensor *output, DeviceResources device_resources):
 #endif
 	Node({}, {output})
 {
