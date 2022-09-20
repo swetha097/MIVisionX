@@ -250,7 +250,7 @@ MasterGraph::create_single_graph()
     {
         // Any tensor not yet created can be created as virtual tensor
         for(auto& tensor: node->output())
-            if(tensor->info().type() == rocALTensorInfo::Type::UNKNOWN)
+            if(tensor->info().type() == rocalTensorInfo::Type::UNKNOWN)
             {
                 tensor->create_virtual(_context, _graph->get());
                 _internal_tensors.push_back(tensor);
@@ -271,7 +271,7 @@ MasterGraph::build()
     // _max_tensor_type_size = _output_tensor_info.data_type_size();
     // for(auto&& output_tensor : _internal_tensor_list)
     // {
-        // rocALTensorInfo tensor_info  = output_tensor->info();
+        // rocalTensorInfo tensor_info  = output_tensor->info();
         // if(tensor_info.data_type_size() > _max_tensor_type_size)
         // {
             // _max_tensor_type_size = tensor_info.data_type_size();
@@ -293,13 +293,13 @@ MasterGraph::build()
     return Status::OK;
 }
 
-rocALTensor *
-MasterGraph::create_loader_output_tensor(const rocALTensorInfo &info)
+rocalTensor *
+MasterGraph::create_loader_output_tensor(const rocalTensorInfo &info)
 {
     /*
     *   NOTE: Output tensor for a source node needs to be created as a regular (non-virtual) tensor
     */
-    auto output = new rocALTensor(info);
+    auto output = new rocalTensor(info);
     if(output->create_from_handle(_context) != 0)
         THROW("Creating output tensor for loader failed");
 
@@ -308,9 +308,9 @@ MasterGraph::create_loader_output_tensor(const rocALTensorInfo &info)
     return output;
 }
 
-rocALTensor * MasterGraph::create_tensor(const rocALTensorInfo &info, bool is_output)
+rocalTensor * MasterGraph::create_tensor(const rocalTensorInfo &info, bool is_output)
 {
-    auto* new_tensor = new rocALTensor(info);
+    auto* new_tensor = new rocalTensor(info);
     // if the tensor is not an output tensor, the tensor creation is deferred and later it'll be created as a virtual tensor
     if(is_output)
     {
@@ -319,7 +319,7 @@ rocALTensor * MasterGraph::create_tensor(const rocALTensorInfo &info, bool is_ou
 
         _internal_tensor_list.push_back(new_tensor);
 
-        auto * output = new rocALTensor(info); 
+        auto * output = new rocalTensor(info); 
         if (output->create_from_handle(_context) != 0)
             THROW("Cannot create the tensor from handle")
 
@@ -330,7 +330,7 @@ rocALTensor * MasterGraph::create_tensor(const rocALTensorInfo &info, bool is_ou
 }
 
 void
-MasterGraph::set_output(rocALTensor* output_tensor)
+MasterGraph::set_output(rocalTensor* output_tensor)
 {
     if(output_tensor->is_handle_set() == false)
     {
@@ -339,7 +339,7 @@ MasterGraph::set_output(rocALTensor* output_tensor)
 
         _internal_tensor_list.push_back(output_tensor);
 
-        auto* output = new rocALTensor(output_tensor->info());
+        auto* output = new rocalTensor(output_tensor->info());
         if (output->create_from_handle(_context) != 0)
                 THROW("Cannot create the tensor from handle")
 
@@ -534,7 +534,7 @@ MasterGraph::copy_output(
 
 #define CHECK_CL_CALL_RET(x) { cl_int ret; ret = x; if( ret != CL_SUCCESS) THROW("ocl call failed "+STR(#x)+" error "+TOSTR(ret)) }
 
-rocALTensorList *
+rocalTensorList *
 MasterGraph::get_output_tensors()
 {
     std::vector<void*> output_ptr = _ring_buffer.get_read_buffers();
@@ -806,7 +806,7 @@ void MasterGraph::stop_processing()
         _output_thread.join();
 }
 
-std::vector<rocALTensorList *> MasterGraph::create_coco_meta_data_reader(const char *source_path, bool is_output, bool mask, MetaDataReaderType reader_type, MetaDataType label_type, bool is_box_encoder)
+std::vector<rocalTensorList *> MasterGraph::create_coco_meta_data_reader(const char *source_path, bool is_output, bool mask, MetaDataReaderType reader_type, MetaDataType label_type, bool is_box_encoder)
 {
     if(_meta_data_reader)
         THROW("A metadata reader has already been created")
@@ -818,11 +818,10 @@ std::vector<rocALTensorList *> MasterGraph::create_coco_meta_data_reader(const c
     _meta_data_reader->init(config);
     _meta_data_reader->read_all(source_path);
     unsigned num_of_dims = 1;
-    std::vector<unsigned> dims;
+    std::vector<size_t> dims;
     dims.resize(num_of_dims);
     dims.at(0) = is_box_encoder ? MAX_NUM_ANCHORS : MAX_OBJECTS;
-    auto default_labels_info  = rocALTensorInfo(num_of_dims,
-                                        dims,
+    auto default_labels_info  = rocalTensorInfo(dims,
                                         _mem_type,
                                         RocalTensorDataType::INT32);
     default_labels_info.set_metadata();
@@ -833,23 +832,21 @@ std::vector<rocALTensorList *> MasterGraph::create_coco_meta_data_reader(const c
     dims.resize(num_of_dims);
     dims.at(0) = is_box_encoder ? MAX_NUM_ANCHORS : MAX_OBJECTS;
     dims.at(1) = BBOX_COUNT;
-    auto default_bbox_info  = rocALTensorInfo(num_of_dims,
-                                        dims,
+    auto default_bbox_info  = rocalTensorInfo(dims,
                                         _mem_type,
                                         RocalTensorDataType::FP32);
     default_bbox_info.set_metadata();
     default_bbox_info.set_tensor_layout(RocalTensorlayout::NONE);
     _meta_data_buffer_size.emplace_back(dims.at(0) * dims.at(1)  * _user_batch_size * sizeof(vx_float32)); // TODO - replace with data size from info
 
-    rocALTensorInfo default_mask_info;
+    rocalTensorInfo default_mask_info;
     if(mask)
     {
         num_of_dims = 2;
         dims.resize(num_of_dims);
         dims.at(0) = MAX_MASK_BUFFER;
         dims.at(1) = 1;
-        default_mask_info  = rocALTensorInfo(num_of_dims,
-                                            dims,
+        default_mask_info  = rocalTensorInfo(dims,
                                             _mem_type,
                                             RocalTensorDataType::FP32);
         default_mask_info.set_metadata();
@@ -861,12 +858,12 @@ std::vector<rocALTensorList *> MasterGraph::create_coco_meta_data_reader(const c
     {
         auto labels_info = default_labels_info;
         auto bbox_info = default_bbox_info;
-        _labels_tensor_list.push_back(new rocALTensor(labels_info));
-        _bbox_tensor_list.push_back(new rocALTensor(bbox_info));
+        _labels_tensor_list.push_back(new rocalTensor(labels_info));
+        _bbox_tensor_list.push_back(new rocalTensor(bbox_info));
         if(mask)
         {
             auto mask_info = default_mask_info;
-            _mask_tensor_list.push_back(new rocALTensor(mask_info));
+            _mask_tensor_list.push_back(new rocalTensor(mask_info));
         }
     }
     _ring_buffer.init_metadata(RocalMemType::HOST, _meta_data_buffer_size, _meta_data_buffer_size.size());
@@ -885,7 +882,7 @@ std::vector<rocALTensorList *> MasterGraph::create_coco_meta_data_reader(const c
     return _metadata_output_tensor_list;
 }
 
-std::vector<rocALTensorList *> MasterGraph::create_label_reader(const char *source_path, MetaDataReaderType reader_type)
+std::vector<rocalTensorList *> MasterGraph::create_label_reader(const char *source_path, MetaDataReaderType reader_type)
 {
     if(_meta_data_reader)
         THROW("A metadata reader has already been created")
@@ -895,11 +892,10 @@ std::vector<rocALTensorList *> MasterGraph::create_label_reader(const char *sour
     _meta_data_reader->read_all(source_path);
 
     unsigned num_of_dims = 1;
-    std::vector<unsigned> dims;
+    std::vector<size_t> dims;
     dims.resize(num_of_dims);
     dims.at(0) = 1; // Number of labels per file
-    auto default_labels_info  = rocALTensorInfo(num_of_dims,
-                                 std::vector<unsigned>(std::move(dims)),
+    auto default_labels_info  = rocalTensorInfo(std::vector<size_t>(std::move(dims)),
                                  _mem_type,
                                  RocalTensorDataType::INT32);
     default_labels_info.set_metadata();
@@ -909,7 +905,7 @@ std::vector<rocALTensorList *> MasterGraph::create_label_reader(const char *sour
     for(unsigned i = 0; i < _user_batch_size; i++)
     {
         auto info = default_labels_info;
-        auto tensor = new rocALTensor(info);
+        auto tensor = new rocalTensor(info);
         _labels_tensor_list.push_back(tensor);
     }
     _ring_buffer.init_metadata(RocalMemType::HOST, _meta_data_buffer_size, _meta_data_buffer_size.size());
@@ -963,7 +959,7 @@ const std::pair<ImageNameBatch,pMetaDataBatch>& MasterGraph::meta_data()
     return _ring_buffer.get_meta_data();
 }
 
-rocALTensorList * MasterGraph::labels_meta_data()
+rocalTensorList * MasterGraph::labels_meta_data()
 {
     if(_ring_buffer.level() == 0)
         THROW("No meta data has been loaded")
@@ -977,7 +973,7 @@ rocALTensorList * MasterGraph::labels_meta_data()
     return &_labels_tensor_list;
 }
 
-rocALTensorList * MasterGraph::bbox_labels_meta_data()
+rocalTensorList * MasterGraph::bbox_labels_meta_data()
 {
     if(_ring_buffer.level() == 0)
         THROW("No meta data has been loaded")
@@ -992,7 +988,7 @@ rocALTensorList * MasterGraph::bbox_labels_meta_data()
     return &_labels_tensor_list;
 }
 
-rocALTensorList * MasterGraph::bbox_meta_data()
+rocalTensorList * MasterGraph::bbox_meta_data()
 {
     if(_ring_buffer.level() == 0)
         THROW("No meta data has been loaded")
@@ -1019,7 +1015,7 @@ size_t MasterGraph::bounding_box_batch_count(int *buf, pMetaDataBatch meta_data_
     return size;
 }
 
-rocALTensorList * MasterGraph::mask_meta_data()
+rocalTensorList * MasterGraph::mask_meta_data()
 {
     if(_ring_buffer.level() == 0)
         THROW("No meta data has been loaded")
@@ -1115,10 +1111,10 @@ bool MasterGraph::no_more_processed_data()
 //     return Status::OK;
 // }
 
-std::vector<rocALTensorList *>
+std::vector<rocalTensorList *>
 MasterGraph::get_bbox_encoded_buffers(size_t num_encoded_boxes)
 {
-    std::vector<rocALTensorList *> bbox_encoded_output;
+    std::vector<rocalTensorList *> bbox_encoded_output;
     if (_is_box_encoder) {
         if (num_encoded_boxes != _user_batch_size*_num_anchors) {
             THROW("num_encoded_boxes is not correct");

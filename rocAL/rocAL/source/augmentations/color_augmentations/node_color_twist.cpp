@@ -2,7 +2,7 @@
 #include "node_color_twist.h"
 #include "exception.h"
 
-ColorTwistNode::ColorTwistNode(const std::vector<rocALTensor *> &inputs,const std::vector<rocALTensor *> &outputs) :
+ColorTwistNode::ColorTwistNode(const std::vector<rocalTensor *> &inputs,const std::vector<rocalTensor *> &outputs) :
         Node(inputs, outputs),
         _alpha(ALPHA_RANGE[0], ALPHA_RANGE[1]),
         _beta (BETA_RANGE[0], BETA_RANGE[1]),

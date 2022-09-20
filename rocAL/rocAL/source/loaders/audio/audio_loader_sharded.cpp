@@ -142,7 +142,7 @@ void AudioLoaderSharded::shut_down()
         _loaders[i]->shut_down();
 }
 
-void AudioLoaderSharded::set_output (rocALTensor* output_tensor)
+void AudioLoaderSharded::set_output (rocalTensor* output_tensor)
 {
     _output_tensor = output_tensor;
 }

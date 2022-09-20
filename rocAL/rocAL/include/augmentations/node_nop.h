@@ -27,7 +27,7 @@ THE SOFTWARE.
 class NopNode : public Node
 {
 public:
-    NopNode(const std::vector<rocALTensor *> &inputs, const std::vector<rocALTensor *> &outputs);
+    NopNode(const std::vector<rocalTensor *> &inputs, const std::vector<rocalTensor *> &outputs);
     NopNode() = delete;
 protected:
     void create_node() override;

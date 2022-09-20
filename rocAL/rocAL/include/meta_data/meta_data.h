@@ -64,19 +64,19 @@ struct MetaData
     MaskCords& get_mask_cords() { return _mask_cords;}
     int get_object_count() { return _object_count; }
     int get_mask_coords_count() { return _mask_coords_count; }
-    std::vector<unsigned> get_bb_label_dims()
+    std::vector<size_t> get_bb_label_dims()
     {
-        _bb_labels_dims = {(unsigned) _bb_label_ids.size()};
+        _bb_labels_dims = {_bb_label_ids.size()};
         return _bb_labels_dims;
     }
-    std::vector<unsigned> get_bb_cords_dims()
+    std::vector<size_t> get_bb_cords_dims()
     {
-        _bb_coords_dims = {(unsigned) _bb_cords.size(), 4};
+        _bb_coords_dims = {_bb_cords.size(), 4};
         return _bb_coords_dims;
     }
-    std::vector<unsigned> get_mask_cords_dims()
+    std::vector<size_t> get_mask_cords_dims()
     {
-        _mask_coords_dims = {(unsigned) _mask_cords.size(), 1};
+        _mask_coords_dims = {_mask_cords.size(), 1};
         return _mask_coords_dims;
     }
 protected:
@@ -86,9 +86,9 @@ protected:
     ImgSize _img_size = {};
     int _label_id = -1; // For label use only
     MaskCords _mask_cords = {};
-    std::vector<unsigned> _bb_labels_dims = {};
-    std::vector<unsigned> _bb_coords_dims = {};
-    std::vector<unsigned> _mask_coords_dims = {};
+    std::vector<size_t> _bb_labels_dims = {};
+    std::vector<size_t> _bb_coords_dims = {};
+    std::vector<size_t> _mask_coords_dims = {};
     std::vector<int> _polygon_count = {};
     std::vector<std::vector<int>> _vertices_count = {};
     int _object_count = 0;
@@ -148,16 +148,16 @@ struct BoundingBox : public MetaData
 
 struct MetaDataDimensionsBatch
 {
-    std::vector<std::vector<unsigned>>& bb_labels_dims() { return _bb_labels_dims; }
-    std::vector<std::vector<unsigned>>& bb_cords_dims() { return _bb_coords_dims; }
-    std::vector<std::vector<unsigned>>& mask_cords_dims() { return _mask_coords_dims; }
+    std::vector<std::vector<size_t>>& bb_labels_dims() { return _bb_labels_dims; }
+    std::vector<std::vector<size_t>>& bb_cords_dims() { return _bb_coords_dims; }
+    std::vector<std::vector<size_t>>& mask_cords_dims() { return _mask_coords_dims; }
     void clear()
     {
         _bb_labels_dims.clear();
         _bb_coords_dims.clear();
         _mask_coords_dims.clear();
     }
-    void resize(unsigned size)
+    void resize(size_t size)
     {
         _bb_labels_dims.resize(size);
         _bb_coords_dims.resize(size);
@@ -170,9 +170,9 @@ struct MetaDataDimensionsBatch
         _mask_coords_dims.insert(_mask_coords_dims.end(), other.mask_cords_dims().begin(), other.mask_cords_dims().end());
     }
 private:
-    std::vector<std::vector<unsigned>> _bb_labels_dims = {};
-    std::vector<std::vector<unsigned>> _bb_coords_dims = {};
-    std::vector<std::vector<unsigned>> _mask_coords_dims = {};
+    std::vector<std::vector<size_t>> _bb_labels_dims = {};
+    std::vector<std::vector<size_t>> _bb_coords_dims = {};
+    std::vector<std::vector<size_t>> _mask_coords_dims = {};
 };
 
 struct MetaDataBatch
@@ -183,7 +183,7 @@ struct MetaDataBatch
     virtual int size() = 0;
     virtual int mask_size() = 0;
     virtual void copy_data(std::vector<void*> buffer, bool is_segmentation) = 0;
-    virtual std::vector<unsigned>& get_buffer_size(bool is_segmentation) = 0;
+    virtual std::vector<size_t>& get_buffer_size(bool is_segmentation) = 0;
     virtual MetaDataBatch&  operator += (MetaDataBatch& other) = 0;
     MetaDataBatch* concatenate(MetaDataBatch* other)
     {
@@ -216,7 +216,7 @@ protected:
     std::vector<MaskCords> _mask_cords = {};
     std::vector<std::vector<int>> _polygon_counts = {};
     std::vector<std::vector<std::vector<int>>> _vertices_counts = {};
-    std::vector<unsigned> _buffer_size;
+    std::vector<size_t> _buffer_size;
     int _total_objects_count = 0;
     int _total_mask_coords_count;
     MetaDataDimensionsBatch _metadata_dimensions;
@@ -262,7 +262,7 @@ struct LabelBatch : public MetaDataBatch
             THROW("The buffers are insufficient") // TODO -change
         mempcpy((int *)buffer[0], _label_id.data(), _label_id.size() * sizeof(int));
     }
-    std::vector<unsigned>& get_buffer_size(bool is_segmentation) override
+    std::vector<size_t>& get_buffer_size(bool is_segmentation) override
     {
         _buffer_size.emplace_back(_total_objects_count * sizeof(int));
         return _buffer_size;
@@ -347,7 +347,7 @@ struct BoundingBoxBatch: public MetaDataBatch
             }
         }
     }
-    std::vector<unsigned>& get_buffer_size(bool is_segmentation) override
+    std::vector<size_t>& get_buffer_size(bool is_segmentation) override
     {
         _buffer_size.emplace_back(_total_objects_count * sizeof(int));
         _buffer_size.emplace_back(_total_objects_count * 4 * sizeof(float));
