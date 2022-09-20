@@ -66,7 +66,7 @@ list(APPEND SOURCES
         source/image/ColorTemperaturebatchPD.cpp
         source/image/ColorTwistbatchPD.cpp
         source/image/ContrastbatchPD.cpp
-        source/image/copy.cpp
+        source/image/CopybatchPD.cpp
         source/image/CropMirrorNormalizePD.cpp
         source/image/CropPD.cpp
         source/image/CustomConvolutionbatchPD.cpp
@@ -103,7 +103,7 @@ list(APPEND SOURCES
         source/image/NoisebatchPD.cpp
         source/image/NonLinearFilterbatchPD.cpp
         source/image/NonMaxSupressionbatchPD.cpp
-        source/image/nop.cpp
+        source/image/NopbatchPD.cpp
         source/image/PhasebatchPD.cpp
         source/image/PixelatebatchPD.cpp
         source/image/RainbatchPD.cpp
@@ -138,8 +138,6 @@ list(APPEND SOURCES
         source/tensor/Crop.cpp
         source/tensor/ColorTwist.cpp
         source/tensor/ResizeMirrorNormalize.cpp
-
-
 
         source/kernel_rpp.cpp
         source/internal_publishKernels.cpp
