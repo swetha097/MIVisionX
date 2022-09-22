@@ -1,4 +1,3 @@
-rocAL/rocAL/source/decoders/image/fused_crop_decoder.cpp
 import amd.rocal.types as types
 import rocal_pybind as b
 from amd.rocal.pipeline import Pipeline
@@ -203,7 +202,7 @@ def image_random_crop(*inputs,user_feature_key_map=None ,path = '', file_root= '
 
 
 def image_slice(*inputs,file_root='',path='',annotations_file='',shard_id = 0, num_shards = 1, random_shuffle = False, affine = True, axes = None, axis_names = "WH",bytes_per_sample_hint = 0, device_memory_padding = 16777216,
-                device_memory_padding_jpeg2k = 0, host_memory_padding = 8388608,
+                device_memory_padding_jpeg2k = 0, host_memory_padding = 8388608, random_aspect_ratio=[0.8, 1.25], random_area=[0.08, 1.0],
                 host_memory_padding_jpeg2k = 0, hybrid_huffman_threshold = 1000000,
                  memory_stats = False, normalized_anchor = True, normalized_shape = True, output_type = types.RGB,
                 preserve = False, seed = 1, split_stages = False, use_chunk_allocator = False, use_fast_idct = False,device = None):
@@ -221,13 +220,13 @@ def image_slice(*inputs,file_root='',path='',annotations_file='',shard_id = 0, n
             "shard_id": shard_id,
             "shard_count": num_shards,
             'is_output': False,
+            "area_factor": random_area,
+            "aspect_ratio": random_aspect_ratio,
             "shuffle": random_shuffle,
             "loop": False,
             "decode_size_policy": types.MAX_SIZE,
             "max_width": 1200, #TODO: what happens when we give user given size = multiplier * max_decoded_width
             "max_height":1200, #TODO: what happens when we give user given size = multiplier * max_decoded_width
-            "area_factor": None,
-            "aspect_ratio": None,
             "x_drift_factor": None,
             "y_drift_factor": None}
         image_decoder_slice = b.COCO_ImageDecoderSliceShard(Pipeline._current_pipeline._handle ,*(kwargs_pybind.values()))
@@ -238,13 +237,13 @@ def image_slice(*inputs,file_root='',path='',annotations_file='',shard_id = 0, n
             "shard_id": shard_id,
             "num_shards": num_shards,
             'is_output': False,
+            "area_factor": random_area,
+            "aspect_ratio": random_aspect_ratio,
             "shuffle": random_shuffle,
             "loop": False,
             "decode_size_policy": types.MAX_SIZE,
             "max_width": 1200,
             "max_height":1200,
-            "area_factor": None,
-            "aspect_ratio": None,
             "x_drift_factor": None,
             "y_drift_factor": None}
         image_decoder_slice = b.Caffe_ImageDecoderPartialShard(Pipeline._current_pipeline._handle ,*(kwargs_pybind.values()))
@@ -255,13 +254,13 @@ def image_slice(*inputs,file_root='',path='',annotations_file='',shard_id = 0, n
             "shard_id": shard_id,
             "num_shards": num_shards,
             'is_output': False,
+            "area_factor": random_area,
+            "aspect_ratio": random_aspect_ratio,
             "shuffle": random_shuffle,
             "loop": False,
             "decode_size_policy": types.MAX_SIZE,
             "max_width": 1200,
             "max_height":1200,
-            "area_factor": None,
-            "aspect_ratio": None,
             "x_drift_factor": None,
             "y_drift_factor": None}
         image_decoder_slice = b.Caffe2_ImageDecoderPartialShard(Pipeline._current_pipeline._handle ,*(kwargs_pybind.values()))
@@ -272,13 +271,13 @@ def image_slice(*inputs,file_root='',path='',annotations_file='',shard_id = 0, n
             "shard_id": shard_id,
             "num_shards": num_shards,
             'is_output': False,
+            "area_factor": random_area,
+            "aspect_ratio": random_aspect_ratio,
             "shuffle": random_shuffle,
             "loop": False,
             "decode_size_policy": types.USER_GIVEN_SIZE_ORIG,
             "max_width": 2000,
             "max_height":2000,
-            "area_factor": None,
-            "aspect_ratio": None,
             "x_drift_factor": None,
             "y_drift_factor": None}
         image_decoder_slice = b.FusedDecoderCropShard(Pipeline._current_pipeline._handle ,*(kwargs_pybind.values()))

@@ -99,6 +99,10 @@ Decoder::Status FusedCropTJDecoder::decode(unsigned char *input_buffer, size_t i
     }
     else
     {
+        std::vector<float> crop_mul_param =  decoder_config.get_crop_param();
+        std::cerr<<"\n ASPECT_RATIO_RANGE : [0]"<< decoder_config.get_random_aspect_ratio()[0]<< "\t [1]"<< decoder_config.get_random_aspect_ratio()[1];
+        std::cerr<<"\n AREA_RANGE : [0]"<< decoder_config.get_random_area()[0]<< "\t [1]"<< decoder_config.get_random_area()[1];
+        // std::exit(0);
         constexpr static double ASPECT_RATIO_RANGE[2] = {3.0/4.0, 4.0/3.0};
         constexpr static double AREA_RANGE[2] = {0.08, 1.0};
         auto is_valid_crop = [](uint h, uint w, uint height, uint width)
