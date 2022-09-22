@@ -307,7 +307,7 @@ class Pipeline(object):
         It rises StopIteration if data set reached its end.
         return:
         :return:
-        A list of `rocALTensorList` objects for respective pipeline outputs.
+        A list of `rocalTensorList` objects for respective pipeline outputs.
         """
         try:
             print("getRemainingImages :", self.getRemainingImages())

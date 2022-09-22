@@ -519,7 +519,7 @@ int test(int test_case, int reader_type, int pipeline_type, const char *path, co
                 if(output_tensor_list->at(idx)->info().mem_type() == RocalMemType::HIP)
                 {
                     out_f_buffer = (float *)malloc(output_tensor_list->at(idx)->info().data_size());
-                    output_tensor_list->at(idx)->copy_data(out_f_buffer, false);
+                    output_tensor_list->at(idx)->copy_data(out_f_buffer);
                 }
                 else if(output_tensor_list->at(idx)->info().mem_type() == RocalMemType::HOST)
                     out_f_buffer = (float *)output_tensor_list->at(idx)->buffer();
@@ -532,7 +532,7 @@ int test(int test_case, int reader_type, int pipeline_type, const char *path, co
                 if(output_tensor_list->at(idx)->info().mem_type() == RocalMemType::HIP)
                 {
                     out_buffer = (unsigned char *)malloc(output_tensor_list->at(idx)->info().data_size());
-                    output_tensor_list->at(idx)->copy_data(out_buffer, false);
+                    output_tensor_list->at(idx)->copy_data(out_buffer);
                 }
                 else if(output_tensor_list->at(idx)->info().mem_type() == RocalMemType::HOST)
                     out_buffer = (unsigned char *)(output_tensor_list->at(idx)->buffer());

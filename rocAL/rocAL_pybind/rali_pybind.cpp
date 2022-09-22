@@ -101,10 +101,10 @@ namespace rali
             .def_readwrite("decode_time", &TimingInfo::decode_time)
             .def_readwrite("process_time", &TimingInfo::process_time)
             .def_readwrite("transfer_time", &TimingInfo::transfer_time);
-        py::class_<rocALTensor>(m, "rocALTensor")
+        py::class_<rocalTensor>(m, "rocalTensor")
                 .def(
                 "batch_height",
-                [](rocALTensor &output_tensor)
+                [](rocalTensor &output_tensor)
                 {
                     return output_tensor.info().max_dims().at(1);
                 },
@@ -114,7 +114,7 @@ namespace rali
             )
             .def(
                 "batch_width",
-                [](rocALTensor &output_tensor)
+                [](rocalTensor &output_tensor)
                 {
                     return output_tensor.info().max_dims().at(0);
                 },
@@ -124,7 +124,7 @@ namespace rali
             )
             .def(
                 "batch_size",
-                [](rocALTensor &output_tensor)
+                [](rocalTensor &output_tensor)
                 {
                     return output_tensor.info().dims().at(0);
                 },
@@ -134,7 +134,7 @@ namespace rali
             )
             .def(
                 "color_format",
-                [](rocALTensor &output_tensor)
+                [](rocalTensor &output_tensor)
                 {
                     if ((output_tensor.info().color_format() == RocalColorFormat::RGB24) || (output_tensor.info().color_format() == RocalColorFormat::BGR24))
                         return 3;
@@ -146,7 +146,7 @@ namespace rali
                 )code"
             )
             .def(
-            "copy_data", [](rocALTensor &output_tensor, py::object p)
+            "copy_data", [](rocalTensor &output_tensor, py::object p)
             {
             auto ptr = ctypes_void_ptr(p);
             output_tensor.copy_data(ptr, 0);
@@ -154,7 +154,7 @@ namespace rali
             )
             .def(
                 "at",
-                [](rocALTensor &output_tensor, uint idx)
+                [](rocalTensor &output_tensor, uint idx)
                 {
                     uint h = output_tensor.info().max_dims().at(1);
                     uint w = output_tensor.info().max_dims().at(0);
@@ -186,15 +186,15 @@ namespace rali
                 },
                 "idx"_a,
                 R"code(
-                Returns a rocAL tensor at given position `i` in the rocALTensorlist.
+                Returns a rocAL tensor at given position `i` in the rocalTensorlist.
                 )code",
                 py::keep_alive<0, 1>());
 
-        // .def_readwrite("swap_handle",&rocALTensor::swap_handle);
-        py::class_<rocALTensorList>(m, "rocALTensorList")
+        // .def_readwrite("swap_handle",&rocalTensor::swap_handle);
+        py::class_<rocalTensorList>(m, "rocalTensorList")
             .def(
                 "__getitem__",
-                [](rocALTensorList &output_tensor_list, uint idx)
+                [](rocalTensorList &output_tensor_list, uint idx)
                 {
                     return output_tensor_list.at(idx);
                 },
@@ -203,7 +203,7 @@ namespace rali
                 )code")
 
             .def("at",
-                [](rocALTensorList &output_tensor_list, uint idx)
+                [](rocalTensorList &output_tensor_list, uint idx)
                 {
                     uint h = output_tensor_list.at(idx)->info().max_dims().at(1);
                     uint w = output_tensor_list.at(idx)->info().max_dims().at(0);
@@ -236,10 +236,10 @@ namespace rali
                 },
                 "idx"_a,
                 R"code(
-                Returns a rocAL tensor at given position `i` in the rocALTensorlist.
+                Returns a rocAL tensor at given position `i` in the rocalTensorlist.
                 )code",
                 py::keep_alive<0, 1>());
-        py::class_<rocALTensorInfo>(m, "rocALTensorInfo");
+        py::class_<rocalTensorInfo>(m, "rocalTensorInfo");
 
         py::module types_m = m.def_submodule("types");
         types_m.doc() = "Datatypes and options used by ROCAL";
@@ -325,7 +325,7 @@ namespace rali
         // m.def("rocalGetOutputTensors",&rocalGetOutputTensors, return_value_policy::reference);
         m.def("rocalGetOutputTensors", [](RocalContext context)
               {
-            rocALTensorList * tl = rocalGetOutputTensors(context);
+            rocalTensorList * tl = rocalGetOutputTensors(context);
             py::list list;
             unsigned int size_of_tensor_list = tl->size();
             for (uint i =0; i< size_of_tensor_list; i++)
@@ -334,7 +334,7 @@ namespace rali
         m.def(
             "rocalGetImageLabels", [](RocalContext context)
     {
-            rocALTensorList *labels = rocalGetImageLabels(context);
+            rocalTensorList *labels = rocalGetImageLabels(context);
             // std::cerr<<"LABELS SIZE ::"<<labels->size();
             // for (int i = 0; i < labels->size(); i++) {
             //     int *labels_buffer = (int *)(labels->at(i)->buffer());
@@ -356,7 +356,7 @@ namespace rali
         // RocalTensorList output_tensor_list = rocalGetOutputTensors(context);
         // // ptr = output_tensor_list->at(0)->buffer();
 
-        // rocALTensor::copy_data((unsigned char *) ptr, 0);
+        // rocalTensor::copy_data((unsigned char *) ptr, 0);
         // // for (uint i =0; i<10; i++)
         // // {
         // //     std::cerr<<"\n TEMP ::"<< (float) (unsigned char *) ptr[i];

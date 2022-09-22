@@ -33,9 +33,9 @@ public:
 
     /// internal_shard_count number of loader/decoders are created and each shard is loaded and decoded using separate and independent resources increasing the parallelism and performance.
 #if ENABLE_HIP
-    FusedJpegCropNode(rocALTensor *output, DeviceResourcesHip device_resources_hip);
+    FusedJpegCropNode(rocalTensor *output, DeviceResourcesHip device_resources_hip);
 #else
-    FusedJpegCropNode(rocALTensor *output, DeviceResources device_resources);
+    FusedJpegCropNode(rocalTensor *output, DeviceResources device_resources);
 #endif
     ~FusedJpegCropNode() override;
     FusedJpegCropNode() = delete;

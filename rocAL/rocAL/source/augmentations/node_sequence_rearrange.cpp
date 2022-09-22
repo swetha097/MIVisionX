@@ -26,7 +26,7 @@ THE SOFTWARE.
 #include "exception.h"
 
 
-SequenceRearrangeNode::SequenceRearrangeNode(const std::vector<rocALTensor *> &inputs, const std::vector<rocALTensor *> &outputs) :
+SequenceRearrangeNode::SequenceRearrangeNode(const std::vector<rocalTensor *> &inputs, const std::vector<rocalTensor *> &outputs) :
         Node(inputs, outputs)
 {
 }

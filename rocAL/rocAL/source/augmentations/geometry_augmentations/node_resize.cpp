@@ -23,7 +23,7 @@ THE SOFTWARE.
 #include <graph.h>
 #include "node_resize.h"
 #include "exception.h"
-ResizeNode::ResizeNode(const std::vector<rocALTensor *> &inputs, const std::vector<rocALTensor *> &outputs) :
+ResizeNode::ResizeNode(const std::vector<rocalTensor *> &inputs, const std::vector<rocalTensor *> &outputs) :
         Node(inputs, outputs)
 {
 }

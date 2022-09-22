@@ -149,10 +149,10 @@ def main():
     # print("----------------------")
     # print(len(output_data_batch_1))
 
-    # print("\n OUTPUT DATA!!!!: ", output_data_batch_1) # rocALTensorList 1
+    # print("\n OUTPUT DATA!!!!: ", output_data_batch_1) # rocalTensorList 1
     exit(0)
-    print("\n rocALTensor:: ",output_data_batch_1[0])
-    # print("\n rocALTensor:: ",output_data_batch_1[0].at(0))
+    print("\n rocalTensor:: ",output_data_batch_1[0])
+    # print("\n rocalTensor:: ",output_data_batch_1[0].at(0))
     print("\n size of rocalTensor ",output_data_batch_1[0].at(0).shape)
 
     print(output_data_batch_1[0].at(0).transpose(2,1,0).shape)
@@ -171,7 +171,7 @@ def main():
     cv2.imwrite("output_images2_2.jpg", cv2.cvtColor(output_data_batch_1[2].at(2), cv2.COLOR_RGB2BGR))
 
     output_data_batch_2 = pipe.run()
-    print("\n OUTPUT DATA BATCH 2!!!!: ", output_data_batch_2) # rocALTensorList 2
+    print("\n OUTPUT DATA BATCH 2!!!!: ", output_data_batch_2) # rocalTensorList 2
 
     cv2.imwrite("output_images2_0_0.jpg", cv2.cvtColor(output_data_batch_2[0].at(0), cv2.COLOR_RGB2BGR))
     cv2.imwrite("output_images2_0_1.jpg", cv2.cvtColor(output_data_batch_2[0].at(1), cv2.COLOR_RGB2BGR))

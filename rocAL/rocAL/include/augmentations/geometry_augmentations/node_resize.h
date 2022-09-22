@@ -26,7 +26,7 @@ THE SOFTWARE.
 class ResizeNode : public Node
 {
 public:
-    ResizeNode(const std::vector<rocALTensor *> &inputs, const std::vector<rocALTensor *> &outputs);
+    ResizeNode(const std::vector<rocalTensor *> &inputs, const std::vector<rocalTensor *> &outputs);
     ResizeNode() = delete;
     void init(int interpolation_type, int layout);
     unsigned int get_dst_width() { return _outputs[0]->info().max_dims()[0]; }

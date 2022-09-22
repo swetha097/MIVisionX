@@ -40,7 +40,7 @@ public:
     LoaderModuleStatus load_next() override;
     void initialize(ReaderConfig reader_cfg, DecoderConfig decoder_cfg, RocalMemType mem_type, unsigned batch_size, bool keep_orig_size = false) override;
     void shut_down() override;
-    void set_output (rocALTensor* output_image) override;
+    void set_output (rocalTensor* output_image) override;
     size_t remaining_count() override;
     void reset() override;
     void start_loading() override;
@@ -65,7 +65,7 @@ private:
     size_t _shard_count = 1;
     void fast_forward_through_empty_loaders();
     size_t _prefetch_queue_depth; // Used for circular buffer's internal buffer
-    rocALTensor* _output_tensor;
+    rocalTensor* _output_tensor;
     crop_image_info _crop_img_info;
 };
 #endif

@@ -3,9 +3,9 @@
 
 
 #if ENABLE_HIP
-FusedJpegCropSingleShardNode::FusedJpegCropSingleShardNode(rocALTensor *output, DeviceResourcesHip device_resources):
+FusedJpegCropSingleShardNode::FusedJpegCropSingleShardNode(rocalTensor *output, DeviceResourcesHip device_resources):
 #else
-FusedJpegCropSingleShardNode::FusedJpegCropSingleShardNode(rocALTensor *output, DeviceResources device_resources):
+FusedJpegCropSingleShardNode::FusedJpegCropSingleShardNode(rocalTensor *output, DeviceResources device_resources):
 #endif
         Node({}, {output})
 {
