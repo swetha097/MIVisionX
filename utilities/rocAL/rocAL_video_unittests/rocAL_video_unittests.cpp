@@ -264,7 +264,7 @@ int main(int argc, const char **argv)
         counter += input_batch_size;
         if (save_frames)
         {
-            std::string batch_path = "output_images/" + std::to_string(count);
+            std::string batch_path = "output_frames/" + std::to_string(count);
             int status = mkdir(batch_path.c_str(), S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
             if (status) continue;
             for(unsigned idx = 0; idx < output_tensor_list->size(); idx++)

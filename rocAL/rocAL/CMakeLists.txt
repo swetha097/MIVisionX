@@ -43,27 +43,16 @@ endif()
 if( GPU_SUPPORT AND "${BACKEND}" STREQUAL "HIP")
     if(NOT DEFINED HIP_PATH)
         if(NOT DEFINED ENV{HIP_PATH})
-            set(HIP_PATH ${ROCM_PATH}/hip CACHE PATH "Path to which HIP has been installed")
+            set(HIP_PATH ${ROCM_PATH} CACHE PATH "Path to which HIP has been installed")
         else()
             set(HIP_PATH $ENV{HIP_PATH} CACHE PATH "Path to which HIP has been installed")
         endif()
     endif()
-    list(APPEND CMAKE_MODULE_PATH ${ROCM_PATH}/lib/cmake/hip ${HIP_PATH}/cmake)
-    # HSA_PATH
-    IF(NOT DEFINED ENV{HSA_PATH})
-        SET(HSA_PATH ${ROCM_PATH}/hsa)
-    ELSE()
-        SET(HSA_PATH $ENV{HSA_PATH})
-    ENDIF()
+    list(APPEND CMAKE_PREFIX_PATH ${ROCM_PATH}/hip ${ROCM_PATH})
     find_package(HIP QUIET)
     if(HIP_FOUND)
         SET(BUILD_ROCAL true)
         message(STATUS "Found HIP for rocAL: " ${HIP_VERSION} ${HIP_PATH} )
-        if(HIP_COMPILER STREQUAL clang)
-            set(hip_library_name amdhip64)
-        else()
-            message(FATAL_ERROR "unsupported hip compiler")
-        endif()
     else()
         SET(BUILD_ROCAL false)
         message("-- ${Yellow}NOTE: rocAL library requires HIP for BACKEND=HIP, Not Found ${ColourReset}")
@@ -86,14 +75,14 @@ if(GPU_SUPPORT)
         #find the RPP backend type
         set(RPP_BACKEND_OPENCL_FOUND 0)
         set(RPP_BACKEND_HIP_FOUND 0)
-        if(EXISTS ${ROCM_PATH}/rpp/include/rpp_backend.h)
-            file(READ ${ROCM_PATH}/rpp/include/rpp_backend.h RPP_BACKEND_FILE)
+        if(EXISTS ${ROCM_PATH}/include/rpp/rpp_backend.h)
+            file(READ ${ROCM_PATH}/include/rpp/rpp_backend.h RPP_BACKEND_FILE)
             string(REGEX MATCH "RPP_BACKEND_OPENCL ([0-9]*)" _ ${RPP_BACKEND_FILE})
             set(RPP_BACKEND_OPENCL_FOUND ${CMAKE_MATCH_1})
             string(REGEX MATCH "RPP_BACKEND_HIP ([0-9]*)" _ ${RPP_BACKEND_FILE})
             set(RPP_BACKEND_HIP_FOUND ${CMAKE_MATCH_1})
         else()
-            message("-- ${Red}WARNING: ${ROCM_PATH}/rpp/include/rpp_backend.h file Not Found. please run the setup script to install latest RPP package ${ColourReset}")
+            message("-- ${Red}WARNING: ${ROCM_PATH}/include/rpp/rpp_backend.h file Not Found. please run the setup script to install latest RPP package ${ColourReset}")
         endif()
 
         if ("${BACKEND}" STREQUAL "OPENCL" AND OpenCL_FOUND)
@@ -140,8 +129,6 @@ if(${BUILD_ROCAL})
         find_path(AVFORMAT_INCLUDE_DIR libavformat/avformat.h)
     endif()
     include_directories(
-                ${OpenCL_INCLUDE_DIRS}
-                ${OpenCL_INCLUDE_DIRS}/Headers
                 ${AVUTIL_INCLUDE_DIR}
                 ${AVCODEC_INCLUDE_DIR}
                 ${SWSCALE_INCLUDE_DIR}
@@ -216,7 +203,11 @@ if(${BUILD_ROCAL})
     else()
         target_compile_definitions(${PROJECT_NAME} PUBLIC ENABLE_OPENCV=0)
     endif()
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fopenmp -msse4.2 -mavx2 -Wall -fPIC -pg -pthread -Wno-deprecated-declarations -std=gnu++17")
+    # -Wall -- Enable most warning messages; -fPIC -- Generate position-independent code if possible.
+    # -mavx2 -- Support MMX, SSE, SSE2, SSE3, SSSE3, SSE4.1, SSE4.2, AVX and AVX2 built-in functions and code generation.
+    # -Wno-deprecated-declarations -- Do not warn about uses of functions, variables, and types marked as deprecated by using the deprecated attribute.
+    # -std=gnu++17 -- Conform to the ISO 2017 C++ standard with GNU extensions.
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fopenmp -pthread -Wall -fPIC -mavx2 -mfma -mf16c -Wno-deprecated-declarations -std=gnu++17")
     message("-- ${White}rocAL -- CMAKE_CXX_FLAGS:${CMAKE_CXX_FLAGS}")
 
     if(NOT FFMPEG_FOUND)
