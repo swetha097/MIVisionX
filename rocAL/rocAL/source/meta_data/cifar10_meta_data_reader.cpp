@@ -104,8 +104,6 @@ void Cifar10MetaDataReader::lookup(const std::vector<std::string>& image_names)
             THROW("ERROR: Given name not present in the map"+ image_name )
         _output->get_label_batch()[i] = it->second->get_label();
         _output->increment_object_count(it->second->get_object_count());
-
-
     }
 }
 

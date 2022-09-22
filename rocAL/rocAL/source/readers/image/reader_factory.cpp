@@ -24,13 +24,13 @@ THE SOFTWARE.
 #include <memory>
 #include "reader_factory.h"
 #include "file_source_reader.h"
+#include "sequence_file_source_reader.h"
 #include "coco_file_source_reader.h"
+#include "cifar10_data_reader.h"
 #include "tf_record_reader.h"
 #include "caffe_lmdb_record_reader.h"
 #include "caffe2_lmdb_record_reader.h"
-#include "cifar10_data_reader.h"
 #include "mxnet_recordio_reader.h"
-#include "sequence_file_source_reader.h"
 
 std::shared_ptr<Reader> create_reader(ReaderConfig config) {
     switch(config.type()) {
@@ -66,23 +66,6 @@ std::shared_ptr<Reader> create_reader(ReaderConfig config) {
             return ret;
         }
         break;
-         case StorageType::CAFFE_LMDB_RECORD:
-        {
-            auto ret = std::make_shared<CaffeLMDBRecordReader>();
-            if(ret->initialize(config) != Reader::Status::OK)
-                throw std::runtime_error("CaffeLMDBRecordReader cannot access the storage");
-            return ret;
-        }
-        break;
-
-        case StorageType::CAFFE2_LMDB_RECORD:
-        {
-            auto ret = std::make_shared<Caffe2LMDBRecordReader>();
-            if(ret->initialize(config) != Reader::Status::OK)
-                throw std::runtime_error("Caffe2LMDBRecordReader cannot access the storage");
-            return ret;
-        }
-        break;
         // case StorageType::UNCOMPRESSED_BINARY_DATA:
         // {
         //     auto ret = std::make_shared<CIFAR10DataReader>();
@@ -91,6 +74,22 @@ std::shared_ptr<Reader> create_reader(ReaderConfig config) {
         //     return ret;
         // }
         // break;
+        case StorageType::CAFFE_LMDB_RECORD:
+        {
+            auto ret = std::make_shared<CaffeLMDBRecordReader>();
+            if(ret->initialize(config) != Reader::Status::OK)
+                throw std::runtime_error("CaffeLMDBRecordReader cannot access the storage");
+            return ret;
+        }
+        break;
+        case StorageType::CAFFE2_LMDB_RECORD:
+        {
+            auto ret = std::make_shared<Caffe2LMDBRecordReader>();
+            if(ret->initialize(config) != Reader::Status::OK)
+                throw std::runtime_error("Caffe2LMDBRecordReader cannot access the storage");
+            return ret;
+        }
+        break;
         // case StorageType::MXNET_RECORDIO:
         // {
         //     auto ret = std::make_shared<MXNetRecordIOReader>();

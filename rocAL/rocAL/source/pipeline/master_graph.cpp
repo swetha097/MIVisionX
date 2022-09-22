@@ -238,6 +238,7 @@ MasterGraph::decrease_image_count()
     if(!_loop)
         _remaining_count -= (_is_sequence_reader_output ? _sequence_batch_size : _user_batch_size);
 }
+
 void
 MasterGraph::create_single_graph()
 {
