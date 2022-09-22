@@ -68,6 +68,7 @@ list(APPEND SOURCES
         source/ContrastbatchPD.cpp
         source/copy.cpp
         source/CropMirrorNormalizePD.cpp
+        source/CropMirrorNormalizetensor.cpp
         source/CropPD.cpp
         source/CustomConvolutionbatchPD.cpp
         source/DataObjectCopybatchPD.cpp

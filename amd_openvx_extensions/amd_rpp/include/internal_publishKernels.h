@@ -116,6 +116,7 @@ vx_status VignettebatchPD_Register(vx_context);
 vx_status WarpAffinebatchPD_Register(vx_context);
 vx_status WarpPerspectivebatchPD_Register(vx_context);
 vx_status Resizetensor_Register(vx_context);
+vx_status CropMirrorNormalizetensor_Register(vx_context);
 
 // kernel names
 #define VX_KERNEL_RPP_NOP_NAME                          "org.rpp.Nop"
@@ -199,5 +200,7 @@ vx_status Resizetensor_Register(vx_context);
 #define VX_KERNEL_RPP_RESIZECROPMIRRORPD_NAME      				"org.rpp.ResizeCropMirrorPD"
 #define VX_KERNEL_RPP_SEQUENCEREARRANGE_NAME                    "org.rpp.SequenceRearrange"
 #define VX_KERNEL_RPP_RESIZETENSOR_NAME      					"org.rpp.Resizetensor"
+#define VX_KERNEL_RPP_CROPMIRRORNORMALIZEBATCHTENSOR_NAME       "org.rpp.CropMirrorNormalizetensor"
+
 
 #endif //_AMDVX_EXT__PUBLISH_KERNELS_H_

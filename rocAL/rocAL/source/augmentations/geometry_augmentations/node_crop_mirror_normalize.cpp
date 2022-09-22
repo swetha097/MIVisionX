@@ -60,7 +60,7 @@ void CropMirrorNormalizeNode::create_node()
 
     unsigned int chnShift = 0;
     vx_scalar  chnToggle = vxCreateScalar(vxGetContext((vx_reference)_graph->get()),VX_TYPE_UINT32,&chnShift);
-    _node = vxExtrppNode_CropMirrorNormalizebatchPD(_graph->get(), _inputs[0]->handle(), _src_roi_width, _src_roi_height, _outputs[0]->handle(),
+    _node = vxExtrppNode_CropMirrorNormalizetensor(_graph->get(), _inputs[0]->handle(), _src_roi_width, _src_roi_height, _outputs[0]->handle(),
                                                     _crop_param->cropw_arr, _crop_param->croph_arr, _crop_param->x1_arr, _crop_param->y1_arr,
                                                     _mean_array, _std_dev_array, _mirror.default_array() , chnToggle , _batch_size);
     if((status = vxGetStatus((vx_reference)_node)) != VX_SUCCESS)
