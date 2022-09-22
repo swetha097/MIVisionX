@@ -123,7 +123,7 @@ vx_status get_kernels_to_publish()
     STATUS_ERROR_CHECK(ADD_KERENEL(ResizeCropMirrorPD_Register));
     STATUS_ERROR_CHECK(ADD_KERENEL(CopybatchPD_Register));
     STATUS_ERROR_CHECK(ADD_KERENEL(NopbatchPD_Register));
-    STATUS_ERROR_CHECK(ADD_KERENEL(SequenceRearrange_Register));
+    STATUS_ERROR_CHECK(ADD_KERENEL(SequenceRearrangebatchPD_Register));
     STATUS_ERROR_CHECK(ADD_KERENEL(Brightness_Register));
     STATUS_ERROR_CHECK(ADD_KERENEL(GammaCorrection_Register));
     STATUS_ERROR_CHECK(ADD_KERENEL(CropMirrorNormalize_Register));
