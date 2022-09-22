@@ -26,7 +26,7 @@ THE SOFTWARE.
 class ResizeShorterNode : public Node
 {
 public:
-    ResizeShorterNode(const std::vector<rocALTensor *> &inputs, const std::vector<rocALTensor *> &outputs);
+    ResizeShorterNode(const std::vector<rocalTensor *> &inputs, const std::vector<rocalTensor *> &outputs);
     ResizeShorterNode() = delete;
     void init(int size);
     unsigned int get_dst_width() { return _outputs[0]->info().max_dims()[0]; }

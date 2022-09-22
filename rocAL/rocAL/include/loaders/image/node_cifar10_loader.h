@@ -32,9 +32,9 @@ public:
 
     /// internal_shard_count number of loader/decoders are created and each shard is loaded and decoded using separate and independent resources increasing the parallelism and performance.
 #if ENABLE_HIP
-    Cifar10LoaderNode(rocALTensor *output, DeviceResourcesHip device_resources);
+    Cifar10LoaderNode(rocalTensor *output, DeviceResourcesHip device_resources);
 #else
-    Cifar10LoaderNode(rocALTensor *output, DeviceResources device_resources);
+    Cifar10LoaderNode(rocalTensor *output, DeviceResources device_resources);
 #endif
     ~Cifar10LoaderNode() override;
     Cifar10LoaderNode() = delete;

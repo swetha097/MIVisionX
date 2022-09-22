@@ -29,7 +29,7 @@ THE SOFTWARE.
 class ColorTwistNode : public Node
 {
 public:
-    ColorTwistNode(const std::vector<rocALTensor *> &inputs, const std::vector<rocALTensor *> &outputs);
+    ColorTwistNode(const std::vector<rocalTensor *> &inputs, const std::vector<rocalTensor *> &outputs);
     ColorTwistNode() = delete;
 
     void init( float alpha, float beta,float hue , float sat, int layout);

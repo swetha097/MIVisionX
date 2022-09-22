@@ -66,7 +66,7 @@ list(APPEND SOURCES
         source/image/ColorTemperaturebatchPD.cpp
         source/image/ColorTwistbatchPD.cpp
         source/image/ContrastbatchPD.cpp
-        source/image/copy.cpp
+        source/image/CopybatchPD.cpp
         source/image/CropMirrorNormalizePD.cpp
         source/image/CropPD.cpp
         source/image/CustomConvolutionbatchPD.cpp
@@ -103,7 +103,7 @@ list(APPEND SOURCES
         source/image/NoisebatchPD.cpp
         source/image/NonLinearFilterbatchPD.cpp
         source/image/NonMaxSupressionbatchPD.cpp
-        source/image/nop.cpp
+        source/image/NopbatchPD.cpp
         source/image/PhasebatchPD.cpp
         source/image/PixelatebatchPD.cpp
         source/image/RainbatchPD.cpp
@@ -165,6 +165,7 @@ elseif (GPU_SUPPORT AND "${BACKEND}" STREQUAL "HIP" AND HIP_FOUND)
     add_library(vx_rpp SHARED ${SOURCES})
     set_target_properties(openvx PROPERTIES LINKER_LANGUAGE CXX)
     set_target_properties(openvx PROPERTIES POSITION_INDEPENDENT_CODE ON)
+    # TBD -- CHECK to FIX
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DGPU_SUPPORT=1 -DRPP_BACKEND_HIP=1") # Currently used by rpp. To be removed.
     target_link_libraries(vx_rpp amd_rpp boost_filesystem boost_system ${HIP_LIBRARY})
 else()

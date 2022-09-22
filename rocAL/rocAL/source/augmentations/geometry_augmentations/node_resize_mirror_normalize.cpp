@@ -25,7 +25,7 @@ THE SOFTWARE.
 #include <graph.h>
 #include "node_resize_mirror_normalize.h"
 #include "exception.h"
-ResizeMirrorNormalizeNode::ResizeMirrorNormalizeNode(const std::vector<rocALTensor *> &inputs, const std::vector<rocALTensor *> &outputs) :
+ResizeMirrorNormalizeNode::ResizeMirrorNormalizeNode(const std::vector<rocalTensor *> &inputs, const std::vector<rocalTensor *> &outputs) :
         Node(inputs, outputs),
         _mirror(MIRROR_RANGE[0], MIRROR_RANGE[1])
 {

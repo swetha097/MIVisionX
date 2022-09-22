@@ -25,9 +25,9 @@ THE SOFTWARE.
 
 
 #if ENABLE_HIP
-Cifar10LoaderNode::Cifar10LoaderNode(rocALTensor *output, DeviceResourcesHip device_resources):
+Cifar10LoaderNode::Cifar10LoaderNode(rocalTensor *output, DeviceResourcesHip device_resources):
 #else
-Cifar10LoaderNode::Cifar10LoaderNode(rocALTensor *output, DeviceResources device_resources):
+Cifar10LoaderNode::Cifar10LoaderNode(rocalTensor *output, DeviceResources device_resources):
 #endif
         Node({}, {output})
 {

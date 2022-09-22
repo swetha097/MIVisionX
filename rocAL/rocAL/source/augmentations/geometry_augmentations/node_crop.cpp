@@ -26,7 +26,7 @@ THE SOFTWARE.
 #include "parameter_crop.h"
 #include "exception.h"
 
-CropNode::CropNode(const std::vector<rocALTensor *> &inputs, const std::vector<rocALTensor *> &outputs) :
+CropNode::CropNode(const std::vector<rocalTensor *> &inputs, const std::vector<rocalTensor *> &outputs) :
         Node(inputs, outputs),
         _dest_width(_outputs[0]->info().max_dims()[0]),
         _dest_height(_outputs[0]->info().max_dims()[1])

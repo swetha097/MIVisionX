@@ -24,9 +24,9 @@ THE SOFTWARE.
 #include "exception.h"
 
 #if ENABLE_HIP
-ImageLoaderNode::ImageLoaderNode(rocALTensor *output, DeviceResourcesHip device_resources):
+ImageLoaderNode::ImageLoaderNode(rocalTensor *output, DeviceResourcesHip device_resources):
 #else
-ImageLoaderNode::ImageLoaderNode(rocALTensor *output, DeviceResources device_resources):
+ImageLoaderNode::ImageLoaderNode(rocalTensor *output, DeviceResources device_resources):
 #endif
         Node({}, {output})
 {

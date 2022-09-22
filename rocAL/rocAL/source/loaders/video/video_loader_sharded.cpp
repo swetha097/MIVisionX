@@ -132,7 +132,7 @@ void VideoLoaderSharded::shut_down()
       loader->shut_down();
 }
 
-void VideoLoaderSharded::set_output(rocALTensor *output_tensor)
+void VideoLoaderSharded::set_output(rocalTensor *output_tensor)
 {
     _output_tensor = output_tensor;
 }

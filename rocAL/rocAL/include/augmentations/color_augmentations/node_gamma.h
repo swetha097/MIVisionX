@@ -28,7 +28,7 @@ THE SOFTWARE.
 class GammaNode : public Node
 {
 public:
-    GammaNode(const std::vector<rocALTensor *> &inputs, const std::vector<rocALTensor *> &outputs);
+    GammaNode(const std::vector<rocalTensor *> &inputs, const std::vector<rocalTensor *> &outputs);
     GammaNode() = delete;
     void init(float shift);
     void init(FloatParam *shift);

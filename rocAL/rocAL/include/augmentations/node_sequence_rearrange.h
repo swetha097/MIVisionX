@@ -29,7 +29,7 @@ THE SOFTWARE.
 class SequenceRearrangeNode : public Node
 {
 public:
-    SequenceRearrangeNode(const std::vector<rocALTensor *> &inputs, const std::vector<rocALTensor *> &outputs);
+    SequenceRearrangeNode(const std::vector<rocalTensor *> &inputs, const std::vector<rocalTensor *> &outputs);
     SequenceRearrangeNode() = delete;
     void init(unsigned int* new_order, unsigned int new_sequence_length, unsigned int sequence_length, unsigned int sequence_count);
 protected:

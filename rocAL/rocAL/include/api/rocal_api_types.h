@@ -40,9 +40,9 @@ using half_float::half;
 typedef void * RocalFloatParam;
 typedef void * RocalIntParam;
 typedef void * RocalContext;
-typedef std::vector<rocALTensorList *> RocalMetaData;
-typedef rocALTensor * RocalTensor;
-typedef rocALTensorList * RocalTensorList;
+typedef std::vector<rocalTensorList *> RocalMetaData;
+typedef rocalTensor * RocalTensor;
+typedef rocalTensorList * RocalTensorList;
 
 struct TimingInfo
 {

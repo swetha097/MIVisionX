@@ -26,7 +26,7 @@ THE SOFTWARE.
 #include "exception.h"
 
 
-ResizeShorterNode::ResizeShorterNode(const std::vector<rocALTensor *> &inputs, const std::vector<rocALTensor *> &outputs) :
+ResizeShorterNode::ResizeShorterNode(const std::vector<rocalTensor *> &inputs, const std::vector<rocalTensor *> &outputs) :
         Node(inputs, outputs)
 {
 }

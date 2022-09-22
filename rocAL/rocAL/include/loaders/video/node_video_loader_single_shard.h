@@ -31,9 +31,9 @@ class VideoLoaderSingleShardNode : public Node
 {
 public:
 #if ENABLE_HIP
-    VideoLoaderSingleShardNode(rocALTensor *output, DeviceResourcesHip device_resources);
+    VideoLoaderSingleShardNode(rocalTensor *output, DeviceResourcesHip device_resources);
 #else
-    VideoLoaderSingleShardNode(rocALTensor *output, DeviceResources device_resources);
+    VideoLoaderSingleShardNode(rocalTensor *output, DeviceResources device_resources);
 #endif
     ~VideoLoaderSingleShardNode() override;
 
