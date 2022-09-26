@@ -124,6 +124,33 @@ list(APPEND SOURCES
         source/tensor/Copy.cpp
         source/tensor/CropMirrorNormalize.cpp
         source/tensor/GammaCorrection.cpp
+        source/tensor/Resize.cpp
+        source/tensor/Exposure.cpp
+        source/tensor/ColorCast.cpp
+        source/tensor/Spatter.cpp
+        source/tensor/ColorTwist.cpp
+        source/tensor/Crop.cpp
+        source/tensor/Contrast.cpp
+        source/tensor/ResizeMirrorNormalize.cpp
+        source/tensor/Flip.cpp
+        source/tensor/ColorJitter.cpp
+        source/tensor/Noise.cpp
+        source/tensor/Blend.cpp
+        source/tensor/Gridmask.cpp
+        source/tensor/WarpAffine.cpp
+        source/tensor/Blur.cpp
+        source/tensor/Vignette.cpp
+        source/tensor/Jitter.cpp
+        source/tensor/Snow.cpp
+        source/tensor/Fog.cpp
+        source/tensor/Saturation.cpp
+        source/tensor/Hue.cpp
+        source/tensor/Fisheye.cpp
+        source/tensor/ColorTemperature.cpp
+        source/tensor/Rain.cpp
+        source/tensor/LensCorrection.cpp
+        source/tensor/Pixelate.cpp
+        source/tensor/Rotate.cpp
         source/tensor/Nop.cpp
         source/tensor/Resize.cpp
         source/tensor/Crop.cpp

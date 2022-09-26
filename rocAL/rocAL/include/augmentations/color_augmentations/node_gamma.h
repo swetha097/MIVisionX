@@ -30,13 +30,14 @@ class GammaNode : public Node
 public:
     GammaNode(const std::vector<rocalTensor *> &inputs, const std::vector<rocalTensor *> &outputs);
     GammaNode() = delete;
-    void init(float shift);
-    void init(FloatParam *shift);
+    void init(float shift, int layout);
+    void init(FloatParam *shift, int layout);
 
 protected:
     void update_node() override;
     void create_node() override;
 private:
     ParameterVX<float> _shift;
+    unsigned _layout, _roi_type;
     constexpr static float SHIFT_RANGE [2] = {0.3, 7.00};
 };

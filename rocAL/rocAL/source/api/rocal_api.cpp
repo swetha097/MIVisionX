@@ -47,6 +47,7 @@ rocalCreate(
     RocalContext context = nullptr;
     try
     {
+        std::cerr<<"check rocal 1 \n";
         auto translate_process_mode = [](RocalProcessMode process_mode)
         {
             switch(process_mode)
@@ -59,6 +60,8 @@ rocalCreate(
                     THROW("Unkown Rocal data type")
             }
         };
+        std::cerr<<"check rocal 2 \n";
+
         auto translate_output_data_type = [](RocalTensorOutputType data_type)
         {
             switch(data_type)
@@ -71,13 +74,19 @@ rocalCreate(
                     THROW("Unkown Rocal data type")
             }
         };
+        std::cerr<<"check rocal 3 \n";
+
         context = new Context(batch_size, translate_process_mode(affinity), gpu_id, cpu_thread_count, prefetch_queue_depth, translate_output_data_type(output_tensor_data_type));
+        std::cerr<<"check rocal 4 \n";
+
         // Reset seed in case it's being randomized during context creation
     }
     catch(const std::exception& e)
     {
         ERR( STR("Failed to init the Rocal context, ") + STR(e.what()))
     }
+        std::cerr<<"check rocal 6 \n";
+
     return context;
 }
 
