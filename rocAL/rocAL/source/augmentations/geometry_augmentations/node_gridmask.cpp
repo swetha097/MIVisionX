@@ -58,7 +58,7 @@ void GridmaskNode::create_node()
     vx_scalar shift_x = vxCreateScalar(vxGetContext((vx_reference)_graph->get()),VX_TYPE_UINT32,&_shift_x);
     vx_scalar shift_y = vxCreateScalar(vxGetContext((vx_reference)_graph->get()),VX_TYPE_UINT32,&_shift_y);
 
-    // _node = vxExtrppNode_Gridmask(_graph->get(), _inputs[0]->handle(), _src_tensor_roi, _outputs[0]->handle(), tile_width, grid_ratio, grid_angle, shift_x, shift_y, layout, roi_type, _batch_size);
+    _node = vxExtrppNode_Gridmask(_graph->get(), _inputs[0]->handle(), _src_tensor_roi, _outputs[0]->handle(), tile_width, grid_ratio, grid_angle, shift_x, shift_y, layout, roi_type, _batch_size);
 
     vx_status status;
     if((status = vxGetStatus((vx_reference)_node)) != VX_SUCCESS)

@@ -36,7 +36,7 @@ void NoiseTensorNode::create_node()
     vx_scalar roi_type = vxCreateScalar(vxGetContext((vx_reference)_graph->get()),VX_TYPE_UINT32,&_roi_type);
     vx_scalar seed = vxCreateScalar(vxGetContext((vx_reference)_graph->get()),VX_TYPE_UINT32,&_seed);
 
-    // _node = vxExtrppNode_Noise(_graph->get(), _inputs[0]->handle(), _src_tensor_roi, _outputs[0]->handle(), _noise_prob.default_array(), _salt_prob.default_array(), _noise_value.default_array(), _salt_value.default_array(),seed, layout, roi_type, _batch_size);
+    _node = vxExtrppNode_Noise(_graph->get(), _inputs[0]->handle(), _src_tensor_roi, _outputs[0]->handle(), _noise_prob.default_array(), _salt_prob.default_array(), _noise_value.default_array(), _salt_value.default_array(),seed, layout, roi_type, _batch_size);
 
     vx_status status;
     if((status = vxGetStatus((vx_reference)_node)) != VX_SUCCESS)

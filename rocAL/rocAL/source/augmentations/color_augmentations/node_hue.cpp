@@ -46,7 +46,7 @@ void HueNode::create_node()
     std::cerr<<"layouttttttttttttttttt"<<_layout<<"\n\n\n\n";
     vx_scalar roi_type = vxCreateScalar(vxGetContext((vx_reference)_graph->get()),VX_TYPE_UINT32,&_roi_type);
 
-    // _node = vxExtrppNode_Hue(_graph->get(), _inputs[0]->handle(),  _src_tensor_roi, _outputs[0]->handle(), _hue.default_array(), layout, roi_type, _batch_size);
+    _node = vxExtrppNode_Hue(_graph->get(), _inputs[0]->handle(),  _src_tensor_roi, _outputs[0]->handle(), _hue.default_array(), layout, roi_type, _batch_size);
     vx_status status;
     if((status = vxGetStatus((vx_reference)_node)) != VX_SUCCESS)
         THROW("Adding the Hue (vxExtrppNode_HueCorrectionbatchPD) node failed: "+ TOSTR(status))

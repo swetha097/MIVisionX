@@ -59,7 +59,7 @@ void RotateNode::create_node()
     vx_scalar roi_type = vxCreateScalar(vxGetContext((vx_reference)_graph->get()),VX_TYPE_UINT32,&_roi_type);
 
 std::cerr<<"dest width <<<<<<<<<<<<<<<<<<<<<<<<<< "<<dst_roi_width[0]<<"  "<<dst_roi_height[0];
-    // _node = vxExtrppNode_Rotate(_graph->get(), _inputs[0]->handle(),  _src_tensor_roi, _outputs[0]->handle(), _dst_roi_width, _dst_roi_height, _angle.default_array(),toggleformat, layout, roi_type, _batch_size);
+    _node = vxExtrppNode_Rotate(_graph->get(), _inputs[0]->handle(),  _src_tensor_roi, _outputs[0]->handle(), _dst_roi_width, _dst_roi_height, _angle.default_array(),toggleformat, layout, roi_type, _batch_size);
 
     vx_status status;
     if((status = vxGetStatus((vx_reference)_node)) != VX_SUCCESS)

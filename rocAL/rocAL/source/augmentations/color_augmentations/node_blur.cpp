@@ -42,7 +42,7 @@ void BlurNode::create_node()
     std::cerr<<"layouttttttttttttttttt"<<_layout<<"\n\n\n\n";
     vx_scalar roi_type = vxCreateScalar(vxGetContext((vx_reference)_graph->get()),VX_TYPE_UINT32,&_roi_type);
     
-    // _node = vxExtrppNode_Blur(_graph->get(), _inputs[0]->handle(),  _src_tensor_roi, _outputs[0]->handle(), _sdev.default_array(), layout, roi_type, _batch_size);
+    _node = vxExtrppNode_Blur(_graph->get(), _inputs[0]->handle(),  _src_tensor_roi, _outputs[0]->handle(), _sdev.default_array(), layout, roi_type, _batch_size);
 
 
     vx_status status;

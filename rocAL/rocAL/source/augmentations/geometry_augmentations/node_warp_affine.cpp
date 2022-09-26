@@ -55,7 +55,7 @@ void WarpAffineNode::create_node()
     vx_scalar roi_type = vxCreateScalar(vxGetContext((vx_reference)_graph->get()),VX_TYPE_UINT32,&_roi_type);
     vx_scalar interpolation = vxCreateScalar(vxGetContext((vx_reference)_graph->get()),VX_TYPE_UINT32,&_interpolation_type);
     std::cerr<<"check 1111\n\n";
-    // _node = vxExtrppNode_WarpAffine (_graph->get(), _inputs[0]->handle(), _src_tensor_roi, _outputs[0]->handle(), _affine_array,interpolation, layout, roi_type, _batch_size);
+    _node = vxExtrppNode_WarpAffine (_graph->get(), _inputs[0]->handle(), _src_tensor_roi, _outputs[0]->handle(), _affine_array,interpolation, layout, roi_type, _batch_size);
 
     std::cerr<<"check2222\n\n";
     if((status = vxGetStatus((vx_reference)_node)) != VX_SUCCESS)

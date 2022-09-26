@@ -50,7 +50,7 @@ void ContrastNode::create_node()
         _roi_type = 1;
     vx_scalar layout = vxCreateScalar(vxGetContext((vx_reference)_graph->get()),VX_TYPE_UINT32,&_layout);
     vx_scalar roi_type = vxCreateScalar(vxGetContext((vx_reference)_graph->get()),VX_TYPE_UINT32,&_roi_type);
-    // _node = vxExtrppNode_Contrast(_graph->get(), _inputs[0]->handle(), _src_tensor_roi, _outputs[0]->handle(), _factor.default_array(), _center.default_array(), layout, roi_type, _batch_size);
+    _node = vxExtrppNode_Contrast(_graph->get(), _inputs[0]->handle(), _src_tensor_roi, _outputs[0]->handle(), _factor.default_array(), _center.default_array(), layout, roi_type, _batch_size);
     vx_status status;
     if((status = vxGetStatus((vx_reference)_node)) != VX_SUCCESS)
         THROW("Adding the Contrast_batch (vxExtrppNode_Contrast) node failed: "+ TOSTR(status))
