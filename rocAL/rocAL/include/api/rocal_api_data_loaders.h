@@ -70,7 +70,7 @@ extern "C"  RocalTensor  ROCAL_API_CALL rocalJpegFileSourceSingleShard(RocalCont
                                                                    bool shuffle = false,
                                                                    bool loop = false,
                                                                    RocalImageSizeEvaluationPolicy decode_size_policy = ROCAL_USE_MOST_FREQUENT_SIZE,
-                                                                   unsigned max_width = 0, unsigned max_height = 0);
+                                                                   unsigned max_width = 0, unsigned max_height = 0, RocalDecoderType dec_type = RocalDecoderType::ROCAL_DECODER_TJPEG);
 
 /// Creates JPEG image reader and decoder. Reads [Frames] sequences from a directory representing a collection of streams.
 /// \param context Rocal context
