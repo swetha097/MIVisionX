@@ -56,7 +56,6 @@ struct BlurLocalData {
 };
 
 static vx_status VX_CALLBACK refreshBlur(vx_node node, const vx_reference *parameters, vx_uint32 num, BlurLocalData *data) {
-    std::cerr << "refreshBlur\n\n";
     vx_status status = VX_SUCCESS;
     STATUS_ERROR_CHECK(vxCopyArrayRange((vx_array)parameters[1], 0, data->nbatchSize * 4, sizeof(unsigned), data->roi_tensor_Ptr, VX_READ_ONLY, VX_MEMORY_TYPE_HOST));
     STATUS_ERROR_CHECK(vxCopyArrayRange((vx_array)parameters[3], 0, data->nbatchSize, sizeof(vx_uint32), data->kernelSize, VX_READ_ONLY, VX_MEMORY_TYPE_HOST));
@@ -92,22 +91,15 @@ static vx_status VX_CALLBACK refreshBlur(vx_node node, const vx_reference *param
         // STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[0], VX_TENSOR_BUFFER_HOST, &data->pSrc, sizeof(vx_uint8)));
         //     STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[2], VX_TENSOR_BUFFER_HOST, &data->pDst, sizeof(vx_uint8)));
         if (data->in_tensor_type == vx_type_e::VX_TYPE_UINT8 && data->out_tensor_type == vx_type_e::VX_TYPE_UINT8) {
-            std::cerr << "UINT8888888888\n";
             STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[0], VX_TENSOR_BUFFER_HOST, &data->pSrc, sizeof(vx_uint8)));
             STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[2], VX_TENSOR_BUFFER_HOST, &data->pDst, sizeof(vx_uint8)));
         } else if (data->in_tensor_type == vx_type_e::VX_TYPE_FLOAT32 && data->out_tensor_type == vx_type_e::VX_TYPE_FLOAT32) {
-            std::cerr << "FLOAT32222222\n";
-
             STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[0], VX_TENSOR_BUFFER_HOST, &data->pSrc, sizeof(vx_float32)));
             STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[2], VX_TENSOR_BUFFER_HOST, &data->pDst, sizeof(vx_float32)));
         } else if (data->in_tensor_type == vx_type_e::VX_TYPE_INT8 && data->out_tensor_type == vx_type_e::VX_TYPE_INT8) {
-            std::cerr << "INT888888888888888\n";
-
             STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[0], VX_TENSOR_BUFFER_HOST, &data->pSrc, sizeof(vx_int8)));
             STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[2], VX_TENSOR_BUFFER_HOST, &data->pDst, sizeof(vx_int8)));
         } else if (data->in_tensor_type == vx_type_e::VX_TYPE_UINT8 && data->out_tensor_type == vx_type_e::VX_TYPE_FLOAT32) {
-            std::cerr << "UINt8 TO FLOAT32\n";
-
             STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[0], VX_TENSOR_BUFFER_HOST, &data->pSrc, sizeof(vx_uint8)));
             STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[2], VX_TENSOR_BUFFER_HOST, &data->pDst, sizeof(vx_float32)));
         }
@@ -215,16 +207,13 @@ static vx_status VX_CALLBACK initializeBlur(vx_node node, const vx_reference *pa
         data->roiType = RpptRoiType::XYWH;
     else
         data->roiType = RpptRoiType::LTRB;
-    std::cerr << "\n layout " << data->layout;
     data->src_desc_ptr = &data->srcDesc;
     STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[0], VX_TENSOR_NUMBER_OF_DIMS, &data->src_desc_ptr->numDims, sizeof(data->src_desc_ptr->numDims)));
     STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[0], VX_TENSOR_DIMS, &data->in_tensor_dims, sizeof(vx_size) * data->src_desc_ptr->numDims));
     STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[0], VX_TENSOR_DATA_TYPE, &data->in_tensor_type, sizeof(data->in_tensor_type)));
     if (data->in_tensor_type == vx_type_e::VX_TYPE_UINT8) {
-        std::cerr << "UUUUUUNIT8\n";
         data->src_desc_ptr->dataType = RpptDataType::U8;
     } else if (data->in_tensor_type == vx_type_e::VX_TYPE_FLOAT32) {
-        std::cerr << "FFFFFFFLOAT\n";
         data->src_desc_ptr->dataType = RpptDataType::F32;
     }
     // else if (data->in_tensor_type->dataType == vx_type_e::VX_TYPE_FLOAT16)
@@ -232,7 +221,6 @@ static vx_status VX_CALLBACK initializeBlur(vx_node node, const vx_reference *pa
     //     data->src_desc_ptr->dataType = RpptDataType::F16;
     // }
     else if (data->in_tensor_type == vx_type_e::VX_TYPE_INT8) {
-        std::cerr << "iiiiin\n";
         data->src_desc_ptr->dataType = RpptDataType::I8;
     }
     // Querying for output tensor
@@ -241,27 +229,17 @@ static vx_status VX_CALLBACK initializeBlur(vx_node node, const vx_reference *pa
     STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[2], VX_TENSOR_DIMS, &data->out_tensor_dims, sizeof(vx_size) * data->dst_desc_ptr->numDims));
     STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[2], VX_TENSOR_DATA_TYPE, &data->out_tensor_type, sizeof(data->out_tensor_type)));
     if (data->out_tensor_type == vx_type_e::VX_TYPE_FLOAT32) {
-        std::cerr << "ooooooooooooooFFFFFFFLOST\n";
-
         data->dst_desc_ptr->dataType = RpptDataType::F32;
-
     } else if (data->out_tensor_type == vx_type_e::VX_TYPE_UINT8) {
-        std::cerr << "ooooooooooooooooooUUUUUUNIT8\n";
-
         data->dst_desc_ptr->dataType = RpptDataType::U8;
     } else if (data->out_tensor_type == vx_type_e::VX_TYPE_FLOAT32) {
-        std::cerr << "ooooooooooooooFFFFFFFLOST\n";
-
         data->dst_desc_ptr->dataType = RpptDataType::F32;
-
     }
     // else if (data->src_desc_ptr->dataType == vx_type_e::VX_TYPE_FLOAT16)
     // {
     //     data->src_desc_ptr->dataType = RpptDataType::F16;
     // }
     else if (data->out_tensor_type == vx_type_e::VX_TYPE_INT8) {
-        std::cerr << "dst datatype check INT8";
-
         data->dst_desc_ptr->dataType = RpptDataType::I8;
     }
     data->src_desc_ptr->offsetInBytes = 0;

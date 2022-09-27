@@ -105,13 +105,11 @@ static vx_status VX_CALLBACK refreshNoise(vx_node node, const vx_reference *para
     {
         if (data->in_tensor_type == vx_type_e::VX_TYPE_UINT8 && data->out_tensor_type == vx_type_e::VX_TYPE_UINT8)
         {
-            std::cerr<<"UINT8888888888\n";
             STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[0], VX_TENSOR_BUFFER_HOST, &data->pSrc, sizeof(vx_uint8)));
             STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[2], VX_TENSOR_BUFFER_HOST, &data->pDst, sizeof(vx_uint8)));
         }
         else if (data->in_tensor_type == vx_type_e::VX_TYPE_FLOAT32 && data->out_tensor_type == vx_type_e::VX_TYPE_FLOAT32)
         {
-            std::cerr<<"FLOAT32222222\n";
             STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[0], VX_TENSOR_BUFFER_HOST, &data->pSrc, sizeof(vx_float32)));
             STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[2], VX_TENSOR_BUFFER_HOST, &data->pDst, sizeof(vx_float32)));
         }
@@ -124,15 +122,11 @@ static vx_status VX_CALLBACK refreshNoise(vx_node node, const vx_reference *para
         // }
         else if (data->in_tensor_type == vx_type_e::VX_TYPE_INT8 && data->out_tensor_type == vx_type_e::VX_TYPE_INT8)
         {
-            std::cerr<<"INT888888888888888\n";
-
             STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[0], VX_TENSOR_BUFFER_HOST, &data->pSrc, sizeof(vx_int8)));
             STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[2], VX_TENSOR_BUFFER_HOST, &data->pDst, sizeof(vx_int8)));
         }
         else if (data->in_tensor_type == vx_type_e::VX_TYPE_UINT8 && data->out_tensor_type == vx_type_e::VX_TYPE_FLOAT32)
         {
-            std::cerr<<"UINt8 TO FLOAT32\n";
-
             STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[0], VX_TENSOR_BUFFER_HOST, &data->pSrc, sizeof(vx_uint8)));
             STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[2], VX_TENSOR_BUFFER_HOST, &data->pDst, sizeof(vx_float32)));
         }
@@ -197,7 +191,7 @@ static vx_status VX_CALLBACK processNoise(vx_node node, const vx_reference *para
         refreshNoise(node, parameters, num, data);
         for(int i = 0; i < data->nbatchSize; i++)
         {
-            std::cerr<<"\n bbox values :: "<<data->roi_tensor_Ptr[i].xywhROI.xy.x<<" "<<data->roi_tensor_Ptr[i].xywhROI.xy.y<<" "<<data->roi_tensor_Ptr[i].xywhROI.roiWidth<<" "<<data->roi_tensor_Ptr[i].xywhROI.roiHeight;
+            // std::cerr<<"\n bbox values :: "<<data->roi_tensor_Ptr[i].xywhROI.xy.x<<" "<<data->roi_tensor_Ptr[i].xywhROI.xy.y<<" "<<data->roi_tensor_Ptr[i].xywhROI.roiWidth<<" "<<data->roi_tensor_Ptr[i].xywhROI.roiHeight;
             data->noise_value[i]=1.0;
             data->noise_prob[i]=0.1;
             data->salt_prob[i]=0.5;
@@ -213,7 +207,7 @@ static vx_status VX_CALLBACK processNoise(vx_node node, const vx_reference *para
         refreshNoise(node, parameters, num, data);
         for(int i = 0; i < data->nbatchSize; i++)
         {
-            std::cerr<<"\n bbox values :: "<<data->roi_tensor_Ptr[i].xywhROI.xy.x<<" "<<data->roi_tensor_Ptr[i].xywhROI.xy.y<<" "<<data->roi_tensor_Ptr[i].xywhROI.roiWidth<<" "<<data->roi_tensor_Ptr[i].xywhROI.roiHeight;
+            // std::cerr<<"\n bbox values :: "<<data->roi_tensor_Ptr[i].xywhROI.xy.x<<" "<<data->roi_tensor_Ptr[i].xywhROI.xy.y<<" "<<data->roi_tensor_Ptr[i].xywhROI.roiWidth<<" "<<data->roi_tensor_Ptr[i].xywhROI.roiHeight;
             data->noise_value[i]=1.0;
             data->noise_prob[i]=0.1;
             data->salt_prob[i]=0.5;
@@ -222,7 +216,7 @@ static vx_status VX_CALLBACK processNoise(vx_node node, const vx_reference *para
         }
         rpp_status = rppt_salt_and_pepper_noise_host(data->pSrc, data->src_desc_ptr, data->pDst, data->src_desc_ptr, data->noise_prob, data->salt_prob,data->noise_value, data->salt_value, 1255459, data->roi_tensor_Ptr, data->roiType, data->rppHandle);
         return_status = (rpp_status == RPP_SUCCESS) ? VX_SUCCESS : VX_FAILURE;
-        std::cerr<<"\n back from RPP";
+        // std::cerr<<"\n back from RPP";
     }
     return return_status;
 }
@@ -271,21 +265,15 @@ static vx_status VX_CALLBACK initializeNoise(vx_node node, const vx_reference *p
     STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[2],VX_TENSOR_DATA_TYPE, &data->out_tensor_type, sizeof(data->out_tensor_type)));
     if (data->out_tensor_type == vx_type_e::VX_TYPE_FLOAT32)
     {
-        std::cerr<<"ooooooooooooooFFFFFFFLOST\n";
-
         data->dst_desc_ptr->dataType = RpptDataType::F32;
 
     }
     else if(data->out_tensor_type == vx_type_e::VX_TYPE_UINT8)
     {
-                std::cerr<<"ooooooooooooooooooUUUUUUNIT8\n";
-
         data->dst_desc_ptr->dataType= RpptDataType::U8;
     }
     else if (data->out_tensor_type == vx_type_e::VX_TYPE_FLOAT32)
     {
-        std::cerr<<"ooooooooooooooFFFFFFFLOST\n";
-
         data->dst_desc_ptr->dataType = RpptDataType::F32;
 
     }
@@ -295,8 +283,6 @@ static vx_status VX_CALLBACK initializeNoise(vx_node node, const vx_reference *p
     // }
     else if (data->out_tensor_type == vx_type_e::VX_TYPE_INT8)
     {
-        std::cerr<<"dst datatype check INT8";
-
         data->dst_desc_ptr->dataType = RpptDataType::I8;
     }
      data->src_desc_ptr->offsetInBytes = 0;
@@ -306,21 +292,17 @@ static vx_status VX_CALLBACK initializeNoise(vx_node node, const vx_reference *p
         data->src_desc_ptr->h = data->in_tensor_dims[1];
         data->src_desc_ptr->w = data->in_tensor_dims[2];
         data->src_desc_ptr->c = data->in_tensor_dims[3];
-        std::cerr<<"\n n h w c "<<data->src_desc_ptr->n<<" "<<data->src_desc_ptr->h<<" "<<data->src_desc_ptr->w<<" "<<data->src_desc_ptr->c;
         data->src_desc_ptr->strides.nStride = data->src_desc_ptr->c * data->src_desc_ptr->w * data->src_desc_ptr->h;
         data->src_desc_ptr->strides.hStride = data->src_desc_ptr->c * data->src_desc_ptr->w;
         data->src_desc_ptr->strides.wStride = data->src_desc_ptr->c;
         data->src_desc_ptr->strides.cStride = 1;
         data->src_desc_ptr->layout = RpptLayout::NHWC;
-        std::cerr<<"\n Setting layout "<<data->src_desc_ptr->layout;
-        std::cerr<<"\n Setting data type "<<data->src_desc_ptr->dataType;
 
         //destination_description_ptr
         data->dst_desc_ptr->n = data->out_tensor_dims[0];
         data->dst_desc_ptr->h = data->out_tensor_dims[1];
         data->dst_desc_ptr->w = data->out_tensor_dims[2];
         data->dst_desc_ptr->c = data->out_tensor_dims[3];
-        std::cerr<<"\n dest n h w c "<<data->dst_desc_ptr->n<<" "<<data->dst_desc_ptr->h<<" "<<data->dst_desc_ptr->w<<" "<<data->dst_desc_ptr->c;
         data->dst_desc_ptr->strides.nStride = data->dst_desc_ptr->c * data->dst_desc_ptr->w * data->dst_desc_ptr->h;
         data->dst_desc_ptr->strides.hStride = data->dst_desc_ptr->c * data->dst_desc_ptr->w;
         data->dst_desc_ptr->strides.wStride = data->dst_desc_ptr->c;
@@ -343,7 +325,6 @@ static vx_status VX_CALLBACK initializeNoise(vx_node node, const vx_reference *p
         data->dst_desc_ptr->h = data->out_tensor_dims[2];
         data->dst_desc_ptr->w = data->out_tensor_dims[3];
         data->dst_desc_ptr->c = data->out_tensor_dims[1];
-        std::cerr<<"\ndest n h w c "<<data->dst_desc_ptr->n<<" "<<data->dst_desc_ptr->h<<" "<<data->dst_desc_ptr->w<<" "<<data->dst_desc_ptr->c;
         data->dst_desc_ptr->strides.nStride = data->dst_desc_ptr->c * data->dst_desc_ptr->w * data->dst_desc_ptr->h;
         data->dst_desc_ptr->strides.cStride = data->dst_desc_ptr->w * data->dst_desc_ptr->h;
         data->dst_desc_ptr->strides.hStride = data->dst_desc_ptr->w;
@@ -356,20 +337,16 @@ static vx_status VX_CALLBACK initializeNoise(vx_node node, const vx_reference *p
         data->src_desc_ptr->h = data->in_tensor_dims[2];
         data->src_desc_ptr->w = data->in_tensor_dims[3];
         data->src_desc_ptr->c = data->in_tensor_dims[4];
-        std::cerr<<"\n n h w c "<<data->src_desc_ptr->n<<" "<<data->src_desc_ptr->h<<" "<<data->src_desc_ptr->w<<" "<<data->src_desc_ptr->c;
         data->src_desc_ptr->strides.nStride = data->src_desc_ptr->c * data->src_desc_ptr->w * data->src_desc_ptr->h;
         data->src_desc_ptr->strides.hStride = data->src_desc_ptr->c * data->src_desc_ptr->w;
         data->src_desc_ptr->strides.wStride = data->src_desc_ptr->c;
         data->src_desc_ptr->strides.cStride = 1;
         data->src_desc_ptr->layout = RpptLayout::NHWC;
-        std::cerr<<"\n Setting layout "<<data->src_desc_ptr->layout;
-        std::cerr<<"\n Setting data type "<<data->src_desc_ptr->dataType;
         //destination_description_ptr
         data->dst_desc_ptr->n = data->out_tensor_dims[0] * data->in_tensor_dims[1];
         data->dst_desc_ptr->h = data->out_tensor_dims[1];
         data->dst_desc_ptr->w = data->out_tensor_dims[2];
         data->dst_desc_ptr->c = data->out_tensor_dims[3];
-        std::cerr<<"\n dest n h w c "<<data->dst_desc_ptr->n<<" "<<data->dst_desc_ptr->h<<" "<<data->dst_desc_ptr->w<<" "<<data->dst_desc_ptr->c;
         data->dst_desc_ptr->strides.nStride = data->dst_desc_ptr->c * data->dst_desc_ptr->w * data->dst_desc_ptr->h;
         data->dst_desc_ptr->strides.hStride = data->dst_desc_ptr->c * data->dst_desc_ptr->w;
         data->dst_desc_ptr->strides.wStride = data->dst_desc_ptr->c;
@@ -392,7 +369,6 @@ static vx_status VX_CALLBACK initializeNoise(vx_node node, const vx_reference *p
         data->dst_desc_ptr->h = data->out_tensor_dims[1];
         data->dst_desc_ptr->w = data->out_tensor_dims[2];
         data->dst_desc_ptr->c = data->out_tensor_dims[3];
-        std::cerr<<"\n dest n h w c "<<data->dst_desc_ptr->n<<" "<<data->dst_desc_ptr->h<<" "<<data->dst_desc_ptr->w<<" "<<data->dst_desc_ptr->c;
         data->dst_desc_ptr->strides.nStride = data->dst_desc_ptr->c * data->dst_desc_ptr->w * data->dst_desc_ptr->h;
         data->dst_desc_ptr->strides.hStride = data->dst_desc_ptr->c * data->dst_desc_ptr->w;
         data->dst_desc_ptr->strides.wStride = data->dst_desc_ptr->c;

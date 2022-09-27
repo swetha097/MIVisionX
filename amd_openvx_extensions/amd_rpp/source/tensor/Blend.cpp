@@ -106,31 +106,24 @@ static vx_status VX_CALLBACK refreshBlend(vx_node node, const vx_reference *para
         // STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[3], VX_TENSOR_BUFFER_HOST, &data->pDst, sizeof(vx_uint8)));
         if (data->in_tensor_type == vx_type_e::VX_TYPE_UINT8 && data->out_tensor_type == vx_type_e::VX_TYPE_UINT8)
         {
-            std::cerr<<"UINT8888888888\n";
             STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[0], VX_TENSOR_BUFFER_HOST, &data->pSrc, sizeof(vx_uint8)));
         STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[1], VX_TENSOR_BUFFER_HOST, &data->pSrc1, sizeof(vx_uint8)));
         STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[3], VX_TENSOR_BUFFER_HOST, &data->pDst, sizeof(vx_uint8)));
         }
         else if (data->in_tensor_type == vx_type_e::VX_TYPE_FLOAT32 && data->out_tensor_type == vx_type_e::VX_TYPE_FLOAT32)
         {
-            std::cerr<<"FLOAT32222222\n";
-
            STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[0], VX_TENSOR_BUFFER_HOST, &data->pSrc, sizeof(vx_float32)));
         STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[1], VX_TENSOR_BUFFER_HOST, &data->pSrc1, sizeof(vx_float32)));
         STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[3], VX_TENSOR_BUFFER_HOST, &data->pDst, sizeof(vx_float32)));
         }
         else if (data->in_tensor_type == vx_type_e::VX_TYPE_INT8 && data->out_tensor_type == vx_type_e::VX_TYPE_INT8)
         {
-            std::cerr<<"INT888888888888888\n";
-
             STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[0], VX_TENSOR_BUFFER_HOST, &data->pSrc, sizeof(vx_int8)));
         STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[1], VX_TENSOR_BUFFER_HOST, &data->pSrc1, sizeof(vx_int8)));
         STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[3], VX_TENSOR_BUFFER_HOST, &data->pDst, sizeof(vx_int8)));
         }
         else if (data->in_tensor_type == vx_type_e::VX_TYPE_UINT8 && data->out_tensor_type == vx_type_e::VX_TYPE_FLOAT32)
         {
-            std::cerr<<"UINt8 TO FLOAT32\n";
-
             STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[0], VX_TENSOR_BUFFER_HOST, &data->pSrc, sizeof(vx_uint8)));
         STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[1], VX_TENSOR_BUFFER_HOST, &data->pSrc1, sizeof(vx_uint8)));
         STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[3], VX_TENSOR_BUFFER_HOST, &data->pDst, sizeof(vx_float32)));
@@ -148,7 +141,6 @@ static vx_status VX_CALLBACK refreshBlend(vx_node node, const vx_reference *para
 
 static vx_status VX_CALLBACK validateBlend(vx_node node, const vx_reference parameters[], vx_uint32 num, vx_meta_format metas[])
 {
-    std::cerr<<"in validateBlend() \n";
     vx_status status = VX_SUCCESS;
     vx_enum scalar_type;
     STATUS_ERROR_CHECK(vxQueryScalar((vx_scalar)parameters[5], VX_SCALAR_TYPE, &scalar_type, sizeof(scalar_type)));
@@ -209,18 +201,17 @@ static vx_status VX_CALLBACK processBlend(vx_node node, const vx_reference *para
         refreshBlend(node, parameters, num, data);
         for(int i = 0; i < data->nbatchSize; i++)
         {
-            std::cerr<<"\n bbox values :: "<<data->roi_tensor_Ptr[i].xywhROI.xy.x<<" "<<data->roi_tensor_Ptr[i].xywhROI.xy.y<<" "<<data->roi_tensor_Ptr[i].xywhROI.roiWidth<<" "<<data->roi_tensor_Ptr[i].xywhROI.roiHeight;
+            // std::cerr<<"\n bbox values :: "<<data->roi_tensor_Ptr[i].xywhROI.xy.x<<" "<<data->roi_tensor_Ptr[i].xywhROI.xy.y<<" "<<data->roi_tensor_Ptr[i].xywhROI.roiWidth<<" "<<data->roi_tensor_Ptr[i].xywhROI.roiHeight;
         }
         rpp_status = rppt_blend_host(data->pSrc,data->pSrc1, data->src_desc_ptr, data->pDst, data->src_desc_ptr, data->alpha, data->roi_tensor_Ptr, data->roiType, data->rppHandle);
         return_status = (rpp_status == RPP_SUCCESS) ? VX_SUCCESS : VX_FAILURE;
-        std::cerr<<"\n back from RPP";
+        // std::cerr<<"\n back from RPP";
     }
     return return_status;
 }
 
 static vx_status VX_CALLBACK initializeBlend(vx_node node, const vx_reference *parameters, vx_uint32 num)
 {
-    std::cerr<<"in initializeBlend\n";
     BlendLocalData *data = new BlendLocalData;
     unsigned roiType;
     memset(data, 0, sizeof(*data));
@@ -232,7 +223,6 @@ static vx_status VX_CALLBACK initializeBlend(vx_node node, const vx_reference *p
     STATUS_ERROR_CHECK(vxCopyScalar((vx_scalar)parameters[8], &data->device_type, VX_READ_ONLY, VX_MEMORY_TYPE_HOST));
     STATUS_ERROR_CHECK(vxReadScalarValue((vx_scalar)parameters[7], &data->nbatchSize));
     STATUS_ERROR_CHECK(vxCopyScalar((vx_scalar)parameters[5], &data->layout, VX_READ_ONLY, VX_MEMORY_TYPE_HOST));
-    std::cerr<<"\n layout "<<data->layout;
     STATUS_ERROR_CHECK(vxCopyScalar((vx_scalar)parameters[6], &roiType, VX_READ_ONLY, VX_MEMORY_TYPE_HOST));
     if(roiType == 1)
         data->roiType = RpptRoiType::XYWH;
@@ -244,12 +234,10 @@ static vx_status VX_CALLBACK initializeBlend(vx_node node, const vx_reference *p
     STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[0], VX_TENSOR_DATA_TYPE, &data->in_tensor_type, sizeof(data->in_tensor_type)));
     if(data->in_tensor_type == vx_type_e::VX_TYPE_UINT8)
     {
-        std::cerr<<"UUUUUUNIT8\n";
         data->src_desc_ptr->dataType = RpptDataType::U8;
     }
     else if (data->in_tensor_type == vx_type_e::VX_TYPE_FLOAT32)
     {
-        std::cerr<<"FFFFFFFLOAT\n";
         data->src_desc_ptr->dataType = RpptDataType::F32;
     }
     // else if (data->in_tensor_type->dataType == vx_type_e::VX_TYPE_FLOAT16)
@@ -258,7 +246,6 @@ static vx_status VX_CALLBACK initializeBlend(vx_node node, const vx_reference *p
     // }
     else if (data->in_tensor_type == vx_type_e::VX_TYPE_INT8)
     {
-        std::cerr<<"iiiiin\n";
         data->src_desc_ptr->dataType = RpptDataType::I8;
     }
     // Querying for output tensor
@@ -268,23 +255,15 @@ static vx_status VX_CALLBACK initializeBlend(vx_node node, const vx_reference *p
     STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[3],VX_TENSOR_DATA_TYPE, &data->out_tensor_type, sizeof(data->out_tensor_type)));
     if (data->out_tensor_type == vx_type_e::VX_TYPE_FLOAT32)
     {
-        std::cerr<<"ooooooooooooooFFFFFFFLOST\n";
-
         data->dst_desc_ptr->dataType = RpptDataType::F32;
-
     }
     else if(data->out_tensor_type == vx_type_e::VX_TYPE_UINT8)
     {
-                std::cerr<<"ooooooooooooooooooUUUUUUNIT8\n";
-
         data->dst_desc_ptr->dataType= RpptDataType::U8;
     }
     else if (data->out_tensor_type == vx_type_e::VX_TYPE_FLOAT32)
     {
-        std::cerr<<"ooooooooooooooFFFFFFFLOST\n";
-
         data->dst_desc_ptr->dataType = RpptDataType::F32;
-
     }
     // else if (data->src_desc_ptr->dataType == vx_type_e::VX_TYPE_FLOAT16)
     // {
@@ -292,8 +271,6 @@ static vx_status VX_CALLBACK initializeBlend(vx_node node, const vx_reference *p
     // }
     else if (data->out_tensor_type == vx_type_e::VX_TYPE_INT8)
     {
-        std::cerr<<"dst datatype check INT8";
-
         data->dst_desc_ptr->dataType = RpptDataType::I8;
     }
      data->src_desc_ptr->offsetInBytes = 0;
@@ -303,14 +280,11 @@ static vx_status VX_CALLBACK initializeBlend(vx_node node, const vx_reference *p
         data->src_desc_ptr->h = data->in_tensor_dims[1];
         data->src_desc_ptr->w = data->in_tensor_dims[2];
         data->src_desc_ptr->c = data->in_tensor_dims[3];
-        std::cerr<<"\n n h w c "<<data->src_desc_ptr->n<<" "<<data->src_desc_ptr->h<<" "<<data->src_desc_ptr->w<<" "<<data->src_desc_ptr->c;
         data->src_desc_ptr->strides.nStride = data->src_desc_ptr->c * data->src_desc_ptr->w * data->src_desc_ptr->h;
         data->src_desc_ptr->strides.hStride = data->src_desc_ptr->c * data->src_desc_ptr->w;
         data->src_desc_ptr->strides.wStride = data->src_desc_ptr->c;
         data->src_desc_ptr->strides.cStride = 1;
         data->src_desc_ptr->layout = RpptLayout::NHWC;
-        std::cerr<<"\n Setting layout "<<data->src_desc_ptr->layout;
-        std::cerr<<"\n Setting data type "<<data->src_desc_ptr->dataType;
     }
     else if(data->layout == 1)// NCHW
     {
@@ -330,14 +304,12 @@ static vx_status VX_CALLBACK initializeBlend(vx_node node, const vx_reference *p
         data->src_desc_ptr->h = data->in_tensor_dims[2];
         data->src_desc_ptr->w = data->in_tensor_dims[3];
         data->src_desc_ptr->c = data->in_tensor_dims[4];
-        std::cerr<<"\n n h w c "<<data->src_desc_ptr->n<<" "<<data->src_desc_ptr->h<<" "<<data->src_desc_ptr->w<<" "<<data->src_desc_ptr->c;
         data->src_desc_ptr->strides.nStride = data->src_desc_ptr->c * data->src_desc_ptr->w * data->src_desc_ptr->h;
         data->src_desc_ptr->strides.hStride = data->src_desc_ptr->c * data->src_desc_ptr->w;
         data->src_desc_ptr->strides.wStride = data->src_desc_ptr->c;
         data->src_desc_ptr->strides.cStride = 1;
         data->src_desc_ptr->layout = RpptLayout::NHWC;
-        std::cerr<<"\n Setting layout "<<data->src_desc_ptr->layout;
-        std::cerr<<"\n Setting data type "<<data->src_desc_ptr->dataType;
+        
     }
     else if(data->layout == 3)// NFCHW
     {
@@ -419,7 +391,6 @@ static vx_status VX_CALLBACK query_target_support(vx_graph graph, vx_node node,
 vx_status Blend_Register(vx_context context)
 {
     vx_status status = VX_SUCCESS;
-    // std::cerr<<"\n CP1";
     // Add kernel to the context with callbacks
     vx_kernel kernel = vxAddUserKernel(context, "org.rpp.Blend",
                                        VX_KERNEL_RPP_BLEND,
@@ -428,13 +399,9 @@ vx_status Blend_Register(vx_context context)
                                        validateBlend,
                                        initializeBlend,
                                        uninitializeBlend);
-// std::cerr<<"\n CP2";
     ERROR_CHECK_OBJECT(kernel);
-    // std::cerr<<"\n CP3";
     AgoTargetAffinityInfo affinity;
-    // std::cerr<<"\n CP4";
     vxQueryContext(context, VX_CONTEXT_ATTRIBUTE_AMD_AFFINITY, &affinity, sizeof(affinity));
-    // std::cerr<<"\n CP5";
 #if ENABLE_OPENCL || ENABLE_HIP
     // enable OpenCL buffer access since the kernel_f callback uses OpenCL buffers instead of host accessible buffers
     vx_bool enableBufferAccess = vx_true_e;
@@ -450,7 +417,6 @@ vx_status Blend_Register(vx_context context)
         STATUS_ERROR_CHECK(vxSetKernelAttribute(kernel, VX_KERNEL_ATTRIBUTE_AMD_QUERY_TARGET_SUPPORT, &query_target_support_f, sizeof(query_target_support_f)));
         PARAM_ERROR_CHECK(vxAddParameterToKernel(kernel, 0, VX_INPUT, VX_TYPE_TENSOR, VX_PARAMETER_STATE_REQUIRED));
         PARAM_ERROR_CHECK(vxAddParameterToKernel(kernel, 1, VX_INPUT, VX_TYPE_TENSOR, VX_PARAMETER_STATE_REQUIRED));
-
         PARAM_ERROR_CHECK(vxAddParameterToKernel(kernel, 2, VX_INPUT, VX_TYPE_ARRAY, VX_PARAMETER_STATE_REQUIRED));
         PARAM_ERROR_CHECK(vxAddParameterToKernel(kernel, 3, VX_OUTPUT, VX_TYPE_TENSOR, VX_PARAMETER_STATE_REQUIRED));
         PARAM_ERROR_CHECK(vxAddParameterToKernel(kernel, 4, VX_INPUT, VX_TYPE_ARRAY, VX_PARAMETER_STATE_REQUIRED));

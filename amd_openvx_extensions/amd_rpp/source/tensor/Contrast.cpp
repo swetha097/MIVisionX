@@ -97,28 +97,21 @@ static vx_status VX_CALLBACK refreshContrast(vx_node node, const vx_reference *p
     {
         if (data->in_tensor_type == vx_type_e::VX_TYPE_UINT8 && data->out_tensor_type == vx_type_e::VX_TYPE_UINT8)
         {
-            std::cerr<<"UINT8888888888\n";
             STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[0], VX_TENSOR_BUFFER_HOST, &data->pSrc, sizeof(vx_uint8)));
             STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[2], VX_TENSOR_BUFFER_HOST, &data->pDst, sizeof(vx_uint8)));
         }
         else if (data->in_tensor_type == vx_type_e::VX_TYPE_FLOAT32 && data->out_tensor_type == vx_type_e::VX_TYPE_FLOAT32)
         {
-            std::cerr<<"FLOAT32222222\n";
-
             STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[0], VX_TENSOR_BUFFER_HOST, &data->pSrc, sizeof(vx_float32)));
             STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[2], VX_TENSOR_BUFFER_HOST, &data->pDst, sizeof(vx_float32)));
         }
         else if (data->in_tensor_type == vx_type_e::VX_TYPE_INT8 && data->out_tensor_type == vx_type_e::VX_TYPE_INT8)
         {
-            std::cerr<<"INT888888888888888\n";
-
             STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[0], VX_TENSOR_BUFFER_HOST, &data->pSrc, sizeof(vx_int8)));
             STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[2], VX_TENSOR_BUFFER_HOST, &data->pDst, sizeof(vx_int8)));
         }
         else if (data->in_tensor_type == vx_type_e::VX_TYPE_UINT8 && data->out_tensor_type == vx_type_e::VX_TYPE_FLOAT32)
         {
-            std::cerr<<"UINt8 TO FLOAT32\n";
-
             STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[0], VX_TENSOR_BUFFER_HOST, &data->pSrc, sizeof(vx_uint8)));
             STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[2], VX_TENSOR_BUFFER_HOST, &data->pDst, sizeof(vx_float32)));
         }
@@ -193,11 +186,11 @@ static vx_status VX_CALLBACK processContrast(vx_node node, const vx_reference *p
         refreshContrast(node, parameters, num, data);
         for(int i = 0; i < data->nbatchSize; i++)
         {
-            std::cerr<<"\n bbox values :: "<<data->roi_tensor_Ptr[i].xywhROI.xy.x<<" "<<data->roi_tensor_Ptr[i].xywhROI.xy.y<<" "<<data->roi_tensor_Ptr[i].xywhROI.roiWidth<<" "<<data->roi_tensor_Ptr[i].xywhROI.roiHeight;
+            // std::cerr<<"\n bbox values :: "<<data->roi_tensor_Ptr[i].xywhROI.xy.x<<" "<<data->roi_tensor_Ptr[i].xywhROI.xy.y<<" "<<data->roi_tensor_Ptr[i].xywhROI.roiWidth<<" "<<data->roi_tensor_Ptr[i].xywhROI.roiHeight;
         }
         rpp_status = rppt_contrast_host(data->pSrc, data->src_desc_ptr, data->pDst, data->src_desc_ptr, data->c_factor, data->c_centre, data->roi_tensor_Ptr, data->roiType, data->rppHandle);
         return_status = (rpp_status == RPP_SUCCESS) ? VX_SUCCESS : VX_FAILURE;
-        std::cerr<<"\n back from RPP";
+        // std::cerr<<"\n back from RPP";
     }
     return return_status;
 }
@@ -215,7 +208,6 @@ static vx_status VX_CALLBACK initializeContrast(vx_node node, const vx_reference
     STATUS_ERROR_CHECK(vxCopyScalar((vx_scalar)parameters[8], &data->device_type, VX_READ_ONLY, VX_MEMORY_TYPE_HOST));
     STATUS_ERROR_CHECK(vxReadScalarValue((vx_scalar)parameters[7], &data->nbatchSize));
     STATUS_ERROR_CHECK(vxCopyScalar((vx_scalar)parameters[5], &data->layout, VX_READ_ONLY, VX_MEMORY_TYPE_HOST));
-    std::cerr<<"\n layout "<<data->layout;
     STATUS_ERROR_CHECK(vxCopyScalar((vx_scalar)parameters[6], &roiType, VX_READ_ONLY, VX_MEMORY_TYPE_HOST));
     if(roiType == 1)
         data->roiType = RpptRoiType::XYWH;
@@ -227,12 +219,10 @@ static vx_status VX_CALLBACK initializeContrast(vx_node node, const vx_reference
     STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[0], VX_TENSOR_DATA_TYPE, &data->in_tensor_type, sizeof(data->in_tensor_type)));
     if(data->in_tensor_type == vx_type_e::VX_TYPE_UINT8)
     {
-        std::cerr<<"UUUUUUNIT8\n";
         data->src_desc_ptr->dataType = RpptDataType::U8;
     }
     else if (data->in_tensor_type == vx_type_e::VX_TYPE_FLOAT32)
     {
-        std::cerr<<"FFFFFFFLOAT\n";
         data->src_desc_ptr->dataType = RpptDataType::F32;
     }
     // else if (data->in_tensor_type->dataType == vx_type_e::VX_TYPE_FLOAT16)
@@ -241,7 +231,6 @@ static vx_status VX_CALLBACK initializeContrast(vx_node node, const vx_reference
     // }
     else if (data->in_tensor_type == vx_type_e::VX_TYPE_INT8)
     {
-        std::cerr<<"iiiiin\n";
         data->src_desc_ptr->dataType = RpptDataType::I8;
     }
     // Querying for output tensor
@@ -251,23 +240,15 @@ static vx_status VX_CALLBACK initializeContrast(vx_node node, const vx_reference
     STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[2],VX_TENSOR_DATA_TYPE, &data->out_tensor_type, sizeof(data->out_tensor_type)));
     if (data->out_tensor_type == vx_type_e::VX_TYPE_FLOAT32)
     {
-        std::cerr<<"ooooooooooooooFFFFFFFLOST\n";
-
         data->dst_desc_ptr->dataType = RpptDataType::F32;
-
     }
     else if(data->out_tensor_type == vx_type_e::VX_TYPE_UINT8)
     {
-                std::cerr<<"ooooooooooooooooooUUUUUUNIT8\n";
-
         data->dst_desc_ptr->dataType= RpptDataType::U8;
     }
     else if (data->out_tensor_type == vx_type_e::VX_TYPE_FLOAT32)
     {
-        std::cerr<<"ooooooooooooooFFFFFFFLOST\n";
-
         data->dst_desc_ptr->dataType = RpptDataType::F32;
-
     }
     // else if (data->src_desc_ptr->dataType == vx_type_e::VX_TYPE_FLOAT16)
     // {
@@ -275,8 +256,6 @@ static vx_status VX_CALLBACK initializeContrast(vx_node node, const vx_reference
     // }
     else if (data->out_tensor_type == vx_type_e::VX_TYPE_INT8)
     {
-        std::cerr<<"dst datatype check INT8";
-
         data->dst_desc_ptr->dataType = RpptDataType::I8;
     }
      data->src_desc_ptr->offsetInBytes = 0;
@@ -286,21 +265,17 @@ static vx_status VX_CALLBACK initializeContrast(vx_node node, const vx_reference
         data->src_desc_ptr->h = data->in_tensor_dims[1];
         data->src_desc_ptr->w = data->in_tensor_dims[2];
         data->src_desc_ptr->c = data->in_tensor_dims[3];
-        std::cerr<<"\n n h w c "<<data->src_desc_ptr->n<<" "<<data->src_desc_ptr->h<<" "<<data->src_desc_ptr->w<<" "<<data->src_desc_ptr->c;
         data->src_desc_ptr->strides.nStride = data->src_desc_ptr->c * data->src_desc_ptr->w * data->src_desc_ptr->h;
         data->src_desc_ptr->strides.hStride = data->src_desc_ptr->c * data->src_desc_ptr->w;
         data->src_desc_ptr->strides.wStride = data->src_desc_ptr->c;
         data->src_desc_ptr->strides.cStride = 1;
         data->src_desc_ptr->layout = RpptLayout::NHWC;
-        std::cerr<<"\n Setting layoutt "<<data->src_desc_ptr->layout;
-        std::cerr<<"\n Setting data type "<<data->src_desc_ptr->dataType;
 
         //destination_description_ptr
         data->dst_desc_ptr->n = data->out_tensor_dims[0];
         data->dst_desc_ptr->h = data->out_tensor_dims[1];
         data->dst_desc_ptr->w = data->out_tensor_dims[2];
         data->dst_desc_ptr->c = data->out_tensor_dims[3];
-        std::cerr<<"\n dest n h w c "<<data->dst_desc_ptr->n<<" "<<data->dst_desc_ptr->h<<" "<<data->dst_desc_ptr->w<<" "<<data->dst_desc_ptr->c;
         data->dst_desc_ptr->strides.nStride = data->dst_desc_ptr->c * data->dst_desc_ptr->w * data->dst_desc_ptr->h;
         data->dst_desc_ptr->strides.hStride = data->dst_desc_ptr->c * data->dst_desc_ptr->w;
         data->dst_desc_ptr->strides.wStride = data->dst_desc_ptr->c;
@@ -323,7 +298,6 @@ static vx_status VX_CALLBACK initializeContrast(vx_node node, const vx_reference
         data->dst_desc_ptr->h = data->out_tensor_dims[2];
         data->dst_desc_ptr->w = data->out_tensor_dims[3];
         data->dst_desc_ptr->c = data->out_tensor_dims[1];
-        std::cerr<<"\ndest n h w c "<<data->dst_desc_ptr->n<<" "<<data->dst_desc_ptr->h<<" "<<data->dst_desc_ptr->w<<" "<<data->dst_desc_ptr->c;
         data->dst_desc_ptr->strides.nStride = data->dst_desc_ptr->c * data->dst_desc_ptr->w * data->dst_desc_ptr->h;
         data->dst_desc_ptr->strides.cStride = data->dst_desc_ptr->w * data->dst_desc_ptr->h;
         data->dst_desc_ptr->strides.hStride = data->dst_desc_ptr->w;
@@ -336,21 +310,18 @@ static vx_status VX_CALLBACK initializeContrast(vx_node node, const vx_reference
         data->src_desc_ptr->h = data->in_tensor_dims[2];
         data->src_desc_ptr->w = data->in_tensor_dims[3];
         data->src_desc_ptr->c = data->in_tensor_dims[4];
-        std::cerr<<"\n n h w c "<<data->src_desc_ptr->n<<" "<<data->src_desc_ptr->h<<" "<<data->src_desc_ptr->w<<" "<<data->src_desc_ptr->c;
         data->src_desc_ptr->strides.nStride = data->src_desc_ptr->c * data->src_desc_ptr->w * data->src_desc_ptr->h;
         data->src_desc_ptr->strides.hStride = data->src_desc_ptr->c * data->src_desc_ptr->w;
         data->src_desc_ptr->strides.wStride = data->src_desc_ptr->c;
         data->src_desc_ptr->strides.cStride = 1;
         data->src_desc_ptr->layout = RpptLayout::NHWC;
-        std::cerr<<"\n Setting layouttttttttttttttt "<<data->src_desc_ptr->layout;
-        std::cerr<<"\n Setting data type "<<data->src_desc_ptr->dataType;
+        
 
         //destination_description_ptr
         data->dst_desc_ptr->n = data->out_tensor_dims[0] * data->in_tensor_dims[1];
         data->dst_desc_ptr->h = data->out_tensor_dims[1];
         data->dst_desc_ptr->w = data->out_tensor_dims[2];
         data->dst_desc_ptr->c = data->out_tensor_dims[3];
-        std::cerr<<"\n dest n h w c "<<data->dst_desc_ptr->n<<" "<<data->dst_desc_ptr->h<<" "<<data->dst_desc_ptr->w<<" "<<data->dst_desc_ptr->c;
         data->dst_desc_ptr->strides.nStride = data->dst_desc_ptr->c * data->dst_desc_ptr->w * data->dst_desc_ptr->h;
         data->dst_desc_ptr->strides.hStride = data->dst_desc_ptr->c * data->dst_desc_ptr->w;
         data->dst_desc_ptr->strides.wStride = data->dst_desc_ptr->c;
@@ -373,7 +344,6 @@ static vx_status VX_CALLBACK initializeContrast(vx_node node, const vx_reference
         data->dst_desc_ptr->h = data->out_tensor_dims[1];
         data->dst_desc_ptr->w = data->out_tensor_dims[2];
         data->dst_desc_ptr->c = data->out_tensor_dims[3];
-        std::cerr<<"\n dest n h w c "<<data->dst_desc_ptr->n<<" "<<data->dst_desc_ptr->h<<" "<<data->dst_desc_ptr->w<<" "<<data->dst_desc_ptr->c;
         data->dst_desc_ptr->strides.nStride = data->dst_desc_ptr->c * data->dst_desc_ptr->w * data->dst_desc_ptr->h;
         data->dst_desc_ptr->strides.hStride = data->dst_desc_ptr->c * data->dst_desc_ptr->w;
         data->dst_desc_ptr->strides.wStride = data->dst_desc_ptr->c;

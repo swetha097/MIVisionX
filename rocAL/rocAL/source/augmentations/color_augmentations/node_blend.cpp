@@ -34,7 +34,6 @@ BlendNode::BlendNode(const std::vector<rocalTensor *> &inputs, const std::vector
 
 void BlendNode::create_node()
 {
-    std::cerr<<"in create_node()***************\n ";
     if(_node)
         return;
 
