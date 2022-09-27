@@ -37,7 +37,6 @@ void RotateNode::create_node()
         return;
     std::vector<uint32_t> dst_roi_width(_batch_size,_outputs[0]->info().max_dims()[0]);
     std::vector<uint32_t> dst_roi_height(_batch_size, _outputs[0]->info().max_dims()[1]);
-    // std::cerr<<"\n\n\nweight    "<<_outputs[0]->info().get_width()<<"  "<< _outputs[0]->info().get_height();
     _dst_roi_width = vxCreateArray(vxGetContext((vx_reference)_graph->get()), VX_TYPE_UINT32, _batch_size);
     _dst_roi_height = vxCreateArray(vxGetContext((vx_reference)_graph->get()), VX_TYPE_UINT32, _batch_size);
 
@@ -55,10 +54,8 @@ void RotateNode::create_node()
     vx_scalar toggleformat = vxCreateScalar(vxGetContext((vx_reference)_graph->get()),VX_TYPE_UINT32,&_outputtoggleformat);
     
     vx_scalar layout = vxCreateScalar(vxGetContext((vx_reference)_graph->get()),VX_TYPE_UINT32,&_layout);
-    std::cerr<<"layouttttttttttttttttt"<<_layout<<"\n\n\n\n";
     vx_scalar roi_type = vxCreateScalar(vxGetContext((vx_reference)_graph->get()),VX_TYPE_UINT32,&_roi_type);
 
-std::cerr<<"dest width <<<<<<<<<<<<<<<<<<<<<<<<<< "<<dst_roi_width[0]<<"  "<<dst_roi_height[0];
     _node = vxExtrppNode_Rotate(_graph->get(), _inputs[0]->handle(),  _src_tensor_roi, _outputs[0]->handle(), _dst_roi_width, _dst_roi_height, _angle.default_array(),toggleformat, layout, roi_type, _batch_size);
 
     vx_status status;

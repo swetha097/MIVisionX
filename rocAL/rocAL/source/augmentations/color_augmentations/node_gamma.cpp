@@ -31,6 +31,7 @@ GammaNode::GammaNode(const std::vector<rocalTensor *> &inputs, const std::vector
 
 void GammaNode::create_node()
 {
+    std::cerr<<"In gamma create_node \n\n";
     if(_node)
         return;
 
@@ -61,6 +62,7 @@ void GammaNode::create_node()
 
 void GammaNode::init(float shfit, int layout)
 {
+    std::cerr<<"in init  in gamma.cpp 1111\n\n";
     _shift.set_param(shfit);
     _layout = _roi_type = 0;
     // _layout = (unsigned) _outputs[0]->layout();
@@ -70,6 +72,7 @@ void GammaNode::init(float shfit, int layout)
 
 void GammaNode::init(FloatParam* shfit, int layout)
 {
+    std::cerr<<"in init in gamma.cpp 22222222222222 \n\n";
     _shift.set_param(core(shfit));
     _layout = _roi_type = 0;
     // _layout = (unsigned) _outputs[0]->layout();

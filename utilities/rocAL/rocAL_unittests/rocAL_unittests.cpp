@@ -899,7 +899,7 @@ int test(int test_case, int reader_type, int pipeline_type, const char *path, co
     int resize_w = 100, resize_h = 300; // height and width
 
     RocalTensor image1,image2;
-
+    RocalIntParam flip = rocalCreateIntParameter(1);
     switch (test_case)
     {
     case 0:
@@ -971,7 +971,7 @@ int test(int test_case, int reader_type, int pipeline_type, const char *path, co
     {
         std::cout << ">>>>>>> Running "
                   << "rocalFlip" << std::endl;
-        image1 = rocalFlip(handle, input1, tensorLayout, tensorOutputType, true);
+        image1 = rocalFlip(handle, input1, tensorLayout, tensorOutputType, true, flip);
     }
     break;
     case 10:
@@ -1008,7 +1008,7 @@ int test(int test_case, int reader_type, int pipeline_type, const char *path, co
     {
         std::cout << ">>>>>>> Running "
                   << "rocalBlend" << std::endl;
-        image2 = rocalGamma(handle, input1, tensorLayout, tensorOutputType, true);
+        image2 = rocalFlip(handle, input1, tensorLayout, tensorOutputType, true, flip);
         image1 = rocalBlend(handle, input1,image2, tensorLayout, tensorOutputType, true);
 
     }
@@ -1113,7 +1113,13 @@ break;
     {
          std::cout << ">>>>>>> Running "
                   << "rocalcrop" << std::endl;
-        // image1 = rocalCrop(handle, input1,  tensorLayout, tensorOutputType,true, resize_w, resize_h, 0, 0, 0);
+        RocalFloatParam crop_width = rocalCreateFloatParameter(100);
+        RocalFloatParam crop_height = rocalCreateFloatParameter(100);
+        RocalFloatParam crop_depth = rocalCreateFloatParameter(0);
+        RocalFloatParam crop_x = rocalCreateFloatParameter(0);
+        RocalFloatParam crop_y = rocalCreateFloatParameter(0);
+        RocalFloatParam crop_z = rocalCreateFloatParameter(0);
+        image1 = rocalCrop(handle, input1, tensorLayout, tensorOutputType,true,crop_width,crop_height,crop_depth,crop_x,crop_y,crop_z);
 
     }
     break;

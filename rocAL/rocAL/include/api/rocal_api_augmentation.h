@@ -376,9 +376,10 @@ extern "C" RocalTensor ROCAL_API_CALL rocalCropMirrorNormalize(RocalContext cont
                                                                   bool is_output,
                                                                   RocalIntParam mirror = NULL);
 
-extern "C" RocalTensor  ROCAL_API_CALL rocalCrop(RocalContext context, RocalTensor input, bool is_output,
+extern "C" RocalTensor  ROCAL_API_CALL rocalCrop(RocalContext context, RocalTensor input,
                                                 RocalTensorLayout rocal_tensor_layout,
                                                 RocalTensorOutputType rocal_tensor_output_type,
+                                                bool is_output,
                                                 RocalFloatParam crop_width = NULL,
                                                 RocalFloatParam crop_height = NULL,
                                                 RocalFloatParam crop_depth = NULL,

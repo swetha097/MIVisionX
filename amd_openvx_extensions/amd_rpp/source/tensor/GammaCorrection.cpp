@@ -184,8 +184,15 @@ static vx_status VX_CALLBACK processGammaCorrection(vx_node node, const vx_refer
 #elif ENABLE_HIP
         refreshGammaCorrection(node, parameters, num, data);
         std::cerr << "Calling gamma GPU\n";
+        if (0) {
+            float *temp1 = ((float *)calloc(100, sizeof(float)));
+            for (int i = 0; i < 100; i++) {
+                temp1[i] = (float)*((unsigned char *)(data->hip_pSrc) + i);
+                std::cout << temp1[i] << " ";
+            }
+        }
         rpp_status = rppt_gamma_correction_gpu((void *)data->hip_pSrc, data->src_desc_ptr, (void *)data->hip_pDst, data->src_desc_ptr,  data->alpha, data->hip_roi_tensor_Ptr, data->roiType, data->rppHandle);
-        if (1) {
+        if (0) {
             float *temp1 = ((float *)calloc(100, sizeof(float)));
             for (int i = 0; i < 100; i++) {
                 temp1[i] = (float)*((unsigned char *)(data->hip_pDst) + i);

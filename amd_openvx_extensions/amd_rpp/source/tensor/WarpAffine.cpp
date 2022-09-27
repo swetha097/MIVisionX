@@ -167,6 +167,7 @@ static vx_status VX_CALLBACK validateWarpAffine(vx_node node, const vx_reference
 }
 
 static vx_status VX_CALLBACK processWarpAffine(vx_node node, const vx_reference *parameters, vx_uint32 num) {
+    std::cerr<<"process\n\n";
     RppStatus rpp_status = RPP_SUCCESS;
     vx_status return_status = VX_SUCCESS;
     WarpAffineLocalData *data = NULL;
@@ -186,6 +187,7 @@ static vx_status VX_CALLBACK processWarpAffine(vx_node node, const vx_reference 
     }
     if (data->device_type == AGO_TARGET_AFFINITY_CPU) {
         refreshWarpAffine(node, parameters, num, data);
+
         for (int i = 0; i < data->nbatchSize; i++) {
             std::cerr << "\n bbox values :: " << data->roi_tensor_Ptr[i].xywhROI.xy.x << " " << data->roi_tensor_Ptr[i].xywhROI.xy.y << " " << data->roi_tensor_Ptr[i].xywhROI.roiWidth << " " << data->roi_tensor_Ptr[i].xywhROI.roiHeight;
         }
