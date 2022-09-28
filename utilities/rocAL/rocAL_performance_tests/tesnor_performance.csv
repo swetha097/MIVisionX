@@ -1,0 +1,15 @@
+test case,Load     time,Decode   time,Process  time,Transfer time,Total time
+rocalResize,1987,213318,28,0,207038
+rocalRotate,2199,226858,17,0,242275
+rocalBrightness,2651,216598,25,0,210330
+rocalGamma,2071,221146,26,0,214645
+rocalContrast,2074,218333,32,0,214668
+rocalFlip,2175,217514,20,0,218577
+rocalBlur,2646,269353,19,0,391587
+rocalBlend,2160,220696,24,0,214791
+rocalWarpAffine,2119,211994,47,0,202803
+rocalFishEye,2077,221921,20,0,223485
+rocalVignette,2293,218979,23,0,213694
+rocalVignette,2293,218979,23,0,213694
+rocalSnPNoise,2042,214556,19,0,207957
+rocalSnow,2123,222265,23,0,226552

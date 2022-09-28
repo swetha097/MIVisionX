@@ -1,0 +1,15 @@
+arguments /media/sample_test/coco/val2017_10_images/ 300 300 10 1 0 1 1 0
+Usage: rocal_performance_tests <image-dataset-folder> <width> <height> <test_case> <batch_size> <gpu=1/cpu=0> <rgb=1/grayscale=0> <shard_count>  <shuffle=1>
+>>> test case 10
+>>> Running on CPU ,  Color 
+>>> Batch size = 1 -- shard count = 1
+OK: loaded 113 kernels from libvx_rpp.so
+OK: loaded 2 kernels from libvx_amd_media.so
+>>>>>>> Running rocalFisheye
+Going to process images
+Load     time 2077
+Decode   time 221921
+Process  time 20
+Transfer time 0
+Total time 223485
+>>>>> Total Elapsed Time 0 sec 223485 us 
