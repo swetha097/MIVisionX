@@ -53,7 +53,7 @@ public:
     CircularBuffer(DeviceResources ocl);
 #endif
     ~CircularBuffer();
-    void init(RocalMemType output_mem_type, size_t output_mem_size, size_t buff_depth);
+    void init(RocalMemType output_mem_type, uint64_t output_mem_size, size_t buff_depth);
     void release(); // release resources
     void sync();// Syncs device buffers with host
     void unblock_reader();// Unblocks the thread currently waiting on a call to get_read_buffer
