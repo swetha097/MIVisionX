@@ -14,12 +14,12 @@ mkdir output_folder
 
 ###########################
 cd build
-INPUTPATH='/media/sample_test/coco/val2017_10_images/'
-width=300
-height=300
+INPUTPATH=$1
+width=$2
+height=$3
 testcase=0
-batch_size=1
-device=0
+batch_size=$4
+device=$5
 rgb=1
 shard_count=1
 shuffle=0
