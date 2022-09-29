@@ -146,7 +146,31 @@ int test(int test_case, const char* path, int rgb, int processing_device, int wi
         return -1;
     }
 
+    RocalFloatParam alpha = rocalCreateFloatParameter(1.0);
+    RocalFloatParam beta = rocalCreateFloatParameter(12.5);
+    RocalFloatParam gamma = rocalCreateFloatParameter(5.0);
+    RocalIntParam contrast_min = rocalCreateIntParameter(15);
+    RocalIntParam contrast_max = rocalCreateIntParameter(75);
+    RocalIntParam flip_h = rocalCreateIntParameter(1);
+    RocalIntParam flip_v = rocalCreateIntParameter(0);
+    RocalFloatParam exposure_val = rocalCreateFloatParameter(0.50);
+    RocalIntParam blend_pt = rocalCreateIntParameter(0.5);
+    RocalFloatParam color_twist_alpha = rocalCreateFloatParameter(1.0);
+    RocalFloatParam color_twist_beta = rocalCreateFloatParameter(15.2);
+    RocalFloatParam color_twist_hue = rocalCreateFloatParameter(150);
+    RocalFloatParam color_twist_saturation = rocalCreateFloatParameter(0.3);
+    RocalFloatParam crop_width = rocalCreateFloatParameter(100);
+    RocalFloatParam crop_height = rocalCreateFloatParameter(100);
+    RocalFloatParam crop_depth = rocalCreateFloatParameter(0);
+    RocalFloatParam crop_x = rocalCreateFloatParameter(0);
+    RocalFloatParam crop_y = rocalCreateFloatParameter(0);
+    RocalFloatParam crop_z = rocalCreateFloatParameter(0);
+    RocalFloatParam noise_val = rocalCreateFloatParameter(0.5);
+    RocalFloatParam salt_prob = rocalCreateFloatParameter(0.1);
+    RocalFloatParam salt_val = rocalCreateFloatParameter(1.0);
+    RocalFloatParam pepper_val = rocalCreateFloatParameter(0.0);
 
+    
     int resize_w = width, resize_h = height;
 
     switch (test_case)
@@ -177,14 +201,14 @@ int test(int test_case, const char* path, int rgb, int processing_device, int wi
     {
         std::cout << ">>>>>>> Running "
                   << "Brightness" << std::endl;
-        image1 = rocalBrightness(handle, input1, true);
+        image1 = rocalBrightness(handle, input1, true,alpha,beta);
     }
     break;
     case 4:
     {
         std::cout << ">>>>>>> Running "
                   << "rocalGamma" << std::endl;
-        image1 = rocalGamma(handle, input1, tensorLayout, tensorOutputType, true);
+        image1 = rocalGamma(handle, input1, tensorLayout, tensorOutputType, true, gamma);
     }
     break;
     
@@ -193,7 +217,7 @@ int test(int test_case, const char* path, int rgb, int processing_device, int wi
     {
         std::cout << ">>>>>>> Running "
                   << "rocalContrast" << std::endl;
-        image1 = rocalContrast(handle, input1, tensorLayout, tensorOutputType, true);
+        image1 = rocalContrast(handle, input1, tensorLayout, tensorOutputType, true,contrast_min,contrast_max);
     break;
     }
     
@@ -201,7 +225,7 @@ int test(int test_case, const char* path, int rgb, int processing_device, int wi
     {
         std::cout << ">>>>>>> Running "
                   << "rocalFlip" << std::endl;
-        image1 = rocalFlip(handle, input1, tensorLayout, tensorOutputType, true);
+        image1 = rocalFlip(handle, input1, tensorLayout, tensorOutputType, true,flip_h,flip_v);
     }
     break;
     
@@ -216,8 +240,8 @@ int test(int test_case, const char* path, int rgb, int processing_device, int wi
     {
         std::cout << ">>>>>>> Running "
                   << "rocalBlend" << std::endl;
-        image2 = rocalFlip(handle, input1, tensorLayout, tensorOutputType, true);
-        image1 = rocalBlend(handle, input1,image2, tensorLayout, tensorOutputType, true);
+        image2 = rocalFlip(handle, input1, tensorLayout, tensorOutputType, true,flip_h,flip_v);
+        image1 = rocalBlend(handle, input1,image2, tensorLayout, tensorOutputType, true,blend_pt);
 
     }
     break;
@@ -255,7 +279,7 @@ break;
     {
         std::cout << ">>>>>>> Running "
                   << "rocalNoise" << std::endl;
-        image1 = rocalNoise(handle, input1, tensorLayout, tensorOutputType, true);
+        image1 = rocalNoise(handle, input1, tensorLayout, tensorOutputType, true,noise_val,salt_prob,salt_val,pepper_val);
     }
     break;
     case 14:
@@ -304,7 +328,7 @@ case 20:
     {
         std::cout << ">>>>>>> Running "
                   << "rocalExposure" << std::endl;
-        image1 = rocalExposure(handle, input1, tensorLayout, tensorOutputType, true);
+        image1 = rocalExposure(handle, input1, tensorLayout, tensorOutputType, true,exposure_val);
     break;
     }
 case 21:
@@ -333,13 +357,15 @@ case 24:
     {
         std::cout << ">>>>>>> Running "
                   << "rocalColorTwist" << std::endl;
-        image1 = rocalColorTwist(handle, input1, tensorLayout, tensorOutputType, true);
+        image1 = rocalColorTwist(handle, input1, tensorLayout, tensorOutputType, true,color_twist_alpha,color_twist_beta,color_twist_hue,color_twist_saturation);
     }
     break;
     case 25:
     {
         std::vector<float> mean{0, 0, 0};
         std::vector<float> sdev{1, 1, 1};
+        resize_h=200;
+        resize_w=200;
         std::cout << ">>>>>>> Running "
                   << " CropMirrorNormalize " << std::endl;
         image1 = rocalCropMirrorNormalize(handle, input1, tensorLayout, tensorOutputType, 3, resize_h, resize_w, 0, 0, 0, mean, sdev, true);
