@@ -334,7 +334,7 @@ int test(int test_case, int reader_type, int pipeline_type, const char *path, co
     {
          std::cout << ">>>>>>> Running "
                   << "rocalResize" << std::endl;
-        image1 = rocalResize(handle, input1, tensorLayout, tensorOutputType, 3,resize_w , resize_h, 0,true);
+        image1 = rocalResize(handle, input1, tensorLayout, tensorOutputType, 0, 0, true, ROCAL_SCALING_MODE_NOT_SMALLER, {}, 256);
     }
     break;
     case 26:

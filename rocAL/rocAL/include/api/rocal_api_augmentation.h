@@ -100,11 +100,13 @@ extern "C" RocalTensor  ROCAL_API_CALL rocalCropCenterFixed(RocalContext context
 extern "C" RocalTensor ROCAL_API_CALL rocalResize(RocalContext context, RocalTensor input,
                                                   RocalTensorLayout rocal_tensor_layout,
                                                   RocalTensorOutputType rocal_tensor_output_type,
-                                                  unsigned resize_depth,
-                                                  unsigned resize_height,
-                                                  unsigned resize_width,
-                                                  int interpolation_type,
-                                                  bool is_output);
+                                                   unsigned dest_width, unsigned dest_height,
+                                                   bool is_output,
+                                                   RocalResizeScalingMode scaling_mode = ROCAL_SCALING_MODE_STRETCH,
+                                                   std::vector<unsigned> max_size = {},
+                                                   unsigned resize_shorter = 0,
+                                                   unsigned resize_longer = 0,
+                                                   RocalResizeInterpolationType interpolation_type = ROCAL_LINEAR_INTERPOLATION);
 
 /// Accepts U8 and RGB24 input.
 /// \param context
