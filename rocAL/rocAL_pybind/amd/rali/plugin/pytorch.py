@@ -84,7 +84,6 @@ class RALIGenericIterator(object):
         # if self.tensor_format == types.NHWC:
         self.output = torch.empty((self.batch_size, self.h, self.w, self.color_format,), dtype=torch.uint8)
         self.out = torch.permute(self.output, (0,3,1,2)) #NCHW expected by classification
-
         self.output_tensor_list[0].copy_data(ctypes.c_void_p(self.out.data_ptr()))
         self.labels = self.loader.rocalGetImageLabels()
         self.labels_tensor = torch.from_numpy(self.labels).type(torch.LongTensor)

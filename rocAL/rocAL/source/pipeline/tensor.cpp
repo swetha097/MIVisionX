@@ -266,6 +266,7 @@ unsigned rocalTensor::copy_data(void *user_buffer) {
         hipError_t status;
         if ((status = hipMemcpyDtoH((void *)user_buffer, _mem_handle, _info.data_size())))
             THROW("copy_data::hipMemcpyDtoH failed: " + TOSTR(status))
+
     } else
 #endif
     {

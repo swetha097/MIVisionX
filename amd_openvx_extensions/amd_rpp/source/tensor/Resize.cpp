@@ -70,6 +70,7 @@ struct ResizeLocalData
 static vx_status VX_CALLBACK refreshResize(vx_node node, const vx_reference *parameters, vx_uint32 num, ResizeLocalData *data)
 {
     vx_status status = VX_SUCCESS;
+    // std::cerr<<"\t refreshResize";
     STATUS_ERROR_CHECK(vxCopyArrayRange((vx_array)parameters[1], 0, data->nbatchSize * 4, sizeof(unsigned), data->roi_tensor_Ptr, VX_READ_ONLY, VX_MEMORY_TYPE_HOST));
     STATUS_ERROR_CHECK(vxCopyArrayRange((vx_array)parameters[4], 0, data->nbatchSize, sizeof(vx_uint32), data->resize_w, VX_READ_ONLY, VX_MEMORY_TYPE_HOST));
     STATUS_ERROR_CHECK(vxCopyArrayRange((vx_array)parameters[5], 0, data->nbatchSize, sizeof(vx_uint32), data->resize_h, VX_READ_ONLY, VX_MEMORY_TYPE_HOST));
@@ -144,6 +145,8 @@ static vx_status VX_CALLBACK refreshResize(vx_node node, const vx_reference *par
         //     STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[2], VX_TENSOR_BUFFER_HOST, &data->pDst, sizeof(vx_float16)));
         // }
     }
+    // std::cerr<<"\t outOfRefreshResize";
+
     return status;
 }
 
@@ -208,8 +211,9 @@ static vx_status VX_CALLBACK processResize(vx_node node, const vx_reference *par
         return_status = (rpp_status == RPP_SUCCESS) ? VX_SUCCESS : VX_FAILURE;
 #elif ENABLE_HIP
         refreshResize(node, parameters, num, data);
+        // std::cerr<<"BEFORE";
         rpp_status = rppt_resize_gpu((void *)data->hip_pSrc, data->src_desc_ptr, (void *)data->hip_pDst, data->dst_desc_ptr, data->hip_dstImgSize, RpptInterpolationType::TRIANGULAR, data->hip_roiTensorPtrSrc, data->roiType, data->rppHandle);
-        std::cerr<<"Resizeeeeeeee";
+        // std::cerr<<"RESIZEEEE";
         return_status = (rpp_status == RPP_SUCCESS) ? VX_SUCCESS : VX_FAILURE;
 #endif
     }
