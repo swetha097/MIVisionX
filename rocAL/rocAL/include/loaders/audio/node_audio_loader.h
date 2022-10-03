@@ -32,9 +32,9 @@ public:
 
     /// internal_shard_count number of loader/decoders are created and each shard is loaded and decoded using separate and independent resources increasing the parallelism and performance.
 #if ENABLE_HIP
-    AudioLoaderNode(rocALTensor *output, DeviceResourcesHip device_resources);
+    AudioLoaderNode(rocalTensor *output, DeviceResourcesHip device_resources);
 #else
-    AudioLoaderNode(rocALTensor *output, DeviceResources device_resources);
+    AudioLoaderNode(rocalTensor *output, DeviceResources device_resources);
 #endif
     ~AudioLoaderNode() override;
     AudioLoaderNode() = delete;

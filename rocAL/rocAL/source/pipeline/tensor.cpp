@@ -97,10 +97,7 @@ void rocalTensorInfo::reallocate_tensor_roi_buffers() {
             _roi->at(i).x2 = _max_dims.at(0);
             _roi->at(i).y2 = _max_dims.at(1);
         }
-    } else {
-        // TODO - For other tensor types
-    }
-    else if(!_is_metadata)
+    } else if(!_is_metadata)
     {
         for (unsigned i = 0; i < _batch_size; i++)
         {

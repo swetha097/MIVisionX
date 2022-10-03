@@ -111,7 +111,7 @@ AudioLoader::load_next()
     return update_output_audio();
 }
 
-void AudioLoader::set_output (rocALTensor* output_tensor)
+void AudioLoader::set_output (rocalTensor* output_tensor)
 {
     _output_tensor = output_tensor;
     _output_mem_size = _output_tensor->info().data_size();

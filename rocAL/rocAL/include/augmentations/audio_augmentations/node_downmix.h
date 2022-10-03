@@ -27,7 +27,7 @@ THE SOFTWARE.
 class DownmixNode : public Node
 {
 public:
-    DownmixNode(const std::vector<rocALTensor *> &inputs, const std::vector<rocALTensor *> &outputs);
+    DownmixNode(const std::vector<rocalTensor *> &inputs, const std::vector<rocalTensor *> &outputs);
     DownmixNode() = delete;
     void init(bool normalize_weights);
 

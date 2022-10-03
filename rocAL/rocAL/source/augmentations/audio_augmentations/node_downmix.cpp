@@ -24,7 +24,7 @@ THE SOFTWARE.
 #include "node_downmix.h"
 #include "exception.h"
 
-DownmixNode::DownmixNode(const std::vector<rocALTensor *> &inputs, const std::vector<rocALTensor *> &outputs) :
+DownmixNode::DownmixNode(const std::vector<rocalTensor *> &inputs, const std::vector<rocalTensor *> &outputs) :
         Node(inputs, outputs)
 {
 }

@@ -686,7 +686,7 @@ rocalAudioFileSourceSingleShard(
         unsigned max_frames,
         unsigned max_channels)
 {
-    rocALTensor* output = nullptr;
+    rocalTensor* output = nullptr;
     auto context = static_cast<Context*>(p_context);
     try
     {
@@ -706,13 +706,12 @@ rocalAudioFileSourceSingleShard(
         RocalTensorDataType tensor_data_type = RocalTensorDataType::FP32;
         // RocalROIType roi_type = RocalROIType::XYWH;  // Letting the roi_type be default value since it isn't required for audio decoder
         unsigned num_of_dims = 3;
-        std::vector<unsigned> dims;
+        std::vector<size_t> dims;
         dims.resize(num_of_dims);
         dims.at(0) = context->user_batch_size();
         dims.at(1) = max_frames;
         dims.at(2) = max_channels;
-        auto info  = rocALTensorInfo(num_of_dims,
-                                std::vector<unsigned>(std::move(dims)),
+        auto info  = rocalTensorInfo(std::vector<size_t>(std::move(dims)),
                                 context->master_graph->mem_type(),
                                 tensor_data_type);
         output = context->master_graph->create_loader_output_tensor(info);
@@ -756,7 +755,7 @@ rocalAudioFileSource(
         unsigned max_frames,
         unsigned max_channels)
 {
-    rocALTensor* output = nullptr;
+    rocalTensor* output = nullptr;
     auto context = static_cast<Context*>(p_context);
     try
     {
@@ -782,13 +781,12 @@ rocalAudioFileSource(
         RocalTensorDataType tensor_data_type = RocalTensorDataType::FP32;
         // RocalROIType roi_type = RocalROIType::XYWH;  // Letting the roi_type be default value since it isn't required for audio decoder
         unsigned num_of_dims = 3;
-        std::vector<unsigned> dims;
+        std::vector<size_t> dims;
         dims.resize(num_of_dims);
         dims.at(0) = context->user_batch_size();
         dims.at(1) = max_frames;
         dims.at(2) = max_channels;
-        auto info  = rocALTensorInfo(num_of_dims,
-                                std::vector<unsigned>(std::move(dims)),
+        auto info  = rocalTensorInfo(std::vector<size_t>(std::move(dims)),
                                 context->master_graph->mem_type(),
                                 tensor_data_type);
         info.set_tensor_layout(RocalTensorlayout::NONE);
@@ -809,12 +807,12 @@ rocalAudioFileSource(
         if(downmix)
         {
             // For the resize node, user can create an image with a different width and height
-            rocALTensorInfo output_info = info;
-            std::vector<unsigned> output_dims;
+            rocalTensorInfo output_info = info;
+            std::vector<size_t> output_dims;
             output_dims.resize(3);
             output_dims.at(0) = context->user_batch_size();
             output_dims.at(1) = info.dims()[1];
-            // output_dims.at(2) = 1;
+            output_dims.at(2) = 1;
             output_info.set_dims(output_dims);
             output_info.set_tensor_layout(RocalTensorlayout::NONE);
 
