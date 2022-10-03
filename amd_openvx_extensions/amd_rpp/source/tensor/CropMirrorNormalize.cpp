@@ -122,6 +122,13 @@ static vx_status VX_CALLBACK refreshCropMirrorNormalize(vx_node node, const vx_r
             STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[0], VX_TENSOR_BUFFER_HOST, &data->pSrc, sizeof(vx_uint8)));
             STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[2], VX_TENSOR_BUFFER_HOST, &data->pDst, sizeof(vx_float32)));
         }
+#if defined(AMD_FP16_SUPPORT)
+        else if (data->in_tensor_type == vx_type_e::VX_TYPE_UINT8 && data->out_tensor_type == vx_type_e::VX_TYPE_FLOAT16)
+        {
+            STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[0], VX_TENSOR_BUFFER_HOST, &data->pSrc, sizeof(vx_uint8)));
+            STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[2], VX_TENSOR_BUFFER_HOST, &data->pDst, sizeof(vx_float16)));
+        }
+#endif
     }
     return status;
 }
@@ -233,6 +240,10 @@ static vx_status VX_CALLBACK initializeCropMirrorNormalize(vx_node node, const v
     {
         data->src_desc_ptr->dataType = RpptDataType::F32;
     }
+    else if (data->in_tensor_type == vx_type_e::VX_TYPE_FLOAT16)
+    {
+        data->src_desc_ptr->dataType = RpptDataType::F16;
+    }
     data->src_desc_ptr->offsetInBytes = 0;
 
     // Querying for output tensor
@@ -247,6 +258,10 @@ static vx_status VX_CALLBACK initializeCropMirrorNormalize(vx_node node, const v
     else if (data->out_tensor_type == vx_type_e::VX_TYPE_FLOAT32)
     {
         data->dst_desc_ptr->dataType = RpptDataType::F32;
+    }
+    else if (data->out_tensor_type == vx_type_e::VX_TYPE_FLOAT16)
+    {
+        data->dst_desc_ptr->dataType = RpptDataType::F16;
     }
     data->dst_desc_ptr->offsetInBytes = 0;
 

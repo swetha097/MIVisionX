@@ -710,11 +710,13 @@ void MasterGraph::output_routine()
                             auto this_cycle_buffer_ptr = (vx_float32 *) tensor_write_buffer[idx] + tensor_each_cycle_size * cycle_idx;
                             _internal_tensor_list[idx]->swap_handle(this_cycle_buffer_ptr);
                         }
+#if defined(AMD_FP16_SUPPORT)
                         else if (_internal_tensor_list[idx]->info().data_type() == RocalTensorDataType::FP16)
                         {
-                            auto this_cycle_buffer_ptr = (half *) tensor_write_buffer[idx] + tensor_each_cycle_size * cycle_idx;
+                            auto this_cycle_buffer_ptr = (vx_float16 *) tensor_write_buffer[idx] + tensor_each_cycle_size * cycle_idx;
                             _internal_tensor_list[idx]->swap_handle(this_cycle_buffer_ptr);
                         }
+#endif
                         else if(_internal_tensor_list[idx]->info().data_type() == RocalTensorDataType::UINT8)
                         {
                             auto this_cycle_buffer_ptr = (vx_uint8 *) tensor_write_buffer[idx] + tensor_each_cycle_size * cycle_idx;
