@@ -130,7 +130,8 @@ list(APPEND SOURCES
         source/tensor/ColorTwist.cpp
         source/tensor/ResizeMirrorNormalize.cpp
         source/tensor/SequenceRearrange.cpp
-
+        source/tensor/Downmix.cpp
+        
         source/kernel_rpp.cpp
         source/internal_publishKernels.cpp
     )

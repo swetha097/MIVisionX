@@ -128,6 +128,7 @@ vx_status Crop_Register(vx_context);
 vx_status ColorTwist_Register(vx_context);
 vx_status ResizeMirrorNormalize_Register(vx_context);
 vx_status SequenceRearrange_Register(vx_context);
+vx_status Downmix_Register(vx_context);
 
 // Image kernel names
 #define VX_KERNEL_RPP_NOPBATCHPD_NAME                                         "org.rpp.NopbatchPD"
@@ -222,4 +223,6 @@ vx_status SequenceRearrange_Register(vx_context);
 #define VX_KERNEL_RPP_COLORTWIST_NAME                                        "org.rpp.ColorTwist"
 #define VX_KERNEL_RPP_RESIZEMIRROR_NAME                                      "org.rpp.ResizeMirrorNormalize"
 #define VX_KERNEL_RPP_SEQUENCEREARRANGE_NAME                                 "org.rpp.SequenceRearrange"
+#define VX_KERNEL_RPP_DOWNMIX_NAME                                            "org.rpp.Downmix"
+
 #endif //_AMDVX_EXT__PUBLISH_KERNELS_H_

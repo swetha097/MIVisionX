@@ -35,6 +35,11 @@ if(GPU_SUPPORT)
     find_package(Protobuf QUIET)
     find_package(FFmpeg QUIET)
     find_package(OpenCV QUIET)
+    # find_package(SndFile)
+    find_library(libsnd_LIBS
+    NAMES sndfile libsndfile
+    PATHS ${CMAKE_SYSTEM_PREFIX_PATH} ${LIBSND_ROOT_DIR} "/usr/local"
+    PATH_SUFFIXES lib lib64)
 else()
     SET(BUILD_ROCAL false)
     message("-- ${Yellow}NOTE: rocAL library requires GPU_SUPPORT=ON and BACKEND=OPENCL/HIP${ColourReset}")
@@ -104,6 +109,10 @@ if(GPU_SUPPORT)
         set(BUILD_ROCAL false)
         message("-- ${Yellow}NOTE: rocAL library requires TurboJpeg, Not Found ${ColourReset}")
     endif()
+    if(${libsnd_LIBS} STREQUAL libsnd_LIBS-NOTFOUND)
+        message("-- ${Yellow}NOTE: rocAL library requires libsnd(sndfile), Not found. Try to specify it's location with `-DLIBSND_ROOT_DIR`.${ColourReset}")
+    endif()
+    message(STATUS "Found libsnd: ${libsnd_LIBS}")
     if(NOT Protobuf_FOUND)
         set(BUILD_ROCAL false)
         message("-- ${Yellow}NOTE: rocAL library requires Protobuf, Not Found ${ColourReset}")
@@ -135,6 +144,7 @@ if(${BUILD_ROCAL})
                 ${AVFORMAT_INCLUDE_DIR}
                 ${CMAKE_CURRENT_BINARY_DIR}
                 ${TurboJpeg_INCLUDE_DIRS}
+                ${SndFile_INCLUDE_DIRS}
                 ${PROTOBUF_INCLUDE_DIRS}
                 ${AMDRPP_INCLUDE_DIRS}
                 ../../amd_openvx/openvx/include/
@@ -144,11 +154,14 @@ if(${BUILD_ROCAL})
                 ./include/api/
                 ./include/augmentations/color_augmentations/
                 ./include/augmentations/geometry_augmentations/
+                ./include/augmentations/audio_augmentations/
                 ./include/augmentations/
+                ./include/decoders/audio/
                 ./include/decoders/image/
                 ./include/decoders/video/
                 ./include/device/
                 ./include/loaders/
+                ./include/loaders/audio/
                 ./include/loaders/image/
                 ./include/loaders/video/
                 ./include/meta_data/
@@ -212,11 +225,11 @@ if(${BUILD_ROCAL})
 
     if(NOT FFMPEG_FOUND)
         message("-- ${Yellow}NOTE: rocAL library is going to be built without video decode functionality ${ColourReset}")
-        target_link_libraries(${PROJECT_NAME} -fPIC ${PROTOBUF_LIBRARIES} lmdb boost_system boost_filesystem turbojpeg openvx vx_rpp)
+        target_link_libraries(${PROJECT_NAME} -fPIC ${PROTOBUF_LIBRARIES} lmdb boost_system boost_filesystem turbojpeg openvx vx_rpp sndfile)
     else()
         message("-- ${White}rocAL library is going to be built with video decode functionality ${ColourReset}")
         target_compile_definitions(${PROJECT_NAME} PUBLIC -DROCAL_VIDEO)
-        target_link_libraries(${PROJECT_NAME} -fPIC ${PROTOBUF_LIBRARIES} ${FFMPEG_LIBRARIES} lmdb turbojpeg openvx vx_rpp)
+        target_link_libraries(${PROJECT_NAME} -fPIC ${PROTOBUF_LIBRARIES} ${FFMPEG_LIBRARIES} lmdb turbojpeg openvx vx_rpp sndfile)
     endif()
 
     # install MIVisionX libs -- {ROCM_PATH)/lib

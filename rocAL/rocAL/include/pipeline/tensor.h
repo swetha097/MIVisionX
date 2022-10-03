@@ -98,6 +98,7 @@ public:
             _max_dims.resize(2);       // Since 2 values will be stored in the vector
             _max_dims[0] = _dims.at(1);
             _max_dims[1] = _num_of_dims > 2 ? _dims.at(2) : 0;
+            reallocate_tensor_roi_buffers();
         }
     }
     void set_tensor_layout(RocalTensorlayout layout) {
