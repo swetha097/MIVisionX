@@ -50,7 +50,8 @@ using namespace cv;
 
 using namespace std::chrono;
 
-void convert_float_to_uchar_buffer(float * input_float_buffer, unsigned char * output_uchar_buffer, size_t data_size)
+template <typename T> 
+void convert_float_to_uchar_buffer(T * input_float_buffer, unsigned char * output_uchar_buffer, size_t data_size)
 {
     for(size_t i = 0; i < data_size; i++)
     {
@@ -526,6 +527,22 @@ int test(int test_case, int reader_type, int pipeline_type, const char *path, co
 
                 out_buffer = (unsigned char *)malloc(output_tensor_list->at(idx)->info().data_size() / 4);
                 convert_float_to_uchar_buffer(out_f_buffer, out_buffer, output_tensor_list->at(idx)->info().data_size() / 4);
+                // if(out_f_buffer != nullptr) free(out_f_buffer);
+            }
+            if(output_tensor_list->at(idx)->info().data_type() == RocalTensorDataType::FP16)
+            {
+                half * out_f16_buffer;
+                if(output_tensor_list->at(idx)->info().mem_type() == RocalMemType::HIP)
+                {
+                    out_f16_buffer = (half *)malloc(output_tensor_list->at(idx)->info().data_size());
+                    output_tensor_list->at(idx)->copy_data(out_f16_buffer);
+                }
+                else if(output_tensor_list->at(idx)->info().mem_type() == RocalMemType::HOST)
+                    out_f16_buffer = (half *)output_tensor_list->at(idx)->buffer();
+
+                out_buffer = (unsigned char *)malloc(output_tensor_list->at(idx)->info().data_size() / 2);
+                convert_float_to_uchar_buffer(out_f16_buffer, out_buffer, output_tensor_list->at(idx)->info().data_size() / 2);
+                // if(out_f16_buffer != nullptr) free(out_f16_buffer);
             }
             else
             {
@@ -564,6 +581,7 @@ int test(int test_case, int reader_type, int pipeline_type, const char *path, co
             {
                 cv::imwrite(out_filename, mat_output, compression_params);
             }
+            // if(out_buffer != nullptr) free(out_buffer);
         }
         mat_input.release();
         mat_output.release();
