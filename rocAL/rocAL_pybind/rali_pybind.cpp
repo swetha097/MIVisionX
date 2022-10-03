@@ -311,8 +311,8 @@ namespace rali
         m.def("labelReader", &rocalCreateLabelReader, py::return_value_policy::reference);
         m.def("COCOReader", &rocalCreateCOCOReader, py::return_value_policy::reference);
         // rocal_api_meta_data.h
-        m.def("RandomBBoxCrop", &rocalRandomBBoxCrop);
-        m.def("BoxEncoder",&rocalBoxEncoder);
+        m.def("RandomBBoxCrop", &rocalRandomBBoxCrop, py::return_value_policy::reference);
+        m.def("BoxEncoder",&rocalBoxEncoder, py::return_value_policy::reference);
         m.def("getImageId", [](RocalContext context, py::array_t<int> array)
         {
             auto buf = array.request();

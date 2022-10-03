@@ -212,7 +212,7 @@ static vx_status VX_CALLBACK processResize(vx_node node, const vx_reference *par
 #elif ENABLE_HIP
         refreshResize(node, parameters, num, data);
         // std::cerr<<"BEFORE";
-        rpp_status = rppt_resize_gpu((void *)data->hip_pSrc, data->src_desc_ptr, (void *)data->hip_pDst, data->dst_desc_ptr, data->hip_dstImgSize, RpptInterpolationType::TRIANGULAR, data->hip_roiTensorPtrSrc, data->roiType, data->rppHandle);
+        rpp_status = rppt_resize_gpu((void *)data->hip_pSrc, data->src_desc_ptr, (void *)data->hip_pDst, data->dst_desc_ptr, data->hip_dstImgSize, RpptInterpolationType::BILINEAR, data->hip_roiTensorPtrSrc, data->roiType, data->rppHandle);
         // std::cerr<<"RESIZEEEE";
         return_status = (rpp_status == RPP_SUCCESS) ? VX_SUCCESS : VX_FAILURE;
 #endif
