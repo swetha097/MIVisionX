@@ -85,7 +85,7 @@ def main():
         flip_coin = fn.random.coin_flip(probability=0.5)
         cmnp = fn.crop_mirror_normalize(res, device="gpu",
                                             rocal_tensor_layout = types.NHWC,
-                                            rocal_tensor_output_type = types.UINT8,
+                                            rocal_tensor_output_type = types.FLOAT,
                                             crop=(224, 224),
                                             mirror=flip_coin,
                                             image_type=types.RGB,
@@ -99,6 +99,7 @@ def main():
     for epoch in range(3):
         print("+++++++++++++++++++++++++++++EPOCH+++++++++++++++++++++++++++++++++++++",epoch)
         for i , it in enumerate(imageIteratorPipeline):
+            print(it)
             print("************************************** i *************************************",i)
             # for img in it[0]:
                 # print(img.shape)
