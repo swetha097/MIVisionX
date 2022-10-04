@@ -132,6 +132,7 @@ list(APPEND SOURCES
         source/tensor/SequenceRearrange.cpp
         source/tensor/Downmix.cpp
         source/tensor/ToDecibles.cpp
+        source/tensor/PreemphasisFilter.cpp
 
         source/kernel_rpp.cpp
         source/internal_publishKernels.cpp

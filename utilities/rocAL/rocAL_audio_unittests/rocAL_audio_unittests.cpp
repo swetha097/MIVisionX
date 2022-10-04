@@ -131,6 +131,15 @@ int test(int test_case, const char *path, float sample_rate, int downmix, unsign
             std::cerr<<"\n Calls rocalToDecibels";
         }
         break;
+        case 1:
+        {
+            RocalTensorLayout tensorLayout; // = RocalTensorLayout::None;
+            RocalTensorOutputType tensorOutputType = RocalTensorOutputType::ROCAL_FP32;
+            output = rocalPreEmphasisFilter(handle, input1, tensorOutputType, true);
+            std::cerr<<"\n Calls rocalPreEmphasisFilter ";
+        }
+        break;
+
         default:
         {
             std::cout << "Not a valid pipeline type ! Exiting!\n";

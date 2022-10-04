@@ -140,4 +140,12 @@ enum RocalResizeInterpolationType {
     ROCAL_TRIANGULAR_INTERPOLATION = 5
 };
 
+enum RocalAudioBorderType
+{
+    ZERO = 0,
+    CLAMP,
+    REFLECT
+};
+
+
 #endif //MIVISIONX_ROCAL_API_TYPES_H

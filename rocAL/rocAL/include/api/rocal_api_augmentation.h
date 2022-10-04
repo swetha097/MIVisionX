@@ -139,4 +139,11 @@ extern "C" RocalTensor ROCAL_API_CALL rocalToDecibels(RocalContext p_context,
                                                       float multiplier = 10.0,
                                                       float magnitude_reference = 0.0);
 
+extern "C" RocalTensor ROCAL_API_CALL rocalPreEmphasisFilter(RocalContext p_context,
+                                                            RocalTensor p_input,
+                                                            RocalTensorOutputType rocal_tensor_output_type,
+                                                            bool is_output,
+                                                            RocalFloatParam p_preemph_coeff = NULL,
+                                                            RocalAudioBorderType preemph_border_type = RocalAudioBorderType::CLAMP);
+
 #endif //MIVISIONX_ROCAL_API_AUGMENTATION_H

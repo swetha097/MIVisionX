@@ -35,6 +35,7 @@ THE SOFTWARE.
 #include "node_resize.h"
 #include "node_crop.h"
 #include "node_to_decibles.h"
+#include "node_preemphasis_filter.h"
 
 #include "meta_node_resize.h"
 #include "meta_node_crop.h"
@@ -737,7 +738,43 @@ rocalToDecibels(RocalContext p_context,
         ERR(e.what())
     }
     return output;
+}
 
+RocalTensor ROCAL_API_CALL
+rocalPreEmphasisFilter(RocalContext p_context,
+                RocalTensor p_input,
+                RocalTensorOutputType rocal_tensor_output_type,
+                bool is_output,
+                RocalFloatParam p_preemph_coeff,
+                RocalAudioBorderType preemph_border_type)
+{
+    if(!p_context || !p_input)
+        THROW("Null values passed as input")
+    rocalTensor* output = nullptr;
+    auto context = static_cast<Context*>(p_context);
+    auto input = static_cast<rocalTensor*>(p_input);
+    auto preemph_coeff = static_cast<FloatParam*>(p_preemph_coeff);
+    RocalTensorDataType op_tensorDataType;
+    try
+    {
+        int layout=0;
+        // get_rocal_tensor_layout(rocal_tensor_layout, op_tensorLayout, layout);
+        get_rocal_tensor_data_type(rocal_tensor_output_type, op_tensorDataType);
+        rocalTensorInfo output_info = input->info();
+        output_info.set_tensor_layout(RocalTensorlayout::NONE);
+        output_info.set_data_type(op_tensorDataType);
 
+        output = context->master_graph->create_tensor(output_info, is_output);
+        context->master_graph->add_node<PreemphasisFilterNode>({input}, {output})->init(preemph_coeff, preemph_border_type);;
+        // std::shared_ptr<PreemphasisFilterNode> preemphasis_node =  context->master_graph->add_node<PreemphasisFilterNode>({input}, {output});
+        // preemphasis_node->init(preemph_coeff, preemph_border_type);
+
+    }
+    catch(const std::exception& e)
+    {
+        context->capture_error(e.what());
+        ERR(e.what())
+    }
+    return output;
 
 }
