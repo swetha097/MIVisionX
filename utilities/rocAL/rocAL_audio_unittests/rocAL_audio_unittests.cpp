@@ -53,12 +53,13 @@ int main(int argc, const char **argv)
 {
     // check command-line usage
     const int MIN_ARG_COUNT = 2;
-    printf("Usage: image_augmentation <audio-dataset-folder> <sample-rate> <downmix> <max_frames> <max_channels> gpu=1/cpu=0 \n");
+    printf("Usage: image_augmentation <audio-dataset-folder> <test_case> <sample-rate> <downmix> <max_frames> <max_channels> gpu=1/cpu=0 \n");
     if (argc < MIN_ARG_COUNT)
         return -1;
 
     int argIdx = 0;
     const char *path = argv[++argIdx];
+    unsigned test_case;
     float sample_rate = 0.0; //atoi(argv[++argIdx]);
     bool downmix = false; //atoi(argv[++argIdx]);
     unsigned max_frames = 1; //atoi(argv[++argIdx]);
@@ -66,7 +67,9 @@ int main(int argc, const char **argv)
 
 
     bool gpu = 0;
-    int test_case = 3; // To be introduced later
+    // int test_case = 3; // To be introduced later
+    if (argc >= argIdx + MIN_ARG_COUNT)
+        test_case = atoi(argv[++argIdx]);
 
     if (argc >= argIdx + MIN_ARG_COUNT)
         sample_rate = atoi(argv[++argIdx]);
@@ -110,7 +113,7 @@ int test(int test_case, const char *path, float sample_rate, int downmix, unsign
 
     rocalSetSeed(0);
 
-    RocalTensor input1;
+    RocalTensor input1, output;
     input1 = rocalAudioFileSource(handle, path, num_threads, true, false, false, max_frames, downmix);
 
     if (rocalGetStatus(handle) != ROCAL_OK)
@@ -118,6 +121,24 @@ int test(int test_case, const char *path, float sample_rate, int downmix, unsign
         std::cout << "Audio source could not initialize : " << rocalGetErrorMessage(handle) << std::endl;
         return -1;
     }
+    switch (test_case)
+    {
+        case 0:
+        {
+            RocalTensorLayout tensorLayout; // = RocalTensorLayout::None;
+            RocalTensorOutputType tensorOutputType = RocalTensorOutputType::ROCAL_FP32;
+            output = rocalToDecibels(handle, input1, tensorLayout, tensorOutputType, true);
+            std::cerr<<"\n Calls rocalToDecibels";
+        }
+        break;
+        default:
+        {
+            std::cout << "Not a valid pipeline type ! Exiting!\n";
+            return -1;
+        }
+
+    }
+
     rocalVerify(handle);
     if (rocalGetStatus(handle) != ROCAL_OK)
     {
@@ -146,7 +167,7 @@ int test(int test_case, const char *path, float sample_rate, int downmix, unsign
             break;
         std::vector<float> audio_op;
         output_tensor_list = rocalGetOutputTensors(handle);
-        
+
         for(int idx = 0; idx < output_tensor_list->size(); idx++)
         {
             float * buffer = (float *)output_tensor_list->at(idx)->buffer();

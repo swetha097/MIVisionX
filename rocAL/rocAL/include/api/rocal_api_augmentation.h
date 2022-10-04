@@ -26,7 +26,7 @@ THE SOFTWARE.
 
 RocalTensor  ROCAL_API_CALL
 rocalSequenceRearrange(
-            RocalContext p_context, RocalTensor input, unsigned int* new_order, 
+            RocalContext p_context, RocalTensor input, unsigned int* new_order,
             unsigned int  new_sequence_length, unsigned int sequence_length, bool is_output );
 
 /// Accepts U8 and RGB24 inputs
@@ -41,7 +41,7 @@ extern "C" RocalTensor ROCAL_API_CALL rocalBrightness(RocalContext context, Roca
 
 extern "C" RocalTensor ROCAL_API_CALL rocalCopyTensor(RocalContext context, RocalTensor input, bool is_output);
 
-extern "C" RocalTensor ROCAL_API_CALL rocalResizeMirrorNormalize(RocalContext p_context, 
+extern "C" RocalTensor ROCAL_API_CALL rocalResizeMirrorNormalize(RocalContext p_context,
                                             RocalTensor p_input,
                                             RocalTensorLayout rocal_tensor_layout,
                                             RocalTensorOutputType rocal_tensor_output_type,
@@ -130,5 +130,13 @@ extern "C" RocalTensor ROCAL_API_CALL rocalColorTwist(RocalContext context,
                                                       RocalFloatParam hue = NULL,
                                                       RocalFloatParam sat = NULL);
 
+extern "C" RocalTensor ROCAL_API_CALL rocalToDecibels(RocalContext p_context,
+                                                      RocalTensor p_input,
+                                                      RocalTensorLayout rocal_tensor_layout,
+                                                      RocalTensorOutputType rocal_tensor_output_type,
+                                                      bool is_output,
+                                                      float cut_off_DB = -200.0,
+                                                      float multiplier = 10.0,
+                                                      float magnitude_reference = 0.0);
 
 #endif //MIVISIONX_ROCAL_API_AUGMENTATION_H

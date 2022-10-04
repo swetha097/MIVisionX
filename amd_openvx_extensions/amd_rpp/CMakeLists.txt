@@ -131,7 +131,8 @@ list(APPEND SOURCES
         source/tensor/ResizeMirrorNormalize.cpp
         source/tensor/SequenceRearrange.cpp
         source/tensor/Downmix.cpp
-        
+        source/tensor/ToDecibles.cpp
+
         source/kernel_rpp.cpp
         source/internal_publishKernels.cpp
     )

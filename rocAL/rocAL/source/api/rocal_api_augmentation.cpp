@@ -34,6 +34,7 @@ THE SOFTWARE.
 #include "meta_node_crop_mirror_normalize.h"
 #include "node_resize.h"
 #include "node_crop.h"
+#include "node_to_decibles.h"
 
 #include "meta_node_resize.h"
 #include "meta_node_crop.h"
@@ -261,7 +262,7 @@ rocalCrop(RocalContext p_context,
 
 //resizemirrornormalize
 RocalTensor
-ROCAL_API_CALL rocalResizeMirrorNormalize(RocalContext p_context, 
+ROCAL_API_CALL rocalResizeMirrorNormalize(RocalContext p_context,
                                           RocalTensor p_input,
                                           RocalTensorLayout rocal_tensor_layout,
                                           RocalTensorOutputType rocal_tensor_output_type,
@@ -699,4 +700,44 @@ rocalColorTwist(RocalContext p_context,
         ERR(e.what())
     }
     return output;
+}
+
+RocalTensor ROCAL_API_CALL
+rocalToDecibels(RocalContext p_context,
+                RocalTensor p_input,
+                RocalTensorLayout rocal_tensor_layout, // not required
+                RocalTensorOutputType rocal_tensor_output_type,
+                bool is_output,
+                float cut_off_DB,
+                float multiplier,
+                float magnitude_reference)
+{
+    if(!p_context || !p_input)
+        THROW("Null values passed as input")
+    rocalTensor* output = nullptr;
+    auto context = static_cast<Context*>(p_context);
+    auto input = static_cast<rocalTensor*>(p_input);
+    RocalTensorlayout op_tensorLayout;
+    RocalTensorDataType op_tensorDataType;
+    try
+    {
+        int layout=0;
+        get_rocal_tensor_layout(rocal_tensor_layout, op_tensorLayout, layout);
+        get_rocal_tensor_data_type(rocal_tensor_output_type, op_tensorDataType);
+        rocalTensorInfo output_info = input->info();
+        output_info.set_tensor_layout(RocalTensorlayout::NONE);
+        output_info.set_data_type(op_tensorDataType);
+
+        output = context->master_graph->create_tensor(output_info, is_output);
+        context->master_graph->add_node<ToDeciblesNode>({input}, {output})->init(cut_off_DB, multiplier, magnitude_reference);
+    }
+    catch(const std::exception& e)
+    {
+        context->capture_error(e.what());
+        ERR(e.what())
+    }
+    return output;
+
+
+
 }
