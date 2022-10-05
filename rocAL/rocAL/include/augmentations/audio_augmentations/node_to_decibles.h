@@ -35,8 +35,8 @@ protected:
     void create_node() override;
     void update_node() override;
 private:
-    vx_array _src_samples_length_array;
-    std::vector<int> _src_samples_length;
+    vx_array _src_samples_length_array, _src_samples_channels_array;
+    std::vector<int> _src_samples_length, _src_samples_channels;
     float _cut_off_db = -200.0;
     float _multiplier = 10.0;
     float _magnitude_reference = 0.0;

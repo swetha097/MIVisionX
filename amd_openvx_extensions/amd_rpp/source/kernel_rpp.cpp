@@ -2132,7 +2132,7 @@ VX_API_CALL vx_node VX_API_CALL vxExtrppNode_SequenceRearrange(vx_graph graph,vx
     return node;
 }
 
-VX_API_ENTRY vx_node VX_API_CALL vxExtrppNode_ToDecibels(vx_graph graph, vx_tensor pSrc, vx_tensor pDst, vx_array srcSamples, vx_scalar cutOffDB, vx_scalar multiplier, vx_scalar referenceMagnitude, vx_uint32 nbatchSize)
+VX_API_ENTRY vx_node VX_API_CALL vxExtrppNode_ToDecibels(vx_graph graph, vx_tensor pSrc, vx_tensor pDst, vx_array srcSamplesLength, vx_array srcSampleChannels, vx_scalar cutOffDB, vx_scalar multiplier, vx_scalar referenceMagnitude, vx_uint32 nbatchSize)
 {
     vx_node node = NULL;
     vx_context context = vxGetContext((vx_reference)graph);
@@ -2144,13 +2144,14 @@ VX_API_ENTRY vx_node VX_API_CALL vxExtrppNode_ToDecibels(vx_graph graph, vx_tens
         vx_reference params[] = {
             (vx_reference)pSrc,
             (vx_reference)pDst,
-            (vx_reference)srcSamples,
+            (vx_reference)srcSamplesLength,
+            (vx_reference)srcSampleChannels,
             (vx_reference)cutOffDB,
             (vx_reference)multiplier,
             (vx_reference)referenceMagnitude,
             (vx_reference)NBATCHSIZE,
             (vx_reference)DEV_TYPE};
-        node = createNode(graph, VX_KERNEL_RPP_TODECIBELS, params, 8);
+        node = createNode(graph, VX_KERNEL_RPP_TODECIBELS, params, 9);
     }
     return node;
 }
