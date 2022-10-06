@@ -138,4 +138,13 @@ extern "C" RocalTensor ROCAL_API_CALL rocalNormalize(RocalContext p_context,
                                                      float mean = 0.0f, float std_dev = 0.0f,
                                                      float scale = 0.0f, float shift = 0.0f,
                                                      int ddof = 0, float epsilon = 0);
+
+extern "C" RocalTensor ROCAL_API_CALL rocalPad(RocalContext p_context,
+                                               RocalTensor p_input,
+                                               RocalTensorOutputType rocal_tensor_output_type,
+                                               bool is_output,
+                                               float fill_value = 0.0f,
+                                               std::vector<int>axes = {},
+                                               std::vector<int>align = {});
+                                               
 #endif //MIVISIONX_ROCAL_API_AUGMENTATION_H

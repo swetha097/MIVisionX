@@ -733,3 +733,55 @@ rocalNormalize(RocalContext p_context,
     }
     return output;
 }
+
+RocalTensor ROCAL_API_CALL
+rocalPad(RocalContext p_context,
+        RocalTensor p_input,
+        RocalTensorOutputType rocal_tensor_output_type,
+        bool is_output,
+        float fill_value,
+        std::vector<int>axes,
+        std::vector<int>align) {
+          
+    if(!p_context || !p_input)
+        THROW("Null values passed as input")
+    rocalTensor* output = nullptr;
+    auto context = static_cast<Context*>(p_context);
+    auto input = static_cast<rocalTensor*>(p_input);
+    try {
+        rocalTensorInfo output_info = input->info();
+        
+        // Commented as it is not used in FAMBench Pipeline trainings
+        // std::vector<int> alignment;
+        // if(align.size() == 1 && output_info.num_of_dims() == 3)
+        //     alignment = {align[0], align[1]};
+        // else
+        //     alignment = align;
+        
+        // std::vector<int> max_dims;
+        // max_dims = {output_info.max_dims[0], output_info.max_dims[1]};
+        // if(align.size()) {
+        //     for(axis : axes) {
+        //         max_dims[axis] = (max_dims[axis] + align[axis]) &~ align[axis];
+        //     }   
+        // }
+        
+        // if(output_info.num_of_dims() == 3) {
+        //     out_dims[1] = max_dims[0];
+        //     out_dims[2] = max_dims[1];
+        // } else if (output_info.num_of_dims() == 2) {
+        //     out_dims[1] = max_dims[0];
+        // }
+        RocalTensorDataType op_tensorDataType;
+        get_rocal_tensor_data_type(rocal_tensor_output_type, op_tensorDataType);
+        output_info.set_data_type(op_tensorDataType);
+        
+        output = context->master_graph->create_tensor(output_info, is_output);
+        context->master_graph->add_node<PadNode>({input}, {output})->init(fill_value);
+        
+    } catch(const std::exception& e) {
+        context->capture_error(e.what());
+        ERR(e.what())
+    }
+    return output;
+}
