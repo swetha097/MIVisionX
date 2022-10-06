@@ -36,6 +36,7 @@ void PreemphasisFilterNode::create_node()
         return;
     _src_samples_size.resize(_batch_size);
     _src_samples_size_array = vxCreateArray(vxGetContext((vx_reference)_graph->get()), VX_TYPE_INT32, _batch_size);
+    _preemph_coeff.create_array(_graph , VX_TYPE_FLOAT32, _batch_size);
     vx_status status = VX_SUCCESS;
     status |= vxAddArrayItems(_src_samples_size_array, _batch_size, _src_samples_size.data(), sizeof(vx_int32));
     if(status != 0)
