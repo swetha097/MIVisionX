@@ -700,3 +700,36 @@ rocalColorTwist(RocalContext p_context,
     }
     return output;
 }
+
+RocalTensor ROCAL_API_CALL
+rocalNormalize(RocalContext p_context,
+               RocalTensor p_input,
+               RocalTensorOutputType rocal_tensor_output_type,
+               bool is_output, bool batch,
+               std::vector<int>axes,
+               float mean, float std_dev,
+               float scale, float shift,
+               int ddof, float epsilon) {
+    if(!p_context || !p_input)
+        THROW("Null values passed as input")
+    rocalTensor* output = nullptr;
+    auto context = static_cast<Context*>(p_context);
+    auto input = static_cast<rocalTensor*>(p_input);
+    try {
+        if(!mean && !std_dev && axes.size())
+            THROW("Axes must not be passed when both mean and standard deviation are specified")
+        
+        rocalTensorInfo output_info = input->info();
+        RocalTensorDataType op_tensorDataType;
+        get_rocal_tensor_data_type(rocal_tensor_output_type, op_tensorDataType);
+        output_info.set_data_type(op_tensorDataType);
+        
+        output = context->master_graph->create_tensor(output_info, is_output);
+        context->master_graph->add_node<NormalizeNode>({input}, {output})->init(mean, std_dev, axes, batch, scale, shift, ddof, epsilon);
+    }
+    catch(const std::exception& e) {
+        context->capture_error(e.what());
+        ERR(e.what())
+    }
+    return output;
+}

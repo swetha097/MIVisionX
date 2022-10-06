@@ -142,6 +142,7 @@ extern "C" SHARED_PUBLIC vx_node VX_API_CALL vxExtrppNode_ColorTwist(vx_graph gr
 extern "C" SHARED_PUBLIC vx_node VX_API_CALL vxExtrppNode_ResizeMirrorNormalize(vx_graph graph, vx_tensor pSrc, vx_array srcROI, vx_tensor pDst, vx_array dstROI,vx_array dst_width,vx_array dst_height, vx_scalar interpolation_type, vx_array mean, vx_array std_dev, vx_array flip, vx_scalar is_packed, vx_scalar chnShift,vx_scalar layout, vx_scalar roiType, vx_uint32 nbatchSize);
 extern "C" SHARED_PUBLIC vx_node VX_API_CALL vxExtrppNode_SequenceRearrange(vx_graph graph,vx_tensor pSrc,vx_tensor pDst, vx_array newOrder,vx_uint32 newSequenceLength, vx_uint32 sequenceLength, vx_uint32 sequenceCount, vx_scalar layout);
 extern "C" SHARED_PUBLIC vx_node VX_API_CALL vxExtrppNode_Downmix(vx_graph graph, vx_tensor pSrc, vx_tensor pDst, vx_array srcSamples, vx_array srcChannels, vx_uint32 nbatchSize);
+extern "C" SHARED_PUBLIC vx_node VX_API_CALL vxExtrppNode_Normalize(vx_graph graph, vx_tensor pSrc, vx_tensor pDst, vx_array srcSamples, vx_array srcChannels, vx_uint32 axisMask, vx_float32 mean, vx_float32 stdDev, vx_float32 scale, vx_float32 shift, vx_float32 epsilon, vx_int32 ddof, vx_uint32 numOfDims, vx_uint32 nbatchSize);
 
 #ifdef __cplusplus
 }

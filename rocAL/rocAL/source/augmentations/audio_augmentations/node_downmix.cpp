@@ -34,14 +34,6 @@ void DownmixNode::create_node()
     if(_node)
         return;
 
-    auto audio_roi = _inputs[0]->info().get_roi();
-    _src_samples.resize(_batch_size);
-    _src_channels.resize(_batch_size);
-    for (uint i=0; i < _batch_size; i++)
-    {
-        _src_samples[i] = audio_roi->at(i).x1;
-        _src_channels[i] = audio_roi->at(i).y1;
-    }
     _src_samples_array = vxCreateArray(vxGetContext((vx_reference)_graph->get()), VX_TYPE_INT32, _batch_size);
     _src_channels_array = vxCreateArray(vxGetContext((vx_reference)_graph->get()), VX_TYPE_INT32, _batch_size);
     vx_status status = VX_SUCCESS;

@@ -130,5 +130,12 @@ extern "C" RocalTensor ROCAL_API_CALL rocalColorTwist(RocalContext context,
                                                       RocalFloatParam hue = NULL,
                                                       RocalFloatParam sat = NULL);
 
-
+extern "C" RocalTensor ROCAL_API_CALL rocalNormalize(RocalContext p_context,
+                                                     RocalTensor p_input,
+                                                     RocalTensorOutputType rocal_tensor_output_type,
+                                                      bool is_output, bool batch = false,
+                                                     std::vector<int> axes = {},
+                                                     float mean = 0.0f, float std_dev = 0.0f,
+                                                     float scale = 0.0f, float shift = 0.0f,
+                                                     int ddof = 0, float epsilon = 0);
 #endif //MIVISIONX_ROCAL_API_AUGMENTATION_H
