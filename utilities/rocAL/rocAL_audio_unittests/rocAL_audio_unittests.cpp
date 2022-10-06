@@ -139,6 +139,14 @@ int test(int test_case, const char *path, float sample_rate, int downmix, unsign
             std::cerr<<"\n Calls rocalPreEmphasisFilter ";
         }
         break;
+        case 2:
+        {
+            RocalTensorLayout tensorLayout; // = RocalTensorLayout::None;
+            RocalTensorOutputType tensorOutputType = RocalTensorOutputType::ROCAL_FP32;
+            output = rocalSpectrogram(handle, input1, tensorOutputType, true, false, false);
+            std::cerr<<"\n Calls rocalSpectrogram ";
+        }
+        break;
 
         default:
         {

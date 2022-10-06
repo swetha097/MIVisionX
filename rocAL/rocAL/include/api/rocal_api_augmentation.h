@@ -146,4 +146,17 @@ extern "C" RocalTensor ROCAL_API_CALL rocalPreEmphasisFilter(RocalContext p_cont
                                                             RocalFloatParam p_preemph_coeff = NULL,
                                                             RocalAudioBorderType preemph_border_type = RocalAudioBorderType::CLAMP);
 
+extern "C" RocalTensor ROCAL_API_CALL rocalSpectrogram(RocalContext p_context,
+                                                       RocalTensor p_input,
+                                                       RocalTensorOutputType rocal_tensor_output_type,
+                                                       bool is_output,
+                                                       bool center_windows = true,
+                                                       bool reflect_padding = true,
+                                                       RocalSpectrogramLayout spec_layout = RocalSpectrogramLayout::FT,
+                                                       int power = 2, // Can be 1 or 2
+                                                       int nfft_size = 2048,
+                                                       int window_length = 512,
+                                                       int window_step = 256,
+                                                       float *window_fn = NULL);
+
 #endif //MIVISIONX_ROCAL_API_AUGMENTATION_H

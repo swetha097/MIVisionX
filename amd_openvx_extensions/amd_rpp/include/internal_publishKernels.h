@@ -131,6 +131,8 @@ vx_status SequenceRearrange_Register(vx_context);
 vx_status Downmix_Register(vx_context);
 vx_status ToDecibels_Register(vx_context);
 vx_status PreemphasisFilter_Register(vx_context);
+vx_status Spectrogram_Register(vx_context);
+
 
 // Image kernel names
 #define VX_KERNEL_RPP_NOPBATCHPD_NAME                                         "org.rpp.NopbatchPD"
@@ -228,5 +230,6 @@ vx_status PreemphasisFilter_Register(vx_context);
 #define VX_KERNEL_RPP_DOWNMIX_NAME                                           "org.rpp.Downmix"
 #define VX_KERNEL_RPP_TODECIBELS_NAME                                        "org.rpp.ToDecibels"
 #define VX_KERNEL_RPP_PREEMPHASISFILTER_NAME                                 "org.rpp.PreemphasisFilter"
+#define VX_KERNEL_RPP_SPECTROGRAM_NAME                                       "org.rpp.Spectrogram"
 
 #endif //_AMDVX_EXT__PUBLISH_KERNELS_H_

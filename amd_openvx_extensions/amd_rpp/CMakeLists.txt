@@ -133,6 +133,7 @@ list(APPEND SOURCES
         source/tensor/Downmix.cpp
         source/tensor/ToDecibles.cpp
         source/tensor/PreemphasisFilter.cpp
+        source/tensor/Spectrogram.cpp
 
         source/kernel_rpp.cpp
         source/internal_publishKernels.cpp

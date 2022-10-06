@@ -36,6 +36,7 @@ THE SOFTWARE.
 #include "node_crop.h"
 #include "node_to_decibles.h"
 #include "node_preemphasis_filter.h"
+#include "node_spectrogram.h"
 
 #include "meta_node_resize.h"
 #include "meta_node_crop.h"
@@ -776,5 +777,64 @@ rocalPreEmphasisFilter(RocalContext p_context,
         ERR(e.what())
     }
     return output;
-
 }
+
+RocalTensor ROCAL_API_CALL
+rocalSpectrogram(RocalContext p_context,
+                RocalTensor p_input,
+                RocalTensorOutputType rocal_tensor_output_type,
+                bool is_output,
+                bool center_windows,
+                bool reflect_padding,
+                RocalSpectrogramLayout spec_layout,
+                int power,
+                int nfft_size,
+                int window_length,
+                int window_step,
+                float *window_fn) {
+    if(!p_context || !p_input)
+        THROW("Null values passed as input")
+    rocalTensor* output = nullptr;
+    auto context = static_cast<Context*>(p_context);
+    auto input = static_cast<rocalTensor*>(p_input);
+    RocalTensorDataType op_tensorDataType;
+    try {
+        int layout=0;
+        get_rocal_tensor_data_type(rocal_tensor_output_type, op_tensorDataType);
+        rocalTensorInfo output_info = input->info();
+        std::vector<size_t> max_dims = output_info.max_dims();
+        int window_offset = 0;
+        if(!center_windows)
+            window_offset = window_length;
+        int max_frame = (((max_dims[0] - window_offset) / window_step) + 1);
+        max_frame = std::max(0, max_frame);
+        int bins = std::max(0, (nfft_size / 2) + 1);
+        std::vector<size_t> dims = output_info.dims();
+        if(spec_layout == RocalSpectrogramLayout::FT) {
+            dims[1] = max_frame;
+            dims[2] = bins;
+        } else {
+            dims[1] = bins;
+            dims[2] = max_frame;
+        }
+        output_info.set_dims(dims);
+        output_info.set_tensor_layout(RocalTensorlayout::NONE);
+        output_info.set_data_type(op_tensorDataType);
+
+        if(power != 1 || power != 2) {
+            WRN("rocalSpectrogram Power value can be 1 or 2 setting it to default 2")
+            power = 2;
+        }
+
+        output = context->master_graph->create_tensor(output_info, is_output);
+        context->master_graph->add_node<SpectrogramNode>({input}, {output})->init(center_windows, reflect_padding, spec_layout,
+                                                                                  power, nfft_size, window_length,
+                                                                                  window_step, window_fn);
+    }
+    catch(const std::exception& e) {
+        context->capture_error(e.what());
+        ERR(e.what())
+    }
+    return output;
+}
+

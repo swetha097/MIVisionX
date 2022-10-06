@@ -786,6 +786,8 @@ rocalAudioFileSource(
         dims.at(0) = context->user_batch_size();
         dims.at(1) = max_frames;
         dims.at(2) = max_channels;
+        // [bs][sam][c] - 3D
+        // [bs][h][w][c] - [bs][bins][frames]
         auto info  = rocalTensorInfo(std::vector<size_t>(std::move(dims)),
                                 context->master_graph->mem_type(),
                                 tensor_data_type);

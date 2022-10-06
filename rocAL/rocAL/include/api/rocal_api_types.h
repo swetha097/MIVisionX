@@ -147,5 +147,9 @@ enum RocalAudioBorderType
     REFLECT
 };
 
-
+enum RocalSpectrogramLayout
+{
+    FT = 0,
+    TF
+};
 #endif //MIVISIONX_ROCAL_API_TYPES_H
