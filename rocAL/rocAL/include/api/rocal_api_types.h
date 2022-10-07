@@ -152,4 +152,11 @@ enum RocalSpectrogramLayout
     FT = 0,
     TF
 };
+
+enum RocalMelScaleFormula
+{
+    SLANEY = 0,
+    HTK,
+};
+
 #endif //MIVISIONX_ROCAL_API_TYPES_H

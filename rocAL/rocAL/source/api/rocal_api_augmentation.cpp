@@ -38,6 +38,7 @@ THE SOFTWARE.
 #include "node_preemphasis_filter.h"
 #include "node_spectrogram.h"
 #include "node_non_silent_region.h"
+#include "node_mel_filter_bank.h"
 
 #include "meta_node_resize.h"
 #include "meta_node_crop.h"
@@ -842,7 +843,6 @@ rocalSpectrogram(RocalContext p_context,
 RocalTensor ROCAL_API_CALL
 rocalNonSilentRegion(RocalContext p_context,
                      RocalTensor p_input,
-                     RocalTensorOutputType rocal_tensor_output_type,
                      bool is_output,
                      float cut_off_db,
                      float reference_power,
@@ -874,3 +874,41 @@ rocalNonSilentRegion(RocalContext p_context,
     }
     return output;
 }
+
+RocalTensor rocalMelFilterBank(RocalContext p_context,
+                                RocalTensor p_input,
+                                bool is_output,
+                                float freq_high,
+                                float freq_low,
+                                RocalMelScaleFormula mel_formula,
+                                int nfilter,
+                                bool normalize,
+                                float sample_rate) {
+    if(!p_context || !p_input)
+        THROW("Null values passed as input")
+    rocalTensor* output = nullptr;
+    auto context = static_cast<Context*>(p_context);
+    auto input = static_cast<rocalTensor*>(p_input);
+    try {
+        rocalTensorInfo output_info = input->info();
+        std::vector<size_t> max_dims = output_info.max_dims();
+        int max_frame = max_dims[0];
+        max_frame = std::max(0, max_frame);
+        std::vector<size_t> dims = output_info.dims();
+        dims[1] = max_frame;
+        dims[2] = nfilter;
+        output_info.set_dims(dims);
+        output_info.set_tensor_layout(RocalTensorlayout::NONE);
+        output_info.set_data_type(RocalTensorDataType::FP32);
+
+        output = context->master_graph->create_tensor(output_info, is_output);
+        context->master_graph->add_node<MelFilterBankNode>({input}, {output})->init(freq_high, freq_low, mel_formula,
+                                                                                  nfilter, normalize, sample_rate);
+    }
+    catch(const std::exception& e) {
+        context->capture_error(e.what());
+        ERR(e.what())
+    }
+    return output;
+}
+

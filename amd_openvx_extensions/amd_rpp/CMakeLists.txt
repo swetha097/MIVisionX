@@ -135,6 +135,7 @@ list(APPEND SOURCES
         source/tensor/PreemphasisFilter.cpp
         source/tensor/Spectrogram.cpp
         source/tensor/NonSilentRegion.cpp
+        source/tensor/MelFilterBank.cpp
 
         source/kernel_rpp.cpp
         source/internal_publishKernels.cpp

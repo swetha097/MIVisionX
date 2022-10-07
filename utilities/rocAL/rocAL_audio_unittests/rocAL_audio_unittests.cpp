@@ -147,7 +147,27 @@ int test(int test_case, const char *path, float sample_rate, int downmix, unsign
             std::cerr<<"\n Calls rocalSpectrogram ";
         }
         break;
+        case 3:
+        {
+            output = rocalNonSilentRegion(handle, input1, true, -60, 1, -1, 3);
+        }
+        break;
+        case 4:
+        {
+            std::cerr<<"\n Mel Filter Bank";
+            RocalTensorLayout tensorLayout; // = RocalTensorLayout::None;
+            RocalTensorOutputType tensorOutputType = RocalTensorOutputType::ROCAL_FP32;
+            RocalTensor temp_output = rocalSpectrogram(handle, input1, tensorOutputType, true, false, false);
+            float sampleRate = 16000;
+            float minFreq = 0.0;
+            float maxFreq = sampleRate / 2;
+            RocalMelScaleFormula melFormula = RocalMelScaleFormula::SLANEY;
+            int numFilter = 128;
+            bool normalize = true;
 
+            output = rocalMelFilterBank(handle, temp_output, true, maxFreq, minFreq, melFormula, numFilter, normalize, sampleRate);
+        }
+        break;
         default:
         {
             std::cout << "Not a valid pipeline type ! Exiting!\n";

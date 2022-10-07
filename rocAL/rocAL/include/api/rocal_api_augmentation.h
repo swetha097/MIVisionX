@@ -161,11 +161,22 @@ extern "C" RocalTensor ROCAL_API_CALL rocalSpectrogram(RocalContext p_context,
 
 extern "C" RocalTensor ROCAL_API_CALL rocalNonSilentRegion(RocalContext p_context,
                                                            RocalTensor p_input,
-                                                           RocalTensorOutputType rocal_tensor_output_type,
                                                            bool is_output,
                                                            float cut_off_db = -0.60,
                                                            float reference_power = 0.0,
                                                            int reset_interval = 8192,
                                                            int window_length = 2048);
+
+extern "C" RocalTensor ROCAL_API_CALL rocalMelFilterBank(RocalContext p_context,
+                                                         RocalTensor p_input,
+                                                         bool is_output,
+                                                         float freq_high = 0.0,
+                                                         float freq_low = 0.0,
+                                                         RocalMelScaleFormula mel_formula = RocalMelScaleFormula::SLANEY,
+                                                         int nfilter = 128,
+                                                         bool normalize = true,
+                                                         float sample_rate = 4410);
+
+
 
 #endif //MIVISIONX_ROCAL_API_AUGMENTATION_H
