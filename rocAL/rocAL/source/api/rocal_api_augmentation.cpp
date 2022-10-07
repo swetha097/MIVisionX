@@ -37,6 +37,7 @@ THE SOFTWARE.
 #include "node_to_decibles.h"
 #include "node_preemphasis_filter.h"
 #include "node_spectrogram.h"
+#include "node_non_silent_region.h"
 
 #include "meta_node_resize.h"
 #include "meta_node_crop.h"
@@ -838,3 +839,38 @@ rocalSpectrogram(RocalContext p_context,
     return output;
 }
 
+RocalTensor ROCAL_API_CALL
+rocalNonSilentRegion(RocalContext p_context,
+                     RocalTensor p_input,
+                     RocalTensorOutputType rocal_tensor_output_type,
+                     bool is_output,
+                     float cut_off_db,
+                     float reference_power,
+                     int reset_interval,
+                     int window_length) {
+    if(!p_context || !p_input)
+        THROW("Null values passed as input")
+    rocalTensor* output = nullptr;
+    auto context = static_cast<Context*>(p_context);
+    auto input = static_cast<rocalTensor*>(p_input);
+    try {
+        RocalTensorDataType tensor_data_type = RocalTensorDataType::INT32;
+        unsigned num_of_dims = 2;
+        std::vector<size_t> dims;
+        dims.resize(num_of_dims);
+        dims.at(0) = context->user_batch_size();
+        dims.at(1) = context->user_batch_size();
+        auto info  = rocalTensorInfo(std::vector<size_t>(std::move(dims)),
+                                context->master_graph->mem_type(),
+                                tensor_data_type);
+        info.set_tensor_layout(RocalTensorlayout::NONE);
+
+        output = context->master_graph->create_tensor(info, is_output);
+        context->master_graph->add_node<NonSilentRegionNode>({input}, {output})->init(cut_off_db, reference_power, window_length, reset_interval);
+    }
+    catch(const std::exception& e) {
+        context->capture_error(e.what());
+        ERR(e.what())
+    }
+    return output;
+}

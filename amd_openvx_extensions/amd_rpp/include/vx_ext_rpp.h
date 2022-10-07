@@ -146,6 +146,7 @@ extern "C" SHARED_PUBLIC vx_node VX_API_CALL vxExtrppNode_ToDecibels(vx_graph gr
 extern "C" SHARED_PUBLIC vx_node VX_API_CALL vxExtrppNode_PreemphasisFilter(vx_graph graph, vx_tensor pSrc, vx_tensor pDst, vx_array srcSamplesSize, vx_array preemphCoeff, vx_scalar borderType, vx_uint32 nbatchSize);
 extern "C" SHARED_PUBLIC vx_node VX_API_CALL vxExtrppNode_Spectrogram(vx_graph graph, vx_tensor pSrc, vx_tensor pDst, vx_array srcSamplesLength, vx_array windowFn, vx_scalar centerWindow, vx_scalar reflectPadding, vx_scalar specLayout,
                                                                       vx_scalar power, vx_scalar nfftSize, vx_scalar windowLength, vx_scalar windowStep, vx_scalar isWindowEmpty, vx_uint32 nbatchSize);
+extern "C" SHARED_PUBLIC vx_node VX_API_CALL vxExtrppNode_NonSilentRegion(vx_graph graph, vx_tensor pSrc, vx_tensor pDst, vx_array srcSamplesSize, vx_scalar cutOffDB, vx_scalar referencePower, vx_scalar window_length, vx_scalar resetInterval, vx_uint32 nbatchSize);
 
 
 #ifdef __cplusplus

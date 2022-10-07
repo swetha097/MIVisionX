@@ -132,6 +132,7 @@ vx_status Downmix_Register(vx_context);
 vx_status ToDecibels_Register(vx_context);
 vx_status PreemphasisFilter_Register(vx_context);
 vx_status Spectrogram_Register(vx_context);
+vx_status NonSilentRegion_Register(vx_context);
 
 
 // Image kernel names
@@ -231,5 +232,6 @@ vx_status Spectrogram_Register(vx_context);
 #define VX_KERNEL_RPP_TODECIBELS_NAME                                        "org.rpp.ToDecibels"
 #define VX_KERNEL_RPP_PREEMPHASISFILTER_NAME                                 "org.rpp.PreemphasisFilter"
 #define VX_KERNEL_RPP_SPECTROGRAM_NAME                                       "org.rpp.Spectrogram"
+#define VX_KERNEL_RPP_NONSILENTREGION_NAME                                   "org.rpp.NonSilentRegion"
 
 #endif //_AMDVX_EXT__PUBLISH_KERNELS_H_

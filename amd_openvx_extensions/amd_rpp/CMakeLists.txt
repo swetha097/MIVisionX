@@ -134,6 +134,7 @@ list(APPEND SOURCES
         source/tensor/ToDecibles.cpp
         source/tensor/PreemphasisFilter.cpp
         source/tensor/Spectrogram.cpp
+        source/tensor/NonSilentRegion.cpp
 
         source/kernel_rpp.cpp
         source/internal_publishKernels.cpp

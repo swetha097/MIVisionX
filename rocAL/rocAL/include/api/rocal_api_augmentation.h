@@ -159,4 +159,13 @@ extern "C" RocalTensor ROCAL_API_CALL rocalSpectrogram(RocalContext p_context,
                                                        int window_step = 256,
                                                        float *window_fn = NULL);
 
+extern "C" RocalTensor ROCAL_API_CALL rocalNonSilentRegion(RocalContext p_context,
+                                                           RocalTensor p_input,
+                                                           RocalTensorOutputType rocal_tensor_output_type,
+                                                           bool is_output,
+                                                           float cut_off_db = -0.60,
+                                                           float reference_power = 0.0,
+                                                           int reset_interval = 8192,
+                                                           int window_length = 2048);
+
 #endif //MIVISIONX_ROCAL_API_AUGMENTATION_H
