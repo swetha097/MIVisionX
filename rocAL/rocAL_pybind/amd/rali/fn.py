@@ -146,3 +146,18 @@ def box_encoder(*inputs, anchors, bytes_per_sample_hint=0, criteria=0.5, means=N
     box_encoder = b.BoxEncoder(Pipeline._current_pipeline._handle ,*(kwargs_pybind.values()))
     Pipeline._current_pipeline._BoxEncoder = True
     return (box_encoder , [])
+
+
+def to_decibals(*inputs, bytes_per_sample_hint=[0], cutoff_db=-200.0, multiplier=10.0, preserve=False, reference=0.0, seed=1 , rocal_tensor_layout=types.NCHW, rocal_tensor_output_type=types.UINT8):
+    '''
+    Converts a magnitude (real, positive) to the decibel scale.
+
+    Conversion is done according to the following formula:
+
+    min_ratio = pow(10, cutoff_db / multiplier)
+    out[i] = multiplier * log10( max(min_ratio, input[i] / reference) )
+    '''
+    kwargs_pybind = {"input_audio0": inputs[0],  "rocal_tensor_layout": rocal_tensor_layout, "rocal_tensor_output_type" :rocal_tensor_output_type, "is_output": False,
+                     "cut_off_DB": cutoff_db, "multiplier": multiplier, "magnitude_reference": reference}
+    decibel_scale = b.ToDecibels(Pipeline._current_pipeline._handle ,*(kwargs_pybind.values()))
+    return decibel_scale
