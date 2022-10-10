@@ -191,6 +191,14 @@ int test(int test_case, const char *path, float sample_rate, int downmix, unsign
             
         }
 
+        RocalTensorList labels = rocalGetImageLabels(handle);
+
+        for(int i = 0; i < labels->size(); i++)
+        {
+            int * labels_buffer = (int *)(labels->at(i)->buffer());
+            std::cerr << ">>>>> LABELS : " << labels_buffer[0] << "\t";
+        }
+
     }
 
     high_resolution_clock::time_point t2 = high_resolution_clock::now();
