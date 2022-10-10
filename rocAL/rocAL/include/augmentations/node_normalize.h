@@ -29,7 +29,7 @@ class NormalizeNode : public Node
 public:
     NormalizeNode(const std::vector<rocalTensor *> &inputs, const std::vector<rocalTensor *> &outputs);
     NormalizeNode() = delete;
-    void init();
+    void init(float mean, float std_dev, std::vector<int> axes, bool batch, float scale, float shift, int ddof, float epsilon);
 
 protected:
     void create_node() override;

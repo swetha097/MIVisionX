@@ -23,20 +23,24 @@ THE SOFTWARE.
 #pragma once
 #include "node.h"
 #include "graph.h"
+#include "rocal_api_types.h"
 
-class PadNode : public Node
+class MelFilterBankNode : public Node
 {
 public:
-    PadNode(const std::vector<rocalTensor *> &inputs, const std::vector<rocalTensor *> &outputs);
-    PadNode() = delete;
-    void init(float fill_value);
+    MelFilterBankNode(const std::vector<rocalTensor *> &inputs, const std::vector<rocalTensor *> &outputs);
+    MelFilterBankNode() = delete;
+    void init(float freq_high,float freq_low, RocalMelScaleFormula formula, int nfilter, bool normalize,
+              float sample_rate);
 
 protected:
     void create_node() override;
     void update_node() override;
-
 private:
-    float _fill_value;
-    vx_array _src_frames_array, _src_channels_array;
-    std::vector<int> _src_frames, _src_channels;
+    float _freq_high = 0;
+    float _freq_low = 0;
+    RocalMelScaleFormula _formula = RocalMelScaleFormula::SLANEY;
+    int _nfilter = 128;
+    int _sample_rate = 4410;
+    bool _normalize = true;
 };

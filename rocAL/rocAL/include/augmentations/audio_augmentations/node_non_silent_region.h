@@ -24,19 +24,21 @@ THE SOFTWARE.
 #include "node.h"
 #include "graph.h"
 
-class PadNode : public Node
+class NonSilentRegionNode : public Node
 {
 public:
-    PadNode(const std::vector<rocalTensor *> &inputs, const std::vector<rocalTensor *> &outputs);
-    PadNode() = delete;
-    void init(float fill_value);
+    NonSilentRegionNode(const std::vector<rocalTensor *> &inputs, const std::vector<rocalTensor *> &outputs);
+    NonSilentRegionNode() = delete;
+    void init(float cutOffDB,float reference_power, int reset_interval, int window_length);
 
 protected:
     void create_node() override;
     void update_node() override;
-
 private:
-    float _fill_value;
-    vx_array _src_frames_array, _src_channels_array;
-    std::vector<int> _src_frames, _src_channels;
+    vx_array _src_samples_size_array;
+    std::vector<int> _src_samples_size;
+    float _cutOffDB = -0.60;
+    float _reference_power = 0.0;
+    int _window_length = 2048;
+    int _reset_interval = 8192;
 };

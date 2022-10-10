@@ -131,7 +131,12 @@ list(APPEND SOURCES
         source/tensor/ResizeMirrorNormalize.cpp
         source/tensor/SequenceRearrange.cpp
         source/tensor/Downmix.cpp
-        
+        source/tensor/ToDecibles.cpp
+        source/tensor/PreemphasisFilter.cpp
+        source/tensor/Spectrogram.cpp
+        source/tensor/NonSilentRegion.cpp
+        source/tensor/MelFilterBank.cpp
+        source/tensor/Slice.cpp
         source/kernel_rpp.cpp
         source/internal_publishKernels.cpp
     )

@@ -23,20 +23,31 @@ THE SOFTWARE.
 #pragma once
 #include "node.h"
 #include "graph.h"
+#include "rocal_api_types.h"
+#include "parameter_factory.h"
+#include "parameter_vx.h"
 
-class PadNode : public Node
+class SliceNode : public Node
 {
 public:
-    PadNode(const std::vector<rocalTensor *> &inputs, const std::vector<rocalTensor *> &outputs);
-    PadNode() = delete;
-    void init(float fill_value);
+    SliceNode(const std::vector<rocalTensor *> &inputs, const std::vector<rocalTensor *> &outputs);
+    SliceNode() = delete;
+    void init( IntParam* anchor_param, IntParam* shape_param, FloatParam* fill_values_param, int axes,
+                bool normalized_anchor, bool normalized_shape, RocalOutOfBoundsPolicy policy);
 
 protected:
     void create_node() override;
     void update_node() override;
-
 private:
-    float _fill_value;
-    vx_array _src_frames_array, _src_channels_array;
-    std::vector<int> _src_frames, _src_channels;
+    ParameterVX<int> _anchor;
+    ParameterVX<int> _shape;
+    ParameterVX<float> _fill_values;
+    bool _normalized_anchor = false;
+    bool _normalized_shape = false;
+    RocalOutOfBoundsPolicy _policy = RocalOutOfBoundsPolicy::ERROR;
+    int _axes = 0;
+    constexpr static int ANCHOR_RANGE [2] = {1, 100}; // Shobi Need to change
+    constexpr static int SHAPE_RANGE [2] = {1, 100};
+    constexpr static float FILL_VALUES_RANGE [2] = {0, 0};
+
 };

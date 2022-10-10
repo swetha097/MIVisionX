@@ -23,20 +23,29 @@ THE SOFTWARE.
 #pragma once
 #include "node.h"
 #include "graph.h"
+#include "rocal_api_types.h"
 
-class PadNode : public Node
+class SpectrogramNode : public Node
 {
 public:
-    PadNode(const std::vector<rocalTensor *> &inputs, const std::vector<rocalTensor *> &outputs);
-    PadNode() = delete;
-    void init(float fill_value);
+    SpectrogramNode(const std::vector<rocalTensor *> &inputs, const std::vector<rocalTensor *> &outputs);
+    SpectrogramNode() = delete;
+    void init(bool center_windows,bool reflect_padding, RocalSpectrogramLayout spec_layout, int power, int nfft_size,
+              int window_length, int window_step, float *window_fn);
 
 protected:
     void create_node() override;
     void update_node() override;
-
 private:
-    float _fill_value;
-    vx_array _src_frames_array, _src_channels_array;
-    std::vector<int> _src_frames, _src_channels;
+    vx_array _src_samples_length_array, _window_fn_array;
+    std::vector<int> _src_samples_length;
+    std::vector<float> _window_fn;
+    bool _center_windows = true;
+    bool _reflect_padding = true;
+    RocalSpectrogramLayout _spec_layout = RocalSpectrogramLayout::FT;
+    int _power = 2;
+    int _nfft_size = 2048;
+    int _window_length = 512;
+    int _window_step = 256;
+    bool _is_window_empty = false;
 };

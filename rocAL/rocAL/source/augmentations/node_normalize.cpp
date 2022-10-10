@@ -48,9 +48,9 @@ void NormalizeNode::create_node() {
     vx_scalar shift = vxCreateScalar(vxGetContext((vx_reference)_graph->get()), VX_TYPE_FLOAT32, &_shift);
     vx_scalar epsilon = vxCreateScalar(vxGetContext((vx_reference)_graph->get()), VX_TYPE_FLOAT32, &_epsilon);
     vx_scalar ddof = vxCreateScalar(vxGetContext((vx_reference)_graph->get()), VX_TYPE_INT32, &_ddof);
-    vx_scalar axis_mask = vxCreateScalar(vxGetContext((vx_reference)_graph->get()), VX_TYPE_UINT32, &_axis_mask;
-    
-    _node = vxExtrppNode_Normalize(_graph->get(), _inputs[0]->handle(), _outputs[0]->handle(), _src_frames_array, _src_channels_array, _axis_mask, _mean, _std_dev, 
+    vx_scalar axis_mask = vxCreateScalar(vxGetContext((vx_reference)_graph->get()), VX_TYPE_UINT32, &_axis_mask);
+
+    _node = vxExtrppNode_Normalize(_graph->get(), _inputs[0]->handle(), _outputs[0]->handle(), _src_frames_array, _src_channels_array, _axis_mask, _mean, _std_dev,
                                    _scale, _shift, _epsilon, _ddof, _num_of_dims, _batch_size);
 
     if((status = vxGetStatus((vx_reference)_node)) != VX_SUCCESS)
@@ -66,9 +66,9 @@ void NormalizeNode::update_node() {
         _src_channels[i] = audio_roi->at(i).y1;
     }
 
-    if(!has_same_dim && batch)
+    if(!has_same_dim && _batch_size)
         THROW("All the tensor must have same dimension to perform Batch Normalization")
-    
+
     vx_status status = VX_SUCCESS;
     status |= vxCopyArrayRange((vx_array)_src_frames_array, 0, _batch_size, sizeof(vx_uint32), _src_frames.data(), VX_WRITE_ONLY, VX_MEMORY_TYPE_HOST);
     status |= vxCopyArrayRange((vx_array)_src_channels_array, 0, _batch_size, sizeof(vx_uint32), _src_channels.data(), VX_WRITE_ONLY, VX_MEMORY_TYPE_HOST);
@@ -79,7 +79,7 @@ void NormalizeNode::update_node() {
     _src_channels.clear();
 }
 
-void NormalizeNode::init(float mean, float std_dev, std::vector<int> axes, bool batch, 
+void NormalizeNode::init(float mean, float std_dev, std::vector<int> axes, bool batch,
                         float scale, float shift, int ddof, float epsilon) {
     _mean = mean;
     _std_dev = std_dev;
@@ -98,7 +98,7 @@ void NormalizeNode::init(float mean, float std_dev, std::vector<int> axes, bool 
         _axes.resize(_num_of_dims);
         std::iota(_axes.begin(), _axes.end(), 0);
     }
-    
+
     for(int d = 0; d < _axes.size(); d++)
-        _axis_mask |= (1 << (_axes[d] + 1))
+        _axis_mask |= (1 << (_axes[d] + 1));
 }

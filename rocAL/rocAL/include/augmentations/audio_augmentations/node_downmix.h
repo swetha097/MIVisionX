@@ -33,7 +33,7 @@ public:
 
 protected:
     void create_node() override;
-    void update_node() override {};
+    void update_node() override;
 
 private:
     vx_array _src_samples_array, _src_channels_array;

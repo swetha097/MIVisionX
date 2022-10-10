@@ -99,6 +99,7 @@ public:
     }
     IntParam* create_uniform_int_rand_param(int start, int end);
     FloatParam* create_uniform_float_rand_param(float start, float end);
+    FloatParam* create_uniform_distribution_float_rand_param(float mean, float std_dev);
     IntParam* create_custom_int_rand_param(const int *value, const double *frequencies, size_t size);
     FloatParam* create_custom_float_rand_param(const float *value, const double *frequencies, size_t size);
     IntParam* create_single_value_int_param(int value);

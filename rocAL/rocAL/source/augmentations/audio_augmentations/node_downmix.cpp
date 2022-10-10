@@ -34,6 +34,8 @@ void DownmixNode::create_node()
     if(_node)
         return;
 
+    _src_samples.resize(_batch_size);
+    _src_channels.resize(_batch_size);
     _src_samples_array = vxCreateArray(vxGetContext((vx_reference)_graph->get()), VX_TYPE_INT32, _batch_size);
     _src_channels_array = vxCreateArray(vxGetContext((vx_reference)_graph->get()), VX_TYPE_INT32, _batch_size);
     vx_status status = VX_SUCCESS;
@@ -47,6 +49,24 @@ void DownmixNode::create_node()
 
     if((status = vxGetStatus((vx_reference)_node)) != VX_SUCCESS)
         THROW("Adding the copy (vxExtrppNode_Downmix) node failed: "+ TOSTR(status))
+
+}
+
+void DownmixNode::update_node()
+{
+    auto audio_roi = _inputs[0]->info().get_roi();
+    for (uint i=0; i < _batch_size; i++)
+    {
+        _src_samples[i] = audio_roi->at(i).x1;
+        _src_channels[i] = audio_roi->at(i).y1;
+    }
+    vx_status src_roi_status;
+    src_roi_status = vxCopyArrayRange((vx_array)_src_samples_array, 0, _batch_size, sizeof(vx_uint32), _src_samples.data(), VX_WRITE_ONLY, VX_MEMORY_TYPE_HOST);
+    if(src_roi_status != 0)
+        THROW(" Failed calling vxCopyArrayRange for src / dst roi status : "+ TOSTR(src_roi_status))
+    src_roi_status = vxCopyArrayRange((vx_array)_src_channels_array, 0, _batch_size, sizeof(vx_uint32), _src_channels.data(), VX_WRITE_ONLY, VX_MEMORY_TYPE_HOST);
+    if(src_roi_status != 0)
+        THROW(" Failed calling vxCopyArrayRange for src / dst roi status : "+ TOSTR(src_roi_status))
 
 }
 

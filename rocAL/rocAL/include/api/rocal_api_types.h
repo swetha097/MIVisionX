@@ -140,4 +140,31 @@ enum RocalResizeInterpolationType {
     ROCAL_TRIANGULAR_INTERPOLATION = 5
 };
 
+enum RocalAudioBorderType
+{
+    ZERO = 0,
+    CLAMP,
+    REFLECT
+};
+
+enum RocalSpectrogramLayout
+{
+    FT = 0,
+    TF
+};
+
+enum RocalMelScaleFormula
+{
+    SLANEY = 0,
+    HTK,
+};
+
+enum RocalOutOfBoundsPolicy
+{
+    PAD = 0,
+    TRIMTOSHAPE,
+    ERROR
+};
+
+
 #endif //MIVISIONX_ROCAL_API_TYPES_H

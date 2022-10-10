@@ -44,7 +44,7 @@ void PadNode::create_node() {
         THROW(" vxAddArrayItems failed in the normalize node (vxExtrppNode_Normalize)  node: "+ TOSTR(status) + "  "+ TOSTR(status))
 
     // Slice Node To be called
-    // _node = vxExtrppNode_Normalize(_graph->get(), _inputs[0]->handle(), _outputs[0]->handle(), _src_frames_array, _src_channels_array, _axis_mask, _mean, _std_dev, 
+    // _node = vxExtrppNode_Normalize(_graph->get(), _inputs[0]->handle(), _outputs[0]->handle(), _src_frames_array, _src_channels_array, _axis_mask, _mean, _std_dev,
     //                                _scale, _shift, _epsilon, _ddof, _num_of_dims, _batch_size);
 
     if((status = vxGetStatus((vx_reference)_node)) != VX_SUCCESS)
@@ -62,9 +62,9 @@ void PadNode::update_node() {
         // TODO - Need to update dst the shpae with the max dims of output tensor
     }
 
-    if(!has_same_dim && batch)
+    if(!has_same_dim && _batch_size)
         THROW("All the tensor must have same dimension to perform Batch Normalization")
-    
+
     vx_status status = VX_SUCCESS;
     status |= vxCopyArrayRange((vx_array)_src_frames_array, 0, _batch_size, sizeof(vx_uint32), _src_frames.data(), VX_WRITE_ONLY, VX_MEMORY_TYPE_HOST);
     status |= vxCopyArrayRange((vx_array)_src_channels_array, 0, _batch_size, sizeof(vx_uint32), _src_channels.data(), VX_WRITE_ONLY, VX_MEMORY_TYPE_HOST);
