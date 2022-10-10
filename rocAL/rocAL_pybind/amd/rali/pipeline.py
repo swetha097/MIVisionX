@@ -192,7 +192,6 @@ class Pipeline(object):
 
     def set_outputs(self, *output_list):
         self._output_list_length = len(output_list)
-        print('OUT LIST LEN : ', len(output_list))
         b.setOutputImages(self._handle, len(output_list), output_list)
 
     def __enter__(self):
