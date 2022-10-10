@@ -92,5 +92,6 @@ public:
     virtual const std::map<std::string, std::shared_ptr<MetaData>> & get_map_content()=0;
     virtual bool exists(const std::string &image_name) = 0;
     virtual bool set_timestamp_mode() = 0;
+    // void read_all(const std::string& path, const std::string file_list_path);
 };
 
