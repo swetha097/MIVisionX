@@ -53,6 +53,7 @@ evaluate_audio_data_set(StorageType storage_type,
     if(max_samples == 0 ||max_channels  == 0)
         THROW("Cannot find size of the audio files or files cannot be accessed")
     LOG("Maximum input image dimension [ "+ TOSTR(max_samples) + " x " + TOSTR(max_channels)+" ] for images in "+source_path)
+    // std::exit(0);
     return std::make_tuple(max_samples, max_channels);
 };
 

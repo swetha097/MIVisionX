@@ -94,7 +94,7 @@ int main(int argc, const char **argv)
 int test(int test_case, const char *path, float sample_rate, int downmix, unsigned max_frames, unsigned max_channels, int gpu)
 {
     size_t num_threads = 1;
-    int inputBatchSize = 1;
+    int inputBatchSize = 2;
     std::cout << ">>> test case " << test_case << std::endl;
     std::cout << ">>> Running on " << (gpu ? "GPU" : "CPU") << std::endl;
 
@@ -113,7 +113,16 @@ int test(int test_case, const char *path, float sample_rate, int downmix, unsign
 
     rocalSetSeed(0);
 
+
+    RocalMetaData metadata_output;
+    // MetaData reader for input file_list which has file seperated by labels
+    // metadata_output = rocalCreateCOCOReader(handle, json_path, true, false);
+    const char* file_list_path = "/media/swetha/audio_support/dummy_audio_dataset/file_list.txt" ; // TODO: Add this as an arg in main() 
+    metadata_output = rocalCreateFileListLabelReader(handle, path, file_list_path);
+    // std::exit(0);
+    //Decoder
     RocalTensor input1, output;
+    std::cerr<<"PATH: "<< path<<std::endl;
     input1 = rocalAudioFileSource(handle, path, num_threads, true, false, false, max_frames, downmix);
 
     if (rocalGetStatus(handle) != ROCAL_OK)
@@ -175,6 +184,11 @@ int test(int test_case, const char *path, float sample_rate, int downmix, unsign
             {
                 std::cerr << buffer[n] << "\n";
             }
+            // for(int n = 0; n < 5; n++)
+            // {
+            //     std::cerr << buffer[n] << "\n";
+            // }
+            
         }
 
     }

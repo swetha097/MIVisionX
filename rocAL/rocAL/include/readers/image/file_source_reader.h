@@ -54,6 +54,7 @@ public:
 
     //! Returns the name of the latest file opened
     std::string id() override { return _last_id;};
+    std::string file_path() override {return _last_file_name; };
 
     unsigned count_items() override;
 
@@ -66,6 +67,7 @@ public:
 
 private:
     //! opens the folder containnig the images
+    std::shared_ptr<MetaDataReader> _meta_data_reader = nullptr;
     Reader::Status open_folder();
     Reader::Status subfolder_reading();
     std::string _folder_path;

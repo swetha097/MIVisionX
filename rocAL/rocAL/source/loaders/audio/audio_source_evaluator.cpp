@@ -49,25 +49,37 @@ AudioSourceEvaluator::create(ReaderConfig reader_cfg, DecoderConfig decoder_cfg)
 
     // _header_buff.resize(COMPRESSED_SIZE);
     _input_path = reader_cfg.path();
-    if(_input_path.back() != '/')
+    // std::cerr<< "Input Path:: "<< _input_path;
+    if(_input_path.back() != '/') {
         _input_path = _input_path + "/";
+        // std::cerr<<"_inp_path"<<_input_path;
+    }
     _decoder = create_audio_decoder(std::move(decoder_cfg));
     _reader = create_reader(std::move(reader_cfg));
     find_max_dimension();
+    std::cerr<< "\n Input Path:: "<< _input_path;
+
     return status;
 }
 
 void
 AudioSourceEvaluator::find_max_dimension()
 {
+    std::cerr<<"\n Comes here in find_max_dim";
     _reader->reset();
+    std::cerr<<"\n  _reader->count_items()"<<  _reader->count_items();
 
     while( _reader->count_items() )
     {
+        // std::cerr<<"\n While Loop";
         size_t fsize = _reader->open();
         if( (fsize) == 0 )
             continue;
-        auto file_name = _input_path + _reader->id();
+        // std::cerr<<" \n reader_id "<<_reader->file_path();
+        // std::cerr<<" \n _input_path "<<_input_path;
+
+        auto file_name = _reader->file_path();
+        // std::cerr<< "\n File Name in audio_source_evaluator" << file_name;
         // _header_buff.resize(fsize);
         // auto actual_read_size = _reader->read_data(_header_buff.data(), fsize);
         // _reader->close();

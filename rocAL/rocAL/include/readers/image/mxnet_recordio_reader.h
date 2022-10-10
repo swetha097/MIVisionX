@@ -1,4 +1,4 @@
-/*
+a/*
 Copyright (c) 2019 - 2022 Advanced Micro Devices, Inc. All rights reserved.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -55,6 +55,7 @@ public:
 
     //! Returns the id of the latest file opened
     std::string id() override { return _last_id;};
+    std::string file_path() override {return _last_file_name; };
 
     unsigned count_items() override;
 

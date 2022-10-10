@@ -67,6 +67,7 @@ AudioDecoder::Status SndFileDecoder::decode_info(int* samples, int* channels)
 AudioDecoder::Status SndFileDecoder::initialize(const char *src_filename)
 {
     _src_filename = src_filename;
+    std::cerr<<"\n SRC FILE NAME: "<<src_filename;
     memset(&_sfinfo, 0, sizeof(_sfinfo)) ;
     if (!(_sf_ptr = sf_open(src_filename, SFM_READ, &_sfinfo)))
 	{	/* Open failed so print an error message. */
