@@ -177,6 +177,17 @@ extern "C" RocalTensor ROCAL_API_CALL rocalMelFilterBank(RocalContext p_context,
                                                          bool normalize = true,
                                                          float sample_rate = 4410);
 
+extern "C" RocalTensor ROCAL_API_CALL rocalSlice(RocalContext p_context,
+                                                RocalTensor p_input,
+                                                RocalTensorOutputType rocal_tensor_output_type,
+                                                bool is_output,
+                                                RocalIntParam p_anchor,
+                                                RocalIntParam p_shape,
+                                                RocalFloatParam p_fill_values,
+                                                int axes =0,
+                                                bool normalized_anchor = false,
+                                                bool normalized_shape = false,
+                                                RocalOutOfBoundsPolicy policy = RocalOutOfBoundsPolicy::ERROR);
 
 
 #endif //MIVISIONX_ROCAL_API_AUGMENTATION_H

@@ -24,7 +24,7 @@ THE SOFTWARE.
 #include "vx_ext_amd.h"
 #define NUM_OF_DIMS 5
 
-struct MelFilterBankLocalData
+struct SliceLocalData
 {
     RPPCommonHandle handle;
     rppHandle_t rppHandle;
@@ -32,18 +32,19 @@ struct MelFilterBankLocalData
     Rpp32u nbatchSize;
     RppPtr_t pSrc;
     RppPtr_t pDst;
-    float freqHigh;
-    float freqLow;
-    unsigned melFormula;
-    int nfilter;
-    bool normalize;
-    float sampleRate;
+    int *anchor;
+    int *shape;
+    float *fill_values;
+    int axes;
+    bool normalized_anchor;
+    bool normalized_shape;
+    uint policy;
     RpptDescPtr src_desc_ptr;
     RpptDesc srcDesc;
     RpptDesc dstDesc;
     RpptDescPtr dst_desc_ptr;
     RpptROI *roi_tensor_ptr;
-    RpptImagePatch *srcDims;
+    int *srcDims;
     // RpptRoiType roiType;
     // Rpp32u layout;
     size_t in_tensor_dims[NUM_OF_DIMS];
@@ -60,15 +61,19 @@ struct MelFilterBankLocalData
 #endif
 };
 
-static vx_status VX_CALLBACK refreshMelFilterBank(vx_node node, const vx_reference *parameters, vx_uint32 num, MelFilterBankLocalData *data)
+static vx_status VX_CALLBACK refreshSlice(vx_node node, const vx_reference *parameters, vx_uint32 num, SliceLocalData *data)
 {
     vx_status status = VX_SUCCESS;
     STATUS_ERROR_CHECK(vxCopyArrayRange((vx_array)parameters[2], 0, data->nbatchSize * 4, sizeof(unsigned), data->roi_tensor_ptr, VX_READ_ONLY, VX_MEMORY_TYPE_HOST));
-    for(uint i = 0; i < data->nbatchSize; i++)
+    for(uint i = 0; i < data->nbatchSize * 2; i+2)
     {
-        data->srcDims[i].width = data->roi_tensor_ptr[i].xywhROI.xy.x;
-        data->srcDims[i].height = data->roi_tensor_ptr[i].xywhROI.xy.y;
+        data->srcDims[i] = data->roi_tensor_ptr[i].xywhROI.xy.x;
+        data->srcDims[i+1] = data->roi_tensor_ptr[i].xywhROI.xy.y;
     }
+    STATUS_ERROR_CHECK(vxCopyArrayRange((vx_array)parameters[3], 0, data->nbatchSize, sizeof(int), data->anchor, VX_READ_ONLY, VX_MEMORY_TYPE_HOST));
+    STATUS_ERROR_CHECK(vxCopyArrayRange((vx_array)parameters[4], 0, data->nbatchSize, sizeof(int), data->shape, VX_READ_ONLY, VX_MEMORY_TYPE_HOST));
+    STATUS_ERROR_CHECK(vxCopyArrayRange((vx_array)parameters[5], 0, data->nbatchSize, sizeof(unsigned), data->fill_values, VX_READ_ONLY, VX_MEMORY_TYPE_HOST));
+
     if (data->deviceType == AGO_TARGET_AFFINITY_GPU)
     {
 #if ENABLE_OPENCL
@@ -90,19 +95,10 @@ static vx_status VX_CALLBACK refreshMelFilterBank(vx_node node, const vx_referen
     return status;
 }
 
-static vx_status VX_CALLBACK validateMelFilterBank(vx_node node, const vx_reference parameters[], vx_uint32 num, vx_meta_format metas[])
+static vx_status VX_CALLBACK validateSlice(vx_node node, const vx_reference parameters[], vx_uint32 num, vx_meta_format metas[])
 {
     vx_status status = VX_SUCCESS;
     vx_enum scalar_type;
-    STATUS_ERROR_CHECK(vxQueryScalar((vx_scalar)parameters[3], VX_SCALAR_TYPE, &scalar_type, sizeof(scalar_type)));
-    if (scalar_type != VX_TYPE_FLOAT32)
-        return ERRMSG(VX_ERROR_INVALID_TYPE, "validate: Paramter: #3 type=%d (must be size)\n", scalar_type);
-    STATUS_ERROR_CHECK(vxQueryScalar((vx_scalar)parameters[4], VX_SCALAR_TYPE, &scalar_type, sizeof(scalar_type)));
-    if (scalar_type != VX_TYPE_FLOAT32)
-        return ERRMSG(VX_ERROR_INVALID_TYPE, "validate: Paramter: #4 type=%d (must be size)\n", scalar_type);
-    STATUS_ERROR_CHECK(vxQueryScalar((vx_scalar)parameters[5], VX_SCALAR_TYPE, &scalar_type, sizeof(scalar_type)));
-    if (scalar_type != VX_TYPE_UINT32)
-        return ERRMSG(VX_ERROR_INVALID_TYPE, "validate: Paramter: #5 type=%d (must be size)\n", scalar_type);
     STATUS_ERROR_CHECK(vxQueryScalar((vx_scalar)parameters[6], VX_SCALAR_TYPE, &scalar_type, sizeof(scalar_type)));
     if (scalar_type != VX_TYPE_INT32)
         return ERRMSG(VX_ERROR_INVALID_TYPE, "validate: Paramter: #6 type=%d (must be size)\n", scalar_type);
@@ -110,8 +106,11 @@ static vx_status VX_CALLBACK validateMelFilterBank(vx_node node, const vx_refere
     if (scalar_type != VX_TYPE_BOOL)
         return ERRMSG(VX_ERROR_INVALID_TYPE, "validate: Paramter: #7 type=%d (must be size)\n", scalar_type);
     STATUS_ERROR_CHECK(vxQueryScalar((vx_scalar)parameters[8], VX_SCALAR_TYPE, &scalar_type, sizeof(scalar_type)));
-    if (scalar_type != VX_TYPE_FLOAT32)
+    if (scalar_type != VX_TYPE_BOOL)
         return ERRMSG(VX_ERROR_INVALID_TYPE, "validate: Paramter: #8 type=%d (must be size)\n", scalar_type);
+    STATUS_ERROR_CHECK(vxQueryScalar((vx_scalar)parameters[9], VX_SCALAR_TYPE, &scalar_type, sizeof(scalar_type)));
+    if (scalar_type != VX_TYPE_UINT32)
+        return ERRMSG(VX_ERROR_INVALID_TYPE, "validate: Paramter: #9 type=%d (must be size)\n", scalar_type);
 
     // Check for output parameters
     vx_tensor output;
@@ -135,34 +134,33 @@ static vx_status VX_CALLBACK validateMelFilterBank(vx_node node, const vx_refere
     return status;
 }
 
-static vx_status VX_CALLBACK processMelFilterBank(vx_node node, const vx_reference *parameters, vx_uint32 num)
+static vx_status VX_CALLBACK processSlice(vx_node node, const vx_reference *parameters, vx_uint32 num)
 {
     RppStatus rpp_status = RPP_SUCCESS;
     vx_status return_status = VX_SUCCESS;
-    MelFilterBankLocalData *data = NULL;
+    SliceLocalData *data = NULL;
     STATUS_ERROR_CHECK(vxQueryNode(node, VX_NODE_LOCAL_DATA_PTR, &data, sizeof(data)));
     if (data->deviceType == AGO_TARGET_AFFINITY_GPU)
     {
 #if ENABLE_HIP
-        refreshMelFilterBank(node, parameters, num, data);
-        // rpp_status = rppt_MelFilterBank_gpu((void *)data->hip_pSrc, data->src_desc_ptr, (void *)data->hip_pDst, data->src_desc_ptr,  data->alpha, data->beta, data->hip_roi_tensor_ptr, data->roiType, data->rppHandle);
+        refreshSlice(node, parameters, num, data);
+        // rpp_status = rppt_Slice_gpu((void *)data->hip_pSrc, data->src_desc_ptr, (void *)data->hip_pDst, data->src_desc_ptr,  data->alpha, data->beta, data->hip_roi_tensor_ptr, data->roiType, data->rppHandle);
         return_status = (rpp_status == RPP_SUCCESS) ? VX_SUCCESS : VX_FAILURE;
 #endif
     }
     if (data->deviceType == AGO_TARGET_AFFINITY_CPU)
     {
-        refreshMelFilterBank(node, parameters, num, data);
-        // rppt_spectrogram_host(inputf32, srcDescPtr, spectrogramf32, dstDescPtr, srcLengthTensor, freqHighs, freqLow, windowFn, nfft, nfilter, sampleRate, windowStep, layout);
-        rpp_status = rppt_mel_filter_bank_host((float *)data->pSrc, data->src_desc_ptr, (float *)data->pDst, data->dst_desc_ptr, data->srcDims, data->freqHigh, data->freqLow,
-                                            RpptMelScaleFormula(data->melFormula), data->nfilter, data->sampleRate, data->normalize);
+        refreshSlice(node, parameters, num, data);
+        rpp_status = rppt_slice_host((float *)data->pSrc, data->src_desc_ptr, (float *)data->pDst, data->dst_desc_ptr, data->srcDims, data->anchor, data->shape,
+                                    &data->axes, data->fill_values, data->normalized_anchor, data->normalized_shape, RpptOutOfBoundsPolicy(data->policy)); // shobi
         return_status = (rpp_status == RPP_SUCCESS) ? VX_SUCCESS : VX_FAILURE;
     }
     return return_status;
 }
 
-static vx_status VX_CALLBACK initializeMelFilterBank(vx_node node, const vx_reference *parameters, vx_uint32 num)
+static vx_status VX_CALLBACK initializeSlice(vx_node node, const vx_reference *parameters, vx_uint32 num)
 {
-    MelFilterBankLocalData *data = new MelFilterBankLocalData;
+    SliceLocalData *data = new SliceLocalData;
     // unsigned roiType;
     memset(data, 0, sizeof(*data));
 #if ENABLE_OPENCL
@@ -170,14 +168,12 @@ static vx_status VX_CALLBACK initializeMelFilterBank(vx_node node, const vx_refe
 #elif ENABLE_HIP
     STATUS_ERROR_CHECK(vxQueryNode(node, VX_NODE_ATTRIBUTE_AMD_HIP_STREAM, &data->handle.hipstream, sizeof(data->handle.hipstream)));
 #endif
-    STATUS_ERROR_CHECK(vxCopyScalar((vx_scalar)parameters[10], &data->deviceType, VX_READ_ONLY, VX_MEMORY_TYPE_HOST));
-    STATUS_ERROR_CHECK(vxReadScalarValue((vx_scalar)parameters[3], &data->freqHigh));
-    STATUS_ERROR_CHECK(vxReadScalarValue((vx_scalar)parameters[4], &data->freqLow));
-    STATUS_ERROR_CHECK(vxReadScalarValue((vx_scalar)parameters[5], &data->melFormula));
-    STATUS_ERROR_CHECK(vxReadScalarValue((vx_scalar)parameters[6], &data->nfilter));
-    STATUS_ERROR_CHECK(vxReadScalarValue((vx_scalar)parameters[7], &data->normalize));
-    STATUS_ERROR_CHECK(vxReadScalarValue((vx_scalar)parameters[8], &data->sampleRate));
-    STATUS_ERROR_CHECK(vxReadScalarValue((vx_scalar)parameters[9], &data->nbatchSize));
+    STATUS_ERROR_CHECK(vxCopyScalar((vx_scalar)parameters[11], &data->deviceType, VX_READ_ONLY, VX_MEMORY_TYPE_HOST));
+    STATUS_ERROR_CHECK(vxReadScalarValue((vx_scalar)parameters[6], &data->axes));
+    STATUS_ERROR_CHECK(vxReadScalarValue((vx_scalar)parameters[7], &data->normalized_anchor));
+    STATUS_ERROR_CHECK(vxReadScalarValue((vx_scalar)parameters[8], &data->normalized_shape));
+    STATUS_ERROR_CHECK(vxReadScalarValue((vx_scalar)parameters[9], &data->policy));
+    STATUS_ERROR_CHECK(vxReadScalarValue((vx_scalar)parameters[10], &data->nbatchSize));
 
     // Querying for input tensor
     data->src_desc_ptr = &data->srcDesc;
@@ -220,7 +216,10 @@ static vx_status VX_CALLBACK initializeMelFilterBank(vx_node node, const vx_refe
     data->dst_desc_ptr->numDims = 4;
 
     data->roi_tensor_ptr = (RpptROI *)calloc(data->src_desc_ptr->n, sizeof(RpptROI));
-    data->srcDims = (RpptImagePatch *) calloc(data->src_desc_ptr->n, sizeof(RpptImagePatch));
+    data->srcDims = (int *) calloc(data->src_desc_ptr->n * 2, sizeof(int));
+    data->anchor = (int *) calloc(data->src_desc_ptr->n, sizeof(int));
+    data->shape = (int *) calloc(data->src_desc_ptr->n, sizeof(int));
+    data->fill_values = (float *) calloc(data->src_desc_ptr->n, sizeof(float));
 
 
 // #if ENABLE_HIP
@@ -228,7 +227,7 @@ static vx_status VX_CALLBACK initializeMelFilterBank(vx_node node, const vx_refe
 //         hipMalloc(&data->hip_roi_tensor_ptr, data->src_desc_ptr->n * sizeof(RpptROI));
 // #endif
 //     data->roi_tensor_ptr = (RpptROI *)calloc(data->src_desc_ptr->n, sizeof(RpptROI));
-    refreshMelFilterBank(node, parameters, num, data);
+    refreshSlice(node, parameters, num, data);
 #if ENABLE_OPENCL
     if (data->deviceType == AGO_TARGET_AFFINITY_GPU)
         rppCreateWithStreamAndBatchSize(&data->rppHandle, data->handle.cmdq, data->nbatchSize);
@@ -243,9 +242,9 @@ static vx_status VX_CALLBACK initializeMelFilterBank(vx_node node, const vx_refe
     return VX_SUCCESS;
 }
 
-static vx_status VX_CALLBACK uninitializeMelFilterBank(vx_node node, const vx_reference *parameters, vx_uint32 num)
+static vx_status VX_CALLBACK uninitializeSlice(vx_node node, const vx_reference *parameters, vx_uint32 num)
 {
-    MelFilterBankLocalData *data;
+    SliceLocalData *data;
     STATUS_ERROR_CHECK(vxQueryNode(node, VX_NODE_LOCAL_DATA_PTR, &data, sizeof(data)));
 #if ENABLE_OPENCL || ENABLE_HIP
     if (data->deviceType == AGO_TARGET_AFFINITY_GPU)
@@ -254,11 +253,9 @@ static vx_status VX_CALLBACK uninitializeMelFilterBank(vx_node node, const vx_re
     if (data->deviceType == AGO_TARGET_AFFINITY_CPU)
         rppDestroyHost(data->rppHandle);
     free(data->roi_tensor_ptr);
-    // free(data->roi_tensor_ptr);
-// #if ENABLE_HIP
-//     if (data->deviceType == AGO_TARGET_AFFINITY_GPU)
-//         hipFree(data->hip_roi_tensor_ptr);
-// #endif
+    free(data->anchor);
+    free(data->shape);
+    free(data->fill_values);
     delete (data);
     return VX_SUCCESS;
 }
@@ -281,17 +278,17 @@ static vx_status VX_CALLBACK query_target_support(vx_graph graph, vx_node node,
     return VX_SUCCESS;
 }
 
-vx_status MelFilterBank_Register(vx_context context)
+vx_status Slice_Register(vx_context context)
 {
     vx_status status = VX_SUCCESS;
     // Add kernel to the context with callbacks
-    vx_kernel kernel = vxAddUserKernel(context, "org.rpp.MelFilterBank",
-                                       VX_KERNEL_RPP_MELFILTERBANK,
-                                       processMelFilterBank,
-                                       11,
-                                       validateMelFilterBank,
-                                       initializeMelFilterBank,
-                                       uninitializeMelFilterBank);
+    vx_kernel kernel = vxAddUserKernel(context, "org.rpp.Slice",
+                                       VX_KERNEL_RPP_SLICE,
+                                       processSlice,
+                                       12,
+                                       validateSlice,
+                                       initializeSlice,
+                                       uninitializeSlice);
     ERROR_CHECK_OBJECT(kernel);
     AgoTargetAffinityInfo affinity;
     vxQueryContext(context, VX_CONTEXT_ATTRIBUTE_AMD_AFFINITY, &affinity, sizeof(affinity));
@@ -311,14 +308,15 @@ vx_status MelFilterBank_Register(vx_context context)
         PARAM_ERROR_CHECK(vxAddParameterToKernel(kernel, 0, VX_INPUT, VX_TYPE_TENSOR, VX_PARAMETER_STATE_REQUIRED));
         PARAM_ERROR_CHECK(vxAddParameterToKernel(kernel, 1, VX_OUTPUT, VX_TYPE_TENSOR, VX_PARAMETER_STATE_REQUIRED));
         PARAM_ERROR_CHECK(vxAddParameterToKernel(kernel, 2, VX_INPUT, VX_TYPE_ARRAY, VX_PARAMETER_STATE_REQUIRED));
-        PARAM_ERROR_CHECK(vxAddParameterToKernel(kernel, 3, VX_INPUT, VX_TYPE_SCALAR, VX_PARAMETER_STATE_REQUIRED));
-        PARAM_ERROR_CHECK(vxAddParameterToKernel(kernel, 4, VX_INPUT, VX_TYPE_SCALAR, VX_PARAMETER_STATE_REQUIRED));
-        PARAM_ERROR_CHECK(vxAddParameterToKernel(kernel, 5, VX_INPUT, VX_TYPE_SCALAR, VX_PARAMETER_STATE_REQUIRED));
+        PARAM_ERROR_CHECK(vxAddParameterToKernel(kernel, 3, VX_INPUT, VX_TYPE_ARRAY, VX_PARAMETER_STATE_REQUIRED));
+        PARAM_ERROR_CHECK(vxAddParameterToKernel(kernel, 4, VX_INPUT, VX_TYPE_ARRAY, VX_PARAMETER_STATE_REQUIRED));
+        PARAM_ERROR_CHECK(vxAddParameterToKernel(kernel, 5, VX_INPUT, VX_TYPE_ARRAY, VX_PARAMETER_STATE_REQUIRED));
         PARAM_ERROR_CHECK(vxAddParameterToKernel(kernel, 6, VX_INPUT, VX_TYPE_SCALAR, VX_PARAMETER_STATE_REQUIRED));
         PARAM_ERROR_CHECK(vxAddParameterToKernel(kernel, 7, VX_INPUT, VX_TYPE_SCALAR, VX_PARAMETER_STATE_REQUIRED));
         PARAM_ERROR_CHECK(vxAddParameterToKernel(kernel, 8, VX_INPUT, VX_TYPE_SCALAR, VX_PARAMETER_STATE_REQUIRED));
         PARAM_ERROR_CHECK(vxAddParameterToKernel(kernel, 9, VX_INPUT, VX_TYPE_SCALAR, VX_PARAMETER_STATE_REQUIRED));
         PARAM_ERROR_CHECK(vxAddParameterToKernel(kernel, 10, VX_INPUT, VX_TYPE_SCALAR, VX_PARAMETER_STATE_REQUIRED));
+        PARAM_ERROR_CHECK(vxAddParameterToKernel(kernel, 11, VX_INPUT, VX_TYPE_SCALAR, VX_PARAMETER_STATE_REQUIRED));
         PARAM_ERROR_CHECK(vxFinalizeKernel(kernel));
     }
     if (status != VX_SUCCESS)

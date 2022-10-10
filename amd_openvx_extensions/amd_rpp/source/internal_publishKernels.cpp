@@ -140,6 +140,7 @@ vx_status get_kernels_to_publish()
     STATUS_ERROR_CHECK(ADD_KERENEL(Spectrogram_Register));
     STATUS_ERROR_CHECK(ADD_KERENEL(NonSilentRegion_Register));
     STATUS_ERROR_CHECK(ADD_KERENEL(MelFilterBank_Register));
+    STATUS_ERROR_CHECK(ADD_KERENEL(Slice_Register));
 
     return status;
 }

@@ -39,6 +39,7 @@ THE SOFTWARE.
 #include "node_spectrogram.h"
 #include "node_non_silent_region.h"
 #include "node_mel_filter_bank.h"
+#include "node_slice.h"
 
 #include "meta_node_resize.h"
 #include "meta_node_crop.h"
@@ -904,6 +905,47 @@ RocalTensor rocalMelFilterBank(RocalContext p_context,
         output = context->master_graph->create_tensor(output_info, is_output);
         context->master_graph->add_node<MelFilterBankNode>({input}, {output})->init(freq_high, freq_low, mel_formula,
                                                                                   nfilter, normalize, sample_rate);
+    }
+    catch(const std::exception& e) {
+        context->capture_error(e.what());
+        ERR(e.what())
+    }
+    return output;
+}
+
+RocalTensor rocalSlice(RocalContext p_context,
+                        RocalTensor p_input,
+                        RocalTensorOutputType rocal_tensor_output_type,
+                        bool is_output,
+                        RocalIntParam p_anchor,
+                        RocalIntParam p_shape,
+                        RocalFloatParam p_fill_values,
+                        int axes,
+                        bool normalized_anchor,
+                        bool normalized_shape,
+                        RocalOutOfBoundsPolicy policy) {
+    if(!p_context || !p_input)
+        THROW("Null values passed as input")
+    rocalTensor* output = nullptr;
+    auto context = static_cast<Context*>(p_context);
+    auto input = static_cast<rocalTensor*>(p_input);
+    auto anchor = static_cast<IntParam*>(p_anchor);
+    auto shape = static_cast<IntParam*>(p_shape);
+    auto fill_values = static_cast<FloatParam*>(p_fill_values);
+    RocalTensorDataType op_tensorDataType;
+    try {
+        rocalTensorInfo output_info = input->info();
+        get_rocal_tensor_data_type(rocal_tensor_output_type, op_tensorDataType);
+        std::vector<size_t> dims = output_info.dims();
+        dims[1] = 200; // shobi
+        output_info.set_dims(dims);
+
+        output_info.set_tensor_layout(RocalTensorlayout::NONE);
+        output_info.set_data_type(op_tensorDataType);
+
+        output = context->master_graph->create_tensor(output_info, is_output);
+        context->master_graph->add_node<SliceNode>({input}, {output})->init(anchor, shape, fill_values,
+                                                                            axes, normalized_anchor, normalized_shape, policy);
     }
     catch(const std::exception& e) {
         context->capture_error(e.what());

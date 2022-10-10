@@ -159,4 +159,12 @@ enum RocalMelScaleFormula
     HTK,
 };
 
+enum RocalOutOfBoundsPolicy
+{
+    PAD = 0,
+    TRIMTOSHAPE,
+    ERROR
+};
+
+
 #endif //MIVISIONX_ROCAL_API_TYPES_H

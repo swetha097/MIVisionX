@@ -168,6 +168,32 @@ int test(int test_case, const char *path, float sample_rate, int downmix, unsign
             output = rocalMelFilterBank(handle, temp_output, true, maxFreq, minFreq, melFormula, numFilter, normalize, sampleRate);
         }
         break;
+        case 5:
+        {
+            std::cerr<<"\n Slice";
+            RocalTensorLayout tensorLayout; // = RocalTensorLayout::None;
+            RocalTensorOutputType tensorOutputType = RocalTensorOutputType::ROCAL_FP32;
+            const size_t num_values = 3;
+
+            int anchor_values[num_values] = {10, 50, 100};
+            double anchor_frequencies[num_values] = {1, 5, 5};
+            RocalIntParam anchor = rocalCreateIntRand(anchor_values, anchor_frequencies,
+                                                    sizeof(anchor_values) / sizeof(anchor_values[0]));
+
+            int values[num_values] = {20, 100, 200};
+            double frequencies[num_values] = {1, 5, 5};
+            RocalIntParam shape = rocalCreateIntRand(values, frequencies,
+                                                    sizeof(values) / sizeof(values[0]));
+
+            float fill_values[num_values] = {10, 50, 100};
+            double fill_frequencies[num_values] = {1, 5, 5};
+            RocalFloatParam fill = rocalCreateFloatRand(fill_values, fill_frequencies,
+                                                    sizeof(fill_values) / sizeof(fill_values[0]));
+
+            output = rocalSlice(handle, input1, tensorOutputType, true, anchor, shape, fill, 0);
+        }
+        break;
+
         default:
         {
             std::cout << "Not a valid pipeline type ! Exiting!\n";
