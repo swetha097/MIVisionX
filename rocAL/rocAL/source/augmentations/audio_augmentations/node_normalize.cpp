@@ -48,10 +48,10 @@ void NormalizeNode::create_node() {
     vx_scalar shift = vxCreateScalar(vxGetContext((vx_reference)_graph->get()), VX_TYPE_FLOAT32, &_shift);
     vx_scalar epsilon = vxCreateScalar(vxGetContext((vx_reference)_graph->get()), VX_TYPE_FLOAT32, &_epsilon);
     vx_scalar ddof = vxCreateScalar(vxGetContext((vx_reference)_graph->get()), VX_TYPE_INT32, &_ddof);
-    vx_scalar axis_mask = vxCreateScalar(vxGetContext((vx_reference)_graph->get()), VX_TYPE_UINT32, &_axis_mask);
+    vx_scalar axis_mask = vxCreateScalar(vxGetContext((vx_reference)_graph->get()), VX_TYPE_INT32, &_axis_mask);
 
-    _node = vxExtrppNode_Normalize(_graph->get(), _inputs[0]->handle(), _outputs[0]->handle(), _src_frames_array, _src_channels_array, _axis_mask, _mean, _std_dev,
-                                   _scale, _shift, _epsilon, _ddof, _num_of_dims, _batch_size);
+    _node = vxExtrppNode_Normalize(_graph->get(), _inputs[0]->handle(), _outputs[0]->handle(), _src_frames_array, _src_channels_array, axis_mask, mean, std_dev,
+                                   scale, shift, epsilon, ddof, _num_of_dims, _batch_size);
 
     if((status = vxGetStatus((vx_reference)_node)) != VX_SUCCESS)
         THROW("Adding the copy (vxExtrppNode_Downmix) node failed: "+ TOSTR(status))

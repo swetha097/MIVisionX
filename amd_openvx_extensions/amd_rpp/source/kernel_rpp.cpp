@@ -2078,21 +2078,14 @@ VX_API_ENTRY vx_node VX_API_CALL vxExtrppNode_Downmix(vx_graph graph, vx_tensor 
     return node;
 }
 
-VX_API_ENTRY vx_node VX_API_CALL vxExtrppNode_Normalize(vx_graph graph, vx_tensor pSrc, vx_tensor pDst, vx_array srcSamples, vx_array srcChannels, vx_uint32 axisMask, vx_float32 mean, vx_float32 stdDev, vx_float32 scale,
-                                                        vx_float32 shift, vx_float32 epsilon, vx_int32 ddof, vx_uint32 numOfDims, vx_uint32 nbatchSize)
+VX_API_ENTRY vx_node VX_API_CALL vxExtrppNode_Normalize(vx_graph graph, vx_tensor pSrc, vx_tensor pDst, vx_array srcSamples, vx_array srcChannels, vx_scalar axisMask, vx_scalar mean, vx_scalar stdDev, vx_scalar scale,
+                                                        vx_scalar shift, vx_scalar epsilon, vx_scalar ddof, vx_uint32 numOfDims, vx_uint32 nbatchSize)
 {
     vx_node node = NULL;
     vx_context context = vxGetContext((vx_reference)graph);
     if (vxGetStatus((vx_reference)context) == VX_SUCCESS)
     {
         vx_uint32 dev_type = getGraphAffinity(graph);
-        vx_scalar AXIS_MASK = vxCreateScalar(vxGetContext((vx_reference)graph), VX_TYPE_UINT32, &axisMask);
-        vx_scalar MEAN = vxCreateScalar(vxGetContext((vx_reference)graph), VX_TYPE_FLOAT32, &mean);
-        vx_scalar STDDEV = vxCreateScalar(vxGetContext((vx_reference)graph), VX_TYPE_FLOAT32, &stdDev);
-        vx_scalar SCALE = vxCreateScalar(vxGetContext((vx_reference)graph), VX_TYPE_FLOAT32, &scale);
-        vx_scalar SHIFT = vxCreateScalar(vxGetContext((vx_reference)graph), VX_TYPE_FLOAT32, &shift);
-        vx_scalar EPSILON = vxCreateScalar(vxGetContext((vx_reference)graph), VX_TYPE_FLOAT32, &epsilon);
-        vx_scalar DDOF = vxCreateScalar(vxGetContext((vx_reference)graph), VX_TYPE_INT32, &ddof);
         vx_scalar NUMOFDIMS = vxCreateScalar(vxGetContext((vx_reference)graph), VX_TYPE_UINT32, &numOfDims);
         vx_scalar DEV_TYPE = vxCreateScalar(vxGetContext((vx_reference)graph), VX_TYPE_UINT32, &dev_type);
         vx_scalar NBATCHSIZE = vxCreateScalar(vxGetContext((vx_reference)graph), VX_TYPE_UINT32, &nbatchSize);
@@ -2101,13 +2094,13 @@ VX_API_ENTRY vx_node VX_API_CALL vxExtrppNode_Normalize(vx_graph graph, vx_tenso
             (vx_reference)pDst,
             (vx_reference)srcSamples,
             (vx_reference)srcChannels,
-            (vx_reference)AXIS_MASK,
-            (vx_reference)MEAN,
-            (vx_reference)STDDEV,
-            (vx_reference)SCALE,
-            (vx_reference)SHIFT,
-            (vx_reference)EPSILON,
-            (vx_reference)DDOF,
+            (vx_reference)axisMask,
+            (vx_reference)mean,
+            (vx_reference)stdDev,
+            (vx_reference)scale,
+            (vx_reference)shift,
+            (vx_reference)epsilon,
+            (vx_reference)ddof,
             (vx_reference)NUMOFDIMS,
             (vx_reference)NBATCHSIZE,
             (vx_reference)DEV_TYPE};

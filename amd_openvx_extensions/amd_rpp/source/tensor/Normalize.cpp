@@ -24,7 +24,7 @@ THE SOFTWARE.
 #include "vx_ext_amd.h"
 #define NUM_OF_DIMS 5
 
-struct SpectrogramLocalData
+struct NormalizeLocalData
 {
     RPPCommonHandle handle;
     rppHandle_t rppHandle;
@@ -32,20 +32,20 @@ struct SpectrogramLocalData
     Rpp32u nbatchSize;
     RppPtr_t pSrc;
     RppPtr_t pDst;
-    bool centerWindow;
-    bool reflectPadding;
-    unsigned specLayout;
-    int power;
-    int nfftSize;
-    int windowLength;
-    int windowStep;
-    bool isWindowEmpty;
+    int axisMask;
+    float mean;
+    float stdDev;
+    float scale;
+    float shift;
+    float epsilon;
+    int ddof;
+    uint numOfDims;
     RpptDescPtr src_desc_ptr;
     RpptDesc srcDesc;
     RpptDesc dstDesc;
     RpptDescPtr dst_desc_ptr;
-    Rpp32u *sampleLength;
-    float *windowFn;
+    Rpp32u *sampleArray;
+    Rpp32u *sampleChannels;
     // RpptROI *roi_tensor_Ptr;
     // RpptRoiType roiType;
     // Rpp32u layout;
@@ -63,18 +63,11 @@ struct SpectrogramLocalData
 #endif
 };
 
-static vx_status VX_CALLBACK refreshSpectrogram(vx_node node, const vx_reference *parameters, vx_uint32 num, SpectrogramLocalData *data)
+static vx_status VX_CALLBACK refreshNormalize(vx_node node, const vx_reference *parameters, vx_uint32 num, NormalizeLocalData *data)
 {
     vx_status status = VX_SUCCESS;
-    STATUS_ERROR_CHECK(vxCopyArrayRange((vx_array)parameters[2], 0, data->nbatchSize, sizeof(unsigned), data->sampleLength, VX_READ_ONLY, VX_MEMORY_TYPE_HOST));
-    if(!data->isWindowEmpty)
-    {
-        STATUS_ERROR_CHECK(vxCopyArrayRange((vx_array)parameters[3], 0, data->windowLength, sizeof(float), data->windowFn, VX_READ_ONLY, VX_MEMORY_TYPE_HOST));
-    }
-    else
-    {
-        data->windowFn = NULL;
-    }
+    STATUS_ERROR_CHECK(vxCopyArrayRange((vx_array)parameters[2], 0, data->nbatchSize, sizeof(unsigned), data->sampleArray, VX_READ_ONLY, VX_MEMORY_TYPE_HOST));
+    STATUS_ERROR_CHECK(vxCopyArrayRange((vx_array)parameters[3], 0, data->nbatchSize, sizeof(float), data->sampleChannels, VX_READ_ONLY, VX_MEMORY_TYPE_HOST));
     if (data->deviceType == AGO_TARGET_AFFINITY_GPU)
     {
 #if ENABLE_OPENCL
@@ -96,34 +89,31 @@ static vx_status VX_CALLBACK refreshSpectrogram(vx_node node, const vx_reference
     return status;
 }
 
-static vx_status VX_CALLBACK validateSpectrogram(vx_node node, const vx_reference parameters[], vx_uint32 num, vx_meta_format metas[])
+static vx_status VX_CALLBACK validateNormalize(vx_node node, const vx_reference parameters[], vx_uint32 num, vx_meta_format metas[])
 {
     vx_status status = VX_SUCCESS;
     vx_enum scalar_type;
     STATUS_ERROR_CHECK(vxQueryScalar((vx_scalar)parameters[4], VX_SCALAR_TYPE, &scalar_type, sizeof(scalar_type)));
-    if (scalar_type != VX_TYPE_BOOL)
+    if (scalar_type != VX_TYPE_INT32)
         return ERRMSG(VX_ERROR_INVALID_TYPE, "validate: Paramter: #4 type=%d (must be size)\n", scalar_type);
     STATUS_ERROR_CHECK(vxQueryScalar((vx_scalar)parameters[5], VX_SCALAR_TYPE, &scalar_type, sizeof(scalar_type)));
-    if (scalar_type != VX_TYPE_BOOL)
+    if (scalar_type != VX_TYPE_FLOAT32)
         return ERRMSG(VX_ERROR_INVALID_TYPE, "validate: Paramter: #5 type=%d (must be size)\n", scalar_type);
     STATUS_ERROR_CHECK(vxQueryScalar((vx_scalar)parameters[6], VX_SCALAR_TYPE, &scalar_type, sizeof(scalar_type)));
-    if (scalar_type != VX_TYPE_UINT32)
+    if (scalar_type != VX_TYPE_FLOAT32)
         return ERRMSG(VX_ERROR_INVALID_TYPE, "validate: Paramter: #6 type=%d (must be size)\n", scalar_type);
     STATUS_ERROR_CHECK(vxQueryScalar((vx_scalar)parameters[7], VX_SCALAR_TYPE, &scalar_type, sizeof(scalar_type)));
-    if (scalar_type != VX_TYPE_INT32)
+    if (scalar_type != VX_TYPE_FLOAT32)
         return ERRMSG(VX_ERROR_INVALID_TYPE, "validate: Paramter: #7 type=%d (must be size)\n", scalar_type);
     STATUS_ERROR_CHECK(vxQueryScalar((vx_scalar)parameters[8], VX_SCALAR_TYPE, &scalar_type, sizeof(scalar_type)));
-    if (scalar_type != VX_TYPE_INT32)
+    if (scalar_type != VX_TYPE_FLOAT32)
         return ERRMSG(VX_ERROR_INVALID_TYPE, "validate: Paramter: #8 type=%d (must be size)\n", scalar_type);
     STATUS_ERROR_CHECK(vxQueryScalar((vx_scalar)parameters[9], VX_SCALAR_TYPE, &scalar_type, sizeof(scalar_type)));
-    if (scalar_type != VX_TYPE_INT32)
+    if (scalar_type != VX_TYPE_FLOAT32)
         return ERRMSG(VX_ERROR_INVALID_TYPE, "validate: Paramter: #9 type=%d (must be size)\n", scalar_type);
     STATUS_ERROR_CHECK(vxQueryScalar((vx_scalar)parameters[10], VX_SCALAR_TYPE, &scalar_type, sizeof(scalar_type)));
     if (scalar_type != VX_TYPE_INT32)
         return ERRMSG(VX_ERROR_INVALID_TYPE, "validate: Paramter: #10 type=%d (must be size)\n", scalar_type);
-    STATUS_ERROR_CHECK(vxQueryScalar((vx_scalar)parameters[11], VX_SCALAR_TYPE, &scalar_type, sizeof(scalar_type)));
-    if (scalar_type != VX_TYPE_BOOL)
-        return ERRMSG(VX_ERROR_INVALID_TYPE, "validate: Paramter: #11 type=%d (must be size)\n", scalar_type);
 
     // Check for output parameters
     vx_tensor output;
@@ -147,34 +137,35 @@ static vx_status VX_CALLBACK validateSpectrogram(vx_node node, const vx_referenc
     return status;
 }
 
-static vx_status VX_CALLBACK processSpectrogram(vx_node node, const vx_reference *parameters, vx_uint32 num)
+static vx_status VX_CALLBACK processNormalize(vx_node node, const vx_reference *parameters, vx_uint32 num)
 {
     RppStatus rpp_status = RPP_SUCCESS;
     vx_status return_status = VX_SUCCESS;
-    SpectrogramLocalData *data = NULL;
+    NormalizeLocalData *data = NULL;
     STATUS_ERROR_CHECK(vxQueryNode(node, VX_NODE_LOCAL_DATA_PTR, &data, sizeof(data)));
     if (data->deviceType == AGO_TARGET_AFFINITY_GPU)
     {
 #if ENABLE_HIP
-        refreshSpectrogram(node, parameters, num, data);
-        // rpp_status = rppt_Spectrogram_gpu((void *)data->hip_pSrc, data->src_desc_ptr, (void *)data->hip_pDst, data->src_desc_ptr,  data->alpha, data->beta, data->hip_roi_tensor_Ptr, data->roiType, data->rppHandle);
+        refreshNormalize(node, parameters, num, data);
+        // rpp_status = rppt_Normalize_gpu((void *)data->hip_pSrc, data->src_desc_ptr, (void *)data->hip_pDst, data->src_desc_ptr,  data->alpha, data->beta, data->hip_roi_tensor_Ptr, data->roiType, data->rppHandle);
         return_status = (rpp_status == RPP_SUCCESS) ? VX_SUCCESS : VX_FAILURE;
 #endif
     }
     if (data->deviceType == AGO_TARGET_AFFINITY_CPU)
     {
-        refreshSpectrogram(node, parameters, num, data);
-        // rppt_spectrogram_host(inputf32, srcDescPtr, spectrogramf32, dstDescPtr, srcLengthTensor, centerWindows, reflectPadding, windowFn, nfft, power, windowLength, windowStep, layout);
-        rpp_status = rppt_spectrogram_host((float *)data->pSrc, data->src_desc_ptr, (float *)data->pDst, data->dst_desc_ptr,(int*) data->sampleLength, data->centerWindow, data->reflectPadding,
-                                            data->windowFn, data->nfftSize, data->power, data->windowLength, data->windowStep, RpptSpectrogramLayout(data->specLayout));
+        refreshNormalize(node, parameters, num, data);
+        // rppt_normalize_audio_host(inputf32, srcDescPtr, outputf32, dstDescPtr, srcLengthTensor, channelsTensor, axis_mask,
+                                        // mean, std_dev, scale, shift, epsilon, ddof, num_of_dims);
+        rpp_status = rppt_Normalize_host((float *)data->pSrc, data->src_desc_ptr, (float *)data->pDst, data->dst_desc_ptr, data->sampleArray, data->sampleChannels, data->axisMask, data->mean,
+                                        data->stdDev, data->scale, data->shift, data->epsilon, data->ddof, data->numOfDims);
         return_status = (rpp_status == RPP_SUCCESS) ? VX_SUCCESS : VX_FAILURE;
     }
     return return_status;
 }
 
-static vx_status VX_CALLBACK initializeSpectrogram(vx_node node, const vx_reference *parameters, vx_uint32 num)
+static vx_status VX_CALLBACK initializeNormalize(vx_node node, const vx_reference *parameters, vx_uint32 num)
 {
-    SpectrogramLocalData *data = new SpectrogramLocalData;
+    NormalizeLocalData *data = new NormalizeLocalData;
     // unsigned roiType;
     memset(data, 0, sizeof(*data));
 #if ENABLE_OPENCL
@@ -183,14 +174,14 @@ static vx_status VX_CALLBACK initializeSpectrogram(vx_node node, const vx_refere
     STATUS_ERROR_CHECK(vxQueryNode(node, VX_NODE_ATTRIBUTE_AMD_HIP_STREAM, &data->handle.hipstream, sizeof(data->handle.hipstream)));
 #endif
     STATUS_ERROR_CHECK(vxCopyScalar((vx_scalar)parameters[13], &data->deviceType, VX_READ_ONLY, VX_MEMORY_TYPE_HOST));
-    STATUS_ERROR_CHECK(vxReadScalarValue((vx_scalar)parameters[4], &data->centerWindow));
-    STATUS_ERROR_CHECK(vxReadScalarValue((vx_scalar)parameters[5], &data->reflectPadding));
-    STATUS_ERROR_CHECK(vxReadScalarValue((vx_scalar)parameters[6], &data->specLayout));
-    STATUS_ERROR_CHECK(vxReadScalarValue((vx_scalar)parameters[7], &data->power));
-    STATUS_ERROR_CHECK(vxReadScalarValue((vx_scalar)parameters[8], &data->nfftSize));
-    STATUS_ERROR_CHECK(vxReadScalarValue((vx_scalar)parameters[9], &data->windowLength));
-    STATUS_ERROR_CHECK(vxReadScalarValue((vx_scalar)parameters[10], &data->windowStep));
-    STATUS_ERROR_CHECK(vxReadScalarValue((vx_scalar)parameters[11], &data->isWindowEmpty));
+    STATUS_ERROR_CHECK(vxReadScalarValue((vx_scalar)parameters[4], &data->axisMask));
+    STATUS_ERROR_CHECK(vxReadScalarValue((vx_scalar)parameters[5], &data->mean));
+    STATUS_ERROR_CHECK(vxReadScalarValue((vx_scalar)parameters[6], &data->stdDev));
+    STATUS_ERROR_CHECK(vxReadScalarValue((vx_scalar)parameters[7], &data->scale));
+    STATUS_ERROR_CHECK(vxReadScalarValue((vx_scalar)parameters[8], &data->shift));
+    STATUS_ERROR_CHECK(vxReadScalarValue((vx_scalar)parameters[9], &data->epsilon));
+    STATUS_ERROR_CHECK(vxReadScalarValue((vx_scalar)parameters[10], &data->ddof));
+    STATUS_ERROR_CHECK(vxReadScalarValue((vx_scalar)parameters[11], &data->numOfDims));
     STATUS_ERROR_CHECK(vxReadScalarValue((vx_scalar)parameters[12], &data->nbatchSize));
 
     // Querying for input tensor
@@ -233,8 +224,8 @@ static vx_status VX_CALLBACK initializeSpectrogram(vx_node node, const vx_refere
     data->dst_desc_ptr->strides.cStride = 1;
     data->dst_desc_ptr->numDims = 4;
 
-    data->sampleLength = (unsigned int *)calloc(data->src_desc_ptr->n, sizeof(unsigned int));
-    data->windowFn = (float *)calloc(data->windowLength, sizeof(float));
+    data->sampleArray = (unsigned int *)calloc(data->src_desc_ptr->n, sizeof(unsigned int));
+    data->sampleChannels = (float *)calloc(data->epsilon, sizeof(float));
 
 
 // #if ENABLE_HIP
@@ -242,7 +233,7 @@ static vx_status VX_CALLBACK initializeSpectrogram(vx_node node, const vx_refere
 //         hipMalloc(&data->hip_roi_tensor_Ptr, data->src_desc_ptr->n * sizeof(RpptROI));
 // #endif
 //     data->roi_tensor_Ptr = (RpptROI *)calloc(data->src_desc_ptr->n, sizeof(RpptROI));
-    refreshSpectrogram(node, parameters, num, data);
+    refreshNormalize(node, parameters, num, data);
 #if ENABLE_OPENCL
     if (data->deviceType == AGO_TARGET_AFFINITY_GPU)
         rppCreateWithStreamAndBatchSize(&data->rppHandle, data->handle.cmdq, data->nbatchSize);
@@ -257,9 +248,9 @@ static vx_status VX_CALLBACK initializeSpectrogram(vx_node node, const vx_refere
     return VX_SUCCESS;
 }
 
-static vx_status VX_CALLBACK uninitializeSpectrogram(vx_node node, const vx_reference *parameters, vx_uint32 num)
+static vx_status VX_CALLBACK uninitializeNormalize(vx_node node, const vx_reference *parameters, vx_uint32 num)
 {
-    SpectrogramLocalData *data;
+    NormalizeLocalData *data;
     STATUS_ERROR_CHECK(vxQueryNode(node, VX_NODE_LOCAL_DATA_PTR, &data, sizeof(data)));
 #if ENABLE_OPENCL || ENABLE_HIP
     if (data->deviceType == AGO_TARGET_AFFINITY_GPU)
@@ -267,8 +258,8 @@ static vx_status VX_CALLBACK uninitializeSpectrogram(vx_node node, const vx_refe
 #endif
     if (data->deviceType == AGO_TARGET_AFFINITY_CPU)
         rppDestroyHost(data->rppHandle);
-    free(data->sampleLength);
-    free(data->windowFn);
+    free(data->sampleArray);
+    free(data->sampleChannels);
     // free(data->roi_tensor_Ptr);
 // #if ENABLE_HIP
 //     if (data->deviceType == AGO_TARGET_AFFINITY_GPU)
@@ -296,17 +287,17 @@ static vx_status VX_CALLBACK query_target_support(vx_graph graph, vx_node node,
     return VX_SUCCESS;
 }
 
-vx_status Spectrogram_Register(vx_context context)
+vx_status Normalize_Register(vx_context context)
 {
     vx_status status = VX_SUCCESS;
     // Add kernel to the context with callbacks
-    vx_kernel kernel = vxAddUserKernel(context, "org.rpp.Spectrogram",
-                                       VX_KERNEL_RPP_SPECTROGRAM,
-                                       processSpectrogram,
+    vx_kernel kernel = vxAddUserKernel(context, "org.rpp.Normalize",
+                                       VX_KERNEL_RPP_NORMALIZE,
+                                       processNormalize,
                                        14,
-                                       validateSpectrogram,
-                                       initializeSpectrogram,
-                                       uninitializeSpectrogram);
+                                       validateNormalize,
+                                       initializeNormalize,
+                                       uninitializeNormalize);
     ERROR_CHECK_OBJECT(kernel);
     AgoTargetAffinityInfo affinity;
     vxQueryContext(context, VX_CONTEXT_ATTRIBUTE_AMD_AFFINITY, &affinity, sizeof(affinity));

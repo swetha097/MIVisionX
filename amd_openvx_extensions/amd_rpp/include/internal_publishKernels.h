@@ -135,6 +135,7 @@ vx_status Spectrogram_Register(vx_context);
 vx_status NonSilentRegion_Register(vx_context);
 vx_status MelFilterBank_Register(vx_context);
 vx_status Slice_Register(vx_context);
+vx_status Normalize_Register(vx_context);
 
 
 // Image kernel names
@@ -237,5 +238,6 @@ vx_status Slice_Register(vx_context);
 #define VX_KERNEL_RPP_NONSILENTREGION_NAME                                   "org.rpp.NonSilentRegion"
 #define VX_KERNEL_RPP_MELFILTERBANK_NAME                                     "org.rpp.MelFilterBank"
 #define VX_KERNEL_RPP_SLICE_NAME                                             "org.rpp.Slice"
+#define VX_KERNEL_RPP_NORMALIZE_NAME                                         "org.rpp.Normalize"
 
 #endif //_AMDVX_EXT__PUBLISH_KERNELS_H_

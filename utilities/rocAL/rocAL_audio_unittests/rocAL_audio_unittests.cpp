@@ -193,6 +193,15 @@ int test(int test_case, const char *path, float sample_rate, int downmix, unsign
             output = rocalSlice(handle, input1, tensorOutputType, true, anchor, shape, fill, 0);
         }
         break;
+        case 6:
+        {
+            std::cerr<<"\n Normalize";
+            RocalTensorLayout tensorLayout;
+            RocalTensorOutputType tensorOutputType = RocalTensorOutputType::ROCAL_FP32;
+            // output = rocalNormalize(handle, input1, tensorOutputType, true, maxFreq, minFreq, melFormula, numFilter, normalize, sampleRate);
+        }
+        break;
+
 
         default:
         {
