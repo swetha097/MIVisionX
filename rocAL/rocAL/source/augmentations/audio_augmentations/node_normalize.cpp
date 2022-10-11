@@ -94,11 +94,14 @@ void NormalizeNode::init(float mean, float std_dev, std::vector<int> axes, bool 
     else
         THROW("The input and ouput must have same dimensions")
     _param_shape.resize(_batch_size);
-    if(!_mean || !_std_dev && !_axes.size()) {
+    if(_mean > 0.0f || _std_dev > 0.0f && !_axes.size()) {
         _axes.resize(_num_of_dims);
         std::iota(_axes.begin(), _axes.end(), 0);
     }
 
     for(int d = 0; d < _axes.size(); d++)
-        _axis_mask |= (1 << (_axes[d] + 1));
+        _axis_mask |= (1 << _axes[d]);
+
+    _src_frames.resize(_batch_size);
+    _src_channels.resize(_batch_size);
 }
