@@ -54,11 +54,14 @@ class RALIGenericIterator(object):
     def __init__(self, pipeline, tensor_layout = types.NCHW, reverse_channels = False, multiplier = [1.0,1.0,1.0], offset = [0.0, 0.0, 0.0], tensor_dtype=types.FLOAT):
         self.loader = pipeline
         self.tensor_format =tensor_layout
+        print("HERE 1")
         self.multiplier = multiplier
         self.offset = offset
         self.reverse_channels = reverse_channels
+        print("HERE 2")
         self.tensor_dtype = tensor_dtype
         self.len = b.getRemainingImages(self.loader._handle)
+        print("HERE 3")
 
 
     def next(self):
@@ -110,20 +113,31 @@ class RALIGenericIterator(object):
             self.channels = self.output_tensor_list[0].batch_width() #Max Channels
             self.samples = self.output_tensor_list[0].batch_height() #Max Samples
             self.audio_length = self.channels * self.samples
-            print("\n Batch Size",self.batch_size)
-            print("\n Channels",self.channels)
-            print("\n Samples",self.samples)
-            print("\n The ROI Shapes",self.output_tensor_list[0].get_roi_at(0))
+            # print("\n Batch Size",self.batch_size)
+            # print("\n Channels",self.channels)
+            # print("\n Samples",self.samples)
+            self.audio_length_roi = []
+            # print("\n The ROI Shapes",torch.tensor(self.output_tensor_list[0].get_roi_at(0)))
+            for i in range(self.batch_size):
+                self.audio_length_roi.append((self.output_tensor_list[0].get_roi_at(i)))
+            # print("\n The tensor ROI", torch.tensor(self.audio_length_roi))
+            
+            #try 
+            # self.roi_size = torch.empty(self.batch_size, 2)
+            # print("THE ROOOOOI SHAPESSS:",self.output_tensor_list[0].get_rois())
+            # print("****", self.roi_size)
+            
 
             print(self.batch_size * self.channels * self.samples)
             self.output = torch.empty((self.batch_size, self.channels, self.samples,), dtype=torch.float32)
             
             # next
-            self.output_tensor_list[0].copy_data(ctypes.c_void_p(self.out.data_ptr()))
+            self.output_tensor_list[0].copy_data(ctypes.c_void_p(self.output.data_ptr()))
             self.labels = self.loader.rocalGetImageLabels()
             self.labels_tensor = torch.from_numpy(self.labels).type(torch.LongTensor)
+            # print("LABELS : ", self.labels_tensor)
             
-            return self.out, self.labels_tensor, self.audio_length
+            return self.output, self.labels_tensor, torch.tensor(self.audio_length_roi)
 
     def reset(self):
         b.rocalResetLoaders(self.loader._handle)
@@ -135,6 +149,7 @@ class RALIGenericIterator(object):
         return self.len
 
     def __del__(self):
+        print("Comes to rocALRelease")
         b.rocalRelease(self.loader._handle)
 
 

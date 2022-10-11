@@ -9,7 +9,7 @@ def file(*inputs, file_root, bytes_per_sample_hint=0, file_list='', initial_fill
     Pipeline._current_pipeline._reader = "labelReader"
     #Output
     labels = []
-    if file_list!='':
+    if file_list=='':
         kwargs_pybind = {"source_path": file_root}
         label_reader_meta_data = b.labelReader(Pipeline._current_pipeline._handle ,*(kwargs_pybind.values()))
     else:

@@ -89,10 +89,23 @@ def image_slice(*inputs,file_root='',path='',annotations_file='',shard_id = 0, n
     return (image_decoder_slice)
 
 def audio(*inputs, file_root='', bytes_per_sample_hint=[0],shard_id = 0, num_shards = 1, random_shuffle = False,downmix=False, dtype=types.FLOAT, preserve=False, quality=50.0, max_frames=1 , max_channels=1 ,sample_rate=0.0, seed=1 ):
+    # kwargs_pybind = {
+    #         "source_path": file_root,
+    #         "shard_id": shard_id,
+    #         "num_shards": num_shards,
+    #         'is_output': False,
+    #         "shuffle": random_shuffle,
+    #         "loop": False,
+    #         "sample_rate": sample_rate,
+    #         "downmix":downmix,
+    #         "max_frames":max_frames,
+    #         "max_channels":max_channels
+    #         }
+    # decoded_audio = b.Audio_DecoderSliceShard(Pipeline._current_pipeline._handle ,*(kwargs_pybind.values()))
+    
     kwargs_pybind = {
             "source_path": file_root,
-            "shard_id": shard_id,
-            "num_shards": num_shards,
+            "num_threads": num_shards,
             'is_output': False,
             "shuffle": random_shuffle,
             "loop": False,
@@ -101,7 +114,6 @@ def audio(*inputs, file_root='', bytes_per_sample_hint=[0],shard_id = 0, num_sha
             "max_frames":max_frames,
             "max_channels":max_channels
             }
-    decoded_audio = b.Audio_DecoderSliceShard(Pipeline._current_pipeline._handle ,*(kwargs_pybind.values()))
-    
-    
+    decoded_audio = b.Audio_decoder(Pipeline._current_pipeline._handle ,*(kwargs_pybind.values()))
+
     return decoded_audio

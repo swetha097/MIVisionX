@@ -106,8 +106,8 @@ namespace rali
                 "get_roi_at",
                 [](rocalTensor &output_tensor, uint idx)
                 {
-                    return *output_tensor.info().get_roi();
-                    // return std::make_pair(output_tensor.info().get_roi()->at(idx).x1, output_tensor.info().get_roi()->at(idx).y1);
+                    // return *(output_tensor.info().get_roi());
+                    return std::make_pair(output_tensor.info().get_roi()->at(idx).x1, output_tensor.info().get_roi()->at(idx).y1);
                 }, py::return_value_policy::reference_internal,
                 R"code(
                 Returns a tensor ROI
@@ -115,6 +115,29 @@ namespace rali
                 ex : samples , channels in case of an audio data
                 )code"
             )
+                .def(
+                "get_rois",
+                [](rocalTensor &output_tensor)
+                {
+                    // auto ptr = ctypes_void_ptr(p);
+                    // std::shared_ptr<std::vector<RocalROI>> 
+                    // ptr = (output_tensor.info().get_roi().get());
+                    // return py::memoryview::from_buffer( output_tensor.info().get_roi().get(), output_tensor.info().dims().at(0) * 2 );
+                    return py::array(py::buffer_info(
+                            (unsigned int *)(output_tensor.info().get_roi().get()),
+                            sizeof(unsigned int),
+                            py::format_descriptor<unsigned int>::format(),
+                            1,
+                            {output_tensor.info().dims().at(0) * 2},
+                            {sizeof(unsigned int) })); //Giving wrong outputs - TODO : DEBUG
+                },
+                R"code(
+                Returns a tensor ROI
+                ex : width, height in case of an image data
+                ex : samples , channels in case of an audio data
+                )code"
+            )
+            
                 .def(
                 "num_of_dims",
                 [](rocalTensor &output_tensor)
@@ -367,11 +390,11 @@ namespace rali
             "rocalGetImageLabels", [](RocalContext context)
     {
             rocalTensorList *labels = rocalGetImageLabels(context);
-            // std::cerr<<"LABELS SIZE ::"<<labels->size();
-            // for (int i = 0; i < labels->size(); i++) {
-            //     int *labels_buffer = (int *)(labels->at(i)->buffer());
-            //     std::cerr << ">>>>> LABELS : " << labels_buffer[0] << "\t";
-            // }
+            std::cerr<<"LABELS SIZE ::"<<labels->size();
+            for (int i = 0; i < labels->size(); i++) {
+                int *labels_buffer = (int *)(labels->at(i)->buffer());
+                std::cerr << ">>>>> LABELS : " << labels_buffer[0] << "\t";
+            }
             return py::array(py::buffer_info(
                             (int *)(labels->at(0)->buffer()),
                             sizeof(int),
@@ -459,6 +482,9 @@ namespace rali
             py::return_value_policy::reference);
         m.def("Audio_DecoderSliceShard",&rocalAudioFileSourceSingleShard,"Reads file from the source given and decodes it according to the policy",
             py::return_value_policy::reference);
+        m.def("Audio_decoder",&rocalAudioFileSource,"Reads file from the source given and decodes it according to the policy",
+            py::return_value_policy::reference);
+            
         m.def("ToDecibels", &rocalToDecibels, "Converts to Decibals",
             py::return_value_policy::reference);
         m.def("Resize",&rocalResize, "Resizes the image ",py::return_value_policy::reference);
