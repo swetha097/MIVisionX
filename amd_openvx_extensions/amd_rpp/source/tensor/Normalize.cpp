@@ -156,7 +156,7 @@ static vx_status VX_CALLBACK processNormalize(vx_node node, const vx_reference *
         refreshNormalize(node, parameters, num, data);
         // rppt_normalize_audio_host(inputf32, srcDescPtr, outputf32, dstDescPtr, srcLengthTensor, channelsTensor, axis_mask,
                                         // mean, std_dev, scale, shift, epsilon, ddof, num_of_dims);
-        rpp_status = rppt_Normalize_host((float *)data->pSrc, data->src_desc_ptr, (float *)data->pDst, data->dst_desc_ptr, data->sampleArray, data->sampleChannels, data->axisMask, data->mean,
+        rpp_status = rppt_normalize_audio_host((float *)data->pSrc, data->src_desc_ptr, (float *)data->pDst, data->dst_desc_ptr,(int *) data->sampleArray,(int *) data->sampleChannels, data->axisMask, data->mean,
                                         data->stdDev, data->scale, data->shift, data->epsilon, data->ddof, data->numOfDims);
         return_status = (rpp_status == RPP_SUCCESS) ? VX_SUCCESS : VX_FAILURE;
     }
@@ -225,7 +225,7 @@ static vx_status VX_CALLBACK initializeNormalize(vx_node node, const vx_referenc
     data->dst_desc_ptr->numDims = 4;
 
     data->sampleArray = (unsigned int *)calloc(data->src_desc_ptr->n, sizeof(unsigned int));
-    data->sampleChannels = (float *)calloc(data->epsilon, sizeof(float));
+    data->sampleChannels = (unsigned int *)calloc(data->src_desc_ptr->n, sizeof(unsigned int));
 
 
 // #if ENABLE_HIP

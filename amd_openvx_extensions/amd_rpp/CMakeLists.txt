@@ -137,6 +137,7 @@ list(APPEND SOURCES
         source/tensor/NonSilentRegion.cpp
         source/tensor/MelFilterBank.cpp
         source/tensor/Slice.cpp
+        source/tensor/Normalize.cpp
         source/kernel_rpp.cpp
         source/internal_publishKernels.cpp
     )
