@@ -199,7 +199,7 @@ int test(int test_case, const char *path, float sample_rate, int downmix, unsign
             std::cerr<<"\n Normalize";
             RocalTensorLayout tensorLayout;
             RocalTensorOutputType tensorOutputType = RocalTensorOutputType::ROCAL_FP32;
-            // output = rocalNormalize(handle, input1, tensorOutputType, true, maxFreq, minFreq, melFormula, numFilter, normalize, sampleRate);
+            output = rocalNormalize(handle, input1, tensorOutputType, true, false, {1});
         }
         break;
 
@@ -246,7 +246,7 @@ int test(int test_case, const char *path, float sample_rate, int downmix, unsign
             float * buffer = (float *)output_tensor_list->at(idx)->buffer();
             for(int n = 0; n < output_tensor_list->at(idx)->info().data_size() / 4; n++) // shobi check with Fiona
             {
-                std::cerr << buffer[n] << "\n";
+                std::cerr << (float)buffer[n] << "\n";
             }
         }
         std::cerr<<"******************************************************************************\n";
