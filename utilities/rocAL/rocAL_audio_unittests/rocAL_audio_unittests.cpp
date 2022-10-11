@@ -114,7 +114,7 @@ int test(int test_case, const char *path, float sample_rate, int downmix, unsign
     rocalSetSeed(0);
 
     RocalTensor input1, output;
-    input1 = rocalAudioFileSource(handle, path, num_threads, true, false, false, max_frames, downmix);
+    input1 = rocalAudioFileSource(handle, path, num_threads, false, false, false, max_frames, downmix);
 
     if (rocalGetStatus(handle) != ROCAL_OK)
     {
@@ -175,14 +175,14 @@ int test(int test_case, const char *path, float sample_rate, int downmix, unsign
             RocalTensorOutputType tensorOutputType = RocalTensorOutputType::ROCAL_FP32;
             const size_t num_values = 3;
 
-            int anchor_values[num_values] = {10, 50, 100};
+            float anchor_values[num_values] = {10, 50, 100};
             double anchor_frequencies[num_values] = {1, 5, 5};
-            RocalIntParam anchor = rocalCreateIntRand(anchor_values, anchor_frequencies,
+            RocalIntParam anchor = rocalCreateFloatRand(anchor_values, anchor_frequencies,
                                                     sizeof(anchor_values) / sizeof(anchor_values[0]));
 
-            int values[num_values] = {20, 100, 200};
+            float values[num_values] = {20, 100, 200};
             double frequencies[num_values] = {1, 5, 5};
-            RocalIntParam shape = rocalCreateIntRand(values, frequencies,
+            RocalIntParam shape = rocalCreateFloatRand(values, frequencies,
                                                     sizeof(values) / sizeof(values[0]));
 
             float fill_values[num_values] = {10, 50, 100};
@@ -230,16 +230,16 @@ int test(int test_case, const char *path, float sample_rate, int downmix, unsign
             break;
         std::vector<float> audio_op;
         output_tensor_list = rocalGetOutputTensors(handle);
-
+        std::cerr<<"*****************************Audio output**********************************\n";
         for(int idx = 0; idx < output_tensor_list->size(); idx++)
         {
             float * buffer = (float *)output_tensor_list->at(idx)->buffer();
-            for(int n = 0; n < output_tensor_list->at(idx)->info().data_size() / 4; n++)
+            for(int n = 0; n < output_tensor_list->at(idx)->info().data_size() / 4; n++) // shobi check with Fiona
             {
                 std::cerr << buffer[n] << "\n";
             }
         }
-
+        std::cerr<<"******************************************************************************\n";
     }
 
     high_resolution_clock::time_point t2 = high_resolution_clock::now();

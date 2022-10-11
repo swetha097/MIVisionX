@@ -37,15 +37,14 @@ void SliceNode::create_node()
     if(_node)
         return;
 
-    _anchor.create_array(_graph, VX_TYPE_INT32, _batch_size);
-    _shape.create_array(_graph, VX_TYPE_INT32, _batch_size);
+    _anchor.create_array(_graph, VX_TYPE_FLOAT32, _batch_size);
+    _shape.create_array(_graph, VX_TYPE_FLOAT32, _batch_size);
     _fill_values.create_array(_graph, VX_TYPE_FLOAT32, _batch_size);
 
     vx_scalar normalized_anchor = vxCreateScalar(vxGetContext((vx_reference)_graph->get()), VX_TYPE_BOOL, &_normalized_anchor);
     vx_scalar normalized_shape = vxCreateScalar(vxGetContext((vx_reference)_graph->get()), VX_TYPE_BOOL, &_normalized_shape);
     vx_scalar policy = vxCreateScalar(vxGetContext((vx_reference)_graph->get()), VX_TYPE_UINT32, &_policy);
     vx_scalar axes = vxCreateScalar(vxGetContext((vx_reference)_graph->get()), VX_TYPE_INT32, &_axes);
-
     _node = vxExtrppNode_Slice(_graph->get(), _inputs[0]->handle(), _outputs[0]->handle(), _src_tensor_roi, _anchor.default_array(),
                                 _shape.default_array(), _fill_values.default_array(), axes, normalized_anchor , normalized_shape, policy, _batch_size);
     vx_status status;
@@ -56,12 +55,13 @@ void SliceNode::create_node()
 
 void SliceNode::update_node()
 {
+    std::cerr<<"\n SliceNode::update_node()";
     vx_status src_roi_status = vxCopyArrayRange((vx_array)_src_tensor_roi, 0, _batch_size * 4, sizeof(vx_uint32), _inputs[0]->info().get_roi()->data(), VX_WRITE_ONLY, VX_MEMORY_TYPE_HOST);
     if(src_roi_status != 0)
         THROW(" Failed calling vxCopyArrayRange for src / dst roi status : "+ TOSTR(src_roi_status))
 }
 
-void SliceNode::init(IntParam* anchor, IntParam* shape, FloatParam* fill_values, int axes, bool normalized_anchor, bool normalized_shape, RocalOutOfBoundsPolicy policy)
+void SliceNode::init(FloatParam* anchor, FloatParam* shape, FloatParam* fill_values, int axes, bool normalized_anchor, bool normalized_shape, RocalOutOfBoundsPolicy policy)
 {
     _anchor.set_param(core(anchor));
     _shape.set_param(core(shape));

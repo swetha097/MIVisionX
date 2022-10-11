@@ -32,8 +32,8 @@ struct SliceLocalData
     Rpp32u nbatchSize;
     RppPtr_t pSrc;
     RppPtr_t pDst;
-    int *anchor;
-    int *shape;
+    float *anchor;
+    float *shape;
     float *fill_values;
     int axes;
     bool normalized_anchor;
@@ -65,14 +65,14 @@ static vx_status VX_CALLBACK refreshSlice(vx_node node, const vx_reference *para
 {
     vx_status status = VX_SUCCESS;
     STATUS_ERROR_CHECK(vxCopyArrayRange((vx_array)parameters[2], 0, data->nbatchSize * 4, sizeof(unsigned), data->roi_tensor_ptr, VX_READ_ONLY, VX_MEMORY_TYPE_HOST));
-    for(uint i = 0; i < data->nbatchSize * 2; i+2)
+    for(uint i = 0; i < data->nbatchSize * 2; i+=2)
     {
         data->srcDims[i] = data->roi_tensor_ptr[i].xywhROI.xy.x;
         data->srcDims[i+1] = data->roi_tensor_ptr[i].xywhROI.xy.y;
     }
-    STATUS_ERROR_CHECK(vxCopyArrayRange((vx_array)parameters[3], 0, data->nbatchSize, sizeof(int), data->anchor, VX_READ_ONLY, VX_MEMORY_TYPE_HOST));
-    STATUS_ERROR_CHECK(vxCopyArrayRange((vx_array)parameters[4], 0, data->nbatchSize, sizeof(int), data->shape, VX_READ_ONLY, VX_MEMORY_TYPE_HOST));
-    STATUS_ERROR_CHECK(vxCopyArrayRange((vx_array)parameters[5], 0, data->nbatchSize, sizeof(unsigned), data->fill_values, VX_READ_ONLY, VX_MEMORY_TYPE_HOST));
+    STATUS_ERROR_CHECK(vxCopyArrayRange((vx_array)parameters[3], 0, data->nbatchSize, sizeof(float), data->anchor, VX_READ_ONLY, VX_MEMORY_TYPE_HOST));
+    STATUS_ERROR_CHECK(vxCopyArrayRange((vx_array)parameters[4], 0, data->nbatchSize, sizeof(float), data->shape, VX_READ_ONLY, VX_MEMORY_TYPE_HOST));
+    STATUS_ERROR_CHECK(vxCopyArrayRange((vx_array)parameters[5], 0, data->nbatchSize, sizeof(float), data->fill_values, VX_READ_ONLY, VX_MEMORY_TYPE_HOST));
 
     if (data->deviceType == AGO_TARGET_AFFINITY_GPU)
     {
@@ -136,6 +136,7 @@ static vx_status VX_CALLBACK validateSlice(vx_node node, const vx_reference para
 
 static vx_status VX_CALLBACK processSlice(vx_node node, const vx_reference *parameters, vx_uint32 num)
 {
+    std::cerr<<"\n processSlice";
     RppStatus rpp_status = RPP_SUCCESS;
     vx_status return_status = VX_SUCCESS;
     SliceLocalData *data = NULL;
@@ -152,7 +153,8 @@ static vx_status VX_CALLBACK processSlice(vx_node node, const vx_reference *para
     {
         refreshSlice(node, parameters, num, data);
         rpp_status = rppt_slice_host((float *)data->pSrc, data->src_desc_ptr, (float *)data->pDst, data->dst_desc_ptr, data->srcDims, data->anchor, data->shape,
-                                    &data->axes, data->fill_values, data->normalized_anchor, data->normalized_shape, RpptOutOfBoundsPolicy(data->policy)); // shobi
+                                    &data->axes, data->fill_values, 1, data->normalized_anchor, data->normalized_shape, RpptOutOfBoundsPolicy(data->policy)); // shobi
+        std::cerr<<"\n Exiting Slice";
         return_status = (rpp_status == RPP_SUCCESS) ? VX_SUCCESS : VX_FAILURE;
     }
     return return_status;
@@ -160,6 +162,7 @@ static vx_status VX_CALLBACK processSlice(vx_node node, const vx_reference *para
 
 static vx_status VX_CALLBACK initializeSlice(vx_node node, const vx_reference *parameters, vx_uint32 num)
 {
+    std::cerr<<"\n static vx_status VX_CALLBACK initializeSlice ";
     SliceLocalData *data = new SliceLocalData;
     // unsigned roiType;
     memset(data, 0, sizeof(*data));
@@ -172,6 +175,7 @@ static vx_status VX_CALLBACK initializeSlice(vx_node node, const vx_reference *p
     STATUS_ERROR_CHECK(vxReadScalarValue((vx_scalar)parameters[6], &data->axes));
     STATUS_ERROR_CHECK(vxReadScalarValue((vx_scalar)parameters[7], &data->normalized_anchor));
     STATUS_ERROR_CHECK(vxReadScalarValue((vx_scalar)parameters[8], &data->normalized_shape));
+    data->normalized_shape = data->normalized_anchor; // shobi
     STATUS_ERROR_CHECK(vxReadScalarValue((vx_scalar)parameters[9], &data->policy));
     STATUS_ERROR_CHECK(vxReadScalarValue((vx_scalar)parameters[10], &data->nbatchSize));
 
@@ -217,8 +221,8 @@ static vx_status VX_CALLBACK initializeSlice(vx_node node, const vx_reference *p
 
     data->roi_tensor_ptr = (RpptROI *)calloc(data->src_desc_ptr->n, sizeof(RpptROI));
     data->srcDims = (int *) calloc(data->src_desc_ptr->n * 2, sizeof(int));
-    data->anchor = (int *) calloc(data->src_desc_ptr->n, sizeof(int));
-    data->shape = (int *) calloc(data->src_desc_ptr->n, sizeof(int));
+    data->anchor = (float *) calloc(data->src_desc_ptr->n, sizeof(float));
+    data->shape = (float *) calloc(data->src_desc_ptr->n, sizeof(float));
     data->fill_values = (float *) calloc(data->src_desc_ptr->n, sizeof(float));
 
 
@@ -227,6 +231,7 @@ static vx_status VX_CALLBACK initializeSlice(vx_node node, const vx_reference *p
 //         hipMalloc(&data->hip_roi_tensor_ptr, data->src_desc_ptr->n * sizeof(RpptROI));
 // #endif
 //     data->roi_tensor_ptr = (RpptROI *)calloc(data->src_desc_ptr->n, sizeof(RpptROI));
+std::cerr<<"\n Gonna call refresh slice in initialize";
     refreshSlice(node, parameters, num, data);
 #if ENABLE_OPENCL
     if (data->deviceType == AGO_TARGET_AFFINITY_GPU)

@@ -943,11 +943,12 @@ rocalNonSilentRegion(RocalContext p_context,
     auto input = static_cast<rocalTensor*>(p_input);
     try {
         RocalTensorDataType tensor_data_type = RocalTensorDataType::INT32;
-        unsigned num_of_dims = 2;
+        unsigned num_of_dims = 3;
         std::vector<size_t> dims;
         dims.resize(num_of_dims);
         dims.at(0) = context->user_batch_size();
         dims.at(1) = context->user_batch_size();
+        dims.at(2) = 1;
         auto info  = rocalTensorInfo(std::vector<size_t>(std::move(dims)),
                                 context->master_graph->mem_type(),
                                 tensor_data_type);
@@ -1004,8 +1005,8 @@ RocalTensor rocalSlice(RocalContext p_context,
                         RocalTensor p_input,
                         RocalTensorOutputType rocal_tensor_output_type,
                         bool is_output,
-                        RocalIntParam p_anchor,
-                        RocalIntParam p_shape,
+                        RocalFloatParam p_anchor,
+                        RocalFloatParam p_shape,
                         RocalFloatParam p_fill_values,
                         int axes,
                         bool normalized_anchor,
@@ -1016,21 +1017,28 @@ RocalTensor rocalSlice(RocalContext p_context,
     rocalTensor* output = nullptr;
     auto context = static_cast<Context*>(p_context);
     auto input = static_cast<rocalTensor*>(p_input);
-    auto anchor = static_cast<IntParam*>(p_anchor);
-    auto shape = static_cast<IntParam*>(p_shape);
+    auto anchor = static_cast<FloatParam*>(p_anchor);
+    auto shape = static_cast<FloatParam*>(p_shape);
     auto fill_values = static_cast<FloatParam*>(p_fill_values);
     RocalTensorDataType op_tensorDataType;
     try {
-        rocalTensorInfo output_info = input->info();
-        get_rocal_tensor_data_type(rocal_tensor_output_type, op_tensorDataType);
-        std::vector<size_t> dims = output_info.dims();
-        dims[1] = 200; // shobi
-        output_info.set_dims(dims);
 
+        rocalTensorInfo output_info = input->info();
         output_info.set_tensor_layout(RocalTensorlayout::NONE);
         output_info.set_data_type(op_tensorDataType);
 
         output = context->master_graph->create_tensor(output_info, is_output);
+
+        // rocalTensorInfo output_info = input->info();
+        // get_rocal_tensor_data_type(rocal_tensor_output_type, op_tensorDataType);
+        // std::vector<size_t> dims = output_info.dims();
+        // // dims[1] = 200; // shobi
+        // output_info.set_dims(dims);
+
+        // output_info.set_tensor_layout(RocalTensorlayout::NONE);
+        // output_info.set_data_type(op_tensorDataType);
+
+        // output = context->master_graph->create_tensor(output_info, is_output);
         context->master_graph->add_node<SliceNode>({input}, {output})->init(anchor, shape, fill_values,
                                                                             axes, normalized_anchor, normalized_shape, policy);
     }

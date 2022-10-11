@@ -32,15 +32,15 @@ class SliceNode : public Node
 public:
     SliceNode(const std::vector<rocalTensor *> &inputs, const std::vector<rocalTensor *> &outputs);
     SliceNode() = delete;
-    void init( IntParam* anchor_param, IntParam* shape_param, FloatParam* fill_values_param, int axes,
+    void init( FloatParam* anchor_param, FloatParam* shape_param, FloatParam* fill_values_param, int axes,
                 bool normalized_anchor, bool normalized_shape, RocalOutOfBoundsPolicy policy);
 
 protected:
     void create_node() override;
     void update_node() override;
 private:
-    ParameterVX<int> _anchor;
-    ParameterVX<int> _shape;
+    ParameterVX<float> _anchor;
+    ParameterVX<float> _shape;
     ParameterVX<float> _fill_values;
     bool _normalized_anchor = false;
     bool _normalized_shape = false;

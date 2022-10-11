@@ -2317,7 +2317,7 @@ VX_API_ENTRY vx_node VX_API_CALL vxExtrppNode_Slice(vx_graph graph, vx_tensor pS
             (vx_reference)axes,
             (vx_reference)normalized_anchor,
             (vx_reference)normalized_shape,
-            (vx_reference) policy,
+            (vx_reference)policy,
             (vx_reference)NBATCHSIZE,
             (vx_reference)DEV_TYPE};
         node = createNode(graph, VX_KERNEL_RPP_SLICE, params, 12);
