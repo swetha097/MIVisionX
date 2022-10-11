@@ -78,30 +78,52 @@ class RALIGenericIterator(object):
         #From init
 
         print(self.output_tensor_list)
-        self.augmentation_count = len(self.output_tensor_list)
-        # print("AUG COUNT", self.augmentation_count)
-        self.w = self.output_tensor_list[0].batch_width()
-        self.h = self.output_tensor_list[0].batch_height()
-        self.batch_size = self.output_tensor_list[0].batch_size()
-        print("\n Batch Size",self.batch_size)
-        self.color_format = self.output_tensor_list[0].color_format()
-        print(self.color_format)
-        print(self.batch_size * self.h * self.color_format * self.w)
-        #NHWC default for now
-        # if self.tensor_format == types.NHWC:
-        self.output = torch.empty((self.batch_size, self.h, self.w, self.color_format,), dtype=torch.uint8)
-        self.out = torch.permute(self.output, (0,3,1,2)) #NCHW expected by classification
+        self.num_of_dims = self.output_tensor_list[0].num_of_dims()
+        print("Number of dims", self.num_of_dims)
+        if self.num_of_dims == 4: # In the case of the Image data
+            self.augmentation_count = len(self.output_tensor_list)
+            self.w = self.output_tensor_list[0].batch_width()
+            self.h = self.output_tensor_list[0].batch_height()
+            self.batch_size = self.output_tensor_list[0].batch_size()
+            print("\n Batch Size",self.batch_size)
+            self.color_format = self.output_tensor_list[0].color_format()
+            print(self.color_format)
+            print(self.batch_size * self.h * self.color_format * self.w)
+            #NHWC default for now
+            # if self.tensor_format == types.NHWC:
+            self.output = torch.empty((self.batch_size, self.h, self.w, self.color_format,), dtype=torch.uint8)
+            self.out = torch.permute(self.output, (0,3,1,2)) #NCHW expected by classification
 
-        #     self.out = torch.empty((self.batch_size, self.color_format, self.h, self.w, ), dtype=torch.uint8)
-        # next
-        self.output_tensor_list[0].copy_data(ctypes.c_void_p(self.out.data_ptr()))
-        self.labels = self.loader.rocalGetImageLabels()
-        self.labels_tensor = torch.from_numpy(self.labels).type(torch.LongTensor)
+            #     self.out = torch.empty((self.batch_size, self.color_format, self.h, self.w, ), dtype=torch.uint8)
+            # next
+            self.output_tensor_list[0].copy_data(ctypes.c_void_p(self.out.data_ptr()))
+            self.labels = self.loader.rocalGetImageLabels()
+            self.labels_tensor = torch.from_numpy(self.labels).type(torch.LongTensor)
 
-        if self.tensor_dtype == types.FLOAT:
-            return self.out.to(torch.float), self.labels_tensor
-        elif self.tensor_dtype == types.FLOAT16:
-            return (self.out.astype(np.float16)), self.labels_tensor
+            if self.tensor_dtype == types.FLOAT:
+                return self.out.to(torch.float), self.labels_tensor
+            elif self.tensor_dtype == types.FLOAT16:
+                return (self.out.astype(np.float16)), self.labels_tensor
+        elif self.num_of_dims == 3: #In case of an audio data
+            self.augmentation_count = len(self.output_tensor_list)
+            self.batch_size = self.output_tensor_list[0].batch_size()
+            self.channels = self.output_tensor_list[0].batch_width() #Max Channels
+            self.samples = self.output_tensor_list[0].batch_height() #Max Samples
+            self.audio_length = self.channels * self.samples
+            print("\n Batch Size",self.batch_size)
+            print("\n Channels",self.channels)
+            print("\n Samples",self.samples)
+            print("\n The ROI Shapes",self.output_tensor_list[0].get_roi_at(0))
+
+            print(self.batch_size * self.channels * self.samples)
+            self.output = torch.empty((self.batch_size, self.channels, self.samples,), dtype=torch.float32)
+            
+            # next
+            self.output_tensor_list[0].copy_data(ctypes.c_void_p(self.out.data_ptr()))
+            self.labels = self.loader.rocalGetImageLabels()
+            self.labels_tensor = torch.from_numpy(self.labels).type(torch.LongTensor)
+            
+            return self.out, self.labels_tensor, self.audio_length
 
     def reset(self):
         b.rocalResetLoaders(self.loader._handle)

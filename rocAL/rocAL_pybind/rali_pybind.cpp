@@ -103,6 +103,30 @@ namespace rali
             .def_readwrite("transfer_time", &TimingInfo::transfer_time);
         py::class_<rocalTensor>(m, "rocalTensor")
                 .def(
+                "get_roi_at",
+                [](rocalTensor &output_tensor, uint idx)
+                {
+                    return *output_tensor.info().get_roi();
+                    // return std::make_pair(output_tensor.info().get_roi()->at(idx).x1, output_tensor.info().get_roi()->at(idx).y1);
+                }, py::return_value_policy::reference_internal,
+                R"code(
+                Returns a tensor ROI
+                ex : width, height in case of an image data
+                ex : samples , channels in case of an audio data
+                )code"
+            )
+                .def(
+                "num_of_dims",
+                [](rocalTensor &output_tensor)
+                {
+                    return output_tensor.info().num_of_dims();
+                },
+                R"code(
+                Returns a tensor data's total number of dimensions.
+                ex: 3 in case of audio, 4 in case of an image, 5 in case of video 
+                )code"
+            )
+                .def(
                 "batch_height",
                 [](rocalTensor &output_tensor)
                 {
@@ -295,6 +319,7 @@ namespace rali
         m.def("rocalGetTimingInfo", &rocalGetTimingInfo);
         m.def("setOutputImages", &rocalSetOutputs);
         m.def("labelReader", &rocalCreateLabelReader, py::return_value_policy::reference);
+        m.def("labelReaderFileList",&rocalCreateFileListLabelReader, py::return_value_policy::reference);
         m.def("COCOReader", &rocalCreateCOCOReader, py::return_value_policy::reference);
         // rocal_api_meta_data.h
         m.def("RandomBBoxCrop", &rocalRandomBBoxCrop);
