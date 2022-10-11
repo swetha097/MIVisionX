@@ -24,7 +24,7 @@ THE SOFTWARE.
 #include "vx_ext_amd.h"
 #define NUM_OF_DIMS 5
 
-struct ToDecibelsLocalData
+struct PreemphasisFilterLocalData
 {
     RPPCommonHandle handle;
     rppHandle_t rppHandle;
@@ -32,23 +32,22 @@ struct ToDecibelsLocalData
     Rpp32u nbatchSize;
     RppPtr_t pSrc;
     RppPtr_t pDst;
-    vx_float32 cutOffDB;
+    vx_uint32 borderType;
+    Rpp32f *preemphCoeff;
     vx_float32 multiplier;
     vx_float32 magnitudeReference;
-    RpptDescPtr src_desc_ptr;
+    RpptDescPtr srcDescPtr;
     RpptDesc srcDesc;
     RpptDesc dstDesc;
-    RpptDescPtr dst_desc_ptr;
-    Rpp32u *sample_length;
-    Rpp32u *sample_channel;
+    RpptDescPtr dstDescPtr;
+    Rpp32u *sampleSize;
     // RpptROI *roi_tensor_Ptr;
     // RpptRoiType roiType;
     // Rpp32u layout;
-    RpptImagePatch *srcDims;
-    size_t in_tensor_dims[NUM_OF_DIMS];
-    size_t out_tensor_dims[NUM_OF_DIMS];
-    vx_enum in_tensor_type;
-    vx_enum out_tensor_type;
+    size_t inTensorDims[NUM_OF_DIMS];
+    size_t outTensorDims[NUM_OF_DIMS];
+    vx_enum inTensorType;
+    vx_enum outTensorType;
 #if ENABLE_OPENCL
     cl_mem cl_pSrc;
     cl_mem cl_pDst;
@@ -59,16 +58,11 @@ struct ToDecibelsLocalData
 #endif
 };
 
-static vx_status VX_CALLBACK refreshToDecibels(vx_node node, const vx_reference *parameters, vx_uint32 num, ToDecibelsLocalData *data)
+static vx_status VX_CALLBACK refreshPreemphasisFilter(vx_node node, const vx_reference *parameters, vx_uint32 num, PreemphasisFilterLocalData *data)
 {
     vx_status status = VX_SUCCESS;
-    STATUS_ERROR_CHECK(vxCopyArrayRange((vx_array)parameters[2], 0, data->nbatchSize, sizeof(unsigned), data->sample_length, VX_READ_ONLY, VX_MEMORY_TYPE_HOST));
-    STATUS_ERROR_CHECK(vxCopyArrayRange((vx_array)parameters[3], 0, data->nbatchSize, sizeof(unsigned), data->sample_channel, VX_READ_ONLY, VX_MEMORY_TYPE_HOST));
-    for(uint i = 0; i < data->nbatchSize; i++)
-    {
-        data->srcDims[i].width = data->sample_length[i];
-        data->srcDims[i].height = data->sample_channel[i];
-    }
+    STATUS_ERROR_CHECK(vxCopyArrayRange((vx_array)parameters[2], 0, data->nbatchSize, sizeof(unsigned), data->sampleSize, VX_READ_ONLY, VX_MEMORY_TYPE_HOST));
+    STATUS_ERROR_CHECK(vxCopyArrayRange((vx_array)parameters[3], 0, data->nbatchSize, sizeof(float), data->preemphCoeff, VX_READ_ONLY, VX_MEMORY_TYPE_HOST));
     if (data->deviceType == AGO_TARGET_AFFINITY_GPU)
     {
 #if ENABLE_OPENCL
@@ -81,7 +75,7 @@ static vx_status VX_CALLBACK refreshToDecibels(vx_node node, const vx_reference 
     }
     if (data->deviceType == AGO_TARGET_AFFINITY_CPU)
     {
-        if (data->in_tensor_type == vx_type_e::VX_TYPE_FLOAT32 && data->out_tensor_type == vx_type_e::VX_TYPE_FLOAT32)
+        if (data->inTensorType == vx_type_e::VX_TYPE_FLOAT32 && data->outTensorType == vx_type_e::VX_TYPE_FLOAT32)
         {
             STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[0], VX_TENSOR_BUFFER_HOST, &data->pSrc, sizeof(vx_float32)));
             STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[1], VX_TENSOR_BUFFER_HOST, &data->pDst, sizeof(vx_float32)));
@@ -90,22 +84,16 @@ static vx_status VX_CALLBACK refreshToDecibels(vx_node node, const vx_reference 
     return status;
 }
 
-static vx_status VX_CALLBACK validateToDecibels(vx_node node, const vx_reference parameters[], vx_uint32 num, vx_meta_format metas[])
+static vx_status VX_CALLBACK validatePreemphasisFilter(vx_node node, const vx_reference parameters[], vx_uint32 num, vx_meta_format metas[])
 {
     vx_status status = VX_SUCCESS;
     vx_enum scalar_type;
     STATUS_ERROR_CHECK(vxQueryScalar((vx_scalar)parameters[4], VX_SCALAR_TYPE, &scalar_type, sizeof(scalar_type)));
-    if (scalar_type != VX_TYPE_FLOAT32)
+    if (scalar_type != VX_TYPE_UINT32)
         return ERRMSG(VX_ERROR_INVALID_TYPE, "validate: Paramter: #4 type=%d (must be size)\n", scalar_type);
     STATUS_ERROR_CHECK(vxQueryScalar((vx_scalar)parameters[5], VX_SCALAR_TYPE, &scalar_type, sizeof(scalar_type)));
-    if (scalar_type != VX_TYPE_FLOAT32)
-        return ERRMSG(VX_ERROR_INVALID_TYPE, "validate: Paramter: #5 type=%d (must be size)\n", scalar_type);
-    STATUS_ERROR_CHECK(vxQueryScalar((vx_scalar)parameters[6], VX_SCALAR_TYPE, &scalar_type, sizeof(scalar_type)));
-    if (scalar_type != VX_TYPE_FLOAT32)
-        return ERRMSG(VX_ERROR_INVALID_TYPE, "validate: Paramter: #6 type=%d (must be size)\n", scalar_type);
-    STATUS_ERROR_CHECK(vxQueryScalar((vx_scalar)parameters[7], VX_SCALAR_TYPE, &scalar_type, sizeof(scalar_type)));
     if (scalar_type != VX_TYPE_UINT32)
-        return ERRMSG(VX_ERROR_INVALID_TYPE, "validate: Paramter: #7 type=%d (must be size)\n", scalar_type);
+        return ERRMSG(VX_ERROR_INVALID_TYPE, "validate: Paramter: #5 type=%d (must be size)\n", scalar_type);
 
     // Check for output parameters
     vx_tensor output;
@@ -129,32 +117,32 @@ static vx_status VX_CALLBACK validateToDecibels(vx_node node, const vx_reference
     return status;
 }
 
-static vx_status VX_CALLBACK processToDecibels(vx_node node, const vx_reference *parameters, vx_uint32 num)
+static vx_status VX_CALLBACK processPreemphasisFilter(vx_node node, const vx_reference *parameters, vx_uint32 num)
 {
     RppStatus rpp_status = RPP_SUCCESS;
     vx_status return_status = VX_SUCCESS;
-    ToDecibelsLocalData *data = NULL;
+    PreemphasisFilterLocalData *data = NULL;
     STATUS_ERROR_CHECK(vxQueryNode(node, VX_NODE_LOCAL_DATA_PTR, &data, sizeof(data)));
     if (data->deviceType == AGO_TARGET_AFFINITY_GPU)
     {
 #if ENABLE_HIP
-        refreshToDecibels(node, parameters, num, data);
-        // rpp_status = rppt_ToDecibels_gpu((void *)data->hip_pSrc, data->src_desc_ptr, (void *)data->hip_pDst, data->src_desc_ptr,  data->alpha, data->beta, data->hip_roi_tensor_Ptr, data->roiType, data->rppHandle);
+        refreshPreemphasisFilter(node, parameters, num, data);
+        // rpp_status = rppt_PreemphasisFilter_gpu((void *)data->hip_pSrc, data->srcDescPtr, (void *)data->hip_pDst, data->srcDescPtr,  data->alpha, data->beta, data->hip_roi_tensor_Ptr, data->roiType, data->rppHandle);
         return_status = (rpp_status == RPP_SUCCESS) ? VX_SUCCESS : VX_FAILURE;
 #endif
     }
     if (data->deviceType == AGO_TARGET_AFFINITY_CPU)
     {
-        refreshToDecibels(node, parameters, num, data);
-        rpp_status = rppt_to_decibels_host((float *)data->pSrc, data->src_desc_ptr, (float *)data->pDst, data->dst_desc_ptr, data->srcDims, data->cutOffDB, data->multiplier, data->magnitudeReference);
+        refreshPreemphasisFilter(node, parameters, num, data);
+        rpp_status = rppt_pre_emphasis_filter_host((float *)data->pSrc, data->srcDescPtr, (float *)data->pDst, data->dstDescPtr, (Rpp32s*) data->sampleSize, data->preemphCoeff , RpptAudioBorderType(data->borderType));
         return_status = (rpp_status == RPP_SUCCESS) ? VX_SUCCESS : VX_FAILURE;
     }
     return return_status;
 }
 
-static vx_status VX_CALLBACK initializeToDecibels(vx_node node, const vx_reference *parameters, vx_uint32 num)
+static vx_status VX_CALLBACK initializePreemphasisFilter(vx_node node, const vx_reference *parameters, vx_uint32 num)
 {
-    ToDecibelsLocalData *data = new ToDecibelsLocalData;
+    PreemphasisFilterLocalData *data = new PreemphasisFilterLocalData;
     // unsigned roiType;
     memset(data, 0, sizeof(*data));
 #if ENABLE_OPENCL
@@ -162,63 +150,59 @@ static vx_status VX_CALLBACK initializeToDecibels(vx_node node, const vx_referen
 #elif ENABLE_HIP
     STATUS_ERROR_CHECK(vxQueryNode(node, VX_NODE_ATTRIBUTE_AMD_HIP_STREAM, &data->handle.hipstream, sizeof(data->handle.hipstream)));
 #endif
-    STATUS_ERROR_CHECK(vxCopyScalar((vx_scalar)parameters[8], &data->deviceType, VX_READ_ONLY, VX_MEMORY_TYPE_HOST));
-    STATUS_ERROR_CHECK(vxReadScalarValue((vx_scalar)parameters[4], &data->cutOffDB));
-    STATUS_ERROR_CHECK(vxReadScalarValue((vx_scalar)parameters[5], &data->multiplier));
-    STATUS_ERROR_CHECK(vxReadScalarValue((vx_scalar)parameters[6], &data->magnitudeReference));
-    STATUS_ERROR_CHECK(vxReadScalarValue((vx_scalar)parameters[7], &data->nbatchSize));
+    STATUS_ERROR_CHECK(vxCopyScalar((vx_scalar)parameters[6], &data->deviceType, VX_READ_ONLY, VX_MEMORY_TYPE_HOST));
+    STATUS_ERROR_CHECK(vxReadScalarValue((vx_scalar)parameters[4], &data->borderType));
+    STATUS_ERROR_CHECK(vxReadScalarValue((vx_scalar)parameters[5], &data->nbatchSize));
 
     // Querying for input tensor
-    data->src_desc_ptr = &data->srcDesc;
-    STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[0], VX_TENSOR_NUMBER_OF_DIMS, &data->src_desc_ptr->numDims, sizeof(data->src_desc_ptr->numDims)));
-    STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[0], VX_TENSOR_DIMS, &data->in_tensor_dims, sizeof(vx_size) * data->src_desc_ptr->numDims));
-    STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[0], VX_TENSOR_DATA_TYPE, &data->in_tensor_type, sizeof(data->in_tensor_type)));
-    if (data->in_tensor_type == vx_type_e::VX_TYPE_FLOAT32)
-        data->src_desc_ptr->dataType = RpptDataType::F32;
-    data->src_desc_ptr->offsetInBytes = 0;
+    data->srcDescPtr = &data->srcDesc;
+    STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[0], VX_TENSOR_NUMBER_OF_DIMS, &data->srcDescPtr->numDims, sizeof(data->srcDescPtr->numDims)));
+    STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[0], VX_TENSOR_DIMS, &data->inTensorDims, sizeof(vx_size) * data->srcDescPtr->numDims));
+    STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[0], VX_TENSOR_DATA_TYPE, &data->inTensorType, sizeof(data->inTensorType)));
+    if (data->inTensorType == vx_type_e::VX_TYPE_FLOAT32)
+        data->srcDescPtr->dataType = RpptDataType::F32;
+    data->srcDescPtr->offsetInBytes = 0;
 
     // Querying for output tensor
-    data->dst_desc_ptr = &data->dstDesc;
-    STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[1], VX_TENSOR_NUMBER_OF_DIMS, &data->dst_desc_ptr->numDims, sizeof(data->dst_desc_ptr->numDims)));
-    STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[1], VX_TENSOR_DIMS, &data->out_tensor_dims, sizeof(vx_size) * data->dst_desc_ptr->numDims));
-    STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[1],VX_TENSOR_DATA_TYPE, &data->out_tensor_type, sizeof(data->out_tensor_type)));
-    if (data->out_tensor_type == vx_type_e::VX_TYPE_FLOAT32)
-        data->dst_desc_ptr->dataType = RpptDataType::F32;
-    data->dst_desc_ptr->offsetInBytes = 0;
+    data->dstDescPtr = &data->dstDesc;
+    STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[1], VX_TENSOR_NUMBER_OF_DIMS, &data->dstDescPtr->numDims, sizeof(data->dstDescPtr->numDims)));
+    STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[1], VX_TENSOR_DIMS, &data->outTensorDims, sizeof(vx_size) * data->dstDescPtr->numDims));
+    STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[1],VX_TENSOR_DATA_TYPE, &data->outTensorType, sizeof(data->outTensorType)));
+    if (data->outTensorType == vx_type_e::VX_TYPE_FLOAT32)
+        data->dstDescPtr->dataType = RpptDataType::F32;
+    data->dstDescPtr->offsetInBytes = 0;
 
     // source_description_ptr
-    data->src_desc_ptr->n = data->in_tensor_dims[0];
-    data->src_desc_ptr->h = data->in_tensor_dims[2];
-    data->src_desc_ptr->w = data->in_tensor_dims[1];
-    data->src_desc_ptr->c = 1;
-    data->src_desc_ptr->strides.nStride = data->src_desc_ptr->c * data->src_desc_ptr->w * data->src_desc_ptr->h;
-    data->src_desc_ptr->strides.hStride = data->src_desc_ptr->c * data->src_desc_ptr->w;
-    data->src_desc_ptr->strides.wStride = data->src_desc_ptr->c;
-    data->src_desc_ptr->strides.cStride = 1;
-    data->src_desc_ptr->numDims = 4;
+    data->srcDescPtr->n = data->inTensorDims[0];
+    data->srcDescPtr->h = data->inTensorDims[2];
+    data->srcDescPtr->w = data->inTensorDims[1];
+    data->srcDescPtr->c = 1;
+    data->srcDescPtr->strides.nStride = data->srcDescPtr->c * data->srcDescPtr->w * data->srcDescPtr->h;
+    data->srcDescPtr->strides.hStride = data->srcDescPtr->c * data->srcDescPtr->w;
+    data->srcDescPtr->strides.wStride = data->srcDescPtr->c;
+    data->srcDescPtr->strides.cStride = 1;
+    data->srcDescPtr->numDims = 4;
 
     // source_description_ptr
-    data->dst_desc_ptr->n = data->in_tensor_dims[0];
-    data->dst_desc_ptr->w = data->in_tensor_dims[1];
-    data->dst_desc_ptr->h = 1;
-    data->dst_desc_ptr->c = 1;
-    data->dst_desc_ptr->strides.nStride = data->dst_desc_ptr->c * data->dst_desc_ptr->w * data->dst_desc_ptr->h;
-    data->dst_desc_ptr->strides.hStride = data->dst_desc_ptr->c * data->dst_desc_ptr->w;
-    data->dst_desc_ptr->strides.wStride = data->dst_desc_ptr->c;
-    data->dst_desc_ptr->strides.cStride = 1;
-    data->dst_desc_ptr->numDims = 4;
+    data->dstDescPtr->n = data->inTensorDims[0];
+    data->dstDescPtr->w = data->inTensorDims[1];
+    data->dstDescPtr->h = 1;
+    data->dstDescPtr->c = 1;
+    data->dstDescPtr->strides.nStride = data->dstDescPtr->c * data->dstDescPtr->w * data->dstDescPtr->h;
+    data->dstDescPtr->strides.hStride = data->dstDescPtr->c * data->dstDescPtr->w;
+    data->dstDescPtr->strides.wStride = data->dstDescPtr->c;
+    data->dstDescPtr->strides.cStride = 1;
+    data->dstDescPtr->numDims = 4;
 
-    data->sample_length = (unsigned int *)calloc(data->src_desc_ptr->n, sizeof(unsigned int));
-    data->sample_channel = (unsigned int *)calloc(data->src_desc_ptr->n, sizeof(unsigned int));
-    data->srcDims = (RpptImagePatch *)calloc(data->src_desc_ptr->n, sizeof(RpptImagePatch));
-
+    data->sampleSize = (unsigned int *)calloc(data->srcDescPtr->n, sizeof(unsigned int));
+    data->preemphCoeff = (float *)calloc(data->srcDescPtr->n, sizeof(float));
 
 // #if ENABLE_HIP
 //     if (data->deviceType == AGO_TARGET_AFFINITY_GPU)
-//         hipMalloc(&data->hip_roi_tensor_Ptr, data->src_desc_ptr->n * sizeof(RpptROI));
+//         hipMalloc(&data->hip_roi_tensor_Ptr, data->srcDescPtr->n * sizeof(RpptROI));
 // #endif
-//     data->roi_tensor_Ptr = (RpptROI *)calloc(data->src_desc_ptr->n, sizeof(RpptROI));
-    refreshToDecibels(node, parameters, num, data);
+//     data->roi_tensor_Ptr = (RpptROI *)calloc(data->srcDescPtr->n, sizeof(RpptROI));
+    refreshPreemphasisFilter(node, parameters, num, data);
 #if ENABLE_OPENCL
     if (data->deviceType == AGO_TARGET_AFFINITY_GPU)
         rppCreateWithStreamAndBatchSize(&data->rppHandle, data->handle.cmdq, data->nbatchSize);
@@ -233,9 +217,9 @@ static vx_status VX_CALLBACK initializeToDecibels(vx_node node, const vx_referen
     return VX_SUCCESS;
 }
 
-static vx_status VX_CALLBACK uninitializeToDecibels(vx_node node, const vx_reference *parameters, vx_uint32 num)
+static vx_status VX_CALLBACK uninitializePreemphasisFilter(vx_node node, const vx_reference *parameters, vx_uint32 num)
 {
-    ToDecibelsLocalData *data;
+    PreemphasisFilterLocalData *data;
     STATUS_ERROR_CHECK(vxQueryNode(node, VX_NODE_LOCAL_DATA_PTR, &data, sizeof(data)));
 #if ENABLE_OPENCL || ENABLE_HIP
     if (data->deviceType == AGO_TARGET_AFFINITY_GPU)
@@ -243,9 +227,8 @@ static vx_status VX_CALLBACK uninitializeToDecibels(vx_node node, const vx_refer
 #endif
     if (data->deviceType == AGO_TARGET_AFFINITY_CPU)
         rppDestroyHost(data->rppHandle);
-    free(data->sample_length);
-    free(data->sample_channel);
-    free(data->srcDims);
+    free(data->sampleSize);
+    free(data->preemphCoeff);
     // free(data->roi_tensor_Ptr);
 // #if ENABLE_HIP
 //     if (data->deviceType == AGO_TARGET_AFFINITY_GPU)
@@ -273,17 +256,17 @@ static vx_status VX_CALLBACK query_target_support(vx_graph graph, vx_node node,
     return VX_SUCCESS;
 }
 
-vx_status ToDecibels_Register(vx_context context)
+vx_status PreemphasisFilter_Register(vx_context context)
 {
     vx_status status = VX_SUCCESS;
     // Add kernel to the context with callbacks
-    vx_kernel kernel = vxAddUserKernel(context, "org.rpp.ToDecibels",
-                                       VX_KERNEL_RPP_TODECIBELS,
-                                       processToDecibels,
-                                       9,
-                                       validateToDecibels,
-                                       initializeToDecibels,
-                                       uninitializeToDecibels);
+    vx_kernel kernel = vxAddUserKernel(context, "org.rpp.PreemphasisFilter",
+                                       VX_KERNEL_RPP_PREEMPHASISFILTER,
+                                       processPreemphasisFilter,
+                                       7,
+                                       validatePreemphasisFilter,
+                                       initializePreemphasisFilter,
+                                       uninitializePreemphasisFilter);
     ERROR_CHECK_OBJECT(kernel);
     AgoTargetAffinityInfo affinity;
     vxQueryContext(context, VX_CONTEXT_ATTRIBUTE_AMD_AFFINITY, &affinity, sizeof(affinity));
@@ -307,8 +290,6 @@ vx_status ToDecibels_Register(vx_context context)
         PARAM_ERROR_CHECK(vxAddParameterToKernel(kernel, 4, VX_INPUT, VX_TYPE_SCALAR, VX_PARAMETER_STATE_REQUIRED));
         PARAM_ERROR_CHECK(vxAddParameterToKernel(kernel, 5, VX_INPUT, VX_TYPE_SCALAR, VX_PARAMETER_STATE_REQUIRED));
         PARAM_ERROR_CHECK(vxAddParameterToKernel(kernel, 6, VX_INPUT, VX_TYPE_SCALAR, VX_PARAMETER_STATE_REQUIRED));
-        PARAM_ERROR_CHECK(vxAddParameterToKernel(kernel, 7, VX_INPUT, VX_TYPE_SCALAR, VX_PARAMETER_STATE_REQUIRED));
-        PARAM_ERROR_CHECK(vxAddParameterToKernel(kernel, 8, VX_INPUT, VX_TYPE_SCALAR, VX_PARAMETER_STATE_REQUIRED));
         PARAM_ERROR_CHECK(vxFinalizeKernel(kernel));
     }
     if (status != VX_SUCCESS)

@@ -37,13 +37,17 @@ void ToDeciblesNode::create_node()
     _src_samples_length_array = vxCreateArray(vxGetContext((vx_reference)_graph->get()), VX_TYPE_INT32, _batch_size);
     vx_status status = VX_SUCCESS;
     status |= vxAddArrayItems(_src_samples_length_array, _batch_size, _src_samples_length.data(), sizeof(vx_int32));
+    _src_samples_channels.resize(_batch_size);
+
+    _src_samples_channels_array = vxCreateArray(vxGetContext((vx_reference)_graph->get()), VX_TYPE_INT32, _batch_size);
+    status |= vxAddArrayItems(_src_samples_channels_array, _batch_size, _src_samples_channels.data(), sizeof(vx_int32));
     if(status != 0)
         THROW(" vxAddArrayItems failed in the Todecibles node node: "+ TOSTR(status) + "  "+ TOSTR(status))
 
     vx_scalar cut_off_db = vxCreateScalar(vxGetContext((vx_reference)_graph->get()), VX_TYPE_FLOAT32, &_cut_off_db);
     vx_scalar multiplier = vxCreateScalar(vxGetContext((vx_reference)_graph->get()), VX_TYPE_FLOAT32, &_multiplier);
     vx_scalar magnitude_reference= vxCreateScalar(vxGetContext((vx_reference)_graph->get()), VX_TYPE_FLOAT32, &_magnitude_reference);
-    _node = vxExtrppNode_ToDecibels(_graph->get(), _inputs[0]->handle(), _outputs[0]->handle(), _src_samples_length_array, cut_off_db, multiplier, magnitude_reference, _batch_size);
+    _node = vxExtrppNode_ToDecibels(_graph->get(), _inputs[0]->handle(), _outputs[0]->handle(), _src_samples_length_array, _src_samples_channels_array, cut_off_db, multiplier, magnitude_reference, _batch_size);
 
     if((status = vxGetStatus((vx_reference)_node)) != VX_SUCCESS)
         THROW("Adding the copy (vxExtrppNode_ToDecibels) node failed: "+ TOSTR(status))
@@ -56,11 +60,16 @@ void ToDeciblesNode::update_node()
     for (uint i=0; i < _batch_size; i++)
     {
         _src_samples_length[i] = audio_roi->at(i).x1;
+        _src_samples_channels[i] = audio_roi->at(i).y1;
     }
     vx_status src_roi_status;
     src_roi_status = vxCopyArrayRange((vx_array)_src_samples_length_array, 0, _batch_size, sizeof(vx_uint32), _src_samples_length.data(), VX_WRITE_ONLY, VX_MEMORY_TYPE_HOST);
     if(src_roi_status != 0)
         THROW(" Failed calling vxCopyArrayRange for src / dst roi status : "+ TOSTR(src_roi_status))
+    src_roi_status = vxCopyArrayRange((vx_array)_src_samples_channels_array, 0, _batch_size, sizeof(vx_uint32), _src_samples_channels.data(), VX_WRITE_ONLY, VX_MEMORY_TYPE_HOST);
+    if(src_roi_status != 0)
+        THROW(" Failed calling vxCopyArrayRange for src / dst roi status : "+ TOSTR(src_roi_status))
+
 }
 
 void ToDeciblesNode::init(float cut_off_db, float multiplier, float magnitude_reference)

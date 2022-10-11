@@ -140,6 +140,79 @@ int test(int test_case, const char *path, float sample_rate, int downmix, unsign
             std::cerr<<"\n Calls rocalToDecibels";
         }
         break;
+        case 1:
+        {
+            RocalTensorLayout tensorLayout; // = RocalTensorLayout::None;
+            RocalTensorOutputType tensorOutputType = RocalTensorOutputType::ROCAL_FP32;
+            output = rocalPreEmphasisFilter(handle, input1, tensorOutputType, true);
+            std::cerr<<"\n Calls rocalPreEmphasisFilter ";
+        }
+        break;
+        case 2:
+        {
+            RocalTensorLayout tensorLayout; // = RocalTensorLayout::None;
+            RocalTensorOutputType tensorOutputType = RocalTensorOutputType::ROCAL_FP32;
+            int nfftSize = 2048;
+            output = rocalSpectrogram(handle, input1, tensorOutputType, true, true, true, RocalSpectrogramLayout(0), 2, nfftSize, 512, 256);
+            std::cerr<<"\n Calls rocalSpectrogram ";
+        }
+        break;
+        case 3:
+        {
+            output = rocalNonSilentRegion(handle, input1, true, -60, 1, -1, 3);
+        }
+        break;
+        case 4:
+        {
+            std::cerr<<"\n Mel Filter Bank";
+            RocalTensorLayout tensorLayout; // = RocalTensorLayout::None;
+            RocalTensorOutputType tensorOutputType = RocalTensorOutputType::ROCAL_FP32;
+            RocalTensor temp_output = rocalSpectrogram(handle, input1, tensorOutputType, false, true, true);
+            float sampleRate = 16000;
+            float minFreq = 0.0;
+            float maxFreq = sampleRate / 2;
+            RocalMelScaleFormula melFormula = RocalMelScaleFormula::SLANEY;
+            int numFilter = 128;
+            bool normalize = true;
+
+            output = rocalMelFilterBank(handle, temp_output, true, maxFreq, minFreq, melFormula, numFilter, normalize, sampleRate);
+        }
+        break;
+        case 5:
+        {
+            std::cerr<<"\n Slice";
+            RocalTensorLayout tensorLayout; // = RocalTensorLayout::None;
+            RocalTensorOutputType tensorOutputType = RocalTensorOutputType::ROCAL_FP32;
+            const size_t num_values = 3;
+
+            float anchor_values[num_values] = {10, 50, 100};
+            double anchor_frequencies[num_values] = {1, 5, 5};
+            RocalIntParam anchor = rocalCreateFloatRand(anchor_values, anchor_frequencies,
+                                                    sizeof(anchor_values) / sizeof(anchor_values[0]));
+
+            float values[num_values] = {20, 100, 200};
+            double frequencies[num_values] = {1, 5, 5};
+            RocalIntParam shape = rocalCreateFloatRand(values, frequencies,
+                                                    sizeof(values) / sizeof(values[0]));
+
+            float fill_values[num_values] = {10, 50, 100};
+            double fill_frequencies[num_values] = {1, 5, 5};
+            RocalFloatParam fill = rocalCreateFloatRand(fill_values, fill_frequencies,
+                                                    sizeof(fill_values) / sizeof(fill_values[0]));
+
+            output = rocalSlice(handle, input1, tensorOutputType, true, anchor, shape, fill, 0);
+        }
+        break;
+        case 6:
+        {
+            std::cerr<<"\n Normalize";
+            RocalTensorLayout tensorLayout;
+            RocalTensorOutputType tensorOutputType = RocalTensorOutputType::ROCAL_FP32;
+            output = rocalNormalize(handle, input1, tensorOutputType, true, false, {1});
+        }
+        break;
+
+
         default:
         {
             std::cout << "Not a valid pipeline type ! Exiting!\n";
@@ -176,13 +249,13 @@ int test(int test_case, const char *path, float sample_rate, int downmix, unsign
             break;
         std::vector<float> audio_op;
         output_tensor_list = rocalGetOutputTensors(handle);
-
+        std::cerr<<"*****************************Audio output**********************************\n";
         for(int idx = 0; idx < output_tensor_list->size(); idx++)
         {
             float * buffer = (float *)output_tensor_list->at(idx)->buffer();
-            for(int n = 0; n < output_tensor_list->at(idx)->info().data_size() / 4; n++)
+            for(int n = 0; n < output_tensor_list->at(idx)->info().data_size() / 4; n++) // shobi check with Fiona
             {
-                std::cerr << buffer[n] << "\n";
+                std::cerr << (float)buffer[n] << "\n";
             }
             // for(int n = 0; n < 5; n++)
             // {
@@ -198,7 +271,7 @@ int test(int test_case, const char *path, float sample_rate, int downmix, unsign
             int * labels_buffer = (int *)(labels->at(i)->buffer());
             std::cerr << ">>>>> LABELS : " << labels_buffer[0] << "\t";
         }
-
+        std::cerr<<"******************************************************************************\n";
     }
 
     high_resolution_clock::time_point t2 = high_resolution_clock::now();

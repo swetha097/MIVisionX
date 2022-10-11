@@ -23,21 +23,24 @@ THE SOFTWARE.
 #pragma once
 #include "node.h"
 #include "graph.h"
+#include "rocal_api_types.h"
 
-class ToDeciblesNode : public Node
+class MelFilterBankNode : public Node
 {
 public:
-    ToDeciblesNode(const std::vector<rocalTensor *> &inputs, const std::vector<rocalTensor *> &outputs);
-    ToDeciblesNode() = delete;
-    void init(float cut_off_db, float multiplier, float magnitude_reference);
+    MelFilterBankNode(const std::vector<rocalTensor *> &inputs, const std::vector<rocalTensor *> &outputs);
+    MelFilterBankNode() = delete;
+    void init(float freq_high,float freq_low, RocalMelScaleFormula formula, int nfilter, bool normalize,
+              float sample_rate);
 
 protected:
     void create_node() override;
     void update_node() override;
 private:
-    vx_array _src_samples_length_array, _src_samples_channels_array;
-    std::vector<int> _src_samples_length, _src_samples_channels;
-    float _cut_off_db = -200.0;
-    float _multiplier = 10.0;
-    float _magnitude_reference = 0.0;
+    float _freq_high = 0;
+    float _freq_low = 0;
+    RocalMelScaleFormula _formula = RocalMelScaleFormula::SLANEY;
+    int _nfilter = 128;
+    int _sample_rate = 4410;
+    bool _normalize = true;
 };

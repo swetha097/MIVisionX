@@ -23,21 +23,29 @@ THE SOFTWARE.
 #pragma once
 #include "node.h"
 #include "graph.h"
+#include "rocal_api_types.h"
 
-class ToDeciblesNode : public Node
+class SpectrogramNode : public Node
 {
 public:
-    ToDeciblesNode(const std::vector<rocalTensor *> &inputs, const std::vector<rocalTensor *> &outputs);
-    ToDeciblesNode() = delete;
-    void init(float cut_off_db, float multiplier, float magnitude_reference);
+    SpectrogramNode(const std::vector<rocalTensor *> &inputs, const std::vector<rocalTensor *> &outputs);
+    SpectrogramNode() = delete;
+    void init(bool center_windows,bool reflect_padding, RocalSpectrogramLayout spec_layout, int power, int nfft_size,
+              int window_length, int window_step, float *window_fn);
 
 protected:
     void create_node() override;
     void update_node() override;
 private:
-    vx_array _src_samples_length_array, _src_samples_channels_array;
-    std::vector<int> _src_samples_length, _src_samples_channels;
-    float _cut_off_db = -200.0;
-    float _multiplier = 10.0;
-    float _magnitude_reference = 0.0;
+    vx_array _src_samples_length_array, _window_fn_array;
+    std::vector<int> _src_samples_length;
+    std::vector<float> _window_fn;
+    bool _center_windows = true;
+    bool _reflect_padding = true;
+    RocalSpectrogramLayout _spec_layout = RocalSpectrogramLayout::FT;
+    int _power = 2;
+    int _nfft_size = 2048;
+    int _window_length = 512;
+    int _window_step = 256;
+    bool _is_window_empty = false;
 };

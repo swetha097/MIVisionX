@@ -23,21 +23,31 @@ THE SOFTWARE.
 #pragma once
 #include "node.h"
 #include "graph.h"
+#include "rocal_api_types.h"
+#include "parameter_factory.h"
+#include "parameter_vx.h"
 
-class ToDeciblesNode : public Node
+class SliceNode : public Node
 {
 public:
-    ToDeciblesNode(const std::vector<rocalTensor *> &inputs, const std::vector<rocalTensor *> &outputs);
-    ToDeciblesNode() = delete;
-    void init(float cut_off_db, float multiplier, float magnitude_reference);
+    SliceNode(const std::vector<rocalTensor *> &inputs, const std::vector<rocalTensor *> &outputs);
+    SliceNode() = delete;
+    void init( FloatParam* anchor_param, FloatParam* shape_param, FloatParam* fill_values_param, int axes,
+                bool normalized_anchor, bool normalized_shape, RocalOutOfBoundsPolicy policy);
 
 protected:
     void create_node() override;
     void update_node() override;
 private:
-    vx_array _src_samples_length_array, _src_samples_channels_array;
-    std::vector<int> _src_samples_length, _src_samples_channels;
-    float _cut_off_db = -200.0;
-    float _multiplier = 10.0;
-    float _magnitude_reference = 0.0;
+    ParameterVX<float> _anchor;
+    ParameterVX<float> _shape;
+    ParameterVX<float> _fill_values;
+    bool _normalized_anchor = false;
+    bool _normalized_shape = false;
+    RocalOutOfBoundsPolicy _policy = RocalOutOfBoundsPolicy::ERROR;
+    int _axes = 0;
+    constexpr static int ANCHOR_RANGE [2] = {1, 100}; // Shobi Need to change
+    constexpr static int SHAPE_RANGE [2] = {1, 100};
+    constexpr static float FILL_VALUES_RANGE [2] = {0, 0};
+
 };

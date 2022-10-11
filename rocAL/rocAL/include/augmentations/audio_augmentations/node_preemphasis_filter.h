@@ -23,21 +23,24 @@ THE SOFTWARE.
 #pragma once
 #include "node.h"
 #include "graph.h"
+#include "parameter_factory.h"
+#include "parameter_vx.h"
+#include "rocal_api_types.h"
 
-class ToDeciblesNode : public Node
+class PreemphasisFilterNode : public Node
 {
 public:
-    ToDeciblesNode(const std::vector<rocalTensor *> &inputs, const std::vector<rocalTensor *> &outputs);
-    ToDeciblesNode() = delete;
-    void init(float cut_off_db, float multiplier, float magnitude_reference);
+    PreemphasisFilterNode(const std::vector<rocalTensor *> &inputs, const std::vector<rocalTensor *> &outputs);
+    PreemphasisFilterNode() = delete;
+    void init(FloatParam* preemph_coeff, RocalAudioBorderType preemph_border);
 
 protected:
     void create_node() override;
     void update_node() override;
 private:
-    vx_array _src_samples_length_array, _src_samples_channels_array;
-    std::vector<int> _src_samples_length, _src_samples_channels;
-    float _cut_off_db = -200.0;
-    float _multiplier = 10.0;
-    float _magnitude_reference = 0.0;
+    vx_array _src_samples_size_array;
+    std::vector<int> _src_samples_size;
+    ParameterVX<float> _preemph_coeff;
+    constexpr static float PREEMPH_COEFF_RANGE [2] = {0.97, 0.97}; // 0.97 is the default value set in DALI
+    RocalAudioBorderType _preemph_border;
 };

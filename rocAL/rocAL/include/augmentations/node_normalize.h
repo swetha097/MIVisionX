@@ -24,20 +24,24 @@ THE SOFTWARE.
 #include "node.h"
 #include "graph.h"
 
-class ToDeciblesNode : public Node
+class NormalizeNode : public Node
 {
 public:
-    ToDeciblesNode(const std::vector<rocalTensor *> &inputs, const std::vector<rocalTensor *> &outputs);
-    ToDeciblesNode() = delete;
-    void init(float cut_off_db, float multiplier, float magnitude_reference);
+    NormalizeNode(const std::vector<rocalTensor *> &inputs, const std::vector<rocalTensor *> &outputs);
+    NormalizeNode() = delete;
+    void init(float mean, float std_dev, std::vector<int> axes, bool batch, float scale, float shift, int ddof, float epsilon);
 
 protected:
     void create_node() override;
     void update_node() override;
+
 private:
-    vx_array _src_samples_length_array, _src_samples_channels_array;
-    std::vector<int> _src_samples_length, _src_samples_channels;
-    float _cut_off_db = -200.0;
-    float _multiplier = 10.0;
-    float _magnitude_reference = 0.0;
+    float _mean, _std_dev, _scale, _shift, _epsilon;
+    int _ddof, _axis_mask = 0;
+    std::vector<int> _axes;
+    bool _batch, _calculate_mean, _calculate_stddev;
+    std::vector<int> _src_frames, _src_channels;
+    vx_array _src_frames_array, _src_channels_array;
+    unsigned _num_of_dims;
+    std::vector<std::vector<unsigned>> _param_shape;
 };

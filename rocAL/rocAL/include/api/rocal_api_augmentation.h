@@ -130,6 +130,23 @@ extern "C" RocalTensor ROCAL_API_CALL rocalColorTwist(RocalContext context,
                                                       RocalFloatParam hue = NULL,
                                                       RocalFloatParam sat = NULL);
 
+extern "C" RocalTensor ROCAL_API_CALL rocalNormalize(RocalContext p_context,
+                                                     RocalTensor p_input,
+                                                     RocalTensorOutputType rocal_tensor_output_type,
+                                                      bool is_output, bool batch = false,
+                                                     std::vector<int> axes = {},
+                                                     float mean = 0.0f, float std_dev = 0.0f,
+                                                     float scale = 0.0f, float shift = 0.0f,
+                                                     int ddof = 0, float epsilon = 0);
+
+extern "C" RocalTensor ROCAL_API_CALL rocalPad(RocalContext p_context,
+                                               RocalTensor p_input,
+                                               RocalTensorOutputType rocal_tensor_output_type,
+                                               bool is_output,
+                                               float fill_value = 0.0f,
+                                               std::vector<int>axes = {},
+                                               std::vector<int>align = {});
+
 extern "C" RocalTensor ROCAL_API_CALL rocalToDecibels(RocalContext p_context,
                                                       RocalTensor p_input,
                                                       RocalTensorLayout rocal_tensor_layout,
@@ -138,5 +155,56 @@ extern "C" RocalTensor ROCAL_API_CALL rocalToDecibels(RocalContext p_context,
                                                       float cut_off_DB = -200.0,
                                                       float multiplier = 10.0,
                                                       float magnitude_reference = 0.0);
+
+extern "C" RocalTensor ROCAL_API_CALL rocalPreEmphasisFilter(RocalContext p_context,
+                                                            RocalTensor p_input,
+                                                            RocalTensorOutputType rocal_tensor_output_type,
+                                                            bool is_output,
+                                                            RocalFloatParam p_preemph_coeff = NULL,
+                                                            RocalAudioBorderType preemph_border_type = RocalAudioBorderType::CLAMP);
+
+extern "C" RocalTensor ROCAL_API_CALL rocalSpectrogram(RocalContext p_context,
+                                                       RocalTensor p_input,
+                                                       RocalTensorOutputType rocal_tensor_output_type,
+                                                       bool is_output,
+                                                       bool center_windows = true,
+                                                       bool reflect_padding = true,
+                                                       RocalSpectrogramLayout spec_layout = RocalSpectrogramLayout::FT,
+                                                       int power = 2, // Can be 1 or 2
+                                                       int nfft_size = 2048,
+                                                       int window_length = 512,
+                                                       int window_step = 256,
+                                                       float *window_fn = NULL);
+
+extern "C" RocalTensor ROCAL_API_CALL rocalNonSilentRegion(RocalContext p_context,
+                                                           RocalTensor p_input,
+                                                           bool is_output,
+                                                           float cut_off_db = -0.60,
+                                                           float reference_power = 0.0,
+                                                           int reset_interval = 8192,
+                                                           int window_length = 2048);
+
+extern "C" RocalTensor ROCAL_API_CALL rocalMelFilterBank(RocalContext p_context,
+                                                         RocalTensor p_input,
+                                                         bool is_output,
+                                                         float freq_high = 0.0,
+                                                         float freq_low = 0.0,
+                                                         RocalMelScaleFormula mel_formula = RocalMelScaleFormula::SLANEY,
+                                                         int nfilter = 128,
+                                                         bool normalize = true,
+                                                         float sample_rate = 4410);
+
+extern "C" RocalTensor ROCAL_API_CALL rocalSlice(RocalContext p_context,
+                                                RocalTensor p_input,
+                                                RocalTensorOutputType rocal_tensor_output_type,
+                                                bool is_output,
+                                                RocalFloatParam p_anchor,
+                                                RocalFloatParam p_shape,
+                                                RocalFloatParam p_fill_values,
+                                                int axes =0,
+                                                bool normalized_anchor = false,
+                                                bool normalized_shape = false,
+                                                RocalOutOfBoundsPolicy policy = RocalOutOfBoundsPolicy::ERROR);
+
 
 #endif //MIVISIONX_ROCAL_API_AUGMENTATION_H

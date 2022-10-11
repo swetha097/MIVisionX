@@ -24,20 +24,19 @@ THE SOFTWARE.
 #include "node.h"
 #include "graph.h"
 
-class ToDeciblesNode : public Node
+class PadNode : public Node
 {
 public:
-    ToDeciblesNode(const std::vector<rocalTensor *> &inputs, const std::vector<rocalTensor *> &outputs);
-    ToDeciblesNode() = delete;
-    void init(float cut_off_db, float multiplier, float magnitude_reference);
+    PadNode(const std::vector<rocalTensor *> &inputs, const std::vector<rocalTensor *> &outputs);
+    PadNode() = delete;
+    void init(float fill_value);
 
 protected:
     void create_node() override;
     void update_node() override;
+
 private:
-    vx_array _src_samples_length_array, _src_samples_channels_array;
-    std::vector<int> _src_samples_length, _src_samples_channels;
-    float _cut_off_db = -200.0;
-    float _multiplier = 10.0;
-    float _magnitude_reference = 0.0;
+    float _fill_value;
+    vx_array _src_frames_array, _src_channels_array;
+    std::vector<int> _src_frames, _src_channels;
 };
