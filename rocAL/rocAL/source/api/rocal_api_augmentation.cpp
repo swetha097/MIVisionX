@@ -1005,10 +1005,10 @@ RocalTensor rocalSlice(RocalContext p_context,
                         RocalTensor p_input,
                         RocalTensorOutputType rocal_tensor_output_type,
                         bool is_output,
-                        RocalFloatParam p_anchor,
-                        RocalFloatParam p_shape,
-                        RocalFloatParam p_fill_values,
-                        int axes,
+                        std::vector<float> anchor,
+                        std::vector<float> shape,
+                        std::vector<float> fill_values,
+                        std::vector<unsigned> axes,
                         bool normalized_anchor,
                         bool normalized_shape,
                         RocalOutOfBoundsPolicy policy) {
@@ -1017,9 +1017,7 @@ RocalTensor rocalSlice(RocalContext p_context,
     rocalTensor* output = nullptr;
     auto context = static_cast<Context*>(p_context);
     auto input = static_cast<rocalTensor*>(p_input);
-    auto anchor = static_cast<FloatParam*>(p_anchor);
-    auto shape = static_cast<FloatParam*>(p_shape);
-    auto fill_values = static_cast<FloatParam*>(p_fill_values);
+
     RocalTensorDataType op_tensorDataType;
     try {
 
@@ -1039,7 +1037,28 @@ RocalTensor rocalSlice(RocalContext p_context,
         // output_info.set_data_type(op_tensorDataType);
 
         // output = context->master_graph->create_tensor(output_info, is_output);
-        context->master_graph->add_node<SliceNode>({input}, {output})->init(anchor, shape, fill_values,
+        std::vector<float> anchors(2, 0);
+        if (anchor.size()) {
+            if(anchor.size() == 1) {
+                anchors = {anchor[0], 0};
+            } else if(anchor.size() == 2) {
+                anchors = anchor; // {width, height}
+            } else {
+                THROW("The length of max_size vector exceeds the image dimension.")
+            }
+        }
+        
+        std::vector<float> shapes;
+        if (shape.size()) {
+            if(shape.size() == 1) {
+                shapes = {shape[0], 0};
+            } else if(shape.size() == 2) {
+                shapes = shape; // {width, height}
+            } else {
+                THROW("The length of max_size vector exceeds the image dimension.")
+            }
+        }
+        context->master_graph->add_node<SliceNode>({input}, {output})->init(anchors, shapes, fill_values,
                                                                             axes, normalized_anchor, normalized_shape, policy);
     }
     catch(const std::exception& e) {

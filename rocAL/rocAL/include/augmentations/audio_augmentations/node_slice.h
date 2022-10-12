@@ -32,22 +32,20 @@ class SliceNode : public Node
 public:
     SliceNode(const std::vector<rocalTensor *> &inputs, const std::vector<rocalTensor *> &outputs);
     SliceNode() = delete;
-    void init( FloatParam* anchor_param, FloatParam* shape_param, FloatParam* fill_values_param, int axes,
+    void init(std::vector<float> &anchor_param, std::vector<float> &shape_param, std::vector<float> &fill_values_param, std::vector<unsigned> &axes,
                 bool normalized_anchor, bool normalized_shape, RocalOutOfBoundsPolicy policy);
 
 protected:
     void create_node() override;
     void update_node() override;
 private:
-    ParameterVX<float> _anchor;
-    ParameterVX<float> _shape;
-    ParameterVX<float> _fill_values;
+    vx_array  _anchors_array , _shapes_array, _fill_values_array;
+    std::vector<float> _anchor, _anchor_vec;
+    std::vector<float> _shape, _shape_vec;
+    std::vector<float> _fill_values, _fill_values_vec;
     bool _normalized_anchor = false;
     bool _normalized_shape = false;
     RocalOutOfBoundsPolicy _policy = RocalOutOfBoundsPolicy::ERROR;
-    int _axes = 0;
-    constexpr static int ANCHOR_RANGE [2] = {1, 100}; // Shobi Need to change
-    constexpr static int SHAPE_RANGE [2] = {1, 100};
-    constexpr static float FILL_VALUES_RANGE [2] = {0, 0};
-
+    unsigned _num_of_dims;
+    int _axis_mask = 0;
 };
