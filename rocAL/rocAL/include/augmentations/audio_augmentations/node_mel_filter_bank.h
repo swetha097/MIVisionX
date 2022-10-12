@@ -41,6 +41,6 @@ private:
     float _freq_low = 0;
     RocalMelScaleFormula _formula = RocalMelScaleFormula::SLANEY;
     int _nfilter = 128;
-    int _sample_rate = 4410;
+    float _sample_rate = 4410;
     bool _normalize = true;
 };

@@ -9824,6 +9824,16 @@ VX_API_ENTRY vx_status VX_API_CALL vxQueryTensor(vx_tensor tensor, vx_enum attri
 						}
 					}
 				}
+				else if (tensor_data_type == VX_TYPE_INT32)
+				{
+					if (size == sizeof(vx_int32)) {
+						if (data->buffer) {
+							vx_int32** temp  = static_cast< vx_int32 **>(ptr);
+							*temp = (vx_int32 *)data->buffer;
+							status = VX_SUCCESS;
+						}
+					}
+				}
 #if defined(EXPERIMENTAL_PLATFORM_SUPPORTS_16_FLOAT)
 				else if (data_type == VX_TYPE_FLOAT16)
 				{

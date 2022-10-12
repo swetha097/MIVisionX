@@ -152,8 +152,8 @@ int test(int test_case, const char *path, float sample_rate, int downmix, unsign
         {
             RocalTensorLayout tensorLayout; // = RocalTensorLayout::None;
             RocalTensorOutputType tensorOutputType = RocalTensorOutputType::ROCAL_FP32;
-            int nfftSize = 2048;
-            output = rocalSpectrogram(handle, input1, tensorOutputType, true, true, true, RocalSpectrogramLayout(0), 2, nfftSize, 512, 256);
+            // int nfftSize = 2048;
+            output = rocalSpectrogram(handle, input1, tensorOutputType, true, true, true, RocalSpectrogramLayout(0), 2, 512, 512, 256);
             std::cerr<<"\n Calls rocalSpectrogram ";
         }
         break;
@@ -167,7 +167,7 @@ int test(int test_case, const char *path, float sample_rate, int downmix, unsign
             std::cerr<<"\n Mel Filter Bank";
             RocalTensorLayout tensorLayout; // = RocalTensorLayout::None;
             RocalTensorOutputType tensorOutputType = RocalTensorOutputType::ROCAL_FP32;
-            RocalTensor temp_output = rocalSpectrogram(handle, input1, tensorOutputType, false, true, true);
+            RocalTensor temp_output = rocalSpectrogram(handle, input1, tensorOutputType, false, true, true, RocalSpectrogramLayout(0), 2, 512, 512, 256);
             float sampleRate = 16000;
             float minFreq = 0.0;
             float maxFreq = sampleRate / 2;
