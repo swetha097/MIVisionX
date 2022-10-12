@@ -176,22 +176,7 @@ int test(int test_case, const char *path, float sample_rate, int downmix, unsign
             RocalTensorOutputType tensorOutputType = RocalTensorOutputType::ROCAL_FP32;
             const size_t num_values = 3;
 
-            float anchor_values[num_values] = {10, 50, 100};
-            double anchor_frequencies[num_values] = {1, 5, 5};
-            RocalIntParam anchor = rocalCreateFloatRand(anchor_values, anchor_frequencies,
-                                                    sizeof(anchor_values) / sizeof(anchor_values[0]));
-
-            float values[num_values] = {20, 100, 200};
-            double frequencies[num_values] = {1, 5, 5};
-            RocalIntParam shape = rocalCreateFloatRand(values, frequencies,
-                                                    sizeof(values) / sizeof(values[0]));
-
-            float fill_values[num_values] = {10, 50, 100};
-            double fill_frequencies[num_values] = {1, 5, 5};
-            RocalFloatParam fill = rocalCreateFloatRand(fill_values, fill_frequencies,
-                                                    sizeof(fill_values) / sizeof(fill_values[0]));
-
-            output = rocalSlice(handle, input1, tensorOutputType, true, anchor, shape, fill, 0);
+            output = rocalSlice(handle, input1, tensorOutputType, true, {}, {4}, {0.3f});
         }
         break;
         case 6:
@@ -202,7 +187,14 @@ int test(int test_case, const char *path, float sample_rate, int downmix, unsign
             output = rocalNormalize(handle, input1, tensorOutputType, true, false, {1});
         }
         break;
-
+        case 7:
+        {
+            std::cerr<<"\nPad";
+            RocalTensorLayout tensorLayout;
+            RocalTensorOutputType tensorOutputType = RocalTensorOutputType::ROCAL_FP32;
+            output = rocalPad(handle, input1, tensorOutputType, true, 4.0f);
+        }
+        break;
 
         default:
         {

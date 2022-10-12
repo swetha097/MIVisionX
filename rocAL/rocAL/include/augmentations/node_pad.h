@@ -23,6 +23,7 @@ THE SOFTWARE.
 #pragma once
 #include "node.h"
 #include "graph.h"
+#include "rocal_api_types.h"
 
 class PadNode : public Node
 {
@@ -37,6 +38,11 @@ protected:
 
 private:
     float _fill_value;
-    vx_array _src_frames_array, _src_channels_array;
-    std::vector<int> _src_frames, _src_channels;
+    bool _normalized_anchor = false;
+    bool _normalized_shape = false;
+    RocalOutOfBoundsPolicy _policy = RocalOutOfBoundsPolicy::PAD;
+    int _axis_mask = 0;
+    vx_array  _anchors_array , _shapes_array, _fill_values_array;
+    std::vector<float> _anchor_vec, _shape_vec, _fill_values_vec;
+    unsigned _num_of_dims;
 };
