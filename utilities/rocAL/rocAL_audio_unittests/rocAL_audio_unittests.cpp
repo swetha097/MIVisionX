@@ -94,7 +94,7 @@ int main(int argc, const char **argv)
 int test(int test_case, const char *path, float sample_rate, int downmix, unsigned max_frames, unsigned max_channels, int gpu)
 {
     size_t num_threads = 1;
-    int inputBatchSize = 2;
+    int inputBatchSize = 1;
     std::cout << ">>> test case " << test_case << std::endl;
     std::cout << ">>> Running on " << (gpu ? "GPU" : "CPU") << std::endl;
 
@@ -153,7 +153,8 @@ int test(int test_case, const char *path, float sample_rate, int downmix, unsign
             RocalTensorLayout tensorLayout; // = RocalTensorLayout::None;
             RocalTensorOutputType tensorOutputType = RocalTensorOutputType::ROCAL_FP32;
             // int nfftSize = 2048;
-            output = rocalSpectrogram(handle, input1, tensorOutputType, true, true, true, RocalSpectrogramLayout(0), 2, 512, 512, 256);
+            std::vector<float> window_fn{};
+            output = rocalSpectrogram(handle, input1, tensorOutputType, true, window_fn, true, true, RocalSpectrogramLayout(0), 2, 512, 512, 256);
             std::cerr<<"\n Calls rocalSpectrogram ";
         }
         break;
@@ -167,7 +168,8 @@ int test(int test_case, const char *path, float sample_rate, int downmix, unsign
             std::cerr<<"\n Mel Filter Bank";
             RocalTensorLayout tensorLayout; // = RocalTensorLayout::None;
             RocalTensorOutputType tensorOutputType = RocalTensorOutputType::ROCAL_FP32;
-            RocalTensor temp_output = rocalSpectrogram(handle, input1, tensorOutputType, false, true, true, RocalSpectrogramLayout(0), 2, 512, 512, 256);
+            std::vector<float> window_fn{};
+            RocalTensor temp_output = rocalSpectrogram(handle, input1, tensorOutputType, false, window_fn, true, true, RocalSpectrogramLayout(0), 2, 512, 512, 256);
             float sampleRate = 16000;
             float minFreq = 0.0;
             float maxFreq = sampleRate / 2;

@@ -31,7 +31,7 @@ public:
     SpectrogramNode(const std::vector<rocalTensor *> &inputs, const std::vector<rocalTensor *> &outputs);
     SpectrogramNode() = delete;
     void init(bool center_windows,bool reflect_padding, RocalSpectrogramLayout spec_layout, int power, int nfft_size,
-              int window_length, int window_step, float *window_fn);
+              int window_length, int window_step, std::vector<float> &window_fn);
 
 protected:
     void create_node() override;

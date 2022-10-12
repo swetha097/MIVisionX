@@ -874,14 +874,14 @@ rocalSpectrogram(RocalContext p_context,
                 RocalTensor p_input,
                 RocalTensorOutputType rocal_tensor_output_type,
                 bool is_output,
+                std::vector<float> & window_fn,
                 bool center_windows,
                 bool reflect_padding,
                 RocalSpectrogramLayout spec_layout,
                 int power,
                 int nfft_size,
                 int window_length,
-                int window_step,
-                float *window_fn) {
+                int window_step) {
     if(!p_context || !p_input)
         THROW("Null values passed as input")
     rocalTensor* output = nullptr;
