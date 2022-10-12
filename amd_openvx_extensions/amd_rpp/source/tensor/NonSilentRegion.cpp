@@ -75,11 +75,11 @@ static vx_status VX_CALLBACK refreshNonSilentRegion(vx_node node, const vx_refer
     }
     if (data->deviceType == AGO_TARGET_AFFINITY_CPU)
     {
-        if (data->in_tensor_type == vx_type_e::VX_TYPE_FLOAT32 && data->out_tensor_type == vx_type_e::VX_TYPE_FLOAT32)
-        {
+        // if (data->in_tensor_type == vx_type_e::VX_TYPE_FLOAT32 && data->out_tensor_type == vx_type_e::VX_TYPE_FLOAT32)
+        // {
             STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[0], VX_TENSOR_BUFFER_HOST, &data->pSrc, sizeof(vx_float32)));
-            STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[1], VX_TENSOR_BUFFER_HOST, &data->pDst, sizeof(vx_float32)));
-        }
+            STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[1], VX_TENSOR_BUFFER_HOST, &data->pDst, sizeof(vx_int32)));
+        // }
     }
     return status;
 }
@@ -143,7 +143,7 @@ static vx_status VX_CALLBACK processNonSilentRegion(vx_node node, const vx_refer
     if (data->deviceType == AGO_TARGET_AFFINITY_CPU)
     {
         refreshNonSilentRegion(node, parameters, num, data);
-        // rpp_status = rppt_to_decibels_host((float *)data->pSrc, data->src_desc_ptr, (float *)data->pDst, data->dst_desc_ptr, data->srcDims, data->cutOffDB, data->referencePower, data->magnitudeReference);
+        rpp_status = rppt_non_silent_region_detection_host((float *)data->pSrc, data->src_desc_ptr,(int *) data->sample_size, (int *)data->pDst, data->cutOffDB, data->windowLength, data->referencePower, data->resetInterval);
         return_status = (rpp_status == RPP_SUCCESS) ? VX_SUCCESS : VX_FAILURE;
     }
     return return_status;
@@ -180,9 +180,6 @@ static vx_status VX_CALLBACK initializeNonSilentRegion(vx_node node, const vx_re
     STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[1], VX_TENSOR_NUMBER_OF_DIMS, &data->dst_desc_ptr->numDims, sizeof(data->dst_desc_ptr->numDims)));
     STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[1], VX_TENSOR_DIMS, &data->out_tensor_dims, sizeof(vx_size) * data->dst_desc_ptr->numDims));
     STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[1],VX_TENSOR_DATA_TYPE, &data->out_tensor_type, sizeof(data->out_tensor_type)));
-    if (data->out_tensor_type == vx_type_e::VX_TYPE_FLOAT32)
-        data->dst_desc_ptr->dataType = RpptDataType::F32;
-    data->dst_desc_ptr->offsetInBytes = 0;
 
     // source_description_ptr
     data->src_desc_ptr->n = data->in_tensor_dims[0];
@@ -194,17 +191,6 @@ static vx_status VX_CALLBACK initializeNonSilentRegion(vx_node node, const vx_re
     data->src_desc_ptr->strides.wStride = data->src_desc_ptr->c;
     data->src_desc_ptr->strides.cStride = 1;
     data->src_desc_ptr->numDims = 4;
-
-    // source_description_ptr
-    data->dst_desc_ptr->n = data->in_tensor_dims[0];
-    data->dst_desc_ptr->w = data->in_tensor_dims[1];
-    data->dst_desc_ptr->h = 1;
-    data->dst_desc_ptr->c = 1;
-    data->dst_desc_ptr->strides.nStride = data->dst_desc_ptr->c * data->dst_desc_ptr->w * data->dst_desc_ptr->h;
-    data->dst_desc_ptr->strides.hStride = data->dst_desc_ptr->c * data->dst_desc_ptr->w;
-    data->dst_desc_ptr->strides.wStride = data->dst_desc_ptr->c;
-    data->dst_desc_ptr->strides.cStride = 1;
-    data->dst_desc_ptr->numDims = 4;
 
     data->sample_size = (unsigned int *)calloc(data->src_desc_ptr->n, sizeof(unsigned int));
 
