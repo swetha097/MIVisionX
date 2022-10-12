@@ -334,6 +334,24 @@ namespace rali
             .value("DECODER_VIDEO_FFMPEG_SW",ROCAL_DECODER_VIDEO_FFMPEG_SW)
             .value("DECODER_VIDEO_FFMPEG_HW",ROCAL_DECODER_VIDEO_FFMPEG_HW)
             .export_values();
+         py::enum_<RocalAudioBorderType>(types_m,"RocalAudioBorderType", "Rocal Audio Border Type")
+            .value("ZERO",ZERO)
+            .value("CLAMP",CLAMP)
+            .value("REFLECT",REFLECT)
+            .export_values();
+        py::enum_<RocalSpectrogramLayout>(types_m,"RocalSpectrogramLayout", "Rocal Audio Border Type")
+            .value("FT",FT)
+            .value("TF",TF)
+            .export_values();
+        py::enum_<RocalMelScaleFormula>(types_m,"RocalMelScaleFormula", "Rocal Audio Border Type")
+            .value("SLANEY",SLANEY)
+            .value("HTK",HTK)
+            .export_values();
+        py::enum_<RocalOutOfBoundsPolicy>(types_m,"RocalOutOfBoundsPolicy", "Rocal Audio Border Type")
+            .value("PAD",PAD)
+            .value("TRIMTOSHAPE",TRIMTOSHAPE)
+            .value("ERROR",ERROR)
+            .export_values();
         // rocal_api_info.h
         m.def("getRemainingImages", &rocalGetRemainingImages);
         m.def("isEmpty", &rocalIsEmpty);
@@ -484,13 +502,24 @@ namespace rali
             py::return_value_policy::reference);
         m.def("Audio_decoder",&rocalAudioFileSource,"Reads file from the source given and decodes it according to the policy",
             py::return_value_policy::reference);
-            
+        // rocal_api_augmentation.h
+        // Audio Augmentations
         m.def("ToDecibels", &rocalToDecibels, "Converts to Decibals",
             py::return_value_policy::reference);
+        m.def("PreEmphasisFilter", &rocalPreEmphasisFilter, "Applies preemphasis filter to the input data", 
+            py::return_value_policy::reference);
+        m.def("Spectrogram", &rocalSpectrogram, " Produces a spectrogram from a 1D signal (for example, audio)",
+            py::return_value_policy::reference);
+        m.def("MelFilterBank", &rocalMelFilterBank, "Converts a spectrogram to a mel spectrogram by applying a bank of triangular filters",
+            py::return_value_policy::reference);
+        m.def("audioSlice", &rocalSlice,"The slice can be specified by proving the start and end coordinates, or start coordinates and shape of the slice. Both coordinates and shapes can be provided in absolute or relative terms",
+            py::return_value_policy::reference);
+        m.def("audioNormalize", &rocalNormalize,"Normalizes the input by removing the mean and dividing by the standard deviation",
+            py::return_value_policy::reference);
+        // Image Augmentations
         m.def("Resize",&rocalResize, "Resizes the image ",py::return_value_policy::reference);
         m.def("ColorTwist",&rocalColorTwist, py::return_value_policy::reference);
         m.def("rocalResetLoaders", &rocalResetLoaders);
-        // rocal_api_augmentation.h
         m.def("Brightness", &rocalBrightness,
               py::return_value_policy::reference,
               py::arg("context"),

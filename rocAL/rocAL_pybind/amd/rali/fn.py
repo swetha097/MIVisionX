@@ -161,3 +161,101 @@ def to_decibals(*inputs, bytes_per_sample_hint=[0], cutoff_db=-200.0, multiplier
                      "cut_off_DB": cutoff_db, "multiplier": multiplier, "magnitude_reference": reference}
     decibel_scale = b.ToDecibels(Pipeline._current_pipeline._handle ,*(kwargs_pybind.values()))
     return decibel_scale
+
+def preemphasis_filter(*inputs, border=types.CLAMP, bytes_per_sample_hint=[0], preemph_coeff=0.97, preserve=False, seed=1,  rocal_tensor_layout=types.NCHW, rocal_tensor_output_type=types.FLOAT):
+    '''
+    Applies preemphasis filter to the input data.
+
+    This filter, in simple form, can be expressed by the formula:
+
+    Y[t] = X[t] - coeff * X[t-1]    if t > 1
+    Y[t] = X[t] - coeff * X_border  if t == 0
+
+    with X and Y being the input and output signal, respectively.
+
+    The value of X_border depends on the border argument:
+
+    X_border = 0                    if border_type == 'zero'
+    X_border = X[0]                 if border_type == 'clamp'
+    X_border = X[1]                 if border_type == 'reflect'
+    
+    '''
+    preemph_coeff_float_param = b.CreateFloatParameter(preemph_coeff)
+    kwargs_pybind = {"input_audio0": inputs[0],  "rocal_tensor_layout": rocal_tensor_layout, "rocal_tensor_output_type" :rocal_tensor_output_type, "is_output": False,
+                     "preemph_coeff": preemph_coeff_float_param, "preemph_border_type": border}
+    preemphasis_output = b.PreEmphasisFilter(Pipeline._current_pipeline._handle ,*(kwargs_pybind.values()))
+    return preemphasis_output
+
+
+
+def spectrogram(*inputs, bytes_per_sample_hint=[0], center_windows=True, layout=types.FT, nfft=None, power=2, preserve=False, reflect_padding=True, seed=1, window_fn=[], window_length=512, window_step=256, rocal_tensor_layout=types.NCHW, rocal_tensor_output_type=types.FLOAT) :
+    '''
+    Produces a spectrogram from a 1D signal (for example, audio).
+
+    Input data is expected to be one channel (shape being (nsamples,), (nsamples, 1), or (1, nsamples)) of type float32.
+    '''
+    kwargs_pybind = {"input_audio0": inputs[0], "rocal_tensor_output_type" :rocal_tensor_output_type, "is_output": False,
+                     "center_windows": center_windows, "reflect_padding": reflect_padding, "layout":layout, "power": power , "nfft":nfft, "window_length": window_length, "window_step":window_step, "window_fn":window_fn }
+    spectrogram_output = b.Spectrogram(Pipeline._current_pipeline._handle ,*(kwargs_pybind.values()))
+    return spectrogram_output
+
+ 
+def mel_filter_bank(*inputs, bytes_per_sample_hint=[0], freq_high=0.0, freq_low=0.0, mel_formula=types.SLANEY, nfilter=128, normalize=True, preserve=False, sample_rate=44100.0, seed=1):
+    '''
+    Converts a spectrogram to a mel spectrogram by applying a bank of triangular filters.
+
+    The frequency (‘f’) dimension is selected from the input layout. In case of no layout, “f”, “ft”, or “*ft” is assumed, depending on the number of dimensions.
+    '''
+    kwargs_pybind = {"input_audio0": inputs[0], "is_output": False,
+                     "freq_high": freq_high, "freq_low": freq_low, "mel_formula":mel_formula, "nfilter": nfilter , "normalize":normalize, "sample_rate": sample_rate }
+    mel_filter_bank_output = b.MelFilterBank(Pipeline._current_pipeline._handle ,*(kwargs_pybind.values()))
+    return mel_filter_bank_output
+
+def normalize(*inputs, axes=[], axis_names="", batch=False, bytes_per_sample_hint=[0], ddof=0, epsilon=0.0, mean=[0.0], preserve=False, scale=1.0, seed=1, shift=0.0, stddev=[0.0] , rocal_tensor_output_type=types.FLOAT):
+    '''
+    Normalizes the input by removing the mean and dividing by the standard deviation.
+
+    The mean and standard deviation can be calculated internally for the specified subset of axes or can be externally provided as the mean and stddev arguments.
+
+    The normalization is done following the formula:
+
+    out = scale * (in - mean) / stddev + shift
+
+    The formula assumes that out and in are equally shaped tensors, but mean and stddev might be either tensors of same shape, scalars, or a mix of these.
+    '''
+    kwargs_pybind = {"input_audio0": inputs[0], "rocal_tensor_output_type": rocal_tensor_output_type, "is_output": False, "batch": batch,
+                     "axes": axes, "mean": mean, "stddev":stddev, "scale": scale , "shift":shift, "ddof": ddof , "epsilon":epsilon}
+    normalize_output = b.audioNormalize(Pipeline._current_pipeline._handle ,*(kwargs_pybind.values()))
+    return normalize_output
+
+def slice(*inputs, anchor=[], shape=[], axes=[1,0], axis_names="WH", bytes_per_sample_hint=[0], dtype=types.FLOAT, end=[], fill_values=[0.0], normalized_anchor=True, normalized_shape=True,  out_of_bounds_policy=types.ERROR, preserve=False, rel_end=[], rel_shape=[], rel_start=[], seed=1, rocal_shape=[], start=[] , rocal_tensor_output_type=types.FLOAT):
+    """
+    The slice can be specified by proving the start and end coordinates, or start coordinates and shape of the slice. Both coordinates and shapes can be provided in absolute or relative terms.
+
+    The slice arguments can be specified by the following named arguments:
+
+    start: Slice start coordinates (absolute)
+
+    rel_start: Slice start coordinates (relative)
+
+    end: Slice end coordinates (absolute)
+
+    rel_end: Slice end coordinates (relative)
+
+    shape: Slice shape (absolute)
+
+    rel_shape: Slice shape (relative)
+
+    """
+    frequencies = [1, 5, 5]
+    anchor_float_rand = b.CreateFloatRand([10, 50, 100], frequencies, 3)
+    shape_float_rand = b.CreateFloatRand([20,100, 200], frequencies, 3)
+    fill_values_rand = b.CreateFloatRand([10, 50, 100], frequencies, 3)
+
+    kwargs_pybind = {"input_audio0": inputs[0], "rocal_tensor_output_type": rocal_tensor_output_type, "is_output": False, "anchor": anchor_float_rand,
+                     "shape": shape_float_rand, "fill_values": fill_values_rand, "axes":axes, "normalized_anchor": normalized_anchor , "normalized_shape":normalized_shape, "out_of_bounds_policy": out_of_bounds_policy }
+    slice_output = b.rocalSlice(Pipeline._current_pipeline._handle ,*(kwargs_pybind.values()))
+    return slice_output
+    
+
+

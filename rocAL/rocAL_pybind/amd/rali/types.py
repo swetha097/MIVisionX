@@ -46,6 +46,28 @@ from rali_pybind.types import DECODER_HW_JEPG
 from rali_pybind.types import DECODER_VIDEO_FFMPEG_SW
 from rali_pybind.types import DECODER_VIDEO_FFMPEG_HW
 
+#     RocalAudioBorderType
+from rali_pybind.types import ZERO
+from rali_pybind.types import CLAMP
+from rali_pybind.types import REFLECT
+
+#     RocalSpectrogramLayout
+from rali_pybind.types import FT
+from rali_pybind.types import TF
+
+#     RocalMelScaleFormula
+from rali_pybind.types import SLANEY
+from rali_pybind.types import HTK
+
+#     RocalOutOfBoundsPolicy
+from rali_pybind.types import PAD
+from rali_pybind.types import TRIMTOSHAPE
+from rali_pybind.types import ERROR
+
+
+
+
+
 
 _known_types={
 
@@ -83,7 +105,22 @@ _known_types={
     DECODER_OPENCV : ("DECODER_OPENCV", DECODER_OPENCV),
     DECODER_HW_JEPG : ("DECODER_HW_JEPG", DECODER_HW_JEPG),
     DECODER_VIDEO_FFMPEG_SW : ("DECODER_VIDEO_FFMPEG_SW", DECODER_VIDEO_FFMPEG_SW),
-    DECODER_VIDEO_FFMPEG_HW : ("DECODER_VIDEO_FFMPEG_HW", DECODER_VIDEO_FFMPEG_HW)
+    DECODER_VIDEO_FFMPEG_HW : ("DECODER_VIDEO_FFMPEG_HW", DECODER_VIDEO_FFMPEG_HW),
+    
+    ZERO : ("ZERO", ZERO),
+    CLAMP : ("CLAMP", CLAMP),
+    REFLECT : ("REFLECT", REFLECT),
+    
+    FT : ("FT", FT),
+    TF : ("TF", TF),
+
+    SLANEY : ("SLANEY", SLANEY),
+    HTK : ("HTK", HTK),
+    
+    PAD : ("PAD", PAD),
+    TRIMTOSHAPE : ("TRIMTOSHAPE", TRIMTOSHAPE),
+    ERROR : ("ERROR", ERROR),
+
 }
 
 
