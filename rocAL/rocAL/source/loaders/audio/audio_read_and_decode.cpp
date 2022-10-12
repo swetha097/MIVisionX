@@ -149,8 +149,8 @@ AudioReadAndDecode::load(float* buff,
         // _compressed_buff[file_counter].reserve(fsize);
         // _actual_read_size[file_counter] = _reader->read(_compressed_buff[file_counter].data(), fsize);
         _audio_names[file_counter] = _reader->id();
-        std::cerr<<" \n In audio Read and decode - _input_path"<<_input_path;
-        std::cerr<<" \n In audio Read and decode - _reader->id()"<<_reader->id();
+        // std::cerr<<" \n In audio Read and decode - _input_path"<<_input_path;
+        // std::cerr<<" \n In audio Read and decode - _reader->id()"<<_reader->id();
 
         _audio_file_path[file_counter] = _reader->file_path();
         _reader->close();

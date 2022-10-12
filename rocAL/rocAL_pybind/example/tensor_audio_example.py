@@ -58,9 +58,29 @@ def main():
 
     with audio_pipeline:
         jpegs, labels = fn.readers.file(file_root=data_path, file_list=file_list)
-        audio_decode = fn.decoders.audio(jpegs, file_root=data_path)
-        to_decibels = fn.to_decibals(audio_decode, rocal_tensor_output_type=types.FLOAT)
-        audio_pipeline.set_outputs(to_decibels)
+        speed_perturbation_coeffs = fn.uniform(rng_range=[0.85, 1.15])
+        sample_rate = 16000
+        # print(speed_perturbation_coeffs)
+        # exit(0)
+        # audio_decode = fn.decoders.audio(jpegs, file_root=data_path, sample_rate=speed_perturbation_coeffs * sample_rate )
+        audio_decode = fn.decoders.audio(jpegs, file_root=data_path, sample_rate=sample_rate )
+        begin_and_length = fn.nonsilent_region(audio_decode) # Dont understand where to use this as input in Slice to pass as what arguments - Confused
+        trim_silence = fn.slice(audio_decode, normalized_anchor=False, normalized_shape=False, axes=0, anchor=0, shape=10)
+        # if self.dither_coeff != 0.: # Where is the normal distribution call ? , cant find in the rocal_api_paramters.h
+        #     audio = audio + self.normal_distribution(audio) * self.dither_coeff
+        preemph_coeff=0.97
+        nfft=512
+        window_size=0.02
+        window_stride=0.01
+        preemph_audio = fn.preemphasis_filter(trim_silence, preemph_coeff=preemph_coeff)
+        # spectogram = fn.spectrogram(preemph_audio, nfft=nfft, window_length=int(window_size* sample_rate), window_step= int(window_stride * sample_rate))
+        nfilt=80 #nfeatures
+        mel_fbank = fn.mel_filter_bank(preemph_audio, sample_rate=sample_rate, nfilter=nfilt, normalize=True)
+        to_decibels = fn.to_decibals(mel_fbank, rocal_tensor_output_type=types.FLOAT)
+        normalize = fn.normalize(to_decibels, axes=[1])
+        #Dont see the Pad augmentation support in rocAL
+        
+        audio_pipeline.set_outputs(normalize)
 
     audio_pipeline.build()
     audioIteratorPipeline = RALIClassificationIterator(audio_pipeline)

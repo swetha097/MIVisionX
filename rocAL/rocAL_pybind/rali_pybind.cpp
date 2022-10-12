@@ -102,6 +102,15 @@ namespace rali
             .def_readwrite("process_time", &TimingInfo::process_time)
             .def_readwrite("transfer_time", &TimingInfo::transfer_time);
         py::class_<rocalTensor>(m, "rocalTensor")
+                // .def(
+                // "__getitem__",
+                // [](rocalTensorList &output_tensor, uint idx)
+                // {
+                //     return output_tensor.at(idx);
+                // },
+                // R"code(
+                // Returns a tensor at given position in the list.
+                // )code")
                 .def(
                 "get_roi_at",
                 [](rocalTensor &output_tensor, uint idx)
@@ -387,7 +396,8 @@ namespace rali
         m.def("CreateFloatUniformRand", &rocalCreateFloatUniformRand);
         m.def("CreateIntRand", [](std::vector<int> values, std::vector<double> frequencies)
               { return rocalCreateIntRand(values.data(), frequencies.data(), values.size()); });
-        m.def("CreateFloatRand", &rocalCreateFloatRand);
+        m.def("CreateFloatRand", [](std::vector<float> values, std::vector<double> frequencies)
+              { return rocalCreateFloatRand(values.data(), frequencies.data(), values.size()); });
         m.def("CreateIntParameter", &rocalCreateIntParameter);
         m.def("CreateFloatParameter", &rocalCreateFloatParameter);
         m.def("UpdateIntParameter", &rocalUpdateIntParameter);
@@ -515,6 +525,8 @@ namespace rali
         m.def("audioSlice", &rocalSlice,"The slice can be specified by proving the start and end coordinates, or start coordinates and shape of the slice. Both coordinates and shapes can be provided in absolute or relative terms",
             py::return_value_policy::reference);
         m.def("audioNormalize", &rocalNormalize,"Normalizes the input by removing the mean and dividing by the standard deviation",
+            py::return_value_policy::reference);
+        m.def("NonSilentRegion", &rocalNonSilentRegion,"  Performs leading and trailing silence detection in an audio buffer",
             py::return_value_policy::reference);
         // Image Augmentations
         m.def("Resize",&rocalResize, "Resizes the image ",py::return_value_policy::reference);
