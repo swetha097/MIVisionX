@@ -68,10 +68,11 @@ ImageReadAndDecode::~ImageReadAndDecode()
 }
 
 void
-ImageReadAndDecode::create(ReaderConfig reader_config, DecoderConfig decoder_config, int batch_size, int device_id)
+ImageReadAndDecode::create(ReaderConfig reader_config, DecoderConfig decoder_config, int batch_size, size_t internal_batch_size, int device_id)
 {
     // Can initialize it to any decoder types if needed
     _batch_size = batch_size;
+    _internal_batch_size = internal_batch_size;
     _compressed_buff.resize(batch_size);
     _decoder.resize(batch_size);
     _actual_read_size.resize(batch_size);
@@ -212,7 +213,7 @@ ImageReadAndDecode::load(unsigned char* buff,
         for (size_t i = 0; i < _batch_size; i++)
             _decompressed_buff_ptrs[i] = buff + image_size * i;
 
-#pragma omp parallel for num_threads(_batch_size)  // default(none) TBD: option disabled in Ubuntu 20.04
+#pragma omp parallel for num_threads(_internal_batch_size)  // default(none) TBD: option disabled in Ubuntu 20.04
         for (size_t i = 0; i < _batch_size; i++)
         {
             // initialize the actual decoded height and width with the maximum
