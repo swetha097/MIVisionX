@@ -88,7 +88,6 @@ private:
     bool _decoder_keep_original = false;
     int _device_id;
     size_t _max_decoded_width, _max_decoded_height;
-    size_t _internal_batch_size;
     std::shared_ptr<RandomBBoxCrop_MetaDataReader> _randombboxcrop_meta_data_reader = nullptr;
 };
 
