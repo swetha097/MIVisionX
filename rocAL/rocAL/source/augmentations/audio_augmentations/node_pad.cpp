@@ -31,50 +31,71 @@ PadNode::PadNode(const std::vector<rocalTensor *> &inputs, const std::vector<roc
 void PadNode::create_node() {
     if(_node)
         return;
-    std::vector<int> src_frames(_batch_size, _inputs[0]->info().max_dims()[0]);
-    std::vector<int> src_channels(_batch_size, _inputs[0]->info().max_dims()[1]);
+    std::vector<float> anchors(_batch_size * _num_of_dims, 0);
+    std::vector<float> shape(_batch_size * _num_of_dims, 0);
+    std::vector<float> fill_value(_batch_size * _num_of_dims, 0);
 
-    _src_frames_array = vxCreateArray(vxGetContext((vx_reference)_graph->get()), VX_TYPE_INT32, _batch_size);
-    _src_channels_array = vxCreateArray(vxGetContext((vx_reference)_graph->get()), VX_TYPE_INT32, _batch_size);
-    vx_status status = VX_SUCCESS;
-    status |= vxAddArrayItems(_src_frames_array, _batch_size, src_frames.data(), sizeof(vx_int32));
-    status |= vxAddArrayItems(_src_channels_array, _batch_size, src_channels.data(), sizeof(vx_int32));
+    _anchors_array = vxCreateArray(vxGetContext((vx_reference)_graph->get()), VX_TYPE_FLOAT32, _batch_size * _num_of_dims);
+    _shapes_array = vxCreateArray(vxGetContext((vx_reference)_graph->get()), VX_TYPE_FLOAT32, _batch_size * _num_of_dims);
+    _fill_values_array = vxCreateArray(vxGetContext((vx_reference)_graph->get()), VX_TYPE_FLOAT32, _batch_size * _num_of_dims);
 
+    vx_status status;
+    status = vxAddArrayItems(_anchors_array, _batch_size * _num_of_dims, anchors.data(), sizeof(vx_float32));
     if(status != 0)
-        THROW(" vxAddArrayItems failed in the normalize node (vxExtrppNode_Normalize)  node: "+ TOSTR(status) + "  "+ TOSTR(status))
+        THROW(" vxAddArrayItems failed in the slice (vxExtrppNode_Slice) node: "+ TOSTR(status));
+    status = vxAddArrayItems(_shapes_array, _batch_size * _num_of_dims, anchors.data(), sizeof(vx_float32));
+    if(status != 0)
+        THROW(" vxAddArrayItems failed in the slice (vxExtrppNode_Slice) node: "+ TOSTR(status));
+    status = vxAddArrayItems(_fill_values_array, _batch_size * _num_of_dims, anchors.data(), sizeof(vx_float32));
+    if(status != 0)
+        THROW(" vxAddArrayItems failed in the slice (vxExtrppNode_Slice) node: "+ TOSTR(status));
 
-    // Slice Node To be called
-    // _node = vxExtrppNode_Normalize(_graph->get(), _inputs[0]->handle(), _outputs[0]->handle(), _src_frames_array, _src_channels_array, _axis_mask, _mean, _std_dev,
-    //                                _scale, _shift, _epsilon, _ddof, _num_of_dims, _batch_size);
-
+    vx_scalar normalized_anchor = vxCreateScalar(vxGetContext((vx_reference)_graph->get()), VX_TYPE_BOOL, &_normalized_anchor);
+    vx_scalar normalized_shape = vxCreateScalar(vxGetContext((vx_reference)_graph->get()), VX_TYPE_BOOL, &_normalized_shape);
+    vx_scalar policy = vxCreateScalar(vxGetContext((vx_reference)_graph->get()), VX_TYPE_UINT32, &_policy);
+    vx_scalar axis_mask = vxCreateScalar(vxGetContext((vx_reference)_graph->get()), VX_TYPE_INT32, &_axis_mask);
+    _node = vxExtrppNode_Slice(_graph->get(), _inputs[0]->handle(), _outputs[0]->handle(), _src_tensor_roi, _anchors_array,
+                                _shapes_array, _fill_values_array, axis_mask, normalized_anchor , normalized_shape, policy, _batch_size);
+    
     if((status = vxGetStatus((vx_reference)_node)) != VX_SUCCESS)
-        THROW("Adding the copy (vxExtrppNode_Downmix) node failed: "+ TOSTR(status))
+        THROW("Adding the pad (vxExtrppNode_Slice) node failed: "+ TOSTR(status))
 
 }
 
 void PadNode::update_node() {
+    std::cerr<<"\n PadNode::update_node()";
+    vx_status src_roi_status = vxCopyArrayRange((vx_array)_src_tensor_roi, 0, _batch_size * 4, sizeof(vx_uint32), _inputs[0]->info().get_roi()->data(), VX_WRITE_ONLY, VX_MEMORY_TYPE_HOST);
+    if(src_roi_status != 0)
+        THROW(" Failed calling vxCopyArrayRange for src / dst roi status : "+ TOSTR(src_roi_status))
     auto audio_roi = _inputs[0]->info().get_roi();
     bool has_same_dim = true;
-    for (uint i=0; i < _batch_size; i++) {
-        _src_frames[i] = audio_roi->at(i).x1;
-        _src_channels[i] = audio_roi->at(i).y1;
-        // TODO - Need to update the anchors
-        // TODO - Need to update dst the shpae with the max dims of output tensor
+    for(unsigned i = 0; i < _batch_size; i++) {
+        int idx = i * _num_of_dims;
+        for(unsigned d = 0; d < _num_of_dims; d++) {
+            _anchor_vec[idx + d] = 0;
+            _shape_vec[idx + d] = (d == 0) ? audio_roi->at(i).x1 : audio_roi->at(i).y1;
+            _fill_values_vec[idx + d] = _fill_value;
+        }
     }
 
     if(!has_same_dim && _batch_size)
         THROW("All the tensor must have same dimension to perform Batch Normalization")
 
     vx_status status = VX_SUCCESS;
-    status |= vxCopyArrayRange((vx_array)_src_frames_array, 0, _batch_size, sizeof(vx_uint32), _src_frames.data(), VX_WRITE_ONLY, VX_MEMORY_TYPE_HOST);
-    status |= vxCopyArrayRange((vx_array)_src_channels_array, 0, _batch_size, sizeof(vx_uint32), _src_channels.data(), VX_WRITE_ONLY, VX_MEMORY_TYPE_HOST);
-
+    status |= vxCopyArrayRange((vx_array)_anchors_array, 0, _batch_size * _num_of_dims, sizeof(vx_float32), _anchor_vec.data(), VX_WRITE_ONLY, VX_MEMORY_TYPE_HOST);
+    status |= vxCopyArrayRange((vx_array)_shapes_array, 0, _batch_size * _num_of_dims, sizeof(vx_float32), _shape_vec.data(), VX_WRITE_ONLY, VX_MEMORY_TYPE_HOST);
+    status |= vxCopyArrayRange((vx_array)_fill_values_array, 0, _batch_size * _num_of_dims, sizeof(vx_float32), _fill_values_vec.data(), VX_WRITE_ONLY, VX_MEMORY_TYPE_HOST);
     if(status != 0)
         WRN("ERROR: vxCopyArrayRange failed in the normalize node (vxExtrppNode_Normalize)  node: "+ TOSTR(status))
-    _src_frames.clear();
-    _src_channels.clear();
+    _anchor_vec.clear();
+    _shape_vec.clear();
+    _fill_values_vec.clear();
 }
 
 void PadNode::init(float fill_value) {
     _fill_value = fill_value;
+    _num_of_dims = _inputs[0]->info().num_of_dims() - 1;
+    _anchor_vec.resize(_batch_size * _num_of_dims);
+    _shape_vec.resize(_batch_size * _num_of_dims);
+    _fill_values_vec.resize(_batch_size * _num_of_dims);
 }
