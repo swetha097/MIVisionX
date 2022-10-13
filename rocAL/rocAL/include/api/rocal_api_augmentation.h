@@ -173,7 +173,7 @@ extern "C" RocalTensor ROCAL_API_CALL rocalSpectrogram(RocalContext p_context,
                                                        RocalSpectrogramLayout spec_layout = RocalSpectrogramLayout::FT,
                                                        int power = 2, // Can be 1 or 2
                                                        int nfft_size = 2048,
-                                                  create_file_list_label_reader     int window_length = 512,
+                                                       int window_length = 512,
                                                        int window_step = 256);
 
 extern "C" RocalTensor ROCAL_API_CALL rocalNonSilentRegion(RocalContext p_context,

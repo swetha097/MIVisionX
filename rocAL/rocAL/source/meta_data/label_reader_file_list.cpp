@@ -89,7 +89,7 @@ void LabelReaderFileList::release(std::string image_name)
 void LabelReaderFileList::lookup(const std::vector<std::string>& image_names)
 {
     std::cerr << "\n Printing Map Contents";
-    print_map_contents();
+    // print_map_contents();
     std::cerr << "\n End of Map Contents";
     if(image_names.empty())
     {
@@ -138,16 +138,16 @@ void LabelReaderFileList::read_all(const std::string& _path)
         if (!(iss >> file_name >> file_label)) { break; } // error
 
         // process pair (a,b)
-        std::cerr<<" \nPrinting the File names & Labels :";
-        std::cerr<<" \nFile Name "<< _full_path + "/" + file_name;
+        // std::cerr<<" \nPrinting the File names & Labels :";
+        // std::cerr<<" \nFile Name "<< _full_path + "/" + file_name;
         auto _last_id= file_name;
         auto last_slash_idx = _last_id.find_last_of("\\/");
         if (std::string::npos != last_slash_idx)
         {
             _last_id.erase(0, last_slash_idx + 1);
         }
-        std::cerr<<" \nFile ID "<< _last_id ;
-        std::cerr<<" \nLabel "<< file_label<< std::endl;
+        // std::cerr<<" \nFile ID "<< _last_id ;
+        // std::cerr<<" \nLabel "<< file_label<< std::endl;
 
         // std::exit(0);
         // add( _full_path + "/" + file_name, file_label);
