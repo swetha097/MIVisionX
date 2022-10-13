@@ -36,6 +36,11 @@ extern "C" RocalMetaData ROCAL_API_CALL rocalCreateLabelReader(RocalContext roca
 /// \return RocalMetaData object, can be used to inquire about the rocal's output (processed) tensors
 extern "C" RocalMetaData ROCAL_API_CALL rocalCreateFileListLabelReader(RocalContext rocal_context, const char* source_path, const char* file_list);
 
+///
+/// \param rocal_context
+/// \param source_path path to the file that contains the metadata file
+/// \return RocalMetaData object, can be used to inquire about the rocal's output (processed) tensors
+extern "C" RocalMetaData ROCAL_API_CALL rocalCreateTextFileBasedLabelReader(RocalContext rocal_context, const char* source_path, const char* file_list);
 
 ///
 /// \param rocal_context
@@ -69,13 +74,6 @@ extern "C" RocalMetaData ROCAL_API_CALL rocalCreateTFReaderDetection(RocalContex
 /// \param source_path path to the coco json file
 /// \return RocalMetaData object, can be used to inquire about the rocal's output (processed) tensors
 extern "C" RocalMetaData ROCAL_API_CALL rocalCreateCOCOReader(RocalContext rocal_context, const char* source_path, bool is_output, bool mask, bool is_box_encoder = false);
-
-
-///
-/// \param rocal_context
-/// \param source_path path to the file that contains the metadata file
-/// \return RocalMetaData object, can be used to inquire about the rocal's output (processed) tensors
-extern "C" RocalMetaData ROCAL_API_CALL rocalCreateTextFileBasedLabelReader(RocalContext rocal_context, const char* source_path);
 
 
 ///

@@ -65,7 +65,7 @@ def main():
     audio_pipeline.build()
     audioIteratorPipeline = RALIClassificationIterator(audio_pipeline)
     cnt = 0
-    for e in range(3):
+    for e in range(1):
         for i , it in enumerate(audioIteratorPipeline):
             print("************************************** i *************************************",i)
             print(it)

@@ -76,6 +76,16 @@ ROCAL_API_CALL rocalCreateFileListLabelReader(RocalContext p_context, const char
 }
 
 RocalMetaData
+ROCAL_API_CALL rocalCreateTextFileBasedLabelReader(RocalContext p_context, const char* source_path, const char* file_list_path) {
+
+    if (!p_context)
+        THROW("Invalid rocal context passed to rocalCreateTextFileBasedLabelReader")
+    auto context = static_cast<Context*>(p_context);
+    //return context->master_graph->create_label_reader(source_path, MetaDataReaderType::TEXT_FILE_META_DATA_READER);
+    return context->master_graph->create_file_list_label_reader(source_path, file_list_path, MetaDataReaderType::TEXT_FILE_META_DATA_READER);
+}
+
+RocalMetaData
 ROCAL_API_CALL rocalCreateVideoLabelReader(RocalContext p_context, const char* source_path, unsigned sequence_length, unsigned frame_step, unsigned frame_stride, bool file_list_frame_num) {
     if (!p_context)
         THROW("Invalid rocal context passed to rocalCreateLabelReader")
