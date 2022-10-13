@@ -63,9 +63,9 @@ def main():
         # print(speed_perturbation_coeffs)
         # exit(0)
         # audio_decode = fn.decoders.audio(jpegs, file_root=data_path, sample_rate=speed_perturbation_coeffs * sample_rate )
-        audio_decode = fn.decoders.audio(jpegs, file_root=data_path, sample_rate=sample_rate )
+        audio_decode = fn.decoders.audio([], file_root=data_path, sample_rate=sample_rate )
         begin_and_length = fn.nonsilent_region(audio_decode) # Dont understand where to use this as input in Slice to pass as what arguments - Confused
-        trim_silence = fn.slice(audio_decode, normalized_anchor=False, normalized_shape=False, axes=0, anchor=0, shape=10)
+        trim_silence = fn.slice(audio_decode, normalized_anchor=False, normalized_shape=False, axes=[0], anchor=[0], shape=[4], fill_values=[0.3])
         # if self.dither_coeff != 0.: # Where is the normal distribution call ? , cant find in the rocal_api_paramters.h
         #     audio = audio + self.normal_distribution(audio) * self.dither_coeff
         preemph_coeff=0.97
@@ -78,9 +78,10 @@ def main():
         mel_fbank = fn.mel_filter_bank(preemph_audio, sample_rate=sample_rate, nfilter=nfilt, normalize=True)
         to_decibels = fn.to_decibals(mel_fbank, rocal_tensor_output_type=types.FLOAT)
         normalize = fn.normalize(to_decibels, axes=[1])
+        padded_audio = fn.pad(normalize, fill_value=0)
         #Dont see the Pad augmentation support in rocAL
         
-        audio_pipeline.set_outputs(normalize)
+        audio_pipeline.set_outputs(padded_audio)
 
     audio_pipeline.build()
     audioIteratorPipeline = RALIClassificationIterator(audio_pipeline)

@@ -247,13 +247,9 @@ def slice(*inputs, anchor=[], shape=[], axes=[1,0], axis_names="WH", bytes_per_s
     rel_shape: Slice shape (relative)
 
     """
-    frequencies = [1.00, 5.00, 5.00]
-    anchor_float_rand = b.CreateFloatRand([10.00, 50.00, 100.00], frequencies)
-    shape_float_rand = b.CreateFloatRand([20.00,100.00, 200.00], frequencies)
-    fill_values_rand = b.CreateFloatRand([10.00, 50.00, 100.00], frequencies)
 
-    kwargs_pybind = {"input_audio0": inputs[0], "rocal_tensor_output_type": rocal_tensor_output_type, "is_output": False, "anchor": anchor_float_rand,
-                     "shape": shape_float_rand, "fill_values": fill_values_rand, "axes":axes, "normalized_anchor": normalized_anchor , "normalized_shape":normalized_shape, "out_of_bounds_policy": out_of_bounds_policy }
+    kwargs_pybind = {"input_audio0": inputs[0], "rocal_tensor_output_type": rocal_tensor_output_type, "is_output": False, "anchor": anchor,
+                     "shape": shape, "fill_values": fill_values, "axes":axes, "normalized_anchor": normalized_anchor , "normalized_shape":normalized_shape, "out_of_bounds_policy": out_of_bounds_policy }
     slice_output = b.audioSlice(Pipeline._current_pipeline._handle ,*(kwargs_pybind.values()))
     return slice_output
     
@@ -270,8 +266,17 @@ def nonsilent_region(*inputs, rocal_tensor_output_type=types.FLOAT, bytes_per_sa
     """
     kwargs_pybind = {"input_audio0": inputs[0], "is_output": False, "cutoff_db": cutoff_db,
                      "reference_power": reference_power, "reset_interval": reset_interval, "window_length":window_length }
-    slice_output = b.NonSilentRegion(Pipeline._current_pipeline._handle ,*(kwargs_pybind.values()))
-    return slice_output
+    non_slient_region_output = b.NonSilentRegion(Pipeline._current_pipeline._handle ,*(kwargs_pybind.values()))
+    return non_slient_region_output
     
 
 
+def pad(*inputs, rocal_tensor_output_type=types.FLOAT, align=[], axes=[], axis_names="", bytes_per_sample_hint=[0], fill_value=[], preserve=False, seed=1, shape=[]):
+    '''
+    Pads all samples with the fill_value in the specified axes to match the biggest extent in the batch for those axes or to match the minimum shape specified.
+    '''
+    kwargs_pybind = {"input_audio0": inputs[0], "rocal_tensor_output_type": rocal_tensor_output_type, "is_output": False, "fill_value": fill_value,
+                     "axes": axes, "align": align }
+    pad_output = b.Pad(Pipeline._current_pipeline._handle ,*(kwargs_pybind.values()))
+    return pad_output
+    

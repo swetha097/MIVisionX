@@ -528,6 +528,8 @@ namespace rali
             py::return_value_policy::reference);
         m.def("NonSilentRegion", &rocalNonSilentRegion,"  Performs leading and trailing silence detection in an audio buffer",
             py::return_value_policy::reference);
+        m.def("Pad", &rocalPad," Pads all samples with the fill_value in the specified axes to match the biggest extent in the batch for those axes or to match the minimum shape specified",
+            py::return_value_policy::reference);
         // Image Augmentations
         m.def("Resize",&rocalResize, "Resizes the image ",py::return_value_policy::reference);
         m.def("ColorTwist",&rocalColorTwist, py::return_value_policy::reference);
