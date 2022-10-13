@@ -26,6 +26,46 @@ THE SOFTWARE.
 #include "image_read_and_decode.h"
 #include "vx_ext_amd.h"
 
+size_t compute_optimum_internal_batch_size(size_t user_batch_size, RocalMemType affinity)
+{
+    const unsigned MINIMUM_CPU_THREAD_COUNT = 2;
+    const unsigned DEFAULT_SMT_COUNT = 2;
+
+
+    if(affinity == RocalMemType::HIP)
+        return user_batch_size;
+
+    unsigned THREAD_COUNT = std::thread::hardware_concurrency();
+    if(THREAD_COUNT >= MINIMUM_CPU_THREAD_COUNT)
+        INFO("Can run " + TOSTR(THREAD_COUNT) + " threads simultaneously on this machine")
+    else
+    {
+        THREAD_COUNT = MINIMUM_CPU_THREAD_COUNT;
+        WRN("hardware_concurrency() call failed assuming can run " + TOSTR(THREAD_COUNT) + " threads")
+    }
+    size_t ret = user_batch_size;
+    size_t CORE_COUNT = THREAD_COUNT / DEFAULT_SMT_COUNT;
+
+    if(CORE_COUNT <= 0)
+        THROW("Wrong core count detected less than 0")
+
+    for( size_t i = CORE_COUNT; i <= THREAD_COUNT; i++)
+        if(user_batch_size % i == 0)
+        {
+            ret = i;
+            break;
+        }
+
+    for(size_t i = CORE_COUNT; i > 1; i--)
+        if(user_batch_size % i == 0)
+        {
+            ret = i;
+            break;
+        }
+    INFO("User batch size "+ TOSTR(user_batch_size)+" Internal batch size set to "+ TOSTR(ret))
+    return ret;
+}
+
 #if ENABLE_HIP
 ImageLoader::ImageLoader(DeviceResourcesHip dev_resources):
 #else
@@ -145,6 +185,7 @@ void ImageLoader::initialize(ReaderConfig reader_cfg, DecoderConfig decoder_cfg,
 
     _mem_type = mem_type;
     _batch_size = batch_size;
+    _internal_batch_size = compute_optimum_internal_batch_size(_batch_size, _mem_type);
     _loop = reader_cfg.loop();
     _decoder_keep_original = decoder_keep_original;
     _image_loader = std::make_shared<ImageReadAndDecode>();
@@ -154,9 +195,9 @@ void ImageLoader::initialize(ReaderConfig reader_cfg, DecoderConfig decoder_cfg,
     {
         // set the device_id for decoder same as shard_id for number of shards > 1
         if (shard_count > 1)
-          _image_loader->create(reader_cfg, decoder_cfg, _batch_size, device_id);
+          _image_loader->create(reader_cfg, decoder_cfg, _batch_size, _internal_batch_size, device_id);
         else
-          _image_loader->create(reader_cfg, decoder_cfg, _batch_size);
+          _image_loader->create(reader_cfg, decoder_cfg, _batch_size, _internal_batch_size);
     }
     catch (const std::exception &e)
     {
