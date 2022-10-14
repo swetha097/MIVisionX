@@ -183,7 +183,7 @@ def main():
     num_threads = 1
     device_id = 0
     random_seed = random.SystemRandom().randint(0, 2**32 - 1)
-    crop=224
+    crop=300
 
     local_rank = 0
     world_size = 1
@@ -262,14 +262,14 @@ def main():
                                             mirror=flip_coin,
                                             rocal_tensor_layout = types.NHWC,
                                             rocal_tensor_output_type = types.UINT8,
-                                            mean=[0,0,0],
-                                            std=[1,1,1])
-                                            #mean=[0.485*255,0.456*255 ,0.406*255 ],
-                                            #std=[0.229*255 ,0.224*255 ,0.225*255 ])
+                                            #mean=[0,0,0],
+                                            #std=[1,1,1])
+                                            mean=[0.485*255,0.456*255 ,0.406*255 ],
+                                            std=[0.229*255 ,0.224*255 ,0.225*255 ])
         bboxes, labels = fn.box_encoder(bboxes, labels, device=rali_device,
                                          criteria=0.5,
                                          anchors=default_boxes,
-                                         offset=False, stds=[0.1, 0.1, 0.2, 0.2], scale=300)
+                                         offset=True, stds=[0.1, 0.1, 0.2, 0.2], scale=300)
 
         coco_train_pipeline.set_outputs(images)
     coco_train_pipeline.build()
