@@ -68,6 +68,8 @@ static vx_status VX_CALLBACK refreshMelFilterBank(vx_node node, const vx_referen
     {
         data->srcDims[i].width = data->roi_tensor_ptr[i].xywhROI.xy.x;
         data->srcDims[i].height = data->roi_tensor_ptr[i].xywhROI.xy.y;
+        std::cerr<<"data->srcDims[i].width " << data->srcDims[i].width;
+        std::cerr<< "data->srcDims[i].height " << data->srcDims[i].height;
     }
     if (data->deviceType == AGO_TARGET_AFFINITY_GPU)
     {
@@ -209,9 +211,9 @@ static vx_status VX_CALLBACK initializeMelFilterBank(vx_node node, const vx_refe
     data->src_desc_ptr->numDims = 4;
 
     // source_description_ptr
-    data->dst_desc_ptr->n = data->in_tensor_dims[0];
-    data->dst_desc_ptr->w = data->in_tensor_dims[1];
-    data->dst_desc_ptr->h = 1;
+    data->dst_desc_ptr->n = data->out_tensor_dims[0];
+    data->dst_desc_ptr->w = data->out_tensor_dims[1];
+    data->dst_desc_ptr->h = data->out_tensor_dims[2];
     data->dst_desc_ptr->c = 1;
     data->dst_desc_ptr->strides.nStride = data->dst_desc_ptr->c * data->dst_desc_ptr->w * data->dst_desc_ptr->h;
     data->dst_desc_ptr->strides.hStride = data->dst_desc_ptr->c * data->dst_desc_ptr->w;

@@ -71,6 +71,8 @@ void SpectrogramNode::update_node()
     for (uint i=0; i < _batch_size; i++)
     {
         _src_samples_length[i] = audio_roi->at(i).x1;
+        // std::cerr<<"\n  audio_roi->at(i).x1 :" <<  audio_roi->at(i).x1;
+        // std::cerr<<"\n  audio_roi->at(i).y1 :" <<  audio_roi->at(i).y1;
     }
     vx_status src_roi_status;
     src_roi_status = vxCopyArrayRange((vx_array)_src_samples_length_array, 0, _batch_size, sizeof(vx_uint32), _src_samples_length.data(), VX_WRITE_ONLY, VX_MEMORY_TYPE_HOST);

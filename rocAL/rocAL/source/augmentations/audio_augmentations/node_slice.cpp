@@ -67,7 +67,7 @@ void SliceNode::create_node()
 
 void SliceNode::update_node()
 {
-    std::cerr<<"\n SliceNode::update_node()";
+    // std::cerr<<"\n SliceNode::update_node()";
     vx_status src_roi_status = vxCopyArrayRange((vx_array)_src_tensor_roi, 0, _batch_size * 4, sizeof(vx_uint32), _inputs[0]->info().get_roi()->data(), VX_WRITE_ONLY, VX_MEMORY_TYPE_HOST);
     if(src_roi_status != 0)
         THROW(" Failed calling vxCopyArrayRange for src / dst roi status : "+ TOSTR(src_roi_status))
@@ -82,9 +82,9 @@ void SliceNode::update_node()
                 _shape_vec[idx + d] = (d == 0) ? audio_roi->at(i).x1 : audio_roi->at(i).y1;
             }
             _fill_values_vec[idx + d] = _fill_values[0];
-            std::cerr << _anchor_vec[idx + d] << " : " << _shape_vec[idx + d] << " : " << _fill_values_vec[idx + d] << "\t";
+            // std::cerr << _anchor_vec[idx + d] << " : " << _shape_vec[idx + d] << " : " << _fill_values_vec[idx + d] << "\t";
         }
-        std::cerr << "\n";
+        // std::cerr << "\n";
     }
     
     vx_status status = VX_SUCCESS;

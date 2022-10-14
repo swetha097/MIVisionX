@@ -73,9 +73,9 @@ def main():
         window_size=0.02
         window_stride=0.01
         preemph_audio = fn.preemphasis_filter(trim_silence, preemph_coeff=preemph_coeff)
-        # spectogram = fn.spectrogram(preemph_audio, nfft=nfft, window_length=int(window_size* sample_rate), window_step= int(window_stride * sample_rate))
+        spectogram = fn.spectrogram(preemph_audio, nfft=nfft, window_length=int(window_size* sample_rate), window_step= int(window_stride * sample_rate))
         nfilt=80 #nfeatures
-        mel_fbank = fn.mel_filter_bank(preemph_audio, sample_rate=sample_rate, nfilter=nfilt, normalize=True)
+        mel_fbank = fn.mel_filter_bank(spectogram, sample_rate=sample_rate, nfilter=nfilt, normalize=True)
         to_decibels = fn.to_decibals(mel_fbank, rocal_tensor_output_type=types.FLOAT)
         normalize = fn.normalize(to_decibels, axes=[1])
         padded_audio = fn.pad(normalize, fill_value=0)

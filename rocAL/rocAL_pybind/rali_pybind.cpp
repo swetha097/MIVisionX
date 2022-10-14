@@ -418,7 +418,7 @@ namespace rali
             "rocalGetImageLabels", [](RocalContext context)
     {
             rocalTensorList *labels = rocalGetImageLabels(context);
-            std::cerr<<"LABELS SIZE ::"<<labels->size();
+            // std::cerr<<"LABELS SIZE ::"<<labels->size();
             for (int i = 0; i < labels->size(); i++) {
                 int *labels_buffer = (int *)(labels->at(i)->buffer());
                 std::cerr << ">>>>> LABELS : " << labels_buffer[0] << "\t";

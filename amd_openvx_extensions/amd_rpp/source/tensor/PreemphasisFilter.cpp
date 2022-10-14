@@ -184,9 +184,9 @@ static vx_status VX_CALLBACK initializePreemphasisFilter(vx_node node, const vx_
     data->srcDescPtr->numDims = 4;
 
     // source_description_ptr
-    data->dstDescPtr->n = data->inTensorDims[0];
-    data->dstDescPtr->w = data->inTensorDims[1];
-    data->dstDescPtr->h = 1;
+    data->dstDescPtr->n = data->outTensorDims[0];
+    data->dstDescPtr->w = data->outTensorDims[1];
+    data->dstDescPtr->h = data->outTensorDims[2];
     data->dstDescPtr->c = 1;
     data->dstDescPtr->strides.nStride = data->dstDescPtr->c * data->dstDescPtr->w * data->dstDescPtr->h;
     data->dstDescPtr->strides.hStride = data->dstDescPtr->c * data->dstDescPtr->w;

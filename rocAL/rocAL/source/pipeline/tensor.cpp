@@ -178,6 +178,9 @@ void rocalTensor::update_tensor_roi(const std::vector<uint32_t> &width,
 
         for (unsigned i = 0; i < info().batch_size(); i++)
         {
+            // std::cerr<< "\n Printing _info.get_roi()->at(i).x1 "<< samples[i];
+            // std::cerr<< "\n Printing _info.get_roi()->at(i).y1 "<< channels[i];
+
             if (samples[i] > max_samples)
             {
                 ERR("Given ROI width is larger than buffer width for tensor[" + TOSTR(i) + "] " + TOSTR(samples[i]) + " > " + TOSTR(max_samples))
