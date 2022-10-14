@@ -448,10 +448,10 @@ break;
     int i = 0;
     for(int epoch = 0; epoch < 3; epoch++)
     {
-        std::cerr<<"\nepoch no "<<epoch;
+//         std::cerr<<"\nepoch no "<<epoch;
         while (rocalGetRemainingImages(handle) >= inputBatchSize) {
-            i++;
-            std::cerr<<"interation "<<i<<"\t";
+//             i++;
+//             std::cerr<<"interation "<<i<<"\t";
             if (rocalRun(handle) != 0) {
                 break;
             }
