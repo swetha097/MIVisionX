@@ -176,7 +176,7 @@ extern "C" RocalTensor ROCAL_API_CALL rocalSpectrogram(RocalContext p_context,
                                                        int window_step = 256,
                                                        float *window_fn = NULL);
 
-extern "C" RocalTensor ROCAL_API_CALL rocalNonSilentRegion(RocalContext p_context,
+extern "C" RocalTensorList ROCAL_API_CALL rocalNonSilentRegion(RocalContext p_context,
                                                            RocalTensor p_input,
                                                            bool is_output,
                                                            float cut_off_db = -0.60,

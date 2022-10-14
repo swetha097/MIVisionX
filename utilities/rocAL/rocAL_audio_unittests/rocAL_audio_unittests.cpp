@@ -114,6 +114,7 @@ int test(int test_case, const char *path, float sample_rate, int downmix, unsign
     rocalSetSeed(0);
 
     RocalTensor input1, output;
+    RocalTensorList non_silent_region_op;
     input1 = rocalAudioFileSource(handle, path, num_threads, false, false, false, max_frames, downmix);
 
     if (rocalGetStatus(handle) != ROCAL_OK)
@@ -150,7 +151,7 @@ int test(int test_case, const char *path, float sample_rate, int downmix, unsign
         break;
         case 3:
         {
-            output = rocalNonSilentRegion(handle, input1, true, -60, 1, -1, 3);
+            non_silent_region_op = rocalNonSilentRegion(handle, input1, true, -60, 1, -1, 3);
         }
         break;
         case 4:
