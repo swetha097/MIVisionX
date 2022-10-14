@@ -136,7 +136,7 @@ int test(int test_case, const char* path, int rgb, int processing_device, int wi
     // The jpeg file loader can automatically select the best size to decode all images to that size
     // User can alternatively set the size or change the policy that is used to automatically find the size
     if (decode_max_height <= 0 || decode_max_width <= 0)
-        input1 = rocalJpegFileSource(handle, path, color_format, num_threads, false, shuffle, true);
+        input1 = rocalJpegFileSource(handle, path, color_format, num_threads, false, shuffle, false);
     else
         input1 = rocalJpegFileSource(handle, path, color_format, num_threads, false, shuffle, false,
                                     ROCAL_USE_USER_GIVEN_SIZE, decode_max_width, decode_max_height);
@@ -446,17 +446,17 @@ break;
     high_resolution_clock::time_point t1 = high_resolution_clock::now();
 
     int i = 0;
-    while (i++ < 100 && !rocalIsEmpty(handle)){
-
-        if (rocalRun(handle) != 0)
-            break;
-
-        //auto last_colot_temp = rocalGetIntValue(color_temp_adj);
-        //rocalUpdateIntParameter(last_colot_temp + 1, color_temp_adj);
-
-
-        //rocalCopyToOutput(handle, mat_input.data, h * w * p);
-
+    for(int epoch = 0; epoch < 3; epoch++)
+    {
+        std::cerr<<"\nepoch no "<<epoch;
+        while (rocalGetRemainingImages(handle) >= inputBatchSize) {
+            i++;
+            std::cerr<<"interation "<<i<<"\t";
+            if (rocalRun(handle) != 0) {
+                break;
+            }
+        }
+        rocalResetLoaders(handle);
     }
     high_resolution_clock::time_point t2 = high_resolution_clock::now();
     auto dur = duration_cast<microseconds>(t2 - t1).count();
