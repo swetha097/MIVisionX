@@ -1198,42 +1198,6 @@ std::vector<rocalTensorList *> MasterGraph::create_label_reader(const char *sour
     return _metadata_output_tensor_list;
 }
 
-std::vector<rocalTensorList *> MasterGraph::create_file_list_label_reader(const char *source_path, const char *file_list_path, MetaDataReaderType reader_type)
-{
-    if(_meta_data_reader)
-        THROW("A metadata reader has already been created")
-    MetaDataConfig config(MetaDataType::Label, reader_type, file_list_path);
-    _meta_data_reader = create_meta_data_reader(config);
-    _meta_data_reader->init(config);
-    _meta_data_reader->read_all(source_path);
-
-    unsigned num_of_dims = 1;
-    std::vector<size_t> dims;
-    dims.resize(num_of_dims);
-    dims.at(0) = 1; // Number of labels per file
-    auto default_labels_info  = rocalTensorInfo(std::vector<size_t>(std::move(dims)),
-                                 _mem_type,
-                                 RocalTensorDataType::INT32);
-    default_labels_info.set_metadata();
-    default_labels_info.set_tensor_layout(RocalTensorlayout::NONE);
-    _meta_data_buffer_size.emplace_back(_user_batch_size * sizeof(vx_int32));
-
-    for(unsigned i = 0; i < _user_batch_size; i++)
-    {
-        auto info = default_labels_info;
-        auto tensor = new rocalTensor(info);
-        _labels_tensor_list.push_back(tensor);
-    }
-    _ring_buffer.init_metadata(RocalMemType::HOST, _meta_data_buffer_size, _meta_data_buffer_size.size());
-    if (_augmented_meta_data)
-        THROW("Metadata can only have a single output")
-    else
-        _augmented_meta_data = _meta_data_reader->get_output();
-    _metadata_output_tensor_list.emplace_back(&_labels_tensor_list);
-
-    return _metadata_output_tensor_list;
-}
-
 void MasterGraph::create_randombboxcrop_reader(RandomBBoxCrop_MetaDataReaderType reader_type, RandomBBoxCrop_MetaDataType label_type, bool all_boxes_overlap, bool no_crop, FloatParam* aspect_ratio, bool has_shape, int crop_width, int crop_height, int num_attempts, FloatParam* scaling, int total_num_attempts, int64_t seed)
 {
     if( _randombboxcrop_meta_data_reader)

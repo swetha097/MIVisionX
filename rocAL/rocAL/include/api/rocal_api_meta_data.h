@@ -31,16 +31,9 @@ extern "C" RocalMetaData ROCAL_API_CALL rocalCreateLabelReader(RocalContext roca
 
 ///
 /// \param rocal_context
-/// \param source_path path to the folder that contains the dataset or metadata file
-/// \param file_list path to the metadata file containing labels
-/// \return RocalMetaData object, can be used to inquire about the rocal's output (processed) tensors
-extern "C" RocalMetaData ROCAL_API_CALL rocalCreateFileListLabelReader(RocalContext rocal_context, const char* source_path, const char* file_list);
-
-///
-/// \param rocal_context
 /// \param source_path path to the file that contains the metadata file
 /// \return RocalMetaData object, can be used to inquire about the rocal's output (processed) tensors
-extern "C" RocalMetaData ROCAL_API_CALL rocalCreateTextFileBasedLabelReader(RocalContext rocal_context, const char* source_path, const char* file_list);
+extern "C" RocalMetaData ROCAL_API_CALL rocalCreateTextFileBasedLabelReader(RocalContext rocal_context, const char* source_path);
 
 ///
 /// \param rocal_context

@@ -117,10 +117,8 @@ int test(int test_case, const char *path, float sample_rate, int downmix, unsign
     RocalMetaData metadata_output;
     // MetaData reader for input file_list which has file seperated by labels
     // metadata_output = rocalCreateCOCOReader(handle, json_path, true, false);
-    const char* file_list_path = "/media/indu/Audio/dummy_audio_dataset/file_list.txt" ; // TODO: Add this as an arg in main() 
-    //const char* file_list_path = "/media/swetha/audio_support/dummy_audio_dataset/file_list.txt" ; // TODO: Add this as an arg in main() 
-    //metadata_output = rocalCreateFileListLabelReader(handle, path, file_list_path);
-    metadata_output = rocalCreateTextFileBasedLabelReader(handle, path, file_list_path);
+    const char* file_list_path = "/media/swetha/audio_support/dummy_audio_dataset/file_list.txt" ; // TODO: Add this as an arg in main() 
+    metadata_output = rocalCreateTextFileBasedLabelReader(handle, path);
     // std::exit(0);
     //Decoder
     RocalTensor input1, output;

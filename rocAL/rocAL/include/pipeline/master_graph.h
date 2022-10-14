@@ -78,7 +78,7 @@ public:
     rocalTensor *create_loader_output_tensor(const rocalTensorInfo &info);
     rocalTensorList * get_output_tensors();
     std::vector<rocalTensorList *> create_label_reader(const char *source_path, MetaDataReaderType reader_type);
-    std::vector<rocalTensorList *> create_file_list_label_reader(const char *source_path, const char *file_list_path, MetaDataReaderType reader_type);
+    std::vector<rocalTensorList *> create_text_file_label_reader(const char *source_path, MetaDataReaderType reader_type);
     std::vector<rocalTensorList *> create_video_label_reader(const char *source_path, MetaDataReaderType reader_type, unsigned sequence_length, unsigned frame_step, unsigned frame_stride, bool file_list_frame_num = true);
     std::vector<rocalTensorList *> create_coco_meta_data_reader(const char *source_path, bool is_output, bool mask, MetaDataReaderType reader_type, MetaDataType label_type, bool is_box_encoder = false);
     std::vector<rocalTensorList *> create_tf_record_meta_data_reader(const char *source_path, MetaDataReaderType reader_type,  MetaDataType label_type, const std::map<std::string, std::string> feature_key_map);
