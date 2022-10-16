@@ -1,13 +1,13 @@
 
-from amd.rali import readers
-from amd.rali import decoders
-from amd.rali import random
-# from amd.rali import noise
-# from amd.rali import reductions
+from amd.rocal import readers
+from amd.rocal import decoders
+from amd.rocal import random
+# from amd.rocal import noise
+# from amd.rocal import reductions
 
-import amd.rali.types as types
-import rali_pybind as b
-from amd.rali.pipeline import Pipeline
+import amd.rocal.types as types
+import rocal_pybind as b
+from amd.rocal.pipeline import Pipeline
 
 
 def brightness(*inputs, brightness=1.0, bytes_per_sample_hint=0, image_type=0,

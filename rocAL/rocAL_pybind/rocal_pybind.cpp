@@ -34,7 +34,7 @@ namespace pybind11
         };
     }
 } // namespace pybind11::detail
-namespace rali
+namespace rocal
 {
     using namespace pybind11::literals; // NOLINT
     // PYBIND11_MODULE(rocal_backend_impl, m) {
@@ -80,7 +80,7 @@ namespace rali
         return py::bytes(s);
     }
 
-    PYBIND11_MODULE(rali_pybind, m)
+    PYBIND11_MODULE(rocal_pybind, m)
     {
         m.doc() = "Python bindings for the C++ portions of ROCAL";
         // rocal_api.h

@@ -1,7 +1,7 @@
 import torch
 import numpy as np
-import rali_pybind as b
-import amd.rali.types as types
+import rocal_pybind as b
+import amd.rocal.types as types
 import ctypes
 
 # class RALIGenericImageIterator(object):
@@ -50,7 +50,7 @@ import ctypes
 #         return self
 
 
-class RALIGenericIterator(object):
+class ROCALGenericIterator(object):
     def __init__(self, pipeline, tensor_layout = types.NCHW, reverse_channels = False, multiplier = [1.0,1.0,1.0], offset = [0.0, 0.0, 0.0], tensor_dtype=types.FLOAT, device="cpu", device_id=0):
         self.loader = pipeline
         self.tensor_format =tensor_layout
@@ -116,7 +116,7 @@ class RALIGenericIterator(object):
         b.rocalRelease(self.loader._handle)
 
 
-class RALIClassificationIterator(RALIGenericIterator):
+class ROCALClassificationIterator(ROCALGenericIterator):
     """
     RALI iterator for classification tasks for PyTorch. It returns 2 outputs
     (data and label) in the form of PyTorch's Tensor.
@@ -125,13 +125,13 @@ class RALIClassificationIterator(RALIGenericIterator):
 
     .. code-block:: python
 
-       RALIClassificationIterator(pipelines, size)
+       ROCALClassificationIterator(pipelines, size)
 
     is equivalent to calling
 
     .. code-block:: python
 
-       RALIGenericIterator(pipelines, ["data", "label"], size)
+       ROCALGenericIterator(pipelines, ["data", "label"], size)
 
     Please keep in mind that Tensors returned by the iterator are
     still owned by RALI. They are valid till the next iterator call.
@@ -139,7 +139,7 @@ class RALIClassificationIterator(RALIGenericIterator):
 
     Parameters
     ----------
-    pipelines : list of amd.raliLI.pipeline.Pipeline
+    pipelines : list of amd.rocalLI.pipeline.Pipeline
                 List of pipelines to use
     size : int
            Number of samples in the epoch (Usually the size of the dataset).
@@ -184,7 +184,7 @@ class RALIClassificationIterator(RALIGenericIterator):
                  dynamic_shape=False,
                  last_batch_padded=False):
         pipe = pipelines
-        super(RALIClassificationIterator, self).__init__(pipe, tensor_layout = pipe._tensor_layout, tensor_dtype = pipe._tensor_dtype,
+        super(ROCALClassificationIterator, self).__init__(pipe, tensor_layout = pipe._tensor_layout, tensor_dtype = pipe._tensor_dtype,
                                                             multiplier=pipe._multiplier, offset=pipe._offset, device=device, device_id=device_id)
 
 
