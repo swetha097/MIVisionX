@@ -51,13 +51,16 @@ import ctypes
 
 
 class RALIGenericIterator(object):
-    def __init__(self, pipeline, tensor_layout = types.NCHW, reverse_channels = False, multiplier = [1.0,1.0,1.0], offset = [0.0, 0.0, 0.0], tensor_dtype=types.FLOAT):
+    def __init__(self, pipeline, tensor_layout = types.NCHW, reverse_channels = False, multiplier = [1.0,1.0,1.0], offset = [0.0, 0.0, 0.0], tensor_dtype=types.FLOAT, device="cpu", device_id=0):
         self.loader = pipeline
         self.tensor_format =tensor_layout
         self.multiplier = multiplier
         self.offset = offset
         self.reverse_channels = reverse_channels
         self.tensor_dtype = tensor_dtype
+        self.device = device
+        self.device_id = device_id
+        print("self.device", self.device)
         self.len = b.getRemainingImages(self.loader._handle)
 
 
@@ -74,17 +77,23 @@ class RALIGenericIterator(object):
             self.output_tensor_list = self.loader.rocalGetOutputTensors()
 
         #From init
-
         self.augmentation_count = len(self.output_tensor_list)
         self.w = self.output_tensor_list[0].batch_width()
         self.h = self.output_tensor_list[0].batch_height()
         self.batch_size = self.output_tensor_list[0].batch_size()
         self.color_format = self.output_tensor_list[0].color_format()
         #NHWC default for now
-        if self.tensor_dtype == types.FLOAT:
-            self.output = torch.empty((self.batch_size, self.h, self.w, self.color_format,), dtype=torch.float32)
+        if self.device == "cpu":
+            if self.tensor_dtype == types.FLOAT:
+                self.output = torch.empty((self.batch_size, self.h, self.w, self.color_format,), dtype=torch.float32)
+            else:
+                self.output = torch.empty((self.batch_size, self.h, self.w, self.color_format,), dtype=torch.uint8)
         else:
-            self.output = torch.empty((self.batch_size, self.h, self.w, self.color_format,), dtype=torch.uint8)
+            torch_gpu_device = torch.device('cuda', self.device_id)
+            if self.tensor_dtype == types.FLOAT:
+                self.output = torch.empty((self.batch_size, self.h, self.w, self.color_format,), dtype=torch.float32, device=torch_gpu_device)
+            else:
+                self.output = torch.empty((self.batch_size, self.h, self.w, self.color_format,), dtype=torch.uint8, device=torch_gpu_device)
         self.out = torch.permute(self.output, (0,3,1,2)) #NCHW expected by classification
         self.output_tensor_list[0].copy_data(ctypes.c_void_p(self.out.data_ptr()))
         self.labels = self.loader.rocalGetImageLabels()
@@ -167,6 +176,8 @@ class RALIClassificationIterator(RALIGenericIterator):
     """
     def __init__(self,
                  pipelines,
+                 device="cpu",
+                 device_id=0,
                  size = 0,
                  auto_reset=False,
                  fill_last_batch=True,
@@ -174,7 +185,7 @@ class RALIClassificationIterator(RALIGenericIterator):
                  last_batch_padded=False):
         pipe = pipelines
         super(RALIClassificationIterator, self).__init__(pipe, tensor_layout = pipe._tensor_layout, tensor_dtype = pipe._tensor_dtype,
-                                                            multiplier=pipe._multiplier, offset=pipe._offset)
+                                                            multiplier=pipe._multiplier, offset=pipe._offset, device=device, device_id=device_id)
 
 
 # class RALI_iterator(RALIGenericImageIterator):
