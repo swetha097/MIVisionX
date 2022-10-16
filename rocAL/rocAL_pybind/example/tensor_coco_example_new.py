@@ -4,12 +4,11 @@ from __future__ import print_function
 import random
 import itertools
 
-from amd.rali.plugin.pytorch import RALIClassificationIterator
 import torch
 import numpy as np
-from amd.rali.pipeline import Pipeline
-import amd.rali.fn as fn
-import amd.rali.types as types
+from amd.rocal.pipeline import Pipeline
+import amd.rocal.fn as fn
+import amd.rocal.types as types
 # import rali_pybind.tensor
 import sys
 import cv2
@@ -34,7 +33,6 @@ class ROCALCOCOIterator(object):
             assert pipelines is not None, "Number of provided pipelines has to be at least 1"
         except Exception as ex:
             print(ex)
-        #print("INIT")
         self.loader = pipelines
         self.tensor_format = tensor_layout
         self.multiplier = multiplier if multiplier else [1.0, 1.0, 1.0]
@@ -59,38 +57,31 @@ class ROCALCOCOIterator(object):
         return self.__next__()
 
     def __next__(self):
-        #print("next")
         if(self.loader.isEmpty()):
             raise StopIteration
-        #print("here 1")
         if self.loader.rocalRun() != 0:
-            #print("here")
             raise StopIteration
         else:
-            #print("Comes to Next in COCO pipeline ")
             self.output_tensor_list = self.loader.rocalGetOutputTensors()
 
         #From init
 
         self.lis = []  # Empty list for bboxes
         self.lis_lab = []  # Empty list of labels
-        #print(self.output_tensor_list)
         self.w = self.output_tensor_list[0].batch_width()
         self.h = self.output_tensor_list[0].batch_height()
         self.bs = self.output_tensor_list[0].batch_size()
-        #print("\n Batch Size",self.bs)
         self.color_format = self.output_tensor_list[0].color_format()
 
+        torch_gpu_device = torch.device('cuda', self.device_id)
+
         #NHWC default for now
-        self.out = torch.empty((self.bs, self.h, self.w, self.color_format,), dtype=torch.uint8)
+        self.out = torch.empty((self.bs, self.h, self.w, self.color_format,), dtype=torch.float32, device=torch_gpu_device)
         self.output_tensor_list[0].copy_data(ctypes.c_void_p(self.out.data_ptr()))
 
 
         # 1D labels & bboxes array
-        torch_gpu_device = torch.device('cuda', self.device_id)
         labels_array, boxes_array = self.loader.getEncodedBoxesAndLables(self.bs, int(self.num_anchors))
-        #print("Labels :", labels_array)
-        #print("boxes : ", boxes_array)
         self.encoded_bboxes = torch.as_tensor(boxes_array, dtype=torch.float32, device=torch_gpu_device)
         self.encoded_bboxes = self.encoded_bboxes.view(self.bs, self.num_anchors, 4)
         self.encoded_labels = torch.as_tensor(labels_array, dtype=torch.int32, device=torch_gpu_device)
@@ -99,18 +90,11 @@ class ROCALCOCOIterator(object):
 
         # Image id of a batch of images
         self.loader.GetImageId(self.image_id)
-
         # Image sizes of a batch
         self.loader.GetImgSizes(self.img_size)
-
-        #print(encoded_bboxes_tensor)
-        #print(encodded_labels_tensor.shape)
-        # exit(0)
         image_id_tensor = torch.tensor(self.image_id, device=torch_gpu_device)
         image_size_tensor = torch.tensor(self.img_size, device=torch_gpu_device).view(-1, self.bs, 2)
-        #print("Image ID :",image_id_tensor)
-        #print("Image SIZE :",image_size_tensor)
-        # exit(0)
+        '''
         for i in range(self.bs):
             index_list = []
             actual_bboxes = []
@@ -121,17 +105,12 @@ class ROCALCOCOIterator(object):
                     actual_bboxes.append(encoded_bboxes_tensor[i][idx].tolist())
                     actual_labels.append(encodded_labels_tensor[i][idx].tolist())
             if self.display:
-                #print("comes inside display")
                 img = self.out
                 draw_patches(img[i], self.image_id[i],
                             actual_bboxes, self.device)
-            #print("\n Actual labels : ",actual_labels)
-            #print("\n Actual boxes : ", actual_bboxes)
-        # exit(0)
+        '''
 
-        # exit(0)
         return (self.out), encoded_bboxes_tensor, encodded_labels_tensor, image_id_tensor, image_size_tensor
-        return self.out
 
     def reset(self):
         self.loader.rocalResetLoaders()
@@ -261,7 +240,7 @@ def main():
                                             image_type=types.RGB,
                                             mirror=flip_coin,
                                             rocal_tensor_layout = types.NHWC,
-                                            rocal_tensor_output_type = types.UINT8,
+                                            rocal_tensor_output_type = types.FLOAT,
                                             #mean=[0,0,0],
                                             #std=[1,1,1])
                                             mean=[0.485*255,0.456*255 ,0.406*255 ],
