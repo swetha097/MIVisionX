@@ -2,67 +2,67 @@
 
 
 # RocalStatus
-from rali_pybind.types import OK
-from rali_pybind.types import CONTEXT_INVALID
-from rali_pybind.types import RUNTIME_ERROR
-from rali_pybind.types import UPDATE_PARAMETER_FAILED
-from rali_pybind.types import INVALID_PARAMETER_TYPE
+from rocal_pybind.types import OK
+from rocal_pybind.types import CONTEXT_INVALID
+from rocal_pybind.types import RUNTIME_ERROR
+from rocal_pybind.types import UPDATE_PARAMETER_FAILED
+from rocal_pybind.types import INVALID_PARAMETER_TYPE
 
 #  RocalProcessMode
-from rali_pybind.types import GPU
-from rali_pybind.types import CPU
+from rocal_pybind.types import GPU
+from rocal_pybind.types import CPU
 
 #  RocalTensorOutputType
-from rali_pybind.types import FLOAT
-from rali_pybind.types import FLOAT16
-from rali_pybind.types import UINT8
+from rocal_pybind.types import FLOAT
+from rocal_pybind.types import FLOAT16
+from rocal_pybind.types import UINT8
 
 # RocalImageSizeEvaluationPolicy
-from rali_pybind.types import MAX_SIZE
-from rali_pybind.types import USER_GIVEN_SIZE
-from rali_pybind.types import MOST_FREQUENT_SIZE
-from rali_pybind.types import MAX_SIZE_ORIG
-from rali_pybind.types import USER_GIVEN_SIZE_ORIG
+from rocal_pybind.types import MAX_SIZE
+from rocal_pybind.types import USER_GIVEN_SIZE
+from rocal_pybind.types import MOST_FREQUENT_SIZE
+from rocal_pybind.types import MAX_SIZE_ORIG
+from rocal_pybind.types import USER_GIVEN_SIZE_ORIG
 
 
 #      RocalImageColor
-from rali_pybind.types import RGB
-from rali_pybind.types import BGR
-from rali_pybind.types import GRAY
-from rali_pybind.types import RGB_PLANAR
+from rocal_pybind.types import RGB
+from rocal_pybind.types import BGR
+from rocal_pybind.types import GRAY
+from rocal_pybind.types import RGB_PLANAR
 
 #     RocalTensorLayout
-from rali_pybind.types import NHWC
-from rali_pybind.types import NCHW
+from rocal_pybind.types import NHWC
+from rocal_pybind.types import NCHW
 
 #     RocalDecodeDevice
-from rali_pybind.types import HARDWARE_DECODE
-from rali_pybind.types import SOFTWARE_DECODE
+from rocal_pybind.types import HARDWARE_DECODE
+from rocal_pybind.types import SOFTWARE_DECODE
 
 #     RocalDecodeDevice
-from rali_pybind.types import DECODER_TJPEG
-from rali_pybind.types import DECODER_OPENCV
-from rali_pybind.types import DECODER_HW_JEPG
-from rali_pybind.types import DECODER_VIDEO_FFMPEG_SW
-from rali_pybind.types import DECODER_VIDEO_FFMPEG_HW
+from rocal_pybind.types import DECODER_TJPEG
+from rocal_pybind.types import DECODER_OPENCV
+from rocal_pybind.types import DECODER_HW_JEPG
+from rocal_pybind.types import DECODER_VIDEO_FFMPEG_SW
+from rocal_pybind.types import DECODER_VIDEO_FFMPEG_HW
 
 #     RocalAudioBorderType
-from rali_pybind.types import ZERO
-from rali_pybind.types import CLAMP
-from rali_pybind.types import REFLECT
+from rocal_pybind.types import ZERO
+from rocal_pybind.types import CLAMP
+from rocal_pybind.types import REFLECT
 
 #     RocalSpectrogramLayout
-from rali_pybind.types import FT
-from rali_pybind.types import TF
+from rocal_pybind.types import FT
+from rocal_pybind.types import TF
 
 #     RocalMelScaleFormula
-from rali_pybind.types import SLANEY
-from rali_pybind.types import HTK
+from rocal_pybind.types import SLANEY
+from rocal_pybind.types import HTK
 
 #     RocalOutOfBoundsPolicy
-from rali_pybind.types import PAD
-from rali_pybind.types import TRIMTOSHAPE
-from rali_pybind.types import ERROR
+from rocal_pybind.types import PAD
+from rocal_pybind.types import TRIMTOSHAPE
+from rocal_pybind.types import ERROR
 
 
 

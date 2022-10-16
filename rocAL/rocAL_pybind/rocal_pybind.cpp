@@ -34,7 +34,7 @@ namespace pybind11
         };
     }
 } // namespace pybind11::detail
-namespace rali
+namespace rocal
 {
     using namespace pybind11::literals; // NOLINT
     // PYBIND11_MODULE(rocal_backend_impl, m) {
@@ -80,7 +80,7 @@ namespace rali
         return py::bytes(s);
     }
 
-    PYBIND11_MODULE(rali_pybind, m)
+    PYBIND11_MODULE(rocal_pybind, m)
     {
         m.doc() = "Python bindings for the C++ portions of ROCAL";
         // rocal_api.h
@@ -419,10 +419,10 @@ namespace rali
     {
             rocalTensorList *labels = rocalGetImageLabels(context);
             // std::cerr<<"LABELS SIZE ::"<<labels->size();
-            for (int i = 0; i < labels->size(); i++) {
-                int *labels_buffer = (int *)(labels->at(i)->buffer());
-                std::cerr << ">>>>> LABELS : " << labels_buffer[0] << "\t";
-            }
+            // for (int i = 0; i < labels->size(); i++) {
+            //     int *labels_buffer = (int *)(labels->at(i)->buffer());
+            //     // std::cerr << ">>>>> LABELS : " << labels_buffer[0] << "\t";
+            // }
             return py::array(py::buffer_info(
                             (int *)(labels->at(0)->buffer()),
                             sizeof(int),

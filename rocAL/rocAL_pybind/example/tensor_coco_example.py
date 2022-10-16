@@ -4,13 +4,13 @@ from __future__ import print_function
 import random
 import itertools
 
-from amd.rali.plugin.pytorch import RALIClassificationIterator
+from amd.rocal.plugin.pytorch import ROCALClassificationIterator
 import torch
 import numpy as np
-from amd.rali.pipeline import Pipeline
-import amd.rali.fn as fn
-import amd.rali.types as types
-# import rali_pybind.tensor
+from amd.rocal.pipeline import Pipeline
+import amd.rocal.fn as fn
+import amd.rocal.types as types
+# import rocal_pybind.tensor
 import sys
 import cv2
 import os

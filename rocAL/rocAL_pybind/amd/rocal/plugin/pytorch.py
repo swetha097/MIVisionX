@@ -1,7 +1,7 @@
 import torch
 import numpy as np
-import rali_pybind as b
-import amd.rali.types as types
+import rocal_pybind as b
+import amd.rocal.types as types
 import ctypes
 
 # class RALIGenericImageIterator(object):
@@ -68,7 +68,7 @@ class RALIGenericIterator(object):
         return self.__next__()
 
     def __next__(self):
-        print("Comes to next")
+        # print("Comes to next")
         if(b.isEmpty(self.loader._handle)):
             raise StopIteration
 
@@ -80,9 +80,9 @@ class RALIGenericIterator(object):
 
         #From init
 
-        print(self.output_tensor_list)
+        # print(self.output_tensor_list)
         self.num_of_dims = self.output_tensor_list[0].num_of_dims()
-        print("Number of dims", self.num_of_dims)
+        # print("Number of dims", self.num_of_dims)
         if self.num_of_dims == 4: # In the case of the Image data
             self.augmentation_count = len(self.output_tensor_list)
             self.w = self.output_tensor_list[0].batch_width()
@@ -122,13 +122,13 @@ class RALIGenericIterator(object):
                 self.audio_length_roi.append((self.output_tensor_list[0].get_roi_at(i)))
             # print("\n The tensor ROI", torch.tensor(self.audio_length_roi))
             
-            #try 
+            #try q
             # self.roi_size = torch.empty(self.batch_size, 2)
             # print("THE ROOOOOI SHAPESSS:",self.output_tensor_list[0].get_rois())
             # print("****", self.roi_size)
             
 
-            print(self.batch_size * self.channels * self.samples)
+            # print(self.batch_size * self.channels * self.samples)
             self.output = torch.empty((self.batch_size, self.channels, self.samples,), dtype=torch.float32)
             
             # next
@@ -153,7 +153,7 @@ class RALIGenericIterator(object):
         b.rocalRelease(self.loader._handle)
 
 
-class RALIClassificationIterator(RALIGenericIterator):
+class ROCALClassificationIterator(RALIGenericIterator):
     """
     RALI iterator for classification tasks for PyTorch. It returns 2 outputs
     (data and label) in the form of PyTorch's Tensor.
@@ -162,7 +162,7 @@ class RALIClassificationIterator(RALIGenericIterator):
 
     .. code-block:: python
 
-       RALIClassificationIterator(pipelines, size)
+       ROCALClassificationIterator(pipelines, size)
 
     is equivalent to calling
 
@@ -176,7 +176,7 @@ class RALIClassificationIterator(RALIGenericIterator):
 
     Parameters
     ----------
-    pipelines : list of amd.raliLI.pipeline.Pipeline
+    pipelines : list of amd.rocalLI.pipeline.Pipeline
                 List of pipelines to use
     size : int
            Number of samples in the epoch (Usually the size of the dataset).
@@ -219,7 +219,7 @@ class RALIClassificationIterator(RALIGenericIterator):
                  dynamic_shape=False,
                  last_batch_padded=False):
         pipe = pipelines
-        super(RALIClassificationIterator, self).__init__(pipe, tensor_layout = pipe._tensor_layout, tensor_dtype = pipe._tensor_dtype,
+        super(ROCALClassificationIterator, self).__init__(pipe, tensor_layout = pipe._tensor_layout, tensor_dtype = pipe._tensor_dtype,
                                                             multiplier=pipe._multiplier, offset=pipe._offset)
 
 
