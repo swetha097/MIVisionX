@@ -63,7 +63,7 @@ void PadNode::create_node() {
 }
 
 void PadNode::update_node() {
-    std::cerr<<"\n PadNode::update_node()";
+    // std::cerr<<"\n PadNode::update_node()";
     vx_status src_roi_status = vxCopyArrayRange((vx_array)_src_tensor_roi, 0, _batch_size * 4, sizeof(vx_uint32), _inputs[0]->info().get_roi()->data(), VX_WRITE_ONLY, VX_MEMORY_TYPE_HOST);
     if(src_roi_status != 0)
         THROW(" Failed calling vxCopyArrayRange for src / dst roi status : "+ TOSTR(src_roi_status))

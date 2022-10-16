@@ -137,7 +137,7 @@ static vx_status VX_CALLBACK validateSlice(vx_node node, const vx_reference para
 
 static vx_status VX_CALLBACK processSlice(vx_node node, const vx_reference *parameters, vx_uint32 num)
 {
-    std::cerr<<"\n processSlice";
+    // std::cerr<<"\n processSlice";
     RppStatus rpp_status = RPP_SUCCESS;
     vx_status return_status = VX_SUCCESS;
     SliceLocalData *data = NULL;
@@ -155,7 +155,7 @@ static vx_status VX_CALLBACK processSlice(vx_node node, const vx_reference *para
         refreshSlice(node, parameters, num, data);
         rpp_status = rppt_slice_host((float *)data->pSrc, data->src_desc_ptr, (float *)data->pDst, data->dst_desc_ptr, data->srcDims, data->anchor, data->shape,
                                     data->axes, data->fill_values, data->normalized_anchor, data->normalized_shape, RpptOutOfBoundsPolicy(data->policy)); // shobi
-        std::cerr<<"\n Exiting Slice";
+        // std::cerr<<"\n Exiting Slice";
         return_status = (rpp_status == RPP_SUCCESS) ? VX_SUCCESS : VX_FAILURE;
     }
     return return_status;

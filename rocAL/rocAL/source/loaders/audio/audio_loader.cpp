@@ -260,7 +260,7 @@ AudioLoader::update_output_audio()
     if (_stopped)
         return LoaderModuleStatus::OK;
 
-    std::cerr << "\nBefore swap op\n";
+    // std::cerr << "\nBefore swap op\n";
     // _circ_buff.get_read_buffer_x() is blocking and puts the caller on sleep until new audios are written to the _circ_buff
     if((_mem_type== RocalMemType::OCL) || (_mem_type== RocalMemType::HIP))
     {
@@ -281,7 +281,7 @@ AudioLoader::update_output_audio()
     if (_stopped)
         return LoaderModuleStatus::OK;
 
-    std::cerr << "\nAfter load next\n";
+    // std::cerr << "\nAfter load next\n";
     _output_decoded_img_info = _circ_buff.get_image_info();
     // if (_randombboxcrop_meta_data_reader) {
     //   _output_cropped_img_info = _circ_buff.get_cropped_audio_info();

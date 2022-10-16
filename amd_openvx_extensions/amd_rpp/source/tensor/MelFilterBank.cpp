@@ -68,8 +68,8 @@ static vx_status VX_CALLBACK refreshMelFilterBank(vx_node node, const vx_referen
     {
         data->srcDims[i].width = data->roi_tensor_ptr[i].xywhROI.xy.x;
         data->srcDims[i].height = data->roi_tensor_ptr[i].xywhROI.xy.y;
-        std::cerr<<"data->srcDims[i].width " << data->srcDims[i].width;
-        std::cerr<< "data->srcDims[i].height " << data->srcDims[i].height;
+        // std::cerr<<"data->srcDims[i].width " << data->srcDims[i].width;
+        // std::cerr<< "data->srcDims[i].height " << data->srcDims[i].height;
     }
     if (data->deviceType == AGO_TARGET_AFFINITY_GPU)
     {

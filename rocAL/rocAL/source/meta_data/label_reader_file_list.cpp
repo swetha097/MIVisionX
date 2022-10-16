@@ -88,9 +88,9 @@ void LabelReaderFileList::release(std::string image_name)
 
 void LabelReaderFileList::lookup(const std::vector<std::string>& image_names)
 {
-    std::cerr << "\n Printing Map Contents";
+    // std::cerr << "\n Printing Map Contents";
     // print_map_contents();
-    std::cerr << "\n End of Map Contents";
+    // std::cerr << "\n End of Map Contents";
     if(image_names.empty())
     {
         WRN("No image names passed")
