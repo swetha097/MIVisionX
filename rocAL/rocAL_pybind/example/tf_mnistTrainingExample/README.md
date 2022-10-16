@@ -8,7 +8,7 @@
 * Build & Install [RPP](https://github.com/GPUOpen-ProfessionalCompute-Libraries/rpp)
 * Build & Install [MIVisionX](https://github.com/GPUOpen-ProfessionalCompute-Libraries/MIVisionX#linux-1)
 
-### Step 1. Build and install rali_pybind plugin 
+### Step 1. Build and install rocal_pybind plugin 
 ```
 sudo ./run.sh (MIVisionX/rocAL/rocAL_pybind/)
 ```
