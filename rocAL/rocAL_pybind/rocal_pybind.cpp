@@ -459,7 +459,6 @@ namespace rocal
               py::arg("beta") = NULL);
         m.def("CropMirrorNormalize",&rocalCropMirrorNormalize, py::return_value_policy::reference);
         // m.def("Crop", &rocalCrop, py::return_value_policy::reference);
-        m.def("ResizeShorter", &rocalResizeShorter, py::return_value_policy::reference);
         m.def("CenterCropFixed", &rocalCropCenterFixed, py::return_value_policy::reference);
 
     }

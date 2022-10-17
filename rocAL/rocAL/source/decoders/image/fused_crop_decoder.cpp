@@ -109,7 +109,7 @@ Decoder::Status FusedCropTJDecoder::decode(unsigned char *input_buffer, size_t i
         float min_area = original_image_width * original_image_height * AREA_RANGE[0];
         int maxW = std::max<int>(1, original_image_height * max_wh_ratio);
         int maxH = std::max<int>(1, original_image_width * max_hw_ratio);
-        int num_attempts_left = 100;
+        int num_attempts_left = 10;
         // detect two impossible cases early
         if (original_image_height * maxW < min_area) { // image too wide
             crop_width = original_image_height;
@@ -164,11 +164,13 @@ Decoder::Status FusedCropTJDecoder::decode(unsigned char *input_buffer, size_t i
                 crop_height = original_image_height;
                 crop_width  = original_image_width;
             }
-            double scale = std::min(1.0f, max_area / (crop_width * crop_height));
-            crop_width = std::max<int>(1, crop_width * std::sqrt(scale));
-            crop_height = std::max<int>(1, crop_height * std::sqrt(scale));
-            x1 = std::uniform_int_distribution<int>(0, original_image_width - crop_width)(_rand_gen);
-            y1 = std::uniform_int_distribution<int>(0, original_image_height - crop_height)(_rand_gen);
+            // double scale = std::min(1.0f, max_area / (crop_width * crop_height));
+            // crop_width = std::max<int>(1, crop_width * std::sqrt(scale));
+            // crop_height = std::max<int>(1, crop_height * std::sqrt(scale));
+            // x1 = std::uniform_int_distribution<int>(0, original_image_width - crop_width)(_rand_gen);
+            // y1 = std::uniform_int_distribution<int>(0, original_image_height - crop_height)(_rand_gen);
+            x1 =  (original_image_width - crop_width) / 2;
+            y1 =  (original_image_height - crop_height) / 2;
         }
     }
     if(crop_width > max_decoded_width)
