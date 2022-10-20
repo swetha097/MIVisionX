@@ -32,6 +32,8 @@ from rocal_pybind.types import RGB_PLANAR
 #     RocalTensorLayout
 from rocal_pybind.types import NHWC
 from rocal_pybind.types import NCHW
+from rocal_pybind.types import NFHWC
+from rocal_pybind.types import NFCHW
 
 #     RocalDecodeDevice
 from rocal_pybind.types import HARDWARE_DECODE
@@ -80,6 +82,8 @@ _known_types = {
 
    	NHWC: ("NHWC", NHWC),
     NCHW: ("NCHW", NCHW),
+    NFHWC: ("NFHWC", NFHWC),
+    NFCHW: ("NFCHW", NFCHW),
    	BGR: ("BGR", BGR),
     RGB: ("RGB", RGB),
    	GRAY: ("GRAY", GRAY),

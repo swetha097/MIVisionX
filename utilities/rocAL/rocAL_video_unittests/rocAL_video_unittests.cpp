@@ -243,7 +243,7 @@ int main(int argc, const char **argv)
     RocalTensorList output_tensor_list;
     /*>>>>>>>>>>>>>>>>>>> Diplay using OpenCV <<<<<<<<<<<<<<<<<*/
     if(save_frames)
-        mkdir("output_images", S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH); // Create directory in which images will be stored
+        mkdir("output_frames", S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH); // Create directory in which images will be stored
     auto cv_color_format = ((color_format == RocalImageColor::ROCAL_COLOR_RGB24) ? CV_8UC3 : CV_8UC1);
     cv::Mat mat_input, mat_color, mat_output;
     high_resolution_clock::time_point t1 = high_resolution_clock::now();
@@ -283,10 +283,11 @@ int main(int argc, const char **argv)
                 if(output_tensor_list->at(idx)->info().mem_type() == RocalMemType::HIP)
                 {
                     out_tensor_buffer = (unsigned char *)malloc(output_tensor_list->at(idx)->info().data_size());
-                    output_tensor_list->at(idx)->copy_data(out_tensor_buffer, false);
+                    output_tensor_list->at(idx)->copy_data(out_tensor_buffer);
                 }
-                else if(output_tensor_list->at(idx)->info().mem_type() == RocalMemType::HOST)
+                else if(output_tensor_list->at(idx)->info().mem_type() == RocalMemType::HOST) {
                     out_tensor_buffer = (unsigned char *)(output_tensor_list->at(idx)->buffer());
+                }
                 
                 mat_input.data = out_tensor_buffer;
                 for(unsigned b = 0; b < input_batch_size; b++) // Iterates over each sequence in the batch

@@ -58,6 +58,14 @@ void get_rocal_tensor_layout(RocalTensorLayout &tensor_layout, RocalTensorlayout
             op_tensor_layout = RocalTensorlayout::NCHW;
             layout = 1;
             return;
+        case 2:
+            op_tensor_layout = RocalTensorLayout::NFHWC;
+            layout = 2;
+            return;
+        case 3:
+            op_tensor_layout = RocalTensorLayout::NFCHW;
+            layout = 3;
+            return;
         default:
             THROW("Unsupported Tensor layout" + TOSTR(tensor_layout))
     }
@@ -473,6 +481,18 @@ ROCAL_API_CALL rocalCropMirrorNormalize(RocalContext p_context, RocalTensor p_in
             out_dims[1] = 3;
             out_dims[2] = crop_height;
             out_dims[3] = crop_width;
+        }
+        else if(op_tensorLayout == RocalTensorlayout::NFHWC)
+        {
+            out_dims[2] = crop_height;
+            out_dims[3] = crop_width;
+            out_dims[4] = 3;
+        }
+        else if(op_tensorLayout == RocalTensorlayout::NFCHW)
+        {
+            out_dims[2] = 3;
+            out_dims[3] = crop_height;
+            out_dims[4] = crop_width;
         }
         output_info.set_dims(out_dims);
         output = context->master_graph->create_tensor(output_info, is_output);

@@ -275,6 +275,8 @@ namespace rocal
         py::enum_<RocalTensorLayout>(types_m, "RocalTensorLayout", "Tensor layout type")
             .value("NHWC", ROCAL_NHWC)
             .value("NCHW", ROCAL_NCHW)
+            .value("NFHWC", ROCAL_NFHWC)
+            .value("NFCHW", ROCAL_NFCHW)
             .export_values();
         py::enum_<RocalDecodeDevice>(types_m, "RocalDecodeDevice", "Decode device type")
             .value("HARDWARE_DECODE", ROCAL_HW_DECODE)
@@ -310,6 +312,7 @@ namespace rocal
         m.def("setOutputImages", &rocalSetOutputs);
         m.def("labelReader", &rocalCreateLabelReader, py::return_value_policy::reference);
         m.def("COCOReader", &rocalCreateCOCOReader, py::return_value_policy::reference);
+        m.def("VideoMetaDataReader", &rocalCreateVideoLabelReader, py::return_value_policy::reference);
         // rocal_api_meta_data.h
         m.def("RandomBBoxCrop", &rocalRandomBBoxCrop);
         m.def("BoxEncoder",&rocalBoxEncoder);
@@ -446,6 +449,32 @@ namespace rocal
             py::return_value_policy::reference);
         m.def("COCO_ImageDecoderSliceShard",&rocalJpegCOCOFileSourcePartialSingleShard,"Reads file from the source given and decodes it according to the policy",
             py::return_value_policy::reference);
+        m.def("VideoDecoder",&rocalVideoFileSource,"Reads videos from the source given and decodes it according to the policy only for Videos as inputs",
+            py::return_value_policy::reference,
+            py::arg("p_context"),
+            py::arg("source_path"),
+            py::arg("color_format"),
+            py::arg("decoder_mode"),
+            py::arg("shard_count"),
+            py::arg("sequence_length"),
+            py::arg("shuffle") = false,
+            py::arg("is_output"),
+            py::arg("loop") = false,
+            py::arg("frame_step"),
+            py::arg("frame_stride"),
+            py::arg("file_list_frame_num") = false);
+        m.def("SequenceReader",&rocalSequenceReader,"Creates JPEG image reader and decoder. Reads [Frames] sequences from a directory representing a collection of streams.",
+            py::return_value_policy::reference,
+            py::arg("context"),
+            py::arg("source_path"),
+            py::arg("color_format"),
+            py::arg("shard_count"),
+            py::arg("sequence_length"),
+            py::arg("is_output"),
+            py::arg("shuffle") = false,
+            py::arg("loop") = false,
+            py::arg("frame_step"),
+            py::arg("frame_stride"));
         m.def("Resize",&rocalResize, "Resizes the image ",py::return_value_policy::reference);
         m.def("ColorTwist",&rocalColorTwist, py::return_value_policy::reference);
         m.def("rocalResetLoaders", &rocalResetLoaders);
