@@ -186,13 +186,23 @@ int main(int argc, const char **argv)
         RocalMetaData meta_data = rocalCreateVideoLabelReader(handle, source_path, sequence_length, frame_step, frame_stride, file_list_frame_num);
     }
 
-    RocalTensor input1;
+    RocalTensor input1, image1;
     switch (reader_case)
     {
         default:
         {
+            is_output = false;
             std::cout << "\n>>>> VIDEO READER\n";
+            int resize_w = 300, resize_h = 300; 
+            RocalTensorLayout tensorLayout = RocalTensorLayout::ROCAL_NFHWC;
+            RocalTensorOutputType tensorOutputType = RocalTensorOutputType::ROCAL_FP32;
             input1 = rocalVideoFileSource(handle, source_path, color_format, decoder_mode, shard_count, sequence_length, is_output, shuffle, false, frame_step, frame_stride, file_list_frame_num);
+            std::vector<float> mean{0.485*255,0.456*255 ,0.406*255};
+            std::vector<float> sdev{0.229*255 ,0.224*255 ,0.225*255};
+            std::cout << ">>>>>>> Running "
+                  << " Crop Mirror Normalize " << std::endl;
+            image1 = rocalCropMirrorNormalize(handle, input1, tensorLayout, tensorOutputType, 3, resize_h, resize_w, 0, 0, 0, mean, sdev, true);
+
             break;
         }
         // case 2:
