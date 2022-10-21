@@ -37,7 +37,7 @@ def video(*inputs,sequence_length, additional_decode_surfaces=2, bytes_per_sampl
     videos = []
     kwargs_pybind_reader = {"source_path": file_root,"sequence_length":sequence_length,"frame_step":step,"frame_stride":stride,"file_list_frame_num":file_list_frame_num} #VideoMetaDataReader
     b.VideoMetaDataReader(Pipeline._current_pipeline._handle ,*(kwargs_pybind_reader.values()))
-    kwargs_pybind_decoder = {"source_path": file_root,"color_format":image_type,"decoder_mode":decoder_mode,"shard_count":num_shards,"sequence_length":sequence_length,"shuffle":random_shuffle ,"is_output":True,"loop":False, "frame_step":step,"frame_stride":stride, "file_list_frame_num":file_list_frame_num } #VideoDecoder
+    kwargs_pybind_decoder = {"source_path": file_root,"color_format":image_type,"decoder_mode":decoder_mode,"shard_count":num_shards,"sequence_length":sequence_length,"shuffle":random_shuffle ,"is_output":False,"loop":False, "frame_step":step,"frame_stride":stride, "file_list_frame_num":file_list_frame_num } #VideoDecoder
 
     videos = b.VideoDecoder(Pipeline._current_pipeline._handle ,*(kwargs_pybind_decoder.values()))
     return (videos)

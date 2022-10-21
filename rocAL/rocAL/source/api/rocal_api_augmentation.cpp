@@ -59,11 +59,11 @@ void get_rocal_tensor_layout(RocalTensorLayout &tensor_layout, RocalTensorlayout
             layout = 1;
             return;
         case 2:
-            op_tensor_layout = RocalTensorLayout::NFHWC;
+            op_tensor_layout = RocalTensorlayout::NFHWC;
             layout = 2;
             return;
         case 3:
-            op_tensor_layout = RocalTensorLayout::NFCHW;
+            op_tensor_layout = RocalTensorlayout::NFCHW;
             layout = 3;
             return;
         default:
