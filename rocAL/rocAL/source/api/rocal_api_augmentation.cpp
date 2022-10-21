@@ -313,6 +313,16 @@ ROCAL_API_CALL rocalResizeMirrorNormalize(RocalContext p_context,
             out_dims[2] = resize_height;
             out_dims[3] = resize_width;
         }
+        else if(op_tensorLayout == RocalTensorlayout::NFHWC)
+        {
+            out_dims[2] = resize_height;
+            out_dims[3] = resize_width;
+        }
+        else if(op_tensorLayout == RocalTensorlayout::NFCHW)
+        {
+            out_dims[3] = resize_height;
+            out_dims[4] = resize_width;
+        }
         output_info.set_dims(out_dims);
         output = context->master_graph->create_tensor(output_info, is_output);
         output->reset_tensor_roi();
@@ -368,6 +378,16 @@ rocalCropFixed(
         {
             out_dims[2] = crop_height;
             out_dims[3] = crop_width;
+        }
+        else if(op_tensorLayout == RocalTensorlayout::NFHWC)
+        {
+            out_dims[2] = crop_height;
+            out_dims[3] = crop_width;
+        }
+        else if(op_tensorLayout == RocalTensorlayout::NFCHW)
+        {
+            out_dims[3] = crop_height;
+            out_dims[4] = crop_width;
         }
         output_info.set_dims(out_dims);
         output = context->master_graph->create_tensor(output_info, is_output);
@@ -427,6 +447,16 @@ rocalCropCenterFixed(
         {
             out_dims[2] = crop_height;
             out_dims[3] = crop_width;
+        }
+        else if(op_tensorLayout == RocalTensorlayout::NFHWC)
+        {
+            out_dims[2] = crop_height;
+            out_dims[3] = crop_width;
+        }
+        else if(op_tensorLayout == RocalTensorlayout::NFCHW)
+        {
+            out_dims[3] = crop_height;
+            out_dims[4] = crop_width;
         }
         output_info.set_dims(out_dims);
         output = context->master_graph->create_tensor(output_info, is_output);
@@ -606,6 +636,16 @@ rocalResize(RocalContext p_context,
         {
             out_dims[2] = max_out_height;
             out_dims[3] = max_out_width;
+        }
+        else if(op_tensorLayout == RocalTensorlayout::NFHWC)
+        {
+            out_dims[2] = max_out_height;
+            out_dims[3] = max_out_width;
+        }
+        else if(op_tensorLayout == RocalTensorlayout::NFCHW)
+        {
+            out_dims[3] = max_out_height;
+            out_dims[4] = max_out_width;
         }
         output_info.set_dims(out_dims);
         output = context->master_graph->create_tensor(output_info, is_output);
