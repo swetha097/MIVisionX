@@ -928,7 +928,7 @@ rocalSpectrogram(RocalContext p_context,
     return output;
 }
 
-RocalTensor ROCAL_API_CALL
+RocalTensorList ROCAL_API_CALL
 rocalNonSilentRegion(RocalContext p_context,
                      RocalTensor p_input,
                      bool is_output,
@@ -938,7 +938,9 @@ rocalNonSilentRegion(RocalContext p_context,
                      int window_length) {
     if(!p_context || !p_input)
         THROW("Null values passed as input")
-    rocalTensor* output = nullptr;
+    rocalTensor* output1 = nullptr;
+    rocalTensor* output2 = nullptr;
+    rocalTensorList output_tensors;
     auto context = static_cast<Context*>(p_context);
     auto input = static_cast<rocalTensor*>(p_input);
     try {
@@ -947,20 +949,33 @@ rocalNonSilentRegion(RocalContext p_context,
         std::vector<size_t> dims;
         dims.resize(num_of_dims);
         dims.at(0) = context->user_batch_size();
-        dims.at(1) = context->user_batch_size();
+        // dims.at(1) = context->user_batch_size();
+        dims.at(1) = 1;
         dims.at(2) = 1;
         auto info  = rocalTensorInfo(std::vector<size_t>(std::move(dims)),
                                 context->master_graph->mem_type(),
                                 tensor_data_type);
         info.set_tensor_layout(RocalTensorlayout::NONE);
-
-        output = context->master_graph->create_tensor(info, is_output);
-        context->master_graph->add_node<NonSilentRegionNode>({input}, {output})->init(cut_off_db, reference_power, window_length, reset_interval);
+        std::vector<size_t> dims1;
+        dims1.resize(num_of_dims);
+        dims1.at(0) = context->user_batch_size();
+        dims1.at(1) = 1;
+        dims1.at(2) = 1;
+        auto info1  = rocalTensorInfo(std::vector<size_t>(std::move(dims1)),
+                            context->master_graph->mem_type(),
+                            tensor_data_type);
+        info1.set_tensor_layout(RocalTensorlayout::NONE);
+        output1 = context->master_graph->create_tensor(info, is_output);
+        output2 = context->master_graph->create_tensor(info1, is_output);
+        output_tensors.push_back(output1);
+        output_tensors.push_back(output2);
+        context->master_graph->add_node<NonSilentRegionNode>({input}, {output1, output2})->init(cut_off_db, reference_power, window_length, reset_interval);
     }
     catch(const std::exception& e) {
         context->capture_error(e.what());
         ERR(e.what())
     }
+    rocalTensorList *output = &output_tensors;
     return output;
 }
 
@@ -1047,7 +1062,7 @@ RocalTensor rocalSlice(RocalContext p_context,
                 THROW("The length of max_size vector exceeds the image dimension.")
             }
         }
-        
+
         std::vector<float> shapes;
         if (shape.size()) {
             if(shape.size() == 1) {
