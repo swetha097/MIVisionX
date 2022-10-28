@@ -124,6 +124,7 @@ vx_status get_kernels_to_publish()
     STATUS_ERROR_CHECK(ADD_KERENEL(CopybatchPD_Register));
     STATUS_ERROR_CHECK(ADD_KERENEL(NopbatchPD_Register));
     STATUS_ERROR_CHECK(ADD_KERENEL(SequenceRearrange_Register));
+    STATUS_ERROR_CHECK(ADD_KERENEL(Resizetensor_Register));
     return status;
 }
 
