@@ -47,6 +47,9 @@ AudioDecoder::Status SndFileDecoder::decode_info(int* samples, int* channels)
     // Set the samples and channels using the struct variables _sfinfo.samples and _sfinfo.channels
     *samples = _sfinfo.frames;
     *channels = _sfinfo.channels;
+    // std::cerr << "\n _sfinfo.frames;" << _sfinfo.frames;
+    // std::cerr << "\n _sfinfo.channels;" << _sfinfo.channels;;
+
     if (_sfinfo.channels < 1)
 	{	printf("Not able to process less than %d channels\n", *channels);
         sf_close(_sf_ptr);
