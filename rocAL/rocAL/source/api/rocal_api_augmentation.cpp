@@ -928,7 +928,7 @@ rocalSpectrogram(RocalContext p_context,
     return output;
 }
 
-RocalTensorList ROCAL_API_CALL
+std::pair<RocalTensor,RocalTensor> ROCAL_API_CALL
 rocalNonSilentRegion(RocalContext p_context,
                      RocalTensor p_input,
                      bool is_output,
@@ -945,13 +945,14 @@ rocalNonSilentRegion(RocalContext p_context,
     auto input = static_cast<rocalTensor*>(p_input);
     try {
         RocalTensorDataType tensor_data_type = RocalTensorDataType::INT32;
-        unsigned num_of_dims = 3;
+        unsigned num_of_dims = 4;
         std::vector<size_t> dims;
         dims.resize(num_of_dims);
         dims.at(0) = context->user_batch_size();
         // dims.at(1) = context->user_batch_size();
         dims.at(1) = 1;
         dims.at(2) = 1;
+        dims.at(3) = 1;
         auto info  = rocalTensorInfo(std::vector<size_t>(std::move(dims)),
                                 context->master_graph->mem_type(),
                                 tensor_data_type);
@@ -961,6 +962,7 @@ rocalNonSilentRegion(RocalContext p_context,
         dims1.at(0) = context->user_batch_size();
         dims1.at(1) = 1;
         dims1.at(2) = 1;
+        dims1.at(3) = 1;
         auto info1  = rocalTensorInfo(std::vector<size_t>(std::move(dims1)),
                             context->master_graph->mem_type(),
                             tensor_data_type);
@@ -969,14 +971,14 @@ rocalNonSilentRegion(RocalContext p_context,
         output2 = context->master_graph->create_tensor(info1, is_output);
         output_tensors.push_back(output1);
         output_tensors.push_back(output2);
-        context->master_graph->add_node<NonSilentRegionNode>({input}, {output1, output2})->init(cut_off_db, reference_power, window_length, reset_interval);
+        context->master_graph->add_node<NonSilentRegionNode>({input}, {output_tensors.at(0), output_tensors.at(1)})->init(cut_off_db, reference_power, window_length, reset_interval);
     }
     catch(const std::exception& e) {
         context->capture_error(e.what());
         ERR(e.what())
     }
-    rocalTensorList *output = &output_tensors;
-    return output;
+    // return &output_tensors;
+    return std::make_pair(output_tensors.at(0), output_tensors.at(1));
 }
 
 RocalTensor rocalMelFilterBank(RocalContext p_context,
@@ -1020,13 +1022,15 @@ RocalTensor rocalSlice(RocalContext p_context,
                         RocalTensor p_input,
                         RocalTensorOutputType rocal_tensor_output_type,
                         bool is_output,
-                        std::vector<float> anchor,
-                        std::vector<float> shape,
+                        RocalTensor anchor_tensor,
+                        RocalTensor shape_tensor,
                         std::vector<float> fill_values,
                         std::vector<unsigned> axes,
                         bool normalized_anchor,
                         bool normalized_shape,
                         RocalOutOfBoundsPolicy policy) {
+                            
+    std::cerr << "In Slice augmentation";
     if(!p_context || !p_input)
         THROW("Null values passed as input")
     rocalTensor* output = nullptr;
@@ -1052,28 +1056,37 @@ RocalTensor rocalSlice(RocalContext p_context,
         // output_info.set_data_type(op_tensorDataType);
 
         // output = context->master_graph->create_tensor(output_info, is_output);
-        std::vector<float> anchors(2, 0);
-        if (anchor.size()) {
-            if(anchor.size() == 1) {
-                anchors = {anchor[0], 0};
-            } else if(anchor.size() == 2) {
-                anchors = anchor; // {width, height}
-            } else {
-                THROW("The length of max_size vector exceeds the image dimension.")
-            }
-        }
+        // std::vector<float> anchors(2, 0);
+        // if (anchor.size()) {
+        //     if(anchor.size() == 0){
+        //         anchors = {0, 0}; // Case where rocALTensors are used
+        //     }
+        //     if(anchor.size() == 1) {
+        //         anchors = {anchor[0], 0};
+        //     } else if(anchor.size() == 2) {
+        //         anchors = anchor; // {width, height}
+        //     } else {
+        //         THROW("The length of max_size vector exceeds the image dimension.")
+        //     }
+        // }
 
-        std::vector<float> shapes;
-        if (shape.size()) {
-            if(shape.size() == 1) {
-                shapes = {shape[0], 0};
-            } else if(shape.size() == 2) {
-                shapes = shape; // {width, height}
-            } else {
-                THROW("The length of max_size vector exceeds the image dimension.")
-            }
-        }
-        context->master_graph->add_node<SliceNode>({input}, {output})->init(anchors, shapes, fill_values,
+        // std::vector<float> shapes;
+        // if (shape.size()) {
+        //     if(shape.size() == 0) {
+        //         shapes = {0,0}; // Case where rocALTensors are used
+        //     }
+        //     if(shape.size() == 1) {
+        //         shapes = {shape[0], 0};
+        //     } else if(shape.size() == 2) {
+        //         shapes = shape; // {width, height}
+        //     } else {
+        //         THROW("The length of max_size vector exceeds the image dimension.")
+        //     }
+        // }
+        // context->master_graph->add_node<SliceNode>({input}, {output})->init(anchors, shapes, fill_values,
+        //                                                                     axes, normalized_anchor, normalized_shape, policy);
+        std::cerr << "\n Comes to the init ";
+        context->master_graph->add_node<SliceNode>({input}, {output})->init(anchor_tensor, shape_tensor, fill_values,
                                                                             axes, normalized_anchor, normalized_shape, policy);
     }
     catch(const std::exception& e) {

@@ -54,7 +54,9 @@ public:
 
     //! Returns the name of the latest file opened
     std::string id() override { return _last_id;};
-    std::string file_path() override {return _last_file_name; };
+    // std::string file_path() override {return _last_file_name; };
+    std::string file_path() override {return _last_file_path; };
+
 
     unsigned count_items() override;
 
@@ -79,7 +81,7 @@ private:
     FILE* _current_fPtr;
     unsigned _current_file_size;
     std::string _last_id;
-    std::string _last_file_name;
+    std::string _last_file_name, _last_file_path;
     size_t _shard_id = 0;
     size_t _shard_count = 1;// equivalent of batch size
     //!< _batch_count Defines the quantum count of the images to be read. It's usually equal to the user's batch size.

@@ -67,7 +67,6 @@ int main(int argc, const char **argv)
 
 
     bool gpu = 0;
-    // int test_case = 3; // To be introduced later
     if (argc >= argIdx + MIN_ARG_COUNT)
         test_case = atoi(argv[++argIdx]);
 
@@ -86,7 +85,6 @@ int main(int argc, const char **argv)
     if (argc >= argIdx + MIN_ARG_COUNT)
         gpu = atoi(argv[++argIdx]);
 
-
     int return_val = test(test_case, path, sample_rate, downmix, max_frames, max_channels, gpu);
     return 0;
 }
@@ -94,7 +92,7 @@ int main(int argc, const char **argv)
 int test(int test_case, const char *path, float sample_rate, int downmix, unsigned max_frames, unsigned max_channels, int gpu)
 {
     size_t num_threads = 1;
-    int inputBatchSize = 1;
+    int inputBatchSize = 10;
     std::cout << ">>> test case " << test_case << std::endl;
     std::cout << ">>> Running on " << (gpu ? "GPU" : "CPU") << std::endl;
 
@@ -118,13 +116,13 @@ int test(int test_case, const char *path, float sample_rate, int downmix, unsign
     // MetaData reader for input file_list which has file seperated by labels
     // metadata_output = rocalCreateCOCOReader(handle, json_path, true, false);
     const char* file_list_path = "/media/swetha/audio_support/dummy_audio_dataset/file_list.txt" ; // TODO: Add this as an arg in main() 
-    metadata_output = rocalCreateFileListLabelReader(handle, path, file_list_path);
+    // metadata_output = rocalCreateFileListLabelReader(handle, path, file_list_path);
     // std::exit(0);
     //Decoder
     RocalTensor input1, output;
     RocalTensorList non_silent_region_op;
     input1 = rocalAudioFileSource(handle, path, num_threads, false, false, false, max_frames, downmix);
-
+    std::cerr<< "\n Comes out of the rocALAudioFileSource";
     if (rocalGetStatus(handle) != ROCAL_OK)
     {
         std::cout << "Audio source could not initialize : " << rocalGetErrorMessage(handle) << std::endl;
@@ -160,7 +158,8 @@ int test(int test_case, const char *path, float sample_rate, int downmix, unsign
         break;
         case 3:
         {
-            non_silent_region_op = rocalNonSilentRegion(handle, input1, true, -60, 1, -1, 3);
+            auto non_silent_region = rocalNonSilentRegion(handle, input1, true, -60, 1, -1, 3);
+            // RocalTensor begin = non_silent_region->at(0);
         }
         break;
         case 4:
@@ -182,12 +181,27 @@ int test(int test_case, const char *path, float sample_rate, int downmix, unsign
         break;
         case 5:
         {
-            std::cerr<<"\n Slice";
+            std::cerr << "\n Here in Slice";
             RocalTensorLayout tensorLayout; // = RocalTensorLayout::None;
             RocalTensorOutputType tensorOutputType = RocalTensorOutputType::ROCAL_FP32;
             const size_t num_values = 3;
+            std::pair <RocalTensor,RocalTensor>  non_silent_region_output;
+            // rocalTensorList* non_silent_region_output;
+            non_silent_region_output = rocalNonSilentRegion(handle, input1, true, -60, 0.0, -1, 3);
+            std::cerr << "\n Out of the non-silent region ";
+            // RocalTensor begin = non_silent_region_output->at(0) ;
+            // std::cerr<<" HEREEE 0";
+            // RocalTensor length = non_silent_region_output->at(1) ;
+            std::cerr<<" HEREEE 1";
+            // int * buffer = (int *)non_silent_region_output->at(0)->buffer();
+            // for(int n = 0; n < 1; n++) // shobi check with Fiona
+            // {
+            //     std::cerr << (int)buffer[n] << "\n";
+            // }
+            // output = rocalSlice(handle, input1, tensorOutputType, true, non_silent_region_output->at(0), non_silent_region_output->at(1), {0.3f});
 
-            output = rocalSlice(handle, input1, tensorOutputType, true, {}, {4}, {0.3f});
+            output = rocalSlice(handle, input1, tensorOutputType, true, non_silent_region_output.first, non_silent_region_output.second, {0.3f});
+            std::cerr << "\n Out of Slice ";
         }
         break;
         case 6:
@@ -244,27 +258,27 @@ int test(int test_case, const char *path, float sample_rate, int downmix, unsign
         std::vector<float> audio_op;
         output_tensor_list = rocalGetOutputTensors(handle);
         std::cerr<<"*****************************Audio output**********************************\n";
-        for(int idx = 0; idx < output_tensor_list->size(); idx++)
-        {
-            float * buffer = (float *)output_tensor_list->at(idx)->buffer();
-            for(int n = 0; n < output_tensor_list->at(idx)->info().data_size() / 4; n++) // shobi check with Fiona
-            {
-                std::cerr << (float)buffer[n] << "\n";
-            }
-            // for(int n = 0; n < 5; n++)
-            // {
-            //     std::cerr << buffer[n] << "\n";
-            // }
+        // for(int idx = 0; idx < output_tensor_list->size(); idx++)
+        // {
+        //     float * buffer = (float *)output_tensor_list->at(idx)->buffer();
+        //     for(int n = 0; n < output_tensor_list->at(idx)->info().data_size() / 4; n++) // shobi check with Fiona
+        //     {
+        //         std::cerr << (float)buffer[n] << "\n";
+        //     }
+        //     // for(int n = 0; n < 5; n++)
+        //     // {
+        //     //     std::cerr << buffer[n] << "\n";
+        //     // }
             
-        }
+        // }
 
-        RocalTensorList labels = rocalGetImageLabels(handle);
+        // RocalTensorList labels = rocalGetImageLabels(handle);
 
-        for(int i = 0; i < labels->size(); i++)
-        {
-            int * labels_buffer = (int *)(labels->at(i)->buffer());
-            std::cerr << ">>>>> LABELS : " << labels_buffer[0] << "\t";
-        }
+        // for(int i = 0; i < labels->size(); i++)
+        // {
+        //     int * labels_buffer = (int *)(labels->at(i)->buffer());
+        //     std::cerr << ">>>>> LABELS : " << labels_buffer[0] << "\t";
+        // }
         std::cerr<<"******************************************************************************\n";
     }
 

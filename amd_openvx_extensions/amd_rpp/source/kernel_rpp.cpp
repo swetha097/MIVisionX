@@ -2291,7 +2291,7 @@ VX_API_ENTRY vx_node VX_API_CALL vxExtrppNode_MelFilterBank(vx_graph graph, vx_t
     return node;
 }
 
-VX_API_ENTRY vx_node VX_API_CALL vxExtrppNode_Slice(vx_graph graph, vx_tensor pSrc, vx_tensor pDst, vx_array srcDims, vx_array anchor, vx_array shape, vx_array fill_value,
+VX_API_ENTRY vx_node VX_API_CALL vxExtrppNode_Slice(vx_graph graph, vx_tensor pSrc, vx_tensor pDst, vx_array srcDims, vx_tensor anchor, vx_tensor shape, vx_array fill_value,
                                                     vx_scalar axes, vx_scalar normalized_anchor, vx_scalar normalized_shape, vx_scalar policy, vx_uint32 nbatchSize)
 {
     vx_node node = NULL;
