@@ -80,7 +80,13 @@ static vx_status VX_CALLBACK refreshBrightness(vx_node node, const vx_reference 
 #if ENABLE_HIP
         STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[0], VX_TENSOR_BUFFER_HIP, &data->pSrc_dev, sizeof(data->pSrc_dev)));
         STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[2], VX_TENSOR_BUFFER_HIP, &data->pDst_dev, sizeof(data->pDst_dev)));
-        hipMemcpy(data->roi_tensor_ptr_dev, data->roi_tensor_ptr, data->nbatchSize * sizeof(RpptROI), hipMemcpyHostToDevice);
+        if((data->layout == 2 || data->layout == 3))
+        {
+            unsigned num_of_frames = data->in_tensor_dims[1];
+            hipMemcpy(data->roi_tensor_ptr_dev, data->roi_tensor_ptr, data->nbatchSize * num_of_frames * sizeof(RpptROI), hipMemcpyHostToDevice);
+        }
+        else
+            hipMemcpy(data->roi_tensor_ptr_dev, data->roi_tensor_ptr, data->nbatchSize * sizeof(RpptROI), hipMemcpyHostToDevice);
 #endif
     }
     else if (data->device_type == AGO_TARGET_AFFINITY_CPU)
@@ -329,7 +335,7 @@ static vx_status VX_CALLBACK initializeBrightness(vx_node node, const vx_referen
 
 #if ENABLE_HIP
     if (data->device_type == AGO_TARGET_AFFINITY_GPU)
-        rppCreateWithStreamAndBatchSize(&data->rppHandle, data->handle.hipstream, data->nbatchSize);
+        rppCreateWithStreamAndBatchSize(&data->rppHandle, data->handle.hipstream, data->src_desc_ptr->n);
 #endif
     if (data->device_type == AGO_TARGET_AFFINITY_CPU)
         rppCreateWithBatchSize(&data->rppHandle, data->nbatchSize);
