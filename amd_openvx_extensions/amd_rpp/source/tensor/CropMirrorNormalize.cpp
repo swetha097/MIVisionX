@@ -75,7 +75,7 @@ static vx_status VX_CALLBACK refreshCropMirrorNormalize(vx_node node, const vx_r
         data->roi_tensor_ptr[i].xywhROI.roiWidth =data->crop_w[i];
         data->roi_tensor_ptr[i].xywhROI.roiHeight =data->crop_h[i];
     }
-    if(data->layout == 2 || data->layout == 3) // For NFCHW and NFHWC formats
+    if((data->layout == 2 || data->layout == 3) && (data->nbatchSize != data->src_desc_ptr->n)) // TO BE DONE ONLY FOR VIDEO READERS OUTPUTS
     {
         unsigned num_of_frames = data->in_tensor_dims[1]; // Num of frames 'F'
         for(int n = data->nbatchSize - 1; n >= 0; n--)
@@ -87,8 +87,12 @@ static vx_status VX_CALLBACK refreshCropMirrorNormalize(vx_node node, const vx_r
                 data->start_y[index + f] = data->start_y[n];
                 data->crop_h[index + f] = data->crop_h[n];
                 data->crop_w[index + f] = data->crop_w[n];
-                data->mean[index + f] = data->mean[n];
-                data->std_dev[index + f] = data->std_dev[n];
+                unsigned mean_index = (index + f) * 3;
+                for (int t = 3; t > 0 ; t--)
+                {
+                    data->mean[mean_index + t] = data->mean[n];
+                    data->std_dev[mean_index + t] = data->std_dev[n];
+                }
                 data->mirror[index + f] = data->mirror[n];
                 data->roi_tensor_ptr[index + f].xywhROI.xy.x = data->roi_tensor_ptr[n].xywhROI.xy.x;
                 data->roi_tensor_ptr[index + f].xywhROI.xy.y = data->roi_tensor_ptr[n].xywhROI.xy.y;
@@ -102,7 +106,13 @@ static vx_status VX_CALLBACK refreshCropMirrorNormalize(vx_node node, const vx_r
 #if ENABLE_HIP
         STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[0], VX_TENSOR_BUFFER_HIP, &data->pSrc_dev, sizeof(data->pSrc_dev)));
         STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[2], VX_TENSOR_BUFFER_HIP, &data->pDst_dev, sizeof(data->pDst_dev)));
-        hipMemcpy(data->roi_tensor_ptr_dev, data->roi_tensor_ptr, data->nbatchSize * sizeof(RpptROI), hipMemcpyHostToDevice);
+        if((data->layout == 2 || data->layout == 3))
+        {
+            unsigned num_of_frames = data->in_tensor_dims[1];
+            hipMemcpy(data->roi_tensor_ptr_dev, data->roi_tensor_ptr, data->nbatchSize * num_of_frames * sizeof(RpptROI), hipMemcpyHostToDevice);
+        }
+        else
+            hipMemcpy(data->roi_tensor_ptr_dev, data->roi_tensor_ptr, data->src_desc_ptr->n * sizeof(RpptROI), hipMemcpyHostToDevice);
 #endif
     }
     else if (data->device_type == AGO_TARGET_AFFINITY_CPU)
@@ -377,10 +387,10 @@ static vx_status VX_CALLBACK initializeCropMirrorNormalize(vx_node node, const v
     refreshCropMirrorNormalize(node, parameters, num, data);
 #if ENABLE_HIP
     if (data->device_type == AGO_TARGET_AFFINITY_GPU)
-        rppCreateWithStreamAndBatchSize(&data->rppHandle, data->handle.hipstream, data->nbatchSize);
+        rppCreateWithStreamAndBatchSize(&data->rppHandle, data->handle.hipstream, data->src_desc_ptr->n);
 #endif
     if (data->device_type == AGO_TARGET_AFFINITY_CPU)
-        rppCreateWithBatchSize(&data->rppHandle, data->nbatchSize);
+        rppCreateWithBatchSize(&data->rppHandle, data->src_desc_ptr->n);
 
     STATUS_ERROR_CHECK(vxSetNodeAttribute(node, VX_NODE_LOCAL_DATA_PTR, &data, sizeof(data)));
     return VX_SUCCESS;
