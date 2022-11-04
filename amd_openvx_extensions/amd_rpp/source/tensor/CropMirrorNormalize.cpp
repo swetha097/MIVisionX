@@ -88,7 +88,7 @@ static vx_status VX_CALLBACK refreshCropMirrorNormalize(vx_node node, const vx_r
                 data->crop_h[index + f] = data->crop_h[n];
                 data->crop_w[index + f] = data->crop_w[n];
                 unsigned mean_index = (index + f) * 3;
-                for (int t = 3; t > 0 ; t--)
+                for(int t = 0; t < 3; t++)
                 {
                     data->mean[mean_index + t] = data->mean[n];
                     data->std_dev[mean_index + t] = data->std_dev[n];

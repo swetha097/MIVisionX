@@ -66,7 +66,7 @@ class ROCALVideoIterator(object):
         self.color_format = self.output_tensor_list[0].color_format()
         self.p = (1 if self.color_format is types.GRAY else 3)
         #NFHWC format default for now
-        self.out = torch.empty((self.bs, self.sequence_length, self.h, self.w, self.p), dtype=torch.uint8)
+        self.out = torch.empty((self.bs, self.sequence_length, self.h, self.w, self.p), dtype=torch.float32)
         self.output_tensor_list[0].copy_data(ctypes.c_void_p(self.out.data_ptr()))
         print("\n Images : ", self.out)
         #print("\n Imag 0 : ", self.out[0][0])
@@ -116,6 +116,7 @@ def main():
                               normalized=False, random_shuffle=False, image_type=types.RGB,
                               dtype=types.UINT8, initial_fill=16, pad_last_batch=True, name="Reader")
         crop_size = (512,960)
+        #crop_size = (1280, 720)
         output_images = fn.crop_mirror_normalize(images,
                                             crop=crop_size,
                                             mean=[0, 0, 0],
@@ -126,7 +127,7 @@ def main():
                                             rocal_tensor_output_type=types.FLOAT,
                                             rocal_tensor_layout=types.NFHWC,
                                             pad_output=False)
-        pipe.set_outputs(images)
+        pipe.set_outputs(output_images)
     # Build the pipeline
     pipe.build()
     # Dataloader
