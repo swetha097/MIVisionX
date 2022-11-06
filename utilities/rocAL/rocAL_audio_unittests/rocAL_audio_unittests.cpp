@@ -45,7 +45,7 @@ using namespace cv;
 #endif
 
 #define DISPLAY 1
-
+#define METADATA 1
 using namespace std::chrono;
 
 int test(int test_case, const char *path, float sample_rate, int downmix, unsigned max_frames, unsigned max_channels, int gpu);
@@ -115,13 +115,17 @@ int test(int test_case, const char *path, float sample_rate, int downmix, unsign
     RocalMetaData metadata_output;
     // MetaData reader for input file_list which has file seperated by labels
     // metadata_output = rocalCreateCOCOReader(handle, json_path, true, false);
-    const char* file_list_path = "/media/swetha/audio_support/dummy_audio_dataset/file_list.txt" ; // TODO: Add this as an arg in main() 
-    // metadata_output = rocalCreateFileListLabelReader(handle, path, file_list_path);
-    // std::exit(0);
+
+    if (METADATA) {
+        const char* file_list_path = "/media/swetha/audio_support/dummy_audio_dataset/file_list.txt" ; // TODO: Add this as an arg in main() 
+        metadata_output = rocalCreateFileListLabelReader(handle, path, file_list_path);
+    }
+
     //Decoder
     RocalTensor input1, output;
     RocalTensorList non_silent_region_op;
-    input1 = rocalAudioFileSource(handle, path, num_threads, false, false, false, max_frames, downmix);
+    input1 = rocalAudioFileSourceSingleShard(handle, path, 0, 1, false, false, false, 10, max_frames, downmix, max_channels);
+    
     std::cerr<< "\n Comes out of the rocALAudioFileSource";
     if (rocalGetStatus(handle) != ROCAL_OK)
     {
@@ -258,27 +262,30 @@ int test(int test_case, const char *path, float sample_rate, int downmix, unsign
         std::vector<float> audio_op;
         output_tensor_list = rocalGetOutputTensors(handle);
         std::cerr<<"*****************************Audio output**********************************\n";
-        // for(int idx = 0; idx < output_tensor_list->size(); idx++)
-        // {
-        //     float * buffer = (float *)output_tensor_list->at(idx)->buffer();
-        //     for(int n = 0; n < output_tensor_list->at(idx)->info().data_size() / 4; n++) // shobi check with Fiona
-        //     {
-        //         std::cerr << (float)buffer[n] << "\n";
-        //     }
-        //     // for(int n = 0; n < 5; n++)
-        //     // {
-        //     //     std::cerr << buffer[n] << "\n";
-        //     // }
+        for(int idx = 0; idx < output_tensor_list->size(); idx++)
+        {
+            float * buffer = (float *)output_tensor_list->at(idx)->buffer();
+            for(int n = 0; n < output_tensor_list->at(idx)->info().data_size() / 4; n++) // shobi check with Fiona
+            {
+                std::cerr << (float)buffer[n] << "\n";
+            }
+            // for(int n = 0; n < 5; n++)
+            // {
+            //     std::cerr << buffer[n] << "\n";
+            // }
             
-        // }
+        }
 
-        // RocalTensorList labels = rocalGetImageLabels(handle);
+        
+        if (METADATA) {
+            RocalTensorList labels = rocalGetImageLabels(handle);
 
-        // for(int i = 0; i < labels->size(); i++)
-        // {
-        //     int * labels_buffer = (int *)(labels->at(i)->buffer());
-        //     std::cerr << ">>>>> LABELS : " << labels_buffer[0] << "\t";
-        // }
+            for(int i = 0; i < labels->size(); i++)
+            {
+                int * labels_buffer = (int *)(labels->at(i)->buffer());
+                std::cerr << ">>>>> LABELS : " << labels_buffer[0] << "\t";
+            }
+        }
         std::cerr<<"******************************************************************************\n";
     }
 
