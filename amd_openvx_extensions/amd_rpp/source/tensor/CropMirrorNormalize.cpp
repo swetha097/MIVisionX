@@ -366,9 +366,9 @@ static vx_status VX_CALLBACK initializeCropMirrorNormalize(vx_node node, const v
         data->dst_desc_ptr->w = data->out_tensor_dims[4];
         data->dst_desc_ptr->c = data->out_tensor_dims[2];
         data->dst_desc_ptr->strides.nStride = data->dst_desc_ptr->c * data->dst_desc_ptr->w * data->dst_desc_ptr->h;
-        data->dst_desc_ptr->strides.hStride = data->dst_desc_ptr->c * data->dst_desc_ptr->w;
-        data->dst_desc_ptr->strides.wStride = data->dst_desc_ptr->c;
-        data->dst_desc_ptr->strides.cStride = 1;
+        data->dst_desc_ptr->strides.cStride = data->dst_desc_ptr->w * data->dst_desc_ptr->h;
+        data->dst_desc_ptr->strides.hStride = data->dst_desc_ptr->w;
+        data->dst_desc_ptr->strides.wStride = 1;
         data->dst_desc_ptr->layout = RpptLayout::NCHW; 
     }
 
