@@ -155,9 +155,11 @@ static vx_status VX_CALLBACK processSlice(vx_node node, const vx_reference *para
     if (data->deviceType == AGO_TARGET_AFFINITY_CPU)
     {
         refreshSlice(node, parameters, num, data);
+
+
         rpp_status = rppt_slice_host((float *)data->pSrc, data->src_desc_ptr, (float *)data->pDst, data->dst_desc_ptr, data->srcDims, (float*)data->anchor, (float*)data->shape,
                                     data->axes, data->fill_values, data->normalized_anchor, data->normalized_shape, RpptOutOfBoundsPolicy(data->policy)); // shobi
-        std::cerr<<"\n Exiting Slice";
+
         return_status = (rpp_status == RPP_SUCCESS) ? VX_SUCCESS : VX_FAILURE;
     }
     return return_status;

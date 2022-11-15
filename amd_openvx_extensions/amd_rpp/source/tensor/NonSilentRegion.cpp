@@ -161,7 +161,7 @@ static vx_status VX_CALLBACK processNonSilentRegion(vx_node node, const vx_refer
     if (data->deviceType == AGO_TARGET_AFFINITY_CPU)
     {
         refreshNonSilentRegion(node, parameters, num, data);
-        rpp_status = rppt_non_silent_region_detection_host((float *)data->pSrc, data->src_desc_ptr,(int *) data->sample_size, (int *)data->pDst1, (int *)data->pDst2, data->cutOffDB, data->windowLength, data->referencePower, data->resetInterval);
+        rpp_status = rppt_non_silent_region_detection_host((float *)data->pSrc, data->src_desc_ptr,(int *) data->sample_size, (float *)data->pDst1, (float *)data->pDst2, data->cutOffDB, data->windowLength, data->referencePower, data->resetInterval);
         int * buffer = (int *)data->pDst1;
             for(int n = 0; n < 3; n++) 
             {

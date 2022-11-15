@@ -971,7 +971,7 @@ rocalNonSilentRegion(RocalContext p_context,
         output2 = context->master_graph->create_tensor(info1, is_output);
         output_tensors.push_back(output1);
         output_tensors.push_back(output2);
-        context->master_graph->add_node<NonSilentRegionNode>({input}, {output_tensors.at(0), output_tensors.at(1)})->init(cut_off_db, reference_power, window_length, reset_interval);
+        context->master_graph->add_node<NonSilentRegionNode>({input}, {output1, output2})->init(cut_off_db, reference_power, window_length, reset_interval);
     }
     catch(const std::exception& e) {
         context->capture_error(e.what());

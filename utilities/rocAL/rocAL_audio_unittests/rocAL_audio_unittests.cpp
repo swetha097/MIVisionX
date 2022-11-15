@@ -191,7 +191,7 @@ int test(int test_case, const char *path, float sample_rate, int downmix, unsign
             const size_t num_values = 3;
             std::pair <RocalTensor,RocalTensor>  non_silent_region_output;
             // rocalTensorList* non_silent_region_output;
-            non_silent_region_output = rocalNonSilentRegion(handle, input1, true, -60, 0.0, -1, 3);
+            non_silent_region_output = rocalNonSilentRegion(handle, input1, false, -60, 0.0, -1, 3);
             std::cerr << "\n Out of the non-silent region ";
             // RocalTensor begin = non_silent_region_output->at(0) ;
             // std::cerr<<" HEREEE 0";
