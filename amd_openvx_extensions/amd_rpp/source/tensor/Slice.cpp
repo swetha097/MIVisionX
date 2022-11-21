@@ -66,10 +66,10 @@ static vx_status VX_CALLBACK refreshSlice(vx_node node, const vx_reference *para
 {
     vx_status status = VX_SUCCESS;
     STATUS_ERROR_CHECK(vxCopyArrayRange((vx_array)parameters[2], 0, data->nbatchSize * 4, sizeof(unsigned), data->roi_tensor_ptr, VX_READ_ONLY, VX_MEMORY_TYPE_HOST));
-    for(uint i = 0; i < data->nbatchSize * 2; i+=2)
+    for(uint i = 0; i < data->nbatchSize ; i++)
     {
         data->srcDims[i] = data->roi_tensor_ptr[i].xywhROI.xy.x;
-        data->srcDims[i+1] = data->roi_tensor_ptr[i].xywhROI.xy.y;
+        // data->srcDims[i+1] = data->roi_tensor_ptr[i].xywhROI.xy.y;
     }
     STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[3], VX_TENSOR_BUFFER_HOST, &data->anchor, sizeof(vx_float32)));
     STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[4], VX_TENSOR_BUFFER_HOST, &data->shape, sizeof(vx_float32)));
@@ -156,15 +156,22 @@ static vx_status VX_CALLBACK processSlice(vx_node node, const vx_reference *para
     {
         refreshSlice(node, parameters, num, data);
 //  float * buffer = (float *)data->anchor;
-//             for(int n = 0; n < 3; n++) 
+//             for(int n = 0; n < data->nbatchSize; n++) 
 //             {
 //                 std::cerr <<"slice begin:  "<<(float)buffer[n] << "\n";
 //             }
 //  float * buffer1 = (float *)data->shape;
-//             for(int n = 0; n < 3; n++) 
+//             for(int n = 0; n < data->nbatchSize; n++) 
 //             {
 //                 std::cerr <<"slice length:  "<<(float)buffer1[n] << "\n";
 //             }
+
+// int * dimSrc = (int*) data->srcDims;
+//  for(int n = 0; n < data->nbatchSize; n++) 
+//             {
+//                 std::cerr <<"src length:  "<<(int)dimSrc[n] << "\n";
+//             }
+
 
         rpp_status = rppt_slice_host((float *)data->pSrc, data->src_desc_ptr, (float *)data->pDst, data->dst_desc_ptr, data->srcDims, (float*)data->anchor, (float*)data->shape,
                                     data->axes, data->fill_values, data->normalized_anchor, data->normalized_shape, RpptOutOfBoundsPolicy(data->policy)); // shobi
