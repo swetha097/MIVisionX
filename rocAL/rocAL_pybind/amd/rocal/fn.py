@@ -248,8 +248,8 @@ def slice(*inputs, anchor=[], shape=[], axes=[1,0], axis_names="WH", bytes_per_s
 
     """
 
-    kwargs_pybind = {"input_audio0": inputs[0], "rocal_tensor_output_type": rocal_tensor_output_type, "is_output": False, "anchor": anchor,
-                     "shape": shape, "fill_values": fill_values, "axes":axes, "normalized_anchor": normalized_anchor , "normalized_shape":normalized_shape, "out_of_bounds_policy": out_of_bounds_policy }
+    kwargs_pybind = {"input_audio0": inputs[0], "rocal_tensor_output_type": rocal_tensor_output_type, "is_output": False, "anchor": anchor[0],
+                     "shape": shape[0], "fill_values": fill_values, "axes":axes, "normalized_anchor": normalized_anchor , "normalized_shape":normalized_shape, "out_of_bounds_policy": out_of_bounds_policy }
     slice_output = b.audioSlice(Pipeline._current_pipeline._handle ,*(kwargs_pybind.values()))
     return slice_output
     

@@ -83,8 +83,8 @@ static vx_status VX_CALLBACK refreshNonSilentRegion(vx_node node, const vx_refer
         // if (data->in_tensor_type == vx_type_e::VX_TYPE_FLOAT32 && data->out_tensor_type == vx_type_e::VX_TYPE_FLOAT32)
         // {
             STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[0], VX_TENSOR_BUFFER_HOST, &data->pSrc, sizeof(vx_float32)));
-            STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[1], VX_TENSOR_BUFFER_HOST, &data->pDst1, sizeof(vx_int32)));
-            STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[2], VX_TENSOR_BUFFER_HOST, &data->pDst2, sizeof(vx_int32)));
+            STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[1], VX_TENSOR_BUFFER_HOST, &data->pDst1, sizeof(vx_float32)));
+            STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[2], VX_TENSOR_BUFFER_HOST, &data->pDst2, sizeof(vx_float32)));
         // }
     }
     return status;
@@ -162,16 +162,16 @@ static vx_status VX_CALLBACK processNonSilentRegion(vx_node node, const vx_refer
     {
         refreshNonSilentRegion(node, parameters, num, data);
         rpp_status = rppt_non_silent_region_detection_host((float *)data->pSrc, data->src_desc_ptr,(int *) data->sample_size, (float *)data->pDst1, (float *)data->pDst2, data->cutOffDB, data->windowLength, data->referencePower, data->resetInterval);
-        int * buffer = (int *)data->pDst1;
-            for(int n = 0; n < 3; n++) 
-            {
-                std::cerr <<"Non silent region begin:  "<<(int)buffer[n] << "\n";
-            }
-        int * buffer1 = (int *)data->pDst2;
-         for(int n = 0; n < 3; n++) 
-            {
-                std::cerr <<"Non silent region length :  "<<(int)buffer1[n] << "\n";
-            }
+        // float * buffer = (float *)data->pDst1;
+        //     for(int n = 0; n < 3; n++) 
+        //     {
+        //         std::cerr <<"Non silent region begin:  "<<(float)buffer[n] << "\n";
+        //     }
+        // float * buffer1 = (float *)data->pDst2;
+        //  for(int n = 0; n < 3; n++) 
+        //     {
+        //         std::cerr <<"Non silent region length :  "<<(float)buffer1[n] << "\n";
+        //     }
         return_status = (rpp_status == RPP_SUCCESS) ? VX_SUCCESS : VX_FAILURE;
     }
     return return_status;

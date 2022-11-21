@@ -155,7 +155,16 @@ static vx_status VX_CALLBACK processSlice(vx_node node, const vx_reference *para
     if (data->deviceType == AGO_TARGET_AFFINITY_CPU)
     {
         refreshSlice(node, parameters, num, data);
-
+//  float * buffer = (float *)data->anchor;
+//             for(int n = 0; n < 3; n++) 
+//             {
+//                 std::cerr <<"slice begin:  "<<(float)buffer[n] << "\n";
+//             }
+//  float * buffer1 = (float *)data->shape;
+//             for(int n = 0; n < 3; n++) 
+//             {
+//                 std::cerr <<"slice length:  "<<(float)buffer1[n] << "\n";
+//             }
 
         rpp_status = rppt_slice_host((float *)data->pSrc, data->src_desc_ptr, (float *)data->pDst, data->dst_desc_ptr, data->srcDims, (float*)data->anchor, (float*)data->shape,
                                     data->axes, data->fill_values, data->normalized_anchor, data->normalized_shape, RpptOutOfBoundsPolicy(data->policy)); // shobi

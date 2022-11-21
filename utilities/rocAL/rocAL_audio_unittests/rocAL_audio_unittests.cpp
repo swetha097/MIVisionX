@@ -265,14 +265,14 @@ int test(int test_case, const char *path, float sample_rate, int downmix, unsign
         for(int idx = 0; idx < output_tensor_list->size(); idx++)
         {
             float * buffer = (float *)output_tensor_list->at(idx)->buffer();
-            for(int n = 0; n < output_tensor_list->at(idx)->info().data_size() / 4; n++) // shobi check with Fiona
-            {
-                std::cerr << (float)buffer[n] << "\n";
-            }
-            // for(int n = 0; n < 5; n++)
+            // for(int n = 0; n < output_tensor_list->at(idx)->info().data_size() / 4; n++) // shobi check with Fiona
             // {
-            //     std::cerr << buffer[n] << "\n";
+            //     std::cerr << (float)buffer[n] << "\n";
             // }
+            for(int n = 0; n < 5; n++)
+            {
+                std::cerr << buffer[n] << "\n";
+            }
             
         }
 
