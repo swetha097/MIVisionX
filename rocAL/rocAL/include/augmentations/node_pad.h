@@ -42,7 +42,9 @@ private:
     bool _normalized_shape = false;
     RocalOutOfBoundsPolicy _policy = RocalOutOfBoundsPolicy::PAD;
     int _axis_mask = 0;
-    vx_array  _anchors_array , _shapes_array, _fill_values_array;
+    vx_array _fill_values_array;
+    vx_tensor _anchors_tensor, _shapes_tensor;
     std::vector<float> _anchor_vec, _shape_vec, _fill_values_vec;
     unsigned _num_of_dims;
+    vx_size * _stride;
 };
