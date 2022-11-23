@@ -148,7 +148,7 @@ def box_encoder(*inputs, anchors, bytes_per_sample_hint=0, criteria=0.5, means=N
     return (box_encoder , [])
 
 
-def to_decibals(*inputs, bytes_per_sample_hint=[0], cutoff_db=-200.0, multiplier=10.0, preserve=False, reference=0.0, seed=1 , rocal_tensor_layout=types.NCHW, rocal_tensor_output_type=types.UINT8):
+def to_decibels(*inputs, bytes_per_sample_hint=[0], cutoff_db=-200.0, multiplier=10.0, preserve=False, reference=0.0, seed=1 , rocal_tensor_layout=types.NCHW, rocal_tensor_output_type=types.UINT8):
     '''
     Converts a magnitude (real, positive) to the decibel scale.
 
@@ -266,6 +266,7 @@ def nonsilent_region(*inputs, rocal_tensor_output_type=types.FLOAT, bytes_per_sa
     """
     kwargs_pybind = {"input_audio0": inputs[0], "is_output": False, "cutoff_db": cutoff_db,
                      "reference_power": reference_power, "reset_interval": reset_interval, "window_length":window_length }
+    print("kwargs_pybind", kwargs_pybind)
     non_slient_region_output = b.NonSilentRegion(Pipeline._current_pipeline._handle ,*(kwargs_pybind.values()))
     return non_slient_region_output
     
