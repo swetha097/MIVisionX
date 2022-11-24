@@ -66,7 +66,13 @@ void SliceNode::update_node()
     auto audio_roi = _inputs[0]->info().get_roi();
     for(unsigned i = 0; i < _batch_size; i++) {
         int idx = i * _num_of_dims;
+        //TODO: Swetha : To clean up the debug code
+            // std::cerr << "\n roi x1 " << audio_roi->at(i).x1;
+            // std::cerr << "\n roi y1 " << audio_roi->at(i).y1;
+            // std::cerr << "\n roi x2 " << audio_roi->at(i).x2;
+            // std::cerr << "\n roi y2 " << audio_roi->at(i).y2;
         for(unsigned d = 0; d < _num_of_dims; d++) {
+
             // _anchor_vec[idx + d] = _anchor[d];
             // if(_shape.size() && _shape[d] > 0) {
             //     _shape_vec[idx + d] = _shape[d];

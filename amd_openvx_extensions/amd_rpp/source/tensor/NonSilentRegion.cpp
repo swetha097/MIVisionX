@@ -163,12 +163,12 @@ static vx_status VX_CALLBACK processNonSilentRegion(vx_node node, const vx_refer
         refreshNonSilentRegion(node, parameters, num, data);
         rpp_status = rppt_non_silent_region_detection_host((float *)data->pSrc, data->src_desc_ptr,(int *) data->sample_size, (float *)data->pDst1, (float *)data->pDst2, data->cutOffDB, data->windowLength, data->referencePower, data->resetInterval);
         // float * buffer = (float *)data->pDst1;
-        //     for(int n = 0; n < 3; n++) 
+        //     for(int n = 0; n < data->nbatchSize; n++) 
         //     {
         //         std::cerr <<"Non silent region begin:  "<<(float)buffer[n] << "\n";
         //     }
         // float * buffer1 = (float *)data->pDst2;
-        //  for(int n = 0; n < 3; n++) 
+        //  for(int n = 0; n < data->nbatchSize; n++) 
         //     {
         //         std::cerr <<"Non silent region length :  "<<(float)buffer1[n] << "\n";
         //     }

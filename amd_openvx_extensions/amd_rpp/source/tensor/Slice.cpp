@@ -66,13 +66,16 @@ static vx_status VX_CALLBACK refreshSlice(vx_node node, const vx_reference *para
 {
     vx_status status = VX_SUCCESS;
     STATUS_ERROR_CHECK(vxCopyArrayRange((vx_array)parameters[2], 0, data->nbatchSize * 4, sizeof(unsigned), data->roi_tensor_ptr, VX_READ_ONLY, VX_MEMORY_TYPE_HOST));
-    for(uint i = 0; i < data->nbatchSize ; i++)
-    {
-        data->srcDims[i] = data->roi_tensor_ptr[i].xywhROI.xy.x;
-        // data->srcDims[i+1] = data->roi_tensor_ptr[i].xywhROI.xy.y;
+    for (uint i = 0, j = 0; i < data->nbatchSize * 2, j < data->nbatchSize; i = i + 2, j = j + 1) {
+      data->srcDims[i] = data->roi_tensor_ptr[j].xywhROI.xy.x;
+      data->srcDims[i + 1] = data->roi_tensor_ptr[j].xywhROI.xy.y;
+    //TODO: Swetha : To clean up the debug code
+    //   std::cerr << " \n slice  data->srcDims[i].width " << data->roi_tensor_ptr[j].xywhROI.xy.x;
+    //   std::cerr << "\n slice  data->srcDims[i].height " << data->roi_tensor_ptr[j].xywhROI.xy.y;
     }
     STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[3], VX_TENSOR_BUFFER_HOST, &data->anchor, sizeof(vx_float32)));
     STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[4], VX_TENSOR_BUFFER_HOST, &data->shape, sizeof(vx_float32)));
+
     // STATUS_ERROR_CHECK(vxCopyArrayRange((vx_array)parameters[3], 0, data->nbatchSize * data->numDims, sizeof(float), data->anchor, VX_READ_ONLY, VX_MEMORY_TYPE_HOST));
     // STATUS_ERROR_CHECK(vxCopyArrayRange((vx_array)parameters[4], 0, data->nbatchSize * data->numDims, sizeof(float), data->shape, VX_READ_ONLY, VX_MEMORY_TYPE_HOST));
     STATUS_ERROR_CHECK(vxCopyArrayRange((vx_array)parameters[5], 0, data->nbatchSize * data->numDims, sizeof(float), data->fill_values, VX_READ_ONLY, VX_MEMORY_TYPE_HOST));
@@ -95,6 +98,8 @@ static vx_status VX_CALLBACK refreshSlice(vx_node node, const vx_reference *para
             STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[1], VX_TENSOR_BUFFER_HOST, &data->pDst, sizeof(vx_float32)));
         }
     }
+    //TODO: Swetha : To clean up the debug code
+    std::cerr << "Exits the refessh slice ";
     return status;
 }
 
@@ -139,6 +144,7 @@ static vx_status VX_CALLBACK validateSlice(vx_node node, const vx_reference para
 
 static vx_status VX_CALLBACK processSlice(vx_node node, const vx_reference *parameters, vx_uint32 num)
 {
+    //TODO: Swetha : To clean up the debug code
     // std::cerr<<"\n processSlice";
     RppStatus rpp_status = RPP_SUCCESS;
     vx_status return_status = VX_SUCCESS;
@@ -155,6 +161,7 @@ static vx_status VX_CALLBACK processSlice(vx_node node, const vx_reference *para
     if (data->deviceType == AGO_TARGET_AFFINITY_CPU)
     {
         refreshSlice(node, parameters, num, data);
+//TODO: Swetha : To clean up the debug code
 //  float * buffer = (float *)data->anchor;
 //             for(int n = 0; n < data->nbatchSize; n++) 
 //             {
@@ -167,14 +174,13 @@ static vx_status VX_CALLBACK processSlice(vx_node node, const vx_reference *para
 //             }
 
 // int * dimSrc = (int*) data->srcDims;
-//  for(int n = 0; n < data->nbatchSize; n++) 
+//  for(int n = 0; n < data->nbatchSize*2; n++) 
 //             {
 //                 std::cerr <<"src length:  "<<(int)dimSrc[n] << "\n";
 //             }
 
 
-        rpp_status = rppt_slice_host((float *)data->pSrc, data->src_desc_ptr, (float *)data->pDst, data->dst_desc_ptr, data->srcDims, (float*)data->anchor, (float*)data->shape,
-                                    data->axes, data->fill_values, data->normalized_anchor, data->normalized_shape, RpptOutOfBoundsPolicy(data->policy)); // shobi
+        rpp_status = rppt_slice_host((float *)data->pSrc, data->src_desc_ptr, (float *)data->pDst, data->dst_desc_ptr, data->srcDims, (float*)data->anchor, (float*)data->shape, data->fill_values); // FIXME: Swetha to check with Sampath/Fiona if any changes is required for slice other than these.
 
         return_status = (rpp_status == RPP_SUCCESS) ? VX_SUCCESS : VX_FAILURE;
     }
@@ -183,6 +189,7 @@ static vx_status VX_CALLBACK processSlice(vx_node node, const vx_reference *para
 
 static vx_status VX_CALLBACK initializeSlice(vx_node node, const vx_reference *parameters, vx_uint32 num)
 {
+    //TODO: Swetha : To clean up the debug code
     std::cerr<<"\n static vx_status VX_CALLBACK initializeSlice ";
     SliceLocalData *data = new SliceLocalData;
     // unsigned roiType;
@@ -253,6 +260,7 @@ static vx_status VX_CALLBACK initializeSlice(vx_node node, const vx_reference *p
 //         hipMalloc(&data->hip_roi_tensor_ptr, data->src_desc_ptr->n * sizeof(RpptROI));
 // #endif
 //     data->roi_tensor_ptr = (RpptROI *)calloc(data->src_desc_ptr->n, sizeof(RpptROI));
+//TODO: Swetha : To clean up the debug code
 std::cerr<<"\n Gonna call refresh slice in initialize";
     refreshSlice(node, parameters, num, data);
 #if ENABLE_OPENCL

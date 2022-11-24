@@ -2,8 +2,10 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 import random
+import numpy as np
 from amd.rocal.plugin.pytorch import ROCALClassificationIterator
-
+import torch
+torch.set_printoptions(threshold=10_000)
 from amd.rocal.pipeline import Pipeline
 import amd.rocal.fn as fn
 import amd.rocal.types as types
@@ -57,31 +59,51 @@ def main():
     audio_pipeline = Pipeline(batch_size=batch_size, num_threads=num_threads, device_id=device_id, seed=random_seed, rocal_cpu=_rali_cpu)
 
     with audio_pipeline:
-        jpegs, labels = fn.readers.file(file_root=data_path, file_list=file_list)
-        speed_perturbation_coeffs = fn.uniform(rng_range=[0.85, 1.15])
+        audio, label = fn.readers.file(
+            # **files_arg,
+            file_root=data_path,
+            file_list=file_list,
+            shard_id=0,
+            num_shards=8,)
         sample_rate = 16000
-        # print(speed_perturbation_coeffs)
-        # exit(0)
-        # audio_decode = fn.decoders.audio(jpegs, file_root=data_path, sample_rate=speed_perturbation_coeffs * sample_rate )
-        audio_decode = fn.decoders.audio([], file_root=data_path, sample_rate=sample_rate )
-        begin, length = fn.nonsilent_region(audio_decode) # Dont understand where to use this as input in Slice to pass as what arguments - Confused
-        trim_silence = fn.slice(audio_decode, normalized_anchor=False, normalized_shape=False, axes=[0], anchor=[begin], shape=[length], fill_values=[0.3])
-        # if self.dither_coeff != 0.: # Where is the normal distribution call ? , cant find in the rocal_api_paramters.h
-        #     audio = audio + self.normal_distribution(audio) * self.dither_coeff
-        preemph_coeff=0.97
         nfft=512
         window_size=0.02
         window_stride=0.01
-        preemph_audio = fn.preemphasis_filter(trim_silence, preemph_coeff=preemph_coeff)
-        spectogram = fn.spectrogram(preemph_audio, nfft=nfft, window_length=int(window_size* sample_rate), window_step= int(window_stride* sample_rate), rocal_tensor_output_type=types.FLOAT)
-        nfilt=80 #nfeatures
-        mel_fbank = fn.mel_filter_bank(spectogram, sample_rate=sample_rate, nfilter=nfilt, normalize=True)
-        to_decibels = fn.to_decibals(mel_fbank, rocal_tensor_output_type=types.FLOAT)
-        normalize = fn.normalize(to_decibels, axes=[1])
-        # padded_audio = fn.pad(normalize, fill_value=0)
-        #Dont see the Pad augmentation support in rocAL
-
-        audio_pipeline.set_outputs(trim_silence)
+        nfilter=80 #nfeatures
+        resample = 1
+        audio_decode = fn.decoders.audio(audio, file_root=data_path, downmix=True, sample_rate=sample_rate*resample, shard_id=0, num_shards=8)
+        begin, length = fn.nonsilent_region(audio_decode, cutoff_db=-60)
+        trim_silence = fn.slice(
+            audio_decode,
+            anchor=[begin],
+            shape=[length],
+            normalized_anchor=False,
+            normalized_shape=False,
+            axes=[0]
+        )
+        premph_audio = fn.preemphasis_filter(trim_silence)
+        spectrogram_audio = fn.spectrogram(
+            premph_audio,
+            nfft=nfft,
+            window_length=512, # Change to 320
+            window_step= 256, # Change to 160
+            rocal_tensor_output_type=types.FLOAT,
+        )
+        mel_filter_bank_audio = fn.mel_filter_bank(
+            spectrogram_audio,
+            sample_rate=sample_rate,
+            nfilter=nfilter,
+        )
+        to_decibels_audio = fn.to_decibels(
+            mel_filter_bank_audio,
+            multiplier=np.log(10),
+            reference=1.0,
+            cutoff_db=np.log(1e-20),
+            rocal_tensor_output_type=types.FLOAT,
+        )
+        normalize_audio = fn.normalize(to_decibels_audio, axes=[1])
+        pad_audio = fn.pad(normalize_audio, fill_value=0)
+        audio_pipeline.set_outputs(pad_audio)
 
     audio_pipeline.build()
     audioIteratorPipeline = ROCALClassificationIterator(audio_pipeline)
