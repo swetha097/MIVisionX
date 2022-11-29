@@ -151,7 +151,6 @@ rocalBrightness(
         output_info.set_data_type(op_tensorDataType);
         
         output = context->master_graph->create_tensor(output_info, is_output);
-        output->reset_tensor_roi();
         context->master_graph->add_node<BrightnessNode>({input}, {output})->init(alpha, beta);
     }
     catch(const std::exception& e)
@@ -497,6 +496,8 @@ ROCAL_API_CALL rocalCropMirrorNormalize(RocalContext p_context, RocalTensor p_in
     {
         if(!input || !context || crop_width == 0 || crop_height == 0)
             THROW("Null values passed as input")
+        RocalTensorlayout op_tensorLayout;
+        RocalTensorDataType op_tensorDataType;
         int layout=0;
         get_rocal_tensor_layout(rocal_tensor_layout, op_tensorLayout, layout);
         get_rocal_tensor_data_type(rocal_tensor_output_type, op_tensorDataType);
@@ -508,11 +509,9 @@ ROCAL_API_CALL rocalCropMirrorNormalize(RocalContext p_context, RocalTensor p_in
         {
             out_dims[1] = crop_height;
             out_dims[2] = crop_width;
-            out_dims[3] = 3;
         }
         else if(op_tensorLayout == RocalTensorlayout::NCHW)
         {
-            out_dims[1] = 3;
             out_dims[2] = crop_height;
             out_dims[3] = crop_width;
         }
@@ -520,17 +519,14 @@ ROCAL_API_CALL rocalCropMirrorNormalize(RocalContext p_context, RocalTensor p_in
         {
             out_dims[2] = crop_height;
             out_dims[3] = crop_width;
-            out_dims[4] = 3;
         }
         else if(op_tensorLayout == RocalTensorlayout::NFCHW)
         {
-            out_dims[2] = 3;
             out_dims[3] = crop_height;
             out_dims[4] = crop_width;
         }
         output_info.set_dims(out_dims);
         output = context->master_graph->create_tensor(output_info, is_output);
-        output->reset_tensor_roi();
         std::shared_ptr<CropMirrorNormalizeNode> cmn_node = context->master_graph->add_node<CropMirrorNormalizeNode>({input}, {output});
         cmn_node->init(crop_height, crop_width, start_x, start_y, mean, std_dev , mirror,layout );
         if (context->master_graph->meta_data_graph())
@@ -541,7 +537,7 @@ ROCAL_API_CALL rocalCropMirrorNormalize(RocalContext p_context, RocalTensor p_in
         context->capture_error(e.what());
         ERR(e.what());
     }
-    return output; // Changed to input----------------IMPORTANT
+    return output;
 }
 
 

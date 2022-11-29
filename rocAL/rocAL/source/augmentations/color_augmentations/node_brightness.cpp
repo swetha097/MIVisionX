@@ -50,7 +50,7 @@ void BrightnessNode::create_node()
         THROW("Adding the brightness_batch (vxExtrppNode_Brightness) node failed: "+ TOSTR(status))
 }
 
-void BrightnessNode::init( float alpha, float beta)
+void BrightnessNode::init(float alpha, float beta)
 {
     _alpha.set_param(alpha);
     _beta.set_param(beta);

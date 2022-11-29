@@ -1854,7 +1854,7 @@ VX_API_CALL vx_node VX_API_CALL  vxExtrppNode_SequenceRearrangebatchPD(vx_graph 
     return node;
 }
 
-VX_API_ENTRY vx_node VX_API_CALL vxExtrppNode_Brightness(vx_graph graph, vx_tensor pSrc, vx_array srcROI, vx_tensor pDst, vx_array alpha, vx_array beta, vx_scalar input_layout, vx_scalar output_layout, vx_scalar roiType, vx_uint32 nbatchSize)
+VX_API_ENTRY vx_node VX_API_CALL vxExtrppNode_Brightness(vx_graph graph, vx_tensor pSrc, vx_array srcROI, vx_tensor pDst, vx_array alpha, vx_array beta, vx_scalar inputLayout, vx_scalar outputLayout, vx_scalar roiType, vx_uint32 nbatchSize)
 {
     vx_node node = NULL;
     vx_context context = vxGetContext((vx_reference)graph);
@@ -1869,8 +1869,8 @@ VX_API_ENTRY vx_node VX_API_CALL vxExtrppNode_Brightness(vx_graph graph, vx_tens
             (vx_reference)pDst,
             (vx_reference)alpha,
             (vx_reference)beta,
-            (vx_reference)input_layout,
-            (vx_reference)output_layout,
+            (vx_reference)inputLayout,
+            (vx_reference)outputLayout,
             (vx_reference)roiType,
             (vx_reference)NBATCHSIZE,
             (vx_reference)DEV_TYPE};
@@ -1933,7 +1933,7 @@ VX_API_ENTRY vx_node VX_API_CALL vxExtrppNode_GammaCorrection(vx_graph graph, vx
 //     return node;
 // }
 
-VX_API_ENTRY vx_node VX_API_CALL vxExtrppNode_CropMirrorNormalize(vx_graph graph, vx_tensor pSrc, vx_array srcROI, vx_tensor pDst, vx_array dstROI,vx_array crop_w,vx_array crop_h, vx_array x1, vx_array y1, vx_array mean, vx_array std_dev, vx_array flip, vx_scalar layout, vx_scalar roiType, vx_uint32 nbatchSize)
+VX_API_ENTRY vx_node VX_API_CALL vxExtrppNode_CropMirrorNormalize(vx_graph graph, vx_tensor pSrc, vx_array srcROI, vx_tensor pDst, vx_array dstROI,vx_array crop_w,vx_array crop_h, vx_array x1, vx_array y1, vx_array mean, vx_array std_dev, vx_array flip, vx_scalar inputLayout, vx_scalar outputLayout, vx_scalar roiType, vx_uint32 nbatchSize)
 {
     vx_node node = NULL;
     vx_context context = vxGetContext((vx_reference)graph);
@@ -1954,11 +1954,12 @@ VX_API_ENTRY vx_node VX_API_CALL vxExtrppNode_CropMirrorNormalize(vx_graph graph
             (vx_reference)mean,
             (vx_reference)std_dev,
             (vx_reference)flip,
-            (vx_reference)layout,
+            (vx_reference)inputLayout,
+            (vx_reference)outputLayout,
             (vx_reference)roiType,
             (vx_reference)NBATCHSIZE,
             (vx_reference)DEV_TYPE};
-        node = createNode(graph, VX_KERNEL_RPP_CROPMIRRORNORMALIZE, params, 15);
+        node = createNode(graph, VX_KERNEL_RPP_CROPMIRRORNORMALIZE, params, 16);
     }
     return node;
 }

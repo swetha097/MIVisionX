@@ -44,7 +44,7 @@ private:
     vx_array _mean_array, _std_dev_array,_mirror_array;
     std::vector<float> _mean;
     std::vector<float> _std_dev;
-    unsigned _layout, _roi_type;
+    unsigned _input_layout, _output_layout, _roi_type;
     ParameterVX<int> _mirror;
 
     constexpr static int   MIRROR_RANGE [2] =  {0, 1};
