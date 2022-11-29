@@ -74,9 +74,27 @@ public:
     // Setting properties required for Image / Video
     void set_roi_type(RocalROIType roi_type) { _roi_type = roi_type; }
     void set_data_type(RocalTensorDataType data_type) {
+        if(_data_type == data_type)
+            return;
         _data_type = data_type;
         _data_size = (_data_size / _data_type_size);
         _data_size *= data_type_size();
+    }
+    void get_modified_dims_from_layout(RocalTensorlayout old_layout, RocalTensorlayout new_layout, std::vector<size_t> &new_dims) {
+        std::vector<size_t> dims_mapping;
+        if (old_layout == RocalTensorlayout::NHWC && new_layout == RocalTensorlayout::NCHW) {
+            dims_mapping = {0, 3, 1, 2};
+        } else if (old_layout == RocalTensorlayout::NCHW && new_layout == RocalTensorlayout::NHWC) {
+            dims_mapping = {0, 2, 3, 1};
+        } else if (old_layout == RocalTensorlayout::NFHWC && new_layout == RocalTensorlayout::NFCHW) {
+            dims_mapping = {0, 1, 4, 2, 3};
+        } else if (old_layout == RocalTensorlayout::NFCHW && new_layout == RocalTensorlayout::NFHWC) {
+            dims_mapping = {0, 1, 3, 4, 2};
+        } else {
+            THROW("Invalid layout conversion")
+        }   
+        for(int i = 0; i < _num_of_dims, i++)
+            new_dims[i] = _dims.at(dims_mapping[i]);
     }
     void set_max_shape() {
         if (_layout != RocalTensorlayout::NONE) {
@@ -101,8 +119,15 @@ public:
         }
     }
     void set_tensor_layout(RocalTensorlayout layout) {
-        _layout = layout;
-        set_max_shape();
+        if(_layout != layout && _layout != RocalTensorlayout::NONE) {
+            RocalTensorlayout old_layout = _layout;
+            _layout = layout;
+            std::vector<size_t> new_dims(_num_of_dims, 0);
+            get_modified_dims_from_layout(old_layout, _layout, new_dims);
+            set_dims(new_dims);
+        } else {
+            set_max_shape();
+        }
     }
     void set_dims(std::vector<size_t>& new_dims) {
         _data_size = _data_type_size;
