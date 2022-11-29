@@ -36,8 +36,10 @@ rocalSequenceRearrange(
 /// \param alpha
 /// \param beta
 /// \return
-extern "C" RocalTensor ROCAL_API_CALL rocalBrightness(RocalContext context, RocalTensor input, bool is_output,
-                                                   RocalFloatParam alpha = NULL, RocalFloatParam beta = NULL);
+extern "C" RocalTensor ROCAL_API_CALL rocalBrightness(RocalContext context, RocalTensor input, 
+                                                      RocalTensorLayout rocal_tensor_layout,
+                                                      RocalTensorOutputType rocal_tensor_output_type, bool is_output,
+                                                      RocalFloatParam alpha = NULL, RocalFloatParam beta = NULL);
 
 extern "C" RocalTensor ROCAL_API_CALL rocalCopyTensor(RocalContext context, RocalTensor input, bool is_output);
 

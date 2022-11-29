@@ -1854,7 +1854,7 @@ VX_API_CALL vx_node VX_API_CALL  vxExtrppNode_SequenceRearrangebatchPD(vx_graph 
     return node;
 }
 
-VX_API_ENTRY vx_node VX_API_CALL vxExtrppNode_Brightness(vx_graph graph, vx_tensor pSrc, vx_array srcROI, vx_tensor pDst, vx_array alpha, vx_array beta, vx_scalar layout, vx_scalar roiType, vx_uint32 nbatchSize)
+VX_API_ENTRY vx_node VX_API_CALL vxExtrppNode_Brightness(vx_graph graph, vx_tensor pSrc, vx_array srcROI, vx_tensor pDst, vx_array alpha, vx_array beta, vx_scalar input_layout, vx_scalar output_layout, vx_scalar roiType, vx_uint32 nbatchSize)
 {
     vx_node node = NULL;
     vx_context context = vxGetContext((vx_reference)graph);
@@ -1869,11 +1869,12 @@ VX_API_ENTRY vx_node VX_API_CALL vxExtrppNode_Brightness(vx_graph graph, vx_tens
             (vx_reference)pDst,
             (vx_reference)alpha,
             (vx_reference)beta,
-            (vx_reference)layout,
+            (vx_reference)input_layout,
+            (vx_reference)output_layout,
             (vx_reference)roiType,
             (vx_reference)NBATCHSIZE,
             (vx_reference)DEV_TYPE};
-        node = createNode(graph, VX_KERNEL_RPP_BRIGHTNESS, params, 9);
+        node = createNode(graph, VX_KERNEL_RPP_BRIGHTNESS, params, 10);
     }
     return node;
 }
@@ -2208,3 +2209,64 @@ vx_status releaseGraphHandle(vx_node node, RPPCommonHandle *handle)
     return VX_SUCCESS;
 }
 #endif
+
+void fillDescriptionPtrfromDims(RpptDescPtr &desc_ptr, Rpp32u layout, size_t *tensor_dims)
+{
+    switch(layout)
+    {
+        case 0: // For NHWC
+        {
+            desc_ptr->n = tensor_dims[0];
+            desc_ptr->h = tensor_dims[1];
+            desc_ptr->w = tensor_dims[2];
+            desc_ptr->c = tensor_dims[3];
+            desc_ptr->strides.nStride = desc_ptr->c * desc_ptr->w * desc_ptr->h;
+            desc_ptr->strides.hStride = desc_ptr->c * desc_ptr->w;
+            desc_ptr->strides.wStride = desc_ptr->c;
+            desc_ptr->strides.cStride = 1;
+            desc_ptr->layout = RpptLayout::NHWC;   
+        }
+        break;
+        case 1: // For NCHW
+        {
+            desc_ptr->n = tensor_dims[0];
+            desc_ptr->h = tensor_dims[2];
+            desc_ptr->w = tensor_dims[3];
+            desc_ptr->c = tensor_dims[1];
+            desc_ptr->strides.nStride = desc_ptr->c * desc_ptr->w * desc_ptr->h;
+            desc_ptr->strides.cStride = desc_ptr->w * desc_ptr->h;
+            desc_ptr->strides.hStride = desc_ptr->w;
+            desc_ptr->strides.wStride = 1;
+            desc_ptr->layout = RpptLayout::NCHW;
+        }
+        break;
+        case 2: // For NFHWC
+        {
+            desc_ptr->n = tensor_dims[0] * tensor_dims[1];
+            desc_ptr->h = tensor_dims[2];
+            desc_ptr->w = tensor_dims[3];
+            desc_ptr->c = tensor_dims[4];
+            desc_ptr->strides.nStride = desc_ptr->c * desc_ptr->w * desc_ptr->h;
+            desc_ptr->strides.hStride = desc_ptr->c * desc_ptr->w;
+            desc_ptr->strides.wStride = desc_ptr->c;
+            desc_ptr->strides.cStride = 1;
+            desc_ptr->layout = RpptLayout::NHWC;
+        }
+        break;
+        case 3: // For NFCHW
+        {
+            // source_description_ptr
+            desc_ptr->n = tensor_dims[0] * tensor_dims[1];
+            desc_ptr->h = tensor_dims[3];
+            desc_ptr->w = tensor_dims[4];
+            desc_ptr->c = tensor_dims[2];
+            desc_ptr->strides.nStride = desc_ptr->c * desc_ptr->w * desc_ptr->h;
+            desc_ptr->strides.cStride = desc_ptr->w * desc_ptr->h;
+            desc_ptr->strides.hStride = desc_ptr->w;
+            desc_ptr->strides.wStride = 1;
+            desc_ptr->layout = RpptLayout::NCHW;
+        }
+        break;
+    }
+    
+}

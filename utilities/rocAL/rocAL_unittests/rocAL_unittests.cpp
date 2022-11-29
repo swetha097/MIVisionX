@@ -328,7 +328,7 @@ int test(int test_case, int reader_type, int pipeline_type, const char *path, co
     {
         std::cout << ">>>>>>> Running "
                   << "Brightness" << std::endl;
-        image1 = rocalBrightness(handle, input1, true);
+        image1 = rocalBrightness(handle, input1, tensorLayout, tensorOutputType, true);
     }
     break;
     case 3:

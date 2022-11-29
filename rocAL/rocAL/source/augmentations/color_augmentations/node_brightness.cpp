@@ -39,37 +39,33 @@ void BrightnessNode::create_node()
     _alpha.create_array(_graph , VX_TYPE_FLOAT32, _batch_size);
     _beta.create_array(_graph , VX_TYPE_FLOAT32, _batch_size);
 
-    if(_inputs[0]->info().layout() == RocalTensorlayout::NCHW)
-        _layout = 1;
-    else if(_inputs[0]->info().layout() == RocalTensorlayout::NFHWC)
-        _layout = 2;
-    else if(_inputs[0]->info().layout() == RocalTensorlayout::NFCHW)
-        _layout = 3;
+    vx_scalar in_layout = vxCreateScalar(vxGetContext((vx_reference)_graph->get()), VX_TYPE_UINT32, &_input_layout);
+    vx_scalar out_layout = vxCreateScalar(vxGetContext((vx_reference)_graph->get()), VX_TYPE_UINT32, &_output_layout);
+    vx_scalar roi_type = vxCreateScalar(vxGetContext((vx_reference)_graph->get()), VX_TYPE_UINT32, &_roi_type);
 
-    if(_inputs[0]->info().roi_type() == RocalROIType::XYWH)
-        _roi_type = 1;
-    vx_scalar layout = vxCreateScalar(vxGetContext((vx_reference)_graph->get()),VX_TYPE_UINT32,&_layout);
-    vx_scalar roi_type = vxCreateScalar(vxGetContext((vx_reference)_graph->get()),VX_TYPE_UINT32,&_roi_type);
-
-    _node = vxExtrppNode_Brightness(_graph->get(), _inputs[0]->handle(), _src_tensor_roi, _outputs[0]->handle(), _alpha.default_array(), _beta.default_array(), layout, roi_type, _batch_size);
+    _node = vxExtrppNode_Brightness(_graph->get(), _inputs[0]->handle(), _src_tensor_roi, _outputs[0]->handle(), _alpha.default_array(), _beta.default_array(), in_layout, out_layout, roi_type, _batch_size);
 
     vx_status status;
     if((status = vxGetStatus((vx_reference)_node)) != VX_SUCCESS)
-        THROW("Adding the brightness_batch (vxExtrppNode_BrightnessbatchPD) node failed: "+ TOSTR(status))
+        THROW("Adding the brightness_batch (vxExtrppNode_Brightness) node failed: "+ TOSTR(status))
 }
 
 void BrightnessNode::init( float alpha, float beta)
 {
     _alpha.set_param(alpha);
     _beta.set_param(beta);
-    _layout = _roi_type = 0;
+    _input_layout = (int)_inputs[0]->info().layout();
+    _output_layout = (int)_outputs[0]->info().layout();
+    _roi_type = (int)_inputs[0]->info().roi_type();
 }
 
 void BrightnessNode::init( FloatParam* alpha, FloatParam* beta)
 {
     _alpha.set_param(core(alpha));
     _beta.set_param(core(beta));
-    _layout = _roi_type = 0;
+    _input_layout = (int)_inputs[0]->info().layout();
+    _output_layout = (int)_outputs[0]->info().layout();
+    _roi_type = (int)_inputs[0]->info().roi_type();
 }
 
 

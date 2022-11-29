@@ -42,7 +42,7 @@ private:
 
     ParameterVX<float> _alpha;
     ParameterVX<float> _beta;
-    unsigned _layout, _roi_type;
+    unsigned _input_layout, _output_layout, _roi_type;
     constexpr static float ALPHA_RANGE [2] = {0.1, 1.95};
     constexpr static float   BETA_RANGE [2] = {0, 25};
 };
