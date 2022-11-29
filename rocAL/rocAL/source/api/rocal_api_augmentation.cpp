@@ -609,8 +609,8 @@ rocalResize(RocalContext p_context,
         } else {
             // compute the output info width and height wrt the scaling modes and roi passed
             if(resize_scaling_mode == ROCAL_SCALING_MODE_STRETCH) {
-                max_out_width = out_width ? out_width : input->info().max_dims()[0];
-                max_out_height = out_height ? out_height : input->info().max_dims()[1];
+                max_out_width = out_width ? out_width : input->info().max_shape()[0];
+                max_out_height = out_height ? out_height : input->info().max_shape()[1];
             } else if(resize_scaling_mode == ROCAL_SCALING_MODE_NOT_SMALLER) {
                 max_out_width = (out_width ? out_width : out_height) * MAX_ASPECT_RATIO;
                 max_out_height = (out_height ? out_height : out_width) * MAX_ASPECT_RATIO;

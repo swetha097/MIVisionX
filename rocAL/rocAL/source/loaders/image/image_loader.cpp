@@ -163,8 +163,8 @@ void ImageLoader::initialize(ReaderConfig reader_cfg, DecoderConfig decoder_cfg,
         de_init();
         throw;
     }
-    _max_decoded_width = _output_tensor->info().max_dims().at(0);
-    _max_decoded_height = _output_tensor->info().max_dims().at(1);
+    _max_decoded_width = _output_tensor->info().max_shape().at(0);
+    _max_decoded_height = _output_tensor->info().max_shape().at(1);
     _decoded_img_info._image_names.resize(_batch_size);
     _decoded_img_info._roi_height.resize(_batch_size);
     _decoded_img_info._roi_width.resize(_batch_size);
