@@ -93,7 +93,7 @@ public:
         } else {
             THROW("Invalid layout conversion")
         }   
-        for(int i = 0; i < _num_of_dims, i++)
+        for(int i = 0; i < _num_of_dims; i++)
             new_dims[i] = _dims.at(dims_mapping[i]);
     }
     void set_max_shape() {
@@ -126,6 +126,7 @@ public:
             get_modified_dims_from_layout(old_layout, _layout, new_dims);
             set_dims(new_dims);
         } else {
+            _layout = layout;
             set_max_shape();
         }
     }

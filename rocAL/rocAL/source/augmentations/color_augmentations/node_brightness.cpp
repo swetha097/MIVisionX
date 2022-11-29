@@ -38,10 +38,13 @@ void BrightnessNode::create_node()
 
     _alpha.create_array(_graph , VX_TYPE_FLOAT32, _batch_size);
     _beta.create_array(_graph , VX_TYPE_FLOAT32, _batch_size);
-
-    vx_scalar in_layout = vxCreateScalar(vxGetContext((vx_reference)_graph->get()), VX_TYPE_UINT32, &_input_layout);
-    vx_scalar out_layout = vxCreateScalar(vxGetContext((vx_reference)_graph->get()), VX_TYPE_UINT32, &_output_layout);
-    vx_scalar roi_type = vxCreateScalar(vxGetContext((vx_reference)_graph->get()), VX_TYPE_UINT32, &_roi_type);
+    
+    unsigned input_layout = (int)_inputs[0]->info().layout();
+    unsigned output_layout = (int)_outputs[0]->info().layout();
+    unsigned roi_type = (int)_inputs[0]->info().roi_type();
+    vx_scalar in_layout = vxCreateScalar(vxGetContext((vx_reference)_graph->get()), VX_TYPE_UINT32, &input_layout);
+    vx_scalar out_layout = vxCreateScalar(vxGetContext((vx_reference)_graph->get()), VX_TYPE_UINT32, &output_layout);
+    vx_scalar roi_type = vxCreateScalar(vxGetContext((vx_reference)_graph->get()), VX_TYPE_UINT32, &roi_type);
 
     _node = vxExtrppNode_Brightness(_graph->get(), _inputs[0]->handle(), _src_tensor_roi, _outputs[0]->handle(), _alpha.default_array(), _beta.default_array(), in_layout, out_layout, roi_type, _batch_size);
 
@@ -54,18 +57,12 @@ void BrightnessNode::init(float alpha, float beta)
 {
     _alpha.set_param(alpha);
     _beta.set_param(beta);
-    _input_layout = (int)_inputs[0]->info().layout();
-    _output_layout = (int)_outputs[0]->info().layout();
-    _roi_type = (int)_inputs[0]->info().roi_type();
 }
 
 void BrightnessNode::init( FloatParam* alpha, FloatParam* beta)
 {
     _alpha.set_param(core(alpha));
     _beta.set_param(core(beta));
-    _input_layout = (int)_inputs[0]->info().layout();
-    _output_layout = (int)_outputs[0]->info().layout();
-    _roi_type = (int)_inputs[0]->info().roi_type();
 }
 
 
