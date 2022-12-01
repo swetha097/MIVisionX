@@ -55,10 +55,10 @@ struct BrightnessLocalData
 static vx_status VX_CALLBACK refreshBrightness(vx_node node, const vx_reference *parameters, vx_uint32 num, BrightnessLocalData *data)
 {
     vx_status status = VX_SUCCESS;
-
     STATUS_ERROR_CHECK(vxCopyArrayRange((vx_array)parameters[1], 0, data->nbatchSize * 4, sizeof(unsigned), data->roi_tensor_ptr, VX_READ_ONLY, VX_MEMORY_TYPE_HOST));
     STATUS_ERROR_CHECK(vxCopyArrayRange((vx_array)parameters[3], 0, data->nbatchSize, sizeof(vx_float32), data->alpha, VX_READ_ONLY, VX_MEMORY_TYPE_HOST));
     STATUS_ERROR_CHECK(vxCopyArrayRange((vx_array)parameters[4], 0, data->nbatchSize, sizeof(vx_float32), data->beta, VX_READ_ONLY, VX_MEMORY_TYPE_HOST));
+    
     if((data->input_layout == 2 || data->input_layout == 3) && (data->nbatchSize != data->src_desc_ptr->n)) // TO BE DONE ONLY FOR VIDEO READERS OUTPUTS
     {
         unsigned num_of_frames = data->in_tensor_dims[1]; // Num of frames 'F'
@@ -96,6 +96,13 @@ static vx_status VX_CALLBACK refreshBrightness(vx_node node, const vx_reference 
             STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[0], VX_TENSOR_BUFFER_HOST, &data->pSrc, sizeof(vx_float32)));
             STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[2], VX_TENSOR_BUFFER_HOST, &data->pDst, sizeof(vx_float32)));
         }
+#if defined(AMD_FP16_SUPPORT)
+        else if (data->in_tensor_type == vx_type_e::VX_TYPE_FLOAT16 && data->out_tensor_type == vx_type_e::VX_TYPE_FLOAT16)
+        {
+            STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[0], VX_TENSOR_BUFFER_HOST, &data->pSrc, sizeof(vx_float16)));
+            STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[2], VX_TENSOR_BUFFER_HOST, &data->pDst, sizeof(vx_float16)));
+        }
+#endif
     }
     return status;
 }
@@ -209,6 +216,10 @@ static vx_status VX_CALLBACK initializeBrightness(vx_node node, const vx_referen
     {
         data->src_desc_ptr->dataType = RpptDataType::F32;
     }
+    else if (data->in_tensor_type == vx_type_e::VX_TYPE_FLOAT16)
+    {
+        data->src_desc_ptr->dataType = RpptDataType::F16;
+    }
     data->src_desc_ptr->offsetInBytes = 0;
 
     // Querying for output tensor
@@ -223,6 +234,10 @@ static vx_status VX_CALLBACK initializeBrightness(vx_node node, const vx_referen
     else if (data->out_tensor_type == vx_type_e::VX_TYPE_FLOAT32)
     {
         data->dst_desc_ptr->dataType = RpptDataType::F32;
+    }
+    else if (data->out_tensor_type == vx_type_e::VX_TYPE_FLOAT16)
+    {
+        data->dst_desc_ptr->dataType = RpptDataType::F16;
     }
     data->dst_desc_ptr->offsetInBytes = 0;
 

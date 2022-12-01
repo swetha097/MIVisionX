@@ -24,6 +24,7 @@ THE SOFTWARE.
 #include "node_brightness.h"
 #include "exception.h"
 
+
 BrightnessNode::BrightnessNode(const std::vector<rocalTensor *> &inputs,const std::vector<rocalTensor *> &outputs) :
         Node(inputs, outputs),
         _alpha(ALPHA_RANGE[0], ALPHA_RANGE[1]),
@@ -38,7 +39,7 @@ void BrightnessNode::create_node()
 
     _alpha.create_array(_graph , VX_TYPE_FLOAT32, _batch_size);
     _beta.create_array(_graph , VX_TYPE_FLOAT32, _batch_size);
-    
+
     unsigned input_layout = (int)_inputs[0]->info().layout();
     unsigned output_layout = (int)_outputs[0]->info().layout();
     unsigned roi_type = (int)_inputs[0]->info().roi_type();
@@ -53,7 +54,7 @@ void BrightnessNode::create_node()
         THROW("Adding the brightness_batch (vxExtrppNode_Brightness) node failed: "+ TOSTR(status))
 }
 
-void BrightnessNode::init(float alpha, float beta)
+void BrightnessNode::init( float alpha, float beta)
 {
     _alpha.set_param(alpha);
     _beta.set_param(beta);

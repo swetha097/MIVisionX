@@ -60,8 +60,8 @@ void CropMirrorNormalizeNode::create_node()
     _mean_array = vxCreateArray(vxGetContext((vx_reference)_graph->get()), VX_TYPE_FLOAT32, _batch_size * 3);
     _std_dev_array = vxCreateArray(vxGetContext((vx_reference)_graph->get()), VX_TYPE_FLOAT32, _batch_size * 3);
     vx_status status = VX_SUCCESS;
-    status |= vxAddArrayItems(_mean_array, _batch_size * 3, _mean_vx.data(), sizeof(vx_float32));
-    status |= vxAddArrayItems(_std_dev_array, _batch_size * 3, _std_dev_vx.data(), sizeof(vx_float32));
+    status |= vxAddArrayItems(_mean_array, _batch_size * 3, mean_vx.data(), sizeof(vx_float32));
+    status |= vxAddArrayItems(_std_dev_array, _batch_size * 3, std_dev_vx.data(), sizeof(vx_float32));
     _mirror.create_array(_graph ,VX_TYPE_UINT32, _batch_size);
     if(status != 0)
         THROW(" vxAddArrayItems failed in the crop_mirror_normalize node (vxExtrppNode_CropMirrorNormalize)  node: "+ TOSTR(status) + "  "+ TOSTR(status))
@@ -91,7 +91,7 @@ void CropMirrorNormalizeNode::update_node()
     _mirror.update_array();
 }
 
-void CropMirrorNormalizeNode::init(int crop_h, int crop_w, float start_x, float start_y, std::vector<float>& mean, std::vector<float>& std_dev, IntParam *mirror, int layout)
+void CropMirrorNormalizeNode::init(int crop_h, int crop_w, float start_x, float start_y, std::vector<float>& mean, std::vector<float>& std_dev, IntParam *mirror)
 {
     _crop_param->x1 = 0;
     _crop_param->y1 = 0;
