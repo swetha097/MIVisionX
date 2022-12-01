@@ -67,13 +67,13 @@ void CropMirrorNormalizeNode::create_node()
     unsigned input_layout = (int)_inputs[0]->info().layout();
     unsigned output_layout = (int)_outputs[0]->info().layout();
     unsigned roi_type = (int)_inputs[0]->info().roi_type();
-    vx_scalar in_layout = vxCreateScalar(vxGetContext((vx_reference)_graph->get()), VX_TYPE_UINT32, &input_layout);
-    vx_scalar out_layout = vxCreateScalar(vxGetContext((vx_reference)_graph->get()), VX_TYPE_UINT32, &output_layout);
-    vx_scalar roi_type = vxCreateScalar(vxGetContext((vx_reference)_graph->get()), VX_TYPE_UINT32, &roi_type);
+    vx_scalar in_layout_vx = vxCreateScalar(vxGetContext((vx_reference)_graph->get()), VX_TYPE_UINT32, &input_layout);
+    vx_scalar out_layout_vx = vxCreateScalar(vxGetContext((vx_reference)_graph->get()), VX_TYPE_UINT32, &output_layout);
+    vx_scalar roi_type_vx = vxCreateScalar(vxGetContext((vx_reference)_graph->get()), VX_TYPE_UINT32, &roi_type);
 
     _node = vxExtrppNode_CropMirrorNormalize(_graph->get(), _inputs[0]->handle(),
                                              _src_tensor_roi, _outputs[0]->handle(),_src_tensor_roi,_crop_param->cropw_arr, _crop_param->croph_arr, _crop_param->x1_arr, _crop_param->y1_arr,
-                                             _mean_array, _std_dev_array, _mirror.default_array(), in_layout, out_layout, roi_type, _batch_size);
+                                             _mean_array, _std_dev_array, _mirror.default_array(), in_layout_vx, out_layout_vx, roi_type_vx, _batch_size);
     if((status = vxGetStatus((vx_reference)_node)) != VX_SUCCESS)
         THROW("Error adding the crop mirror normalize tensor (vxExtrppNode_CropMirrorNormalize) failed: " + TOSTR(status))
 
