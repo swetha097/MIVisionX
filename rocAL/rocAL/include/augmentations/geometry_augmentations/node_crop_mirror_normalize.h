@@ -30,7 +30,8 @@ THE SOFTWARE.
 class CropMirrorNormalizeNode : public Node
 {
 public:
-    CropMirrorNormalizeNode(const std::vector<rocalTensor *> &inputs, const std::vector<rocalTensor *> &outputs);
+    CropMirrorNormalizeNode(const std::vector<rocalTensor *> &inputs,
+                            const std::vector<rocalTensor *> &outputs);
     CropMirrorNormalizeNode() = delete;
     void init(int crop_h, int crop_w, float start_x, float start_y, std::vector<float>& mean,  std::vector<float>& std_dev, IntParam *mirror,int layout);
     vx_array return_mirror(){ return _mirror.default_array();  }
@@ -41,11 +42,7 @@ protected:
 private:
     std::shared_ptr<RocalCropParam> _crop_param;
     std::vector<vx_float32> _mean_vx, _std_dev_vx;
-    vx_array _mean_array, _std_dev_array,_mirror_array;
-    std::vector<float> _mean;
-    std::vector<float> _std_dev;
-    unsigned _input_layout, _output_layout, _roi_type;
+    vx_array _mean_array, _std_dev_array;
     ParameterVX<int> _mirror;
-
     constexpr static int   MIRROR_RANGE [2] =  {0, 1};
 };
