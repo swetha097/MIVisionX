@@ -138,7 +138,7 @@ rocalBrightness(
 {
     rocalTensor* output = nullptr;
     if ((p_context == nullptr) || (p_input == nullptr)) {
-        ERR("Invalid ROCAL context or invalid input image")
+        ERR("Invalid ROCAL context or invalid input tensor")
         return output;
     }
 
@@ -487,6 +487,7 @@ rocalCropCenterFixed(
 
 
 RocalTensor
+RocalTensor
 ROCAL_API_CALL rocalCropMirrorNormalize(RocalContext p_context, RocalTensor p_input, RocalTensorLayout rocal_tensor_layout,
                                     RocalTensorOutputType rocal_tensor_output_type, unsigned crop_depth, unsigned crop_height,
                                     unsigned crop_width, float start_x, float start_y, float start_z, std::vector<float> &mean,
@@ -494,7 +495,7 @@ ROCAL_API_CALL rocalCropMirrorNormalize(RocalContext p_context, RocalTensor p_in
 {
     rocalTensor* output = nullptr;
     if ((p_context == nullptr) || (p_input == nullptr)) {
-        ERR("Invalid ROCAL context or invalid input image")
+        ERR("Invalid ROCAL context or invalid input tensor")
         return output;
     }
     auto context = static_cast<Context*>(p_context);
