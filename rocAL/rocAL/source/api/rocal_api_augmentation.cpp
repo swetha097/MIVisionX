@@ -487,6 +487,7 @@ rocalCropCenterFixed(
 
 
 RocalTensor
+RocalTensor
 ROCAL_API_CALL rocalCropMirrorNormalize(RocalContext p_context, RocalTensor p_input, RocalTensorLayout rocal_tensor_layout,
                                     RocalTensorOutputType rocal_tensor_output_type, unsigned crop_depth, unsigned crop_height,
                                     unsigned crop_width, float start_x, float start_y, float start_z, std::vector<float> &mean,
