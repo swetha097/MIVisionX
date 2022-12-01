@@ -138,7 +138,7 @@ rocalBrightness(
 {
     rocalTensor* output = nullptr;
     if ((p_context == nullptr) || (p_input == nullptr)) {
-        ERR("Invalid ROCAL context or invalid input image")
+        ERR("Invalid ROCAL context or invalid input tensor")
         return output;
     }
 
@@ -494,7 +494,7 @@ ROCAL_API_CALL rocalCropMirrorNormalize(RocalContext p_context, RocalTensor p_in
 {
     rocalTensor* output = nullptr;
     if ((p_context == nullptr) || (p_input == nullptr)) {
-        ERR("Invalid ROCAL context or invalid input image")
+        ERR("Invalid ROCAL context or invalid input tensor")
         return output;
     }
     auto context = static_cast<Context*>(p_context);
