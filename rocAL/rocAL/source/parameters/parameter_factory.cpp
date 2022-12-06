@@ -72,8 +72,7 @@ bool validate_uniform_rand_param(pParam  rand_obj)
 
 ParameterFactory::ParameterFactory()
 {
-    std::random_device rd;
-    _seed = rd();
+    generate_seed();
 }
 
 ParameterFactory* ParameterFactory::instance() {
@@ -88,6 +87,13 @@ ParameterFactory* ParameterFactory::instance() {
     }
     return _instance;
 }
+
+void
+ParameterFactory::generate_seed()
+{
+    std::random_device rd;
+    _seed = rd();
+} 
 
 ParameterFactory::~ParameterFactory() {
     for(auto&& rand_obj : _parameters)

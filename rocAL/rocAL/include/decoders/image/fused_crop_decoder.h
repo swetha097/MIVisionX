@@ -23,7 +23,6 @@ THE SOFTWARE.
 #pragma once
 #include "decoder.h"
 #include <turbojpeg.h>
-#include "parameter_factory.h"
 class FusedCropTJDecoder : public Decoder {
 public:
     //! Default constructor
@@ -52,14 +51,15 @@ public:
                            size_t max_decoded_width, size_t max_decoded_height,
                            size_t original_image_width, size_t original_image_height,
                            size_t &actual_decoded_width, size_t &actual_decoded_height,
-                           Decoder::ColorFormat desired_decoded_color_format, DecoderConfig config, bool keep_original_size=false, uint sample_idx = 0) override;
+                           Decoder::ColorFormat desired_decoded_color_format, DecoderConfig config, bool keep_original_size=false) override;
 
 
     ~FusedCropTJDecoder() override;
     void initialize(int device_id) override {};
-    bool is_partial_decoder() override { return _is_partial_decoder; };
-    void set_bbox_coords(std::vector <float> bbox_coord) override { _bbox_coord = bbox_coord;};
-    std::vector <float> get_bbox_coords() override { return _bbox_coord;}
+    bool is_partial_decoder() override { return _is_partial_decoder; }
+    void set_bbox_coords(std::vector <float> bbox_coord) override { _bbox_coord = bbox_coord; }
+    std::vector <float> get_bbox_coords() override { return _bbox_coord; }
+    void set_crop_window(CropWindow &crop_window) override { _crop_window = crop_window; }
 
 private:
     tjhandle m_jpegDecompressor;
@@ -84,15 +84,5 @@ private:
     };
     bool _is_partial_decoder = true;
     std::vector <float> _bbox_coord;
-    std::mt19937 _rand_gen;
-    int64_t seed;
-    int64_t getseed() { return ParameterFactory::instance()->get_seed(); }
-    void generate_rngs(int64_t _seed, int64_t N) {
-      std::seed_seq seq{_seed};
-      std::vector<int64_t> seeds(N);
-      seq.generate(seeds.begin(), seeds.end());
-      for (int64_t i = 0; i < N; i++) {
-        _rand_gen.seed(seeds[i]);
-      }
-    }
+    CropWindow _crop_window;
 };
