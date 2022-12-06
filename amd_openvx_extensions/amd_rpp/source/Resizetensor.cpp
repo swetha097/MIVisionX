@@ -47,8 +47,6 @@ struct ResizetensorLocalData
 #if ENABLE_HIP
     void *pSrc_dev;
     void *pDst_dev;
-    RpptImagePatch *dstImgSize_dev;
-    RpptROI *roiTensorPtrSrc_dev;
 #endif
 };
 
@@ -73,8 +71,6 @@ static vx_status VX_CALLBACK refreshResizetensor(vx_node node, const vx_referenc
     {
         STATUS_ERROR_CHECK(vxQueryImage((vx_image)parameters[0], VX_IMAGE_ATTRIBUTE_AMD_HIP_BUFFER, &data->pSrc_dev, sizeof(data->pSrc_dev)));
         STATUS_ERROR_CHECK(vxQueryImage((vx_image)parameters[3], VX_IMAGE_ATTRIBUTE_AMD_HIP_BUFFER, &data->pDst_dev, sizeof(data->pDst_dev)));
-        hipMemcpy(data->dstImgSize_dev, data->dstImgSize, data->nbatchSize * sizeof(RpptImagePatch), hipMemcpyHostToDevice);
-        hipMemcpy(data->roiTensorPtrSrc_dev, data->roiTensorPtrSrc, data->nbatchSize * sizeof(RpptROI), hipMemcpyHostToDevice);
     }
 #endif
     if (data->device_type == AGO_TARGET_AFFINITY_CPU)
@@ -139,7 +135,7 @@ static vx_status VX_CALLBACK processResizetensor(vx_node node, const vx_referenc
     if (data->device_type == AGO_TARGET_AFFINITY_GPU)
     {
         refreshResizetensor(node, parameters, num, data);
-        rpp_status = rppt_resize_gpu(data->pSrc_dev, data->srcDescPtr, data->pDst_dev, data->dstDescPtr, data->dstImgSize_dev, data->interpolation_type, data->roiTensorPtrSrc_dev, data->roiType, data->rppHandle);
+        rpp_status = rppt_resize_gpu(data->pSrc_dev, data->srcDescPtr, data->pDst_dev, data->dstDescPtr, data->dstImgSize, data->interpolation_type, data->roiTensorPtrSrc, data->roiType, data->rppHandle);
         return_status = (rpp_status == RPP_SUCCESS) ? VX_SUCCESS : VX_FAILURE;
     }
 #endif
@@ -241,10 +237,6 @@ static vx_status VX_CALLBACK initializeResizetensor(vx_node node, const vx_refer
 
     // Set ROI tensors types for src/dst
     data->roiType = RpptRoiType::XYWH;
-#if ENABLE_HIP
-    hipMalloc(&data->dstImgSize_dev, data->nbatchSize * sizeof(RpptImagePatch));
-    hipMalloc(&data->roiTensorPtrSrc_dev, data->nbatchSize * sizeof(RpptROI));
-#endif
     refreshResizetensor(node, parameters, num, data);
 #if ENABLE_HIP
     if (data->device_type == AGO_TARGET_AFFINITY_GPU)
@@ -262,8 +254,6 @@ static vx_status VX_CALLBACK uninitializeResizetensor(vx_node node, const vx_ref
     ResizetensorLocalData *data;
     STATUS_ERROR_CHECK(vxQueryNode(node, VX_NODE_LOCAL_DATA_PTR, &data, sizeof(data)));
 #if ENABLE_HIP
-    hipFree(data->dstImgSize_dev);
-    hipFree(data->roiTensorPtrSrc_dev);
     if (data->device_type == AGO_TARGET_AFFINITY_GPU)
         rppDestroyGPU(data->rppHandle);
 #endif
