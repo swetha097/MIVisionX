@@ -36,7 +36,7 @@ public:
     vx_array return_mirror(){ return _mirror.default_array();  }
     std::shared_ptr<RocalCropParam> return_crop_param() { return _crop_param; }
 protected:
-    void create_node() override ;
+    void create_node() override;
     void update_node() override;
 private:
     std::shared_ptr<RocalCropParam> _crop_param;
