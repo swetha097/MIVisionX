@@ -151,27 +151,19 @@ rocalJpegFileSourceSingleShard(
                                                        source_path, "");
         auto [color_format, num_of_planes] = convert_color_format(rocal_color_format);
 
+
+
         INFO("Internal buffer size width = "+ TOSTR(width)+ " height = "+ TOSTR(height) + " depth = "+ TOSTR(num_of_planes))
 
-        RocalTensorlayout tensor_format = RocalTensorlayout::NHWC;
-        RocalTensorDataType tensor_data_type = RocalTensorDataType::UINT8;
-        RocalROIType roi_type = RocalROIType::XYWH;
-        unsigned num_of_dims = 4;
-        std::vector<size_t> dims;
-        dims.resize(num_of_dims);
-        dims.at(0) = context->user_batch_size();
-        dims.at(1) = height;
-        dims.at(2) = width;
-        dims.at(3) = num_of_planes;
-        auto info  = rocalTensorInfo(std::vector<size_t>(std::move(dims)),
-                                context->master_graph->mem_type(),
-                                tensor_data_type);
-        info.set_roi_type(roi_type);
+        std::vector<size_t> dims = {context->user_batch_size(), height, width, num_of_planes};
+        auto info  = rocalTensorInfo(std::move(dims),
+                                     context->master_graph->mem_type(),
+                                     RocalTensorDataType::UINT8);
         info.set_color_format(color_format);
-        info.set_tensor_layout(tensor_format);
+        info.set_tensor_layout(RocalTensorlayout::NHWC);
         info.set_max_shape();
-
         output = context->master_graph->create_loader_output_tensor(info);
+
         context->master_graph->add_node<ImageLoaderSingleShardNode>({}, {output})->init(shard_id, shard_count,
                                                                                         source_path, "",
                                                                                         StorageType::FILE_SYSTEM,
@@ -246,14 +238,14 @@ rocalJpegFileSource(
         INFO("Internal buffer size width = "+ TOSTR(width)+ " height = "+ TOSTR(height) + " depth = "+ TOSTR(num_of_planes))
 
         std::vector<size_t> dims = {context->user_batch_size(), height, width, num_of_planes};
-        auto info  = rocalTensorInfo(std::vector<size_t>(std::move(dims)),
-                                context->master_graph->mem_type(),
-                                RocalTensorDataType::UINT8);
+        auto info  = rocalTensorInfo(std::move(dims),
+                                     context->master_graph->mem_type(),
+                                     RocalTensorDataType::UINT8);
         info.set_color_format(color_format);
         info.set_tensor_layout(RocalTensorlayout::NHWC);
         info.set_max_shape();
-
         output = context->master_graph->create_loader_output_tensor(info);
+
         context->master_graph->add_node<ImageLoaderNode>({}, {output})->init(internal_shard_count,
                                                                           source_path, "",
                                                                           std::map<std::string, std::string>(),
@@ -270,7 +262,7 @@ rocalJpegFileSource(
         if(is_output)
         {
             auto actual_output = context->master_graph->create_tensor(info, is_output);
-            context->master_graph->add_node<CopyNode>({output}, {actual_output}); // Have to add copy tensor node
+            context->master_graph->add_node<CopyNode>({output}, {actual_output});
         }
 
     }
