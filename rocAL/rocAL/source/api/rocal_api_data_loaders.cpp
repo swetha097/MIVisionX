@@ -345,6 +345,8 @@ rocalSequenceReader(
         info.set_roi_type(roi_type);
         info.set_color_format(color_format);
         info.set_tensor_layout(tensor_format);
+        info.set_max_shape();
+        
         output = context->master_graph->create_loader_output_tensor(info);
 
         context->master_graph->add_node<ImageLoaderNode>({}, {output})->init(internal_shard_count,
@@ -443,6 +445,7 @@ rocalSequenceReaderSingleShard(
         info.set_roi_type(roi_type);
         info.set_color_format(color_format);
         info.set_tensor_layout(tensor_format);
+        info.set_max_shape();
         output = context->master_graph->create_loader_output_tensor(info);
 
         context->master_graph->add_node<ImageLoaderSingleShardNode>({}, {output})->init(shard_id, shard_count,
@@ -531,6 +534,7 @@ rocalJpegCaffe2LMDBRecordSource(
         info.set_roi_type(roi_type);
         info.set_color_format(color_format);
         info.set_tensor_layout(tensor_format);
+        info.set_max_shape();
         output = context->master_graph->create_loader_output_tensor(info);
 
         context->master_graph->add_node<ImageLoaderNode>({}, {output})->init(internal_shard_count,
@@ -621,6 +625,7 @@ rocalJpegCaffe2LMDBRecordSourceSingleShard(
         info.set_roi_type(roi_type);
         info.set_color_format(color_format);
         info.set_tensor_layout(tensor_format);
+        info.set_max_shape();
         output = context->master_graph->create_loader_output_tensor(info);
 
 
@@ -707,6 +712,7 @@ rocalJpegCaffeLMDBRecordSource(
         info.set_roi_type(roi_type);
         info.set_color_format(color_format);
         info.set_tensor_layout(tensor_format);
+        info.set_max_shape();
         output = context->master_graph->create_loader_output_tensor(info);
 
 
@@ -799,6 +805,7 @@ rocalJpegCaffeLMDBRecordSourceSingleShard(
         info.set_roi_type(roi_type);
         info.set_color_format(color_format);
         info.set_tensor_layout(tensor_format);
+        info.set_max_shape();
         output = context->master_graph->create_loader_output_tensor(info);
 
         context->master_graph->add_node<ImageLoaderSingleShardNode>({}, {output})->init(shard_id, shard_count,
@@ -889,6 +896,7 @@ rocalMXNetRecordSource(
         info.set_roi_type(roi_type);
         info.set_color_format(color_format);
         info.set_tensor_layout(tensor_format);
+        info.set_max_shape();
         output = context->master_graph->create_loader_output_tensor(info);
 
         context->master_graph->add_node<ImageLoaderNode>({}, {output})->init(internal_shard_count,
@@ -984,6 +992,7 @@ rocalMXNetRecordSourceSingleShard(
         info.set_roi_type(roi_type);
         info.set_color_format(color_format);
         info.set_tensor_layout(tensor_format);
+        info.set_max_shape();
         output = context->master_graph->create_loader_output_tensor(info);
 
         context->master_graph->add_node<ImageLoaderSingleShardNode>({}, {output})->init(shard_id, shard_count,
@@ -1072,6 +1081,7 @@ rocalJpegCOCOFileSource(
         info.set_roi_type(roi_type);
         info.set_color_format(color_format);
         info.set_tensor_layout(tensor_format);
+        info.set_max_shape();
         output = context->master_graph->create_loader_output_tensor(info);
 
         context->master_graph->add_node<ImageLoaderNode>({}, {output})->init(internal_shard_count,
@@ -1166,6 +1176,7 @@ rocalJpegCOCOFileSourceSingleShard(
         info.set_roi_type(roi_type);
         info.set_color_format(color_format);
         info.set_tensor_layout(tensor_format);
+        info.set_max_shape();
         output = context->master_graph->create_loader_output_tensor(info);
 
         context->master_graph->add_node<ImageLoaderSingleShardNode>({}, {output})->init(shard_id, shard_count,
@@ -1256,6 +1267,7 @@ rocalFusedJpegCrop(
         info.set_roi_type(roi_type);
         info.set_color_format(color_format);
         info.set_tensor_layout(tensor_format);
+        info.set_max_shape();
         output = context->master_graph->create_loader_output_tensor(info);
         context->master_graph->add_node<FusedJpegCropNode>({}, {output})->init(internal_shard_count,
                                                                           source_path, "",
@@ -1348,6 +1360,7 @@ rocalJpegCOCOFileSourcePartial(
         info.set_roi_type(roi_type);
         info.set_color_format(color_format);
         info.set_tensor_layout(tensor_format);
+        info.set_max_shape();
         output = context->master_graph->create_loader_output_tensor(info);
 
         context->master_graph->add_node<FusedJpegCropNode>({}, {output})->init(internal_shard_count,
@@ -1444,6 +1457,7 @@ rocalJpegCOCOFileSourcePartialSingleShard(
         info.set_roi_type(roi_type);
         info.set_color_format(color_format);
         info.set_tensor_layout(tensor_format);
+        info.set_max_shape();
         output = context->master_graph->create_loader_output_tensor(info);
 
         context->master_graph->add_node<FusedJpegCropSingleShardNode>({}, {output})->init(shard_id, shard_count,
@@ -1539,6 +1553,7 @@ rocalJpegTFRecordSource(
         info.set_roi_type(roi_type);
         info.set_color_format(color_format);
         info.set_tensor_layout(tensor_format);
+        info.set_max_shape();
         output = context->master_graph->create_loader_output_tensor(info);
 
         context->master_graph->add_node<ImageLoaderNode>({}, {output})->init(internal_shard_count,
@@ -1625,6 +1640,7 @@ rocalJpegTFRecordSourceSingleShard(
         info.set_roi_type(roi_type);
         info.set_color_format(color_format);
         info.set_tensor_layout(tensor_format);
+        info.set_max_shape();
         output = context->master_graph->create_loader_output_tensor(info);
         context->master_graph->add_node<ImageLoaderSingleShardNode>({}, {output})->init(shard_id, shard_count,
                                                                                         source_path, "",
@@ -1717,6 +1733,7 @@ rocalFusedJpegCropSingleShard(
         info.set_roi_type(roi_type);
         info.set_color_format(color_format);
         info.set_tensor_layout(tensor_format);
+        info.set_max_shape();
         output = context->master_graph->create_loader_output_tensor(info);
         context->master_graph->add_node<FusedJpegCropSingleShardNode>({}, {output})->init(shard_id, shard_count,
                                                                           source_path, "",
@@ -1791,6 +1808,7 @@ rocalRawCIFAR10Source(
         info.set_roi_type(roi_type);
         info.set_color_format(color_format);
         info.set_tensor_layout(tensor_format);
+        info.set_max_shape();
         output = context->master_graph->create_loader_output_tensor(info);
 
         context->master_graph->add_node<Cifar10LoaderNode>({}, {output})->init(source_path, "",
@@ -1879,6 +1897,7 @@ rocalVideoFileSourceSingleShard(
         info.set_roi_type(roi_type);
         info.set_color_format(color_format);
         info.set_tensor_layout(tensor_format);
+        info.set_max_shape();
         output = context->master_graph->create_loader_output_tensor(info);
         context->master_graph->add_node<VideoLoaderSingleShardNode>({}, {output})->init(shard_id, shard_count,
                                                                                         source_path,
@@ -1969,6 +1988,7 @@ rocalVideoFileSource(
         info.set_roi_type(roi_type);
         info.set_color_format(color_format);
         info.set_tensor_layout(tensor_format);
+        info.set_max_shape();
         output = context->master_graph->create_loader_output_tensor(info);
         context->master_graph->add_node<VideoLoaderNode>({}, {output})->init(internal_shard_count,
                                                                             source_path,
