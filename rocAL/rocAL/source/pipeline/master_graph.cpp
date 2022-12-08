@@ -841,7 +841,6 @@ std::vector<rocalTensorList *> MasterGraph::create_mxnet_label_reader(const char
                                 _mem_type,
                                 RocalTensorDataType::INT32);
     default_labels_info.set_metadata();
-    default_labels_info.set_tensor_layout(RocalTensorlayout::NONE);
     _meta_data_buffer_size.emplace_back(_user_batch_size * sizeof(vx_int32));
 
     for(unsigned i = 0; i < _user_batch_size; i++)
@@ -878,7 +877,6 @@ std::vector<rocalTensorList *> MasterGraph::create_cifar10_label_reader(const ch
                                 _mem_type,
                                 RocalTensorDataType::INT32);
     default_labels_info.set_metadata();
-    default_labels_info.set_tensor_layout(RocalTensorlayout::NONE);
     _meta_data_buffer_size.emplace_back(_user_batch_size * sizeof(vx_int32));
 
     for(unsigned i = 0; i < _user_batch_size; i++)
@@ -918,7 +916,6 @@ std::vector<rocalTensorList *> MasterGraph::create_video_label_reader(const char
                                  _mem_type,
                                  RocalTensorDataType::INT32);
     default_labels_info.set_metadata();
-    default_labels_info.set_tensor_layout(RocalTensorlayout::NONE);
     _meta_data_buffer_size.emplace_back(_user_batch_size * sizeof(vx_int32));
 
     for(unsigned i = 0; i < _user_batch_size; i++)
@@ -958,7 +955,6 @@ std::vector<rocalTensorList *> MasterGraph::create_coco_meta_data_reader(const c
                                         _mem_type,
                                         RocalTensorDataType::INT32);
     default_labels_info.set_metadata();
-    default_labels_info.set_tensor_layout(RocalTensorlayout::NONE);
     _meta_data_buffer_size.emplace_back(dims.at(0) * _user_batch_size * sizeof(vx_int32)); // TODO - replace with data size from info
 
     num_of_dims = 2;
@@ -969,7 +965,6 @@ std::vector<rocalTensorList *> MasterGraph::create_coco_meta_data_reader(const c
                                         _mem_type,
                                         RocalTensorDataType::FP32);
     default_bbox_info.set_metadata();
-    default_bbox_info.set_tensor_layout(RocalTensorlayout::NONE);
     _meta_data_buffer_size.emplace_back(dims.at(0) * dims.at(1)  * _user_batch_size * sizeof(vx_float32)); // TODO - replace with data size from info
 
     rocalTensorInfo default_mask_info;
@@ -983,7 +978,6 @@ std::vector<rocalTensorList *> MasterGraph::create_coco_meta_data_reader(const c
                                             _mem_type,
                                             RocalTensorDataType::FP32);
         default_mask_info.set_metadata();
-        default_mask_info.set_tensor_layout(RocalTensorlayout::NONE);
         _meta_data_buffer_size.emplace_back(dims.at(0) * dims.at(1)  * _user_batch_size * sizeof(vx_float32)); // TODO - replace with data size from info  
     }
 
@@ -1034,7 +1028,6 @@ std::vector<rocalTensorList *> MasterGraph::create_caffe2_lmdb_record_meta_data_
                                     _mem_type,
                                     RocalTensorDataType::INT32);
         default_labels_info.set_metadata();
-        default_labels_info.set_tensor_layout(RocalTensorlayout::NONE);
         _meta_data_buffer_size.emplace_back(_user_batch_size * sizeof(vx_int32));
 
         for(unsigned i = 0; i < _user_batch_size; i++)
@@ -1055,7 +1048,6 @@ std::vector<rocalTensorList *> MasterGraph::create_caffe2_lmdb_record_meta_data_
                                             _mem_type,
                                             RocalTensorDataType::INT32);
         default_labels_info.set_metadata();
-        default_labels_info.set_tensor_layout(RocalTensorlayout::NONE);
 
         num_of_dims = 2;
         dims.resize(num_of_dims);
@@ -1065,7 +1057,6 @@ std::vector<rocalTensorList *> MasterGraph::create_caffe2_lmdb_record_meta_data_
                                             _mem_type,
                                             RocalTensorDataType::FP32);
         default_bbox_info.set_metadata();
-        default_bbox_info.set_tensor_layout(RocalTensorlayout::NONE);
         _meta_data_buffer_size.emplace_back(MAX_OBJECTS * _user_batch_size * sizeof(vx_int32));
         _meta_data_buffer_size.emplace_back(MAX_OBJECTS * BBOX_COUNT  * _user_batch_size * sizeof(vx_float32));
 
@@ -1107,7 +1098,6 @@ std::vector<rocalTensorList *> MasterGraph::create_tf_record_meta_data_reader(co
                                     _mem_type,
                                     RocalTensorDataType::INT32);
         default_labels_info.set_metadata();
-        default_labels_info.set_tensor_layout(RocalTensorlayout::NONE);
         _meta_data_buffer_size.emplace_back(_user_batch_size * sizeof(vx_int32));
 
         for(unsigned i = 0; i < _user_batch_size; i++)
@@ -1128,7 +1118,6 @@ std::vector<rocalTensorList *> MasterGraph::create_tf_record_meta_data_reader(co
                                             _mem_type,
                                             RocalTensorDataType::INT32);
         default_labels_info.set_metadata();
-        default_labels_info.set_tensor_layout(RocalTensorlayout::NONE);
 
         num_of_dims = 2;
         dims.resize(num_of_dims);
@@ -1138,7 +1127,6 @@ std::vector<rocalTensorList *> MasterGraph::create_tf_record_meta_data_reader(co
                                             _mem_type,
                                             RocalTensorDataType::FP32);
         default_bbox_info.set_metadata();
-        default_bbox_info.set_tensor_layout(RocalTensorlayout::NONE);
         _meta_data_buffer_size.emplace_back(MAX_OBJECTS * _user_batch_size * sizeof(vx_int32));
         _meta_data_buffer_size.emplace_back(MAX_OBJECTS * BBOX_COUNT  * _user_batch_size * sizeof(vx_float32));
 
@@ -1179,7 +1167,6 @@ std::vector<rocalTensorList *> MasterGraph::create_label_reader(const char *sour
                                  _mem_type,
                                  RocalTensorDataType::INT32);
     default_labels_info.set_metadata();
-    default_labels_info.set_tensor_layout(RocalTensorlayout::NONE);
     _meta_data_buffer_size.emplace_back(_user_batch_size * sizeof(vx_int32));
 
     for(unsigned i = 0; i < _user_batch_size; i++)
@@ -1251,7 +1238,6 @@ std::vector<rocalTensorList *> MasterGraph::create_caffe_lmdb_record_meta_data_r
                                     _mem_type,
                                     RocalTensorDataType::INT32);
         default_labels_info.set_metadata();
-        default_labels_info.set_tensor_layout(RocalTensorlayout::NONE);
         _meta_data_buffer_size.emplace_back(_user_batch_size * sizeof(vx_int32));
 
         for(unsigned i = 0; i < _user_batch_size; i++)
@@ -1272,7 +1258,6 @@ std::vector<rocalTensorList *> MasterGraph::create_caffe_lmdb_record_meta_data_r
                                             _mem_type,
                                             RocalTensorDataType::INT32);
         default_labels_info.set_metadata();
-        default_labels_info.set_tensor_layout(RocalTensorlayout::NONE);
 
         num_of_dims = 2;
         dims.resize(num_of_dims);
@@ -1282,7 +1267,6 @@ std::vector<rocalTensorList *> MasterGraph::create_caffe_lmdb_record_meta_data_r
                                             _mem_type,
                                             RocalTensorDataType::FP32);
         default_bbox_info.set_metadata();
-        default_bbox_info.set_tensor_layout(RocalTensorlayout::NONE);
         _meta_data_buffer_size.emplace_back(MAX_OBJECTS * _user_batch_size * sizeof(vx_int32));
         _meta_data_buffer_size.emplace_back(MAX_OBJECTS * BBOX_COUNT  * _user_batch_size * sizeof(vx_float32));
 
