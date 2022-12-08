@@ -93,7 +93,7 @@ rocalSequenceRearrange(
             unsigned int* new_order,
             unsigned int  new_sequence_length,
             unsigned int sequence_length,
-            bool is_output )
+            bool is_output)
 {
     rocalTensor* output = nullptr;
 
@@ -218,15 +218,13 @@ rocalCopyTensor(
 RocalTensor ROCAL_API_CALL
 rocalCrop(RocalContext p_context,
           RocalTensor p_input,
-          RocalTensorLayout rocal_tensor_layout,
-          RocalTensorOutputType rocal_tensor_output_type,
           bool is_output,
           RocalFloatParam p_crop_width,
           RocalFloatParam p_crop_height,
-          RocalFloatParam p_crop_depth,
           RocalFloatParam p_crop_pox_x,
           RocalFloatParam p_crop_pos_y,
-          RocalFloatParam p_crop_pos_z)
+          RocalTensorLayout rocal_tensor_layout,
+          RocalTensorOutputType rocal_tensor_output_type)
 {
     rocalTensor* output = nullptr;
     auto context = static_cast<Context*>(p_context);
@@ -279,16 +277,15 @@ rocalCrop(RocalContext p_context,
 RocalTensor
 ROCAL_API_CALL rocalResizeMirrorNormalize(RocalContext p_context, 
                                           RocalTensor p_input,
-                                          RocalTensorLayout rocal_tensor_layout,
-                                          RocalTensorOutputType rocal_tensor_output_type,
-                                          unsigned resize_depth,
                                           unsigned resize_height,
                                           unsigned resize_width,
                                           int interpolation_type,
                                           std::vector<float> &mean,
                                           std::vector<float> &std_dev,
                                           bool is_output,
-                                          RocalIntParam p_mirror)
+                                          RocalIntParam p_mirror,
+                                          RocalTensorLayout rocal_tensor_layout,
+                                          RocalTensorOutputType rocal_tensor_output_type)
 {
     rocalTensor* output = nullptr;
     auto context = static_cast<Context*>(p_context);
@@ -350,15 +347,13 @@ RocalTensor  ROCAL_API_CALL
 rocalCropFixed(
         RocalContext p_context,
         RocalTensor p_input,
-        RocalTensorLayout rocal_tensor_layout,
-        RocalTensorOutputType rocal_tensor_output_type,
         unsigned crop_width,
         unsigned crop_height,
-        unsigned crop_depth,
         bool is_output,
         float crop_pos_x,
         float crop_pos_y,
-        float crop_pos_z)
+        RocalTensorLayout rocal_tensor_layout,
+        RocalTensorOutputType rocal_tensor_output_type)
 {
     rocalTensor* output = nullptr;
     auto context = static_cast<Context*>(p_context);
@@ -367,7 +362,7 @@ rocalCropFixed(
     RocalTensorDataType op_tensorDataType;
     try
     {
-        if(crop_width == 0 || crop_height == 0 || crop_depth == 0)
+        if(crop_width == 0 || crop_height == 0)
             THROW("Crop node needs tp receive non-zero destination dimensions")
         // For the crop node, user can create an image with a different width and height
         int layout=0;
@@ -417,12 +412,11 @@ RocalTensor  ROCAL_API_CALL
 rocalCropCenterFixed(
         RocalContext p_context,
         RocalTensor p_input,
-        RocalTensorLayout rocal_tensor_layout,
-        RocalTensorOutputType rocal_tensor_output_type,
         unsigned crop_width,
         unsigned crop_height,
-        unsigned crop_depth,
-        bool is_output)
+        bool is_output,
+        RocalTensorLayout rocal_tensor_layout,
+        RocalTensorOutputType rocal_tensor_output_type)
 {
     rocalTensor* output = nullptr;
     if ((p_context == nullptr) || (p_input == nullptr)) {
@@ -435,7 +429,7 @@ rocalCropCenterFixed(
     RocalTensorDataType op_tensorDataType;
     try
     {
-        if(crop_width == 0 || crop_height == 0 || crop_depth == 0)
+        if(crop_width == 0 || crop_height == 0)
             THROW("Crop node needs tp receive non-zero destination dimensions")
         // For the crop node, user can create an image with a different width and height
         int layout=0;
@@ -535,7 +529,7 @@ ROCAL_API_CALL rocalCropMirrorNormalize(RocalContext p_context, RocalTensor p_in
         }
         output_info.set_dims(out_dims);
         output = context->master_graph->create_tensor(output_info, is_output);
-        std::shared_ptr<CropMirrorNormalizeNode> cmn_node =  context->master_graph->add_node<CropMirrorNormalizeNode>({input}, {output});
+        std::shared_ptr<CropMirrorNormalizeNode> cmn_node = context->master_graph->add_node<CropMirrorNormalizeNode>({input}, {output});
         cmn_node->init(crop_height, crop_width, start_x, start_y, mean, std_dev , mirror);
         if (context->master_graph->meta_data_graph())
             context->master_graph->meta_add_node<CropMirrorNormalizeMetaNode,CropMirrorNormalizeNode>(cmn_node);
@@ -552,8 +546,6 @@ ROCAL_API_CALL rocalCropMirrorNormalize(RocalContext p_context, RocalTensor p_in
 RocalTensor ROCAL_API_CALL
 rocalResize(RocalContext p_context,
             RocalTensor p_input,
-            RocalTensorLayout rocal_tensor_layout,
-            RocalTensorOutputType rocal_tensor_output_type,
             unsigned dest_width,
             unsigned dest_height,
             bool is_output,
@@ -561,7 +553,9 @@ rocalResize(RocalContext p_context,
             std::vector<unsigned> max_size,
             unsigned resize_shorter,
             unsigned resize_longer,
-            RocalResizeInterpolationType interpolation_type)
+            RocalResizeInterpolationType interpolation_type,
+            RocalTensorLayout rocal_tensor_layout,
+            RocalTensorOutputType rocal_tensor_output_type)
 {
     rocalTensor* output = nullptr;
     auto context = static_cast<Context*>(p_context);
@@ -675,13 +669,13 @@ rocalResize(RocalContext p_context,
 RocalTensor ROCAL_API_CALL
 rocalColorTwist(RocalContext p_context,
                 RocalTensor p_input,
-                RocalTensorLayout rocal_tensor_layout,
-                RocalTensorOutputType rocal_tensor_output_type,
                 bool is_output,
                 RocalFloatParam p_alpha,
                 RocalFloatParam p_beta,
                 RocalFloatParam p_hue,
-                RocalFloatParam p_sat)
+                RocalFloatParam p_sat,
+                RocalTensorLayout rocal_tensor_layout,
+                RocalTensorOutputType rocal_tensor_output_type)
 {
     if(!p_context || !p_input)
         THROW("Null values passed as input")
