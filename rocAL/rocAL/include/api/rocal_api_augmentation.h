@@ -36,10 +36,11 @@ rocalSequenceRearrange(
 /// \param alpha
 /// \param beta
 /// \return
-extern "C" RocalTensor ROCAL_API_CALL rocalBrightness(RocalContext context, RocalTensor input, 
-                                                      RocalTensorLayout rocal_tensor_layout,
-                                                      RocalTensorOutputType rocal_tensor_output_type, bool is_output,
-                                                      RocalFloatParam alpha = NULL, RocalFloatParam beta = NULL);
+extern "C" RocalTensor ROCAL_API_CALL rocalBrightness(RocalContext context, RocalTensor input,
+                                                      bool is_output,
+                                                      RocalFloatParam alpha = NULL, RocalFloatParam beta = NULL,
+                                                      RocalTensorLayout rocal_tensor_layout = ROCAL_NHWC,
+                                                      RocalTensorOutputType rocal_tensor_output_type = ROCAL_UINT8);
 
 extern "C" RocalTensor ROCAL_API_CALL rocalCopyTensor(RocalContext context, RocalTensor input, bool is_output);
 
@@ -57,8 +58,6 @@ extern "C" RocalTensor ROCAL_API_CALL rocalResizeMirrorNormalize(RocalContext p_
                                              RocalIntParam mirror = NULL);
 
 extern "C" RocalTensor ROCAL_API_CALL rocalCropMirrorNormalize(RocalContext context, RocalTensor input,
-                                                                  RocalTensorLayout rocal_tensor_layout,
-                                                                  RocalTensorOutputType rocal_tensor_output_type,
                                                                   unsigned crop_height,
                                                                   unsigned crop_width,
                                                                   float start_x,
@@ -66,7 +65,9 @@ extern "C" RocalTensor ROCAL_API_CALL rocalCropMirrorNormalize(RocalContext cont
                                                                   std::vector<float> &mean,
                                                                   std::vector<float> &std_dev,
                                                                   bool is_output,
-                                                                  RocalIntParam mirror = NULL);
+                                                                  RocalIntParam mirror = NULL,
+                                                                  RocalTensorLayout rocal_tensor_layout = ROCAL_NHWC,
+                                                                  RocalTensorOutputType rocal_tensor_output_type = ROCAL_UINT8);
 
 extern "C" RocalTensor  ROCAL_API_CALL rocalCrop(RocalContext context, RocalTensor input, bool is_output,
                                                 RocalTensorLayout rocal_tensor_layout,
