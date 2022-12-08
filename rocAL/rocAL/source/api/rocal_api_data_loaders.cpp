@@ -169,6 +169,8 @@ rocalJpegFileSourceSingleShard(
         info.set_roi_type(roi_type);
         info.set_color_format(color_format);
         info.set_tensor_layout(tensor_format);
+        info.set_max_shape();
+
         output = context->master_graph->create_loader_output_tensor(info);
         context->master_graph->add_node<ImageLoaderSingleShardNode>({}, {output})->init(shard_id, shard_count,
                                                                                         source_path, "",
@@ -249,6 +251,7 @@ rocalJpegFileSource(
                                 RocalTensorDataType::UINT8);
         info.set_color_format(color_format);
         info.set_tensor_layout(RocalTensorlayout::NHWC);
+        info.set_max_shape();
 
         output = context->master_graph->create_loader_output_tensor(info);
         context->master_graph->add_node<ImageLoaderNode>({}, {output})->init(internal_shard_count,
