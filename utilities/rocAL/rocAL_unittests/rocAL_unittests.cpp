@@ -321,21 +321,21 @@ int test(int test_case, int reader_type, int pipeline_type, const char *path, co
         std::vector<float> sdev{1, 1, 1};
         std::cout << ">>>>>>> Running "
                   << " Crop Mirror Normalize " << std::endl;
-        image1 = rocalCropMirrorNormalize(handle, input1, tensorLayout, tensorOutputType, 3, resize_h, resize_w, 0, 0, 0, mean, sdev, true);
+        image1 = rocalCropMirrorNormalize(handle, input1, resize_h, resize_w, 0, 0, mean, sdev, true, NULL, tensorLayout, RocalTensorOutputType::ROCAL_FP32);
         break;
     }
     case 1:
     {
         std::cout << ">>>>>>> Running "
                   << "Brightness" << std::endl;
-        image1 = rocalBrightness(handle, input1, tensorLayout, tensorOutputType, true);
+        image1 = rocalBrightness(handle, input1, true, NULL, NULL, tensorLayout, tensorOutputType);
     }
     break;
     case 3:
     {
          std::cout << ">>>>>>> Running "
                   << "rocalResize" << std::endl;
-        image1 = rocalResize(handle, input1, tensorLayout, tensorOutputType, 0, 0, true, ROCAL_SCALING_MODE_NOT_SMALLER, {}, 256);
+        image1 = rocalResize(handle, input1, 0, 0, true, ROCAL_SCALING_MODE_NOT_SMALLER, {}, 256, 0, ROCAL_LINEAR_INTERPOLATION, tensorLayout, tensorOutputType);
     }
     break;
     case 26:
@@ -350,7 +350,7 @@ int test(int test_case, int reader_type, int pipeline_type, const char *path, co
     {
         std::cout << ">>>>>>> Running "
                   << "rocalColorTwist" << std::endl;
-        image1 = rocalColorTwist(handle, input1, tensorLayout, tensorOutputType, true);
+        image1 = rocalColorTwist(handle, input1, true, NULL, NULL, NULL, NULL, tensorLayout, tensorOutputType);
     }
     break;
     case 10:
@@ -359,7 +359,7 @@ int test(int test_case, int reader_type, int pipeline_type, const char *path, co
         std::vector<float> sdev{1, 1, 1};
         std::cout << ">>>>>>> Running "
                   << " Resize Mirror Normalize " << std::endl;
-        image1 = rocalResizeMirrorNormalize(handle, input1, tensorLayout, tensorOutputType, 3,resize_w , resize_h, 0, mean, sdev,true);
+        image1 = rocalResizeMirrorNormalize(handle, input1, resize_w , resize_h, 0, mean, sdev, true, NULL, tensorLayout, tensorOutputType);
         break;
     }
     default:
