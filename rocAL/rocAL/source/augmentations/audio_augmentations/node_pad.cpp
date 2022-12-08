@@ -1,3 +1,4 @@
+
 /*
 Copyright (c) 2019 - 2022 Advanced Micro Devices, Inc. All rights reserved.
 
@@ -34,15 +35,17 @@ void PadNode::create_node() {
     std::vector<float> anchors(_batch_size * _num_of_dims, 0);
     std::vector<float> shape(_batch_size * _num_of_dims, 0);
     std::vector<float> fill_value(_batch_size * _num_of_dims, 0);
-    _stride = (vx_size *)malloc((_num_of_dims - 1) * tensor_data_size(_inputs[0]->info().data_type()));
+    _stride = (vx_size *)malloc((_num_of_dims - 1) * tensor_data_size(_outputs[0]->info().data_type()));
     _stride[0] = sizeof(float);
+    _stride[1] = _stride[0] * _inputs[0]->info().dims()[0];
     vx_status status;
 
     _fill_values_array = vxCreateArray(vxGetContext((vx_reference)_graph->get()), VX_TYPE_FLOAT32, _batch_size * _num_of_dims);
-    _anchors_tensor = vxCreateTensor(vxGetContext((vx_reference)_graph->get()), (_num_of_dims-1), _inputs[0]->info().dims().data(), VX_TYPE_FLOAT32, 0);
+    std::cerr << "\n _inputs[0]->info().dims().data()" <<_inputs[0]->info().dims()[0];
+    _anchors_tensor = vxCreateTensor(vxGetContext((vx_reference)_graph->get()), (_num_of_dims), _outputs[0]->info().dims().data(), VX_TYPE_FLOAT32, 0);
     if ((status = vxGetStatus((vx_reference)_anchors_tensor)) != VX_SUCCESS)
         THROW("Error: vxCreateTensor for _anchors_tensor: failed " + TOSTR(status))
-    _shapes_tensor = vxCreateTensor(vxGetContext((vx_reference)_graph->get()), (_num_of_dims-1), _inputs[0]->info().dims().data(), VX_TYPE_FLOAT32, 0);
+    _shapes_tensor = vxCreateTensor(vxGetContext((vx_reference)_graph->get()), (_num_of_dims), _outputs[0]->info().dims().data(), VX_TYPE_FLOAT32, 0);
     if ((status = vxGetStatus((vx_reference)_shapes_tensor)) != VX_SUCCESS)
         THROW("Error: vxCreateTensor for _shapes_tensor: failed " + TOSTR(status))
 
@@ -68,11 +71,13 @@ void PadNode::update_node() {
         THROW(" Failed calling vxCopyArrayRange for src / dst roi status : "+ TOSTR(src_roi_status))
     auto audio_roi = _inputs[0]->info().get_roi();
     bool has_same_dim = true;
+    std::cerr << "\n Num of dims in pad :" << _num_of_dims;
     for(unsigned i = 0; i < _batch_size; i++) {
         int idx = i * _num_of_dims;
         for(unsigned d = 0; d < _num_of_dims; d++) {
             _anchor_vec[idx + d] = 0;
             _shape_vec[idx + d] = (d == 0) ? audio_roi->at(i).x1 : audio_roi->at(i).y1;
+            std::cerr << "\n  _shape_vec[idx + d]  : " << _shape_vec[idx + d];
             _fill_values_vec[idx + d] = _fill_value;
         }
     }
@@ -81,8 +86,8 @@ void PadNode::update_node() {
         THROW("All the tensor must have same dimension to perform Batch Normalization")
 
     vx_status status = VX_SUCCESS;
-    status |= vxCopyTensorPatch((vx_tensor)_anchors_tensor, (_num_of_dims-1), nullptr, nullptr, _stride, _anchor_vec.data(), VX_WRITE_ONLY, VX_MEMORY_TYPE_HOST);
-    status |= vxCopyTensorPatch((vx_tensor)_shapes_tensor, (_num_of_dims-1), nullptr, nullptr, _stride, _shape_vec.data(), VX_WRITE_ONLY, VX_MEMORY_TYPE_HOST);
+    status |= vxCopyTensorPatch((vx_tensor)_anchors_tensor, (_num_of_dims), nullptr, nullptr, _stride, _anchor_vec.data(), VX_WRITE_ONLY, VX_MEMORY_TYPE_HOST);
+    status |= vxCopyTensorPatch((vx_tensor)_shapes_tensor, (_num_of_dims), nullptr, nullptr, _stride, _shape_vec.data(), VX_WRITE_ONLY, VX_MEMORY_TYPE_HOST);
     status |= vxCopyArrayRange((vx_array)_fill_values_array, 0, _batch_size * _num_of_dims, sizeof(vx_float32), _fill_values_vec.data(), VX_WRITE_ONLY, VX_MEMORY_TYPE_HOST);
     if(status != 0)
         THROW("ERROR: vxCopyArrayRange failed in the pad node (vxExtrppNode_Slice)  node: "+ TOSTR(status))
