@@ -643,11 +643,9 @@ void MasterGraph::output_routine()
 #endif
     }
     try {
-
-        _process_time.start();
         while (_processing)
         {
-            std::vector<size_t> tensor_each_cycle_size_vec = tensor_output_byte_size(); // /batch_ratio;
+            // std::vector<size_t> tensor_each_cycle_size_vec = tensor_output_byte_size(); // /batch_ratio;
             ImageNameBatch full_batch_image_names = {};
             pMetaDataBatch full_batch_meta_data = nullptr;
             pMetaDataBatch augmented_batch_meta_data = nullptr;
@@ -657,7 +655,6 @@ void MasterGraph::output_routine()
                 // processed images stored in the _ring_buffer will be consumed by the user when it calls the run() func
                 notify_user_thread();
                 // the following call is required in case the ring buffer is waiting for more data to be loaded and there is no more data to process.
-                // if(_internal_tensor_list.size() != 0)
                 _ring_buffer.release_if_empty();
                 std::this_thread::sleep_for(std::chrono::milliseconds(100));
                 continue;
@@ -667,124 +664,98 @@ void MasterGraph::output_routine()
             auto tensor_write_buffer = _ring_buffer.get_write_buffers();
             _rb_block_if_full_time.end();
 
-            // When executing on CPU the internal batch count can be smaller than the user batch count
-            // In that case the user_batch_size will be an integer multiple of the _internal_batch_size
-            // Multiple cycles worth of internal_batch_size images should be processed to complete a full _user_batch_size
-            for(unsigned cycle_idx = 0; cycle_idx < 1; cycle_idx++)
+            // Swap handles on the input tensor, so that new tensor is loaded to be processed
+            auto load_ret = _loader_module->load_next();
+            if (load_ret != LoaderModuleStatus::OK)
+                THROW("Loader module failed to load next batch of images, status " + TOSTR(load_ret))
+            if (!_processing)
+                break;
+            auto this_cycle_names =  _loader_module->get_id();
+            auto decode_image_info = _loader_module->get_decode_image_info();
+            auto crop_image_info = _loader_module->get_crop_image_info();
+
+            if(this_cycle_names.size() != _internal_batch_size)
+                WRN("Internal problem: names count "+ TOSTR(this_cycle_names.size()))
+            // meta_data lookup is done before _meta_data_graph->process() is called to have the new meta_data ready for processing
+            if (_meta_data_reader)
+                _meta_data_reader->lookup(this_cycle_names);
+            full_batch_image_names += this_cycle_names;
+            if (!_processing)
+                break;
+
+            // Swap handles on the output tensor, so that new processed tensor will be written to the a new buffer
+            for (size_t idx = 0; idx < _internal_tensor_list.size(); idx++)
             {
-                // Swap handles on the input tensor, so that new tensor is loaded to be processed
-                auto load_ret = _loader_module->load_next();
-                if (load_ret != LoaderModuleStatus::OK)
-                    THROW("Loader module failed to load next batch of images, status " + TOSTR(load_ret))
-                if (!_processing)
-                    break;
-                auto this_cycle_names =  _loader_module->get_id();
-                auto decode_image_info = _loader_module->get_decode_image_info();
-                auto crop_image_info = _loader_module->get_crop_image_info();
-
-                if(this_cycle_names.size() != _internal_batch_size)
-                    WRN("Internal problem: names count "+ TOSTR(this_cycle_names.size()))
-                // meta_data lookup is done before _meta_data_graph->process() is called to have the new meta_data ready for processing
-                if (_meta_data_reader)
-                    _meta_data_reader->lookup(this_cycle_names);
-                full_batch_image_names += this_cycle_names;
-                if (!_processing)
-                    break;
-
-                // Swap handles on the output tensor, so that new processed tensor will be written to the a new buffer
-                for (size_t idx = 0; idx < _internal_tensor_list.size(); idx++)
-                {
-                    // if(_internal_tensor_list.size() != 0)
-                    size_t tensor_each_cycle_size = tensor_each_cycle_size_vec[idx]; // TODO - Batch ratio calculation TO be removed
-                    if(_affinity == RocalAffinity::GPU)
-                    {
-                        _internal_tensor_list[idx]->swap_handle(tensor_write_buffer[idx]);
-                    }
-                    else
-                    {
-                        // Have to change float to the equivalent of max size data type
-                        if(_internal_tensor_list[idx]->info().data_type() == RocalTensorDataType::FP32)
-                        {
-                            auto this_cycle_buffer_ptr = (vx_float32 *) tensor_write_buffer[idx] + tensor_each_cycle_size * cycle_idx;
-                            _internal_tensor_list[idx]->swap_handle(this_cycle_buffer_ptr);
-                        }
-#if defined(AMD_FP16_SUPPORT)
-                        else if (_internal_tensor_list[idx]->info().data_type() == RocalTensorDataType::FP16)
-                        {
-                            auto this_cycle_buffer_ptr = (vx_float16 *) tensor_write_buffer[idx] + tensor_each_cycle_size * cycle_idx;
-                            _internal_tensor_list[idx]->swap_handle(this_cycle_buffer_ptr);
-                        }
-#endif
-                        else if(_internal_tensor_list[idx]->info().data_type() == RocalTensorDataType::UINT8)
-                        {
-                            auto this_cycle_buffer_ptr = (vx_uint8 *) tensor_write_buffer[idx] + tensor_each_cycle_size * cycle_idx;
-                            _internal_tensor_list[idx]->swap_handle(this_cycle_buffer_ptr);
-                        }
-                    }
-                }
-                if (!_processing)
-                    break;
-
-                for(auto node: _nodes)
-                {
-                    if(node->_is_ssd)
-                    {
-                        node->set_meta_data(_augmented_meta_data);
-                    }
-                }
-
-                update_node_parameters();
-                if(_augmented_meta_data)
-                {
-                    if (_meta_data_graph)
-                    {
-                        if(_is_random_bbox_crop)
-                        {
-                            _meta_data_graph->update_random_bbox_meta_data(_augmented_meta_data, decode_image_info, crop_image_info);
-                        }
-                        else
-                        {
-                            _meta_data_graph->update_meta_data(_augmented_meta_data, decode_image_info, _is_segmentation);
-                        }
-                        _meta_data_graph->process(_augmented_meta_data, _is_segmentation);
-                    }
-                    if (full_batch_meta_data)
-                        full_batch_meta_data->concatenate(_augmented_meta_data);
-                    else
-                        full_batch_meta_data = _augmented_meta_data->clone();
-                }
-
-                // get roi width and height of output image
-                std::vector<uint32_t> temp_width_arr;
-                std::vector<uint32_t> temp_height_arr;
-                for (unsigned int i = 0; i < _internal_batch_size; i++)
-                {
-                    temp_width_arr.push_back(_output_tensor_info.get_roi()->at(i).x2);
-                    temp_height_arr.push_back(_output_tensor_info.get_roi()->at(i).y2);
-                }
-                _resize_width.insert(_resize_width.begin(), temp_width_arr);
-                _resize_height.insert(_resize_height.begin(), temp_height_arr);
-                _graph->process();
+                // if(_internal_tensor_list.size() != 0)
+                // size_t tensor_each_cycle_size = tensor_each_cycle_size_vec[idx]; // TODO - Batch ratio calculation TO be removed
+                _internal_tensor_list[idx]->swap_handle(tensor_write_buffer[idx]);
             }
+            if (!_processing)
+                break;
+
+            for(auto node: _nodes)
+            {
+                if(node->_is_ssd)
+                {
+                    node->set_meta_data(_augmented_meta_data);
+                }
+            }
+
+            update_node_parameters();
+            if(_augmented_meta_data)
+            {
+                if (_meta_data_graph)
+                {
+                    if(_is_random_bbox_crop)
+                    {
+                        _meta_data_graph->update_random_bbox_meta_data(_augmented_meta_data, decode_image_info, crop_image_info);
+                    }
+                    else
+                    {
+                        _meta_data_graph->update_meta_data(_augmented_meta_data, decode_image_info, _is_segmentation);
+                    }
+                    _meta_data_graph->process(_augmented_meta_data, _is_segmentation);
+                }
+                if (full_batch_meta_data)
+                    full_batch_meta_data->concatenate(_augmented_meta_data);
+                else
+                    full_batch_meta_data = _augmented_meta_data->clone();
+            }
+
+            // get roi width and height of output image
+            std::vector<uint32_t> temp_width_arr;
+            std::vector<uint32_t> temp_height_arr;
+            for (unsigned int i = 0; i < _internal_batch_size; i++)
+            {
+                temp_width_arr.push_back(_output_tensor_info.get_roi()->at(i).x2);
+                temp_height_arr.push_back(_output_tensor_info.get_roi()->at(i).y2);
+            }
+            _resize_width.insert(_resize_width.begin(), temp_width_arr);
+            _resize_height.insert(_resize_height.begin(), temp_height_arr);
+            
+            _process_time.start();
+            _graph->process();
+            _process_time.end();
+            
             _bencode_time.start();
             if(_is_box_encoder )
             {
 #if ENABLE_HIP
-                if(_mem_type == RocalMemType::HIP){
+                if(_mem_type == RocalMemType::HIP) {
                     // get bbox encoder read buffers
                     auto bbox_encode_write_buffers = _ring_buffer.get_box_encode_write_buffers();
                     if (_box_encoder_gpu) _box_encoder_gpu->Run(full_batch_meta_data, (float *)bbox_encode_write_buffers.first, (int *)bbox_encode_write_buffers.second);
                     //_meta_data_graph->update_box_encoder_meta_data_gpu(_anchors_gpu_buf, num_anchors, full_batch_meta_data, _criteria, _offset, _scale, _means, _stds);
-                }else
+                } else
 #endif
                     _meta_data_graph->update_box_encoder_meta_data(&_anchors, full_batch_meta_data, _criteria, _offset, _scale, _means, _stds);
             }
             _bencode_time.end();
+            
             _ring_buffer.set_meta_data(full_batch_image_names, full_batch_meta_data, _is_segmentation);
             _ring_buffer.push();
             // full_batch_meta_data->clear();
         }
-        _process_time.end();
     }
     catch (const std::exception &e)
     {
@@ -792,7 +763,6 @@ void MasterGraph::output_routine()
         _processing = false;
         _ring_buffer.release_all_blocked_calls();
     }
-    _process_time.end();
 }
 
 void MasterGraph::start_processing()
