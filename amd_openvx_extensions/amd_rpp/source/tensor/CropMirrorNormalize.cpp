@@ -122,6 +122,7 @@ static vx_status VX_CALLBACK refreshCropMirrorNormalize(vx_node node, const vx_r
         }
 #endif
     }
+
     return status;
 }
 
@@ -215,7 +216,7 @@ static vx_status VX_CALLBACK initializeCropMirrorNormalize(vx_node node, const v
     THROW("initialize : CropMirrorNormalize OpenCL backend is not supported")
 #elif ENABLE_HIP
     STATUS_ERROR_CHECK(vxQueryNode(node, VX_NODE_ATTRIBUTE_AMD_HIP_STREAM, &data->handle.hipstream, sizeof(data->handle.hipstream)));
-#endif  
+#endif
     STATUS_ERROR_CHECK(vxCopyScalar((vx_scalar)parameters[6], &data->input_layout, VX_READ_ONLY, VX_MEMORY_TYPE_HOST));
     STATUS_ERROR_CHECK(vxCopyScalar((vx_scalar)parameters[7], &data->output_layout, VX_READ_ONLY, VX_MEMORY_TYPE_HOST));
     STATUS_ERROR_CHECK(vxCopyScalar((vx_scalar)parameters[8], &roiType, VX_READ_ONLY, VX_MEMORY_TYPE_HOST));

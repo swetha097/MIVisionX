@@ -24,7 +24,6 @@ THE SOFTWARE.
 #include "node_gamma.h"
 #include "node_brightness.h"
 #include "node_resize.h"
-#include "node_resize_shorter.h"
 #include "node_color_twist.h"
 #include "node_crop_mirror_normalize.h"
 #include "node_crop.h"
@@ -622,7 +621,6 @@ rocalResize(RocalContext p_context,
             }
         }
 
-        int layout=0;
         get_rocal_tensor_layout(rocal_tensor_layout, op_tensorLayout);
         get_rocal_tensor_data_type(rocal_tensor_output_type, op_tensorDataType);
         rocalTensorInfo output_info = input->info();
@@ -653,7 +651,7 @@ rocalResize(RocalContext p_context,
         output = context->master_graph->create_tensor(output_info, is_output);
         output->reset_tensor_roi();
         std::shared_ptr<ResizeNode> resize_node =  context->master_graph->add_node<ResizeNode>({input}, {output});
-        resize_node->init(out_width, out_height, resize_scaling_mode, maximum_size, interpolation_type, layout);
+        resize_node->init(out_width, out_height, resize_scaling_mode, maximum_size, interpolation_type);
         if (context->master_graph->meta_data_graph())
             context->master_graph->meta_add_node<ResizeMetaNode,ResizeNode>(resize_node);
     }
