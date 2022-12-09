@@ -99,6 +99,7 @@ MasterGraph::MasterGraph(size_t batch_size, RocalAffinity affinity, int gpu_id, 
         _convert_time("Conversion Time", DBG_TIMING),
         _process_time("Process Time", DBG_TIMING),
         _bencode_time("BoxEncoder Time", DBG_TIMING),
+        _output_routine_time("Output_routine Time", DBG_TIMING),
         _user_batch_size(batch_size),
 #if ENABLE_HIP
         _mem_type ((_affinity == RocalAffinity::GPU) ? RocalMemType::HIP : RocalMemType::HOST),
@@ -528,6 +529,7 @@ MasterGraph::timing()
     t.image_process_time += _process_time.get_timing();
     t.copy_to_output += _convert_time.get_timing();
     t.bb_process_time += _bencode_time.get_timing();
+    t.image_output_routine_time += _output_routine_time.get_timing();
     return t;
 }
 
@@ -646,7 +648,6 @@ void MasterGraph::output_routine()
     }
     try {
 
-        _process_time.start();
         while (_processing)
         {
             std::vector<size_t> tensor_each_cycle_size_vec = tensor_output_byte_size(); // /batch_ratio;
@@ -669,6 +670,7 @@ void MasterGraph::output_routine()
             auto tensor_write_buffer = _ring_buffer.get_write_buffers();
             _rb_block_if_full_time.end();
 
+            _output_routine_time.start();
             // When executing on CPU the internal batch count can be smaller than the user batch count
             // In that case the user_batch_size will be an integer multiple of the _internal_batch_size
             // Multiple cycles worth of internal_batch_size images should be processed to complete a full _user_batch_size
@@ -766,7 +768,9 @@ void MasterGraph::output_routine()
                 }
                 _resize_width.insert(_resize_width.begin(), temp_width_arr);
                 _resize_height.insert(_resize_height.begin(), temp_height_arr);
+                _process_time.start();
                 _graph->process();
+                _process_time.end();                
             }
             _bencode_time.start();
             if(_is_box_encoder )
@@ -784,6 +788,7 @@ void MasterGraph::output_routine()
             _bencode_time.end();
             _ring_buffer.set_meta_data(full_batch_image_names, full_batch_meta_data, _is_segmentation);
             _ring_buffer.push();
+            _output_routine_time.end();
             // full_batch_meta_data->clear();
         }
         _process_time.end();
@@ -794,7 +799,6 @@ void MasterGraph::output_routine()
         _processing = false;
         _ring_buffer.release_all_blocked_calls();
     }
-    _process_time.end();
 }
 
 void MasterGraph::start_processing()

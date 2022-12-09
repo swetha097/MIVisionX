@@ -158,7 +158,7 @@ private:
     RocalAffinity _affinity;
     const int _gpu_id;//!< Defines the device id used for processing
     pLoaderModule _loader_module; //!< Keeps the loader module used to feed the input the images of the graph
-    TimingDBG _convert_time, _process_time, _bencode_time;
+    TimingDBG _convert_time, _process_time, _bencode_time, _output_routine_time;
     const size_t _user_batch_size;//!< Batch size provided by the user
     vx_context _context;
     const RocalMemType _mem_type;//!< Is set according to the _affinity, if GPU, is set to CL, otherwise host

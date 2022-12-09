@@ -97,10 +97,11 @@ namespace rocal
         m.def("rocalRelease", &rocalRelease);
         // rocal_api_types.h
         py::class_<TimingInfo>(m, "TimingInfo")
-            .def_readwrite("load_time", &TimingInfo::load_time)
-            .def_readwrite("decode_time", &TimingInfo::decode_time)
-            .def_readwrite("process_time", &TimingInfo::process_time)
-            .def_readwrite("transfer_time", &TimingInfo::transfer_time);
+            .def_readwrite("load_time",&TimingInfo::load_time)
+            .def_readwrite("decode_time",&TimingInfo::decode_time)
+            .def_readwrite("process_time",&TimingInfo::process_time)
+            .def_readwrite("transfer_time",&TimingInfo::transfer_time)
+            .def_readwrite("output_routine_time",&TimingInfo::output_routine_time);
         py::class_<rocalTensor>(m, "rocalTensor")
                 .def(
                 "batch_height",
@@ -307,6 +308,7 @@ namespace rocal
         m.def("getStatus", rocalGetStatus);
         m.def("rocalGetErrorMessage", &rocalGetErrorMessage);
         m.def("rocalGetTimingInfo", &rocalGetTimingInfo);
+        m.def("getTimingInfo", &rocalGetTimingInfo);
         m.def("setOutputImages", &rocalSetOutputs);
         m.def("labelReader", &rocalCreateLabelReader, py::return_value_policy::reference);
         m.def("COCOReader", &rocalCreateCOCOReader, py::return_value_policy::reference);
