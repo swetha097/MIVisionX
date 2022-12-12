@@ -157,7 +157,13 @@ public:
     RocalROIType roi_type() const { return _roi_type; }
     RocalTensorDataType data_type() const { return _data_type; }
     RocalTensorlayout layout() const { return _layout; }
-    std::shared_ptr<std::vector<RocalROI>> get_roi() const { return _roi; }
+    unsigned * get_roi() const {
+    #if ENABLE_HIP
+        return (unsigned *)_roi_dev;
+    #else
+        return _roi;
+    #endif
+    }
     RocalColorFormat color_format() const { return _color_format; }
     Type type() const { return _type; }
     uint64_t data_type_size() {
@@ -178,7 +184,13 @@ private:
     RocalTensorDataType _data_type = RocalTensorDataType::FP32;  //!< tensor data type
     RocalTensorlayout _layout = RocalTensorlayout::NONE;     //!< layout of the tensor
     RocalColorFormat _color_format;  //!< color format of the image
-    std::shared_ptr<std::vector<RocalROI>> _roi;
+    // std::shared_ptr<std::vector<RocalROI>> _roi;
+    // unsigned *_roi;
+#if ENABLE_HIP
+    void *_roi_dev;
+#else
+    unsigned *_roi;
+#endif
     uint64_t _data_type_size = tensor_data_size(_data_type);
     uint64_t _data_size = 0;
     std::vector<size_t> _max_shape;  //!< stores the the width and height dimensions in the tensor

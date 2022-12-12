@@ -43,7 +43,7 @@ void CropMirrorNormalizeMetaNode::update_parameters(MetaDataBatch* input_meta_da
     _dstImgHeight = _meta_crop_param->croph_arr;
     _x1 = _meta_crop_param->x1_arr;
     _y1 = _meta_crop_param->y1_arr;
-    std::vector<RocalROI> input_roi = _meta_crop_param->in_roi;
+    auto input_roi = _meta_crop_param->in_roi;
     vxCopyArrayRange((vx_array)_dstImgWidth, 0, _batch_size, sizeof(uint),_width_val.data(), VX_READ_ONLY, VX_MEMORY_TYPE_HOST);
     vxCopyArrayRange((vx_array)_dstImgHeight, 0, _batch_size, sizeof(uint),_height_val.data(), VX_READ_ONLY, VX_MEMORY_TYPE_HOST);
     vxCopyArrayRange((vx_array)_x1, 0, _batch_size, sizeof(uint),_x1_val.data(), VX_READ_ONLY, VX_MEMORY_TYPE_HOST);
@@ -61,10 +61,11 @@ void CropMirrorNormalizeMetaNode::update_parameters(MetaDataBatch* input_meta_da
         BoundingBoxCord temp_box = {0, 0, 1, 1};
         BoundingBoxLabels bb_labels;
         BoundingBoxCord crop_box;
-        crop_box.l = (_x1_val[i]) / input_roi[i].x2;
-        crop_box.t = (_y1_val[i]) / input_roi[i].y2;
-        crop_box.r = (_x1_val[i] + _width_val[i]) / input_roi[i].x2;
-        crop_box.b = (_y1_val[i] + _height_val[i]) / input_roi[i].y2;
+        crop_box.l = (_x1_val[i]) / input_roi[2];
+        crop_box.t = (_y1_val[i]) / input_roi[3];
+        crop_box.r = (_x1_val[i] + _width_val[i]) / input_roi[2];
+        crop_box.b = (_y1_val[i] + _height_val[i]) / input_roi[3];
+        input_roi +=  4;
         // std::cout<<"CROP Co-ordinates in CMN: lxtxrxb::\t"<<crop_box.l<<"x"<<crop_box.t<<"x"<<crop_box.r<<"x"<<crop_box.b<<"x";
         for(uint j = 0; j < bb_count; j++)
         {

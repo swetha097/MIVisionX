@@ -22,6 +22,7 @@ THE SOFTWARE.
 
 #pragma once
 #include <VX/vx_types.h>
+#include <cstring>
 #include "parameter_factory.h"
 enum class RocalCropType
 {
@@ -50,17 +51,17 @@ public:
         x_drift_factor     = default_x_drift_factor();
         y_drift_factor     = default_y_drift_factor();
     }
-    void set_image_dimensions( const std::shared_ptr<std::vector<RocalROI>> roi)
+    void set_image_dimensions(const unsigned *roi)
     {
-        if(in_roi.size() != roi->size())
-            THROW("wrong input width or height size")
-        in_roi = *roi;
+        // if(in_roi.size() != roi->size())
+        //     THROW("wrong input width or height size")
+        in_roi = roi; // TODO - Should I do a mem copy here
     }
     void set_random() {_random = true;}
     void set_center() { _is_center_crop = true; }
     void set_x_drift_factor(Parameter<float>* x_drift);
     void set_y_drift_factor(Parameter<float>* y_drift);
-    std::vector<RocalROI> in_roi;
+    const unsigned * in_roi;
     unsigned int  x1, y1, x2, y2;
     const unsigned int batch_size;
     void set_batch_size(unsigned int batch_size);

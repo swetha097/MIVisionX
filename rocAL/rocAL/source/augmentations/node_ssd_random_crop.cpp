@@ -82,7 +82,7 @@ void SSDRandomCropNode::update_node()
     std::pair<float, float> iou;
     float min_iou, max_iou;
     float w_factor = 0.0f, h_factor = 0.0f;
-    std::vector<RocalROI> input_roi = _crop_param->in_roi;
+    auto input_roi = _crop_param->in_roi;
     bool invalid_bboxes = true;
     _entire_iou = true;
     BoundingBoxCord crop_box, jth_box;
@@ -179,12 +179,13 @@ void SSDRandomCropNode::update_node()
                 continue;
             break;
         } // while loop
-        _x1_val[i] = (crop_box.l) * input_roi[i].x2;
-        _y1_val[i] = (crop_box.t) * input_roi[i].y2;
-        _crop_width_val[i] = (crop_box.r - crop_box.l) * input_roi[i].x2;
-        _crop_height_val[i] = (crop_box.b - crop_box.t) * input_roi[i].y2;
-        _x2_val[i] =  (crop_box.r) * input_roi[i].x2;
-        _y2_val[i] =  (crop_box.b) * input_roi[i].y2;
+        _x1_val[i] = (crop_box.l) * input_roi[2];
+        _y1_val[i] = (crop_box.t) * input_roi[3];
+        _crop_width_val[i] = (crop_box.r - crop_box.l) * input_roi[2];
+        _crop_height_val[i] = (crop_box.b - crop_box.t) * input_roi[3];
+        _x2_val[i] =  (crop_box.r) * input_roi[2];
+        _y2_val[i] =  (crop_box.b) * input_roi[3];
+        input_roi += 4;
 
     }
     vxCopyArrayRange((vx_array)_crop_param->cropw_arr, 0, _batch_size, sizeof(uint), _crop_width_val.data(), VX_WRITE_ONLY, VX_MEMORY_TYPE_HOST);

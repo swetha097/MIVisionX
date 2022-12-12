@@ -91,20 +91,47 @@ bool operator==(const rocalTensorInfo &rhs, const rocalTensorInfo &lhs) {
 }
 
 void rocalTensorInfo::reallocate_tensor_roi_buffers() {
-    _roi = std::make_shared<std::vector<RocalROI>>(_batch_size);
-
-    if (_roi->size()) _roi->clear();
-    _roi->resize(_batch_size);
+    
+    size_t roi_size = _batch_size * 4 * sizeof(unsigned);
+#if ENABLE_HIP
+    hipError_t err = hipHostMalloc((void **)&_roi_dev, roi_size, hipHostMallocDefault/*hipHostMallocMapped|hipHostMallocWriteCombined*/);
+    if(err != hipSuccess || !_roi_dev)
+    {
+        THROW("hipHostMalloc of size " + TOSTR(roi_size) + " failed " + TOSTR(err));
+    }
+    hipMemset(_roi_dev, 0, roi_size);
+#else
+    _roi = (unsigned *) malloc(roi_size);
+    memset((void *) _roi, 0, roi_size);
+#endif
     if (_is_image) {
-        for (unsigned i = 0; i < _batch_size; i++) {
-            _roi->at(i).x1 = 0;
-            _roi->at(i).y1 = 0;
-            _roi->at(i).x2 = _max_shape.at(0);
-            _roi->at(i).y2 = _max_shape.at(1);
+        unsigned *roi = (unsigned *)_roi_dev;
+        for (unsigned i = 0, j = 2; i < _batch_size; i++, j += 4) {
+#if ENABLE_HIP
+            roi[j] = _max_shape.at(0);
+            roi[j + 1] = _max_shape.at(1);
+#else
+            _roi[j] = _max_shape.at(0);
+            _roi[j + 1] = _max_shape.at(1);
+#endif
         }
     } else {
         // TODO - For other tensor types
     }
+    // _roi = std::make_shared<std::vector<RocalROI>>(_batch_size);
+
+    // if (_roi->size()) _roi->clear();
+    // _roi->resize(_batch_size);
+    // if (_is_image) {
+    //     for (unsigned i = 0; i < _batch_size; i++) {
+    //         _roi->at(i).x1 = 0;
+    //         _roi->at(i).y1 = 0;
+    //         _roi->at(i).x2 = _max_shape.at(0);
+    //         _roi->at(i).y2 = _max_shape.at(1);
+    //     }
+    // } else {
+    //     // TODO - For other tensor types
+    // }
 }
 
 rocalTensorInfo::rocalTensorInfo()
@@ -135,25 +162,26 @@ void rocalTensor::update_tensor_roi(const std::vector<uint32_t> &width,
         auto max_shape = _info.max_shape();
         unsigned max_width = max_shape.at(0);
         unsigned max_height = max_shape.at(1);
-
+        auto roi = _info.get_roi();
+        
         if (width.size() != height.size())
             THROW("Batch size of Tensor height and width info does not match")
 
         if (width.size() != info().batch_size())
             THROW("The batch size of actual Tensor height and width different from Tensor batch size " + TOSTR(width.size()) + " != " + TOSTR(info().batch_size()))
 
-        for (unsigned i = 0; i < info().batch_size(); i++) {
+        for (unsigned i = 0, j = 2; i < info().batch_size(); i++, j+=4) {
             if (width[i] > max_width) {
                 WRN("Given ROI width is larger than buffer width for tensor[" + TOSTR(i) + "] " + TOSTR(width[i]) + " > " + TOSTR(max_width))
-                _info.get_roi()->at(i).x2 = max_width;
+                roi[j] = max_width;
             } else {
-                _info.get_roi()->at(i).x2 = width[i];
+                roi[j] = width[i];
             }
             if (height[i] > max_height) {
                 WRN("Given ROI height is larger than buffer height for tensor[" + TOSTR(i) + "] " + TOSTR(height[i]) + " > " + TOSTR(max_height))
-                _info.get_roi()->at(i).y2 = max_height;
+                roi[j + 1] = max_height;
             } else {
-                _info.get_roi()->at(i).y2 = height[i];
+                roi[j + 1] = height[i];
             }
         }
     }
