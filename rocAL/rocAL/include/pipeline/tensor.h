@@ -70,7 +70,8 @@ public:
     //! Initializer constructor with only fields common to all types (Image/ Video / Audio)
     rocalTensorInfo(std::vector<size_t> dims, RocalMemType mem_type,
                     RocalTensorDataType data_type);
-
+    
+    ~rocalTensorInfo();
     // Setting properties required for Image / Video
     void set_roi_type(RocalROIType roi_type) { _roi_type = roi_type; }
     void set_data_type(RocalTensorDataType data_type) {
