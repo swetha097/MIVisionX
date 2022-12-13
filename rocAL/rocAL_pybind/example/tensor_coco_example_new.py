@@ -112,7 +112,7 @@ class ROCALCOCOIterator(object):
         self.loader.GetImgSizes(self.img_size)
         image_id_tensor = torch.tensor(self.image_id, device=torch_gpu_device)
         image_size_tensor = torch.tensor(self.img_size, device=torch_gpu_device).view(-1, self.bs, 2)
-        '''
+
         for i in range(self.bs):
             index_list = []
             actual_bboxes = []
@@ -128,7 +128,6 @@ class ROCALCOCOIterator(object):
             img = self.out
             draw_patches(img[i], self.image_id[i],
                         actual_bboxes, self.device)
-        '''
         return (self.out), encodded_labels_tensor, image_id_tensor, image_size_tensor
         #return (self.out), encoded_bboxes_tensor, encodded_labels_tensor, image_id_tensor, image_size_tensor
 
@@ -250,7 +249,7 @@ def main():
                                     num_attempts=1)
         '''
         images_decoded = fn.decoders.image(jpegs, device=decoder_device, output_type = types.RGB, file_root=image_path, annotations_file=annotation_path, random_shuffle=False,shard_id=local_rank, num_shards=world_size)
-        res_images = fn.resize(images_decoded, device=rali_device, resize_width=crop, resize_height=crop, rocal_tensor_layout = types.NHWC, rocal_tensor_output_type = types.UINT8)
+        #res_images = fn.resize(images_decoded, device=rali_device, resize_width=crop, resize_height=crop, rocal_tensor_layout = types.NHWC, rocal_tensor_output_type = types.UINT8)
         #saturation = fn.uniform(rng_range=[0.5, 1.5])
         #contrast = fn.uniform(rng_range=[0.5, 1.5])
         #brightness = fn.uniform(rng_range=[0.875, 1.125])
@@ -258,14 +257,24 @@ def main():
         #cl_twist_images = fn.color_twist(res_images, saturation=saturation, contrast=contrast, brightness=brightness, hue=hue)
         flip_coin = fn.random.coin_flip(probability=0.5)
         # bboxes = fn.coin_flip(bboxes, ltrb=True, horizontal=flip_coin)
-        images = fn.crop_mirror_normalize(res_images, device="gpu",
-                                            crop=(crop, crop),
+        images = fn.resize_mirror_normalize(images_decoded, device="gpu",
                                             image_type=types.RGB,
+                                            resize_width=crop, resize_height=crop,
                                             mirror=flip_coin,
                                             rocal_tensor_layout = types.NHWC,
-                                            rocal_tensor_output_type = types.FLOAT,
+                                            rocal_tensor_output_type = types.UINT8,
                                             mean=[0,0,0],
                                             std=[1,1,1])
+                                            #mean=[0.485*255,0.456*255 ,0.406*255 ],
+                                            #std=[0.229*255 ,0.224*255 ,0.225*255 ])
+        #images = fn.crop_mirror_normalize(res_images, device="gpu",
+        #                                    rocal_tensor_layout = types.NHWC,
+        #                                    rocal_tensor_output_type = types.FLOAT,
+        #                                    crop=(crop, crop),
+        #                                    mirror=flip_coin,
+        #                                    image_type=types.RGB,
+        #                                    mean=[0,0,0],
+        #                                    std=[1,1,1])
                                             #mean=[0.485*255,0.456*255 ,0.406*255 ],
                                             #std=[0.229*255 ,0.224*255 ,0.225*255 ])
         #bboxes, labels = fn.box_encoder(bboxes, labels, device=rali_device,
