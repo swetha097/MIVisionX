@@ -181,4 +181,8 @@ extern "C" void ROCAL_API_CALL rocalBoxEncoder(RocalContext p_context, std::vect
                                              std::vector<float>  &means , std::vector<float>  &stds ,  bool offset = false, float scale = 1.0);
 
 extern "C" RocalMetaData ROCAL_API_CALL rocalGetEncodedBoxesAndLables(RocalContext p_context, int num_encoded_boxes);
+
+extern "C" void ROCAL_API_CALL rocalBoxIOUMatcher(RocalContext p_context, std::vector<float> &anchors, float criteria,
+                                             float high_threshold, float low_threshold ,  bool allow_low_quality_matches = true);
+
 #endif //MIVISIONX_ROCAL_API_META_DATA_H

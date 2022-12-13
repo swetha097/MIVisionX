@@ -781,6 +781,12 @@ void MasterGraph::output_routine()
 #endif
                     _meta_data_graph->update_box_encoder_meta_data(&_anchors, full_batch_meta_data, _criteria, _offset, _scale, _means, _stds);
             }
+            if(_is_box_iou_matcher)
+            {
+                //TODO - to add call for hip kernel.
+                std::cerr << "\n Calls box_iou_matcher :" << std::endl;
+                _meta_data_graph->update_box_iou_matcher(&_anchors, full_batch_meta_data, _criteria, _high_threshold, _low_threshold, _allow_low_quality_matches);
+            }
             _bencode_time.end();
             _ring_buffer.set_meta_data(full_batch_image_names, full_batch_meta_data, _is_segmentation);
             _ring_buffer.push();
@@ -974,6 +980,9 @@ std::vector<rocalTensorList *> MasterGraph::create_coco_meta_data_reader(const c
     default_bbox_info.set_tensor_layout(RocalTensorlayout::NONE);
     _meta_data_buffer_size.emplace_back(dims.at(0) * dims.at(1)  * _user_batch_size * sizeof(vx_float32)); // TODO - replace with data size from info
 
+    //check if box coder - then add matched idxs meta data
+    //dim - 1 (int)
+    //1x120087
     rocalTensorInfo default_mask_info;
     if(mask)
     {
@@ -988,6 +997,7 @@ std::vector<rocalTensorList *> MasterGraph::create_coco_meta_data_reader(const c
         default_mask_info.set_tensor_layout(RocalTensorlayout::NONE);
         _meta_data_buffer_size.emplace_back(dims.at(0) * dims.at(1)  * _user_batch_size * sizeof(vx_float32)); // TODO - replace with data size from info  
     }
+
 
     for(unsigned i = 0; i < _user_batch_size; i++)
     {
@@ -1232,6 +1242,21 @@ void MasterGraph::box_encoder(std::vector<float> &anchors, float criteria, const
     _scale = scale;
     _means = means;
     _stds = stds;
+}
+
+void MasterGraph::box_iou_matcher(std::vector<float> &anchors, float criteria, float high_threshold, float low_threshold, bool allow_low_quality_matches)
+{
+    _is_box_iou_matcher = true;
+    _num_anchors = anchors.size() / 4;
+    std::cerr << "\n num anchors : " << _num_anchors << std::endl;
+ 
+#if ENABLE_HIP
+    //do nothing for now - have to add gpu kernels
+#endif
+    _anchors = anchors;
+    _high_threshold = high_threshold;
+    _low_threshold = low_threshold;
+    _allow_low_quality_matches = allow_low_quality_matches;
 }
 
 std::vector<rocalTensorList *> MasterGraph::create_caffe_lmdb_record_meta_data_reader(const char *source_path, MetaDataReaderType reader_type , MetaDataType label_type)

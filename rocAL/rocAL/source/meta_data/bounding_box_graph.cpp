@@ -270,3 +270,59 @@ void BoundingBoxGraph::update_box_encoder_meta_data(std::vector<float> *anchors,
     }
 }
 
+void BoundingBoxGraph::update_box_iou_matcher(std::vector<float> *anchors, pMetaDataBatch full_batch_meta_data ,float criteria, float high_threshold, float low_threshold, bool allow_low_quality_matches)
+{
+    std::cerr << "\n Inside bbox graph : box_iou)matcher..";
+    #pragma omp parallel for
+    for (int i = 0; i < full_batch_meta_data->size(); i++)
+    {
+        BoundingBoxCord *bbox_anchors = reinterpret_cast<BoundingBoxCord *>(anchors->data());
+        auto bb_count = full_batch_meta_data->get_bb_labels_batch()[i].size();
+        BoundingBoxCord bb_coords[bb_count];
+        BoundingBoxLabels bb_labels;
+        bb_labels.resize(bb_count);
+        memcpy(bb_labels.data(), full_batch_meta_data->get_bb_labels_batch()[i].data(), sizeof(int) * bb_count);
+        memcpy(bb_coords, full_batch_meta_data->get_bb_cords_batch()[i].data(), full_batch_meta_data->get_bb_cords_batch()[i].size() * sizeof(BoundingBoxCord));
+        BoundingBoxCords_xcycwh encoded_bb;
+        BoundingBoxLabels encoded_labels;
+        unsigned anchors_size = anchors->size() / 4; // divide the anchors_size by 4 to get the total number of anchors
+        std::cerr << "\n Anchor size : " << anchors_size;
+        //Calculate Ious
+        //ious size - bboxes count x anchors count
+        std::vector<float> ious(bb_count * anchors_size);
+        encoded_bb.resize(anchors_size);
+        encoded_labels.resize(anchors_size);
+        for (uint bb_idx = 0; bb_idx < bb_count; bb_idx++)
+        {
+            auto iou_rows = ious.data() + (bb_idx * (anchors_size));
+            calculate_ious_for_box(iou_rows, bb_coords[bb_idx], bbox_anchors, anchors_size);
+        }
+        std::cerr << "\n Passed iou _box";
+        // Depending on the matches ->place the best bbox instead of the corresponding anchor_idx in anchor
+        for (unsigned anchor_idx = 0; anchor_idx < anchors_size; anchor_idx++)
+        {
+            BoundingBoxCord_xcycwh box_bestidx, anchor_xcyxwh;
+            BoundingBoxCord *p_anchor = &bbox_anchors[anchor_idx];
+            const auto best_idx = find_best_box_for_anchor(anchor_idx, ious, bb_count, anchors_size);
+            // Filter matches by criteria
+            if (ious[(best_idx * anchors_size) + anchor_idx] > criteria) //Its a match
+            {
+                //Convert the "ltrb" format to "xcycwh"
+                encoded_bb[anchor_idx].xc = 0.5 * (p_anchor->l + p_anchor->r); //xc
+                encoded_bb[anchor_idx].yc = 0.5 * (p_anchor->t + p_anchor->b); //yc
+                encoded_bb[anchor_idx].w = (-p_anchor->l + p_anchor->r);      //w
+                encoded_bb[anchor_idx].h = (-p_anchor->t + p_anchor->b);      //h
+                encoded_labels[anchor_idx] = 0;
+            }
+        }
+        std::cerr << "\n Passes for loop : ";
+        BoundingBoxCords * encoded_bb_ltrb = (BoundingBoxCords*)&encoded_bb;
+        full_batch_meta_data->get_bb_cords_batch()[i] = (*encoded_bb_ltrb);
+        full_batch_meta_data->get_bb_labels_batch()[i] = encoded_labels;
+        full_batch_meta_data->get_metadata_dimensions_batch().bb_labels_dims()[i][0] = anchors_size;
+        full_batch_meta_data->get_metadata_dimensions_batch().bb_cords_dims()[i][0] = anchors_size;
+        std::cerr << "\n End.." ;
+        //encoded_bb.clear();
+        //encoded_labels.clear();
+    }
+}

@@ -1,0 +1,43 @@
+OK: OpenVX using GPU device - 0:  [gfx90a:sramecc+:xnack-] with 110 CUs on PCI bus c1:00.0
+OK: loaded 90 kernels from libvx_rpp.so
+OK: loaded 2 kernels from libvx_amd_media.so
+[INF]  {rocalJpegCOCOFileSourceSingleShard}  Internal buffer size width = 640 height = 640 depth = 3
+[INF]  {output_routine}  Output routine started with 10 to load
+[INF]  {output_routine}  Output routine started with 10 to load
+*********************************************************************
+comes to gpu
+Pipeline has been created succesfully
+*********************** SHARD ID ************************ 0
+*********************** NUM SHARDS ********************** 1
++++++++++++++++++++++++++++++EPOCH+++++++++++++++++++++++++++++++++++++ 0
+
+ Self.encoded_labels :  tensor([3], dtype=torch.int32)
+************************************** i ************************************* 0
+
+ Self.encoded_labels :  tensor([51], dtype=torch.int32)
+************************************** i ************************************* 1
+
+ Self.encoded_labels :  tensor([3], dtype=torch.int32)
+************************************** i ************************************* 2
+
+ Self.encoded_labels :  tensor([28], dtype=torch.int32)
+************************************** i ************************************* 3
+
+ Self.encoded_labels :  tensor([21], dtype=torch.int32)
+************************************** i ************************************* 4
+
+ Self.encoded_labels :  tensor([1], dtype=torch.int32)
+************************************** i ************************************* 5
+
+ Self.encoded_labels :  tensor([1], dtype=torch.int32)
+************************************** i ************************************* 6
+
+ Self.encoded_labels :  tensor([75], dtype=torch.int32)
+************************************** i ************************************* 7
+
+ Self.encoded_labels :  tensor([18], dtype=torch.int32)
+************************************** i ************************************* 8
+
+ Self.encoded_labels :  tensor([68], dtype=torch.int32)
+************************************** i ************************************* 9
+*********************************************************************

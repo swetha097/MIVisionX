@@ -117,6 +117,7 @@ class Pipeline(object):
         self._name = None
         self._anchors = None
         self._BoxEncoder = None
+        self._BoxIOUMatcher = None
         self._encode_tensor = None
         self._numOfClasses = None
         self._oneHotEncoding = False
@@ -294,6 +295,9 @@ class Pipeline(object):
 
     def rocalGetImageLabels(self):
         return b.rocalGetImageLabels(self._handle)
+    
+    def rocalGetBoundingBoxCords(self):
+        return b.rocalGetBoundingBoxCords(self._handle)
 
     def copy_out_data_ptr(self, data_ptr):
         return b.copy_data_ptr(self._handle, data_ptr)

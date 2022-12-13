@@ -313,6 +313,16 @@ namespace rocal
         // rocal_api_meta_data.h
         m.def("RandomBBoxCrop", &rocalRandomBBoxCrop);
         m.def("BoxEncoder",&rocalBoxEncoder);
+        m.def("BoxIOUMatcher", &rocalBoxIOUMatcher);
+        //introduce one for getMatchedIdxs
+        /*m.def("getMatchedIdxs", [](RocalContext context, py::array_t<int> array)
+        {
+            auto buf = array.request();
+            int* ptr = (int*) buf.ptr;
+            // call pure C++ function
+            rocalGetMatchedIdxs(context,ptr);
+        }
+        );*/
         m.def("getImageId", [](RocalContext context, py::array_t<int> array)
         {
             auto buf = array.request();
@@ -368,6 +378,19 @@ namespace rocal
                             1,
                             {labels->size()},
                             {sizeof(int) }));
+    }
+            );
+        m.def(
+            "rocalGetBoundingBoxCords", [](RocalContext context)
+    {
+            rocalTensorList *boxes = rocalGetBoundingBoxCords(context);
+            return py::array(py::buffer_info(
+                            (float *)(boxes->at(0)->buffer()),
+                            sizeof(float),
+                            py::format_descriptor<float>::format(),
+                            1,
+                            {boxes->size() * 4},
+                            {sizeof(float) }));
     }
             );
         // m.def(

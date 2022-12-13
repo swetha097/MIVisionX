@@ -412,6 +412,15 @@ void ROCAL_API_CALL rocalBoxEncoder(RocalContext p_context, std::vector<float>& 
     context->master_graph->box_encoder(anchors, criteria, means, stds, offset, scale);
 }
 
+void ROCAL_API_CALL rocalBoxIOUMatcher(RocalContext p_context, std::vector<float>& anchors, float criteria,
+                                  float high_threshold, float low_threshold ,  bool allow_low_quality_matches)
+{
+    if (!p_context)
+        THROW("Invalid rocal context passed to rocalBoxIOUMatcher")
+    auto context = static_cast<Context *>(p_context);
+    context->master_graph->box_iou_matcher(anchors, criteria, high_threshold, low_threshold, allow_low_quality_matches);
+}
+
 // RocalMetaData
 // ROCAL_API_CALL rocalCopyEncodedBoxesAndLables(RocalContext p_context, float* boxes_buf, int* labels_buf)
 // {

@@ -47,6 +47,8 @@ typedef  std::vector<ImgSize> ImgSizes;
 typedef std::vector<std::vector<float>> coords;
 typedef std::vector<float> MaskCords;
 
+typedef std::vector<std::vector<float>> matched_idxs;
+
 struct MetaData
 {
     int& get_label() { return _label_id; }
