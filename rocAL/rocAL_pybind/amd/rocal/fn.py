@@ -68,6 +68,30 @@ def crop_mirror_normalize(*inputs, bytes_per_sample_hint=0, crop=[0, 0], crop_d=
     Pipeline._current_pipeline._offset = list(map(lambda x,y: -(x/y), mean, std))
     return (cmn)
 
+def resize_mirror_normalize(*inputs, bytes_per_sample_hint=0, resize_depth = 0, resize_width = 0, resize_height = 0, interpolation_type=types.LINEAR_INTERPOLATION,
+                            image_type=0, mean=[0.0], mirror=1, output_dtype=types.FLOAT, rocal_tensor_layout =types.NHWC,
+                            rocal_tensor_output_type = types.FLOAT, output_layout=types.NHWC, pad_output=False,
+                            preserve=False, seed=1, std=[1.0], device=None):
+    #Set Seed
+    b.setSeed(seed)
+
+    if isinstance(mirror,int):
+        if(mirror == 0):
+            mirror = b.CreateIntParameter(0)
+        else:
+            mirror = b.CreateIntParameter(1)
+
+    # pybind call arguments
+    kwargs_pybind = {"input_image0": inputs[0],"rocal_tensor_layout" : rocal_tensor_layout, "rocal_tensor_output_type" : rocal_tensor_output_type, "resize_depth":resize_depth, "resize_heigh":resize_height,
+                     "resize_width":resize_width, "interpolation_type":interpolation_type, "mean":mean, "std_dev":std, "is_output": False, "mirror": mirror}
+    b.setSeed(seed)
+    rmn = b.ResizeMirrorNormalize(Pipeline._current_pipeline._handle ,*(kwargs_pybind.values()))
+    Pipeline._current_pipeline._tensor_layout = output_layout
+    Pipeline._current_pipeline._tensor_dtype = output_dtype
+    Pipeline._current_pipeline._multiplier = list(map(lambda x: 1/x ,std))
+    Pipeline._current_pipeline._offset = list(map(lambda x,y: -(x/y), mean, std))
+    return (rmn)
+
 def resize_shorter(*inputs, resize_size=0, rocal_tensor_layout=types.NHWC, rocal_tensor_output_type=types.UINT8):
     # pybind call arguments
     kwargs_pybind = {"input_image0": inputs[0], "rocal_tensor_layout": rocal_tensor_layout, "rocal_tensor_output_type" :rocal_tensor_output_type, "resize_size": resize_size,
