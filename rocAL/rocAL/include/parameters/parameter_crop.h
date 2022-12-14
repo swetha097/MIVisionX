@@ -51,7 +51,7 @@ public:
         x_drift_factor     = default_x_drift_factor();
         y_drift_factor     = default_y_drift_factor();
     }
-    void set_image_dimensions(const unsigned *roi)
+    void set_image_dimensions(unsigned *roi)
     {
         // if(in_roi.size() != roi->size())
         //     THROW("wrong input width or height size")

@@ -36,7 +36,7 @@ struct BrightnessLocalData {
     RpptDesc srcDesc;
     RpptDesc dstDesc;
     RpptDescPtr dst_desc_ptr;
-    unsigned *roi_tensor_ptr;
+    void *roi_tensor_ptr;
     RpptRoiType roiType;
     Rpp32s input_layout;
     Rpp32s output_layout;
@@ -53,24 +53,9 @@ struct BrightnessLocalData {
 
 static vx_status VX_CALLBACK refreshBrightness(vx_node node, const vx_reference *parameters, vx_uint32 num, BrightnessLocalData *data) {
     vx_status status = VX_SUCCESS;
-    // STATUS_ERROR_CHECK(vxCopyArrayRange((vx_array)parameters[1], 0, data->nbatchSize * 4, sizeof(unsigned), data->roi_tensor_ptr, VX_READ_ONLY, VX_MEMORY_TYPE_HOST));
     STATUS_ERROR_CHECK(vxCopyArrayRange((vx_array)parameters[3], 0, data->nbatchSize, sizeof(vx_float32), data->alpha, VX_READ_ONLY, VX_MEMORY_TYPE_HOST));
     STATUS_ERROR_CHECK(vxCopyArrayRange((vx_array)parameters[4], 0, data->nbatchSize, sizeof(vx_float32), data->beta, VX_READ_ONLY, VX_MEMORY_TYPE_HOST));
-    
-    // if((data->input_layout == 2 || data->input_layout == 3)) { // For NFCHW and NFHWC formats
-    //     unsigned num_of_frames = data->in_tensor_dims[1]; // Num of frames 'F'
-    //     for(int n = data->nbatchSize - 1; n >= 0; n--) {
-    //         unsigned index = n * num_of_frames;
-    //         for(int f = 0; f < num_of_frames; f++) {
-    //             data->alpha[index + f] = data->alpha[n];
-    //             data->beta[index + f] = data->beta[n];
-    //             data->roi_tensor_ptr[index + f].xywhROI.xy.x = data->roi_tensor_ptr[n].xywhROI.xy.x;
-    //             data->roi_tensor_ptr[index + f].xywhROI.xy.y = data->roi_tensor_ptr[n].xywhROI.xy.y;
-    //             data->roi_tensor_ptr[index + f].xywhROI.roiWidth = data->roi_tensor_ptr[n].xywhROI.roiWidth;
-    //             data->roi_tensor_ptr[index + f].xywhROI.roiHeight = data->roi_tensor_ptr[n].xywhROI.roiHeight;
-    //         }
-    //     }
-    // }
+
     if (data->device_type == AGO_TARGET_AFFINITY_GPU) {
 #if ENABLE_HIP
         STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[1], VX_TENSOR_BUFFER_HIP, &data->roi_tensor_ptr_dev, sizeof(data->roi_tensor_ptr_dev)));
@@ -96,9 +81,21 @@ static vx_status VX_CALLBACK refreshBrightness(vx_node node, const vx_reference 
         }
 #endif
     }
-    
-    
-    
+    if((data->input_layout == 2 || data->input_layout == 3)) { // For NFCHW and NFHWC formats
+        unsigned num_of_frames = data->in_tensor_dims[1]; // Num of frames 'F'
+        for(int n = data->nbatchSize - 1; n >= 0; n--) {
+            unsigned index = n * num_of_frames;
+            for(int f = 0; f < num_of_frames; f++) {
+                data->alpha[index + f] = data->alpha[n];
+                data->beta[index + f] = data->beta[n];
+                data->roi_tensor_ptr[index + f].xywhROI.xy.x = data->roi_tensor_ptr[n].xywhROI.xy.x;
+                data->roi_tensor_ptr[index + f].xywhROI.xy.y = data->roi_tensor_ptr[n].xywhROI.xy.y;
+                data->roi_tensor_ptr[index + f].xywhROI.roiWidth = data->roi_tensor_ptr[n].xywhROI.roiWidth;
+                data->roi_tensor_ptr[index + f].xywhROI.roiHeight = data->roi_tensor_ptr[n].xywhROI.roiHeight;
+            }
+        }
+    }
+
     return status;
 }
 
