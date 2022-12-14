@@ -39,10 +39,12 @@ protected:
     void create_node() override;
     void update_node() override;
 private:
-    vx_array _anchors_array , _shapes_array, _fill_values_array;
+    vx_array  _fill_values_array;
+    float * _anchor_array , *_shape_array;
     RocalTensor _anchor;
     RocalTensor _shape;
-    std::vector<float> _fill_values, _fill_values_vec;
+    std::vector<float> _fill_values, _fill_values_vec, _anchor_vec, _shape_vec;
+    std::vector<unsigned int> _output_width_vector, _output_height_vector;
     bool _normalized_anchor = false;
     bool _normalized_shape = false;
     RocalOutOfBoundsPolicy _policy = RocalOutOfBoundsPolicy::ERROR;

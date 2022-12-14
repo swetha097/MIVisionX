@@ -88,7 +88,7 @@ def image_slice(*inputs,file_root='',path='',annotations_file='',shard_id = 0, n
         image_decoder_slice = b.FusedDecoderCropShard(Pipeline._current_pipeline._handle ,*(kwargs_pybind.values()))
     return (image_decoder_slice)
 
-def audio(*inputs, file_root='', bytes_per_sample_hint=[0],shard_id = 0, num_shards = 1, random_shuffle = False,downmix=False, dtype=types.FLOAT, preserve=False, quality=50.0, max_frames=1 , max_channels=1 ,sample_rate=0.0, seed=1 ):
+def audio(*inputs, file_root='', bytes_per_sample_hint=[0], shard_id = 0, num_shards = 1, random_shuffle = False, downmix=False, dtype=types.FLOAT, preserve=False, quality=50.0, max_frames=1 , max_channels=1 ,sample_rate=0.0, seed=1 ):
     kwargs_pybind = {
             "source_path": file_root,
             "shard_id": shard_id,

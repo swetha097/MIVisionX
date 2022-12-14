@@ -35,7 +35,7 @@ void PadNode::create_node() {
     std::vector<float> anchors(_batch_size * _num_of_dims, 0);
     std::vector<float> shape(_batch_size * _num_of_dims, 0);
     std::vector<float> fill_value(_batch_size * _num_of_dims, 0);
-    _stride = (vx_size *)malloc((_num_of_dims - 1) * tensor_data_size(_outputs[0]->info().data_type()));
+    _stride = (vx_size *)malloc((_num_of_dims ) * tensor_data_size(_outputs[0]->info().data_type()));
     _stride[0] = sizeof(float);
     _stride[1] = _stride[0] * _inputs[0]->info().dims()[0];
     vx_status status;

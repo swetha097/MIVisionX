@@ -6,12 +6,15 @@ import numpy as np
 from amd.rocal.plugin.pytorch import ROCALClassificationIterator
 import torch
 torch.set_printoptions(threshold=10_000)
+np.set_printoptions(threshold=1000, edgeitems=10000)
+
 from amd.rocal.pipeline import Pipeline
 import amd.rocal.fn as fn
 import amd.rocal.types as types
 # import rocal_pybind.tensor
 import sys
 import cv2
+import matplotlib.pyplot as plt
 import os
 
 def draw_patches(img, idx, device):
@@ -21,10 +24,17 @@ def draw_patches(img, idx, device):
             image = img.detach().numpy()
     else:
         image = img.cpu().numpy()
-    image = image.transpose([1, 2, 0])
+    # image = image.transpose([1, 2, 0])
     print(img.shape)
-    image = cv2.cvtColor(image, cv2.COLOR_RGB2BGR)
-    cv2.imwrite("OUTPUT_IMAGES_PYTHON/NEW_API/FILE_READER/" + "brightness" + "/" + str(idx)+"_"+"train"+".png", image * 255)
+    print(idx)
+    print(img.cpu().detach().numpy().flatten())
+    print(idx)
+    # exit(0)
+    audio_data = img.flatten()
+    label = idx.cpu().detach().numpy()
+    plt.plot(audio_data)
+    plt.savefig("rocal_audio_data"+str(label)+".png")
+    # cv2.imwrite("OUTPUT_IMAGES_PYTHON/NEW_API/FILE_READER/" + "brightness" + "/" + str(idx)+"_"+"train"+".png", image * 255)
 
 def main():
     if  len(sys.argv) < 3:
@@ -64,14 +74,14 @@ def main():
             file_root=data_path,
             file_list=file_list,
             shard_id=0,
-            num_shards=8,)
+            num_shards=1,)
         sample_rate = 16000
         nfft=512
         window_size=0.02
         window_stride=0.01
         nfilter=80 #nfeatures
         resample = 1
-        audio_decode = fn.decoders.audio(audio, file_root=data_path, downmix=True, sample_rate=sample_rate*resample, shard_id=0, num_shards=8)
+        audio_decode = fn.decoders.audio(audio, file_root=data_path, downmix=True, sample_rate=sample_rate*resample, shard_id=0, num_shards=1)
         begin, length = fn.nonsilent_region(audio_decode, cutoff_db=-60)
         trim_silence = fn.slice(
             audio_decode,
@@ -89,34 +99,34 @@ def main():
             window_step= 160, # Change to 160
             rocal_tensor_output_type=types.FLOAT,
         )
-        mel_filter_bank_audio = fn.mel_filter_bank(
-            spectrogram_audio,
-            sample_rate=sample_rate,
-            nfilter=nfilter,
-        )
-        to_decibels_audio = fn.to_decibels(
-            mel_filter_bank_audio,
-            multiplier=np.log(10),
-            reference=1.0,
-            cutoff_db=np.log(1e-20),
-            rocal_tensor_output_type=types.FLOAT,
-        )
-        normalize_audio = fn.normalize(to_decibels_audio, axes=[1])
-        pad_audio = fn.pad(normalize_audio, fill_value=0)
-        audio_pipeline.set_outputs(normalize_audio)
+        # mel_filter_bank_audio = fn.mel_filter_bank(
+        #     spectrogram_audio,
+        #     sample_rate=sample_rate,
+        #     nfilter=nfilter,
+        # )
+        # to_decibels_audio = fn.to_decibels(
+        #     mel_filter_bank_audio,
+        #     multiplier=np.log(10),
+        #     reference=1.0,
+        #     cutoff_db=np.log(1e-20),
+        #     rocal_tensor_output_type=types.FLOAT,
+        # )
+        # normalize_audio = fn.normalize(to_decibels_audio, axes=[1])
+        # pad_audio = fn.pad(normalize_audio, fill_value=0)
+        audio_pipeline.set_outputs(spectrogram_audio)
 
     audio_pipeline.build()
     audioIteratorPipeline = ROCALClassificationIterator(audio_pipeline)
     cnt = 0
-    for e in range(3):
+    for e in range(1):
+        torch.set_printoptions(threshold=5000, profile="full", edgeitems=100)
         for i , it in enumerate(audioIteratorPipeline):
             print("************************************** i *************************************",i)
-            torch.set_printoptions(threshold=10_000)
             print(it)
-            for img in it[0]:
+            for img, label in zip(it[0],it[1]):
                 print(img.shape)
+                draw_patches(img, label, "cpu")
                 cnt = cnt + 1
-                    # draw_patches(img, cnt, "cpu")
         print("EPOCH DONE", e)
         audioIteratorPipeline.reset()
 

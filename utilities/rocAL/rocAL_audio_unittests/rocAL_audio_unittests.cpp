@@ -117,7 +117,7 @@ int test(int test_case, const char *path, float sample_rate, int downmix, unsign
     // metadata_output = rocalCreateCOCOReader(handle, json_path, true, false);
 
     if (METADATA) {
-        const char* file_list_path = "/media/swetha/audio_support/dummy_audio_dataset/file_list.txt" ; // TODO: Add this as an arg in main() 
+        const char* file_list_path = "/media/MIVisionX-data/rocal_data/audio_samples/file_list.txt" ; // TODO: Add this as an arg in main() 
         metadata_output = rocalCreateFileListLabelReader(handle, path, file_list_path);
     }
 

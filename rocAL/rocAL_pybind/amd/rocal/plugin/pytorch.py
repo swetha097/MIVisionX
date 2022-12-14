@@ -4,6 +4,7 @@ import rocal_pybind as b
 import amd.rocal.types as types
 import ctypes
 
+torch.set_printoptions(threshold=10_000, profile="full")
 # class RALIGenericImageIterator(object):
 #     def __init__(self, pipeline):
 #         self.loader = pipeline
@@ -69,6 +70,7 @@ class RALIGenericIterator(object):
 
     def __next__(self):
         print("Comes to next")
+        torch.set_printoptions(threshold=10_000, profile="full", edgeitems=100)
         if(b.isEmpty(self.loader._handle)):
             raise StopIteration
 

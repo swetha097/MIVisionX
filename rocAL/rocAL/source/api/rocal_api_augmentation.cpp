@@ -1045,7 +1045,7 @@ RocalTensor rocalSlice(RocalContext p_context,
         output_info.set_data_type(op_tensorDataType);
 
         output = context->master_graph->create_tensor(output_info, is_output);
-
+        output->reset_tensor_roi(); // TODO : Swetha : Check with Fiona
         // rocalTensorInfo output_info = input->info();
         // get_rocal_tensor_data_type(rocal_tensor_output_type, op_tensorDataType);
         // std::vector<size_t> dims = output_info.dims();
