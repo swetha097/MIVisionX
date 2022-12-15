@@ -57,11 +57,10 @@ void CropMetaNode::update_parameters(MetaDataBatch* input_meta_data, bool segmen
         BoundingBoxCord temp_box;
         BoundingBoxLabels bb_labels;
         BoundingBoxCord crop_box;
-        crop_box.l = (float)_x1_val[i] / input_roi[2];
-        crop_box.t = (float)_y1_val[i] / input_roi[3];
-        crop_box.r = (float)(_x1_val[i] + _crop_width_val[i]) / input_roi[2];
-        crop_box.b = (float)(_y1_val[i] + _crop_height_val[i]) / input_roi[3];
-        input_roi += 4;
+        crop_box.l = (float)_x1_val[i] / input_roi[i].x2;
+        crop_box.t = (float)_y1_val[i] / input_roi[i].y2;
+        crop_box.r = (float)(_x1_val[i] + _crop_width_val[i]) / input_roi[i].x2;
+        crop_box.b = (float)(_y1_val[i] + _crop_height_val[i]) / input_roi[i].y2;
 
         for(uint j = 0; j < bb_count; j++)
         {

@@ -61,11 +61,10 @@ void CropMirrorNormalizeMetaNode::update_parameters(MetaDataBatch* input_meta_da
         BoundingBoxCord temp_box = {0, 0, 1, 1};
         BoundingBoxLabels bb_labels;
         BoundingBoxCord crop_box;
-        crop_box.l = (_x1_val[i]) / input_roi[2];
-        crop_box.t = (_y1_val[i]) / input_roi[3];
-        crop_box.r = (_x1_val[i] + _width_val[i]) / input_roi[2];
-        crop_box.b = (_y1_val[i] + _height_val[i]) / input_roi[3];
-        input_roi +=  4;
+        crop_box.l = (_x1_val[i]) / input_roi[i].x2;
+        crop_box.t = (_y1_val[i]) / input_roi[i].y2;
+        crop_box.r = (_x1_val[i] + _width_val[i]) / input_roi[i].x2;
+        crop_box.b = (_y1_val[i] + _height_val[i]) / input_roi[i].y2;
         // std::cout<<"CROP Co-ordinates in CMN: lxtxrxb::\t"<<crop_box.l<<"x"<<crop_box.t<<"x"<<crop_box.r<<"x"<<crop_box.b<<"x";
         for(uint j = 0; j < bb_count; j++)
         {

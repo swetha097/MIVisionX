@@ -179,13 +179,12 @@ void SSDRandomCropNode::update_node()
                 continue;
             break;
         } // while loop
-        _x1_val[i] = (crop_box.l) * input_roi[2];
-        _y1_val[i] = (crop_box.t) * input_roi[3];
-        _crop_width_val[i] = (crop_box.r - crop_box.l) * input_roi[2];
-        _crop_height_val[i] = (crop_box.b - crop_box.t) * input_roi[3];
-        _x2_val[i] =  (crop_box.r) * input_roi[2];
-        _y2_val[i] =  (crop_box.b) * input_roi[3];
-        input_roi += 4;
+        _x1_val[i] = (crop_box.l) * input_roi[i].x2;
+        _y1_val[i] = (crop_box.t) * input_roi[i].y2;
+        _crop_width_val[i] = (crop_box.r - crop_box.l) * input_roi[i].x2;
+        _crop_height_val[i] = (crop_box.b - crop_box.t) * input_roi[i].y2;
+        _x2_val[i] =  (crop_box.r) * input_roi[i].x2;
+        _y2_val[i] =  (crop_box.b) * input_roi[i].y2;
 
     }
     vxCopyArrayRange((vx_array)_crop_param->cropw_arr, 0, _batch_size, sizeof(uint), _crop_width_val.data(), VX_WRITE_ONLY, VX_MEMORY_TYPE_HOST);

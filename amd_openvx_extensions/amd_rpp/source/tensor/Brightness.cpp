@@ -37,6 +37,7 @@ struct BrightnessLocalData {
     RpptDesc dstDesc;
     RpptDescPtr dst_desc_ptr;
     void *roi_tensor_ptr;
+    RpptROI * roi_ptr;
     RpptRoiType roiType;
     Rpp32s input_layout;
     Rpp32s output_layout;
@@ -47,7 +48,6 @@ struct BrightnessLocalData {
 #if ENABLE_HIP
     void *pSrc_dev;
     void *pDst_dev;
-    void *roi_tensor_ptr_dev;
 #endif
 };
 
@@ -58,7 +58,7 @@ static vx_status VX_CALLBACK refreshBrightness(vx_node node, const vx_reference 
 
     if (data->device_type == AGO_TARGET_AFFINITY_GPU) {
 #if ENABLE_HIP
-        STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[1], VX_TENSOR_BUFFER_HIP, &data->roi_tensor_ptr_dev, sizeof(data->roi_tensor_ptr_dev)));
+        STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[1], VX_TENSOR_BUFFER_HIP, &data->roi_tensor_ptr, sizeof(data->roi_tensor_ptr)));
         STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[0], VX_TENSOR_BUFFER_HIP, &data->pSrc_dev, sizeof(data->pSrc_dev)));
         STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[2], VX_TENSOR_BUFFER_HIP, &data->pDst_dev, sizeof(data->pDst_dev)));
 #endif
@@ -81,6 +81,7 @@ static vx_status VX_CALLBACK refreshBrightness(vx_node node, const vx_reference 
         }
 #endif
     }
+    data->roi_ptr = (RpptROI *)data->roi_tensor_ptr;
     if((data->input_layout == 2 || data->input_layout == 3)) { // For NFCHW and NFHWC formats
         unsigned num_of_frames = data->in_tensor_dims[1]; // Num of frames 'F'
         for(int n = data->nbatchSize - 1; n >= 0; n--) {
@@ -88,10 +89,10 @@ static vx_status VX_CALLBACK refreshBrightness(vx_node node, const vx_reference 
             for(int f = 0; f < num_of_frames; f++) {
                 data->alpha[index + f] = data->alpha[n];
                 data->beta[index + f] = data->beta[n];
-                data->roi_tensor_ptr[index + f].xywhROI.xy.x = data->roi_tensor_ptr[n].xywhROI.xy.x;
-                data->roi_tensor_ptr[index + f].xywhROI.xy.y = data->roi_tensor_ptr[n].xywhROI.xy.y;
-                data->roi_tensor_ptr[index + f].xywhROI.roiWidth = data->roi_tensor_ptr[n].xywhROI.roiWidth;
-                data->roi_tensor_ptr[index + f].xywhROI.roiHeight = data->roi_tensor_ptr[n].xywhROI.roiHeight;
+                data->roi_ptr[index + f].xywhROI.xy.x = data->roi_ptr[n].xywhROI.xy.x;
+                data->roi_ptr[index + f].xywhROI.xy.y = data->roi_ptr[n].xywhROI.xy.y;
+                data->roi_ptr[index + f].xywhROI.roiWidth = data->roi_ptr[n].xywhROI.roiWidth;
+                data->roi_ptr[index + f].xywhROI.roiHeight = data->roi_ptr[n].xywhROI.roiHeight;
             }
         }
     }
@@ -160,12 +161,12 @@ static vx_status VX_CALLBACK processBrightness(vx_node node, const vx_reference 
     if (data->device_type == AGO_TARGET_AFFINITY_GPU) {
 #if ENABLE_HIP
         refreshBrightness(node, parameters, num, data);
-        rpp_status = rppt_brightness_gpu((void *)data->pSrc_dev, data->src_desc_ptr, (void *)data->pDst_dev, data->dst_desc_ptr,  data->alpha, data->beta, (RpptROI *)data->roi_tensor_ptr_dev, data->roiType, data->rppHandle);
+        rpp_status = rppt_brightness_gpu((void *)data->pSrc_dev, data->src_desc_ptr, (void *)data->pDst_dev, data->dst_desc_ptr,  data->alpha, data->beta, data->roi_ptr, data->roiType, data->rppHandle);
         return_status = (rpp_status == RPP_SUCCESS) ? VX_SUCCESS : VX_FAILURE;
 #endif
     } else if (data->device_type == AGO_TARGET_AFFINITY_CPU) {
         refreshBrightness(node, parameters, num, data);
-        rpp_status = rppt_brightness_host(data->pSrc, data->src_desc_ptr, data->pDst, data->dst_desc_ptr, data->alpha, data->beta, (RpptROI *)data->roi_tensor_ptr, data->roiType, data->rppHandle);
+        rpp_status = rppt_brightness_host(data->pSrc, data->src_desc_ptr, data->pDst, data->dst_desc_ptr, data->alpha, data->beta, data->roi_ptr, data->roiType, data->rppHandle);
         return_status = (rpp_status == RPP_SUCCESS) ? VX_SUCCESS : VX_FAILURE;
     }
     return return_status;

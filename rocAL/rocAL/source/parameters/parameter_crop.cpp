@@ -57,7 +57,6 @@ void CropParam::array_init()
     croph_arr_val.resize(batch_size);
     x2_arr_val.resize(batch_size);
     y2_arr_val.resize(batch_size);
-    // in_roi.resize(batch_size);
 }
 
 void CropParam::create_array(std::shared_ptr<Graph> graph)
