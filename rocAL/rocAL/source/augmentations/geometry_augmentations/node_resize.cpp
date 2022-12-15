@@ -52,7 +52,7 @@ void ResizeNode::create_node()
     vx_scalar out_layout_vx = vxCreateScalar(vxGetContext((vx_reference)_graph->get()), VX_TYPE_INT32, &output_layout);
     vx_scalar roi_type_vx = vxCreateScalar(vxGetContext((vx_reference)_graph->get()), VX_TYPE_INT32, &roi_type);
     vx_scalar interpolation_vx = vxCreateScalar(vxGetContext((vx_reference)_graph->get()),VX_TYPE_INT32,&_interpolation_type);
-   _node = vxExtrppNode_Resize(_graph->get(), _inputs[0]->handle(), _src_tensor_roi, _outputs[0]->handle(), _dst_roi_width, 
+   _node = vxExtrppNode_Resize(_graph->get(), _inputs[0]->handle(), _src_tensor_roi_, _outputs[0]->handle(), _dst_roi_width, 
                                _dst_roi_height, interpolation_vx, in_layout_vx , out_layout_vx, roi_type_vx, _batch_size);
 
     vx_status status;
@@ -61,10 +61,10 @@ void ResizeNode::create_node()
 }
 
 void ResizeNode::update_node() {
-    std::shared_ptr<std::vector<RocalROI>> src_roi = _inputs[0]->info().get_roi();
+    RocalROI *src_roi = _inputs[0]->info().get_roi();
     for (unsigned i = 0; i < _batch_size; i++) {
-        _src_width = src_roi->at(i).x2;
-        _src_height = src_roi->at(i).y2;
+        _src_width = src_roi[i].x2;
+        _src_height = src_roi[i].y2;
         _dst_width = _out_width;
         _dst_height = _out_height;
         adjust_out_roi_size();

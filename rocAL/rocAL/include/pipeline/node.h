@@ -51,6 +51,7 @@ protected:
     const std::vector<rocalTensor *> _outputs;
     std::shared_ptr<Graph> _graph = nullptr;
     vx_array _src_tensor_roi = nullptr, _dst_tensor_roi = nullptr;
+    vx_tensor _src_tensor_roi_ = nullptr, _dst_tensor_roi_ = nullptr; // TODO - To be removed
     vx_array _src_roi_width = nullptr; // TODO - To be removed
     vx_array _src_roi_height = nullptr; // TODO - To be removed
     vx_node _node = nullptr;
