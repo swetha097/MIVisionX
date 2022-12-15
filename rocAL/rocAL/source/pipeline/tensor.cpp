@@ -101,20 +101,19 @@ void rocalTensorInfo::allocate_tensor_roi_buffers() {
     {
         THROW("hipHostMalloc of size " + TOSTR(roi_size) + " failed " + TOSTR(err));
     }
-    hipMemset(_roi_buf, 0, roi_size);
-    _roi.reset(_roi_buf, hipHostFree);
+    hipMemset((void *)_roi_buf, 0, roi_size);
 #endif
     } else {
         std::cerr << "ROI BUFFER ALLOCATED------------HOST\n";
         
-        _roi_buf = (unsigned *) malloc(roi_size);
+        _roi_buf = (void *)malloc(roi_size);
         memset((void *) _roi_buf, 0, roi_size);
-        _roi.reset(_roi_buf, free);
     }
 }
+
 void rocalTensorInfo::reallocate_tensor_roi_buffers() {
     
-    if(!_roi)
+    if(!_roi_buf)
         allocate_tensor_roi_buffers();
 
     if (_is_image) {
@@ -142,12 +141,52 @@ rocalTensorInfo::rocalTensorInfo(std::vector<size_t> dims,
       _dims(dims),
       _mem_type(mem_type),
       _data_type(data_type) {
+    std::cerr << "INFO INIT CONSTRUCTOR\t";
     _batch_size = dims.at(0);
     _num_of_dims = dims.size();
     _data_size = tensor_data_size(data_type);
     for (unsigned i = 0; i < _num_of_dims; i++) _data_size *= dims.at(i);
 
     if (_num_of_dims <= 3) _is_image = false;
+}
+
+rocalTensorInfo::rocalTensorInfo(const rocalTensorInfo &other) {
+    std::cerr << "INVOKE COPY CONSTRUCTOR\t";
+    _type = other._type;
+    _num_of_dims = other._num_of_dims;
+    _dims = other._dims;
+    _batch_size = other._batch_size;
+    _mem_type = other._mem_type;
+    _roi_type = other._roi_type;
+    _data_type = other._data_type;
+    _layout = other._layout;
+    _color_format = other._color_format;
+    _data_type_size = other._data_type_size;
+    _data_size = other._data_size;
+    _max_shape = other._max_shape;
+    _is_image = other._is_image;
+    _is_metadata = other._is_metadata;
+    _channels = other._channels;
+    if(!other.is_metadata()) {  // For Metadata ROI buffer is not required
+        allocate_tensor_roi_buffers();
+        if(!other.get_roi())
+            memcpy((void *)_roi_buf, (const void *)other.get_roi(), _batch_size * 4 * sizeof(unsigned));
+    }
+}
+
+rocalTensorInfo::~rocalTensorInfo() {
+    if(!_is_metadata) {
+        if(_mem_type == RocalMemType::HIP) {
+    std::cerr << "DESTRUCTOR CALLED-----HIP";
+#if ENABLE_HIP
+            hipDeviceSynchronize();
+            hipHostFree(_roi_buf);
+#endif
+        } else {
+        std::cerr << "DESTRUCTOR CALLED-----HOST";
+        if(!_roi_buf) free(_roi_buf);
+        }
+    } 
 }
 
 void rocalTensor::update_tensor_roi(const std::vector<uint32_t> &width,
@@ -182,6 +221,7 @@ void rocalTensor::update_tensor_roi(const std::vector<uint32_t> &width,
 }
 
 rocalTensor::~rocalTensor() {
+    std::cerr << "Tensor destructor\n";
     _mem_handle = nullptr;
     if (_vx_handle) vxReleaseTensor(&_vx_handle);
 }
