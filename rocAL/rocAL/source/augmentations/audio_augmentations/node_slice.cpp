@@ -82,10 +82,10 @@ void SliceNode::update_node()
     for(unsigned i = 0; i < _batch_size; i++) {
         int idx = i * num_of_dims_shapes_anchors;
         //TODO: Swetha : To clean up the debug code
-            std::cerr << "\n roi x1 " << audio_roi->at(i).x1;
-            std::cerr << "\n roi y1 " << audio_roi->at(i).y1;
+            // std::cerr << "\n roi x1 " << audio_roi->at(i).x1;
+            // std::cerr << "\n roi y1 " << audio_roi->at(i).y1;
         for(unsigned d = 0; d < num_of_dims_shapes_anchors; d++) {
-        std::cerr << "\n Anchor : " << _anchor_array[idx + d] << "|\t Shape Array : " << (_shape_array[idx + d] - _anchor_array[idx + d]);
+        // std::cerr << "\n Anchor : " << _anchor_array[idx + d] << "|\t Shape Array : " << (_shape_array[idx + d] - _anchor_array[idx + d]);
         //TODO: Swetha : To handle 3d data by checking NCHW / NHWC format for images
             if(_shape_array[i + _batch_size] > 0  ) { // 2d anchors & shapes
                 if (d==0) _output_width_vector[i] = (_shape_array[idx + d] - _anchor_array[idx + d]);
@@ -101,11 +101,11 @@ void SliceNode::update_node()
             }
             _fill_values_vec[idx + d] = _fill_values[0];
 
-            std::cerr << "\n Slice.cpp" << _output_width_vector[i] << " : " << _output_height_vector[i] << " : " << _fill_values_vec[idx + d] << "\t";
+            // std::cerr << "\n Slice.cpp" << _output_width_vector[i] << " : " << _output_height_vector[i] << " : " << _fill_values_vec[idx + d] << "\t";
         }
 
         
-        std::cerr << "\n";
+        // std::cerr << "\n";
     }
     
     vx_status status = VX_SUCCESS;

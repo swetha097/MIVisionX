@@ -162,22 +162,22 @@ static vx_status VX_CALLBACK processSlice(vx_node node, const vx_reference *para
     {
         refreshSlice(node, parameters, num, data);
 //TODO: Swetha : To clean up the debug code
- float * buffer = (float *)data->anchor;
-            for(int n = 0; n < data->nbatchSize * 2; n++) 
-            {
-                std::cerr <<"slice begin:  "<<(float)buffer[n] << "\n";
-            }
- float * buffer1 = (float *)data->shape;
-            for(int n = 0; n < data->nbatchSize * 2; n++) 
-            {
-                std::cerr <<"slice length:  "<<(float)buffer1[n] << "\n";
-            }
+//  float * buffer = (float *)data->anchor;
+//             for(int n = 0; n < data->nbatchSize * 2; n++) 
+//             {
+//                 std::cerr <<"slice begin:  "<<(float)buffer[n] << "\n";
+//             }
+//  float * buffer1 = (float *)data->shape;
+//             for(int n = 0; n < data->nbatchSize * 2; n++) 
+//             {
+//                 std::cerr <<"slice length:  "<<(float)buffer1[n] << "\n";
+//             }
 
-int * dimSrc = (int*) data->srcDims;
- for(int n = 0; n < data->nbatchSize*2; n++) 
-            {
-                std::cerr <<"src length:  "<<(int)dimSrc[n] << "\n";
-            }
+// int * dimSrc = (int*) data->srcDims;
+//  for(int n = 0; n < data->nbatchSize*2; n++) 
+//             {
+//                 std::cerr <<"src length:  "<<(int)dimSrc[n] << "\n";
+//             }
 // float * psrc = (float*) data->pSrc;
 //  for(int n = 0; n < data->nbatchSize; n++) 
 //             {

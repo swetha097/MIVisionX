@@ -61,6 +61,10 @@ void ToDeciblesNode::update_node()
     {
         _src_samples_length[i] = audio_roi->at(i).x1;
         _src_samples_channels[i] = audio_roi->at(i).y1;
+        _dst_roi_width_vec.push_back(audio_roi->at(i).x1);
+        _dst_roi_height_vec.push_back(audio_roi->at(i).y1);
+        std::cerr << "_src_samples_length[i] = audio_roi->at(i).x1; " <<  audio_roi->at(i).x1;
+        std::cerr << "_src_samples_channels[i] = audio_roi->at(i).y1" << audio_roi->at(i).y1;
     }
     vx_status src_roi_status;
     src_roi_status = vxCopyArrayRange((vx_array)_src_samples_length_array, 0, _batch_size, sizeof(vx_uint32), _src_samples_length.data(), VX_WRITE_ONLY, VX_MEMORY_TYPE_HOST);
@@ -69,7 +73,9 @@ void ToDeciblesNode::update_node()
     src_roi_status = vxCopyArrayRange((vx_array)_src_samples_channels_array, 0, _batch_size, sizeof(vx_uint32), _src_samples_channels.data(), VX_WRITE_ONLY, VX_MEMORY_TYPE_HOST);
     if(src_roi_status != 0)
         THROW(" Failed calling vxCopyArrayRange for src / dst roi status : "+ TOSTR(src_roi_status))
-
+    _outputs[0]->update_tensor_roi(_dst_roi_width_vec, _dst_roi_height_vec);
+    _dst_roi_width_vec.clear();
+    _dst_roi_height_vec.clear();
 }
 
 void ToDeciblesNode::init(float cut_off_db, float multiplier, float magnitude_reference)

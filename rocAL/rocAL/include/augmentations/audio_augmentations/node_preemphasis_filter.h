@@ -43,4 +43,5 @@ private:
     ParameterVX<float> _preemph_coeff;
     constexpr static float PREEMPH_COEFF_RANGE [2] = {0.97, 0.97}; // 0.97 is the default value set in DALI
     RocalAudioBorderType _preemph_border;
+    std::vector<unsigned> _dst_roi_width_vec, _dst_roi_height_vec;
 };

@@ -5,8 +5,8 @@ import random
 import numpy as np
 from amd.rocal.plugin.pytorch import ROCALClassificationIterator
 import torch
-torch.set_printoptions(threshold=10_000)
-np.set_printoptions(threshold=1000, edgeitems=10000)
+# torch.set_printoptions(threshold=10_000)
+# np.set_printoptions(threshold=1000, edgeitems=10000)
 
 from amd.rocal.pipeline import Pipeline
 import amd.rocal.fn as fn
@@ -24,7 +24,6 @@ def draw_patches(img, idx, device):
             image = img.detach().numpy()
     else:
         image = img.cpu().numpy()
-    # image = image.transpose([1, 2, 0])
     print(img.shape)
     print(idx)
     print(img.cpu().detach().numpy().flatten())
@@ -76,7 +75,7 @@ def main():
             shard_id=0,
             num_shards=1,)
         sample_rate = 16000
-        nfft=512
+        nfft=2048
         window_size=0.02
         window_stride=0.01
         nfilter=80 #nfeatures
@@ -99,21 +98,21 @@ def main():
             window_step= 160, # Change to 160
             rocal_tensor_output_type=types.FLOAT,
         )
-        # mel_filter_bank_audio = fn.mel_filter_bank(
-        #     spectrogram_audio,
-        #     sample_rate=sample_rate,
-        #     nfilter=nfilter,
-        # )
-        # to_decibels_audio = fn.to_decibels(
-        #     mel_filter_bank_audio,
-        #     multiplier=np.log(10),
-        #     reference=1.0,
-        #     cutoff_db=np.log(1e-20),
-        #     rocal_tensor_output_type=types.FLOAT,
-        # )
+        mel_filter_bank_audio = fn.mel_filter_bank(
+            spectrogram_audio,
+            sample_rate=sample_rate,
+            nfilter=nfilter,
+        )
+        to_decibels_audio = fn.to_decibels(
+            mel_filter_bank_audio,
+            multiplier=np.log(10),
+            reference=1.0,
+            cutoff_db=np.log(1e-20),
+            rocal_tensor_output_type=types.FLOAT,
+        )
         # normalize_audio = fn.normalize(to_decibels_audio, axes=[1])
         # pad_audio = fn.pad(normalize_audio, fill_value=0)
-        audio_pipeline.set_outputs(spectrogram_audio)
+        audio_pipeline.set_outputs(mel_filter_bank_audio, to_decibels_audio)
 
     audio_pipeline.build()
     audioIteratorPipeline = ROCALClassificationIterator(audio_pipeline)

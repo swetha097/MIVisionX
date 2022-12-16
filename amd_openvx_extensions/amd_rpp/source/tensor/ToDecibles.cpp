@@ -66,8 +66,10 @@ static vx_status VX_CALLBACK refreshToDecibels(vx_node node, const vx_reference 
     STATUS_ERROR_CHECK(vxCopyArrayRange((vx_array)parameters[3], 0, data->nbatchSize, sizeof(unsigned), data->sample_channel, VX_READ_ONLY, VX_MEMORY_TYPE_HOST));
     for(uint i = 0; i < data->nbatchSize; i++)
     {
-        data->srcDims[i].width = data->sample_channel[i];
-        data->srcDims[i].height = data->sample_length[i];
+        data->srcDims[i].width = data->sample_length[i];
+        data->srcDims[i].height = data->sample_channel[i];
+        std::cerr << " \n tod data->srcDims[i].width :" << data->srcDims[i].width; 
+        std::cerr << " \n tod data->srcDims[i].height :" << data->srcDims[i].height; 
     }
     if (data->deviceType == AGO_TARGET_AFFINITY_GPU)
     {
@@ -146,6 +148,18 @@ static vx_status VX_CALLBACK processToDecibels(vx_node node, const vx_reference 
     if (data->deviceType == AGO_TARGET_AFFINITY_CPU)
     {
         refreshToDecibels(node, parameters, num, data);
+        int * dimSrc = (int*) data->srcDims;
+    for(int n = 0; n < data->nbatchSize*2; n++) 
+            {
+                std::cerr <<"src length:  "<<(int)dimSrc[n] << "\n";
+            }
+    float * psrc = (float*) data->pSrc;
+ for(int n = 0; n < data->nbatchSize*2; n++) 
+            {
+                for (int j=0; j<(int)dimSrc[n] * (int)dimSrc[n+1] ;j++)
+
+                    std::cerr <<"src psrc:  "<<(float)psrc[j] << "\n";
+            }
         rpp_status = rppt_to_decibels_host((float *)data->pSrc, data->src_desc_ptr, (float *)data->pDst, data->dst_desc_ptr, data->srcDims, data->cutOffDB, data->multiplier, data->magnitudeReference);
         return_status = (rpp_status == RPP_SUCCESS) ? VX_SUCCESS : VX_FAILURE;
     }
@@ -197,7 +211,7 @@ static vx_status VX_CALLBACK initializeToDecibels(vx_node node, const vx_referen
     data->src_desc_ptr->strides.cStride = 1;
     data->src_desc_ptr->numDims = 4;
 
-    // source_description_ptr
+    // destination_description_ptr
     data->dst_desc_ptr->n = data->out_tensor_dims[0];
     data->dst_desc_ptr->w = data->out_tensor_dims[1];
     data->dst_desc_ptr->h = data->out_tensor_dims[2];

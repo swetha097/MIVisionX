@@ -70,14 +70,23 @@ void SpectrogramNode::update_node()
     auto audio_roi = _inputs[0]->info().get_roi();
     for (uint i=0; i < _batch_size; i++)
     {
+        //Change based on layout type
         _src_samples_length[i] = audio_roi->at(i).x1;
+        _dst_roi_width_vec[i] =(( _src_samples_length[i] - _window_length ) / _window_step) + 1;
+        _dst_roi_height_vec[i] =  _nfft_size / 2 + 1;
         // std::cerr<<"\n  audio_roi->at(i).x1 :" <<  audio_roi->at(i).x1;
         // std::cerr<<"\n  audio_roi->at(i).y1 :" <<  audio_roi->at(i).y1;
     }
+
+//                    dstDims[i].height = nfft / 2 + 1;
+                    // dstDims[i].width = ((srcLengthTensor[i] - windowOffset) / windowStep) + 1;
     vx_status src_roi_status;
     src_roi_status = vxCopyArrayRange((vx_array)_src_samples_length_array, 0, _batch_size, sizeof(vx_uint32), _src_samples_length.data(), VX_WRITE_ONLY, VX_MEMORY_TYPE_HOST);
     if(src_roi_status != 0)
-        THROW(" Failed calling vxCopyArrayRange for src / dst roi status : "+ TOSTR(src_roi_status))
+        THROW(" Failed calling vxCopyArrayRange for src / dst roi status : " + TOSTR(src_roi_status))
+    _outputs[0]->update_tensor_roi(_dst_roi_width_vec, _dst_roi_height_vec);
+    _dst_roi_width_vec.clear();
+    _dst_roi_height_vec.clear();
 }
 
 void SpectrogramNode::init(bool center_windows, bool reflect_padding, RocalSpectrogramLayout spec_layout,
@@ -90,6 +99,8 @@ void SpectrogramNode::init(bool center_windows, bool reflect_padding, RocalSpect
     _nfft_size = nfft_size;
     _window_length = window_length;
     _window_step = window_step;
+    _dst_roi_width_vec.resize(_batch_size);
+    _dst_roi_height_vec.resize(_batch_size);
     if(window_fn.empty())
     {
         _is_window_empty = true;

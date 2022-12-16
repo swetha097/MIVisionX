@@ -819,6 +819,7 @@ rocalToDecibels(RocalContext p_context,
         rocalTensorInfo output_info = input->info();
         output_info.set_tensor_layout(RocalTensorlayout::NONE);
         output_info.set_data_type(op_tensorDataType);
+        // TODO : Swetha -output->reset_tensor_roi();
 
         output = context->master_graph->create_tensor(output_info, is_output);
         context->master_graph->add_node<ToDeciblesNode>({input}, {output})->init(cut_off_DB, multiplier, magnitude_reference);
@@ -1045,7 +1046,7 @@ RocalTensor rocalSlice(RocalContext p_context,
         output_info.set_data_type(op_tensorDataType);
 
         output = context->master_graph->create_tensor(output_info, is_output);
-        output->reset_tensor_roi(); // TODO : Swetha : Check with Fiona
+        // output->reset_tensor_roi(); // TODO : Swetha : Check with Fiona
         // rocalTensorInfo output_info = input->info();
         // get_rocal_tensor_data_type(rocal_tensor_output_type, op_tensorDataType);
         // std::vector<size_t> dims = output_info.dims();
