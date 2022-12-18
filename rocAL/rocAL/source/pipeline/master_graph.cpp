@@ -979,11 +979,20 @@ std::vector<rocalTensorList *> MasterGraph::create_coco_meta_data_reader(const c
     default_bbox_info.set_metadata();
     default_bbox_info.set_tensor_layout(RocalTensorlayout::NONE);
     _meta_data_buffer_size.emplace_back(dims.at(0) * dims.at(1)  * _user_batch_size * sizeof(vx_float32)); // TODO - replace with data size from info
-
+    rocalTensorInfo default_mask_info, default_matches_info;
     //check if box coder - then add matched idxs meta data
-    //dim - 1 (int)
-    //1x120087
-    rocalTensorInfo default_mask_info;
+    if(_is_box_iou_matcher)
+    {
+        num_of_dims = 1;
+        dims.resize(num_of_dims);
+        dims.at(0) = 8732;//_is_box_iou_matcher ? MAX_NUM_ANCHORS : MAX_OBJECTS;//change it to 120087
+        default_matches_info  = rocalTensorInfo(dims,
+                                        _mem_type,
+                                        RocalTensorDataType::INT32);
+        default_matches_info.set_metadata();
+        default_matches_info.set_tensor_layout(RocalTensorlayout::NONE);
+        _meta_data_buffer_size.emplace_back(dims.at(0) * _user_batch_size * sizeof(vx_int32)); // TODO - replace with data size from info
+    }
     if(mask)
     {
         num_of_dims = 2;
@@ -1010,7 +1019,13 @@ std::vector<rocalTensorList *> MasterGraph::create_coco_meta_data_reader(const c
             auto mask_info = default_mask_info;
             _mask_tensor_list.push_back(new rocalTensor(mask_info));
         }
+        if(_is_box_iou_matcher)
+        {
+            auto matches_info = default_matches_info;
+            _matches_tensor_list.push_back(new rocalTensor(matches_info));
+        }
     }
+    std::cerr <<"\n Before init metadata in coco reader : " << _meta_data_buffer_size.size(); 
     _ring_buffer.init_metadata(RocalMemType::HOST, _meta_data_buffer_size, _meta_data_buffer_size.size());
     if(is_output)
     {
@@ -1023,6 +1038,8 @@ std::vector<rocalTensorList *> MasterGraph::create_coco_meta_data_reader(const c
     _metadata_output_tensor_list.emplace_back(&_bbox_tensor_list);
     if(mask)
         _metadata_output_tensor_list.emplace_back(&_mask_tensor_list);
+    if(_is_box_iou_matcher)
+        _metadata_output_tensor_list.emplace_back(&_matches_tensor_list);
 
     return _metadata_output_tensor_list;
 }
@@ -1365,6 +1382,21 @@ rocalTensorList * MasterGraph::bbox_labels_meta_data()
         meta_data_buffers += _labels_tensor_list[i]->info().data_size();
     }
     return &_labels_tensor_list;
+}
+
+rocalTensorList * MasterGraph::matches_meta_data()
+{
+    if(_ring_buffer.level() == 0)
+        THROW("No meta data has been loaded")
+    auto meta_data_buffers = (unsigned char *)_ring_buffer.get_meta_read_buffers()[2]; // Get labels buffer from ring buffer
+    auto matches_tensor_dims = _ring_buffer.get_meta_data_info().matches_dims();
+    for(unsigned i = 0; i < _matches_tensor_list.size(); i++)
+    {
+        _matches_tensor_list[i]->set_dims(matches_tensor_dims[i]);
+        _matches_tensor_list[i]->set_mem_handle((void *)meta_data_buffers);
+        meta_data_buffers += _matches_tensor_list[i]->info().data_size();
+    }
+    return &_matches_tensor_list;
 }
 
 rocalTensorList * MasterGraph::bbox_meta_data()

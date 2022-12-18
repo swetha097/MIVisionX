@@ -241,7 +241,8 @@ ROCAL_API_CALL rocalGetImageId(RocalContext p_context,  int* buf)
         THROW("meta data batch size is wrong " + TOSTR(meta_data_batch_size) + " != "+ TOSTR(context->user_batch_size() ))
     for(unsigned int i = 0; i < meta_data_batch_size; i++)
     {
-        std::string str_id = meta_data.first[i].erase(0, meta_data.first[i].find_first_not_of('0'));
+        //std::string str_id = meta_data.first[i].erase(0, meta_data.first[i].find_first_not_of('0'));
+        std::string str_id = meta_data.first[i];
         buf[i] = stoi(str_id);
     }
 }
@@ -285,6 +286,16 @@ ROCAL_API_CALL rocalGetBoundingBoxCords(RocalContext p_context)
     auto context = static_cast<Context*>(p_context);
     return context->master_graph->bbox_meta_data();
 }
+
+RocalTensorList
+ROCAL_API_CALL rocalGetMatchedIndices(RocalContext p_context)
+{
+    if (!p_context)
+        THROW("Invalid rocal context passed to rocalGetMatchedIndices")
+    auto context = static_cast<Context*>(p_context);
+    return context->master_graph->matches_meta_data();
+}
+
 
 #if 0 // Commented out for now
 void
@@ -396,10 +407,11 @@ ROCAL_API_CALL rocalGetImageSizes(RocalContext p_context, int* buf)
         WRN("No sizes has been loaded for this output image")
         return;
     }
+    std::cerr << "\n Inside meta data - rocalGetImgSize : meta_data_batch_size : " << meta_data_batch_size;
     for(unsigned i = 0; i < meta_data_batch_size; i++)
     {
         memcpy(buf, &(img_sizes[i]), sizeof(ImgSize));
-        buf += 2;
+        buf += 3;
     }
 }
 

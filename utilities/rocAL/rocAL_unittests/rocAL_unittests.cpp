@@ -180,13 +180,14 @@ int test(int test_case, int reader_type, int pipeline_type, const char *path, co
         {
             std::cout << ">>>>>>> Running PARTIAL DECODE" << std::endl;
             rocalCreateLabelReader(handle, path);
-            input1 = rocalFusedJpegCrop(handle, path, color_format, num_threads, false, false);
+            //input1 = rocalFusedJpegCrop(handle, path, color_format, num_threads, false, false);
         }
         break;
         case 2: //coco detection
         {
             std::cout << ">>>>>>> Running COCO READER" << std::endl;
-            char const *json_path = "";
+            char const *json_path = "/media/indu/RetinaNet/coco_10_img/coco2017/annotations/instances_train2017.json";
+            //char const *json_path = "/media/openimages_mlperf/validation/labels/openimages-mlperf.json";
             if (strcmp(json_path, "") == 0)
             {
                 std::cout << "\n json_path has to be set in rocal_unit test manually";
@@ -213,7 +214,7 @@ int test(int test_case, int reader_type, int pipeline_type, const char *path, co
 #if defined RANDOMBBOXCROP
             rocalRandomBBoxCrop(handle, all_boxes_overlap, no_crop);
 #endif
-            input1 = rocalJpegCOCOFileSourcePartial(handle, path, json_path, color_format, num_threads, false, true, false);
+            //input1 = rocalJpegCOCOFileSourcePartial(handle, path, json_path, color_format, num_threads, false, true, false);
         }
         break;
         case 4: //tf classification

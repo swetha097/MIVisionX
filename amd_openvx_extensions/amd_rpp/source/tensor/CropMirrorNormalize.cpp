@@ -67,14 +67,28 @@ static vx_status VX_CALLBACK refreshCropMirrorNormalize(vx_node node, const vx_r
     STATUS_ERROR_CHECK(vxCopyArrayRange((vx_array)parameters[8], 0, data->nbatchSize * 3, sizeof(vx_float32), data->mean, VX_READ_ONLY, VX_MEMORY_TYPE_HOST));
     STATUS_ERROR_CHECK(vxCopyArrayRange((vx_array)parameters[9], 0, data->nbatchSize * 3, sizeof(vx_float32), data->std_dev, VX_READ_ONLY, VX_MEMORY_TYPE_HOST));
     STATUS_ERROR_CHECK(vxCopyArrayRange((vx_array)parameters[10], 0, data->nbatchSize, sizeof(vx_uint32), data->mirror, VX_READ_ONLY, VX_MEMORY_TYPE_HOST));
-
+    
     for(int i = 0; i < data->nbatchSize; i++)
     {
-        data->roi_tensor_ptr[i].xywhROI.xy.x = data->start_x[i];
-        data->roi_tensor_ptr[i].xywhROI.xy.y = data->start_y[i];
-        data->roi_tensor_ptr[i].xywhROI.roiWidth =data->crop_w[i];
-        data->roi_tensor_ptr[i].xywhROI.roiHeight =data->crop_h[i];
+            data->roi_tensor_ptr[i].xywhROI.xy.x = data->start_x[i];
+            data->roi_tensor_ptr[i].xywhROI.xy.y = data->start_y[i];
+            data->roi_tensor_ptr[i].xywhROI.roiWidth =data->crop_w[i];
+            data->roi_tensor_ptr[i].xywhROI.roiHeight =data->crop_h[i];
     }
+
+    /*for(int i = 0, j = 0; i < data->nbatchSize; i++, j+=3)
+    {
+            data->roi_tensor_ptr[i].xywhROI.xy.x = data->start_x[i];
+            data->roi_tensor_ptr[i].xywhROI.xy.y = data->start_y[i];
+            data->roi_tensor_ptr[i].xywhROI.roiWidth =data->crop_w[i];
+            data->roi_tensor_ptr[i].xywhROI.roiHeight =data->crop_h[i];
+            data->mean[j] = -(data->mean[j]/ data->std_dev[j]);
+            data->mean[j + 1] = -(data->mean[j + 1]/ data->std_dev[j + 1]);
+            data->mean[j + 2] = -(data->mean[j + 2]/ data->std_dev[j + 2]);
+            data->std_dev[j] = (1 / data->std_dev[j]);
+            data->std_dev[j + 1] = (1 / data->std_dev[j + 1]);
+            data->std_dev[j + 2] = (1 / data->std_dev[j + 2]);
+    }*/
     if(data->layout == 2 || data->layout == 3) // For NFCHW and NFHWC formats
     {
         unsigned num_of_frames = data->in_tensor_dims[1]; // Num of frames 'F'

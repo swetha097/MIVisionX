@@ -28,6 +28,7 @@ THE SOFTWARE.
 #include <cstring>
 #include "commons.h"
 
+#define ANCHOR_SIZE 8732//change it to 120087
 
 typedef struct BoundingBoxCord_
 {
@@ -41,14 +42,14 @@ typedef  struct { float xc; float yc; float w; float h; } BoundingBoxCord_xcycwh
 typedef  std::vector<BoundingBoxCord> BoundingBoxCords;
 typedef  std::vector<BoundingBoxCord_xcycwh> BoundingBoxCords_xcycwh;
 typedef  std::vector<int> BoundingBoxLabels;
-typedef  struct { int w; int h; } ImgSize;
+//typedef  struct { int w; int h; std::string filename; } ImgSize;
+typedef  struct { int w; int h; int original_id; } ImgSize;
 typedef  std::vector<ImgSize> ImgSizes;
 
 typedef std::vector<std::vector<float>> coords;
 typedef std::vector<float> MaskCords;
 
-typedef std::vector<std::vector<float>> matched_idxs;
-
+typedef std::vector<int> Matches;
 struct MetaData
 {
     int& get_label() { return _label_id; }
@@ -59,6 +60,11 @@ struct MetaData
     {
         _bb_label_ids = std::move(bb_label_ids);
         _object_count = _bb_label_ids.size();
+    }
+    Matches& get_matches() { return _match; }
+    void set_matches(Matches matches)
+    {
+        _match = std::move(matches);
     }
     std::vector<int>& get_polygon_count() { return _polygon_count; }
     std::vector<std::vector<int>>& get_vertices_count() { return _vertices_count; }
@@ -81,16 +87,24 @@ struct MetaData
         _mask_coords_dims = {_mask_cords.size(), 1};
         return _mask_coords_dims;
     }
+    std::vector<size_t> get_matches_dims()
+    {
+        _matches_dims = {_match.size()};
+        return _matches_dims; 
+    }
 protected:
     BoundingBoxCords _bb_cords = {}; // For bb use
     BoundingBoxCords_xcycwh _bb_cords_xcycwh = {}; // For bb use
     BoundingBoxLabels _bb_label_ids = {};// For bb use
+    Matches _match = {};
+    int _matched_id = -1;
     ImgSize _img_size = {};
     int _label_id = -1; // For label use only
     MaskCords _mask_cords = {};
     std::vector<size_t> _bb_labels_dims = {};
     std::vector<size_t> _bb_coords_dims = {};
     std::vector<size_t> _mask_coords_dims = {};
+    std::vector<size_t> _matches_dims = {};
     std::vector<int> _polygon_count = {};
     std::vector<std::vector<int>> _vertices_count = {};
     int _object_count = 0;
@@ -115,6 +129,13 @@ struct BoundingBox : public MetaData
         _bb_cords = std::move(bb_cords);
         _bb_label_ids = std::move(bb_label_ids);
     }
+    BoundingBox(BoundingBoxCords bb_cords,BoundingBoxLabels bb_label_ids ,ImgSize img_size, Matches match)
+    {
+        _bb_cords =std::move(bb_cords);
+        _bb_label_ids = std::move(bb_label_ids);
+        _img_size = std::move(img_size);
+        _match = std::move(match);
+    }  
     BoundingBox(BoundingBoxCords bb_cords,BoundingBoxLabels bb_label_ids ,ImgSize img_size)
     {
         _bb_cords =std::move(bb_cords);
@@ -139,6 +160,7 @@ struct BoundingBox : public MetaData
     void set_bb_cords_xcycwh(BoundingBoxCords_xcycwh bb_cords_xcycwh) { _bb_cords_xcycwh =std::move(bb_cords_xcycwh); }
     void set_bb_labels(BoundingBoxLabels bb_label_ids) { _bb_label_ids = std::move(bb_label_ids); }
     void set_img_sizes(ImgSize img_size) { _img_size =std::move(img_size); }
+    void set_matches(Matches matches) { _match = std::move(matches); }
     void set_mask_cords(MaskCords mask_cords) 
     { 
         _mask_cords = std::move(mask_cords);
@@ -153,28 +175,33 @@ struct MetaDataDimensionsBatch
     std::vector<std::vector<size_t>>& bb_labels_dims() { return _bb_labels_dims; }
     std::vector<std::vector<size_t>>& bb_cords_dims() { return _bb_coords_dims; }
     std::vector<std::vector<size_t>>& mask_cords_dims() { return _mask_coords_dims; }
+    std::vector<std::vector<size_t>>& matches_dims() { return _matches_dims; }
     void clear()
     {
         _bb_labels_dims.clear();
         _bb_coords_dims.clear();
         _mask_coords_dims.clear();
+        _matches_dims.clear();
     }
     void resize(size_t size)
     {
         _bb_labels_dims.resize(size);
         _bb_coords_dims.resize(size);
         _mask_coords_dims.resize(size);
+        _matches_dims.resize(size);
     }
     void insert(MetaDataDimensionsBatch &other)
     {
         _bb_labels_dims.insert(_bb_labels_dims.end(), other.bb_labels_dims().begin(), other.bb_labels_dims().end());
         _bb_coords_dims.insert(_bb_coords_dims.end(), other.bb_cords_dims().begin(), other.bb_cords_dims().end());
         _mask_coords_dims.insert(_mask_coords_dims.end(), other.mask_cords_dims().begin(), other.mask_cords_dims().end());
+        _matches_dims.insert(_matches_dims.end(), other.matches_dims().begin(), other.matches_dims().end());
     }
 private:
     std::vector<std::vector<size_t>> _bb_labels_dims = {};
     std::vector<std::vector<size_t>> _bb_coords_dims = {};
     std::vector<std::vector<size_t>> _mask_coords_dims = {};
+    std::vector<std::vector<size_t>> _matches_dims = {};
 };
 
 struct MetaDataBatch
@@ -197,6 +224,7 @@ struct MetaDataBatch
     std::vector<BoundingBoxCords>& get_bb_cords_batch() { return _bb_cords; }
     std::vector<BoundingBoxCords_xcycwh>& get_bb_cords_batch_xcycxwh() { return _bb_cords_xcycwh; }
     std::vector<BoundingBoxLabels>& get_bb_labels_batch() { return _bb_label_ids; }
+    std::vector<Matches>& get_matches_batch() { return _matches; }
     ImgSizes& get_img_sizes_batch() { return _img_sizes; }
     std::vector<MaskCords>& get_mask_cords_batch() { return _mask_cords; }
     std::vector<std::vector<int>>& get_mask_polygons_count_batch() { return _polygon_counts; }
@@ -214,6 +242,7 @@ protected:
     std::vector<BoundingBoxCords> _bb_cords = {};
     std::vector<BoundingBoxCords_xcycwh> _bb_cords_xcycwh = {};
     std::vector<BoundingBoxLabels> _bb_label_ids = {};
+    std::vector<Matches> _matches = {};
     ImgSizes _img_sizes = {};
     std::vector<MaskCords> _mask_cords = {};
     std::vector<std::vector<int>> _polygon_counts = {};
@@ -279,6 +308,7 @@ struct BoundingBoxBatch: public MetaDataBatch
         _bb_label_ids.clear();
         _img_sizes.clear();
         _mask_cords.clear();
+        _matches.clear();
         _metadata_dimensions.clear();
         _total_objects_count = 0;
         _buffer_size.clear();
@@ -291,6 +321,7 @@ struct BoundingBoxBatch: public MetaDataBatch
         _mask_cords.insert(_mask_cords.end(),other.get_mask_cords_batch().begin(), other.get_mask_cords_batch().end());
         _polygon_counts.insert(_polygon_counts.end(),other.get_mask_polygons_count_batch().begin(), other.get_mask_polygons_count_batch().end());
         _vertices_counts.insert(_vertices_counts.end(),other.get_mask_vertices_count_batch().begin(), other.get_mask_vertices_count_batch().end());
+        _matches.insert(_matches.end(),other.get_matches_batch().begin(), other.get_matches_batch().end());
         _metadata_dimensions.insert(other.get_metadata_dimensions_batch());
         return *this;
     }
@@ -303,6 +334,7 @@ struct BoundingBoxBatch: public MetaDataBatch
         _polygon_counts.resize(batch_size);
         _vertices_counts.resize(batch_size);
         _metadata_dimensions.resize(batch_size);
+        _matches.resize(batch_size);
     }
     int size() override
     {
@@ -318,12 +350,14 @@ struct BoundingBoxBatch: public MetaDataBatch
     }
     void copy_data(std::vector<void*> buffer, bool is_segmentation) override
     {
-        if(buffer.size() < 2)
+        if(buffer.size() < 3)
             THROW("The buffers are insufficient") // TODO -change
         int *labels_buffer = (int *)buffer[0];
         float *bbox_buffer = (float *)buffer[1];
+        int *matches_buffer = (int *)buffer[2];
         auto bb_labels_dims = _metadata_dimensions.bb_labels_dims();
         auto bb_coords_dims = _metadata_dimensions.bb_cords_dims();
+        auto matches_dims = _metadata_dimensions.matches_dims();
         if(is_segmentation)
         {
             float *mask_buffer = (float *)buffer[2];
@@ -344,8 +378,10 @@ struct BoundingBoxBatch: public MetaDataBatch
             {
                 mempcpy(labels_buffer, _bb_label_ids[i].data(), bb_labels_dims[i][0] * sizeof(int));
                 memcpy(bbox_buffer, _bb_cords[i].data(), bb_coords_dims[i][0] * sizeof(BoundingBoxCord));
+                memcpy(matches_buffer, _matches[i].data(), matches_dims[i][0] * sizeof(int));
                 labels_buffer += bb_labels_dims[i][0];
                 bbox_buffer += (bb_coords_dims[i][0] * 4);
+                matches_buffer += matches_dims[i][0];
             }
         }
     }
@@ -353,6 +389,7 @@ struct BoundingBoxBatch: public MetaDataBatch
     {
         _buffer_size.emplace_back(_total_objects_count * sizeof(int));
         _buffer_size.emplace_back(_total_objects_count * 4 * sizeof(float));
+        _buffer_size.emplace_back(ANCHOR_SIZE * sizeof(int));
         if(is_segmentation)
             _buffer_size.emplace_back(_total_mask_coords_count * sizeof(float));
         return _buffer_size;

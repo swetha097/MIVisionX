@@ -83,11 +83,23 @@ static vx_status VX_CALLBACK refreshResizeMirrorNormalize(vx_node node, const vx
     STATUS_ERROR_CHECK(vxCopyArrayRange((vx_array)parameters[8], 0, data->nbatchSize*3, sizeof(vx_float32), data->std_dev, VX_READ_ONLY, VX_MEMORY_TYPE_HOST));
     STATUS_ERROR_CHECK(vxCopyArrayRange((vx_array)parameters[9], 0, data->nbatchSize, sizeof(vx_uint32), data->mirror, VX_READ_ONLY, VX_MEMORY_TYPE_HOST));
     STATUS_ERROR_CHECK(vxReadScalarValue((vx_scalar)parameters[11], &data->chnShift));
-    for (int i = 0; i < data->nbatchSize; i++)
+    /*for (int i = 0; i < data->nbatchSize; i++)
     {
         data->dstImgsize[i].width = data->resize_w[i];
         data->dstImgsize[i].height = data->resize_h[i];
+    }*/
+    for(int i = 0, j = 0; i < data->nbatchSize; i++, j+=3)
+    {
+            data->dstImgsize[i].width = data->resize_w[i];
+            data->dstImgsize[i].height = data->resize_h[i];
+            data->mean[j] = -(data->mean[j]/ data->std_dev[j]);
+            data->mean[j + 1] = -(data->mean[j + 1]/ data->std_dev[j + 1]);
+            data->mean[j + 2] = -(data->mean[j + 2]/ data->std_dev[j + 2]);
+            data->std_dev[j] = (1 / data->std_dev[j]);
+            data->std_dev[j + 1] = (1 / data->std_dev[j + 1]);
+            data->std_dev[j + 2] = (1 / data->std_dev[j + 2]);
     }
+
     if (data->device_type == AGO_TARGET_AFFINITY_GPU)
     {
 #if ENABLE_OPENCL

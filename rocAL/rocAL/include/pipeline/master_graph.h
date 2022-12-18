@@ -92,6 +92,7 @@ public:
     rocalTensorList * bbox_labels_meta_data();
     rocalTensorList * bbox_meta_data();
     rocalTensorList * mask_meta_data();
+    rocalTensorList * matches_meta_data();
     ImgSizes& get_image_sizes();
 
     void set_loop(bool val) { _loop = val; }
@@ -142,9 +143,11 @@ private:
     rocalTensorList _labels_tensor_list;
     rocalTensorList _bbox_tensor_list;
     rocalTensorList _mask_tensor_list;
+    rocalTensorList _matches_tensor_list;
     std::vector<std::vector<unsigned>> _labels_tensor_dims;
     std::vector<std::vector<unsigned>> _bbox_tensor_dims;
     std::vector<std::vector<unsigned>> _mask_tensor_dims;
+    std::vector<std::vector<unsigned>> _matches_tensor_dims;
 
     std::vector<size_t> _meta_data_buffer_size;
 
@@ -184,7 +187,7 @@ private:
     std::vector<std::vector<uint32_t>> _resize_height;
     // box encoder variables
     bool _is_box_encoder = false; //bool variable to set the box encoder
-    bool _is_box_iou_matcher = false; // bool variable to set the box iou matcher
+    bool _is_box_iou_matcher = true; // bool variable to set the box iou matcher
     std::vector<float> _anchors; // Anchors to be used for encoding, as the array of floats is in the ltrb format of size 8732x4
     size_t _num_anchors;       // number of bbox anchors
     float _criteria = 0.5; // Threshold IoU for matching bounding boxes with anchors. The value needs to be between 0 and 1.
