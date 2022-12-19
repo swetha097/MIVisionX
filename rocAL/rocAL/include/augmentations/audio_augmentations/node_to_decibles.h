@@ -40,4 +40,5 @@ private:
     float _cut_off_db = -200.0;
     float _multiplier = 10.0;
     float _magnitude_reference = 0.0;
+    std::vector<unsigned> _dst_roi_width_vec, _dst_roi_height_vec;
 };

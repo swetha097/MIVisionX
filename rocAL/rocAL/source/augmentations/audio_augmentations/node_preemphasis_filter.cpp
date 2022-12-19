@@ -57,16 +57,24 @@ void PreemphasisFilterNode::update_node()
     {
         // Calculating size = frames * channel
         _src_samples_size[i] = audio_roi->at(i).x1 * audio_roi->at(i).y1;
+        _dst_roi_width_vec[i] = audio_roi->at(i).x1;
+        _dst_roi_height_vec[i] = audio_roi->at(i).y1;
+        std::cerr << "\n In PreEmphasis Filter : " <<"\n audio_roi->at(i).x1" << _src_samples_size[i]<< "\n audio_roi->at(i).y1" << audio_roi->at(i).y1;
     }
     vx_status src_roi_status;
     src_roi_status = vxCopyArrayRange((vx_array)_src_samples_size_array, 0, _batch_size, sizeof(vx_uint32), _src_samples_size.data(), VX_WRITE_ONLY, VX_MEMORY_TYPE_HOST);
     if(src_roi_status != 0)
         THROW(" Failed calling vxCopyArrayRange for src / dst roi status : "+ TOSTR(src_roi_status))
      _preemph_coeff.update_array();
+    _outputs[0]->update_tensor_roi(_dst_roi_width_vec, _dst_roi_height_vec);
+    _dst_roi_width_vec.clear();
+    _dst_roi_height_vec.clear();
 }
 
 void PreemphasisFilterNode::init(FloatParam* preemph_coeff, RocalAudioBorderType preemph_border)
 {
     _preemph_coeff.set_param(core(preemph_coeff));
     _preemph_border = preemph_border;
+    _dst_roi_width_vec.resize(_batch_size);
+    _dst_roi_height_vec.resize(_batch_size);
 }

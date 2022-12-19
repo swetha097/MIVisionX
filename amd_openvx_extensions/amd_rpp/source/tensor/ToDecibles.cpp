@@ -66,8 +66,8 @@ static vx_status VX_CALLBACK refreshToDecibels(vx_node node, const vx_reference 
     STATUS_ERROR_CHECK(vxCopyArrayRange((vx_array)parameters[3], 0, data->nbatchSize, sizeof(unsigned), data->sample_channel, VX_READ_ONLY, VX_MEMORY_TYPE_HOST));
     for(uint i = 0; i < data->nbatchSize; i++)
     {
-        data->srcDims[i].width = data->sample_channel[i];
-        data->srcDims[i].height = data->sample_length[i];
+        data->srcDims[i].height = data->sample_channel[i];
+        data->srcDims[i].width = data->sample_length[i];
     }
     if (data->deviceType == AGO_TARGET_AFFINITY_GPU)
     {

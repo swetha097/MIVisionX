@@ -43,4 +43,5 @@ private:
     int _nfilter = 128;
     float _sample_rate = 4410;
     bool _normalize = true;
+    std::vector<unsigned> _dst_roi_width_vec, _dst_roi_height_vec;
 };
