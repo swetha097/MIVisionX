@@ -47,6 +47,7 @@ private:
     int _nfft_size = 2048;
     int _window_length = 512;
     int _window_step = 256;
+    int _window_offset = 0;
     bool _is_window_empty = false;
     std::vector<unsigned> _dst_roi_width_vec, _dst_roi_height_vec;
 };

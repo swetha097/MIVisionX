@@ -71,9 +71,10 @@ void SpectrogramNode::update_node()
     for (uint i=0; i < _batch_size; i++)
     {
         _src_samples_length[i] = audio_roi->at(i).x1;
+        std::cerr << "\n spec :: _src_samples_length"<< _src_samples_length[i];
         // std::cerr<<"\n  audio_roi->at(i).x1 :" <<  audio_roi->at(i).x1;
         // std::cerr<<"\n  audio_roi->at(i).y1 :" <<  audio_roi->at(i).y1;
-        _dst_roi_width_vec[i] =(( _src_samples_length[i] - _window_length ) / _window_step) + 1;
+        _dst_roi_width_vec[i] =(( _src_samples_length[i] - _window_offset ) / _window_step) + 1;
         _dst_roi_height_vec[i] =  (_nfft_size / 2 )+ 1;
     }
     _outputs[0]->update_tensor_roi(_dst_roi_width_vec, _dst_roi_height_vec);
@@ -94,6 +95,8 @@ void SpectrogramNode::init(bool center_windows, bool reflect_padding, RocalSpect
     _power = power;
     _nfft_size = nfft_size;
     _window_length = window_length;
+    if(!center_windows)
+        _window_offset = _window_length;
     _window_step = window_step;
     _dst_roi_width_vec.resize(_batch_size);
     _dst_roi_height_vec.resize(_batch_size);
