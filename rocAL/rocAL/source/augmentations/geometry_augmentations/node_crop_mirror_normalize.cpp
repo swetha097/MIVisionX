@@ -83,7 +83,7 @@ void CropMirrorNormalizeNode::create_node() {
     vx_scalar out_layout_vx = vxCreateScalar(vxGetContext((vx_reference)_graph->get()), VX_TYPE_INT32, &output_layout);
     vx_scalar roi_type_vx = vxCreateScalar(vxGetContext((vx_reference)_graph->get()), VX_TYPE_INT32, &roi_type);
     _node = vxExtrppNode_CropMirrorNormalize(_graph->get(), _inputs[0]->handle(), _src_tensor_roi_, _outputs[0]->handle(),
-                                             _mean_array, _std_dev_array, _mirror.default_array(), in_layout_vx, out_layout_vx, roi_type_vx, _batch_size);
+                                             _mean_vx_array, _std_dev_vx_array, _mirror.default_array(), in_layout_vx, out_layout_vx, roi_type_vx, _batch_size);
     if((status = vxGetStatus((vx_reference)_node)) != VX_SUCCESS)
         THROW("Error adding the crop mirror normalize (vxExtrppNode_CropMirrorNormalize) failed: " + TOSTR(status))
 }

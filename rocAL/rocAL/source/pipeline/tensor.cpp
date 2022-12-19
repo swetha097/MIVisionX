@@ -96,10 +96,10 @@ void rocalTensorInfo::allocate_tensor_roi_buffers() {
 #if ENABLE_HIP
     hipError_t err = hipHostMalloc((void **)&_roi_buf, roi_size, hipHostMallocDefault/*hipHostMallocMapped|hipHostMallocWriteCombined*/);
     if(err != hipSuccess || !_roi_buf)
-    {
-        THROW("hipHostMalloc of size " + TOSTR(roi_size) + " failed " + TOSTR(err));
-    }
-    hipMemset((void *)_roi_buf, 0, roi_size);
+        THROW("hipHostMalloc of size " + TOSTR(roi_size) + " failed " + TOSTR(err))
+    err = hipMemset((void *)_roi_buf, 0, roi_size);
+    if(err != hipSuccess)
+        THROW("hipMemset of size " + TOSTR(roi_size) + " failed " + TOSTR(err))
 #endif
     } else {
         _roi_buf = (void *)malloc(roi_size);
@@ -170,7 +170,11 @@ rocalTensorInfo::~rocalTensorInfo() {
     if(!_is_metadata) {
         if(_mem_type == RocalMemType::HIP) {
 #if ENABLE_HIP
-            if(!_roi_buf) hipHostFree(_roi_buf);
+            if(!_roi_buf) {
+                hipError_t err = hipHostFree(_roi_buf);
+                if (err != hipSuccess)
+                    ERR("hipHostFree failed " + TOSTR(err));
+            }
 #endif
         } else {
             if(!_roi_buf) free(_roi_buf);
