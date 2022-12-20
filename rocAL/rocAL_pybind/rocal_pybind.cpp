@@ -387,10 +387,9 @@ namespace rocal
                             (int *)(labels->at(0)->buffer()),
                             sizeof(int),
                             py::format_descriptor<int>::format(),
-                            1,
-                            //{labels->size() * 2},
-                            {labels->at(0)->info().dims().at(0)},
-                            {sizeof(int) }));
+                            2,
+                            {labels->size(), labels->at(0)->info().dims().at(0)},
+                            {labels->at(0)->info().dims().at(0) * sizeof(int), sizeof(int) }));
     }
             );
         m.def(
@@ -405,7 +404,7 @@ namespace rocal
                             py::format_descriptor<float>::format(),
                             1,
                             //{boxes->size() * 2 * 4},
-                            {boxes->at(0)->info().dims().at(0) * 4},
+                            {boxes->size() * boxes->at(0)->info().dims().at(0) * 4},
                             {sizeof(float) }));
     }
             );

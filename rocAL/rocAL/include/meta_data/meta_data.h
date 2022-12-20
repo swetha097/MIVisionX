@@ -350,6 +350,7 @@ struct BoundingBoxBatch: public MetaDataBatch
     }
     void copy_data(std::vector<void*> buffer, bool is_segmentation) override
     {
+        //if(buffer.size() < 2)
         if(buffer.size() < 3)
             THROW("The buffers are insufficient") // TODO -change
         int *labels_buffer = (int *)buffer[0];

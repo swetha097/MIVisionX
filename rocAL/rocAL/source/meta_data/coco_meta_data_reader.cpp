@@ -232,7 +232,8 @@ void COCOMetaDataReader::read_all(const std::string &path)
                     }
                     else if(0 == std::strcmp(internal_key, "id"))
                     {
-                        original_id = parser.GetInt();
+                        //original_id = parser.GetInt();
+                        img_size.original_id = parser.GetInt();
                     }
                     else
                     {
@@ -240,7 +241,7 @@ void COCOMetaDataReader::read_all(const std::string &path)
                     }
                 }
                 //_map_img_sizes.insert(pair<int, ImgSize>(original_id, img_size));
-                _map_img_names.insert(pair<int, std::string>(original_id, image_name));
+                _map_img_names.insert(pair<int, std::string>(img_size.original_id, image_name));
                 _map_img_sizes.insert(pair<std::string, ImgSize>(image_name, img_size));
                 img_size = {};
             }
@@ -356,7 +357,6 @@ void COCOMetaDataReader::read_all(const std::string &path)
                 //std::cerr << "\n Image name : " << itr->second << std::endl;
                 auto it = _map_img_sizes.find(itr->second);
                 ImgSize image_size = it->second; //Normalizing the co-ordinates & convert to "ltrb" format
-                //std::cerr << "\n Image name : " << image_size.filename << std::endl;
                 if (_mask && iscrowd == 0)
                 {
                     box.l = bbox[0] / image_size.w;
