@@ -279,51 +279,22 @@ void BoundingBoxGraph::update_box_encoder_meta_data(std::vector<float> *anchors,
 
 void BoundingBoxGraph::update_box_iou_matcher(std::vector<float> *anchors, pMetaDataBatch full_batch_meta_data ,float criteria, float high_threshold, float low_threshold, bool allow_low_quality_matches)
 {
-    std::cerr << "\n Inside bbox graph : box_iou)matcher.. full_batch_meta_data->size()" << full_batch_meta_data->size();
-    //#pragma omp parallel for
-    
+    //#pragma omp parallel for    
     for (int i = 0; i < full_batch_meta_data->size(); i++)
     {
         BoundingBoxCord *bbox_anchors = reinterpret_cast<BoundingBoxCord *>(anchors->data());
         auto bb_count = full_batch_meta_data->get_bb_labels_batch()[i].size();
-        //auto matches_count = full_batch_meta_data->get_ma
         BoundingBoxCord bb_coords[bb_count];
         BoundingBoxLabels bb_labels;
         Matches matches_idx;
-        matches_idx.resize(8732);
-        //matches_idx.resize(bb_count * 8732);
+        unsigned anchors_size = anchors->size() / 4; // divide the anchors_size by 4 to get the total number of anchors
+        matches_idx.resize(anchors_size);
         bb_labels.resize(bb_count);
-        std::cerr << "\n BBox size : " << bb_count;
-        std::cerr << "\nPrinting labels size: " << full_batch_meta_data->get_bb_labels_batch()[i].size();
-        std::cerr << "\nPrinting bbox size: " << full_batch_meta_data->get_bb_cords_batch()[i].size();
-        std::cerr << "\nPrinting matches size: " << full_batch_meta_data->get_matches_batch()[i].size();//gives bb_count * 8732 values
-        //exit(0);
         memcpy(bb_labels.data(), full_batch_meta_data->get_bb_labels_batch()[i].data(), sizeof(int) * bb_count);
         memcpy(bb_coords, full_batch_meta_data->get_bb_cords_batch()[i].data(), full_batch_meta_data->get_bb_cords_batch()[i].size() * sizeof(BoundingBoxCord));
-        memcpy(matches_idx.data(), full_batch_meta_data->get_matches_batch()[i].data(), 8732 * sizeof(int));
-        //memcpy(matches_idx.data(), full_batch_meta_data->get_matches_batch()[i].data(), full_batch_meta_data->get_matches_batch()[i].size() * sizeof(int));
+        memcpy(matches_idx.data(), full_batch_meta_data->get_matches_batch()[i].data(), full_batch_meta_data->get_matches_batch()[i].size() * sizeof(int));
         BoundingBoxCords_xcycwh encoded_bb;
         BoundingBoxLabels encoded_labels;
-        unsigned anchors_size = anchors->size() / 4; // divide the anchors_size by 4 to get the total number of anchors
-        std::cerr << "\n Anchor size : " << anchors_size;
-        std::cerr << "\n BBox size : " << bb_count;
-        std::cerr << "\n full_batch_meta_data->get_matches_batch()[i].size() :" << full_batch_meta_data->get_matches_batch()[i].size() << std::endl;
-        std::cerr << "\n Matches_idx sizs : " << matches_idx.size() << std::endl;
-        for(uint id_match = 0; id_match < matches_idx.size(); id_match++)
-            std::cerr << "\n Matches : [" << id_match << "] :"  << matches_idx[id_match];
-        /*std::cerr << "\n BBoxes  ; " << std::endl;        
-        for (uint bb_idx = 0; bb_idx < bb_count; bb_idx++)
-        {
-            std::cerr << "\n bb_coords. l " <<  bb_coords[bb_idx].l << "\t bb_coords.t: " << bb_coords[bb_idx].t ;
-            std::cerr << "\n bb_coords. r " <<  bb_coords[bb_idx].r << "\t bb_coords.b: " << bb_coords[bb_idx].b ;
-        }
-        std::cerr << "\n Anchors ; " << std::endl;
-        for (unsigned anchor_idx = 0; anchor_idx < anchors_size; anchor_idx++)
-        { 
-            std::cerr << "\n anchor. l " <<  bbox_anchors[anchor_idx].l << "\t anchor.t: " << bbox_anchors[anchor_idx].t ;
-            std::cerr << "\n anchor. r " <<  bbox_anchors[anchor_idx].r << "\t anchor.b: " << bbox_anchors[anchor_idx].b ;
-            exit(0);
-        }*/ 
 
         //Calculate Ious
         //ious size - bboxes count x anchors count
@@ -331,93 +302,49 @@ void BoundingBoxGraph::update_box_iou_matcher(std::vector<float> *anchors, pMeta
         std::vector<std::vector<float>> iou_matrix(bb_count, std::vector<float> (anchors_size, 0));
         std::cerr << "\n size of iou_matrix : " << iou_matrix.size();
 
-        for(uint bb_idx = 0; bb_idx < bb_count; bb_idx++){
-            //auto iou_rows = ious.data() + (bb_idx * (anchors_size));
+        for(uint bb_idx = 0; bb_idx < bb_count; bb_idx++)
             calculate_ious(iou_matrix, bb_coords[bb_idx], bbox_anchors, anchors_size, bb_idx);        
-        }
-
-        std::cerr << "\n Passed iou_box";
-
+            
         std::vector<float> matched_vals;
-        //std::vector<float> matches, all_matches;
         Matches matches, all_matches;
-        //for each prediction, find gt - for each col or Find transpose of the vector & try max_element
+        //for each prediction, find gt
         for(int i = 0; i < iou_matrix[0].size(); i++) {
             float max_col = iou_matrix[0][i];
+            int max_col_index = 0;
             for(int j = 1; j < iou_matrix.size(); j++) {
                 if(iou_matrix[j][i] > max_col) {
                     max_col = iou_matrix[j][i];
-                    matches.push_back(j);
+                    max_col_index = j;
                 }
-                else
-                    matches.push_back(j-1); // check if jth index condition is valid for large matrix - more then 2/3 rows
+                matches.push_back(max_col_index);
                 matched_vals.push_back(max_col);
             }
         }
 
-        /*std::cerr << "\n Matched vals : " << std::endl;
-        std::cerr << "\n Matched vals size : " << matched_vals.size();
-        for(int idx = 0; idx < matched_vals.size(); idx++)
-            std::cerr << " \t " << matched_vals[idx] ;*/
-
         all_matches = matches;
-        //std::cerr << "\n Matches : ";
         for(int idx = 0; idx < matches.size(); idx++){
-            //std::cerr << " \t " << matches[idx] ;
-            //all_matches[idx] = matches[idx];
             if(matched_vals[idx] < 0.4) matches[idx] = -1;
-            if((matched_vals[idx] >= 0.4) && (matched_vals[idx] < 0.5)) matches[idx] = -2; // check to use if & or &&
+            if((matched_vals[idx] >= 0.4) && (matched_vals[idx] < 0.5)) matches[idx] = -2;
         }
-    
-        /*std::cerr << "\n Matches after threshold: ";
-        for(int idx = 0; idx < matches.size(); idx++)
-            std::cerr << " \t " << matches[idx] ;*/
 
         std::vector<float> highest_foreground;
-        std::vector<int>  gts, preds;
+        std::vector<int>  gts, preds;//try keep it as a map of gts & preds
         //for each gt, find max prediction - for each row f
+        float best_match = 0;
+        int best_index = 0;
         for(int i = 0; i < iou_matrix.size(); i++) {
-            //std::cerr << "\n value of I : " << i;
             gts.push_back(i);
             float max_row = *std::max_element(iou_matrix[i].begin(), iou_matrix[i].end());
             int max_row_index = std::max_element(iou_matrix[i].begin(), iou_matrix[i].end()) - iou_matrix[i].begin();
-            //std::cerr << "\n Max row : " << max_row;
-            //std::cerr << "\n Max row index : " << max_row_index << std::endl;
             preds.push_back(max_row_index);
             highest_foreground.push_back(max_row);
         }
-        /*for(int i = 0; i < highest_foreground.size(); i++) {
-            std::cerr << "\t " << highest_foreground[i] ;
-        }
-
-        for(int i = 0; i < highest_foreground.size(); i++){
-            std::cerr << "\t " << gts[i] ;
-        }
-
-        for(int i = 0; i < highest_foreground.size(); i++){
-            std::cerr << "\t " << preds[i] ;
-        }*/ 
-
-        for(int i = 0; i < highest_foreground.size(); i++) {
-            matches[preds[i]] = all_matches[gts[i]]; // Add cond in which has the highest gt across all.
-        }
         
-        //Matches final_match = reinterpret_cast<Matches>(matches);
+        for(int i = 0; i < highest_foreground.size(); i++) {
+            matches[preds[i]] = all_matches[gts[i]];
+        }
 
-        /*std::cerr << "\n Matches in the end: ";
-        for(int idx = 0; idx < matches.size(); idx++)
-            std::cerr << " \t " << matches[idx] ;*/
-
-        std::cerr << "\n Full batch meta data : " << std::endl;
         full_batch_meta_data->get_matches_batch()[i] = matches;
         full_batch_meta_data->get_metadata_dimensions_batch().matches_dims()[i][0] = anchors_size;
-        
-        
-        //update the matched idxs value batch
-        //update the matched idxs dimension batch
-        std::cerr << "\n End.." ;
-        //exit(0);
-        //encoded_bb.clear();
-        //encoded_labels.clear();
     }
 }

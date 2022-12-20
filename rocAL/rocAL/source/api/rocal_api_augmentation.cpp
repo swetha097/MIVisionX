@@ -32,6 +32,7 @@ THE SOFTWARE.
 #include "node_nop.h"
 #include "node_sequence_rearrange.h"
 #include "meta_node_crop_mirror_normalize.h"
+#include "meta_node_resize_mirror_normalize.h"
 #include "node_resize.h"
 #include "node_crop.h"
 
