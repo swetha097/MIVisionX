@@ -138,6 +138,7 @@ list(APPEND SOURCES
         source/tensor/MelFilterBank.cpp
         source/tensor/Slice.cpp
         source/tensor/Normalize.cpp
+        source/tensor/TensorMulScalar.cpp
         source/kernel_rpp.cpp
         source/internal_publishKernels.cpp
     )

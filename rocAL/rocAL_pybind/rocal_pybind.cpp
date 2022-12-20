@@ -82,6 +82,10 @@ namespace rocal
 
     PYBIND11_MODULE(rocal_pybind, m)
     {
+        // Importing the python modules
+        // py::object pipeline_class = py::module::import("amd.rocal.pipeline").attr("Pipeline");
+        
+
         m.doc() = "Python bindings for the C++ portions of ROCAL";
         // rocal_api.h
         m.def("rocalCreate", &rocalCreate, "Creates context with the arguments sent and returns it",
@@ -111,13 +115,56 @@ namespace rocal
                 // R"code(
                 // Returns a tensor at given position in the list.
                 // )code")
+                // .def(
+                .def( // TODO: Swetha - Add rmul, add, radd
+                "__mul__",
+                [](rocalTensor &output_tensor, uint scalar)
+                {
+                    std::cerr << "HERE in __MUL__ in rocal_pybind unit dtype";
+                    return &output_tensor;
+                },
+                R"code(
+                Adds a node for arithmetic operation
+                )code"
+            )
+                .def(
+                "__mul__",
+                [](rocalTensor *output_tensor, float scalar)
+                {
+                    std::cerr << "HERE in __MUL__ in rocal_pybind for float -----------------";
+                    RocalTensor arithmetic_op_output;
+                    py::object pipeline_class = py::module::import("amd.rocal.pipeline").attr("Pipeline");
+                    py::object current_pipeline_obj = pipeline_class.attr("_current_pipeline");
+                    py::object current_pipeline_handle = current_pipeline_obj.attr("_handle");
+                    RocalContext context = current_pipeline_handle.cast<RocalContext>();
+                    // MyClass *cls = obj.cast<MyClass *>(); 
+                    py::print(pipeline_class);
+                    py::print(current_pipeline_obj);
+                    py::print("\n The Current Pipeline Handle");
+                    py::print(current_pipeline_handle);
+                    RocalTensorLayout tensorLayout; // = RocalTensorLayout::None;
+                    RocalTensorOutputType tensorOutputType = RocalTensorOutputType::ROCAL_FP32;
+                    // arithmetic_op_output = rocalTensorMulScalar(context, output_tensor, false, tensorLayout, tensorOutputType, scalar);
+
+                    std::cerr << "\n Float scalar value : " << scalar;
+                    //add a fn call here
+                    py::object fn_module = py::module::import("amd.rocal.fn");
+                    auto fn_function_call = fn_module.attr("tensor_mul_scalar_float")(output_tensor, "scalar"_a=scalar).cast<RocalTensor>();
+                    // auto result = fast_calc.attr("add")(1, 2).cast<int>();
+                    return fn_function_call;
+                },
+                R"code(
+                Returns a tensor ROI
+                Adds a node for arithmetic operation
+                )code", py::return_value_policy::reference
+            )
                 .def(
                 "get_roi_at",
                 [](rocalTensor &output_tensor, uint idx)
                 {
                     // return *(output_tensor.info().get_roi());
                     return std::make_pair(output_tensor.info().get_roi()->at(idx).x1, output_tensor.info().get_roi()->at(idx).y1);
-                }, py::return_value_policy::reference_internal,
+                },
                 R"code(
                 Returns a tensor ROI
                 ex : width, height in case of an image data
@@ -529,6 +576,8 @@ namespace rocal
         m.def("NonSilentRegion", &rocalNonSilentRegion,"  Performs leading and trailing silence detection in an audio buffer",
             py::return_value_policy::reference);
         m.def("Pad", &rocalPad," Pads all samples with the fill_value in the specified axes to match the biggest extent in the batch for those axes or to match the minimum shape specified",
+            py::return_value_policy::reference);
+        m.def("TensorMulScalar", &rocalTensorMulScalar, "Multiplies a given Tensor Value with Scalar - Arithmetic Operation",
             py::return_value_policy::reference);
         // Image Augmentations
         m.def("Resize",&rocalResize, "Resizes the image ",py::return_value_policy::reference);

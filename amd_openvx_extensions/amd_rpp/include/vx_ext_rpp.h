@@ -151,6 +151,7 @@ extern "C" SHARED_PUBLIC vx_node VX_API_CALL vxExtrppNode_NonSilentRegion(vx_gra
 extern "C" SHARED_PUBLIC vx_node VX_API_CALL vxExtrppNode_MelFilterBank(vx_graph graph, vx_tensor pSrc, vx_tensor pDst, vx_array srcDims, vx_scalar freqHigh, vx_scalar freqLow, vx_scalar melFormula, vx_scalar nfilter, vx_scalar normalize, vx_scalar sampleRate, vx_uint32 nbatchSize);
 extern "C" SHARED_PUBLIC vx_node VX_API_CALL vxExtrppNode_Slice(vx_graph graph, vx_tensor pSrc, vx_tensor pDst, vx_array srcDims, vx_tensor anchor, vx_tensor shape, vx_array fill_value,
                                                                   vx_scalar axes, vx_scalar normalized_anchor, vx_scalar normalized_shape, vx_scalar policy, vx_uint32 nbatchSize);
+extern "C" SHARED_PUBLIC vx_node VX_API_CALL vxExtrppNode_TensorMulScalar(vx_graph graph, vx_tensor pSrc, vx_tensor pDst, vx_scalar scalar_value, vx_uint32 nbatchSize);
 
 
 #ifdef __cplusplus

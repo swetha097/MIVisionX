@@ -39,6 +39,7 @@ THE SOFTWARE.
 #include "node_spectrogram.h"
 #include "node_non_silent_region.h"
 #include "node_mel_filter_bank.h"
+#include "node_tensor_mul_scalar.h"
 #include "node_slice.h"
 #include "node_pad.h"
 #include "node_normalize.h"
@@ -1089,6 +1090,42 @@ RocalTensor rocalSlice(RocalContext p_context,
         std::cerr << "\n Comes to the init ";
         context->master_graph->add_node<SliceNode>({input}, {output})->init(anchor_tensor, shape_tensor, fill_values,
                                                                             axes, normalized_anchor, normalized_shape, policy);
+    }
+    catch(const std::exception& e) {
+        context->capture_error(e.what());
+        ERR(e.what())
+    }
+    return output;
+}
+
+// TODO : Swetha - To add a templated function later
+RocalTensor rocalTensorMulScalar(RocalContext p_context,
+                                RocalTensor p_input,
+                                bool is_output,
+                                RocalTensorLayout rocal_tensor_layout, // TODO : Swetha - not required for audio data - Check on this
+                                RocalTensorOutputType rocal_tensor_output_type,
+                                float scalar) {
+    if(!p_context || !p_input)
+        THROW("Null values passed as input")
+    rocalTensor* output = nullptr;
+    auto context = static_cast<Context*>(p_context);
+    auto input = static_cast<rocalTensor*>(p_input);
+    RocalTensorlayout op_tensorLayout;
+    RocalTensorDataType op_tensorDataType;
+    try {
+        int layout=0; // Why using layout = 0 ?
+        std::cerr << "Here in Op overl";
+        get_rocal_tensor_layout(rocal_tensor_layout, op_tensorLayout, layout);
+        get_rocal_tensor_data_type(rocal_tensor_output_type, op_tensorDataType);
+        rocalTensorInfo output_info = input->info();
+        // output_info.set_tensor_layout(op_tensorLayout); // TODO- Swetha - For Audio Data - Cant use the NCHW / NHWC  - commons.h & rocal_api_data_types.h
+        // output_info.set_data_type(op_tensorDataType);
+        // output_info.set_tensor_layout(RocalTensorlayout::NONE);
+
+        // instead of output_info -> can use input->info() - //TODO - Swetha - Check what can be used here later 
+
+        output = context->master_graph->create_tensor(input->info(), is_output); // Create a rocALTensor object dynamically on heap 
+        context->master_graph->add_node<TensorMulScalarNode>({input}, {output})->init(scalar); // Change this line of code
     }
     catch(const std::exception& e) {
         context->capture_error(e.what());

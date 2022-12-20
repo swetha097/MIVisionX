@@ -206,5 +206,10 @@ extern "C" RocalTensor ROCAL_API_CALL rocalSlice(RocalContext p_context,
                                                 bool normalized_shape = false,
                                                 RocalOutOfBoundsPolicy policy = RocalOutOfBoundsPolicy::ERROR);
 
-
+extern "C" RocalTensor ROCAL_API_CALL rocalTensorMulScalar(RocalContext p_context,
+                                                          RocalTensor p_input,
+                                                          bool is_output,
+                                                          RocalTensorLayout rocal_tensor_layout,
+                                                          RocalTensorOutputType rocal_tensor_output_type,
+                                                          float freq_high = 0.0);
 #endif //MIVISIONX_ROCAL_API_AUGMENTATION_H
