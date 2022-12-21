@@ -176,13 +176,13 @@ MasterGraph::MasterGraph(size_t batch_size, RocalAffinity affinity, int gpu_id, 
             THROW("Cannot load vx_rpp extension (vx_rpp), vxLoadKernels failed " + TOSTR(status))
         else
             LOG("vx_rpp module loaded successfully")
-#ifdef ROCAL_VIDEO
-        // loading video decoder modules
-        if ((status = vxLoadKernels(_context, "vx_amd_media")) != VX_SUCCESS)
-            WRN("Cannot load vx_amd_media extension, video decode functionality will not be available")
-        else
-            LOG("vx_amd_media module loaded")
-#endif
+// #ifdef ROCAL_VIDEO
+//         // loading video decoder modules
+//         if ((status = vxLoadKernels(_context, "vx_amd_media")) != VX_SUCCESS)
+//             WRN("Cannot load vx_amd_media extension, video decode functionality will not be available")
+//         else
+//             LOG("vx_amd_media module loaded")
+// #endif
         if(_affinity == RocalAffinity::GPU) {
 #if ENABLE_HIP
             _device.init_hip(_context);
@@ -262,14 +262,13 @@ MasterGraph::Status
 MasterGraph::build()
 {
     if(_internal_tensor_list.empty())
-        THROW("No output images or tensors are there, cannot create the pipeline")
+        THROW("No output tensors are there, cannot create the pipeline")
 
-    // allocate_output_tensor();
 #if ENABLE_HIP
     _ring_buffer.initHip(_mem_type, _device.resources(), _internal_tensor_list.data_size(), _internal_tensor_list.size());
     if (_is_box_encoder) _ring_buffer.initBoxEncoderMetaData(_mem_type, _user_batch_size*_num_anchors*4*sizeof(float), _user_batch_size*_num_anchors*sizeof(int));
 #else
-    _ring_buffer.init(_mem_type, _device.resources(), _internal_tensor_list.data_size(), _internal_tensor_list.size()); // TODO - Tensorlist change here
+    _ring_buffer.init(_mem_type, _device.resources(), _internal_tensor_list.data_size(), _internal_tensor_list.size());
     if (_is_box_encoder) _ring_buffer.initBoxEncoderMetaData(_mem_type, _user_batch_size*_num_anchors*4*sizeof(float), _user_batch_size*_num_anchors*sizeof(int));
 #endif
     // _output_tensor_list = _internal_tensor_list;
@@ -342,13 +341,14 @@ void MasterGraph::release()
     _root_nodes.clear();
     _tensor_map.clear();
     _ring_buffer.release_gpu_res();
+    //shut_down loader:: required for releasing any allocated resourses
     _loader_module->shut_down();
     // release all openvx resources.
     vx_status status;
-    _internal_tensor_list.release();
-    _output_tensor_list.release();
+    _internal_tensor_list.release(); // It will call the vxReleaseTensor internally in the destructor for each tensor in the list
+    _output_tensor_list.release();   // It will call the vxReleaseTensor internally in the destructor for each tensor in the list
     for(auto& tensor: _internal_tensors)
-        delete tensor;
+        delete tensor;  // It will call the vxReleaseTensor internally in the destructor
     deallocate_output_tensor();
 
 
@@ -407,45 +407,6 @@ MasterGraph::sequence_frame_timestamps(std::vector<std::vector<float>> &sequence
     _sequence_frame_timestamps_vec.pop_back();
 }
 
-MasterGraph::Status // TO be removed
-MasterGraph::allocate_output_tensor()
-{
-//     // creating a float buffer that can accommodates all output images
-//     // size_t total_size =  _internal_tensor_list.size();
-//     // size_t output_size;
-//     // output_size = tensor_output_byte_size();
-
-//     // size_t output_float_buffer_size = output_size * total_size;
-// #if !ENABLE_HIP
-//     if(processing_on_device_ocl())
-//     {
-//         cl_int ret = CL_SUCCESS;
-//         _output_tensor = nullptr;
-//         size_t size = output_float_buffer_size*sizeof(cl_float);
-//         cl_mem clImgFloat  = clCreateBuffer(_device.resources().context,
-//                                             CL_MEM_READ_WRITE,
-//                                             size,
-//                                             nullptr, &ret);
-
-//         if (!clImgFloat || ret != CL_SUCCESS)
-//             THROW("clCreateBuffer of size " + TOSTR(size) + " failed " + TOSTR(ret))
-
-//         _output_tensor = clImgFloat;
-//     }
-// #else
-//     if (processing_on_device_hip())
-//     {
-//         void *hipMemory = nullptr;
-//         size_t size = (_out_data_type==RocalTensorDataType::FP32)? output_float_buffer_size*sizeof(float): output_float_buffer_size*sizeof(half);
-//         hipError_t status = hipMalloc( &hipMemory, size);
-//         if (status != hipSuccess)
-//             THROW("ROCAL::hipMalloc of size " + TOSTR(size) + " failed " + TOSTR(status))
-
-//         _output_tensor = hipMemory;
-//     }
-// #endif
-    return Status::OK;
-}
 
 MasterGraph::Status
 MasterGraph::deallocate_output_tensor()
@@ -661,10 +622,13 @@ void MasterGraph::output_routine()
 
             if(this_cycle_names.size() != _internal_batch_size)
                 WRN("Internal problem: names count "+ TOSTR(this_cycle_names.size()))
+
             // meta_data lookup is done before _meta_data_graph->process() is called to have the new meta_data ready for processing
             if (_meta_data_reader)
                 _meta_data_reader->lookup(this_cycle_names);
+
             full_batch_image_names += this_cycle_names;
+
             if (!_processing)
                 break;
 
@@ -675,6 +639,7 @@ void MasterGraph::output_routine()
                 // size_t tensor_each_cycle_size = tensor_each_cycle_size_vec[idx]; // TODO - Batch ratio calculation TO be removed
                 _internal_tensor_list[idx]->swap_handle(tensor_write_buffer[idx]);
             }
+
             if (!_processing)
                 break;
 
@@ -736,10 +701,8 @@ void MasterGraph::output_routine()
                     _meta_data_graph->update_box_encoder_meta_data(&_anchors, full_batch_meta_data, _criteria, _offset, _scale, _means, _stds);
             }
             _bencode_time.end();
-            
-            _ring_buffer.set_meta_data(full_batch_image_names, full_batch_meta_data, _is_segmentation);
-            _ring_buffer.push();
-            // full_batch_meta_data->clear();
+            _ring_buffer.set_meta_data(full_batch_image_names, full_batch_meta_data);
+            _ring_buffer.push(); // Image data and metadata is now stored in output the ring_buffer, increases it's level by 1
         }
     }
     catch (const std::exception &e)

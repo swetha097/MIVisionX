@@ -70,7 +70,7 @@ public:
     RocalMemType mem_type();
     void release();
     template <typename T>
-    std::shared_ptr<T> add_node(const std::vector<rocalTensor *> &input, const std::vector<rocalTensor *> &output);
+    std::shared_ptr<T> add_node(const std::vector<rocalTensor *> &inputs, const std::vector<rocalTensor *> &outputs);
     template <typename T, typename M> std::shared_ptr<T> meta_add_node(std::shared_ptr<M> node);
     rocalTensor *create_tensor(const rocalTensorInfo &info, bool is_output);
     rocalTensor *create_loader_output_tensor(const rocalTensorInfo &info);
@@ -130,10 +130,10 @@ private:
     rocalTensorList _internal_tensor_list;  //!< Keeps a list of ovx tensors that are used to store the augmented outputs (there is an augmentation output batch per element in the list)
     rocalTensorList _output_tensor_list;    //!< Keeps a list of ovx tensors(augmented outputs) that are to be passed to the user (there is an augmentation output batch per element in the list)
     std::list<rocalTensor*> _internal_tensors;  //!< Keeps all the ovx tensors (virtual/non-virtual) either intermediate tensors, or input tensors that feed the graph
-    std::list<std::shared_ptr<Node>> _nodes;
-    std::list<std::shared_ptr<Node>> _root_nodes;
+    std::list<std::shared_ptr<Node>> _nodes;//!< List of all the nodes
+    std::list<std::shared_ptr<Node>> _root_nodes;//!< List of all root nodes (image/video loaders)
     std::list<std::shared_ptr<Node>> _meta_data_nodes;//!< List of nodes where meta data has to be updated after augmentation
-    std::map<rocalTensor*, std::shared_ptr<Node>> _tensor_map;
+    std::map<rocalTensor*, std::shared_ptr<Node>> _tensor_map;//!< key: tensor, value : Parent node
 
     // Output tensorList for metadata
     std::vector<rocalTensorList *> _metadata_output_tensor_list;
@@ -211,8 +211,8 @@ std::shared_ptr<T> MasterGraph::add_node(const std::vector<rocalTensor *> &input
             THROW("Input image is invalid, cannot be found among output of previously created nodes")
 
         auto parent_node = _tensor_map.find(input)->second;
-        // parent_node->add_next(node);
-        // node->add_previous(parent_node);
+        parent_node->add_next(node);
+        node->add_previous(parent_node);
     }
 
     for(auto& output: outputs)
@@ -277,6 +277,7 @@ template<> inline std::shared_ptr<FusedJpegCropNode> MasterGraph::add_node(const
 
     return node;
 }
+
 template<> inline std::shared_ptr<FusedJpegCropSingleShardNode> MasterGraph::add_node(const std::vector<rocalTensor*>& inputs, const std::vector<rocalTensor*>& outputs)
 {
     if(_loader_module)
@@ -339,4 +340,3 @@ template<> inline std::shared_ptr<VideoLoaderSingleShardNode> MasterGraph::add_n
 
     return node;
 }
-
