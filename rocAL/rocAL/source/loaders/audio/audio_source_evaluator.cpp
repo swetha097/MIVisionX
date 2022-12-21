@@ -65,9 +65,7 @@ AudioSourceEvaluator::create(ReaderConfig reader_cfg, DecoderConfig decoder_cfg)
 void
 AudioSourceEvaluator::find_max_dimension()
 {
-    std::cerr<<"\n Comes here in find_max_dim";
     _reader->reset();
-    std::cerr<<"\n  _reader->count_items()"<<  _reader->count_items();
 
     while( _reader->count_items() )
     {

@@ -129,9 +129,9 @@ rocalTensorInfo::rocalTensorInfo(std::vector<size_t> dims,
     _num_of_dims = dims.size();
     _data_size = tensor_data_size(data_type);
     for (unsigned i = 0; i < _num_of_dims; i++) _data_size *= dims.at(i);
-    std::cerr << "rocalTensorInfo" ;
+    // std::cerr << "rocalTensorInfo" ;
     if (_num_of_dims <= 3) _is_image = false;
-    std::cerr << "\n rocalTensorInfo 1";
+    // std::cerr << "\n rocalTensorInfo 1";
 }
 
 void rocalTensor::update_tensor_roi(const std::vector<uint32_t> &width,

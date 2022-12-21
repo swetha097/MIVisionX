@@ -156,7 +156,6 @@ FileSourceReader::release()
 
 void FileSourceReader::reset()
 {
-    std::cerr<<"\n Here in reset";
     _shuffle_time.start();
     if (_shuffle) std::random_shuffle(_file_names.begin(), _file_names.end());
     _shuffle_time.end();

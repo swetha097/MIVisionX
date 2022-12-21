@@ -99,7 +99,7 @@ static vx_status VX_CALLBACK refreshSlice(vx_node node, const vx_reference *para
         }
     }
     //TODO: Swetha : To clean up the debug code
-    std::cerr << "Exits the refessh slice ";
+    // std::cerr << "Exits the refessh slice ";
     return status;
 }
 
@@ -273,7 +273,7 @@ static vx_status VX_CALLBACK initializeSlice(vx_node node, const vx_reference *p
 // #endif
 //     data->roi_tensor_ptr = (RpptROI *)calloc(data->src_desc_ptr->n, sizeof(RpptROI));
 //TODO: Swetha : To clean up the debug code
-std::cerr<<"\n Gonna call refresh slice in initialize";
+// std::cerr<<"\n Gonna call refresh slice in initialize";
     refreshSlice(node, parameters, num, data);
 #if ENABLE_OPENCL
     if (data->deviceType == AGO_TARGET_AFFINITY_GPU)
