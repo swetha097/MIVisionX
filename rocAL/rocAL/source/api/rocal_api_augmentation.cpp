@@ -634,7 +634,7 @@ rocalResize(RocalContext p_context,
         }
         output_info.set_dims(out_dims);
         output = context->master_graph->create_tensor(output_info, is_output);
-        output->reset_tensor_roi();
+        // output->reset_tensor_roi();
         std::shared_ptr<ResizeNode> resize_node =  context->master_graph->add_node<ResizeNode>({input}, {output});
         resize_node->init(out_width, out_height, resize_scaling_mode, maximum_size, interpolation_type);
         if (context->master_graph->meta_data_graph())

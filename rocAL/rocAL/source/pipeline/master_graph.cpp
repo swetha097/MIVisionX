@@ -264,19 +264,6 @@ MasterGraph::build()
     if(_internal_tensor_list.empty())
         THROW("No output images or tensors are there, cannot create the pipeline")
 
-    // Verify all output images have the same dimension, otherwise creating a unified tensor from them is not supported
-    _output_tensor_info = _internal_tensor_list.front()->info();
-    // _max_tensor_type_size = _output_tensor_info.data_type_size();
-    // for(auto&& output_tensor : _internal_tensor_list)
-    // {
-        // rocalTensorInfo tensor_info  = output_tensor->info();
-        // if(tensor_info.data_type_size() > _max_tensor_type_size)
-        // {
-            // _max_tensor_type_size = tensor_info.data_type_size();
-            // _output_tensor_info = output_tensor->info();
-        // }
-    // }
-
     // allocate_output_tensor();
 #if ENABLE_HIP
     _ring_buffer.initHip(_mem_type, _device.resources(), _internal_tensor_list.data_size(), _internal_tensor_list.size());
@@ -725,8 +712,8 @@ void MasterGraph::output_routine()
             std::vector<uint32_t> temp_height_arr;
             for (unsigned int i = 0; i < _user_batch_size; i++)
             {
-                temp_width_arr.push_back(_output_tensor_info.get_roi()[i].x2);
-                temp_height_arr.push_back(_output_tensor_info.get_roi()[i].y2);
+                temp_width_arr.push_back(_internal_tensor_list.front()->info().get_roi()[i].x2);
+                temp_height_arr.push_back(_internal_tensor_list.front()->info().get_roi()[i].y2);
             }
             _resize_width.insert(_resize_width.begin(), temp_width_arr);
             _resize_height.insert(_resize_height.begin(), temp_height_arr);

@@ -51,28 +51,27 @@ void RocalCropParam::update_array()
 
 void RocalCropParam::fill_crop_dims()
 {
-    auto input_roi = in_roi;
     for(uint img_idx =0; img_idx < batch_size; img_idx++)
     {
         if(!(_random))
         {
             // Evaluating user given crop
-            cropw_arr_val[img_idx] = (crop_w > input_roi[img_idx].x2) ? input_roi[img_idx].x2 : crop_w;
-            croph_arr_val[img_idx] = (crop_h > input_roi[img_idx].y2) ? input_roi[img_idx].y2 : crop_h;
+            cropw_arr_val[img_idx] = (crop_w > in_roi[img_idx].x2) ? in_roi[img_idx].x2 : crop_w;
+            croph_arr_val[img_idx] = (crop_h > in_roi[img_idx].y2) ? in_roi[img_idx].y2 : crop_h;
             if(_is_center_crop)
             {
                 float x_drift, y_drift;
                 x_drift = x_drift_factor->get();
                 y_drift = y_drift_factor->get();
-                x1_arr_val[img_idx] = static_cast<size_t>(x_drift * (input_roi[img_idx].x2 - cropw_arr_val[img_idx]));
-                y1_arr_val[img_idx] = static_cast<size_t>(y_drift * (input_roi[img_idx].y2 - croph_arr_val[img_idx]));
+                x1_arr_val[img_idx] = static_cast<size_t>(x_drift * (in_roi[img_idx].x2 - cropw_arr_val[img_idx]));
+                y1_arr_val[img_idx] = static_cast<size_t>(y_drift * (in_roi[img_idx].y2 - croph_arr_val[img_idx]));
             }
             else
             {
-                x1_arr_val[img_idx] = (x1 >= input_roi[img_idx].x2) ? 0 : x1;
-                y1_arr_val[img_idx] = (y1 >= input_roi[img_idx].y2) ? 0 : y1;
+                x1_arr_val[img_idx] = (x1 >= in_roi[img_idx].x2) ? 0 : x1;
+                y1_arr_val[img_idx] = (y1 >= in_roi[img_idx].y2) ? 0 : y1;
             }
-            // std::cerr<<"\n In width:: "<<input_roi[img_idx].x2<<"\t In height:: "<<input_roi[img_idx].y2;
+            // std::cerr<<"\n In width:: "<<in_roi[img_idx].x2<<"\t In height:: "<<in_roi[img_idx].y2;
             // std::cerr<<"\n Crop dims:: "<<x1_arr_val[img_idx]<<" "<<y1_arr_val[img_idx]<<" "<<cropw_arr_val[img_idx]<<" "<<croph_arr_val[img_idx]<<"\n";
         }
         else
@@ -82,21 +81,21 @@ void RocalCropParam::fill_crop_dims()
             crop_h_factor_ = crop_height_factor->get();
             crop_width_factor->renew();
             crop_w_factor_ = crop_width_factor->get();
-            cropw_arr_val[img_idx] = static_cast<size_t> (crop_w_factor_ * input_roi[img_idx].x2);
-            croph_arr_val[img_idx] = static_cast<size_t> (crop_h_factor_ * input_roi[img_idx].y2);
+            cropw_arr_val[img_idx] = static_cast<size_t> (crop_w_factor_ * in_roi[img_idx].x2);
+            croph_arr_val[img_idx] = static_cast<size_t> (crop_h_factor_ * in_roi[img_idx].y2);
             x_drift_factor->renew();
             y_drift_factor->renew();
             y_drift_factor->renew();
             x_drift = x_drift_factor->get();
             y_drift = y_drift_factor->get();
-            x1_arr_val[img_idx] = static_cast<size_t>(x_drift * (input_roi[img_idx].x2  - cropw_arr_val[img_idx]));
-            y1_arr_val[img_idx] = static_cast<size_t>(y_drift * (input_roi[img_idx].y2 - croph_arr_val[img_idx]));
+            x1_arr_val[img_idx] = static_cast<size_t>(x_drift * (in_roi[img_idx].x2  - cropw_arr_val[img_idx]));
+            y1_arr_val[img_idx] = static_cast<size_t>(y_drift * (in_roi[img_idx].y2 - croph_arr_val[img_idx]));
         }
         x2_arr_val[img_idx] = x1_arr_val[img_idx] + cropw_arr_val[img_idx];
         y2_arr_val[img_idx] = y1_arr_val[img_idx] + croph_arr_val[img_idx];
         // Evaluating the crop
-        (x2_arr_val[img_idx] > input_roi[img_idx].x2) ? x2_arr_val[img_idx] = input_roi[img_idx].x2 : x2_arr_val[img_idx] = x2_arr_val[img_idx];
-        (y2_arr_val[img_idx] > input_roi[img_idx].y2) ? y2_arr_val[img_idx] = input_roi[img_idx].y2 : y2_arr_val[img_idx] = y2_arr_val[img_idx];
+        (x2_arr_val[img_idx] > in_roi[img_idx].x2) ? x2_arr_val[img_idx] = in_roi[img_idx].x2 : x2_arr_val[img_idx] = x2_arr_val[img_idx];
+        (y2_arr_val[img_idx] > in_roi[img_idx].y2) ? y2_arr_val[img_idx] = in_roi[img_idx].y2 : y2_arr_val[img_idx] = y2_arr_val[img_idx];
     }
 }
 

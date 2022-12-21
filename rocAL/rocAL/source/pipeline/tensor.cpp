@@ -92,30 +92,24 @@ bool operator==(const rocalTensorInfo &rhs, const rocalTensorInfo &lhs) {
 
 void rocalTensorInfo::allocate_tensor_roi_buffers() {
     size_t roi_size = _batch_size * 4 * sizeof(unsigned);
-    std::cerr << "ROI BUFFER ALLOCATED\n";
     if(_mem_type == RocalMemType::HIP) {
 #if ENABLE_HIP
-    std::cerr << "ROI BUFFER ALLOCATED------------HIP\n";
     hipError_t err = hipHostMalloc((void **)&_roi_buf, roi_size, hipHostMallocDefault/*hipHostMallocMapped|hipHostMallocWriteCombined*/);
     if(err != hipSuccess || !_roi_buf)
-    {
-        THROW("hipHostMalloc of size " + TOSTR(roi_size) + " failed " + TOSTR(err));
-    }
-    hipMemset((void *)_roi_buf, 0, roi_size);
+        THROW("hipHostMalloc of size " + TOSTR(roi_size) + " failed " + TOSTR(err))
+    err = hipMemset((void *)_roi_buf, 0, roi_size);
+    if(err != hipSuccess)
+        THROW("hipMemset of size " + TOSTR(roi_size) + " failed " + TOSTR(err))
 #endif
     } else {
-        std::cerr << "ROI BUFFER ALLOCATED------------HOST\n";
-        
         _roi_buf = (void *)malloc(roi_size);
         memset((void *) _roi_buf, 0, roi_size);
     }
 }
 
-void rocalTensorInfo::reallocate_tensor_roi_buffers() {
-    
+void rocalTensorInfo::reset_tensor_roi_buffers() {
     if(!_roi_buf)
         allocate_tensor_roi_buffers();
-
     if (_is_image) {
         auto roi = get_roi();
         for (unsigned i = 0; i < _batch_size; i++) {
@@ -141,7 +135,6 @@ rocalTensorInfo::rocalTensorInfo(std::vector<size_t> dims,
       _dims(dims),
       _mem_type(mem_type),
       _data_type(data_type) {
-    std::cerr << "INFO INIT CONSTRUCTOR\t";
     _batch_size = dims.at(0);
     _num_of_dims = dims.size();
     _data_size = tensor_data_size(data_type);
@@ -151,7 +144,6 @@ rocalTensorInfo::rocalTensorInfo(std::vector<size_t> dims,
 }
 
 rocalTensorInfo::rocalTensorInfo(const rocalTensorInfo &other) {
-    std::cerr << "INVOKE COPY CONSTRUCTOR\t";
     _type = other._type;
     _num_of_dims = other._num_of_dims;
     _dims = other._dims;
@@ -169,39 +161,40 @@ rocalTensorInfo::rocalTensorInfo(const rocalTensorInfo &other) {
     _channels = other._channels;
     if(!other.is_metadata()) {  // For Metadata ROI buffer is not required
         allocate_tensor_roi_buffers();
-        if(!other.get_roi())
-            memcpy((void *)_roi_buf, (const void *)other.get_roi(), _batch_size * 4 * sizeof(unsigned));
+        memcpy((void *)_roi_buf, (const void *)other.get_roi(), _batch_size * 4 * sizeof(unsigned));
     }
 }
 
 rocalTensorInfo::~rocalTensorInfo() {
     if(!_is_metadata) {
         if(_mem_type == RocalMemType::HIP) {
-    std::cerr << "DESTRUCTOR CALLED-----HIP";
 #if ENABLE_HIP
-            hipDeviceSynchronize();
-            hipHostFree(_roi_buf);
+            if(_roi_buf) {
+                hipError_t err = hipHostFree(_roi_buf);
+                if (err != hipSuccess)
+                    ERR("hipHostFree failed " + TOSTR(err));
+            }
 #endif
         } else {
-        std::cerr << "DESTRUCTOR CALLED-----HOST";
-        if(!_roi_buf) free(_roi_buf);
+            if(_roi_buf) free(_roi_buf);
         }
+        _roi_buf = nullptr;
     } 
 }
 
 void rocalTensor::update_tensor_roi(const std::vector<uint32_t> &width,
                                     const std::vector<uint32_t> &height) {
-    std::cerr << "UPDATE TENSOR ROI\n";
     if (_info.is_image()) {
         auto max_shape = _info.max_shape();
         unsigned max_width = max_shape.at(0);
         unsigned max_height = max_shape.at(1);
-        
+
         if (width.size() != height.size())
             THROW("Batch size of Tensor height and width info does not match")
 
         if (width.size() != info().batch_size())
             THROW("The batch size of actual Tensor height and width different from Tensor batch size " + TOSTR(width.size()) + " != " + TOSTR(info().batch_size()))
+
         for (unsigned i = 0; i < info().batch_size(); i++) {
             if (width[i] > max_width) {
                 WRN("Given ROI width is larger than buffer width for tensor[" + TOSTR(i) + "] " + TOSTR(width[i]) + " > " + TOSTR(max_width))
@@ -215,13 +208,11 @@ void rocalTensor::update_tensor_roi(const std::vector<uint32_t> &width,
             } else {
                 _info.get_roi()[i].y2 = height[i];
             }
-            std::cerr << "ROI : " << _info.get_roi()[i].x1 << " " << _info.get_roi()[i].y1 << " " << _info.get_roi()[i].x2 << " " << _info.get_roi()[i].y2 << "\n";
         }
     }
 }
 
 rocalTensor::~rocalTensor() {
-    std::cerr << "Tensor destructor\n";
     _mem_handle = nullptr;
     if (_vx_handle) vxReleaseTensor(&_vx_handle);
 }

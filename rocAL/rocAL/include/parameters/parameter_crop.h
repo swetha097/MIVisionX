@@ -22,7 +22,6 @@ THE SOFTWARE.
 
 #pragma once
 #include <VX/vx_types.h>
-#include <cstring>
 #include "parameter_factory.h"
 enum class RocalCropType
 {

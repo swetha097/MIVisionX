@@ -321,7 +321,7 @@ int test(int test_case, int reader_type, int pipeline_type, const char *path, co
         std::vector<float> sdev{1, 1, 1};
         std::cout << ">>>>>>> Running "
                   << " Crop Mirror Normalize " << std::endl;
-        image1 = rocalCropMirrorNormalize(handle, input1, resize_h, resize_w, 0, 0, mean, sdev, true, NULL, tensorLayout, RocalTensorOutputType::ROCAL_UINT8);
+        image1 = rocalCropMirrorNormalize(handle, input1, resize_h, resize_w, 0, 0, mean, sdev, true, NULL, tensorLayout, tensorOutputType);
         break;
     }
     case 1:

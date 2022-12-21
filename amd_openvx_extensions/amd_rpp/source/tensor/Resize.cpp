@@ -64,7 +64,6 @@ static vx_status VX_CALLBACK refreshResize(vx_node node, const vx_reference *par
     {
         data->dstImgSize[i].width = data->resize_w[i];
         data->dstImgSize[i].height = data->resize_h[i];
-        std::cerr << "RESIZE W : " << data->resize_w[i] << " RESIZE H : " << data->resize_h[i] << "\n";
     }
     if (data->device_type == AGO_TARGET_AFFINITY_GPU)
     {
