@@ -28,7 +28,7 @@ THE SOFTWARE.
 #include <cstring>
 #include "commons.h"
 
-#define ANCHOR_SIZE 8732//change it to 120087
+#define ANCHOR_SIZE 120087
 
 typedef struct BoundingBoxCord_
 {

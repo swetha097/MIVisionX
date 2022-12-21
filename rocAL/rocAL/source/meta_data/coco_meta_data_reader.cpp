@@ -191,7 +191,7 @@ void COCOMetaDataReader::read_all(const std::string &path)
     BoundingBoxCords bb_coords;
     BoundingBoxLabels bb_labels;
     ImgSizes img_sizes;
-    Matches matches(8732, 2);
+    Matches matches(120087, 0);
     std::vector<int> polygon_count;
     int polygon_size = 0;
     std::vector<std::vector<int>> vertices_count;
@@ -228,11 +228,9 @@ void COCOMetaDataReader::read_all(const std::string &path)
                     else if (0 == std::strcmp(internal_key, "file_name"))
                     {
                         image_name = parser.GetString();
-                        //img_size.filename = parser.GetString();
                     }
                     else if(0 == std::strcmp(internal_key, "id"))
                     {
-                        //original_id = parser.GetInt();
                         img_size.original_id = parser.GetInt();
                     }
                     else
@@ -240,7 +238,6 @@ void COCOMetaDataReader::read_all(const std::string &path)
                         parser.SkipValue();
                     }
                 }
-                //_map_img_sizes.insert(pair<int, ImgSize>(original_id, img_size));
                 _map_img_names.insert(pair<int, std::string>(img_size.original_id, image_name));
                 _map_img_sizes.insert(pair<std::string, ImgSize>(image_name, img_size));
                 img_size = {};
@@ -348,13 +345,8 @@ void COCOMetaDataReader::read_all(const std::string &path)
                         parser.SkipValue();
                     }
                 }
-                /*char buffer[13];
-                sprintf(buffer, "%012d", id);
-                string str(buffer);
-                std::string file_name = str + ".jpg";*/
                 
                 auto itr = _map_img_names.find(id);
-                //std::cerr << "\n Image name : " << itr->second << std::endl;
                 auto it = _map_img_sizes.find(itr->second);
                 ImgSize image_size = it->second; //Normalizing the co-ordinates & convert to "ltrb" format
                 if (_mask && iscrowd == 0)
@@ -367,7 +359,6 @@ void COCOMetaDataReader::read_all(const std::string &path)
                     bb_labels.push_back(label);
                     polygon_count.push_back(polygon_size);
                     vertices_count.push_back(vertices_array);
-                    //add(image_size.filename, bb_coords, bb_labels, image_size, mask, polygon_count, vertices_count);
                     add(itr->second, bb_coords, bb_labels, image_size, mask, polygon_count, vertices_count);
                     mask.clear();
                     polygon_size = 0;
@@ -385,11 +376,6 @@ void COCOMetaDataReader::read_all(const std::string &path)
                     box.b = (bbox[1] + bbox[3]) / image_size.h;
                     bb_coords.push_back(box);
                     bb_labels.push_back(label);
-                    //add(image_size.filename, bb_coords, bb_labels, image_size);
-                    //add(itr->second, bb_coords, bb_labels, image_size);
-                    //std::cerr << "\n In coco meta data : size of matches" <<  matches.size() << std::endl;
-                    //for(int i = 0; i < matches.size(); i++)
-                    //    std::cerr  << matches[i] ;
                     add(itr->second, bb_coords, bb_labels, image_size, matches);
                     bb_coords.clear();
                     bb_labels.clear();

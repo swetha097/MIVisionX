@@ -784,7 +784,6 @@ void MasterGraph::output_routine()
             if(_is_box_iou_matcher)
             {
                 //TODO - to add call for hip kernel.
-                std::cerr << "\n Calls box_iou_matcher :" << std::endl;
                 _meta_data_graph->update_box_iou_matcher(&_anchors, full_batch_meta_data, _criteria, _high_threshold, _low_threshold, _allow_low_quality_matches);
             }
             _bencode_time.end();
@@ -985,7 +984,7 @@ std::vector<rocalTensorList *> MasterGraph::create_coco_meta_data_reader(const c
     {
         num_of_dims = 1;
         dims.resize(num_of_dims);
-        dims.at(0) = 8732;//_is_box_iou_matcher ? MAX_NUM_ANCHORS : MAX_OBJECTS;//change it to 120087
+        dims.at(0) = 120087;
         default_matches_info  = rocalTensorInfo(dims,
                                         _mem_type,
                                         RocalTensorDataType::INT32);
@@ -1025,7 +1024,7 @@ std::vector<rocalTensorList *> MasterGraph::create_coco_meta_data_reader(const c
             _matches_tensor_list.push_back(new rocalTensor(matches_info));
         }
     }
-    std::cerr <<"\n Before init metadata in coco reader : " << _meta_data_buffer_size.size(); 
+    //std::cerr <<"\n Before init metadata in coco reader : " << _meta_data_buffer_size.size(); 
     _ring_buffer.init_metadata(RocalMemType::HOST, _meta_data_buffer_size, _meta_data_buffer_size.size());
     if(is_output)
     {

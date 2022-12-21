@@ -421,7 +421,7 @@ namespace rocal
                             sizeof(int),
                             py::format_descriptor<int>::format(),
                             1,
-                            {matches->size() * 8732},
+                            {matches->size() * 120087},
                             {sizeof(int) }));
     }
             );
