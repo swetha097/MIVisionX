@@ -82,41 +82,41 @@ def main():
         nfilter=80 #nfeatures
         resample = 1
         audio_decode = fn.decoders.audio(audio, file_root=data_path, downmix=True, sample_rate=sample_rate*resample, shard_id=0, num_shards=1)
-        print(audio_decode)
-        audio_new = audio_decode * 1.0
-        print(audio_new)
-        # begin, length = fn.nonsilent_region(audio_decode, cutoff_db=-60)
-        # trim_silence = fn.slice(
-        #     audio_decode,
-        #     anchor=[begin],
-        #     shape=[length],
-        #     normalized_anchor=False,
-        #     normalized_shape=False,
-        #     axes=[0]
-        # )
-        # premph_audio = fn.preemphasis_filter(trim_silence)
-        # spectrogram_audio = fn.spectrogram(
-        #     premph_audio,
-        #     nfft=nfft,
-        #     window_length=320, # Change to 320
-        #     window_step= 160, # Change to 160
-        #     rocal_tensor_output_type=types.FLOAT,
-        # )
-        # mel_filter_bank_audio = fn.mel_filter_bank(
-        #     spectrogram_audio,
-        #     sample_rate=sample_rate,
-        #     nfilter=nfilter,
-        # )
-        # to_decibels_audio = fn.to_decibels(
-        #     mel_filter_bank_audio,
-        #     multiplier=np.log(10),
-        #     reference=1.0,
-        #     cutoff_db=np.log(1e-20),
-        #     rocal_tensor_output_type=types.FLOAT,
-        # )
+        # print(audio_decode)
+        # audio_new = audio_decode * 1.0
+        # print(audio_new)
+        begin, length = fn.nonsilent_region(audio_decode, cutoff_db=-60)
+        trim_silence = fn.slice(
+            audio_decode,
+            anchor=[begin],
+            shape=[length],
+            normalized_anchor=False,
+            normalized_shape=False,
+            axes=[0]
+        )
+        premph_audio = fn.preemphasis_filter(trim_silence)
+        spectrogram_audio = fn.spectrogram(
+            premph_audio,
+            nfft=nfft,
+            window_length=320, # Change to 320
+            window_step= 160, # Change to 160
+            rocal_tensor_output_type=types.FLOAT,
+        )
+        mel_filter_bank_audio = fn.mel_filter_bank(
+            spectrogram_audio,
+            sample_rate=sample_rate,
+            nfilter=nfilter,
+        )
+        to_decibels_audio = fn.to_decibels(
+            mel_filter_bank_audio,
+            multiplier=np.log(10),
+            reference=1.0,
+            cutoff_db=np.log(1e-20),
+            rocal_tensor_output_type=types.FLOAT,
+        )
         # normalize_audio = fn.normalize(to_decibels_audio, axes=[1])
         # pad_audio = fn.pad(normalize_audio, fill_value=0)
-        audio_pipeline.set_outputs(audio_new)
+        audio_pipeline.set_outputs(to_decibels_audio)
 
     audio_pipeline.build()
     audioIteratorPipeline = ROCALClassificationIterator(audio_pipeline)
@@ -128,7 +128,7 @@ def main():
             print(it)
             for img, label in zip(it[0],it[1]):
                 print(img.shape)
-                draw_patches(img, label, "cpu")
+                # draw_patches(img, label, "cpu")
                 cnt = cnt + 1
         print("EPOCH DONE", e)
         audioIteratorPipeline.reset()

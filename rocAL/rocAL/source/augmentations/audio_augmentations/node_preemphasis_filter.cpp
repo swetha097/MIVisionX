@@ -67,8 +67,6 @@ void PreemphasisFilterNode::update_node()
         THROW(" Failed calling vxCopyArrayRange for src / dst roi status : "+ TOSTR(src_roi_status))
      _preemph_coeff.update_array();
     _outputs[0]->update_tensor_roi(_dst_roi_width_vec, _dst_roi_height_vec);
-    _dst_roi_width_vec.clear();
-    _dst_roi_height_vec.clear();
 }
 
 void PreemphasisFilterNode::init(FloatParam* preemph_coeff, RocalAudioBorderType preemph_border)

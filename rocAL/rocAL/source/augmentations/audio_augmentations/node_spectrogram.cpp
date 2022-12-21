@@ -78,8 +78,6 @@ void SpectrogramNode::update_node()
         _dst_roi_height_vec[i] =  (_nfft_size / 2 )+ 1;
     }
     _outputs[0]->update_tensor_roi(_dst_roi_width_vec, _dst_roi_height_vec);
-    _dst_roi_width_vec.clear();
-    _dst_roi_height_vec.clear();
     vx_status src_roi_status;
     src_roi_status = vxCopyArrayRange((vx_array)_src_samples_length_array, 0, _batch_size, sizeof(vx_uint32), _src_samples_length.data(), VX_WRITE_ONLY, VX_MEMORY_TYPE_HOST);
     if(src_roi_status != 0)

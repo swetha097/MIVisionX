@@ -61,8 +61,8 @@ void ToDeciblesNode::update_node()
     {
         _src_samples_length[i] = audio_roi->at(i).x1;
         _src_samples_channels[i] = audio_roi->at(i).y1;
-        _dst_roi_width_vec.push_back(audio_roi->at(i).x1);
-        _dst_roi_height_vec.push_back(audio_roi->at(i).y1);
+        _dst_roi_width_vec[i] = (audio_roi->at(i).x1);
+        _dst_roi_height_vec[i] = (audio_roi->at(i).y1);
         std::cerr << "todecibels _src_samples_length[i] = audio_roi->at(i).x1; " <<  audio_roi->at(i).x1;
         std::cerr << "todecibels _src_samples_channels[i] = audio_roi->at(i).y1" << audio_roi->at(i).y1;
     }
@@ -74,8 +74,6 @@ void ToDeciblesNode::update_node()
     if(src_roi_status != 0)
         THROW(" Failed calling vxCopyArrayRange for src / dst roi status : "+ TOSTR(src_roi_status))
     _outputs[0]->update_tensor_roi(_dst_roi_width_vec, _dst_roi_height_vec);
-    _dst_roi_width_vec.clear();
-    _dst_roi_height_vec.clear();
 }
 
 void ToDeciblesNode::init(float cut_off_db, float multiplier, float magnitude_reference)
@@ -83,4 +81,7 @@ void ToDeciblesNode::init(float cut_off_db, float multiplier, float magnitude_re
     _cut_off_db = cut_off_db;
     _multiplier = multiplier;
     _magnitude_reference = magnitude_reference;
+    _dst_roi_width_vec.resize(_batch_size);
+    _dst_roi_height_vec.resize(_batch_size);
+
 }
