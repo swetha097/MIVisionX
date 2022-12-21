@@ -468,8 +468,6 @@ MasterGraph::copy_output(
     return Status::OK;
 }
 
-#define CHECK_CL_CALL_RET(x) { cl_int ret; ret = x; if( ret != CL_SUCCESS) THROW("ocl call failed "+STR(#x)+" error "+TOSTR(ret)) }
-
 rocalTensorList *
 MasterGraph::get_output_tensors()
 {
