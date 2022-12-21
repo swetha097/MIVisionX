@@ -110,8 +110,6 @@ public:
     void set_sequence_batch_ratio() { _sequence_batch_ratio = _sequence_batch_size / _internal_batch_size; }
 private:
     Status update_node_parameters();
-    Status allocate_output_tensor();
-    Status deallocate_output_tensor();
     void create_single_graph();
     void start_processing();
     void stop_processing();
@@ -147,10 +145,8 @@ private:
     std::vector<size_t> _meta_data_buffer_size;
 
 #if ENABLE_HIP
-    void * _output_tensor;//!< In the GPU processing case , is used to convert the U8 samples to float32 before they are being transfered back to host
     DeviceManagerHip   _device;//!< Keeps the device related constructs needed for running on GPU
 #else
-    void* _output_tensor;//!< In the GPU processing case , is used to convert the U8 samples to float32 before they are being transfered back to host
     DeviceManager   _device;//!< Keeps the device related constructs needed for running on GPU
 #endif
     std::shared_ptr<Graph> _graph = nullptr;
