@@ -376,20 +376,22 @@ namespace rocal
             "rocalGetBoundingBoxLabel", [](RocalContext context)
     {
             rocalTensorList *labels = rocalGetBoundingBoxLabel(context);
-            // std::cerr<<"LABELS SIZE ::"<<labels->size();
-            // for (int i = 0; i < labels->size(); i++) {
-            //     int *labels_buffer = (int *)(labels->at(i)->buffer());
-            //     std::cerr << ">>>>> LABELS : " << labels_buffer[0] << "\t";
-            // }
-            std::cerr << "\n labels array size: " << labels->size() ;
-            std::cerr << "\n labels size  : " << labels->at(0)->info().dims().at(0);
-            return py::array(py::buffer_info(
-                            (int *)(labels->at(0)->buffer()),
+            std::cerr<<"LABELS SIZE ::"<< labels->size();
+            py::list labels_list;
+            py::array_t<int> labels_array;
+            for (int i = 0; i < labels->size(); i++) {
+                int *labels_buffer = (int *)(labels->at(i)->buffer());
+                std::cerr << "\n labels : i : " << i << " count : " << labels->at(i)->info().dims().at(0);
+                labels_array = py::array(py::buffer_info(
+                            (int *)(labels->at(i)->buffer()),
                             sizeof(int),
                             py::format_descriptor<int>::format(),
-                            2,
-                            {labels->size(), labels->at(0)->info().dims().at(0)},
-                            {labels->at(0)->info().dims().at(0) * sizeof(int), sizeof(int) }));
+                            1,
+                            {labels->at(i)->info().dims().at(0)},
+                            {sizeof(int) }));
+                labels_list.append(labels_array);
+            }
+            return labels_list;
     }
             );
         m.def(
@@ -397,15 +399,21 @@ namespace rocal
     {
             rocalTensorList *boxes = rocalGetBoundingBoxCords(context);
             std::cerr << "\n boxes array size: " << boxes->size();
-            std::cerr << "\n boxes size : " << boxes->at(0)->info().dims().at(0);
-            return py::array(py::buffer_info(
-                            (float *)(boxes->at(0)->buffer()),
+            py::list boxes_list;
+            py::array_t<float> boxes_array;
+            for (int i = 0; i < boxes->size(); i++) {
+                float *box_buffer = (float *)(boxes->at(i)->buffer());
+                std::cerr << "\n BBoxes : i : " << i << " count : " << boxes->at(i)->info().dims().at(0);
+                boxes_array = py::array(py::buffer_info(
+                            (float *)(boxes->at(i)->buffer()),
                             sizeof(float),
                             py::format_descriptor<float>::format(),
                             1,
-                            //{boxes->size() * 2 * 4},
-                            {boxes->size() * boxes->at(0)->info().dims().at(0) * 4},
+                            { boxes->at(i)->info().dims().at(0) * 4},
                             {sizeof(float) }));
+                boxes_list.append(boxes_array);
+            }
+            return boxes_list;
     }
             );
         m.def(
