@@ -17,6 +17,9 @@ public:
     unsigned int get_dst_height() { return _outputs[0]->info().max_dims()[1]; }
     vx_array get_src_width() { return _src_roi_width; }
     vx_array get_src_height() { return _src_roi_height; }
+    std::vector<RocalROI> get_src_roi() { return *_inputs[0]->info().get_roi(); }
+    std::vector<RocalROI> get_dst_roi() { return *_outputs[0]->info().get_roi(); }
+
 protected:
     void create_node() override ;
     void update_node() override;

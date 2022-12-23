@@ -309,7 +309,10 @@ ROCAL_API_CALL rocalResizeMirrorNormalize(RocalContext p_context,
         output_info.set_dims(out_dims);
         output = context->master_graph->create_tensor(output_info, is_output);
         output->reset_tensor_roi();
-        context->master_graph->add_node<ResizeMirrorNormalizeNode>({input}, {output})->init( interpolation_type, mean,std_dev , mirror, layout);
+        std::shared_ptr<ResizeMirrorNormalizeNode> rmn_node = context->master_graph->add_node<ResizeMirrorNormalizeNode>({input}, {output});
+        rmn_node->init( interpolation_type, mean,std_dev , mirror, layout);
+        if (context->master_graph->meta_data_graph())
+            context->master_graph->meta_add_node<ResizeMirrorNormalizeMetaNode,ResizeMirrorNormalizeNode>(rmn_node);
     }
     catch(const std::exception& e)
     {
