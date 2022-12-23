@@ -407,7 +407,6 @@ ROCAL_API_CALL rocalGetImageSizes(RocalContext p_context, int* buf)
         WRN("No sizes has been loaded for this output image")
         return;
     }
-    std::cerr << "\n Inside meta data - rocalGetImgSize : meta_data_batch_size : " << meta_data_batch_size;
     for(unsigned i = 0; i < meta_data_batch_size; i++)
     {
         memcpy(buf, &(img_sizes[i]), sizeof(ImgSize));

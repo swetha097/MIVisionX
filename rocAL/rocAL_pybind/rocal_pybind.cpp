@@ -376,12 +376,10 @@ namespace rocal
             "rocalGetBoundingBoxLabel", [](RocalContext context)
     {
             rocalTensorList *labels = rocalGetBoundingBoxLabel(context);
-            std::cerr<<"LABELS SIZE ::"<< labels->size();
             py::list labels_list;
             py::array_t<int> labels_array;
             for (int i = 0; i < labels->size(); i++) {
                 int *labels_buffer = (int *)(labels->at(i)->buffer());
-                std::cerr << "\n labels : i : " << i << " count : " << labels->at(i)->info().dims().at(0);
                 labels_array = py::array(py::buffer_info(
                             (int *)(labels->at(i)->buffer()),
                             sizeof(int),
@@ -398,12 +396,10 @@ namespace rocal
             "rocalGetBoundingBoxCords", [](RocalContext context)
     {
             rocalTensorList *boxes = rocalGetBoundingBoxCords(context);
-            std::cerr << "\n boxes array size: " << boxes->size();
             py::list boxes_list;
             py::array_t<float> boxes_array;
             for (int i = 0; i < boxes->size(); i++) {
                 float *box_buffer = (float *)(boxes->at(i)->buffer());
-                std::cerr << "\n BBoxes : i : " << i << " count : " << boxes->at(i)->info().dims().at(0);
                 boxes_array = py::array(py::buffer_info(
                             (float *)(boxes->at(i)->buffer()),
                             sizeof(float),
@@ -420,7 +416,6 @@ namespace rocal
             "rocalGetMatchedIndices", [](RocalContext context)
     {
             rocalTensorList *matches = rocalGetMatchedIndices(context);
-            std::cerr << "\n matched indices size: " << matches->size() ;
             return py::array(py::buffer_info(
                             (int *)(matches->at(0)->buffer()),
                             sizeof(int),
