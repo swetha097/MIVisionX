@@ -340,9 +340,9 @@ void BoundingBoxGraph::update_box_iou_matcher(std::vector<float> *anchors, pMeta
             highest_foreground.push_back(max_row);
         }
         
-        for(int i = 0; i < highest_foreground.size(); i++) {
-            matches[preds[i]] = all_matches[gts[i]];
-        }
+        //for(int i = 0; i < highest_foreground.size(); i++) {
+        //    matches[preds[i]] = all_matches[gts[i]];
+        //}
 
         full_batch_meta_data->get_matches_batch()[i] = matches;
         full_batch_meta_data->get_metadata_dimensions_batch().matches_dims()[i][0] = anchors_size;

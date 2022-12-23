@@ -135,6 +135,22 @@ class ROCALCOCOIterator(object):
         image_size_tensor = torch.tensor(self.img_size, device=torch_gpu_device).view(-1, self.bs, 3)
         print("\n Image size tensor :", image_size_tensor)
 
+        for i in range(self.bs):
+            index_list = []
+            actual_bboxes = []
+            actual_labels = []
+            for idx, x in enumerate(encodded_labels_tensor[i]):
+                if x != 0:
+                    index_list.append(idx)
+                    actual_bboxes.append(encoded_bboxes_tensor[i][idx].tolist())
+                    actual_labels.append(encodded_labels_tensor[i][idx].tolist())
+            print("\n Actual boxes : ", actual_bboxes)
+            print("\n Actual labels : ", actual_labels)
+            #if self.display:
+            img = self.out
+            draw_patches(img[i], image_size_tensor[0][i][2],
+                            actual_bboxes, self.device)
+
         targets = { 'boxes' : encoded_bboxes_tensor,
                     'labels' : encodded_labels_tensor,
                     #'images_id' : image_id_tensor,
@@ -154,7 +170,6 @@ class ROCALCOCOIterator(object):
         return self
 
 def draw_patches(img, idx, bboxes, device):
-    print("\n Comes insdie draw")
     #image is expected as a tensor, bboxes as numpy
     import cv2
     if device == "cpu":
@@ -165,16 +180,19 @@ def draw_patches(img, idx, bboxes, device):
 
     image = cv2.cvtColor(image, cv2.COLOR_RGB2BGR)
     for (xc, yc, w, h) in bboxes:
-        l = xc - 0.5*(w)
-        t = yc - 0.5*(h)
-        r = xc + 0.5*(w)
-        b = yc + 0.5*(h)
+        l = xc #- 0.5*(w)
+        t = yc #- 0.5*(h)
+        r = w #+ 0.5*(w)
+        b = h #+ 0.5*(h)
         loc_ = [l, t, r, b]
+        print("\n loc : ", loc_)
         color = (255, 0, 0)
         thickness = 2
         image = cv2.UMat(image).get()
-        image = cv2.rectangle(image, (int(loc_[0]*wtot), int(loc_[1] * htot)), (int(
-            (loc_[2] * wtot)), int((loc_[3] * htot))), color, thickness)
+        #image = cv2.rectangle(image, (int(loc_[0]*wtot), int(loc_[1] * htot)), (int(
+        #    (loc_[2] * wtot)), int((loc_[3] * htot))), color, thickness)
+        image = cv2.rectangle(image, (int(loc_[0]), int(loc_[1])), (int(
+            (loc_[2])), int((loc_[3]))), color, thickness)
         cv2.imwrite("OUTPUT_IMAGES_PYTHON/NEW_API/COCO_READER/" + str(idx)+"_"+"train"+".png", image)
 
 def main():
