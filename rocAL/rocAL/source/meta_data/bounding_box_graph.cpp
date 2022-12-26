@@ -285,36 +285,29 @@ void BoundingBoxGraph::update_box_iou_matcher(std::vector<float> *anchors, pMeta
         BoundingBoxCord *bbox_anchors = reinterpret_cast<BoundingBoxCord *>(anchors->data());
         auto bb_count = full_batch_meta_data->get_bb_labels_batch()[i].size();
         BoundingBoxCord bb_coords[bb_count];
-        BoundingBoxLabels bb_labels;
-        Matches matches_idx;
         unsigned anchors_size = anchors->size() / 4; // divide the anchors_size by 4 to get the total number of anchors
-        matches_idx.resize(anchors_size);
-        bb_labels.resize(bb_count);
-        memcpy(bb_labels.data(), full_batch_meta_data->get_bb_labels_batch()[i].data(), sizeof(int) * bb_count);
         memcpy(bb_coords, full_batch_meta_data->get_bb_cords_batch()[i].data(), full_batch_meta_data->get_bb_cords_batch()[i].size() * sizeof(BoundingBoxCord));
-        memcpy(matches_idx.data(), full_batch_meta_data->get_matches_batch()[i].data(), full_batch_meta_data->get_matches_batch()[i].size() * sizeof(int));
         BoundingBoxCords_xcycwh encoded_bb;
         BoundingBoxLabels encoded_labels;
 
         //Calculate Ious
-        //ious size - bboxes count x anchors count
-        
+        //ious size - bboxes count x anchors count        
         std::vector<std::vector<float>> iou_matrix(bb_count, std::vector<float> (anchors_size, 0));
-        std::cerr << "\n size of iou_matrix : " << iou_matrix.size();
 
         for(uint bb_idx = 0; bb_idx < bb_count; bb_idx++)
             calculate_ious(iou_matrix, bb_coords[bb_idx], bbox_anchors, anchors_size, bb_idx);        
             
         std::vector<float> matched_vals;
         Matches matches, all_matches;
+        //matches.resize(anchors_size);
         //for each prediction, find gt
-        for(int i = 0; i < iou_matrix[0].size(); i++) {
-            float max_col = iou_matrix[0][i];
+        for(int row = 0; row < iou_matrix[0].size(); row++) {
+            float max_col = iou_matrix[0][row];
             int max_col_index = 0;
-            for(int j = 1; j < iou_matrix.size(); j++) {
-                if(iou_matrix[j][i] > max_col) {
-                    max_col = iou_matrix[j][i];
-                    max_col_index = j;
+            for(int col = 0; col < iou_matrix.size(); col++) {
+                if(iou_matrix[col][row] > max_col) {
+                    max_col = iou_matrix[col][row];
+                    max_col_index = col;
                 }
                 matches.push_back(max_col_index);
                 matched_vals.push_back(max_col);
@@ -322,27 +315,29 @@ void BoundingBoxGraph::update_box_iou_matcher(std::vector<float> *anchors, pMeta
         }
 
         all_matches = matches;
+
         for(int idx = 0; idx < matches.size(); idx++){
-            if(matched_vals[idx] < 0.4) matches[idx] = -1;
-            if((matched_vals[idx] >= 0.4) && (matched_vals[idx] < 0.5)) matches[idx] = -2;
+            if(matched_vals[idx] < low_threshold) matches[idx] = -1;
+            if((matched_vals[idx] >= low_threshold) && (matched_vals[idx] < high_threshold)) matches[idx] = -2;
         }
 
-        std::vector<float> highest_foreground;
-        std::vector<int>  gts, preds;//try keep it as a map of gts & preds
-        //for each gt, find max prediction - for each row f
-        float best_match = 0;
-        int best_index = 0;
-        for(int i = 0; i < iou_matrix.size(); i++) {
-            gts.push_back(i);
-            float max_row = *std::max_element(iou_matrix[i].begin(), iou_matrix[i].end());
-            int max_row_index = std::max_element(iou_matrix[i].begin(), iou_matrix[i].end()) - iou_matrix[i].begin();
-            preds.push_back(max_row_index);
-            highest_foreground.push_back(max_row);
+        if(allow_low_quality_matches) {
+            std::vector<float> highest_foreground;
+            std::vector<int>  gts, preds;//try keep it as a map of gts & preds
+            //for each gt, find max prediction - for each row f
+            float best_match = 0;
+            int best_index = 0;
+            for(int index = 0; index < iou_matrix.size(); index++) {
+                gts.push_back(index);
+                float max_row = *std::max_element(iou_matrix[index].begin(), iou_matrix[index].end());
+                int max_row_index = std::max_element(iou_matrix[index].begin(), iou_matrix[index].end()) - iou_matrix[index].begin();
+                preds.push_back(max_row_index);
+                highest_foreground.push_back(max_row);
+            }
+
+            for(int pred_idx = 0; pred_idx < highest_foreground.size(); pred_idx++)
+                matches[preds[pred_idx]] = all_matches[preds[pred_idx]];
         }
-        
-        //for(int i = 0; i < highest_foreground.size(); i++) {
-        //    matches[preds[i]] = all_matches[gts[i]];
-        //}
 
         full_batch_meta_data->get_matches_batch()[i] = matches;
         full_batch_meta_data->get_metadata_dimensions_batch().matches_dims()[i][0] = anchors_size;
