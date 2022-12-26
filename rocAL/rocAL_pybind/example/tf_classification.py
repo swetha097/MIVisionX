@@ -45,9 +45,9 @@ def draw_patches(img, idx, device):
     # print(image.dtype)
     print(image.shape,type(image))
     # image = img.transpose([0,3,2,1])
-    # for i in range (image.shape[0]):
-    #     image1 = cv2.cvtColor(image[i], cv2.COLOR_RGB2BGR)
-    #     cv2.imwrite("OUTPUT_IMAGES_PYTHON/NEW_API/FILE_READER/" + "brightness" + "/" + str(idx)+"_"+"trainnn"+".png", image1 )
+    for i in range (image.shape[0]):
+        image1 = cv2.cvtColor(image[i], cv2.COLOR_RGB2BGR)
+        cv2.imwrite("OUTPUT_IMAGES_PYTHON/NEW_API/FILE_READER/" + "brightness" + "/" + str(idx)+"_"+"train"+".png", image1 )
 def main():
     if  len(sys.argv) < 1:
         print ('Please pass image_folder cpu/gpu batch_size')
@@ -97,8 +97,8 @@ def main():
         jpegs = inputs["image/encoded"]
         images = fn.decoders.image(jpegs, user_feature_key_map=featureKeyMap, output_type=types.RGB, path=data_path)
         # resized = fn.resize(images, resize_width=300, resize_height=300,rocal_tensor_output_type=types.FLOAT)
-        resized = fn.resize(images, resize_width=224, resize_height=224, rocal_tensor_layout = types.NHWC, rocal_tensor_output_type = types.FLOAT)
-        # bright = fn .blur(images)
+        resized = fn.resize(images, resize_width=224, resize_height=224, rocal_tensor_layout = types.NHWC, rocal_tensor_output_type = types.UINT8)
+        bright = fn .brightness(resized)
         pipe.set_outputs(resized)
         # pipe.set_outputs(images)
 
