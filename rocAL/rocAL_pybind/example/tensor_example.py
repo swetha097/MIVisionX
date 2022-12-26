@@ -10,7 +10,6 @@ import amd.rocal.types as types
 import sys
 import cv2
 import os
-
 def draw_patches(img, idx, device):
     #image is expected as a tensor, bboxes as numpy
     import cv2
@@ -21,9 +20,11 @@ def draw_patches(img, idx, device):
     image = image.transpose([1, 2, 0])
     # print(img.shape)
     image = cv2.cvtColor(image, cv2.COLOR_RGB2BGR)
-    cv2.imwrite("OUTPUT_IMAGES_PYTHON/NEW_API/FILE_READER/" + "brightness" + "/" + str(idx)+"_"+"train"+".png", image * 255)
+    cv2.imwrite("OUTPUT_IMAGES_PYTHON/NEW_API/FILE_READER/" + "brightness" + "/" + str(count)+"_"+"t"+".png", image * 255)
 
 def main():
+    count =0
+
     if  len(sys.argv) < 3:
         print ('Please pass image_folder cpu/gpu batch_size')
         exit(0)
@@ -100,10 +101,11 @@ def main():
         for i , it in enumerate(imageIteratorPipeline):
             print(it)
             print("************************************** i *************************************",i)
-            # for img in it[0]:
+            for img in it[0]:
                 # print(img.shape)
                 # cnt = cnt + 1
-                # draw_patches(img, cnt, "cpu")
+                draw_patches(img, cnt, "cpu")
+                count+=1
         imageIteratorPipeline.reset()
     print("*********************************************************************")
     exit(0)

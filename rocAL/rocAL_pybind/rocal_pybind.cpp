@@ -153,6 +153,12 @@ namespace rocal
             output_tensor.copy_data(ptr);
             }
             )
+            .def("copy_data_numpy", [](rocalTensor &output_tensor, py::array_t<unsigned char> array) {
+                auto buf = array.request();
+                unsigned char *ptr = (unsigned char *)buf.ptr;
+                std::cerr << "Copy DATA PY";
+                output_tensor.copy_data((void *)ptr);
+            })
             .def(
                 "at",
                 [](rocalTensor &output_tensor, uint idx)
@@ -313,6 +319,9 @@ namespace rocal
         m.def("labelReader", &rocalCreateLabelReader, py::return_value_policy::reference);
         m.def("COCOReader", &rocalCreateCOCOReader, py::return_value_policy::reference);
         // rocal_api_meta_data.h
+        m.def("TFReader",&rocalCreateTFReader, py::return_value_policy::reference);
+        m.def("TFReaderDetection",&rocalCreateTFReaderDetection, py::return_value_policy::reference);
+        
         m.def("RandomBBoxCrop", &rocalRandomBBoxCrop);
         m.def("BoxEncoder",&rocalBoxEncoder);
         m.def("getImageId", [](RocalContext context, py::array_t<int> array)
@@ -446,6 +455,20 @@ namespace rocal
             py::return_value_policy::reference);
         m.def("COCO_ImageDecoderShard",&rocalJpegCOCOFileSourceSingleShard,"Reads file from the source given and decodes it according to the shard id and number of shards",
             py::return_value_policy::reference);
+        m.def("TF_ImageDecoder",&rocalJpegTFRecordSource,"Reads file from the source given and decodes it according to the policy only for TFRecords",
+            py::return_value_policy::reference,
+            py::arg("p_context"),
+            py::arg("source_path"),
+            py::arg("rocal_color_format"),
+            py::arg("internal_shard_count"),
+            py::arg("is_output"),
+            py::arg("user_key_for_encoded"),
+            py::arg("user_key_for_filename"),
+            py::arg("shuffle") = false,
+            py::arg("loop") = false,
+            py::arg("decode_size_policy") = ROCAL_USE_MOST_FREQUENT_SIZE,
+            py::arg("max_width") = 0,
+            py::arg("max_height") = 0);
         m.def("COCO_ImageDecoderSliceShard",&rocalJpegCOCOFileSourcePartialSingleShard,"Reads file from the source given and decodes it according to the policy",
             py::return_value_policy::reference);
         m.def("Resize",&rocalResize, "Resizes the image ",py::return_value_policy::reference);

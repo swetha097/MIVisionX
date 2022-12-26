@@ -21,6 +21,20 @@ def image(*inputs, user_feature_key_map = None, path='', file_root ='', annotati
             "max_width": 0,
             "max_height":0}
         decoded_image = b.COCO_ImageDecoderShard(Pipeline._current_pipeline._handle ,*(kwargs_pybind.values()))
+    elif (reader == "TFRecordReaderClassification" or reader == "TFRecordReaderDetection"):
+        kwargs_pybind = {
+            "source_path": path,
+            "color_format": output_type,
+            "num_shards": num_shards,
+            'is_output': False,
+            "user_key_for_encoded": user_feature_key_map["image/encoded"],
+            "user_key_for_filename": user_feature_key_map["image/filename"],
+            "shuffle": random_shuffle,
+            "loop": False,
+            "decode_size_policy": types.USER_GIVEN_SIZE,
+            "max_width": 2000,
+            "max_height": 2000}
+        decoded_image   = b.TF_ImageDecoder(Pipeline._current_pipeline._handle ,*(kwargs_pybind.values()))
 
     else:
         kwargs_pybind = {

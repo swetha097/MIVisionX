@@ -180,7 +180,7 @@ int test(int test_case, int reader_type, int pipeline_type, const char *path, co
         {
             std::cout << ">>>>>>> Running PARTIAL DECODE" << std::endl;
             rocalCreateLabelReader(handle, path);
-            input1 = rocalFusedJpegCrop(handle, path, color_format, num_threads, false, false);
+            // input1 = rocalFusedJpegCrop(handle, path, color_format, num_threads, false, false);
         }
         break;
         case 2: //coco detection
@@ -213,7 +213,7 @@ int test(int test_case, int reader_type, int pipeline_type, const char *path, co
 #if defined RANDOMBBOXCROP
             rocalRandomBBoxCrop(handle, all_boxes_overlap, no_crop);
 #endif
-            input1 = rocalJpegCOCOFileSourcePartial(handle, path, json_path, color_format, num_threads, false, true, false);
+            // input1 = rocalJpegCOCOFileSourcePartial(handle, path, json_path, color_format, num_threads, false, true, false);
         }
         break;
         case 4: //tf classification
@@ -335,7 +335,7 @@ int test(int test_case, int reader_type, int pipeline_type, const char *path, co
     {
          std::cout << ">>>>>>> Running "
                   << "rocalResize" << std::endl;
-        image1 = rocalResize(handle, input1, tensorLayout, tensorOutputType, 0, 0, true, ROCAL_SCALING_MODE_NOT_SMALLER, {}, 256);
+        image1 = rocalResize(handle, input1, tensorLayout, tensorOutputType, (unsigned)0,(unsigned) 0, true, ROCAL_SCALING_MODE_NOT_SMALLER, {}, 256);
     }
     break;
     case 26:

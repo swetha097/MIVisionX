@@ -145,6 +145,7 @@ void TFRecordReader::reset()
 
 Reader::Status TFRecordReader::folder_reading()
 {
+    std::cerr<<"\n_folder_path "<<_folder_path.c_str();
     if ((_sub_dir = opendir(_folder_path.c_str())) == nullptr)
         THROW("FileReader ShardID [" + TOSTR(_shard_id) + "] ERROR: Failed opening the directory at " + _folder_path);
 
