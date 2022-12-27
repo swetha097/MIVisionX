@@ -44,4 +44,5 @@ private:
     vx_array _src_frames_array, _src_channels_array;
     unsigned _num_of_dims;
     std::vector<std::vector<unsigned>> _param_shape;
+    std::vector<unsigned> _dst_roi_width_vec, _dst_roi_height_vec;
 };

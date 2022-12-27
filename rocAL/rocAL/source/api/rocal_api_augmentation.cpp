@@ -897,7 +897,7 @@ rocalSpectrogram(RocalContext p_context,
         int window_offset = 0;
         if(!center_windows)
             window_offset = window_length;
-        std::cerr << "\n spec : max_frames :" <<max_dims[0];
+        // std::cerr << "\n spec : max_frames :" <<max_dims[0];
         int max_frame = (((max_dims[0] - window_offset) / window_step) + 1);
         max_frame = std::max(0, max_frame);
         int bins = std::max(0, (nfft_size / 2) + 1);
@@ -1032,7 +1032,7 @@ RocalTensor rocalSlice(RocalContext p_context,
                         bool normalized_shape,
                         RocalOutOfBoundsPolicy policy) {
                             
-    std::cerr << "In Slice augmentation";
+    // std::cerr << "In Slice augmentation";
     if(!p_context || !p_input)
         THROW("Null values passed as input")
     rocalTensor* output = nullptr;

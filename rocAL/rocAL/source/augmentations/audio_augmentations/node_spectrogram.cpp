@@ -54,11 +54,11 @@ void SpectrogramNode::create_node()
     vx_scalar window_length = vxCreateScalar(vxGetContext((vx_reference)_graph->get()), VX_TYPE_INT32, &_window_length);
     vx_scalar window_step = vxCreateScalar(vxGetContext((vx_reference)_graph->get()), VX_TYPE_INT32, &_window_step);
     vx_scalar is_window_empty = vxCreateScalar(vxGetContext((vx_reference)_graph->get()), VX_TYPE_BOOL, &_is_window_empty);
-    std::cerr<<"Call RPP spectogram";
+    // std::cerr<<"Call RPP spectogram";
     _node = vxExtrppNode_Spectrogram(_graph->get(), _inputs[0]->handle(), _outputs[0]->handle(), _src_samples_length_array, _window_fn_array,
                                      center_windows, reflect_padding, spec_layout, power, nfft_size, window_length,
                                      window_step, is_window_empty, _batch_size);
-    std::cerr<< "Return from RPP spectogram";
+    // std::cerr<< "Return from RPP spectogram";
 
     if((status = vxGetStatus((vx_reference)_node)) != VX_SUCCESS)
         THROW("Adding the copy (vxExtrppNode_Spectrogram) node failed: "+ TOSTR(status))

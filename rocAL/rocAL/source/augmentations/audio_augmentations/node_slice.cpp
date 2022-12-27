@@ -61,7 +61,7 @@ void SliceNode::create_node()
 
 void SliceNode::update_node()
 {
-    std::cerr<<"\n SliceNode::update_node()";
+    // std::cerr<<"\n SliceNode::update_node()";
     vx_status src_roi_status = vxCopyArrayRange((vx_array)_src_tensor_roi, 0, _batch_size * 4, sizeof(vx_uint32), _inputs[0]->info().get_roi()->data(), VX_WRITE_ONLY, VX_MEMORY_TYPE_HOST);
     vx_status anchor_status  =  (vxQueryTensor((vx_tensor)_anchor->handle(), VX_TENSOR_BUFFER_HOST, &_anchor_array, sizeof(vx_float32)));
     vx_status shape_status = (vxQueryTensor((vx_tensor)_shape->handle(), VX_TENSOR_BUFFER_HOST, &_shape_array, sizeof(vx_float32)));
@@ -105,7 +105,7 @@ void SliceNode::update_node()
         }
 
         
-        std::cerr << "\n";
+        // std::cerr << "\n";
     }
     
     vx_status status = VX_SUCCESS;
