@@ -78,11 +78,11 @@ def main():
         jpegs = inputs["image/encoded"]
         images = fn.decoders.image(jpegs, user_feature_key_map=featureKeyMap, output_type=types.RGB, path=data_path)
         resized = fn.resize(images, resize_width=300, resize_height=300, rocal_tensor_layout = types.NHWC, rocal_tensor_output_type = types.UINT8)
-        if(oneHotLabel == 1):
-            print("check ")
-            labels = inputs["image/class/label"]
-            _ = fn.one_hot(labels, num_classes=1000)
-            print("labels ",_)
+        # if(oneHotLabel == 1):
+        #     print("check ")
+        #     labels = inputs["image/class/label"]
+        #     _ = fn.one_hot(labels, num_classes=1000)
+        #     print("labels ",_)
         # bright = fn .brightness(resized)
         pipe.set_outputs(resized)
 
@@ -91,11 +91,7 @@ def main():
         # Dataloader
         imageIterator = ROCALIterator(pipe)
         cnt = 0
-        for i, (images_array, labels_array) in enumerate(imageIterator, 0):
-            if 1:
-                print("\n",i)
-                print("lables_array",labels_array)
-                print("\n\nPrinted first batch with", (batch_size), "images!")
+        for i, (images_array) in enumerate(imageIterator):
             for element in list(range(batch_size)):
                 cnt = cnt + 1
                 print("size of image_Array   ",images_array[element].__sizeof__())
