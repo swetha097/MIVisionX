@@ -146,3 +146,9 @@ def box_encoder(*inputs, anchors, bytes_per_sample_hint=0, criteria=0.5, means=N
     box_encoder = b.BoxEncoder(Pipeline._current_pipeline._handle ,*(kwargs_pybind.values()))
     Pipeline._current_pipeline._BoxEncoder = True
     return (box_encoder , [])
+
+def one_hot(*inputs, bytes_per_sample_hint=0, dtype=types.FLOAT, num_classes=0, off_value=0.0,
+            on_value=1.0, preserve=False, seed=-1,  device=None):
+    Pipeline._current_pipeline._numOfClasses = num_classes
+    Pipeline._current_pipeline._oneHotEncoding = True
+    return ([])

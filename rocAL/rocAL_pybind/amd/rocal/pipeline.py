@@ -248,6 +248,12 @@ class Pipeline(object):
 
     def getImageLabels(self, array):
         b.getImageLabels(self._handle, ctypes.c_void_p(array.data_ptr()))
+    
+    def rocalGetBoundingBoxLabel(self ):
+        return b.rocalGetBoundingBoxLabel(self._handle)
+
+    def rocalGetBoundingBoxCords(self ):
+        return b.rocalGetBoundingBoxCords(self._handle)
 
     def copyEncodedBoxesAndLables(self, bbox_array, label_array):
         b.rocalCopyEncodedBoxesAndLables(self._handle, bbox_array, label_array)

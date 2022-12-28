@@ -18,6 +18,7 @@ import tensorflow as tf
 # import amd.rali.fn as fn
 
 from amd.rocal.plugin.pytorch import ROCALClassificationIterator
+from amd.rocal.plugin.tf import ROCALIterator
 
 from amd.rocal.pipeline import Pipeline
 import amd.rocal.fn as fn
@@ -53,15 +54,15 @@ def draw_patches(img, idx, bboxes):
     import cv2
     # image = img.detach().numpy()
     print("*************************************draw_patches**********************************")
-    # image = img.transpose([0, 2, 1])
+    # image = img.transpose([0, 1, 2])
     image =img
-    print(image.shape)
+    print("image shape in draw patch ",image.shape)
     print(image.dtype)
-    print("image",image)
+    # print("image",image)
     # image =image.astype(int)
     
     image = cv2.cvtColor(image, cv2.COLOR_RGB2BGR)
-    cv2.imwrite("/media/tf_detection/MIVisionX/rocAL/rocAL_pybind/example/OUTPUT_IMAGES_PYTHON/NEW_API/FILE_READER/brightness/"+str(idx)+"_"+"haha"+".png", image)
+    cv2.imwrite("OUTPUT_IMAGES_PYTHON/NEW_API/TF_READER/DETECTION/"+str(idx)+"_"+"haha"+".png", image)
 
     # image = cv2.normalize(image, None, alpha = 0, beta = 255, norm_type = cv2.NORM_MINMAX, dtype = cv2.CV_32F)
     htot, wtot ,_ = image.shape
@@ -83,18 +84,18 @@ def draw_patches(img, idx, bboxes):
         print("valuessssss",loc_[0]*wtot,loc_[1] * htot,loc_[2] * wtot,loc_[3] * htot,color,thickness)
         image = cv2.rectangle(image, (int(loc_[0]*wtot), int(loc_[1] * htot)), (int(
             (loc_[2] * wtot)), int((loc_[3] * htot))), color, thickness)
-        cv2.imwrite("/media/tf_detection/MIVisionX/rocAL/rocAL_pybind/example/OUTPUT_IMAGES_PYTHON/NEW_API/FILE_READER/brightness/"+str(idx)+"_"+"haha"+".png", image)
+        cv2.imwrite("OUTPUT_IMAGES_PYTHON/NEW_API/TF_READER/DETECTION/"+str(idx)+"_"+"haha"+".png", image)
         print("end of draw_patch")
 def main():
     if  len(sys.argv) < 1:
         print ('Please pass image_folder cpu/gpu batch_size')
         exit(0)
     try:
-        path= "OUTPUT_IMAGES_PYTHON/NEW_API/FILE_READER/" + "brightness"
+        path= "OUTPUT_IMAGES_PYTHON/NEW_API/TF_READER/DETECTION/"
         isExist = os.path.exists(path)
         if not isExist:
             os.makedirs(path)
-    except OSError as error:
+    except OSError as error:   
         print(error)
     data_path = sys.argv[1]
     if(sys.argv[2] == "cpu"):
@@ -144,8 +145,12 @@ def main():
                     }
         )
         jpegs = inputs["image/encoded"]
-        images = fn.decoders.image(jpegs, user_feature_key_map=featureKeyMap, output_type=types.RGB, path=data_path)
-        resized = fn.resize(images, resize_width=600, resize_height=600)
+        # images = fn.decoders.image(jpegs, user_feature_key_map=featureKeyMap, output_type=types.RGB, path=data_path)
+        images = fn.decoders.image_random_crop(jpegs,user_feature_key_map=featureKeyMap, output_type=types.RGB,
+                                                      random_aspect_ratio=[0.8, 1.25],
+                                                      random_area=[0.1, 1.0],
+                                                      num_attempts=100,path = data_path)
+        resized = fn.resize(images, resize_width=600, resize_height=600,rocal_tensor_output_type = types.UINT8, rocal_tensor_layout = types.NHWC,)
         # bright = fn .blur(images)
 
         pipe.set_outputs(resized)
@@ -154,13 +159,13 @@ def main():
         # Build the pipeline
         pipe.build()
         # Dataloader
-        imageIterator = ROCALIterator(pipe)
+        imageIterator = ROCALClassificationIterator(pipe)
         cnt = 0
         print("imageIterator   ",imageIterator)
         for i, (images_array, bboxes_array, labels_array,num_bboxes_array) in enumerate(imageIterator, 0):
             print("images_array",images_array)
             # images_array = np.transpose(images_array, [0, 2, 3, 1])
-            print("images_array1",images_array)
+            # print("images_array1",images_array)
         print("ROCAL augmentation pipeline - Processing batch %d....." % i)
 
         for element in list(range(batch_size)):
