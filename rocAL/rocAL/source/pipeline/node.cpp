@@ -32,6 +32,7 @@ Node::~Node()
 void
 Node::create(std::shared_ptr<Graph> graph)
 {
+    std::cerr << "In node::  create ()";
     if(_outputs.empty() || _inputs.empty())
         THROW("Uninitialized input/output images to the node")
 
@@ -54,13 +55,17 @@ Node::create(std::shared_ptr<Graph> graph)
     }
 
     create_node();
+    std::cerr <<"After create node :: ";
 }
 
 void
 Node::update_parameters()
 {
+    std::cerr << "In update_node()";
     update_src_roi();
+    std::cerr << "Update src roi";
     update_node();
+    std::cerr << "Out of it";
 }
 
 void

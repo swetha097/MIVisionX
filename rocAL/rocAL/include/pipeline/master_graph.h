@@ -261,6 +261,7 @@ template<> inline std::shared_ptr<ImageLoaderSingleShardNode> MasterGraph::add_n
     _loader_module = node->get_loader_module();
     _loader_module->set_prefetch_queue_depth(_prefetch_queue_depth);
     _root_nodes.push_back(node);
+    std::cerr<<"Head Node added!";
     for(auto& output: outputs)
         _tensor_map.insert(make_pair(output, node));
 

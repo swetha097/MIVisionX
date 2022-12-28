@@ -205,12 +205,14 @@ void rocalTensor::update_tensor_roi(const std::vector<uint32_t> &width,
 }
 
 rocalTensor::~rocalTensor() {
+    std::cerr << "\n Destructor called : ";
     _mem_handle = nullptr;
     if (_vx_handle) vxReleaseTensor(&_vx_handle);
 }
 
 rocalTensor::rocalTensor(const rocalTensorInfo &tensor_info)
     : _info(tensor_info) {
+        std::cerr << "\n Constructor called";
     _info._type = rocalTensorInfo::Type::UNKNOWN;
     _mem_handle = nullptr;
 }

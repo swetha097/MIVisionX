@@ -211,12 +211,16 @@ public:
     bool empty() { return _tensor_list.empty(); }
     rocalTensor* front() { return _tensor_list.front(); }
     void push_back(rocalTensor* tensor) {
+        std::cerr <<"\n push back in rocALTensorList";
         _tensor_list.emplace_back(tensor);
         _tensor_data_size.emplace_back(tensor->info().data_size());
     }
     std::vector<size_t> data_size() { return _tensor_data_size; }
     void release() {
-        for (auto& tensor : _tensor_list) delete tensor;
+        for (auto& tensor : _tensor_list) 
+        {
+            std::cerr  << "del tensor from rocALTensorList";
+            delete tensor;}
     }
     rocalTensor* operator[](size_t index) { return _tensor_list[index]; }
     rocalTensor* at(size_t index) { return _tensor_list[index]; }

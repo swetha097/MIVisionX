@@ -250,12 +250,15 @@ MasterGraph::create_single_graph()
         for(auto& tensor: node->output())
             if(tensor->info().type() == rocalTensorInfo::Type::UNKNOWN)
             {
+                std::cerr << "Doesnt come here";
                 tensor->create_virtual(_context, _graph->get());
                 _internal_tensors.push_back(tensor);
             }
         node->create(_graph);
     }
+    std::cerr << "\n Before verify ::" ;
     _graph->verify();
+    std::cerr << "\n After verify ::" ;
 }
 
 MasterGraph::Status
@@ -287,7 +290,9 @@ MasterGraph::build()
 #endif
     // _output_tensor_list = _internal_tensor_list;
     create_single_graph();
+    std::cerr << "Out of create_single_graph";
     start_processing();
+    std::cerr << "Out of start_processing";
     return Status::OK;
 }
 
@@ -332,6 +337,7 @@ MasterGraph::set_output(rocalTensor* output_tensor)
 {
     if(output_tensor->is_handle_set() == false)
     {
+        std::cerr << "Is_handle_set";
         if (output_tensor->create_from_handle(_context) != 0)
                 THROW("Cannot create the tensor from handle")
 
@@ -345,6 +351,7 @@ MasterGraph::set_output(rocalTensor* output_tensor)
     }
     else
     {
+        std::cerr << "Comes here - is_handle_not set";
         // Decoder case only
         auto actual_output = create_tensor(output_tensor->info(), true);
         add_node<CopyNode>({output_tensor}, {actual_output});
@@ -632,6 +639,7 @@ ImageNameBatch& operator+=(ImageNameBatch& dest, const ImageNameBatch& src)
 
 void MasterGraph::output_routine()
 {
+    std::cerr << "output routine";
     INFO("Output routine started with "+TOSTR(_remaining_count) + " to load");
     size_t batch_ratio = _is_sequence_reader_output ? _sequence_batch_ratio : _user_to_internal_batch_ratio;
     if(!_is_sequence_reader_output) 
@@ -799,6 +807,7 @@ void MasterGraph::start_processing()
 {
     _processing = true;
     _remaining_count = _loader_module->remaining_count();
+    std::cerr << "_remaining_count: "<< _remaining_count;
     _output_thread = std::thread(&MasterGraph::output_routine, this);
 #if defined(WIN32) || defined(_WIN32) || defined(__WIN32) && !defined(__CYGWIN__)
 #else

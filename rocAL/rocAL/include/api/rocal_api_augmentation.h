@@ -212,4 +212,10 @@ extern "C" RocalTensor ROCAL_API_CALL rocalTensorMulScalar(RocalContext p_contex
                                                           RocalTensorLayout rocal_tensor_layout,
                                                           RocalTensorOutputType rocal_tensor_output_type,
                                                           float freq_high = 0.0);
+
+extern "C" RocalTensor ROCAL_API_CALL rocalNormalDistribution(RocalContext p_context,
+                                                          RocalTensor p_input,
+                                                          bool is_output,
+                                                          float mean = 0.0,
+                                                          float stddev = 0.0);
 #endif //MIVISIONX_ROCAL_API_AUGMENTATION_H

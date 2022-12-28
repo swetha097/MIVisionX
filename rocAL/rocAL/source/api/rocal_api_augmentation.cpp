@@ -43,6 +43,7 @@ THE SOFTWARE.
 #include "node_slice.h"
 #include "node_pad.h"
 #include "node_normalize.h"
+#include "node_normal_distribution.h"
 
 #include "meta_node_resize.h"
 #include "meta_node_crop.h"
@@ -1126,6 +1127,54 @@ RocalTensor rocalTensorMulScalar(RocalContext p_context,
 
         output = context->master_graph->create_tensor(input->info(), is_output); // Create a rocALTensor object dynamically on heap 
         context->master_graph->add_node<TensorMulScalarNode>({input}, {output})->init(scalar); // Change this line of code
+    }
+    catch(const std::exception& e) {
+        context->capture_error(e.what());
+        ERR(e.what())
+    }
+    return output;
+}
+
+RocalTensor rocalNormalDistribution(RocalContext p_context, // To handle the case of p_input similar to DALI
+                                RocalTensor p_input, // Not gonna be used - Always use decoder input
+                                bool is_output,
+                                float mean,
+                                float stddev) {
+    if(!p_context )
+        THROW("Null values passed as input")
+    rocalTensor* output = nullptr;
+    auto context = static_cast<Context*>(p_context);
+    auto input = static_cast<rocalTensor*>(p_input);
+    try {
+        std::cerr << "Here in Normal Dist";
+        RocalTensorDataType tensor_data_type = RocalTensorDataType::FP32;
+        unsigned num_of_dims = 3;
+        std::vector<size_t> dims;
+        dims.resize(num_of_dims);
+        dims.at(0) = context->user_batch_size();
+        dims.at(1) = 1;
+        dims.at(2) = 1;
+        auto info  = rocalTensorInfo(std::vector<size_t>(std::move(dims)),
+                                context->master_graph->mem_type(),
+                                tensor_data_type);
+        info.set_tensor_layout(RocalTensorlayout::NONE); // Change for generic data
+
+        // output = context->master_graph->create_tensor(info, is_output); // Check this
+        output = context->master_graph->create_loader_output_tensor(info);
+        
+        context->master_graph->add_node<NormalDistributionNode>({input}, {output})->init(mean, stddev); // Change this line of code - Check with Shobana
+
+        // if(is_output)
+        // {
+        //     auto actual_output = context->master_graph->create_tensor(info, is_output);
+        //     context->master_graph->add_node<CopyNode>({output}, {actual_output});
+        // }
+        // output = new rocalTensor(info);
+        //  if (output->create_from_handle(p_context) != 0) 
+         // The is_output will not work here, needs to be added to the output_tensor_list, check how to do this ?
+         // if is_output = True -> Call create_tensor in master_graph & do not dynamically allocate memory here & carete_from_handle
+            // THROW("Cannot create the tensor from handle for Node Normal Distribution")
+        // output = context->master_graph->create_tensor(output_info, is_output); // Create a rocALTensor object dynamically on heap 
     }
     catch(const std::exception& e) {
         context->capture_error(e.what());
