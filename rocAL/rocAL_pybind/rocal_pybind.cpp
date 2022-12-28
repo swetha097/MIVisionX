@@ -409,12 +409,12 @@ namespace rocal
             .value("ERROR",ERROR)
             .export_values();
         // rocal_api_info.h
-        m.def("getRemainingImages", &rocalGetRemainingImages);
-        m.def("isEmpty", &rocalIsEmpty);
-        m.def("getStatus", rocalGetStatus);
-        m.def("rocalGetErrorMessage", &rocalGetErrorMessage);
-        m.def("rocalGetTimingInfo", &rocalGetTimingInfo);
-        m.def("setOutputImages", &rocalSetOutputs);
+        m.def("getRemainingImages", &rocalGetRemainingImages, py::return_value_policy::reference);
+        m.def("isEmpty", &rocalIsEmpty, py::return_value_policy::reference);
+        m.def("getStatus", rocalGetStatus, py::return_value_policy::reference);
+        m.def("rocalGetErrorMessage", &rocalGetErrorMessage, py::return_value_policy::reference);
+        m.def("rocalGetTimingInfo", &rocalGetTimingInfo, py::return_value_policy::reference);
+        m.def("setOutputImages", &rocalSetOutputs, py::return_value_policy::reference);
         m.def("labelReader", &rocalCreateLabelReader, py::return_value_policy::reference);
         m.def("labelReaderFileList",&rocalCreateFileListLabelReader, py::return_value_policy::reference);
         m.def("COCOReader", &rocalCreateCOCOReader, py::return_value_policy::reference);
@@ -561,6 +561,8 @@ namespace rocal
             py::return_value_policy::reference);
         // rocal_api_augmentation.h
         // Audio Augmentations
+        m.def("NormalDistribution", &rocalNormalDistribution, "Generates random numbers following a normal distribution",
+            py::return_value_policy::reference);
         m.def("ToDecibels", &rocalToDecibels, "Converts to Decibals",
             py::return_value_policy::reference);
         m.def("PreEmphasisFilter", &rocalPreEmphasisFilter, "Applies preemphasis filter to the input data", 
