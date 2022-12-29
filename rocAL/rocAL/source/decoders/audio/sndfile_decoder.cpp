@@ -42,11 +42,12 @@ AudioDecoder::Status SndFileDecoder::decode(float* buffer)
     return status;
 }
 
-AudioDecoder::Status SndFileDecoder::decode_info(int* samples, int* channels)
+AudioDecoder::Status SndFileDecoder::decode_info(int* samples, int* channels, int* sample_rate)
 {
     // Set the samples and channels using the struct variables _sfinfo.samples and _sfinfo.channels
     *samples = _sfinfo.frames;
     *channels = _sfinfo.channels;
+    *sample_rate = _sfinfo.samplerate;
     // std::cerr << "\n _sfinfo.frames;" << _sfinfo.frames;
     // std::cerr << "\n _sfinfo.channels;" << _sfinfo.channels;;
 

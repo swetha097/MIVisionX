@@ -84,6 +84,7 @@ AudioReadAndDecode::create(ReaderConfig reader_config, DecoderConfig decoder_con
     _actual_decoded_channels.resize(_batch_size);
     _original_channels.resize(_batch_size);
     _original_samples.resize(_batch_size);
+    _original_sample_rates.resize(_batch_size);
     _decoder_config = decoder_config;
     if ((_decoder_config._type != DecoderType::SKIP_DECODE)) {
         for (int i = 0; i < batch_size; i++) {
@@ -119,7 +120,8 @@ AudioReadAndDecode::load(float* buff,
                          std::vector<uint32_t> &roi_samples,
                          std::vector<uint32_t> &roi_channels,
                          std::vector<uint32_t> &actual_samples,
-                         std::vector<uint32_t> &actual_channels)
+                         std::vector<uint32_t> &actual_channels,
+                         std::vector<uint32_t> &actual_sample_rates)
 {
     if(max_decoded_samples == 0 || max_decoded_channels == 0 )
         THROW("Zero audio dimension is not valid")
@@ -172,15 +174,16 @@ AudioReadAndDecode::load(float* buff,
             _actual_decoded_samples[i] = max_decoded_samples;
             _actual_decoded_channels[i] = max_decoded_channels;
 
-            int original_samples, original_channels;
+            int original_samples, original_channels, original_sample_rates;
             if (_decoder[i]->initialize(_audio_file_path[i].c_str()) != AudioDecoder::Status::OK) {
                 THROW("Decoder can't be initialized for file: " + _audio_names[i].c_str())
             }
-            if (_decoder[i]->decode_info(&original_samples, &original_channels) != AudioDecoder::Status::OK) {
+            if (_decoder[i]->decode_info(&original_samples, &original_channels, &original_sample_rates) != AudioDecoder::Status::OK) {
                 THROW("Unable to fetch decode info for file: " + _audio_names[i].c_str())
             }
             _original_channels[i] = original_channels;
             _original_samples[i] = original_samples;
+            _original_sample_rates[i] = original_sample_rates;
             // std::cerr << "\n _original_channels" << _original_channels[i];
             // std::cerr << "\n  _original_samples" << _original_samples[i];
 
@@ -193,6 +196,8 @@ AudioReadAndDecode::load(float* buff,
 
             actual_samples[i] = roi_samples[i] = _original_samples[i]; // TODO - Needs to be checked
             actual_channels[i] = roi_channels[i] = _original_channels[i];
+            actual_sample_rates[i] = _original_sample_rates[i];
+
             // std::cerr << "\n actual samples" << actual_samples[i];
             // std::cerr << "\n  actual channels" << actual_channels[i];
             // actual_samples[i] = _actual_decoded_samples[i];

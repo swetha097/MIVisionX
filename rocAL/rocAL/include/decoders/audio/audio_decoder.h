@@ -56,7 +56,7 @@ public:
     };
     virtual AudioDecoder::Status initialize(const char *src_filename) = 0;
     virtual AudioDecoder::Status decode(float* buffer) = 0; //to pass buffer & number of frames/samples to decode
-    virtual AudioDecoder::Status decode_info(int* samples, int* channels) = 0; //to decode info about the audio samples
+    virtual AudioDecoder::Status decode_info(int* samples, int* channels, int* sample_rates) = 0; //to decode info about the audio samples
     virtual void release() = 0;
     virtual ~AudioDecoder() = default;
 protected:

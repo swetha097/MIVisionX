@@ -163,6 +163,7 @@ void AudioLoader::initialize(ReaderConfig reader_cfg, DecoderConfig decoder_cfg,
     _decoded_img_info._roi_audio_channels.resize(_batch_size);
     _decoded_img_info._original_audio_samples.resize(_batch_size);
     _decoded_img_info._original_audio_channels.resize(_batch_size);
+    _decoded_img_info._original_audio_sample_rates.resize(_batch_size);
     // _crop_audio_info._crop_audio_coords.resize(_batch_size);
     _circ_buff.init(_mem_type, _output_mem_size,_prefetch_queue_depth );
     _is_initialized = true;
@@ -203,7 +204,8 @@ AudioLoader::load_routine()
                                             _decoded_img_info._roi_audio_samples,
                                             _decoded_img_info._roi_audio_channels,
                                             _decoded_img_info._original_audio_samples,
-                                            _decoded_img_info._original_audio_channels);
+                                            _decoded_img_info._original_audio_channels,
+                                            _decoded_img_info._original_audio_sample_rates);
 
             if(load_status == LoaderModuleStatus::OK)
             {
@@ -288,6 +290,7 @@ AudioLoader::update_output_audio()
     // }
     _output_names = _output_decoded_img_info._image_names;
     _output_tensor->update_tensor_roi(_output_decoded_img_info._roi_audio_samples, _output_decoded_img_info._roi_audio_channels);
+    _output_tensor->update_audio_tensor_sample_rate(_output_decoded_img_info._original_audio_sample_rates);
     _circ_buff.pop();
     if (!_loop)
         _remaining_audio_count -= _batch_size;

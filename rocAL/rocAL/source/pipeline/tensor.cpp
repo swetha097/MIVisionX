@@ -134,6 +134,23 @@ rocalTensorInfo::rocalTensorInfo(std::vector<size_t> dims,
     // std::cerr << "\n rocalTensorInfo 1";
 }
 
+void rocalTensor::update_audio_tensor_sample_rate(const std::vector<uint32_t> &sample_rate) {
+    if (_info.is_image()) {
+        THROW("No sample rate available for Image data")
+    }
+    else if(!_info.is_metadata())
+    {
+       
+        for (unsigned i = 0; i < info().batch_size(); i++)
+        {
+            std::cerr<< "\n Printing sample_rate[i] "<< sample_rate[i];
+            // std::cerr<< "\n Printing _info.get_roi()->at(i).y1 "<< channels[i];
+            _info.get_sample_rate().at(i) = sample_rate[i];
+           
+        }
+    }
+}
+
 void rocalTensor::update_tensor_roi(const std::vector<uint32_t> &width,
                                     const std::vector<uint32_t> &height) {
     if (_info.is_image()) {

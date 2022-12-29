@@ -130,6 +130,7 @@ public:
     RocalTensorDataType data_type() const { return _data_type; }
     RocalTensorlayout layout() const { return _layout; }
     std::shared_ptr<std::vector<RocalROI>> get_roi() const { return _roi; }
+    std::vector<uint32_t> get_sample_rate() const { return _sample_rate; }
     RocalColorFormat color_format() const { return _color_format; }
     Type type() const { return _type; }
     size_t data_type_size() {
@@ -151,6 +152,7 @@ private:
     RocalTensorlayout _layout = RocalTensorlayout::NONE;     //!< layout of the tensor
     RocalColorFormat _color_format;  //!< color format of the image
     std::shared_ptr<std::vector<RocalROI>> _roi;
+    std::vector<uint32_t> _sample_rate;
     size_t _data_type_size = tensor_data_size(_data_type);
     size_t _data_size = 0;
     std::vector<size_t> _max_dims;  //!< stores the the width and height dimensions in the tensor
@@ -189,6 +191,7 @@ public:
     explicit rocalTensor(const rocalTensorInfo& tensor_info);
     int create(vx_context context);
     void update_tensor_roi(const std::vector<uint32_t>& width, const std::vector<uint32_t>& height);
+    void update_audio_tensor_sample_rate(const std::vector<uint32_t>& sample_rate);
     void reset_tensor_roi() { _info.reallocate_tensor_roi_buffers(); }
     // create_from_handle() no internal memory allocation is done here since
     // tensor's handle should be swapped with external buffers before usage

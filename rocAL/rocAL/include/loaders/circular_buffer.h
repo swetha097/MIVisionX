@@ -41,6 +41,7 @@ struct decoded_image_info //
     std::vector<uint32_t> _roi_audio_channels;
     std::vector<uint32_t> _original_audio_samples;
     std::vector<uint32_t> _original_audio_channels;
+    std::vector<uint32_t> _original_audio_sample_rates;
 };
 
 struct crop_image_info
