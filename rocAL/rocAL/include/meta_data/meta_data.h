@@ -42,7 +42,6 @@ typedef  struct { float xc; float yc; float w; float h; } BoundingBoxCord_xcycwh
 typedef  std::vector<BoundingBoxCord> BoundingBoxCords;
 typedef  std::vector<BoundingBoxCord_xcycwh> BoundingBoxCords_xcycwh;
 typedef  std::vector<int> BoundingBoxLabels;
-//typedef  struct { int w; int h; std::string filename; } ImgSize;
 typedef  struct { int w; int h; int original_id; } ImgSize;
 typedef  std::vector<ImgSize> ImgSizes;
 

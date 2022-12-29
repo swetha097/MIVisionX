@@ -191,7 +191,6 @@ void COCOMetaDataReader::read_all(const std::string &path)
     BoundingBoxCords bb_coords;
     BoundingBoxLabels bb_labels;
     ImgSizes img_sizes;
-    Matches matches(120087, 0);
     std::vector<int> polygon_count;
     int polygon_size = 0;
     std::vector<std::vector<int>> vertices_count;
@@ -376,7 +375,7 @@ void COCOMetaDataReader::read_all(const std::string &path)
                     box.b = (bbox[1] + bbox[3]) / image_size.h;
                     bb_coords.push_back(box);
                     bb_labels.push_back(label);
-                    add(itr->second, bb_coords, bb_labels, image_size, matches);
+                    add(itr->second, bb_coords, bb_labels, image_size);
                     bb_coords.clear();
                     bb_labels.clear();
                 }
@@ -403,7 +402,7 @@ void COCOMetaDataReader::read_all(const std::string &path)
     }
     _coco_metadata_read_time.end(); // Debug timing
     //print_map_contents();
-    // std::cout << "coco read time in sec: " << _coco_metadata_read_time.get_timing() / 1000 << std::endl;
+    std::cout << "coco read time in sec: " << _coco_metadata_read_time.get_timing() / 1000 << std::endl;
 }
 
 void COCOMetaDataReader::release(std::string image_name)
