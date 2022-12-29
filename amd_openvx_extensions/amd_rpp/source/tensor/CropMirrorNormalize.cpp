@@ -67,7 +67,7 @@ static vx_status VX_CALLBACK refreshCropMirrorNormalize(vx_node node, const vx_r
     STATUS_ERROR_CHECK(vxCopyArrayRange((vx_array)parameters[8], 0, data->nbatchSize * 3, sizeof(vx_float32), data->mean, VX_READ_ONLY, VX_MEMORY_TYPE_HOST));
     STATUS_ERROR_CHECK(vxCopyArrayRange((vx_array)parameters[9], 0, data->nbatchSize * 3, sizeof(vx_float32), data->std_dev, VX_READ_ONLY, VX_MEMORY_TYPE_HOST));
     STATUS_ERROR_CHECK(vxCopyArrayRange((vx_array)parameters[10], 0, data->nbatchSize, sizeof(vx_uint32), data->mirror, VX_READ_ONLY, VX_MEMORY_TYPE_HOST));
-    
+
     for(int i = 0; i < data->nbatchSize; i++)
     {
             data->roi_tensor_ptr[i].xywhROI.xy.x = data->start_x[i];
@@ -76,7 +76,7 @@ static vx_status VX_CALLBACK refreshCropMirrorNormalize(vx_node node, const vx_r
             data->roi_tensor_ptr[i].xywhROI.roiHeight =data->crop_h[i];
     }
 
-    /*for(int i = 0, j = 0; i < data->nbatchSize; i++, j+=3)
+    for(int i = 0, j = 0; i < data->nbatchSize; i++, j+=3)
     {
             data->roi_tensor_ptr[i].xywhROI.xy.x = data->start_x[i];
             data->roi_tensor_ptr[i].xywhROI.xy.y = data->start_y[i];
@@ -88,7 +88,7 @@ static vx_status VX_CALLBACK refreshCropMirrorNormalize(vx_node node, const vx_r
             data->std_dev[j] = (1 / data->std_dev[j]);
             data->std_dev[j + 1] = (1 / data->std_dev[j + 1]);
             data->std_dev[j + 2] = (1 / data->std_dev[j + 2]);
-    }*/
+    }
     if(data->layout == 2 || data->layout == 3) // For NFCHW and NFHWC formats
     {
         unsigned num_of_frames = data->in_tensor_dims[1]; // Num of frames 'F'
@@ -175,7 +175,7 @@ static vx_status VX_CALLBACK validateCropMirrorNormalize(vx_node node, const vx_
     {
         return ERRMSG(VX_ERROR_INVALID_DIMENSION, "validate: CropMirrorNormalize: tensor: #0 dimensions=%lu (must be greater than or equal to 4)\n", in_num_tensor_dims);
     }
-    
+
     // Check for output parameters
     vx_tensor output;
     vx_parameter output_param;
@@ -234,7 +234,7 @@ static vx_status VX_CALLBACK initializeCropMirrorNormalize(vx_node node, const v
     THROW("initialize : CropMirrorNormalize OpenCL backend is not supported")
 #elif ENABLE_HIP
     STATUS_ERROR_CHECK(vxQueryNode(node, VX_NODE_ATTRIBUTE_AMD_HIP_STREAM, &data->handle.hipstream, sizeof(data->handle.hipstream)));
-#endif  
+#endif
     STATUS_ERROR_CHECK(vxCopyScalar((vx_scalar)parameters[11], &data->layout, VX_READ_ONLY, VX_MEMORY_TYPE_HOST));
     STATUS_ERROR_CHECK(vxCopyScalar((vx_scalar)parameters[12], &roiType, VX_READ_ONLY, VX_MEMORY_TYPE_HOST));
     STATUS_ERROR_CHECK(vxReadScalarValue((vx_scalar)parameters[13], &data->nbatchSize));
@@ -281,6 +281,7 @@ static vx_status VX_CALLBACK initializeCropMirrorNormalize(vx_node node, const v
 
     if(data->layout == 0) // NHWC
     {
+        //  std::cerr<<"entering NHWC case"<<std::endl;
         // source_description_ptr
         data->src_desc_ptr->n = data->in_tensor_dims[0];
         data->src_desc_ptr->h = data->in_tensor_dims[1];
@@ -305,16 +306,17 @@ static vx_status VX_CALLBACK initializeCropMirrorNormalize(vx_node node, const v
     }
     else if(data->layout == 1) // NCHW
     {
+        // std::cerr<<"entering NCHW case"<<std::endl;
         // source_description_ptr
         data->src_desc_ptr->n = data->in_tensor_dims[0];
-        data->src_desc_ptr->h = data->in_tensor_dims[2];
-        data->src_desc_ptr->w = data->in_tensor_dims[3];
-        data->src_desc_ptr->c = data->in_tensor_dims[1];
+        data->src_desc_ptr->h = data->in_tensor_dims[1];
+        data->src_desc_ptr->w = data->in_tensor_dims[2];
+        data->src_desc_ptr->c = data->in_tensor_dims[3];
         data->src_desc_ptr->strides.nStride = data->src_desc_ptr->c * data->src_desc_ptr->w * data->src_desc_ptr->h;
-        data->src_desc_ptr->strides.cStride = data->src_desc_ptr->w * data->src_desc_ptr->h;
-        data->src_desc_ptr->strides.hStride = data->src_desc_ptr->w;
-        data->src_desc_ptr->strides.wStride = 1;
-        data->src_desc_ptr->layout = RpptLayout::NCHW;
+        data->src_desc_ptr->strides.hStride = data->src_desc_ptr->c * data->src_desc_ptr->w;
+        data->src_desc_ptr->strides.wStride = data->src_desc_ptr->c;
+        data->src_desc_ptr->strides.cStride = 1;
+        data->src_desc_ptr->layout = RpptLayout::NHWC;
 
         //destination_description_ptr
         data->dst_desc_ptr->n = data->out_tensor_dims[0];
@@ -373,7 +375,7 @@ static vx_status VX_CALLBACK initializeCropMirrorNormalize(vx_node node, const v
         data->dst_desc_ptr->strides.hStride = data->dst_desc_ptr->c * data->dst_desc_ptr->w;
         data->dst_desc_ptr->strides.wStride = data->dst_desc_ptr->c;
         data->dst_desc_ptr->strides.cStride = 1;
-        data->dst_desc_ptr->layout = RpptLayout::NCHW; 
+        data->dst_desc_ptr->layout = RpptLayout::NCHW;
     }
 
 #if ENABLE_HIP

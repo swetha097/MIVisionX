@@ -80,7 +80,7 @@ class ROCALCOCOIterator(object):
 
         if self.device == "gpu":
             #NHWC default for now
-            self.out = torch.empty((self.bs, self.h, self.w, self.color_format,), dtype=torch.uint8, device=torch_gpu_device)
+            self.out = torch.empty((self.bs, self.color_format, self.h, self.w), dtype=torch.uint8, device=torch_gpu_device)
             self.output_tensor_list[0].copy_data(ctypes.c_void_p(self.out.data_ptr()))
             print("\nImages : ", self.out)
 
@@ -95,7 +95,7 @@ class ROCALCOCOIterator(object):
             #print("\n Self.encoded_boxes : ", self.encoded_bboxes)
         else:
             #NHWC default for now
-            self.out = torch.empty((self.bs, self.h, self.w, self.color_format,), dtype=torch.float32)
+            self.out = torch.empty((self.bs, self.color_format, self.h, self.w), dtype=torch.float32)
             #self.out = torch.empty((self.bs, self.color_format, self.h, self.w,), dtype=torch.float32)
             self.output_tensor_list[0].copy_data(ctypes.c_void_p(self.out.data_ptr()))
             print("\nImages : ", self.out)
@@ -103,7 +103,7 @@ class ROCALCOCOIterator(object):
             labels_array = self.loader.rocalGetBoundingBoxLabel()
             #print("\n labels array : ", labels_array)
             #print("\n labels-arry len : ", len(labels_array) )
-            
+
             encodded_labels_tensor = []
             encoded_bboxes_tensor = []
             for label in labels_array:
@@ -158,9 +158,9 @@ class ROCALCOCOIterator(object):
                     'original_image_size' : image_size_tensor,
                     'matched_idxs' : matched_idxs_tensor
         }
-        
+
         print("\n targets  :", targets)
-        
+
         return self.out, targets
         #return (self.out), encoded_bboxes_tensor, encodded_labels_tensor, image_id_tensor, image_size_tensor
 
@@ -218,7 +218,7 @@ def main():
 
     local_rank = 0
     world_size = 1
-   
+
     rali_device = 'gpu'
     decoder_device = 'mixed'
     device_memory_padding = 211025920 if decoder_device == 'mixed' else 0
@@ -273,17 +273,26 @@ def main():
         print("*********************** NUM SHARDS **********************",world_size)
         images_decoded = fn.decoders.image(jpegs, device=decoder_device, output_type = types.RGB, file_root=image_path, annotations_file=annotation_path, random_shuffle=False,shard_id=local_rank, num_shards=world_size)
         res_images = fn.resize(images_decoded, device=rali_device, resize_width=crop, resize_height=crop, rocal_tensor_layout = types.NHWC, rocal_tensor_output_type = types.UINT8)
-        flip_coin = fn.random.coin_flip(probability=0.5)
-        images = fn.resize_mirror_normalize(res_images, device="gpu",
-                                            image_type=types.RGB,
-                                            resize_width=crop, resize_height=crop,
-                                            mirror=flip_coin,
-                                            rocal_tensor_layout = types.NHWC,
+        flip_coin = fn.random.coin_flip(probability=0.0)
+        images = fn.crop_mirror_normalize(res_images, device="gpu",
+                                            rocal_tensor_layout = types.NCHW,
                                             rocal_tensor_output_type = types.FLOAT,
-                                            mean=[0,0,0],
-                                            std=[1,1,1])
-                                            #mean=[0.485*255,0.456*255 ,0.406*255 ],
-                                            #std=[0.229*255 ,0.224*255 ,0.225*255 ])
+                                            crop=(crop, crop),
+                                            mirror=flip_coin,
+                                            image_type=types.RGB,
+                                            mean=[0.485*255,0.456*255 ,0.406*255 ],
+                                            std=[0.229*255 ,0.224*255 ,0.225*255 ])
+
+        # images = fn.resize_mirror_normalize(res_images, device="gpu",
+        #                                     image_type=types.RGB,
+        #                                     resize_width=crop, resize_height=crop,
+        #                                     mirror=flip_coin,
+        #                                     rocal_tensor_layout = types.NHWC,
+        #                                     rocal_tensor_output_type = types.FLOAT,
+        #                                     mean=[0,0,0],
+        #                                     std=[1,1,1])
+        #                                     #mean=[0.485*255,0.456*255 ,0.406*255 ],
+        #                                     #std=[0.229*255 ,0.224*255 ,0.225*255 ])
         Matched_idxs  = fn.box_iou_matcher(anchors=default_boxes, criteria=0.5,
                                      high_threshold=0.5, low_threshold=0.4,
                                      allow_low_quality_matches=True)
@@ -292,7 +301,7 @@ def main():
     coco_train_pipeline.build()
     COCOIteratorPipeline = ROCALCOCOIterator(coco_train_pipeline)
     cnt = 0
-    for epoch in range(1): 
+    for epoch in range(1):
         print("+++++++++++++++++++++++++++++EPOCH+++++++++++++++++++++++++++++++++++++",epoch)
         for i , it in enumerate(COCOIteratorPipeline):
             print("************************************** i *************************************",i)
