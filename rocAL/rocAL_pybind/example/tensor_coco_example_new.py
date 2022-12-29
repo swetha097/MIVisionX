@@ -95,10 +95,10 @@ class ROCALCOCOIterator(object):
             #print("\n Self.encoded_boxes : ", self.encoded_bboxes)
         else:
             #NHWC default for now
-            self.out = torch.empty((self.bs, self.h, self.w, self.color_format,), dtype=torch.float32)
-            #self.out = torch.empty((self.bs, self.color_format, self.h, self.w,), dtype=torch.float32)
+            #self.out = torch.empty((self.bs, self.h, self.w, self.color_format,), dtype=torch.float32)
+            self.out = torch.empty((self.bs, self.color_format, self.h, self.w,), dtype=torch.float32)
             self.output_tensor_list[0].copy_data(ctypes.c_void_p(self.out.data_ptr()))
-            #print("\nImages : ", self.out)
+            print("\nImages : ", self.out)
 
             labels_array = self.loader.rocalGetBoundingBoxLabel()
             #print("\n labels array : ", labels_array)

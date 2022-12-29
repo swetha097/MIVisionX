@@ -210,8 +210,8 @@ struct MetaDataBatch
     virtual void resize(int batch_size) = 0;
     virtual int size() = 0;
     virtual int mask_size() = 0;
-    virtual void copy_data(std::vector<void*> buffer, bool is_segmentation) = 0;
-    virtual std::vector<size_t>& get_buffer_size(bool is_segmentation) = 0;
+    virtual void copy_data(std::vector<void*> buffer, bool is_segmentation, bool is_box_iou_matcher) = 0;
+    virtual std::vector<size_t>& get_buffer_size(bool is_segmentation, bool is_box_iou_matcher) = 0;
     virtual MetaDataBatch&  operator += (MetaDataBatch& other) = 0;
     MetaDataBatch* concatenate(MetaDataBatch* other)
     {
@@ -286,13 +286,13 @@ struct LabelBatch : public MetaDataBatch
         _label_id = std::move(labels);
     }
     LabelBatch() = default;
-    void copy_data(std::vector<void*> buffer, bool is_segmentation) override
+    void copy_data(std::vector<void*> buffer, bool is_segmentation, bool is_box_iou_matcher) override
     {
         if(buffer.size() < 1)
             THROW("The buffers are insufficient") // TODO -change
         mempcpy((int *)buffer[0], _label_id.data(), _label_id.size() * sizeof(int));
     }
-    std::vector<size_t>& get_buffer_size(bool is_segmentation) override
+    std::vector<size_t>& get_buffer_size(bool is_segmentation, bool is_box_iou_matcher) override
     {
         _buffer_size.emplace_back(_total_objects_count * sizeof(int));
         return _buffer_size;
@@ -347,17 +347,15 @@ struct BoundingBoxBatch: public MetaDataBatch
     {
         return std::make_shared<BoundingBoxBatch>(*this);
     }
-    void copy_data(std::vector<void*> buffer, bool is_segmentation) override
+    void copy_data(std::vector<void*> buffer, bool is_segmentation, bool is_box_iou_matcher) override
     {
-        //if(buffer.size() < 2)
-        if(buffer.size() < 3)
+        uint buffer_size = (is_segmentation || is_box_iou_matcher) ? 3 : 2;
+        if(buffer.size() < buffer_size)
             THROW("The buffers are insufficient") // TODO -change
         int *labels_buffer = (int *)buffer[0];
         float *bbox_buffer = (float *)buffer[1];
-        int *matches_buffer = (int *)buffer[2];
         auto bb_labels_dims = _metadata_dimensions.bb_labels_dims();
         auto bb_coords_dims = _metadata_dimensions.bb_cords_dims();
-        auto matches_dims = _metadata_dimensions.matches_dims();
         if(is_segmentation)
         {
             float *mask_buffer = (float *)buffer[2];
@@ -372,8 +370,10 @@ struct BoundingBoxBatch: public MetaDataBatch
                 mask_buffer += mask_coords_dims[i][0];
             }            
         }
-        else
+        else if(is_box_iou_matcher)
         {
+            int *matches_buffer = (int *)buffer[2];
+            auto matches_dims = _metadata_dimensions.matches_dims();
             for(unsigned i = 0; i < _bb_label_ids.size(); i++)
             {
                 mempcpy(labels_buffer, _bb_label_ids[i].data(), bb_labels_dims[i][0] * sizeof(int));
@@ -384,12 +384,23 @@ struct BoundingBoxBatch: public MetaDataBatch
                 matches_buffer += matches_dims[i][0];
             }
         }
+        else
+        {
+            for(unsigned i = 0; i < _bb_label_ids.size(); i++)
+            {
+                mempcpy(labels_buffer, _bb_label_ids[i].data(), bb_labels_dims[i][0] * sizeof(int));
+                memcpy(bbox_buffer, _bb_cords[i].data(), bb_coords_dims[i][0] * sizeof(BoundingBoxCord));
+                labels_buffer += bb_labels_dims[i][0];
+                bbox_buffer += (bb_coords_dims[i][0] * 4);
+            }
+        }
     }
-    std::vector<size_t>& get_buffer_size(bool is_segmentation) override
+    std::vector<size_t>& get_buffer_size(bool is_segmentation, bool is_box_iou_matcher) override
     {
         _buffer_size.emplace_back(_total_objects_count * sizeof(int));
         _buffer_size.emplace_back(_total_objects_count * 4 * sizeof(float));
-        _buffer_size.emplace_back(ANCHOR_SIZE * sizeof(int));
+        if(is_box_iou_matcher)
+            _buffer_size.emplace_back(ANCHOR_SIZE * sizeof(int));
         if(is_segmentation)
             _buffer_size.emplace_back(_total_mask_coords_count * sizeof(float));
         return _buffer_size;
