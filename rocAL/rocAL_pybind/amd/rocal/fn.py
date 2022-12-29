@@ -9,11 +9,14 @@ import amd.rocal.types as types
 import rocal_pybind as b
 from amd.rocal.pipeline import Pipeline
 
+def tensor_add_tensor_float(*inputs, rocal_tensor_output_type=types.FLOAT, rocal_tensor_layout=types.NCHW):
+    kwargs_pybind = {"input_image0": inputs[0], "input_image1": inputs[1], "is_output": False, "rocal_tensor_layout": rocal_tensor_layout, "rocal_tensor_output_type": rocal_tensor_output_type}
+    tensor_add_tensor_float = b.TensorAddTensor(Pipeline._current_pipeline._handle ,*(kwargs_pybind.values()))
+    return (tensor_add_tensor_float)
+
 def tensor_mul_scalar_float(*inputs, scalar=1.0, rocal_tensor_output_type=types.FLOAT, rocal_tensor_layout=types.NCHW):
     print("Scalar in fn : ", scalar)
     print(inputs[0])
-    # # print(inputs[1])
-    # exit(0)
     kwargs_pybind = {"input_image0": inputs[0], "is_output": False, "rocal_tensor_layout": rocal_tensor_layout, "rocal_tensor_output_type": rocal_tensor_output_type, "scalar": scalar}
     tensor_mul_scalar_float = b.TensorMulScalar(Pipeline._current_pipeline._handle ,*(kwargs_pybind.values()))
     return (tensor_mul_scalar_float)

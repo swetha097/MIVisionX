@@ -152,6 +152,7 @@ extern "C" SHARED_PUBLIC vx_node VX_API_CALL vxExtrppNode_MelFilterBank(vx_graph
 extern "C" SHARED_PUBLIC vx_node VX_API_CALL vxExtrppNode_Slice(vx_graph graph, vx_tensor pSrc, vx_tensor pDst, vx_array srcDims, vx_tensor anchor, vx_tensor shape, vx_array fill_value,
                                                                   vx_scalar axes, vx_scalar normalized_anchor, vx_scalar normalized_shape, vx_scalar policy, vx_uint32 nbatchSize);
 extern "C" SHARED_PUBLIC vx_node VX_API_CALL vxExtrppNode_TensorMulScalar(vx_graph graph, vx_tensor pSrc, vx_tensor pDst, vx_scalar scalar_value, vx_uint32 nbatchSize);
+extern "C" SHARED_PUBLIC vx_node VX_API_CALL vxExtrppNode_TensorAddTensor(vx_graph graph, vx_tensor pSrc1, vx_tensor pSrc2, vx_tensor pDst, vx_array src1_roi, vx_uint32 nbatchSize);
 
 
 #ifdef __cplusplus

@@ -85,17 +85,20 @@ def main():
         # print(audio_decode)
         # audio_new = audio_decode * 1.0
         # print(audio_new)
+        dither = 0.001
+        distribution = fn.random.normal(audio_decode, mean=0.0, stddev=1.0)
+        # mul_dist1 = distribution * 0.0001
         # begin, length = fn.nonsilent_region(audio_decode, cutoff_db=-60)
         # trim_silence = fn.slice(
-        #     audio_decode,
+        #     mul_dist1,
         #     anchor=[begin],
         #     shape=[length],
         #     normalized_anchor=False,
         #     normalized_shape=False,
         #     axes=[0]
         # )
-        dither = 0.001
-        distribution = fn.random.normal(audio_decode,mean=0.0, stddev=1.0)
+
+        mul_dist = audio_decode + distribution * 0.0001 
         # p = distribution
         # new_dist =  trim_silence
         # distributed_normalied_audio = trim_silence * new_dist
@@ -122,7 +125,7 @@ def main():
         # )
         # normalize_audio = fn.normalize(to_decibels_audio, axes=[1])
         # pad_audio = fn.pad(normalize_audio, fill_value=0)
-        audio_pipeline.set_outputs(distribution)
+        audio_pipeline.set_outputs(mul_dist)
 
     audio_pipeline.build()
     audioIteratorPipeline = ROCALClassificationIterator(audio_pipeline)

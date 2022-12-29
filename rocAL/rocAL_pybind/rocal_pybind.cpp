@@ -117,6 +117,25 @@ namespace rocal
                 // )code")
                 // .def(
                 .def( // TODO: Swetha - Add rmul, add, radd
+                "__add__",
+                [](rocalTensor &output_tensor, rocalTensor &output_tensor1)
+                {
+                    std::cerr << "HERE in __ADD__ in rocal_pybind unit dtype";
+                    // Check if the first dim alone matches - call a diff function
+                    // Multipliy all dims - check whos value is greater a- call a diffeent function
+                    // Check if all dims matches - call a diff function
+                    // If none of the dims match - throw error
+                    // For now adding an example to just add a simple function for uneven dims
+                    py::object fn_module = py::module::import("amd.rocal.fn");
+                    auto fn_function_call = fn_module.attr("tensor_add_tensor_float")(output_tensor, output_tensor1).cast<RocalTensor>();
+                    // auto result = fast_calc.attr("add")(1, 2).cast<int>();
+                    return fn_function_call;
+                },
+                R"code(
+                Adds a node for arithmetic operation
+                )code"
+            )
+                .def( // TODO: Swetha - Add rmul, add, radd
                 "__mul__",
                 [](rocalTensor &output_tensor, uint scalar)
                 {
@@ -132,20 +151,6 @@ namespace rocal
                 [](rocalTensor *output_tensor, float scalar)
                 {
                     std::cerr << "HERE in __MUL__ in rocal_pybind for float -----------------";
-                    RocalTensor arithmetic_op_output;
-                    py::object pipeline_class = py::module::import("amd.rocal.pipeline").attr("Pipeline");
-                    py::object current_pipeline_obj = pipeline_class.attr("_current_pipeline");
-                    py::object current_pipeline_handle = current_pipeline_obj.attr("_handle");
-                    RocalContext context = current_pipeline_handle.cast<RocalContext>();
-                    // MyClass *cls = obj.cast<MyClass *>(); 
-                    py::print(pipeline_class);
-                    py::print(current_pipeline_obj);
-                    py::print("\n The Current Pipeline Handle");
-                    py::print(current_pipeline_handle);
-                    RocalTensorLayout tensorLayout; // = RocalTensorLayout::None;
-                    RocalTensorOutputType tensorOutputType = RocalTensorOutputType::ROCAL_FP32;
-                    // arithmetic_op_output = rocalTensorMulScalar(context, output_tensor, false, tensorLayout, tensorOutputType, scalar);
-
                     std::cerr << "\n Float scalar value : " << scalar;
                     //add a fn call here
                     py::object fn_module = py::module::import("amd.rocal.fn");
@@ -580,6 +585,8 @@ namespace rocal
         m.def("Pad", &rocalPad," Pads all samples with the fill_value in the specified axes to match the biggest extent in the batch for those axes or to match the minimum shape specified",
             py::return_value_policy::reference);
         m.def("TensorMulScalar", &rocalTensorMulScalar, "Multiplies a given Tensor Value with Scalar - Arithmetic Operation",
+            py::return_value_policy::reference);
+        m.def("TensorAddTensor", &rocalTensorAddTensor, "Multiplies a given Tensor Value with Scalar - Arithmetic Operation",
             py::return_value_policy::reference);
         // Image Augmentations
         m.def("Resize",&rocalResize, "Resizes the image ",py::return_value_policy::reference);

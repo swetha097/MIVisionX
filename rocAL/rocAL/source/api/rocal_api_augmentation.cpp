@@ -40,6 +40,7 @@ THE SOFTWARE.
 #include "node_non_silent_region.h"
 #include "node_mel_filter_bank.h"
 #include "node_tensor_mul_scalar.h"
+#include "node_tensor_add_tensor.h"
 #include "node_slice.h"
 #include "node_pad.h"
 #include "node_normalize.h"
@@ -1158,23 +1159,45 @@ RocalTensor rocalNormalDistribution(RocalContext p_context, // To handle the cas
                                 context->master_graph->mem_type(),
                                 tensor_data_type);
         info.set_tensor_layout(RocalTensorlayout::NONE); // Change for generic data
-
-        // output = context->master_graph->create_tensor(info, is_output); // Check this
         output = context->master_graph->create_loader_output_tensor(info);
-        
         context->master_graph->add_node<NormalDistributionNode>({input}, {output})->init(mean, stddev); // Change this line of code - Check with Shobana
 
-        // if(is_output)
-        // {
-        //     auto actual_output = context->master_graph->create_tensor(info, is_output);
-        //     context->master_graph->add_node<CopyNode>({output}, {actual_output});
-        // }
-        // output = new rocalTensor(info);
-        //  if (output->create_from_handle(p_context) != 0) 
-         // The is_output will not work here, needs to be added to the output_tensor_list, check how to do this ?
-         // if is_output = True -> Call create_tensor in master_graph & do not dynamically allocate memory here & carete_from_handle
-            // THROW("Cannot create the tensor from handle for Node Normal Distribution")
-        // output = context->master_graph->create_tensor(output_info, is_output); // Create a rocALTensor object dynamically on heap 
+    }
+    catch(const std::exception& e) {
+        context->capture_error(e.what());
+        ERR(e.what())
+    }
+    return output;
+}
+
+// TODO : Swetha - To add a templated function later
+RocalTensor rocalTensorAddTensor(RocalContext p_context,
+                                RocalTensor p_input1,
+                                RocalTensor p_input2,
+                                bool is_output,
+                                RocalTensorLayout rocal_tensor_layout, // TODO : Swetha - not required for audio data - Check on this
+                                RocalTensorOutputType rocal_tensor_output_type) {
+    if(!p_context || !p_input1 || !p_input2)
+        THROW("Null values passed as input")
+    rocalTensor* output = nullptr;
+    auto context = static_cast<Context*>(p_context);
+    auto input1 = static_cast<rocalTensor*>(p_input1);
+    auto input2 = static_cast<rocalTensor*>(p_input2);
+    RocalTensorlayout op_tensorLayout;
+    RocalTensorDataType op_tensorDataType;
+    try {
+        int layout=0; // Why using layout = 0 ?
+        std::cerr << "Here in Op over for addition!";
+        // get_rocal_tensor_layout(rocal_tensor_layout, op_tensorLayout, layout);
+        // get_rocal_tensor_data_type(rocal_tensor_output_type, op_tensorDataType);
+        rocalTensorInfo output_info = input1->info();
+        // output_info.set_tensor_layout(op_tensorLayout); // TODO- Swetha - For Audio Data - Cant use the NCHW / NHWC  - commons.h & rocal_api_data_types.h
+        // output_info.set_data_type(op_tensorDataType);
+        // output_info.set_tensor_layout(RocalTensorlayout::NONE);
+        // instead of output_info -> can use input->info() - //TODO - Swetha - Check what can be used here later 
+
+        output = context->master_graph->create_tensor(input1->info(), is_output); // Assuming the bigger tensor is the first input
+        context->master_graph->add_node<TensorAddTensorNode>({input1,input2}, {output})->init(); // Change this line of code
     }
     catch(const std::exception& e) {
         context->capture_error(e.what());

@@ -137,6 +137,7 @@ vx_status MelFilterBank_Register(vx_context);
 vx_status Slice_Register(vx_context);
 vx_status Normalize_Register(vx_context);
 vx_status TensorMulScalar_Register(vx_context);
+vx_status TensorAddTensor_Register(vx_context);
 
 
 // Image kernel names
@@ -241,4 +242,5 @@ vx_status TensorMulScalar_Register(vx_context);
 #define VX_KERNEL_RPP_SLICE_NAME                                             "org.rpp.Slice"
 #define VX_KERNEL_RPP_NORMALIZE_NAME                                         "org.rpp.Normalize"
 #define VX_KERNEL_RPP_TENSORMULSCALAR_NAME                                   "org.rpp.TensorMulScalar"
+#define VX_KERNEL_RPP_TENSORADDTENSOR_NAME                                   "org.rpp.TensorAddTensor"
 #endif //_AMDVX_EXT__PUBLISH_KERNELS_H_

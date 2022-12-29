@@ -207,15 +207,22 @@ extern "C" RocalTensor ROCAL_API_CALL rocalSlice(RocalContext p_context,
                                                 RocalOutOfBoundsPolicy policy = RocalOutOfBoundsPolicy::ERROR);
 
 extern "C" RocalTensor ROCAL_API_CALL rocalTensorMulScalar(RocalContext p_context,
-                                                          RocalTensor p_input,
-                                                          bool is_output,
-                                                          RocalTensorLayout rocal_tensor_layout,
-                                                          RocalTensorOutputType rocal_tensor_output_type,
-                                                          float freq_high = 0.0);
+                                                           RocalTensor p_input,
+                                                           bool is_output,
+                                                           RocalTensorLayout rocal_tensor_layout,
+                                                           RocalTensorOutputType rocal_tensor_output_type,
+                                                           float freq_high = 0.0);
 
 extern "C" RocalTensor ROCAL_API_CALL rocalNormalDistribution(RocalContext p_context,
-                                                          RocalTensor p_input,
-                                                          bool is_output,
-                                                          float mean = 0.0,
-                                                          float stddev = 0.0);
+                                                              RocalTensor p_input,
+                                                              bool is_output,
+                                                              float mean = 0.0,
+                                                              float stddev = 0.0);
+
+extern "C" RocalTensor ROCAL_API_CALL rocalTensorAddTensor(RocalContext p_context,
+                                                           RocalTensor p_input1,
+                                                           RocalTensor p_input2,
+                                                           bool is_output,
+                                                           RocalTensorLayout rocal_tensor_layout, // TODO : Swetha - not required for audio data - Check on this
+                                                           RocalTensorOutputType rocal_tensor_output_type);
 #endif //MIVISIONX_ROCAL_API_AUGMENTATION_H

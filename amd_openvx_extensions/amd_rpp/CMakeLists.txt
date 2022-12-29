@@ -139,6 +139,7 @@ list(APPEND SOURCES
         source/tensor/Slice.cpp
         source/tensor/Normalize.cpp
         source/tensor/TensorMulScalar.cpp
+        source/tensor/TensorAddTensor.cpp
         source/kernel_rpp.cpp
         source/internal_publishKernels.cpp
     )
