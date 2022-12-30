@@ -25,6 +25,8 @@ THE SOFTWARE.
 void ResizeMirrorNormalizeMetaNode::initialize()
 {
     _mirror_val.resize(_batch_size);
+    _src_height_val.resize(_batch_size);
+    _src_width_val.resize(_batch_size);
 }
 void ResizeMirrorNormalizeMetaNode::update_parameters(MetaDataBatch *input_meta_data, bool segmentation)
 {
@@ -34,15 +36,11 @@ void ResizeMirrorNormalizeMetaNode::update_parameters(MetaDataBatch *input_meta_
         _batch_size = input_meta_data->size();
     }
     _mirror = _node->return_mirror();
-    std::vector<RocalROI> src_roi = _node->get_src_roi();
-    std::vector<RocalROI> dst_roi = _node->get_dst_roi();
 
     vxCopyArrayRange((vx_array)_mirror, 0, _batch_size, sizeof(uint), _mirror_val.data(), VX_READ_ONLY, VX_MEMORY_TYPE_HOST);
 
     for (int i = 0; i < _batch_size; i++)
     {
-        _dst_to_src_width_ratio = dst_roi[i].x2 / float(src_roi[i].x2);
-        _dst_to_src_height_ratio = dst_roi[i].y2 / float(src_roi[i].y2);
         auto bb_count = input_meta_data->get_bb_labels_batch()[i].size();
         BoundingBoxCords coords_buf;
         BoundingBoxLabels labels_buf;
@@ -52,34 +50,21 @@ void ResizeMirrorNormalizeMetaNode::update_parameters(MetaDataBatch *input_meta_
         memcpy((void *)coords_buf.data(), input_meta_data->get_bb_cords_batch()[i].data(), input_meta_data->get_bb_cords_batch()[i].size() * sizeof(BoundingBoxCord));
         BoundingBoxCords bb_coords;
         BoundingBoxLabels bb_labels;
-        if (segmentation)
-        {
-            // auto ptr = mask_data;
-            auto mask_data_ptr = input_meta_data->get_mask_cords_batch()[i].data();
-            int mask_size = input_meta_data->get_mask_cords_batch()[i].size();
-            for (int idx = 0; idx < mask_size; idx += 2)
-            {
-                if(_mirror_val[i] == 1)
-                {
-                    mask_data_ptr[idx] = dst_roi[i].x2 - (mask_data_ptr[idx] * _dst_to_src_width_ratio) - 1;
-                    mask_data_ptr[idx + 1] = mask_data_ptr[idx + 1] * _dst_to_src_height_ratio;
-                }
-                else
-                {
-                    mask_data_ptr[idx] = mask_data_ptr[idx] * _dst_to_src_width_ratio;
-                    mask_data_ptr[idx + 1] = mask_data_ptr[idx + 1] * _dst_to_src_height_ratio;
-                }
-            }
-        }
-
         for (uint j = 0; j < bb_count; j++)
         {            
-            if(_mirror_val[i] == 1)
+            /*if(_mirror_val[i] == 1)
             {
                 float one_by_width_coeff = 1 / float(dst_roi[i].x2);
                 float l = 1 - coords_buf[j].r - one_by_width_coeff;
                 coords_buf[j].r = 1 - coords_buf[j].l - one_by_width_coeff;
                 coords_buf[j].l = l; 
+            }*/
+            if (_mirror_val[i] == 1)
+            {
+
+                float l = 1 - coords_buf[j].r;
+                coords_buf[j].r = 1 - coords_buf[j].l;
+                coords_buf[j].l = l;
             }
             bb_coords.push_back(coords_buf[j]);
             bb_labels.push_back(labels_buf[j]);

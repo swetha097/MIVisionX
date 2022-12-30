@@ -10,15 +10,17 @@ class ResizeMirrorNormalizeNode : public Node
 public:
     ResizeMirrorNormalizeNode(const std::vector<rocalTensor *> &inputs, const std::vector<rocalTensor *> &outputs);
     ResizeMirrorNormalizeNode() = delete;
-    void init(int interpolation_type,std::vector<float>& mean,  std::vector<float>& std_dev, IntParam *mirror, int layout);
+    void init(unsigned dest_width, unsigned dest_height, RocalResizeScalingMode scaling_mode,
+              std::vector<unsigned> max_size, RocalResizeInterpolationType interpolation_type,std::vector<float>& mean,  std::vector<float>& std_dev, IntParam *mirror, int layout);
     vx_array return_mirror(){ return _mirror.default_array();  }
 
     unsigned int get_dst_width() { return _outputs[0]->info().max_dims()[0]; }
     unsigned int get_dst_height() { return _outputs[0]->info().max_dims()[1]; }
-    vx_array get_src_width() { return _src_roi_width; }
-    vx_array get_src_height() { return _src_roi_height; }
-    std::vector<RocalROI> get_src_roi() { return *_inputs[0]->info().get_roi(); }
-    std::vector<RocalROI> get_dst_roi() { return *_outputs[0]->info().get_roi(); }
+    //vx_array get_src_width() { return _src_roi_width; }
+    //vx_array get_src_height() { return _src_roi_height; }
+    //std::vector<RocalROI> get_src_roi() { return *_inputs[0]->info().get_roi(); }
+    //std::vector<RocalROI> get_dst_roi() { return *_outputs[0]->info().get_roi(); }
+    void adjust_out_roi_size();
 
 protected:
     void create_node() override ;
@@ -31,9 +33,9 @@ private:
     std::vector<float> _std_dev;
     int _interpolation_type;
     ParameterVX<int> _mirror;
-
-    RocalTensorLayout _rocal_tensor_layout;
     constexpr static int   MIRROR_RANGE [2] =  {0, 1};
-
-
+    RocalResizeScalingMode _scaling_mode;
+    unsigned _src_width, _src_height, _dst_width, _dst_height, _out_width, _out_height;
+    unsigned _max_width = 0, _max_height = 0;
+    std::vector<unsigned> _dst_roi_width_vec, _dst_roi_height_vec;
 };

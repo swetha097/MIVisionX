@@ -45,14 +45,16 @@ extern "C" RocalTensor ROCAL_API_CALL rocalResizeMirrorNormalize(RocalContext p_
                                             RocalTensor p_input,
                                             RocalTensorLayout rocal_tensor_layout,
                                             RocalTensorOutputType rocal_tensor_output_type,
-                                            unsigned resize_depth,
-                                            unsigned resize_height,
-                                            unsigned resize_width,
-                                            int interpolation_type,
+                                            unsigned dest_width, unsigned dest_height,
                                             std::vector<float> &mean,
                                             std::vector<float> &std_dev,
                                             bool is_output,
-                                             RocalIntParam mirror = NULL);
+                                            RocalResizeScalingMode scaling_mode = ROCAL_SCALING_MODE_STRETCH,
+                                            std::vector<unsigned> max_size = {},
+                                            unsigned resize_shorter = 0,
+                                            unsigned resize_longer = 0,
+                                            RocalResizeInterpolationType interpolation_type = ROCAL_LINEAR_INTERPOLATION,
+                                            RocalIntParam mirror = NULL);
 
 extern "C" RocalTensor ROCAL_API_CALL rocalCropMirrorNormalize(RocalContext context, RocalTensor input,
                                                                   RocalTensorLayout rocal_tensor_layout,
