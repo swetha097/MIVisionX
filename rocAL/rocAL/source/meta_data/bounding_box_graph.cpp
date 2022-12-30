@@ -279,7 +279,7 @@ void BoundingBoxGraph::update_box_encoder_meta_data(std::vector<float> *anchors,
 
 void BoundingBoxGraph::update_box_iou_matcher(std::vector<float> *anchors, pMetaDataBatch full_batch_meta_data ,float criteria, float high_threshold, float low_threshold, bool allow_low_quality_matches)
 {
-    //#pragma omp parallel for    
+    #pragma omp parallel for
     for (int i = 0; i < full_batch_meta_data->size(); i++)
     {
         BoundingBoxCord *bbox_anchors = reinterpret_cast<BoundingBoxCord *>(anchors->data());
@@ -287,8 +287,6 @@ void BoundingBoxGraph::update_box_iou_matcher(std::vector<float> *anchors, pMeta
         BoundingBoxCord bb_coords[bb_count];
         unsigned anchors_size = anchors->size() / 4; // divide the anchors_size by 4 to get the total number of anchors
         memcpy(bb_coords, full_batch_meta_data->get_bb_cords_batch()[i].data(), full_batch_meta_data->get_bb_cords_batch()[i].size() * sizeof(BoundingBoxCord));
-        BoundingBoxCords_xcycwh encoded_bb;
-        BoundingBoxLabels encoded_labels;
 
         //Calculate Ious
         //ious size - bboxes count x anchors count        
@@ -309,9 +307,9 @@ void BoundingBoxGraph::update_box_iou_matcher(std::vector<float> *anchors, pMeta
                     max_col = iou_matrix[col][row];
                     max_col_index = col;
                 }
-                matches.push_back(max_col_index);
-                matched_vals.push_back(max_col);
             }
+            matches.push_back(max_col_index);
+            matched_vals.push_back(max_col);
         }
 
         all_matches = matches;
