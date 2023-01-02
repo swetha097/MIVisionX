@@ -88,7 +88,6 @@ private:
     std::condition_variable _wait_for_load;
     std::condition_variable _wait_for_unload;
     std::vector<std::vector<void*>> _dev_sub_buffer;
-    std::vector<void*> _host_master_buffers;
     std::vector<std::vector<void*>> _host_sub_buffers;
     std::vector<std::vector<void*>> _host_meta_data_buffers;
     std::vector<void *> _dev_bbox_buffer;

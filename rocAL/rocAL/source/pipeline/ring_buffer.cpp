@@ -162,7 +162,6 @@ void RingBuffer::init(RocalMemType mem_type, DeviceResources dev, std::vector<si
     {
         for(size_t buffIdx = 0; buffIdx < BUFF_DEPTH; buffIdx++)
         {
-            // const size_t master_buffer_size = sub_buffer_size * sub_buffer_count;
             // a minimum of extra MEM_ALIGNMENT is allocated
             _host_sub_buffers[buffIdx].resize(_sub_buffer_count);
             for(size_t sub_buff_idx = 0; sub_buff_idx < _sub_buffer_count; sub_buff_idx++)
@@ -193,7 +192,9 @@ void RingBuffer::initHip(RocalMemType mem_type, DeviceResourcesHip dev, std::vec
             _dev_sub_buffer[buffIdx].resize(_sub_buffer_count);
             for(unsigned sub_idx = 0; sub_idx < _sub_buffer_count; sub_idx++)
             {
+
                 hipError_t err =  hipMalloc(&_dev_sub_buffer[buffIdx][sub_idx], _sub_buffer_size[sub_idx]);
+                //printf("allocated HIP device buffer <%d, %d, %d, %p>\n", buffIdx, sub_idx, _sub_buffer_size[sub_idx], _dev_sub_buffer[buffIdx][sub_idx]);
                 if(err != hipSuccess)
                 {
                     _dev_sub_buffer.clear();
