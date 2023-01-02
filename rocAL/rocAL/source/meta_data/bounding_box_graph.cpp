@@ -299,10 +299,10 @@ void BoundingBoxGraph::update_box_iou_matcher(std::vector<float> *anchors, pMeta
         Matches matches, all_matches;
         //matches.resize(anchors_size);
         //for each prediction, find gt
-        for(int row = 0; row < iou_matrix[0].size(); row++) {
+        for(uint row = 0; row < iou_matrix[0].size(); row++) {
             float max_col = iou_matrix[0][row];
             int max_col_index = 0;
-            for(int col = 0; col < iou_matrix.size(); col++) {
+            for(uint col = 0; col < iou_matrix.size(); col++) {
                 if(iou_matrix[col][row] > max_col) {
                     max_col = iou_matrix[col][row];
                     max_col_index = col;
@@ -314,26 +314,34 @@ void BoundingBoxGraph::update_box_iou_matcher(std::vector<float> *anchors, pMeta
 
         all_matches = matches;
 
-        for(int idx = 0; idx < matches.size(); idx++){
+        for(uint idx = 0; idx < matches.size(); idx++){
             if(matched_vals[idx] < low_threshold) matches[idx] = -1;
             if((matched_vals[idx] >= low_threshold) && (matched_vals[idx] < high_threshold)) matches[idx] = -2;
         }
 
         if(allow_low_quality_matches) {
             std::vector<float> highest_foreground;
-            std::vector<int>  gts, preds;//try keep it as a map of gts & preds
+            std::vector<uint>  gts, preds;
             //for each gt, find max prediction - for each row f
-            float best_match = 0;
-            int best_index = 0;
-            for(int index = 0; index < iou_matrix.size(); index++) {
-                gts.push_back(index);
+            for(uint index = 0; index < iou_matrix.size(); index++) {
                 float max_row = *std::max_element(iou_matrix[index].begin(), iou_matrix[index].end());
                 int max_row_index = std::max_element(iou_matrix[index].begin(), iou_matrix[index].end()) - iou_matrix[index].begin();
-                preds.push_back(max_row_index);
                 highest_foreground.push_back(max_row);
             }
+            for(uint row = 0; row < iou_matrix.size(); row++) {
+                for(uint col = 0; col < iou_matrix[row].size(); col++) {
+                    // if the element is found
+                    for(uint idx = 0; idx < highest_foreground.size(); idx++) {
+                        if (iou_matrix[row][col] == highest_foreground[idx]) {
+                            gts.push_back(row);
+                            preds.push_back(col);
+                            break;
+                        }
+                    }
+                }
+            }
 
-            for(int pred_idx = 0; pred_idx < highest_foreground.size(); pred_idx++)
+            for(uint pred_idx = 0; pred_idx < preds.size(); pred_idx++)
                 matches[preds[pred_idx]] = all_matches[preds[pred_idx]];
         }
 
