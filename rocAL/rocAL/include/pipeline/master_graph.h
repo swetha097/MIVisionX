@@ -111,6 +111,7 @@ public:
     void set_sequence_reader_output() { _is_sequence_reader_output = true; }
     void set_sequence_batch_size(size_t sequence_length) { _sequence_batch_size = _user_batch_size * sequence_length; }
     void set_sequence_batch_ratio() { _sequence_batch_ratio = _sequence_batch_size / _internal_batch_size; }
+    vx_context get_vx_context() { return _context; }
 private:
     Status update_node_parameters();
     Status allocate_output_tensor();

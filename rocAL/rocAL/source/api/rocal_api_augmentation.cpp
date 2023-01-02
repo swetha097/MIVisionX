@@ -1159,7 +1159,8 @@ RocalTensor rocalNormalDistribution(RocalContext p_context, // To handle the cas
                                 context->master_graph->mem_type(),
                                 tensor_data_type);
         info.set_tensor_layout(RocalTensorlayout::NONE); // Change for generic data
-        output = context->master_graph->create_loader_output_tensor(info);
+        output = context->master_graph->create_tensor(info, is_output);
+        output->create_from_handle(context->master_graph->get_vx_context());
         context->master_graph->add_node<NormalDistributionNode>({input}, {output})->init(mean, stddev); // Change this line of code - Check with Shobana
 
     }

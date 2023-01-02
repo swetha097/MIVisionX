@@ -37,7 +37,7 @@ protected:
     float _mean, _std_dev;
     std::random_device rd{}; // Check this
     std::mt19937 _generator{rd()};
-    std::normal_distribution<double> _dist_normal; // Normal Distribution
+    std::normal_distribution<float> _dist_normal; // Normal Distribution
     std::vector<float> _mean_array, _std_dev_array, _normal_distribution_array;
     unsigned _num_of_dims;
     vx_size * _stride;

@@ -33,7 +33,7 @@ void NormalDistributionNode::create_node()
 {
     if(_node)
         return;
-    _stride = (vx_size *)malloc((_num_of_dims ) * tensor_data_size(_outputs[0]->info().data_type()));
+    _stride = (vx_size *)malloc(_num_of_dims * sizeof(float));
     _stride[0] = sizeof(float);
     _stride[1] = _stride[0] * _outputs[0]->info().dims()[0];
     _stride[2] = _stride[1] * _outputs[0]->info().dims()[1];
@@ -45,10 +45,7 @@ void NormalDistributionNode::create_node()
     _normal_distribution_array[i] = _dist_normal(_generator);
     std::cerr << "\n _normal_distribution_array :"<< _normal_distribution_array[i];
     }
-    status = vxCopyTensorPatch((vx_tensor)_outputs[0]->handle(), (_num_of_dims), nullptr, nullptr, _stride, _normal_distribution_array.data(), VX_WRITE_ONLY, VX_MEMORY_TYPE_HOST);
- if(status != 0)
-        THROW("ERROR: vxCopyArrayRange failed in the pad node (vxExtrppNode_Slice)  node: "+ TOSTR(status))
-    _normal_distribution_array.clear();
+    _outputs[0]->swap_handle((void *)_normal_distribution_array.data());
     // create tensor
     // update tensor
     // _node = vxExtrppNode_Nop(_graph->get(), _inputs[0]->handle(), _outputs[0]->handle());
@@ -73,15 +70,14 @@ void NormalDistributionNode::update_node()
     _normal_distribution_array[i] = _dist_normal(_generator);
     std::cerr << "\n _normal_distribution_array :"<< _normal_distribution_array[i];
     }
-    status = vxCopyTensorPatch((vx_tensor)_outputs[0]->handle(), (_num_of_dims), nullptr, nullptr, _stride, _normal_distribution_array.data(), VX_WRITE_ONLY, VX_MEMORY_TYPE_HOST);
+    // status = vxCopyTensorPatch((vx_tensor)_outputs[0]->handle(), _num_of_dims, nullptr, nullptr, _stride, _normal_distribution_array.data(), VX_WRITE_ONLY, VX_MEMORY_TYPE_HOST);
  if(status != 0)
         THROW("ERROR: vxCopyArrayRange failed in the pad node (vxExtrppNode_Slice)  node: "+ TOSTR(status))
-    _normal_distribution_array.clear();
 }
 
 void NormalDistributionNode::update_param()
 {
-    std::normal_distribution<double> dist_normal(_mean, _std_dev);
+    std::normal_distribution<float> dist_normal(_mean, _std_dev);
     _dist_normal = dist_normal;
 }
 
@@ -91,7 +87,7 @@ void NormalDistributionNode::init(float mean, float std_dev) {
     std::cerr << "\n _mean : " << _mean;
     std::cerr << "\n _std_dev : " << _std_dev;
     _num_of_dims = _outputs[0]->info().num_of_dims();
-    _normal_distribution_array.resize(_batch_size * _num_of_dims);
+    _normal_distribution_array.resize(_batch_size);
     // unsigned seed = 0;
     // _generator = seed;
     update_param();
