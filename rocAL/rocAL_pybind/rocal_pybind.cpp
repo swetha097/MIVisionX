@@ -118,7 +118,7 @@ namespace rocal
                 // .def(
                 .def( // TODO: Swetha - Add rmul, add, radd
                 "__add__",
-                [](rocalTensor &output_tensor, rocalTensor &output_tensor1)
+                [](rocalTensor *output_tensor, rocalTensor *output_tensor1)
                 {
                     std::cerr << "HERE in __ADD__ in rocal_pybind unit dtype";
                     // Check if the first dim alone matches - call a diff function
@@ -133,18 +133,18 @@ namespace rocal
                 },
                 R"code(
                 Adds a node for arithmetic operation
-                )code"
+                )code", py::return_value_policy::reference
             )
                 .def( // TODO: Swetha - Add rmul, add, radd
                 "__mul__",
-                [](rocalTensor &output_tensor, uint scalar)
+                [](rocalTensor *output_tensor, uint scalar)
                 {
                     std::cerr << "HERE in __MUL__ in rocal_pybind unit dtype";
-                    return &output_tensor;
+                    return output_tensor;
                 },
                 R"code(
                 Adds a node for arithmetic operation
-                )code"
+                )code", py::return_value_policy::reference
             )
                 .def(
                 "__mul__",

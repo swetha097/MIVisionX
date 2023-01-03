@@ -1122,11 +1122,11 @@ RocalTensor rocalTensorMulScalar(RocalContext p_context,
         rocalTensorInfo output_info = input->info();
         // output_info.set_tensor_layout(op_tensorLayout); // TODO- Swetha - For Audio Data - Cant use the NCHW / NHWC  - commons.h & rocal_api_data_types.h
         // output_info.set_data_type(op_tensorDataType);
-        // output_info.set_tensor_layout(RocalTensorlayout::NONE);
+        output_info.set_tensor_layout(RocalTensorlayout::NONE);
 
         // instead of output_info -> can use input->info() - //TODO - Swetha - Check what can be used here later 
 
-        output = context->master_graph->create_tensor(input->info(), is_output); // Create a rocALTensor object dynamically on heap 
+        output = context->master_graph->create_tensor(output_info, is_output); // Create a rocALTensor object dynamically on heap 
         context->master_graph->add_node<TensorMulScalarNode>({input}, {output})->init(scalar); // Change this line of code
     }
     catch(const std::exception& e) {
@@ -1161,6 +1161,7 @@ RocalTensor rocalNormalDistribution(RocalContext p_context, // To handle the cas
         info.set_tensor_layout(RocalTensorlayout::NONE); // Change for generic data
         output = context->master_graph->create_tensor(info, is_output);
         output->create_from_handle(context->master_graph->get_vx_context());
+        output->reset_tensor_roi(); // TODO : Swetha : Check with Fiona
         context->master_graph->add_node<NormalDistributionNode>({input}, {output})->init(mean, stddev); // Change this line of code - Check with Shobana
 
     }
@@ -1190,14 +1191,14 @@ RocalTensor rocalTensorAddTensor(RocalContext p_context,
         int layout=0; // Why using layout = 0 ?
         std::cerr << "Here in Op over for addition!";
         // get_rocal_tensor_layout(rocal_tensor_layout, op_tensorLayout, layout);
-        // get_rocal_tensor_data_type(rocal_tensor_output_type, op_tensorDataType);
+        get_rocal_tensor_data_type(rocal_tensor_output_type, op_tensorDataType);
         rocalTensorInfo output_info = input1->info();
         // output_info.set_tensor_layout(op_tensorLayout); // TODO- Swetha - For Audio Data - Cant use the NCHW / NHWC  - commons.h & rocal_api_data_types.h
-        // output_info.set_data_type(op_tensorDataType);
-        // output_info.set_tensor_layout(RocalTensorlayout::NONE);
+        output_info.set_data_type(op_tensorDataType);
+        output_info.set_tensor_layout(RocalTensorlayout::NONE);
         // instead of output_info -> can use input->info() - //TODO - Swetha - Check what can be used here later 
 
-        output = context->master_graph->create_tensor(input1->info(), is_output); // Assuming the bigger tensor is the first input
+        output = context->master_graph->create_tensor(output_info, is_output); // Assuming the bigger tensor is the first input
         context->master_graph->add_node<TensorAddTensorNode>({input1,input2}, {output})->init(); // Change this line of code
     }
     catch(const std::exception& e) {
