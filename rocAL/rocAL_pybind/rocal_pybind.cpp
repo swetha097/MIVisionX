@@ -568,6 +568,8 @@ namespace rocal
         // Audio Augmentations
         m.def("NormalDistribution", &rocalNormalDistribution, "Generates random numbers following a normal distribution",
             py::return_value_policy::reference);
+        m.def("UniformDistribution", &rocalUniformDistribution, "Generates random numbers following a normal distribution",
+            py::return_value_policy::reference);
         m.def("ToDecibels", &rocalToDecibels, "Converts to Decibals",
             py::return_value_policy::reference);
         m.def("PreEmphasisFilter", &rocalPreEmphasisFilter, "Applies preemphasis filter to the input data", 

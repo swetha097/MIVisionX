@@ -225,4 +225,9 @@ extern "C" RocalTensor ROCAL_API_CALL rocalTensorAddTensor(RocalContext p_contex
                                                            bool is_output,
                                                            RocalTensorLayout rocal_tensor_layout, // TODO : Swetha - not required for audio data - Check on this
                                                            RocalTensorOutputType rocal_tensor_output_type);
+                                                        
+extern "C" RocalTensor ROCAL_API_CALL rocalUniformDistribution(RocalContext p_context,
+                                                              RocalTensor p_input,
+                                                              bool is_output,
+                                                              std::vector<float> &range);
 #endif //MIVISIONX_ROCAL_API_AUGMENTATION_H
