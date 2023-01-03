@@ -24,9 +24,9 @@ def draw_patches(img, idx, device):
     print("IN DRAW_PATCH  ",img.shape)
     image =img
     print(image.shape,type(image))
-    for i in range (image.shape[0]):
-        image1 = cv2.cvtColor(image[i], cv2.COLOR_RGB2BGR)
-        cv2.imwrite("OUTPUT_IMAGES_PYTHON/NEW_API/TF_READER/CLASSIFICATION/" + str(idx)+"_"+"train"+".png", image1 )
+    
+    image1 = cv2.cvtColor(image, cv2.COLOR_RGB2BGR)
+    cv2.imwrite("OUTPUT_IMAGES_PYTHON/NEW_API/TF_READER/CLASSIFICATION/" + str(idx)+"_"+"train"+".png", image1 )
 def main():
     if  len(sys.argv) < 1:
         print ('Please pass image_folder cpu/gpu batch_size')
@@ -44,6 +44,7 @@ def main():
     else:
         rocalCPU = False
     batch_size = int(sys.argv[3])
+    print("batch_size  ",batch_size)
     TFRecordReaderType = 0
     featureKeyMap = {
         'image/encoded':'image/encoded',
@@ -58,7 +59,7 @@ def main():
     oneHotLabel = 1
     local_rank = 0
     world_size = 1
-    rali_cpu= True
+    rali_cpu= False
     rali_device = 'cpu' if rali_cpu else 'gpu'
     decoder_device = 'cpu' if rali_cpu else 'mixed'
     device_memory_padding = 211025920 if decoder_device == 'mixed' else 0
@@ -91,12 +92,17 @@ def main():
         # Dataloader
         imageIterator = ROCALIterator(pipe)
         cnt = 0
-        for i, (images_array) in enumerate(imageIterator):
+        for i, (images_array,labels_array) in enumerate(imageIterator):
+            if 1:
+                print("\n",i)
+                print("lables_array",labels_array)
+                print("\n\nPrinted first batch with", (batch_size), "images!")
             for element in list(range(batch_size)):
+                print("element in unittest  ",element)
                 cnt = cnt + 1
                 print("size of image_Array   ",images_array[element].__sizeof__())
                 draw_patches(images_array[element],cnt,"cpu")
-                break
+                # break
         imageIterator.reset()
 
     print("###############################################    TF CLASSIFICATION    ###############################################")
