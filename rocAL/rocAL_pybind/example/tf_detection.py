@@ -62,7 +62,7 @@ def draw_patches(img, idx, bboxes):
     # image =image.astype(int)
     
     image = cv2.cvtColor(image, cv2.COLOR_RGB2BGR)
-    cv2.imwrite("OUTPUT_IMAGES_PYTHON/NEW_API/TF_READER/DETECTION/"+str(idx)+"_"+"haha"+".png", image)
+    cv2.imwrite("OUTPUT_IMAGES_PYTHON/NEW_API/TF_READER/DETECTION/"+str(idx)+"_"+"aki"+".png", image)
 
     # image = cv2.normalize(image, None, alpha = 0, beta = 255, norm_type = cv2.NORM_MINMAX, dtype = cv2.CV_32F)
     htot, wtot ,_ = image.shape
@@ -84,7 +84,7 @@ def draw_patches(img, idx, bboxes):
         print("valuessssss",loc_[0]*wtot,loc_[1] * htot,loc_[2] * wtot,loc_[3] * htot,color,thickness)
         image = cv2.rectangle(image, (int(loc_[0]*wtot), int(loc_[1] * htot)), (int(
             (loc_[2] * wtot)), int((loc_[3] * htot))), color, thickness)
-        cv2.imwrite("OUTPUT_IMAGES_PYTHON/NEW_API/TF_READER/DETECTION/"+str(idx)+"_"+"haha"+".png", image)
+        cv2.imwrite("OUTPUT_IMAGES_PYTHON/NEW_API/TF_READER/DETECTION/"+str(idx)+"_"+"aki"+".png", image)
         print("end of draw_patch")
 def main():
     if  len(sys.argv) < 1:
@@ -132,7 +132,7 @@ def main():
     pipe = Pipeline(batch_size=batch_size, num_threads=num_threads,device_id=device_id, seed=2, rocal_cpu=_rocal_cpu)
 
     with pipe:
-        inputs = fn.readers.tfrecord(path=data_path, index_path = "", reader_type=TFRecordReaderType, user_feature_key_map=featureKeyMap,
+        inputs = fn.readers.tfrecord(path=data_path, index_path = "", reader_type=TFRecordReaderType, user_feature_key_map=featureKeyMap,random_shuffle=True,
             features={
                     'image/encoded': tf.io.FixedLenFeature((), tf.string, ""),
                     'image/class/label': tf.io.FixedLenFeature([1], tf.int64,  -1),
@@ -145,13 +145,14 @@ def main():
                     }
         )
         jpegs = inputs["image/encoded"]
-        # images = fn.decoders.image(jpegs, user_feature_key_map=featureKeyMap, output_type=types.RGB, path=data_path)
+        # images = fn.decoders.image(jpegs, user_feature_key_map=featureKeyMap, output_type=types.RGB, path=data_path,random_shuffle=True)
         images = fn.decoders.image_random_crop(jpegs,user_feature_key_map=featureKeyMap, output_type=types.RGB,
                                                       random_aspect_ratio=[0.8, 1.25],
                                                       random_area=[0.1, 1.0],
                                                       num_attempts=100,path = data_path)
-        resized = fn.resize(images, resize_width=600, resize_height=600,rocal_tensor_output_type = types.UINT8, rocal_tensor_layout = types.NHWC,)
-        # bright = fn .blur(images)
+        resized = fn.resize(images, resize_width=600, resize_height=600,rocal_tensor_output_type = types.UINT8, rocal_tensor_layout = types.NHWC)
+        # crop_image= fn.crop_mirror_normalize(images,crop_d=100,crop_h =100,device=1,rocal_tensor_output_type = types.UINT8, rocal_tensor_layout = types.NHWC)
+        # bright = fn .brightness(images)
 
         pipe.set_outputs(resized)
         # pipe.set_outputs(images)
@@ -159,7 +160,7 @@ def main():
         # Build the pipeline
         pipe.build()
         # Dataloader
-        imageIterator = ROCALClassificationIterator(pipe)
+        imageIterator = ROCALIterator(pipe)
         cnt = 0
         print("imageIterator   ",imageIterator)
         for i, (images_array, bboxes_array, labels_array,num_bboxes_array) in enumerate(imageIterator, 0):

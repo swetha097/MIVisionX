@@ -31,6 +31,11 @@ THE SOFTWARE.
 #include <sstream>
 #include <fstream>
 #include <stdint.h>
+#include "meta_data_reader_factory.h"
+// #include "meta_data_graph_factory.h"
+#include "tf_meta_data_reader.h"
+#include "tf_record_reader.h"
+
 
 namespace filesys = boost::filesystem;
 
@@ -72,6 +77,10 @@ Reader::Status TFRecordReader::initialize(ReaderConfig desc)
     _loop = desc.loop();
     _shuffle = desc.shuffle();
     _record_name_prefix = desc.file_prefix();
+    _meta_data_reader = desc.meta_data_reader();
+    std::cerr<<"\n_meta_data_reader in tf "<<_meta_data_reader;
+
+
     _encoded_key = _feature_key_map.at("image/encoded");
     _filename_key = _feature_key_map.at("image/filename");
     ret = folder_reading();
@@ -157,8 +166,9 @@ Reader::Status TFRecordReader::folder_reading()
         std::string entry_name(_entity->d_name);
         if (strcmp(_entity->d_name, ".") == 0 || strcmp(_entity->d_name, "..") == 0)
             continue;
+        std::cerr<<"\n _entity->d_name "<<_entity->d_name;
         entry_name_list.push_back(entry_name);
-        // std::cerr<<"\n entry_name::"<<entry_name;
+
     }
     std::sort(entry_name_list.begin(), entry_name_list.end());
     for (unsigned dir_count = 0; dir_count < entry_name_list.size(); ++dir_count)
@@ -272,6 +282,9 @@ Reader::Status TFRecordReader::read_image_names(std::ifstream &file_contents, ui
         _in_batch_read_count++;
         _in_batch_read_count = (_in_batch_read_count % _batch_count == 0) ? 0 : _in_batch_read_count;
         _last_file_name = file_path;
+        std::cerr<<"\n _last_file_name in file reader "<<_last_file_name<<"\n"<<fname;
+        if(!_meta_data_reader || _meta_data_reader->exists(fname)) {
+            std::cerr<<"\nFile reader if condition check ";
         if (get_file_shard_id() != _shard_id)
         {
             incremenet_file_id();
@@ -284,6 +297,7 @@ Reader::Status TFRecordReader::read_image_names(std::ifstream &file_contents, ui
         _file_names.push_back(file_path);
         incremenet_file_id();
         _file_count_all_shards++;
+    }
         _single_feature = feature.at(_encoded_key);
         _last_file_size = _single_feature.bytes_list().value()[0].size();
         _file_size.insert(std::pair<std::string, unsigned int>(_last_file_name, _last_file_size));
