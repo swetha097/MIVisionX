@@ -311,6 +311,19 @@ MasterGraph::create_loader_output_tensor(const rocalTensorInfo &info)
     return output;
 }
 
+rocalTensor *
+MasterGraph::create_output_tensor(const rocalTensorInfo &info)
+{
+    /*
+    *   NOTE: Output tensor for a source node needs to be created as a regular (non-virtual) tensor
+    */
+    auto* output = new rocalTensor(info);
+    if(output->create_from_handle(_context) != 0)
+        THROW("Creating output tensor for loader failed");
+
+    return output;
+}
+
 rocalTensor * MasterGraph::create_tensor(const rocalTensorInfo &info, bool is_output)
 {
     auto* new_tensor = new rocalTensor(info);
@@ -335,6 +348,7 @@ rocalTensor * MasterGraph::create_tensor(const rocalTensorInfo &info, bool is_ou
 void
 MasterGraph::set_output(rocalTensor* output_tensor)
 {
+    std::cerr << "In set_output";
     if(output_tensor->is_handle_set() == false)
     {
         std::cerr << "Is_handle_set";

@@ -199,6 +199,10 @@ static vx_status VX_CALLBACK uninitializeTensorAddTensor(vx_node node, const vx_
 {
     TensorAddTensorLocalData *data;
     STATUS_ERROR_CHECK(vxQueryNode(node, VX_NODE_LOCAL_DATA_PTR, &data, sizeof(data)));
+    // free(data->roi_tensor_ptr1);
+    // free(data->roi_tensor_ptr2);
+    // free(data->srcDims1);
+    // free(data->srcDims2);
     delete (data);
     return VX_SUCCESS;
 }

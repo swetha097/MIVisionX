@@ -206,7 +206,7 @@ AudioLoader::load_routine()
                                             _decoded_img_info._original_audio_samples,
                                             _decoded_img_info._original_audio_channels,
                                             _decoded_img_info._original_audio_sample_rates);
-
+            std::cerr << "COMES OUT OF THE LOAD FUNCTION SUCCESSFULLY";
             if(load_status == LoaderModuleStatus::OK)
             {
                 // if (_randombboxcrop_meta_data_reader)
@@ -234,7 +234,7 @@ AudioLoader::load_routine()
                 }
                 last_load_status = load_status;
             }
-
+            std::cerr << "HERE IN LOAD ROUTINE ";
             // Here it sets the out-of-data flag and signal the circular buffer's internal
             // read semaphore using release() call
             // , and calls the release() allows the reader thread to wake up and handle
@@ -244,7 +244,9 @@ AudioLoader::load_routine()
             _circ_buff.unblock_reader();
             std::this_thread::sleep_for(std::chrono::seconds(1));
         }
+
     }
+    std::cerr << "--------------- LOAD ROUTINE DONE _----------------------";
     return LoaderModuleStatus::OK;
 }
 
@@ -290,6 +292,7 @@ AudioLoader::update_output_audio()
     // }
     _output_names = _output_decoded_img_info._image_names;
     _output_tensor->update_tensor_roi(_output_decoded_img_info._roi_audio_samples, _output_decoded_img_info._roi_audio_channels);
+    std::cerr << "Update the ROI & sample rate";
     _output_tensor->update_audio_tensor_sample_rate(_output_decoded_img_info._original_audio_sample_rates);
     _circ_buff.pop();
     if (!_loop)

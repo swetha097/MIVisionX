@@ -588,6 +588,8 @@ namespace rocal
             py::return_value_policy::reference);
         m.def("TensorAddTensor", &rocalTensorAddTensor, "Multiplies a given Tensor Value with Scalar - Arithmetic Operation",
             py::return_value_policy::reference);
+        m.def("Resample", &rocalResample, "Resamples the audio",
+            py::return_value_policy::reference);
         // Image Augmentations
         m.def("Resize",&rocalResize, "Resizes the image ",py::return_value_policy::reference);
         m.def("ColorTwist",&rocalColorTwist, py::return_value_policy::reference);

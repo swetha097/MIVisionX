@@ -121,8 +121,9 @@ AudioReadAndDecode::load(float* buff,
                          std::vector<uint32_t> &roi_channels,
                          std::vector<uint32_t> &actual_samples,
                          std::vector<uint32_t> &actual_channels,
-                         std::vector<uint32_t> &actual_sample_rates)
+                         std::vector<float> &actual_sample_rates)
 {
+    std::cerr << "LOAD --------------------------------------";
     if(max_decoded_samples == 0 || max_decoded_channels == 0 )
         THROW("Zero audio dimension is not valid")
     if(!buff)
@@ -174,7 +175,8 @@ AudioReadAndDecode::load(float* buff,
             _actual_decoded_samples[i] = max_decoded_samples;
             _actual_decoded_channels[i] = max_decoded_channels;
 
-            int original_samples, original_channels, original_sample_rates;
+            int original_samples, original_channels;
+            float original_sample_rates;
             if (_decoder[i]->initialize(_audio_file_path[i].c_str()) != AudioDecoder::Status::OK) {
                 THROW("Decoder can't be initialized for file: " + _audio_names[i].c_str())
             }

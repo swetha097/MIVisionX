@@ -73,9 +73,11 @@ public:
     void release();
     template <typename T>
     std::shared_ptr<T> add_node(const std::vector<rocalTensor *> &input, const std::vector<rocalTensor *> &output);
+    vx_context get_vx_context() { return _context; }
     template <typename T, typename M> std::shared_ptr<T> meta_add_node(std::shared_ptr<M> node);
     rocalTensor *create_tensor(const rocalTensorInfo &info, bool is_output);
     rocalTensor *create_loader_output_tensor(const rocalTensorInfo &info);
+    rocalTensor *create_output_tensor(const rocalTensorInfo &info);
     rocalTensorList * get_output_tensors();
     std::vector<rocalTensorList *> create_label_reader(const char *source_path, MetaDataReaderType reader_type);
     std::vector<rocalTensorList *> create_file_list_label_reader(const char *source_path, const char *file_list_path, MetaDataReaderType reader_type);

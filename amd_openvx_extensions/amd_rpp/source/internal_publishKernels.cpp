@@ -144,6 +144,7 @@ vx_status get_kernels_to_publish()
     STATUS_ERROR_CHECK(ADD_KERENEL(Normalize_Register));
     STATUS_ERROR_CHECK(ADD_KERENEL(TensorMulScalar_Register));
     STATUS_ERROR_CHECK(ADD_KERENEL(TensorAddTensor_Register));
+    STATUS_ERROR_CHECK(ADD_KERENEL(Resample_Register));
 
 
     return status;

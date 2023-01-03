@@ -21,6 +21,11 @@ def tensor_mul_scalar_float(*inputs, scalar=1.0, rocal_tensor_output_type=types.
     tensor_mul_scalar_float = b.TensorMulScalar(Pipeline._current_pipeline._handle ,*(kwargs_pybind.values()))
     return (tensor_mul_scalar_float)
 
+def resample(*inputs, resample_rate=None, rocal_tensor_output_type=types.FLOAT):
+    kwargs_pybind = {"input_image0": inputs[0], "resample_rate": resample_rate, "rocal_tensor_output_type": rocal_tensor_output_type, "is_output": False}
+    resample_output = b.Resample(Pipeline._current_pipeline._handle ,*(kwargs_pybind.values()))
+    return (resample_output)
+
 def brightness(*inputs, brightness=1.0, bytes_per_sample_hint=0, image_type=0,
                preserve=False, seed=-1, device=None):
     kwargs_pybind = {"input_image0": inputs[0], "is_output": False, "alpha": None, "beta": None}

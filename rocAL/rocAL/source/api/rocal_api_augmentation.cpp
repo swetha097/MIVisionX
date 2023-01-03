@@ -45,6 +45,7 @@ THE SOFTWARE.
 #include "node_pad.h"
 #include "node_normalize.h"
 #include "node_normal_distribution.h"
+#include "node_resample.h"
 
 #include "meta_node_resize.h"
 #include "meta_node_crop.h"
@@ -1050,6 +1051,7 @@ RocalTensor rocalSlice(RocalContext p_context,
 
         output = context->master_graph->create_tensor(output_info, is_output);
         output->reset_tensor_roi(); // TODO : Swetha : Check with Fiona
+        output->reset_audio_sample_rate();
         // rocalTensorInfo output_info = input->info();
         // get_rocal_tensor_data_type(rocal_tensor_output_type, op_tensorDataType);
         // std::vector<size_t> dims = output_info.dims();
@@ -1159,7 +1161,8 @@ RocalTensor rocalNormalDistribution(RocalContext p_context, // To handle the cas
                                 context->master_graph->mem_type(),
                                 tensor_data_type);
         info.set_tensor_layout(RocalTensorlayout::NONE); // Change for generic data
-        output = context->master_graph->create_loader_output_tensor(info);
+        output = context->master_graph->create_tensor(info, is_output);
+        output->create_from_handle(context->master_graph->get_vx_context());
         context->master_graph->add_node<NormalDistributionNode>({input}, {output})->init(mean, stddev); // Change this line of code - Check with Shobana
 
     }
@@ -1204,4 +1207,38 @@ RocalTensor rocalTensorAddTensor(RocalContext p_context,
         ERR(e.what())
     }
     return output;
+}
+
+RocalTensor ROCAL_API_CALL
+rocalResample(RocalContext p_context,
+                RocalTensor p_input,
+                RocalTensor p_input_resample_rate,
+                RocalTensorOutputType rocal_tensor_output_type,
+                bool is_output)
+{
+    if(!p_context || !p_input_resample_rate || !p_input)
+        THROW("Null values passed as input")
+    rocalTensor* resampled_output = nullptr;
+    auto context = static_cast<Context*>(p_context);
+    auto input = static_cast<rocalTensor*>(p_input);
+    auto input_resample_rate = static_cast<rocalTensor*>(p_input_resample_rate);
+    RocalTensorDataType op_tensorDataType;
+
+    try
+    {
+        std::cerr << "In Resample node :";
+        int layout=0;
+        get_rocal_tensor_data_type(rocal_tensor_output_type, op_tensorDataType);
+        rocalTensorInfo output_info = input->info();
+        output_info.set_tensor_layout(RocalTensorlayout::NONE);
+        output_info.set_data_type(op_tensorDataType);
+        resampled_output = context->master_graph->create_tensor(output_info, is_output);
+        context->master_graph->add_node<ResampleNode>({input}, {resampled_output})->init(input_resample_rate, 50.0);
+    }
+    catch(const std::exception& e)
+    {
+        context->capture_error(e.what());
+        ERR(e.what())
+    }
+    return resampled_output;
 }
