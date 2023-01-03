@@ -45,6 +45,7 @@ THE SOFTWARE.
 #include "node_pad.h"
 #include "node_normalize.h"
 #include "node_normal_distribution.h"
+#include "node_uniform_distribution.h"
 
 #include "meta_node_resize.h"
 #include "meta_node_crop.h"
@@ -1200,6 +1201,40 @@ RocalTensor rocalTensorAddTensor(RocalContext p_context,
 
         output = context->master_graph->create_tensor(output_info, is_output); // Assuming the bigger tensor is the first input
         context->master_graph->add_node<TensorAddTensorNode>({input1,input2}, {output})->init(); // Change this line of code
+    }
+    catch(const std::exception& e) {
+        context->capture_error(e.what());
+        ERR(e.what())
+    }
+    return output;
+}
+
+RocalTensor rocalUniformDistribution(RocalContext p_context, // To handle the case of p_input similar to DALI
+                                RocalTensor p_input, // Not gonna be used - Always use decoder input
+                                bool is_output,
+                                std::vector<float> &range) {
+    if(!p_context )
+        THROW("Null values passed as input")
+    rocalTensor* output = nullptr;
+    auto context = static_cast<Context*>(p_context);
+    auto input = static_cast<rocalTensor*>(p_input);
+    try {
+        std::cerr << "Here in Uniform Dist";
+        RocalTensorDataType tensor_data_type = RocalTensorDataType::FP32;
+        unsigned num_of_dims = 3;
+        std::vector<size_t> dims;
+        dims.resize(num_of_dims);
+        dims.at(0) = context->user_batch_size();
+        dims.at(1) = 1;
+        dims.at(2) = 1;
+        auto info  = rocalTensorInfo(std::vector<size_t>(std::move(dims)),
+                                context->master_graph->mem_type(),
+                                tensor_data_type);
+        info.set_tensor_layout(RocalTensorlayout::NONE); // Change for generic data
+        output = context->master_graph->create_tensor(info, is_output);
+        output->create_from_handle(context->master_graph->get_vx_context());
+        context->master_graph->add_node<UniformDistributionNode>({input}, {output})->init(range); // Change this line of code - Check with Shobana
+
     }
     catch(const std::exception& e) {
         context->capture_error(e.what());
