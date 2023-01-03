@@ -21,17 +21,24 @@ THE SOFTWARE.
 */
 
 #pragma once
+#include "node.h"
+#include "graph.h"
 
-#include "audio_decoder.h"
-
-class SndFileDecoder : public AudioDecoder
+class UniformDistributionNode : public Node
 {
 public:
-    //! Default constructor
-    SndFileDecoder();
-    AudioDecoder::Status initialize(const char *src_filename) override;
-    AudioDecoder::Status decode(float* buffer);
-    AudioDecoder::Status decode_info(int* samples, int* channels, float* sample_rates) override;
-    void release() override;
-    ~SndFileDecoder() override;
+    UniformDistributionNode(const std::vector<rocalTensor *> &inputs, const std::vector<rocalTensor *> &outputs);
+    UniformDistributionNode() = delete;
+    void init(std::vector<float>& range);
+    void update_param();
+protected:
+    void create_node() override;
+    void update_node() override;
+    float _min, _max;
+    std::random_device rd{}; // Check this
+    std::mt19937 _generator{rd()};
+    std::uniform_real_distribution<float> _dist_uniform; // uniform Distribution
+    std::vector<float> _uniform_distribution_array;
+    unsigned _num_of_dims;
+    vx_size * _stride;
 };

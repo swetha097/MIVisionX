@@ -21,17 +21,28 @@ THE SOFTWARE.
 */
 
 #pragma once
+#include "node.h"
+#include "graph.h"
+#include "rocal_api_types.h"
 
-#include "audio_decoder.h"
-
-class SndFileDecoder : public AudioDecoder
+class ResampleNode : public Node
 {
 public:
-    //! Default constructor
-    SndFileDecoder();
-    AudioDecoder::Status initialize(const char *src_filename) override;
-    AudioDecoder::Status decode(float* buffer);
-    AudioDecoder::Status decode_info(int* samples, int* channels, float* sample_rates) override;
-    void release() override;
-    ~SndFileDecoder() override;
+    ResampleNode(const std::vector<rocalTensor *> &inputs, const std::vector<rocalTensor *> &outputs);
+    ResampleNode() = delete;
+    void init(RocalTensor resample_rate, float quality);
+
+protected:
+    void create_node() override;
+    void update_node() override;
+private:
+    RocalTensor _resample_rate;
+    float _quality, _scale_ratio;
+    float* _out_sample_rate_array;
+    uint _max_dst_width, _resample_rate_dims;
+    std::vector<float> _resample_rate_vec;
+    vx_scalar _max_dst_width_scalar;
+    vx_array _src_frames_array = nullptr, _src_channels_array = nullptr, _src_sample_rate_array ;
+    std::vector<unsigned> _dst_roi_width_vec, _dst_roi_height_vec, _src_frames, _src_channels;
+
 };

@@ -230,4 +230,11 @@ extern "C" RocalTensor ROCAL_API_CALL rocalUniformDistribution(RocalContext p_co
                                                               RocalTensor p_input,
                                                               bool is_output,
                                                               std::vector<float> &range);
+
+extern "C" RocalTensor ROCAL_API_CALL rocalResample(RocalContext p_context,
+                                                    RocalTensor p_input,
+                                                    RocalTensor p_input_resample_rate,
+                                                    RocalTensorOutputType rocal_tensor_output_type,
+                                                    bool is_output,
+                                                    float sample_hint);
 #endif //MIVISIONX_ROCAL_API_AUGMENTATION_H

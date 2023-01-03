@@ -88,8 +88,9 @@ AudioSourceEvaluator::find_max_dimension()
             continue;
         }
         int samples, channels;
+        float sample_rates;
 
-        if(_decoder->decode_info(&samples, &channels) != AudioDecoder::Status::OK)
+        if(_decoder->decode_info(&samples, &channels, &sample_rates) != AudioDecoder::Status::OK)
         {
             WRN("Could not decode the header of the: "+ _reader->id())
             continue;

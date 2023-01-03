@@ -716,8 +716,11 @@ rocalAudioFileSourceSingleShard(
         auto info  = rocalTensorInfo(std::vector<size_t>(std::move(dims)),
                                 context->master_graph->mem_type(),
                                 tensor_data_type);
+        // info.reallocate
         info.set_tensor_layout(RocalTensorlayout::NONE);
+        // info.reallocate_tensor_sample_rate_buffers();
         output = context->master_graph->create_loader_output_tensor(info);
+        output->reset_audio_sample_rate();
         context->master_graph->add_node<AudioLoaderSingleShardNode>({}, {output})->init(shard_id, shard_count,
                                                                                         source_path,
                                                                                         StorageType::FILE_SYSTEM,

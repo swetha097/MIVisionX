@@ -140,6 +140,7 @@ list(APPEND SOURCES
         source/tensor/Normalize.cpp
         source/tensor/TensorMulScalar.cpp
         source/tensor/TensorAddTensor.cpp
+        source/tensor/Resample.cpp
         source/kernel_rpp.cpp
         source/internal_publishKernels.cpp
     )

@@ -111,6 +111,22 @@ void rocalTensorInfo::reallocate_tensor_roi_buffers() {
     }
 }
 
+void rocalTensorInfo::reallocate_tensor_sample_rate_buffers() {
+    _sample_rate = std::make_shared<std::vector<float>>(_batch_size);
+
+    // if (_sample_rate.size()) _sample_rate.clear();
+    _sample_rate->resize(_batch_size);
+    if (_is_image) {
+        THROW("No sample rate available for Image data")
+    } else if(!_is_metadata)
+    {
+        // for (unsigned i = 0; i < _batch_size; i++)
+        // {
+        //     _sample_rate.at(i) = 0;
+        // }
+    }
+}
+
 rocalTensorInfo::rocalTensorInfo()
     : _type(Type::UNKNOWN),
       _num_of_dims(0),
@@ -132,6 +148,24 @@ rocalTensorInfo::rocalTensorInfo(std::vector<size_t> dims,
     // std::cerr << "rocalTensorInfo" ;
     if (_num_of_dims <= 3) _is_image = false;
     // std::cerr << "\n rocalTensorInfo 1";
+}
+
+void rocalTensor::update_audio_tensor_sample_rate(const std::vector<float> &sample_rate) {
+    if (_info.is_image()) {
+        THROW("No sample rate available for Image data")
+    }
+    else if(!_info.is_metadata())
+    {
+        // if (_info.get_sample_rate().size() >0) _info.get_sample_rate().clear();
+        // _info.get_sample_rate()->resize(_info.batch_size());
+        for (unsigned i = 0; i < info().batch_size(); i++)
+        {
+            std::cerr<< "\n Printing sample_rate[i] "<< sample_rate[i];
+            _info.get_sample_rate()->at(i) = sample_rate[i];
+            std::cerr<< "\n Printing sample_rate[i] 1 "<< _info.get_sample_rate()->at(i);
+           
+        }
+    }
 }
 
 void rocalTensor::update_tensor_roi(const std::vector<uint32_t> &width,
