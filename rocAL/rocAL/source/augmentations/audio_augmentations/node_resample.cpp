@@ -71,6 +71,7 @@ void ResampleNode::update_node()
 
     vx_status src_roi_status = vxCopyArrayRange((vx_array)_src_sample_rate_array, 0, _batch_size , sizeof(vx_float32), _inputs[0]->info().get_sample_rate()->data(), VX_WRITE_ONLY, VX_MEMORY_TYPE_HOST);
     vx_status resample_rate_status  = vxQueryTensor((vx_tensor)_resample_rate->handle(), VX_TENSOR_BUFFER_HOST, &_out_sample_rate_array, sizeof(vx_float32));
+    
     if((src_roi_status || resample_rate_status) != 0)
         THROW(" Failed calling vxCopyArrayRange with status in resample node : "+ TOSTR(src_roi_status) + TOSTR(resample_rate_status))
 
@@ -82,10 +83,14 @@ void ResampleNode::update_node()
         _src_frames[i] = audio_roi->at(i).x1;
         _src_channels[i] = audio_roi->at(i).y1;
         // TODO: Formula shared by Sampath - update the dst width & height later - calc ratio & then update it.
-        _scale_ratio = _out_sample_rate_array[i] / audio_input_sample_rate->at(i);
+        std::cerr << "\n _out_sample_rate_array[i] :" << _out_sample_rate_array[i];
+        std::cerr << "\n audio_input_sample_rate->at(i) : " << audio_input_sample_rate->at(i);
+        _scale_ratio = _out_sample_rate_array[i] / (float)audio_input_sample_rate->at(i);
         _resample_rate_vec[i] = _out_sample_rate_array[i];
         _dst_roi_width_vec[i] = (int)std::ceil(_scale_ratio * _src_frames[i]); 
         _dst_roi_height_vec[i] = _src_channels[i];
+        std::cerr << "_dst_roi_width_vec[i] : " <<_dst_roi_width_vec[i];
+        std::cerr << "_dst_roi_height_vec[i] :" << _dst_roi_height_vec[i];
         _max_dst_width = std::max(_max_dst_width, _dst_roi_width_vec[i]);
         std::cerr << "_max_dst_width : " << _max_dst_width;
     }
