@@ -984,7 +984,7 @@ std::vector<rocalTensorList *> MasterGraph::create_coco_meta_data_reader(const c
     {
         num_of_dims = 1;
         dims.resize(num_of_dims);
-        dims.at(0) = 120087;
+        dims.at(0) = MAX_ANCHORS;
         default_matches_info  = rocalTensorInfo(dims,
                                         _mem_type,
                                         RocalTensorDataType::INT32);
