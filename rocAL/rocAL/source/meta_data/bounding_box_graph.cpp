@@ -332,10 +332,10 @@ void BoundingBoxGraph::update_box_iou_matcher(std::vector<float> *anchors, pMeta
                 for(uint col = 0; col < iou_matrix[row].size(); col++) {
                     // if the element is found
                     for(uint idx = 0; idx < highest_foreground.size(); idx++) {
-                        if (iou_matrix[row][col] == highest_foreground[idx]) {
+                        if(fabs(iou_matrix[row][col] - highest_foreground[idx]) < 1e-6)
+                        {
                             gts.push_back(row);
                             preds.push_back(col);
-                            break;
                         }
                     }
                 }
