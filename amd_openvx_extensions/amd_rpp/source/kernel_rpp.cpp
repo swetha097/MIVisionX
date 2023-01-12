@@ -1931,7 +1931,7 @@ VX_API_ENTRY vx_node VX_API_CALL vxExtrppNode_GammaCorrection(vx_graph graph, vx
 //     return node;
 // }
 
-VX_API_ENTRY vx_node VX_API_CALL vxExtrppNode_CropMirrorNormalize(vx_graph graph, vx_tensor pSrc, vx_tensor srcROI, vx_tensor pDst, vx_array mean, vx_array std_dev, vx_array flip, vx_scalar inputLayout, vx_scalar outputLayout, vx_scalar roiType)
+VX_API_ENTRY vx_node VX_API_CALL vxExtrppNode_CropMirrorNormalize(vx_graph graph, vx_tensor pSrc, vx_tensor srcROI, vx_tensor pDst, vx_array multiplier, vx_array offset, vx_array flip, vx_scalar inputLayout, vx_scalar outputLayout, vx_scalar roiType)
 {
     vx_node node = NULL;
     vx_context context = vxGetContext((vx_reference)graph);
@@ -1943,8 +1943,8 @@ VX_API_ENTRY vx_node VX_API_CALL vxExtrppNode_CropMirrorNormalize(vx_graph graph
             (vx_reference)pSrc,
             (vx_reference)srcROI,
             (vx_reference)pDst,
-            (vx_reference)mean,
-            (vx_reference)std_dev,
+            (vx_reference)multiplier,
+            (vx_reference)offset,
             (vx_reference)flip,
             (vx_reference)inputLayout,
             (vx_reference)outputLayout,
