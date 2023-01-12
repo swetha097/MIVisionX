@@ -82,7 +82,7 @@ private:
     const unsigned BUFF_DEPTH;
     std::vector<size_t> _sub_buffer_size;
     unsigned _sub_buffer_count;
-    std::vector<size_t> _meta_data_sub_buffer_size;
+    std::vector<std::vector<size_t>> _meta_data_sub_buffer_size;
     unsigned _meta_data_sub_buffer_count;
     std::mutex _lock;
     std::condition_variable _wait_for_load;
