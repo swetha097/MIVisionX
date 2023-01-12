@@ -21,7 +21,6 @@ THE SOFTWARE.
 */
 
 #include "internal_publishKernels.h"
-#define NUM_OF_DIMS 5
 
 struct GammaCorrectionLocalData
 {
@@ -37,7 +36,7 @@ struct GammaCorrectionLocalData
     vx_size channels;
     Rpp32u *srcBatch_width;
     Rpp32u *srcBatch_height;
-    size_t in_tensor_dims[NUM_OF_DIMS]; // will have NHWC info
+    size_t in_tensor_dims[RPP_MAX_TENSOR_DIMS]; // will have NHWC info
 #if ENABLE_OPENCL
     cl_mem cl_pSrc;
     cl_mem cl_pDst;
@@ -91,7 +90,7 @@ static vx_status VX_CALLBACK validateGammaCorrection(vx_node node, const vx_refe
     vx_parameter output_param;
     size_t num_tensor_dims;
     vx_uint8 tensor_fixed_point_position;
-    size_t tensor_dims[NUM_OF_DIMS];
+    size_t tensor_dims[RPP_MAX_TENSOR_DIMS];
     vx_enum tensor_type;
     output_param = vxGetParameterByIndex(node, 3);
     STATUS_ERROR_CHECK(vxQueryParameter(output_param, VX_PARAMETER_ATTRIBUTE_REF, &output, sizeof(vx_tensor)));
@@ -167,7 +166,7 @@ static vx_status VX_CALLBACK initializeGammaCorrection(vx_node node, const vx_re
 #endif
     STATUS_ERROR_CHECK(vxCopyScalar((vx_scalar)parameters[6], &data->device_type, VX_READ_ONLY, VX_MEMORY_TYPE_HOST));
     STATUS_ERROR_CHECK(vxReadScalarValue((vx_scalar)parameters[5], &data->nbatchSize));
-    STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[0], VX_TENSOR_DIMS, data->in_tensor_dims, sizeof(vx_size) * NUM_OF_DIMS));
+    STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[0], VX_TENSOR_DIMS, data->in_tensor_dims, sizeof(vx_size) * RPP_MAX_TENSOR_DIMS));
     data->maxSrcDimensions.height = data->in_tensor_dims[1];
     data->maxSrcDimensions.width = data->in_tensor_dims[2];
     data->channels = data->in_tensor_dims[3];

@@ -22,7 +22,6 @@ THE SOFTWARE.
 
 #include "internal_publishKernels.h"
 #include "vx_ext_amd.h"
-#define NUM_OF_DIMS 4
 
 struct CropLocalData
 {
@@ -41,8 +40,8 @@ struct CropLocalData
     vx_uint32 *crop_h;
     vx_uint32 *crop_w;
     vx_bool is_packed;                  // if true NHWC else NCHW
-    size_t in_tensor_dims[NUM_OF_DIMS]; // will have NHWC info
-    size_t out_tensor_dims[NUM_OF_DIMS];
+    size_t in_tensor_dims[RPP_MAX_TENSOR_DIMS]; // will have NHWC info
+    size_t out_tensor_dims[RPP_MAX_TENSOR_DIMS];
     vx_uint32 channels;
     vx_uint32 batch_size;
     RpptROI *roi_tensor_Ptr;

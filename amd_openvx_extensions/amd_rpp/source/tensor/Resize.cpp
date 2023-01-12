@@ -21,7 +21,6 @@ THE SOFTWARE.
 */
 
 #include "internal_publishKernels.h"
-#define NUM_OF_DIMS 5
 
 struct ResizeLocalData
 {
@@ -42,8 +41,8 @@ struct ResizeLocalData
     RpptRoiType roiType;
     Rpp32s input_layout;
     Rpp32s output_layout;
-    size_t in_tensor_dims[NUM_OF_DIMS];
-    size_t out_tensor_dims[NUM_OF_DIMS];
+    size_t in_tensor_dims[RPP_MAX_TENSOR_DIMS];
+    size_t out_tensor_dims[RPP_MAX_TENSOR_DIMS];
     vx_enum in_tensor_type;
     vx_enum out_tensor_type;
     RpptImagePatch *dstImgSize;
@@ -160,7 +159,7 @@ static vx_status VX_CALLBACK validateResize(vx_node node, const vx_reference par
     vx_parameter output_param;
     size_t out_num_tensor_dims;
     vx_uint8 tensor_fixed_point_position;
-    size_t tensor_dims[NUM_OF_DIMS];
+    size_t tensor_dims[RPP_MAX_TENSOR_DIMS];
     vx_enum tensor_type;
     output_param = vxGetParameterByIndex(node, 2);
     STATUS_ERROR_CHECK(vxQueryParameter(output_param, VX_PARAMETER_ATTRIBUTE_REF, &output, sizeof(vx_tensor)));

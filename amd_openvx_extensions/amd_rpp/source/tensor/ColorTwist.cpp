@@ -21,7 +21,6 @@ THE SOFTWARE.
 */
 
 #include "internal_publishKernels.h"
-#define NUM_OF_DIMS 4
 
 struct ColorTwistLocalData
 {
@@ -42,8 +41,8 @@ struct ColorTwistLocalData
     RpptDesc dstDesc;
     RpptROI *roi_tensor_Ptr;
     RpptRoiType roiType;
-    size_t in_tensor_dims[NUM_OF_DIMS];
-    size_t out_tensor_dims[NUM_OF_DIMS];
+    size_t in_tensor_dims[RPP_MAX_TENSOR_DIMS];
+    size_t out_tensor_dims[RPP_MAX_TENSOR_DIMS];
     vx_enum in_tensor_type ;
     vx_enum out_tensor_type;
 

@@ -22,7 +22,6 @@ THE SOFTWARE.
 
 #include "internal_publishKernels.h"
 #include "vx_ext_amd.h"
-#define NUM_OF_DIMS 5
 
 struct ResizeMirrorNormalizeLocalData
 {
@@ -42,8 +41,8 @@ struct ResizeMirrorNormalizeLocalData
     vx_float32 *std_dev;
     vx_uint32 *mirror;
     vx_bool is_packed;                  // if true NHWC else NCHW
-    size_t in_tensor_dims[NUM_OF_DIMS]; // will have NHWC info
-    size_t out_tensor_dims[NUM_OF_DIMS];
+    size_t in_tensor_dims[RPP_MAX_TENSOR_DIMS]; // will have NHWC info
+    size_t out_tensor_dims[RPP_MAX_TENSOR_DIMS];
     vx_uint32 channels;
     vx_uint32 batch_size;
     RpptROI *roi_tensor_Ptr;
@@ -166,7 +165,7 @@ static vx_status VX_CALLBACK validateResizeMirrorNormalize(vx_node node, const v
     vx_parameter output_param;
     size_t num_tensor_dims;
     vx_uint8 tensor_fixed_point_position;
-    size_t tensor_dims[NUM_OF_DIMS];
+    size_t tensor_dims[RPP_MAX_TENSOR_DIMS];
     vx_enum tensor_type;
     output_param = vxGetParameterByIndex(node, 2);
     STATUS_ERROR_CHECK(vxQueryParameter(output_param, VX_PARAMETER_ATTRIBUTE_REF, &output, sizeof(vx_tensor)));
