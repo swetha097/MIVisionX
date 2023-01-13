@@ -161,6 +161,7 @@ Reader::Status TFRecordReader::folder_reading()
     std::vector<std::string> entry_name_list;
     std::string _full_path = _folder_path;
     auto ret = Reader::Status::OK;
+    std::cerr<<"\n check in tf_record reader.cpp ";
     while ((_entity = readdir(_sub_dir)) != nullptr)
     {
         std::string entry_name(_entity->d_name);
@@ -178,6 +179,7 @@ Reader::Status TFRecordReader::folder_reading()
         if (tf_record_reader() != Reader::Status::OK)
             WRN("FileReader ShardID [" + TOSTR(_shard_id) + "] File reader cannot access the storage at " + _folder_path);
     }
+    std::cerr<<"\n _batch_count   "<<_batch_count<<"\n _in_batch_read_count   "<<_in_batch_read_count<<"\n";
     if (_in_batch_read_count > 0 && _in_batch_read_count < _batch_count)
     {
         replicate_last_image_to_fill_last_shard();
@@ -282,21 +284,21 @@ Reader::Status TFRecordReader::read_image_names(std::ifstream &file_contents, ui
         _in_batch_read_count++;
         _in_batch_read_count = (_in_batch_read_count % _batch_count == 0) ? 0 : _in_batch_read_count;
         _last_file_name = file_path;
-        std::cerr<<"\n _last_file_name in file reader "<<_last_file_name<<"\n"<<fname;
+        // std::cerr<<"\n _last_file_name in file reader "<<_last_file_name<<"\n"<<fname;
         if(!_meta_data_reader || _meta_data_reader->exists(fname)) {
-            std::cerr<<"\nFile reader if condition check ";
+            // std::cerr<<"\nFile reader if condition check ";
         if (get_file_shard_id() != _shard_id)
         {
-            incremenet_file_id();
             _file_count_all_shards++;
-            file_contents.read((char *)&data_crc, sizeof(data_crc));
+            incremenet_file_id();
+            // file_contents.read((char *)&data_crc, sizeof(data_crc));
             if(!file_contents)
                 THROW("TFRecordReader: Error in reading TF records")
             continue;
         }
         _file_names.push_back(file_path);
-        incremenet_file_id();
         _file_count_all_shards++;
+        incremenet_file_id();
     }
         _single_feature = feature.at(_encoded_key);
         _last_file_size = _single_feature.bytes_list().value()[0].size();

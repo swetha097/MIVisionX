@@ -169,7 +169,7 @@ int test(int test_case, int reader_type, int pipeline_type, const char *path, co
 
     RocalTensor input1;
     RocalTensorLayout tensorLayout = RocalTensorLayout::ROCAL_NHWC;
-    RocalTensorOutputType tensorOutputType = RocalTensorOutputType::ROCAL_UINT8;
+    RocalTensorOutputType tensorOutputType = RocalTensorOutputType::ROCAL_FP32;
     RocalMetaData metadata_output;
 
     // The jpeg file loader can automatically select the best size to decode all images to that size
@@ -186,7 +186,7 @@ int test(int test_case, int reader_type, int pipeline_type, const char *path, co
         case 2: //coco detection
         {
             std::cout << ">>>>>>> Running COCO READER" << std::endl;
-            char const *json_path = "";
+            char const *json_path = "/media/audio_samples/MIVisionX-data/rocal_data/coco/coco_10_img/annotations/instances_train2017.json";
             if (strcmp(json_path, "") == 0)
             {
                 std::cout << "\n json_path has to be set in rocal_unit test manually";
@@ -395,108 +395,7 @@ int test(int test_case, int reader_type, int pipeline_type, const char *path, co
         int label_id[inputBatchSize];
         int numOfClasses = 0;
         int image_name_length[inputBatchSize];
-        switch(pipeline_type)
-        {
-            case 1: //classification pipeline
-            {
-                RocalTensorList labels = rocalGetImageLabels(handle);
-
-                for(int i = 0; i < labels->size(); i++)
-                {
-                    int * labels_buffer = (int *)(labels->at(i)->buffer());
-                    std::cerr << ">>>>> LABELS : " << labels_buffer[0] << "\t";
-                }
-            }
-            break;
-            case 2: //detection pipeline
-            {
-                RocalTensorList bbox_labels = rocalGetBoundingBoxLabel(handle);
-                RocalTensorList bbox_coords = rocalGetBoundingBoxCords(handle);
-                for(int i = 0; i < bbox_labels->size(); i++)
-                {
-                    int * labels_buffer = (int *)(bbox_labels->at(i)->buffer());
-                    float *bbox_buffer = (float *)(bbox_coords->at(i)->buffer());
-                    std::cerr << "\n>>>>> BBOX LABELS : ";
-                    for(int j = 0; j < bbox_labels->at(i)->info().dims().at(0); j++)
-                        std::cerr << labels_buffer[j] << " ";
-                    std::cerr << "\n>>>>> BBOXX : " <<bbox_coords->at(i)->info().dims().at(0) << " : \n";
-                    for(int j = 0, j4 = 0; j < bbox_coords->at(i)->info().dims().at(0); j++, j4 = j * 4)
-                        std::cerr << bbox_buffer[j4] << " " << bbox_buffer[j4 + 1] << " " << bbox_buffer[j4 + 2] << " " << bbox_buffer[j4 + 3] << "\n";
-
-                }
-            }
-            break;
-            case 3: //detection + segmentation pipeline
-            {
-                RocalTensorList bbox_labels = rocalGetBoundingBoxLabel(handle);
-                RocalTensorList bbox_coords = rocalGetBoundingBoxCords(handle);
-                std::vector<int> mask_count;
-                std::vector<int> polygon_size;
-                unsigned total_number_of_objects_per_batch = rocalGetBoundingBoxCount(handle);
-                mask_count.resize(total_number_of_objects_per_batch);
-                int mask_size = rocalGetMaskCount(handle, mask_count.data());
-                polygon_size.resize(mask_size);
-                RocalTensorList mask_data = rocalGetMaskCoordinates(handle, polygon_size.data());
-                
-                for(int i = 0; i < bbox_labels->size(); i++)
-                {
-                    int * labels_buffer = (int *)(bbox_labels->at(i)->buffer());
-                    float *bbox_buffer = (float *)(bbox_coords->at(i)->buffer());
-                    float *mask_buffer = (float *)(mask_data->at(i)->buffer());
-                    std::cerr << "\n>>>>> BBOX LABELS : ";
-                    for(int j = 0; j < bbox_labels->at(i)->info().dims().at(0); j++)
-                        std::cerr << labels_buffer[j] << " ";
-                    std::cerr << "\n>>>>> BBOXX : " <<bbox_coords->at(i)->info().dims().at(0) << " : \n";
-                    for(int j = 0, j4 = 0; j < bbox_coords->at(i)->info().dims().at(0); j++, j4 = j * 4)
-                        std::cerr << bbox_buffer[j4] << " " << bbox_buffer[j4 + 1] << " " << bbox_buffer[j4 + 2] << " " << bbox_buffer[j4 + 3] << "\n";
-                    std::cerr << "\n>>>>>>> MASK COORDS : ";
-                    int poly_cnt = 0;
-                    for(unsigned j = 0; j < total_number_of_objects_per_batch; j++)
-                    {
-                        std::cerr << "Mask idx : " << j << "Polygons : " <<  mask_count[j] << "[" ;
-                        for(int k = 0; k < mask_count[j]; k++)
-                        {
-                            std::cerr << "[";
-                            for(int l = 0; l < polygon_size[poly_cnt]; l++)
-                                std::cerr << mask_buffer[l] << ", ";
-                            std::cerr << "]";
-                            mask_buffer += polygon_size[poly_cnt++];
-                        }
-                        std::cerr << "]\n";
-                    }
-                }
-            }
-            break;
-#if 0
-            case 4: // keypoints pipeline
-            {
-                int size = inputBatchSize;
-                RocalJointsData *joints_data;
-                rocalGetJointsDataPtr(handle, &joints_data);
-                for (int i = 0; i < size; i++)
-                {
-                    std::cout << "ImageID: " << joints_data->image_id_batch[i] << std::endl;
-                    std::cout << "AnnotationID: " << joints_data->annotation_id_batch[i] << std::endl;
-                    std::cout << "ImagePath: " << joints_data->image_path_batch[i] << std::endl;
-                    std::cout << "Center: " << joints_data->center_batch[i][0] << " " << joints_data->center_batch[i][1] << std::endl;
-                    std::cout << "Scale: " << joints_data->scale_batch[i][0] << " " << joints_data->scale_batch[i][1] << std::endl;
-                    std::cout << "Score: " << joints_data->score_batch[i] << std::endl;
-                    std::cout << "Rotation: " << joints_data->rotation_batch[i] << std::endl;
-
-                    for (int k = 0; k < 17; k++)
-                    {
-                    std::cout << "x : " << joints_data->joints_batch[i][k][0] << " , y : " << joints_data->joints_batch[i][k][1] << " , v : " << joints_data->joints_visibility_batch[i][k][0] << std::endl;
-                    }
-                }
-            }
-            break;
-#endif
-            default:
-            {
-                std::cout << "Not a valid pipeline type ! Exiting!\n";
-                return -1;
-            }
-        }
+        
         auto last_colot_temp = rocalGetIntValue(color_temp_adj);
         rocalUpdateIntParameter(last_colot_temp + 1, color_temp_adj);
 
@@ -585,6 +484,127 @@ int test(int test_case, int reader_type, int pipeline_type, const char *path, co
         }
         mat_input.release();
         mat_output.release();
+        switch(pipeline_type)
+        {
+            case 1: //classification pipeline
+            {
+                RocalTensorList labels = rocalGetImageLabels(handle);
+
+                for(int i = 0; i < labels->size(); i++)
+                {
+                    int * labels_buffer = (int *)(labels->at(i)->buffer());
+                    std::cerr << ">>>>> LABELS : " << labels_buffer[0] << "\t";
+                }
+            }
+            break;
+            case 2: //detection pipeline
+            {
+                // RocalTensorList bbox_labels = rocalGetBoundingBoxLabel(handle);
+                // RocalTensorList bbox_coords = rocalGetBoundingBoxCords(handle);
+                // for(int i = 0; i < bbox_labels->size(); i++)
+                // {
+                //     int * labels_buffer = (int *)(bbox_labels->at(i)->buffer());
+                //     float *bbox_buffer = (float *)(bbox_coords->at(i)->buffer());
+                //     std::cerr << "\n>>>>> BBOX LABELS : ";
+                //     for(int j = 0; j < bbox_labels->at(i)->info().dims().at(0); j++)
+                //         std::cerr << labels_buffer[j] << " ";
+                //     std::cerr << "\n>>>>> BBOXX : " <<bbox_coords->at(i)->info().dims().at(0) << " : \n";
+                //     for(int j = 0, j4 = 0; j < bbox_coords->at(i)->info().dims().at(0); j++, j4 = j * 4)
+                //         std::cerr << bbox_buffer[j4] << " " << bbox_buffer[j4 + 1] << " " << bbox_buffer[j4 + 2] << " " << bbox_buffer[j4 + 3] << "\n";
+
+                // }
+                int img_size = rocalGetImageNameLen(handle, image_name_length);
+                char img_name[img_size];
+                rocalGetImageName(handle, img_name);
+                std::cerr << "\nPrinting image names of batch: " << img_name;
+                int bb_label_count[inputBatchSize];
+                int size = rocalGetBoundingBoxCount1(handle, bb_label_count);
+                for (int i = 0; i < (int)inputBatchSize; i++)
+                    std::cerr << "\n Number of box:  " << bb_label_count[i];
+                int bb_labels[size];
+                rocalGetBoundingBoxLabel1(handle, bb_labels);
+                float bb_coords[size * 4];
+                rocalGetBoundingBoxCords1(handle, bb_coords);
+                int img_sizes_batch[inputBatchSize * 2];
+                rocalGetImageSizes(handle, img_sizes_batch);
+                for (int i = 0; i < (int)inputBatchSize; i++)
+                {
+                    std::cout<<"\nwidth:"<<img_sizes_batch[i*2];
+                    std::cout<<"\nHeight:"<<img_sizes_batch[(i*2)+1];
+                }
+            }
+            break;
+            case 3: //detection + segmentation pipeline
+            {
+                RocalTensorList bbox_labels = rocalGetBoundingBoxLabel(handle);
+                RocalTensorList bbox_coords = rocalGetBoundingBoxCords(handle);
+                std::vector<int> mask_count;
+                std::vector<int> polygon_size;
+                unsigned total_number_of_objects_per_batch = rocalGetBoundingBoxCount(handle);
+                mask_count.resize(total_number_of_objects_per_batch);
+                int mask_size = rocalGetMaskCount(handle, mask_count.data());
+                polygon_size.resize(mask_size);
+                RocalTensorList mask_data = rocalGetMaskCoordinates(handle, polygon_size.data());
+                
+                for(int i = 0; i < bbox_labels->size(); i++)
+                {
+                    int * labels_buffer = (int *)(bbox_labels->at(i)->buffer());
+                    float *bbox_buffer = (float *)(bbox_coords->at(i)->buffer());
+                    float *mask_buffer = (float *)(mask_data->at(i)->buffer());
+                    std::cerr << "\n>>>>> BBOX LABELS : ";
+                    for(int j = 0; j < bbox_labels->at(i)->info().dims().at(0); j++)
+                        std::cerr << labels_buffer[j] << " ";
+                    std::cerr << "\n>>>>> BBOXX : " <<bbox_coords->at(i)->info().dims().at(0) << " : \n";
+                    for(int j = 0, j4 = 0; j < bbox_coords->at(i)->info().dims().at(0); j++, j4 = j * 4)
+                        std::cerr << bbox_buffer[j4] << " " << bbox_buffer[j4 + 1] << " " << bbox_buffer[j4 + 2] << " " << bbox_buffer[j4 + 3] << "\n";
+                    std::cerr << "\n>>>>>>> MASK COORDS : ";
+                    int poly_cnt = 0;
+                    for(unsigned j = 0; j < total_number_of_objects_per_batch; j++)
+                    {
+                        std::cerr << "Mask idx : " << j << "Polygons : " <<  mask_count[j] << "[" ;
+                        for(int k = 0; k < mask_count[j]; k++)
+                        {
+                            std::cerr << "[";
+                            for(int l = 0; l < polygon_size[poly_cnt]; l++)
+                                std::cerr << mask_buffer[l] << ", ";
+                            std::cerr << "]";
+                            mask_buffer += polygon_size[poly_cnt++];
+                        }
+                        std::cerr << "]\n";
+                    }
+                }
+            }
+            break;
+#if 0
+            case 4: // keypoints pipeline
+            {
+                int size = inputBatchSize;
+                RocalJointsData *joints_data;
+                rocalGetJointsDataPtr(handle, &joints_data);
+                for (int i = 0; i < size; i++)
+                {
+                    std::cout << "ImageID: " << joints_data->image_id_batch[i] << std::endl;
+                    std::cout << "AnnotationID: " << joints_data->annotation_id_batch[i] << std::endl;
+                    std::cout << "ImagePath: " << joints_data->image_path_batch[i] << std::endl;
+                    std::cout << "Center: " << joints_data->center_batch[i][0] << " " << joints_data->center_batch[i][1] << std::endl;
+                    std::cout << "Scale: " << joints_data->scale_batch[i][0] << " " << joints_data->scale_batch[i][1] << std::endl;
+                    std::cout << "Score: " << joints_data->score_batch[i] << std::endl;
+                    std::cout << "Rotation: " << joints_data->rotation_batch[i] << std::endl;
+
+                    for (int k = 0; k < 17; k++)
+                    {
+                    std::cout << "x : " << joints_data->joints_batch[i][k][0] << " , y : " << joints_data->joints_batch[i][k][1] << " , v : " << joints_data->joints_visibility_batch[i][k][0] << std::endl;
+                    }
+                }
+            }
+            break;
+#endif
+            default:
+            {
+                std::cout << "Not a valid pipeline type ! Exiting!\n";
+                return -1;
+            }
+        }
     }
 
     high_resolution_clock::time_point t2 = high_resolution_clock::now();

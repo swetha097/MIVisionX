@@ -53,13 +53,13 @@ void TFMetaDataReaderDetection::add(std::string image_name, BoundingBoxCords bb_
 
     static int count =0 ;
     // std::cerr
-    std::cerr<<" \nadd_image_name "<<image_name;
+    // std::cerr<<" \nadd_image_name "<<image_name;
     if(exists(image_name))
     {
         auto it = _map_content.find(image_name);
         it->second->get_bb_cords().push_back(bb_coords[0]);
         it->second->get_bb_labels().push_back(bb_labels[0]);
-        std::cerr<<"\n bb_labels[] in tf_meta_data_reader_detection.cpp "<<image_name <<"  "<<bb_labels[0];
+        // std::cerr<<"\n bb_labels[] in tf_meta_data_reader_detection.cpp "<<image_name <<"  "<<bb_labels[0];
         return;
     }
     pMetaDataBox info = std::make_shared<BoundingBox>(bb_coords, bb_labels, image_size);
@@ -85,9 +85,9 @@ void TFMetaDataReaderDetection::print_map_contents()
 }
 void TFMetaDataReaderDetection::lookup(const std::vector<std::string> &image_names)
 {
-    print_map_contents();
-
     std::cerr<<"\n lookup ";
+    // print_map_contents();
+
     if(image_names.empty())
     {
         WRN("No image names passed")

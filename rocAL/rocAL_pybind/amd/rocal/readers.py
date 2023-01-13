@@ -30,10 +30,10 @@ def coco(*inputs,file_root='', annotations_file='', bytes_per_sample_hint=0, dum
 def tfrecord(*inputs, path, user_feature_key_map, features, index_path="", reader_type=0, bytes_per_sample_hint=0, initial_fill=1024, lazy_init=False,
  num_shards=1, pad_last_batch=False, prefetch_queue_depth=1, preserve=False, random_shuffle=False, read_ahead=False, seed=1, shard_id=0, skip_cached_images=False, stick_to_shard=False, tensor_init_bytes=1048576,  device=None):
     labels=[]
-    b.setSeed(seed)
+    # b.setSeed(seed)
     if reader_type == 1:
         Pipeline._current_pipeline._reader = "TFRecordReaderDetection"
-        print("TF_detection")
+        print("TF_detection in readers.py ")
         kwargs_pybind = {"path": path, "is_output": True, "user_key_for_label": user_feature_key_map["image/class/label"], "user_key_for_text": user_feature_key_map["image/class/text"], "user_key_for_xmin": user_feature_key_map["image/object/bbox/xmin"],
                          "user_key_for_ymin": user_feature_key_map["image/object/bbox/ymin"], "user_key_for_xmax": user_feature_key_map["image/object/bbox/xmax"], "user_key_for_ymax": user_feature_key_map["image/object/bbox/ymax"], "user_key_for_filename": user_feature_key_map["image/filename"]}
         for key in features.keys():

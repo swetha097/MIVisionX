@@ -69,6 +69,7 @@ namespace rocal
 
     py::object wrapper_image_name(RocalContext context, int array_len)
     {
+        std::cerr<<"/n wrapper_image_name";
         py::array_t<char> array;
         auto buf = array.request();
         char *ptr = (char *)buf.ptr;
@@ -78,6 +79,18 @@ namespace rocal
         std::string s(ptr);
         free(ptr);
         return py::bytes(s);
+    }
+    py::object wrapper_one_hot_label_copy(RocalContext context, py::object p , unsigned numOfClasses, int dest)
+    {
+        auto ptr = ctypes_void_ptr(p);
+        // auto ptr = ptr_as_int.p()
+
+        // call pure C++ function
+        std::cerr<<"\n before  rocalGetOneHotImageLabels in pybind ";
+
+        rocalGetOneHotImageLabels(context, ptr, numOfClasses, dest);
+        std::cerr<<"\n after rocalGetOneHotImageLabels in pybind ";
+        return py::cast<py::none>(Py_None);
     }
 
     PYBIND11_MODULE(rocal_pybind, m)
@@ -153,12 +166,34 @@ namespace rocal
             output_tensor.copy_data(ptr);
             }
             )
+
             .def("copy_data_numpy", [](rocalTensor &output_tensor, py::array_t<unsigned char> array) {
                 auto buf = array.request();
                 unsigned char *ptr = (unsigned char *)buf.ptr;
                 std::cerr << "Copy DATA PY";
                 output_tensor.copy_data((void *)ptr);
-            })
+                std::cerr << "Copy DATA PY 11";
+
+            },
+            "idx"_a,
+            R"code(
+            Returns a rocal tensor at given position `i` in the rocalTensorlist.
+            )code",
+            py::keep_alive<0, 1>())
+
+            .def("copy_data_numpy1", [](rocalTensor &output_tensor, py::array_t<float> array) {
+                auto buf = array.request();
+                unsigned char *ptr = (unsigned char *)buf.ptr;
+                std::cerr << "Copy DATA PY";
+                output_tensor.copy_data((void *)ptr);
+                std::cerr << "Copy DATA PY 11";
+
+            },
+            "idx"_a,
+            R"code(
+            Returns a rocal tensor at given position `i` in the rocalTensorlist.
+            )code",
+            py::keep_alive<0, 1>())
             .def(
                 "at",
                 [](rocalTensor &output_tensor, uint idx)
@@ -318,6 +353,8 @@ namespace rocal
         m.def("setOutputImages", &rocalSetOutputs);
         m.def("labelReader", &rocalCreateLabelReader, py::return_value_policy::reference);
         m.def("COCOReader", &rocalCreateCOCOReader, py::return_value_policy::reference);
+        m.def("getOneHotEncodedLabels",&wrapper_one_hot_label_copy, py::return_value_policy::reference);
+
         // rocal_api_meta_data.h
         m.def("TFReader",&rocalCreateTFReader, py::return_value_policy::reference);
         m.def("TFReaderDetection",&rocalCreateTFReaderDetection, py::return_value_policy::reference);

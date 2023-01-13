@@ -225,7 +225,7 @@ class ROCALGenericImageIterator(object):
         return self
 
 class ROCALGenericIteratorDetection(object):
-    def __init__(self, pipeline, tensor_layout = types.NCHW, reverse_channels = False, multiplier = [1.0,1.0,1.0], offset = [0.0, 0.0, 0.0], tensor_dtype=types.FLOAT):
+    def __init__(self, pipeline, tensor_layout = types.NCHW, reverse_channels = False, multiplier = [1.0,1.0,1.0], offset = [0.0, 0.0, 0.0], tensor_dtype=types.UINT8):
         self.loader = pipeline
         self.tensor_format =tensor_layout
         self.multiplier = multiplier
@@ -233,16 +233,31 @@ class ROCALGenericIteratorDetection(object):
         self.reverse_channels = reverse_channels
         self.tensor_dtype = tensor_dtype
         print("INIT THE ITERATOR!!!!")
+        if(b.isEmpty(self.loader._handle)):
+            print("handle is empty ")
         self.len = b.getRemainingImages(self.loader._handle)
         print("remaining images ",self.len)
         if self.loader._name is None:
+            print("if self.loader._name is None:")
             self.loader._name = self.loader._reader
+            if self.loader._name is None:
+                print("after if self.loader._name is None:")
+
         
 
     def next(self):
         return self.__next__()
 
     def __next__(self):
+        print("in _next")
+        if self.loader._handle is None:
+            print("none check handle in tf.py empty ")
+        else:
+            print("none check - handle in tf.py full  ")
+        if(b.isEmpty(self.loader._handle)):
+            print("tf.py -- handle is empty ")
+        else:
+            print("tf.py --handle is full")
         if(b.isEmpty(self.loader._handle)):
             timing_info = b.getTimingInfo(self.loader._handle)
             print("Load     time ::",timing_info.load_time)
@@ -250,7 +265,7 @@ class ROCALGenericIteratorDetection(object):
             print("Process  time ::",timing_info.process_time)
             print("Transfer time ::",timing_info.transfer_time)
             raise StopIteration
-        print("self.loader.rocalRun()   ",self.loader.rocalRun())
+        # print("self.loader.rocalRun()   ",self.loader.rocalRun())
         print("IN NEXT FUNCTION !!!")
         if self.loader.rocalRun() != 0:
             print("if check ")
@@ -261,28 +276,41 @@ class ROCALGenericIteratorDetection(object):
 
         print(self.output_tensor_list)
         self.augmentation_count = len(self.output_tensor_list)
-        print("AUG COUNT", self.augmentation_count)
+        # print("AUG COUNT", self.augmentation_count)
         self.w = self.output_tensor_list[0].batch_width() #2000
         self.h = self.output_tensor_list[0].batch_height()  #2000
         self.batch_size = self.output_tensor_list[0].batch_size()  # 1
         self.color_format = self.output_tensor_list[0].color_format()  # 3
-        print(self.color_format)
-        print(self.batch_size , self.h , self.w, self.color_format )
-        self.out = np.zeros(( self.batch_size * self.augmentation_count, self.h, self.w, self.color_format),dtype="uint8")
+        # print(self.color_format)
+        # print(self.batch_size , self.h , self.w, self.color_format )
+        print("self.tensor_dtype  in tf.py ",self.tensor_dtype)
+        if self.tensor_dtype == types.FLOAT:
+            data_type="float32"
+        elif self.tensor_dtype == types.FLOAT16:
+            data_type="float16"
+        else:
+            data_type= "uint8"
+        print("data_type in tf.py ",data_type)
+        self.out = np.zeros(( self.batch_size * self.augmentation_count, self.h, self.w, self.color_format),dtype=data_type)
         # self.output = torch.empty((self.batch_size, self.h, self.w, self.color_format,), dtype=torch.uint8)
         # self.out = torch.permute(self.output, (0,3,1,2))
         if(self.loader._name == "TFRecordReaderDetection"):
+            print("in tf_detection")
             self.bbox_list =[]
             self.label_list=[]
             self.num_bboxes_list=[]
             
             # std::cerr<<"self.output_tensor_list[0] "<<self.output_tensor_list[0];
-            print("self.output_tensor_list[0]  ",self.output_tensor_list[0])
+            # print("self.output_tensor_list[0]  ",self.output_tensor_list[0])
+            print("before copy_data_numpy ")
             self.output_tensor_list[0].copy_data_numpy(self.out)
+            # self.output_tensor_list[0].copy_data(ctypes.c_void_p(self.out.data_ptr()))
+
+            # print("self.out ",self.out )
             print("after copy_data_numpy")
             #Count of labels/ bboxes in a batch
             self.labels=self.loader.rocalGetBoundingBoxLabel()
-            print("labels    ", self.labels)
+            # print("labels    ", self.labels)
             # print("labels    ", len(self.labels[0]))
             # print("labels    ", self.labels[1].shape)
             # print("labels    ", self.labels[2].shape)
@@ -308,7 +336,7 @@ class ROCALGenericIteratorDetection(object):
             count =0 # number of bboxes per image
             lab_list=[]
             sum_count=0 # sum of the no. of the bboxes
-            # print("self.batch_size",self.batch_size)
+            print("self.batch_size",self.batch_size)
             for i in range(self.batch_size):
                 count = len(self.labels[i])
                 lab_list.append(count)
@@ -326,7 +354,7 @@ class ROCALGenericIteratorDetection(object):
                 self.bbox_list.append(self.bb_2d_numpy)
                 sum_count = sum_count +count
                 # print("&&&",count)
-            # print("sum_count",lab_list)
+            print("sum_count",lab_list)
             self.target = self.bbox_list
             self.target1 = self.label_list
             max_cols = max([len(row) for batch in self.target for row in batch])
@@ -349,17 +377,27 @@ class ROCALGenericIteratorDetection(object):
             # print("self.l",self.l)
             # print("label_list",label_list)
         
-            # print("SELF.OUT",self.out)
+            # print("SELF.OUT",type(self.out))
+            print("self.out ,self.labels  ",self.out )
+            print( self.labels)
             if self.tensor_dtype == types.FLOAT:
                 return self.out.astype(np.float32), self.res, self.l,label_list
             elif self.tensor_dtype == types.FLOAT16:
                 return self.out.astype(np.float16), self.res, self.l,label_list
+            else: 
+                return self.out.astype(np.uint8), self.res, self.l,label_list
+
         elif (self.loader._name == "TFRecordReaderClassification"):
             print("CLASSIFICATION ITERATOR")
             print(self.output_tensor_list)
             self.output_tensor_list[0].copy_data_numpy(self.out)
+            print("tf_classification after copy numpy ")
             self.labels = self.loader.rocalGetImageLabels()#numpy
+            # self.loader.GetOneHotEncodedLabels_TF(self.labels)
+            # self.labels = np.reshape(self.labels, (-1, self.batch_size, self.loader._numOfClasses))
             # self.labels_tensor = torch.from_numpy(self.labels).type(torch.LongTensor)
+            pint("self.out ,self.labels  ",self.out )
+            print( self.labels)
             return (self.out),self.labels
     def reset(self):
         b.rocalResetLoaders(self.loader._handle)
@@ -389,6 +427,7 @@ class ROCALIterator(ROCALGenericIteratorDetection):
                  dynamic_shape=False,
                  last_batch_padded=False):
         pipe = pipelines
+        print("pipe._tensor_dtype ",pipe._tensor_dtype)
         super(ROCALIterator, self).__init__(pipe, tensor_layout = pipe._tensor_layout, tensor_dtype = pipe._tensor_dtype,
                                                             multiplier=pipe._multiplier, offset=pipe._offset)
 

@@ -79,9 +79,20 @@ class Pipeline(object):
                  exec_async=True, bytes_per_sample=0,
                  rocal_cpu=False, max_streams=-1, default_cuda_stream_priority=0, tensor_layout = types.NCHW, reverse_channels = False, multiplier = [1.0,1.0,1.0], offset = [0.0, 0.0, 0.0], tensor_dtype=types.FLOAT):
         if(rocal_cpu):
-            # print("comes to cpu")
+            print("comes to cpu")
+            print(" tensor_dtype ", tensor_dtype)
             self._handle = b.rocalCreate(
                 batch_size, types.CPU, device_id, num_threads,prefetch_queue_depth,types.FLOAT)
+            if self._handle is None:
+                print("none check handle in pipeline.cpp is empty ")
+            else:
+                print("none check - handle in pipeline.cpp created successfully ")
+            if(b.isEmpty(self._handle)):
+                print("pipeline.py -- handle is empty ")
+            else:
+                print("pipeline.py --handle is full")
+
+
         else:
             print("comes to gpu")
             self._handle = b.rocalCreate(
@@ -124,10 +135,16 @@ class Pipeline(object):
         self._current_pipeline = None
         self._reader = None
         self._define_graph_set = False
+        if self._handle is None:
+            print("2.handle in pipeline.cpp is empty ")
+        else:
+            print("2.handle in pipeline.cpp created successfully ")
+        print("self._tensor_dtype in pipeline.py ",self._tensor_dtype)
 
     def build(self):
         """Build the pipeline using rocalVerify call
         """
+        print("self._tensor_dtype in pipeline.py in build() ",self._tensor_dtype)
         status = b.rocalVerify(self._handle)
         if(status != types.OK):
             print("Verify graph failed")
@@ -137,6 +154,8 @@ class Pipeline(object):
     def rocalRun(self):
         """ Run the pipeline using rocalRun call
         """
+        print("self._tensor_dtype in pipeline.py in rocalRun() ",self._tensor_dtype)
+
         status = b.rocalRun(self._handle)
         if(status != types.OK):
             print("Rocal Run failed")
@@ -150,6 +169,7 @@ class Pipeline(object):
         raise NotImplementedError
 
     def get_handle(self):
+        print("get_handle() ")
         return self._handle
 
     def copyImage(self, array):

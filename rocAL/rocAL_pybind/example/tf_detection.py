@@ -129,8 +129,8 @@ def main():
     device_memory_padding = 211025920 if decoder_device == 'mixed' else 0
     host_memory_padding = 140544512 if decoder_device == 'mixed' else 0
     
-    pipe = Pipeline(batch_size=batch_size, num_threads=num_threads,device_id=device_id, seed=2, rocal_cpu=_rocal_cpu)
-
+    pipe = Pipeline(batch_size=batch_size, num_threads=num_threads,device_id=device_id, seed=2, rocal_cpu=_rocal_cpu, tensor_dtype=types.UINT8)
+    print(pipe)
     with pipe:
         inputs = fn.readers.tfrecord(path=data_path, index_path = "", reader_type=TFRecordReaderType, user_feature_key_map=featureKeyMap,random_shuffle=True,
             features={
@@ -144,43 +144,92 @@ def main():
                     'image/filename': tf.io.FixedLenFeature((), tf.string, "")
                     }
         )
+        print("after reader")
         jpegs = inputs["image/encoded"]
         # images = fn.decoders.image(jpegs, user_feature_key_map=featureKeyMap, output_type=types.RGB, path=data_path,random_shuffle=True)
         images = fn.decoders.image_random_crop(jpegs,user_feature_key_map=featureKeyMap, output_type=types.RGB,
                                                       random_aspect_ratio=[0.8, 1.25],
                                                       random_area=[0.1, 1.0],
                                                       num_attempts=100,path = data_path)
-        resized = fn.resize(images, resize_width=600, resize_height=600,rocal_tensor_output_type = types.UINT8, rocal_tensor_layout = types.NHWC)
-        # crop_image= fn.crop_mirror_normalize(images,crop_d=100,crop_h =100,device=1,rocal_tensor_output_type = types.UINT8, rocal_tensor_layout = types.NHWC)
+                                                      
+        print("after decoderrrr ")
+        
+        resized = fn.resize(images, resize_width=300, resize_height=300,rocal_tensor_output_type = types.UINT8, rocal_tensor_layout = types.NHWC)
+        print("before cmn ")
+        # cmnp = fn.crop_mirror_normalize(images, device="cpu",
+        #                                     rocal_tensor_layout = types.NHWC,
+        #                                     rocal_tensor_output_type = types.FLOAT,
+        #                                     output_dtype = types.FLOAT,
+        #                                     crop=[1200, 1200],
+        #                                     mirror=1,
+        #                                     image_type=types.RGB,
+        #                                     mean=[0.0],
+        #                                     std=[1.0],crop_d=3)
+        print("after cmn ")
         # bright = fn .brightness(images)
 
+
         pipe.set_outputs(resized)
+        # exit(0)
+
         # pipe.set_outputs(images)
 
         # Build the pipeline
+        print("before build ")
         pipe.build()
         # Dataloader
+        print("before iterator call ",pipe._tensor_dtype)
         imageIterator = ROCALIterator(pipe)
         cnt = 0
-        print("imageIterator   ",imageIterator)
-        for i, (images_array, bboxes_array, labels_array,num_bboxes_array) in enumerate(imageIterator, 0):
-            print("images_array",images_array)
-            # images_array = np.transpose(images_array, [0, 2, 3, 1])
-            # print("images_array1",images_array)
+        print("imageIterator in unittest    ",imageIterator)
+        if imageIterator is None:
+            print("image iterator is none ")
+        else: 
+            print("image iterator is  full ")
+    #     for i, (images_array, bboxes_array, labels_array,num_bboxes_array) in enumerate(imageIterator, 0):
+    #         print("images_array",images_array)
+    #         # images_array = np.transpose(images_array, [0, 2, 3, 1])
+    #         # print("images_array1",images_array)
+    #         print("ROCAL augmentation pipeline - Processing batch %d....." % i)
+
+    #     for element in list(range(batch_size)):
+    #         cnt = cnt + 1
+    #         print("image shape ",images_array[element].shape)
+    #         # if args.print_tensor:
+    #         print("Processing image %d....." % element)
+    #         features_dict = {
+    #             "image": images_array[element],
+    #             "true_image_shape": np.array([len(images_array[element]), len(images_array[element, 0]), len(images_array[element, 0, 0])])
+    #         }
+            
+    #         draw_patches(images_array[element],cnt,bboxes_array[element])
+
+    #         labels_dict = {
+    #             "num_groundtruth_boxes": num_bboxes_array[element],
+    #             "groundtruth_boxes": bboxes_array[element],
+    #             "groundtruth_classes": get_onehot(labels_array[element], numClasses),
+    #             "groundtruth_weights": get_weights(num_bboxes_array[element])
+    #         }
+    #         processed_tensors = (features_dict, labels_dict)
+    #         # if args.print_tensor:
+    #         #     print("\nPROCESSED_TENSORS:\n", processed_tensors)
+    #         draw_patches(images_array[element],cnt,bboxes_array[element])
+    #     print("\n\nPrinted first batch with", (batch_size), "images!")
+    #     # break
+    # imageIterator.reset()
+    print("unittest check ")
+    for i, (images_array, bboxes_array, labels_array, num_bboxes_array) in enumerate(imageIterator, 0):
+        # images_array = np.transpose(images_array, [0, 2, 3, 1])
         print("ROCAL augmentation pipeline - Processing batch %d....." % i)
 
         for element in list(range(batch_size)):
             cnt = cnt + 1
-            print("image shape ",images_array[element].shape)
-            # if args.print_tensor:
-            print("Processing image %d....." % element)
+            if 1:
+                print("Processing image %d....." % element)
             features_dict = {
                 "image": images_array[element],
                 "true_image_shape": np.array([len(images_array[element]), len(images_array[element, 0]), len(images_array[element, 0, 0])])
             }
-            
-            draw_patches(images_array[element],cnt,bboxes_array[element])
-
             labels_dict = {
                 "num_groundtruth_boxes": num_bboxes_array[element],
                 "groundtruth_boxes": bboxes_array[element],
@@ -188,16 +237,15 @@ def main():
                 "groundtruth_weights": get_weights(num_bboxes_array[element])
             }
             processed_tensors = (features_dict, labels_dict)
-            # if args.print_tensor:
-            #     print("\nPROCESSED_TENSORS:\n", processed_tensors)
+            if 1:
+                print("\nPROCESSED_TENSORS:\n", processed_tensors)
             draw_patches(images_array[element],cnt,bboxes_array[element])
         print("\n\nPrinted first batch with", (batch_size), "images!")
-        # break
     imageIterator.reset()
 
     print("###############################################    TF DETECTION    ###############################################")
     print("###############################################    SUCCESS              ###############################################")
-
+    exit(0)
     #     jpegs, labels = fn.readers.file(file_root=data_path)
     #     images = fn.decoders.image(jpegs,file_root=data_path, output_type=types.RGB, shard_id=0, num_shards=1, random_shuffle=False)
     #     brightend_images = fn.gamma_correction(images, rocal_tensor_layout=types.NHWC, rocal_tensor_output_type=types.UINT8)
