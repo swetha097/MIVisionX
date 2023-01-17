@@ -184,9 +184,13 @@ namespace rocal
             .def("copy_data_numpy1", [](rocalTensor &output_tensor, py::array_t<float> array) {
                 auto buf = array.request();
                 unsigned char *ptr = (unsigned char *)buf.ptr;
-                std::cerr << "Copy DATA PY";
+                std::cerr << "\nCopy DATA \n";
+                for (int i=0;i<100 ;i++)
+                {
+                    std::cerr<<(unsigned char *)(ptr);
+                }
                 output_tensor.copy_data((void *)ptr);
-                std::cerr << "Copy DATA PY 11";
+                std::cerr << "\nCopy DATA PY 11";
 
             },
             "idx"_a,

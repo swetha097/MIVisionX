@@ -79,13 +79,22 @@ def main():
         jpegs = inputs["image/encoded"]
         images = fn.decoders.image(jpegs, user_feature_key_map=featureKeyMap, output_type=types.RGB, path=data_path)
         resized = fn.resize(images, resize_width=300, resize_height=300, rocal_tensor_layout = types.NHWC, rocal_tensor_output_type = types.UINT8)
+        cmnp = fn.crop_mirror_normalize(resized, device="cpu",
+                                            rocal_tensor_layout = types.NHWC,
+                                            rocal_tensor_output_type = types.UINT8,
+                                            output_dtype = types.UINT8,
+                                            crop=[300, 100],
+                                            mirror=0,
+                                            image_type=types.RGB,
+                                            mean=[0.0],
+                                            std=[1.0],crop_d=3)
         # if(oneHotLabel == 1):
         #     print("check ")
         #     labels = inputs["image/class/label"]
         #     _ = fn.one_hot(labels, num_classes=1000)
         #     print("labels ",_)
         # bright = fn .brightness(resized)
-        pipe.set_outputs(resized)
+        pipe.set_outputs(cmnp)
 
         # Build the pipeline
         pipe.build()

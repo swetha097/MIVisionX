@@ -33,8 +33,8 @@ def resize(*inputs, bytes_per_sample_hint=0, image_type=0, interp_type=1, mag_fi
     return (resized_image)
 
 def crop_mirror_normalize(*inputs, bytes_per_sample_hint=0, crop=[0, 0], crop_d=0, crop_h=0, crop_pos_x=0.5, crop_pos_y=0.5, crop_pos_z=0.5,
-                          crop_w=0, image_type=0, mean=[0.0], mirror=1, output_dtype=types.FLOAT, rocal_tensor_layout =types.NCHW, rocal_tensor_output_type = types.FLOAT,output_layout=types.NCHW, pad_output=False,
-                          preserve=False, seed=1, std=[1.0], device=None):
+                          crop_w=0, image_type=0, mean=[0,0,0], mirror=0, output_dtype=types.FLOAT, rocal_tensor_layout =types.NCHW, rocal_tensor_output_type = types.FLOAT,output_layout=types.NCHW, pad_output=False,
+                          preserve=False, seed=1, std=[1,1,1], device=None):
 
     if(len(crop) == 2):
         crop_depth = crop_d
@@ -49,18 +49,18 @@ def crop_mirror_normalize(*inputs, bytes_per_sample_hint=0, crop=[0, 0], crop_d=
         crop_height = crop_h
         crop_width = crop_w
     #Set Seed
-    b.setSeed(seed)
+    # b.setSeed(seed)
 
     if isinstance(mirror,int):
         if(mirror == 0):
             mirror = b.CreateIntParameter(0)
         else:
             mirror = b.CreateIntParameter(1)
-
+    print("mirror in fn.py ",mirror)
     # pybind call arguments
-    kwargs_pybind = {"input_image0": inputs[0],"rocal_tensor_layout" : rocal_tensor_layout, "rocal_tensor_output_type" : rocal_tensor_output_type, "crop_depth":crop_depth, "crop_height":crop_height, "crop_width":crop_width, "start_x":1, "start_y":1, "start_z":1, "mean":mean, "std_dev":std,
+    kwargs_pybind = {"input_image0": inputs[0],"rocal_tensor_layout" : rocal_tensor_layout, "rocal_tensor_output_type" : rocal_tensor_output_type, "crop_depth":crop_depth, "crop_height":crop_height, "crop_width":crop_width, "start_x":0, "start_y":0, "start_z":0, "mean":mean, "std_dev":std,
                      "is_output": False, "mirror": mirror}
-    b.setSeed(seed)
+    # b.setSeed(seed)
     cmn = b.CropMirrorNormalize(Pipeline._current_pipeline._handle ,*(kwargs_pybind.values()))
     Pipeline._current_pipeline._tensor_layout = output_layout
     Pipeline._current_pipeline._tensor_dtype = output_dtype

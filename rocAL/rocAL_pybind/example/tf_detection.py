@@ -129,7 +129,7 @@ def main():
     device_memory_padding = 211025920 if decoder_device == 'mixed' else 0
     host_memory_padding = 140544512 if decoder_device == 'mixed' else 0
     
-    pipe = Pipeline(batch_size=batch_size, num_threads=num_threads,device_id=device_id, seed=2, rocal_cpu=_rocal_cpu, tensor_dtype=types.UINT8)
+    pipe = Pipeline(batch_size=batch_size, num_threads=num_threads,device_id=device_id, seed=2, rocal_cpu=_rocal_cpu, tensor_dtype=types.FLOAT)
     print(pipe)
     with pipe:
         inputs = fn.readers.tfrecord(path=data_path, index_path = "", reader_type=TFRecordReaderType, user_feature_key_map=featureKeyMap,random_shuffle=True,
@@ -154,22 +154,22 @@ def main():
                                                       
         print("after decoderrrr ")
         
-        resized = fn.resize(images, resize_width=300, resize_height=300,rocal_tensor_output_type = types.UINT8, rocal_tensor_layout = types.NHWC)
+        resized = fn.resize(images, resize_width=400, resize_height=400,rocal_tensor_output_type = types.UINT8, rocal_tensor_layout = types.NHWC)
         print("before cmn ")
-        # cmnp = fn.crop_mirror_normalize(images, device="cpu",
-        #                                     rocal_tensor_layout = types.NHWC,
-        #                                     rocal_tensor_output_type = types.FLOAT,
-        #                                     output_dtype = types.FLOAT,
-        #                                     crop=[1200, 1200],
-        #                                     mirror=1,
-        #                                     image_type=types.RGB,
-        #                                     mean=[0.0],
-        #                                     std=[1.0],crop_d=3)
+        cmnp = fn.crop_mirror_normalize(resized, device="cpu",
+                                            rocal_tensor_layout = types.NHWC,
+                                            rocal_tensor_output_type = types.FLOAT,
+                                            output_dtype = types.FLOAT,
+                                            crop=[250, 250],
+                                            mirror=0,
+                                            image_type=types.RGB,
+                                            mean=[0,0,0],
+                                            std=[1,1,1],crop_d=3)
         print("after cmn ")
         # bright = fn .brightness(images)
 
 
-        pipe.set_outputs(resized)
+        pipe.set_outputs(cmnp)
         # exit(0)
 
         # pipe.set_outputs(images)
@@ -221,7 +221,7 @@ def main():
     for i, (images_array, bboxes_array, labels_array, num_bboxes_array) in enumerate(imageIterator, 0):
         # images_array = np.transpose(images_array, [0, 2, 3, 1])
         print("ROCAL augmentation pipeline - Processing batch %d....." % i)
-
+        print("shape of image  ", images_array.shape )
         for element in list(range(batch_size)):
             cnt = cnt + 1
             if 1:
@@ -241,6 +241,7 @@ def main():
                 print("\nPROCESSED_TENSORS:\n", processed_tensors)
             draw_patches(images_array[element],cnt,bboxes_array[element])
         print("\n\nPrinted first batch with", (batch_size), "images!")
+        break
     imageIterator.reset()
 
     print("###############################################    TF DETECTION    ###############################################")

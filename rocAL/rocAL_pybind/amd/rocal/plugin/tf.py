@@ -291,6 +291,12 @@ class ROCALGenericIteratorDetection(object):
         else:
             data_type= "uint8"
         print("data_type in tf.py ",data_type)
+        print(" self.augmentation_count in tf.py ", self.augmentation_count)
+        print("self.batch_size * self.augmentation_count in tf.py ", self.batch_size * self.augmentation_count)
+        print("self.h in tf.py ", self.h)
+        print("self.w in tf.py ", self.w)
+        print("self.color_format in tf.py ", self.color_format)
+
         self.out = np.zeros(( self.batch_size * self.augmentation_count, self.h, self.w, self.color_format),dtype=data_type)
         # self.output = torch.empty((self.batch_size, self.h, self.w, self.color_format,), dtype=torch.uint8)
         # self.out = torch.permute(self.output, (0,3,1,2))
@@ -303,7 +309,7 @@ class ROCALGenericIteratorDetection(object):
             # std::cerr<<"self.output_tensor_list[0] "<<self.output_tensor_list[0];
             # print("self.output_tensor_list[0]  ",self.output_tensor_list[0])
             print("before copy_data_numpy ")
-            self.output_tensor_list[0].copy_data_numpy(self.out)
+            self.output_tensor_list[0].copy_data_numpy1(self.out)
             # self.output_tensor_list[0].copy_data(ctypes.c_void_p(self.out.data_ptr()))
 
             # print("self.out ",self.out )
@@ -396,7 +402,7 @@ class ROCALGenericIteratorDetection(object):
             # self.loader.GetOneHotEncodedLabels_TF(self.labels)
             # self.labels = np.reshape(self.labels, (-1, self.batch_size, self.loader._numOfClasses))
             # self.labels_tensor = torch.from_numpy(self.labels).type(torch.LongTensor)
-            pint("self.out ,self.labels  ",self.out )
+            print("self.out ,self.labels  ",self.out )
             print( self.labels)
             return (self.out),self.labels
     def reset(self):

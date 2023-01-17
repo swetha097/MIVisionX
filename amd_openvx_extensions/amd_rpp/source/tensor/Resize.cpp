@@ -222,6 +222,8 @@ static vx_status VX_CALLBACK processResize(vx_node node, const vx_reference *par
     {
         
         refreshResize(node, parameters, num, data);
+        std::cerr<<"\ndata->src_desc_ptr in openvx in resize "<<data->src_desc_ptr->n<<"  "<<data->src_desc_ptr->h<<"  "<<data->src_desc_ptr->w<<"  "<<data->src_desc_ptr->c<<"  "<<data->src_desc_ptr->strides.nStride<<"  "<<data->src_desc_ptr->strides.hStride<<"  "<<data->src_desc_ptr->strides.wStride<<"  "<<data->src_desc_ptr->strides.cStride<<"\n";
+        std::cerr<<"\ndata->dst_desc_ptr in openvx in resize "<<data->dst_desc_ptr->n<<"  "<<data->dst_desc_ptr->h<<"  "<<data->dst_desc_ptr->w<<"  "<<data->dst_desc_ptr->c<<"  "<<data->dst_desc_ptr->strides.nStride<<"  "<<data->dst_desc_ptr->strides.hStride<<"  "<<data->dst_desc_ptr->strides.wStride<<"  "<<data->dst_desc_ptr->strides.cStride<<"\n";
         rpp_status = rppt_resize_host(data->pSrc, data->src_desc_ptr, data->pDst, data->dst_desc_ptr, data->dstImgsize, data->interpolation_type, data->roi_tensor_Ptr, data->roiType, data->rppHandle);
         return_status = (rpp_status == RPP_SUCCESS) ? VX_SUCCESS : VX_FAILURE;
     }
