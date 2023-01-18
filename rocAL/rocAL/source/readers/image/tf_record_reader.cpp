@@ -78,8 +78,6 @@ Reader::Status TFRecordReader::initialize(ReaderConfig desc)
     _shuffle = desc.shuffle();
     _record_name_prefix = desc.file_prefix();
     _meta_data_reader = desc.meta_data_reader();
-
-
     _encoded_key = _feature_key_map.at("image/encoded");
     _filename_key = _feature_key_map.at("image/filename");
     ret = folder_reading();
