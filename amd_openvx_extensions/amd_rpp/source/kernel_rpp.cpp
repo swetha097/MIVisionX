@@ -2162,26 +2162,40 @@ int getEnvironmentVariable(const char *name)
     }
     return -1;
 }
+#endif
 
 vx_status createGraphHandle(vx_node node, RPPCommonHandle **pHandle)
 {
+    std::cerr << "CREATE GRAPH HANDLE\t";
     RPPCommonHandle *handle = NULL;
     STATUS_ERROR_CHECK(vxGetModuleHandle(node, OPENVX_KHR_RPP, (void **)&handle));
+
     if (handle)
     {
+        std::cerr << "increment\n";
+        
         handle->count++;
     }
     else
     {
+        std::cerr << "new\t";
+        
         handle = new RPPCommonHandle;
         memset(handle, 0, sizeof(*handle));
-        const char *searchEnvName = "NN_MIOPEN_SEARCH";
-        int isEnvSet = getEnvironmentVariable(searchEnvName);
-        if (isEnvSet > 0)
-            handle->exhaustiveSearch = true;
+        // const char *searchEnvName = "NN_MIOPEN_SEARCH";
+        // int isEnvSet = getEnvironmentVariable(searchEnvName);
+        // if (isEnvSet > 0)
+        handle->exhaustiveSearch = true;
 
         handle->count = 1;
+#if ENABLE_OPENCL
         STATUS_ERROR_CHECK(vxQueryNode(node, VX_NODE_ATTRIBUTE_AMD_OPENCL_COMMAND_QUEUE, &handle->cmdq, sizeof(handle->cmdq)));
+#elif ENABLE_HIP
+        STATUS_ERROR_CHECK(vxQueryNode(node, VX_NODE_ATTRIBUTE_AMD_HIP_STREAM, &handle->hipstream, sizeof(handle->hipstream)));
+        // rppCreateWithStreamAndBatchSize(&handle->rppHandle, handle->hipstream, RPP_MAX_BATCH_SIZE);
+#endif
+        rppCreateWithBatchSize(&handle->rppHandle, RPP_MAX_BATCH_SIZE);
+        STATUS_ERROR_CHECK(vxSetModuleHandle(node, OPENVX_KHR_RPP, handle));
     }
     *pHandle = handle;
     return VX_SUCCESS;
@@ -2192,13 +2206,19 @@ vx_status releaseGraphHandle(vx_node node, RPPCommonHandle *handle)
     handle->count--;
     if (handle->count == 0)
     {
+        std::cerr << "HANDLE destroyed!!\n";
         //TBD: release miopen_handle
+#if ENABLE_HIP
+        // rppDestroyGPU(handle->rppHandle);
+#endif
+        rppDestroyHost(handle->rppHandle);
+
         delete handle;
         STATUS_ERROR_CHECK(vxSetModuleHandle(node, OPENVX_KHR_RPP, NULL));
     }
     return VX_SUCCESS;
 }
-#endif
+
 
 void fillDescriptionPtrfromDims(RpptDescPtr &descPtr, Rpp32s layout, size_t *tensorDims) {
     switch(layout) {

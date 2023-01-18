@@ -60,7 +60,7 @@ struct RPPCommonHandle {
 #elif ENABLE_HIP
     hipStream_t hipstream;
 #endif
-    void* cpuHandle = NULL;
+    rppHandle_t rppHandle;
     int count;
     bool exhaustiveSearch;
 };
