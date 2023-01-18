@@ -446,18 +446,6 @@ ROCAL_API_CALL rocalCropMirrorNormalize(RocalContext p_context, RocalTensor p_in
                                     std::vector<float> &std_dev, bool is_output, RocalIntParam p_mirror)
 {
     rocalTensor* output = nullptr;
-    std::cerr<<"\n rocal_tensor_layout in rocal_api_augmentation.cpp"<<rocal_tensor_layout;
-    std::cerr<<"\n rocal_tensor_output_type in rocal_api_augmentation.cpp"<<rocal_tensor_output_type;
-    std::cerr<<"\n crop_depth in rocal_api_augmentation.cpp "<<crop_depth;
-    std::cerr<<"\n crop_height in rocal_api_augmentation.cpp "<<crop_height;
-    std::cerr<<"\n crop_width in rocal_api_augmentation.cpp "<<crop_width;
-    std::cerr<<"\n start_x in rocal_api_augmentation.cpp "<<start_x;
-    std::cerr<<"\n start_y in rocal_api_augmentation.cpp "<<start_y;
-    std::cerr<<"\n start_z in rocal_api_augmentation.cpp "<<start_z;
-    std::cerr<<"\n p_mirror in rocal_api_augmentation.cpp "<<p_mirror;
-    std::cerr<<"\n mean in rocal_api_augmentation.cpp "<<mean[0];
-    std::cerr<<"\n std_dev in rocal_api_augmentation.cpp "<<std_dev[0];
-
     auto context = static_cast<Context*>(p_context);
     auto input = static_cast<rocalTensor*>(p_input);
     auto mirror = static_cast<IntParam *>(p_mirror);

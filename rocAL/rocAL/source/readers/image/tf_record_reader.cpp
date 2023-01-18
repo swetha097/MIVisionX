@@ -78,7 +78,6 @@ Reader::Status TFRecordReader::initialize(ReaderConfig desc)
     _shuffle = desc.shuffle();
     _record_name_prefix = desc.file_prefix();
     _meta_data_reader = desc.meta_data_reader();
-    std::cerr<<"\n_meta_data_reader in tf "<<_meta_data_reader;
 
 
     _encoded_key = _feature_key_map.at("image/encoded");
@@ -154,20 +153,17 @@ void TFRecordReader::reset()
 
 Reader::Status TFRecordReader::folder_reading()
 {
-    std::cerr<<"\n_folder_path "<<_folder_path.c_str();
     if ((_sub_dir = opendir(_folder_path.c_str())) == nullptr)
         THROW("FileReader ShardID [" + TOSTR(_shard_id) + "] ERROR: Failed opening the directory at " + _folder_path);
 
     std::vector<std::string> entry_name_list;
     std::string _full_path = _folder_path;
     auto ret = Reader::Status::OK;
-    std::cerr<<"\n check in tf_record reader.cpp ";
     while ((_entity = readdir(_sub_dir)) != nullptr)
     {
         std::string entry_name(_entity->d_name);
         if (strcmp(_entity->d_name, ".") == 0 || strcmp(_entity->d_name, "..") == 0)
             continue;
-        std::cerr<<"\n _entity->d_name "<<_entity->d_name;
         entry_name_list.push_back(entry_name);
 
     }
@@ -179,7 +175,6 @@ Reader::Status TFRecordReader::folder_reading()
         if (tf_record_reader() != Reader::Status::OK)
             WRN("FileReader ShardID [" + TOSTR(_shard_id) + "] File reader cannot access the storage at " + _folder_path);
     }
-    std::cerr<<"\n _batch_count   "<<_batch_count<<"\n _in_batch_read_count   "<<_in_batch_read_count<<"\n";
     if (_in_batch_read_count > 0 && _in_batch_read_count < _batch_count)
     {
         replicate_last_image_to_fill_last_shard();
@@ -192,7 +187,6 @@ Reader::Status TFRecordReader::folder_reading()
 }
 void TFRecordReader::replicate_last_image_to_fill_last_shard()
 {
-    // std::cerr<<"\n Replicate last image";
     for (size_t i = _in_batch_read_count; i < _batch_count; i++)
     {
         _file_names.push_back(_last_file_name);
@@ -220,7 +214,6 @@ Reader::Status TFRecordReader::tf_record_reader()
             THROW("TFRecordReader: Failed to open file " + fname);
         file_contents.seekg(0, std::ifstream::end);
         file_size = file_contents.tellg();
-        // std::cerr<<"\n length of the file:: "<<length<<std::endl;
         file_contents.seekg(0, std::ifstream::beg);
         auto ret = read_image_names(file_contents, file_size);
         if (ret != Reader::Status::OK)
@@ -284,9 +277,7 @@ Reader::Status TFRecordReader::read_image_names(std::ifstream &file_contents, ui
         _in_batch_read_count++;
         _in_batch_read_count = (_in_batch_read_count % _batch_count == 0) ? 0 : _in_batch_read_count;
         _last_file_name = file_path;
-        // std::cerr<<"\n _last_file_name in file reader "<<_last_file_name<<"\n"<<fname;
         if(!_meta_data_reader || _meta_data_reader->exists(fname)) {
-            // std::cerr<<"\nFile reader if condition check ";
         if (get_file_shard_id() != _shard_id)
         {
             _file_count_all_shards++;
@@ -327,7 +318,6 @@ Reader::Status TFRecordReader::read_image(unsigned char *buff, std::string file_
     {
         THROW("ERROR: Given name not present in the map" + file_name)
     }
-    // std::cerr<<"\n image present at loc:: "<<it->second;
     file_contents.seekg(it->second, std::ifstream::beg);
     uint64_t data_length;
     uint32_t length_crc, data_crc;

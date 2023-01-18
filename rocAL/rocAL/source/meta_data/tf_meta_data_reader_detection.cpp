@@ -49,11 +49,7 @@ bool TFMetaDataReaderDetection::exists(const std::string& _image_name)
 
 void TFMetaDataReaderDetection::add(std::string image_name, BoundingBoxCords bb_coords, BoundingBoxLabels bb_labels, ImgSize image_size)
 {
-    // std::cerr<<"\n add  ";
-
     static int count =0 ;
-    // std::cerr
-    // std::cerr<<" \nadd_image_name "<<image_name;
     if(exists(image_name))
     {
         auto it = _map_content.find(image_name);
@@ -85,7 +81,6 @@ void TFMetaDataReaderDetection::print_map_contents()
 }
 void TFMetaDataReaderDetection::lookup(const std::vector<std::string> &image_names)
 {
-    std::cerr<<"\n lookup ";
     // print_map_contents();
 
     if(image_names.empty())
@@ -103,16 +98,12 @@ void TFMetaDataReaderDetection::lookup(const std::vector<std::string> &image_nam
  
         if(_map_content.end() == it)
         {
-            std::cerr<<"\n tf_meta_data_reader_detection.cpp if check ";
-            std::cerr<<"\nimage_name checking  "<<image_name;
             _output->get_bb_cords_batch()[i] = {{0, 0, 0, 0}};
             _output->get_bb_labels_batch()[i] = {{0}};
             _output->get_img_sizes_batch()[i] = {0, 0};
         }
         else
         {
-            std::cerr<<"\n tf_meta_data_reader_detection.cpp else  check ";
-
             _output->get_bb_cords_batch()[i] = it->second->get_bb_cords();
             _output->get_bb_labels_batch()[i] = it->second->get_bb_labels();
             _output->get_img_sizes_batch()[i] = it->second->get_img_size();
@@ -123,25 +114,6 @@ void TFMetaDataReaderDetection::lookup(const std::vector<std::string> &image_nam
         }
     }
 }
-
-// void TFMetaDataReaderDetection::print_map_contents()
-// {
-//     std::cerr<<"\nprint_map_contents ";
-//     BoundingBoxCords bb_coords;
-//     BoundingBoxLabels bb_labels;
-
-//     std::cerr << "\nMap contents: \n";
-//     for (auto& elem : _map_content) {
-//         std::cerr << "Name :\t " << elem.first;
-//         bb_coords = elem.second->get_bb_cords() ;
-//         bb_labels = elem.second->get_bb_labels();
-//         std::cerr << "\nsize of the element  : "<< bb_coords.size() << std::endl;
-//         for(unsigned int i = 0; i < bb_coords.size(); i++){
-//             std::cerr << " l : " << bb_coords[i].l << " t: :" << bb_coords[i].t << " r : " << bb_coords[i].r << " b: :" << bb_coords[i].b << std::endl;
-//             std::cerr  << "Label Id : " << bb_labels[i] << std::endl;
-//         }
-//     }
-// }
 
 void TFMetaDataReaderDetection::read_record(std::ifstream &file_contents, uint file_size, std::vector<std::string> &_image_name,
     std::string user_label_key, std::string user_text_key, 

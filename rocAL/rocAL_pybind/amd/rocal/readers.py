@@ -33,7 +33,6 @@ def tfrecord(*inputs, path, user_feature_key_map, features, index_path="", reade
     # b.setSeed(seed)
     if reader_type == 1:
         Pipeline._current_pipeline._reader = "TFRecordReaderDetection"
-        print("TF_detection in readers.py ")
         kwargs_pybind = {"path": path, "is_output": True, "user_key_for_label": user_feature_key_map["image/class/label"], "user_key_for_text": user_feature_key_map["image/class/text"], "user_key_for_xmin": user_feature_key_map["image/object/bbox/xmin"],
                          "user_key_for_ymin": user_feature_key_map["image/object/bbox/ymin"], "user_key_for_xmax": user_feature_key_map["image/object/bbox/xmax"], "user_key_for_ymax": user_feature_key_map["image/object/bbox/ymax"], "user_key_for_filename": user_feature_key_map["image/filename"]}
         for key in features.keys():
@@ -45,7 +44,6 @@ def tfrecord(*inputs, path, user_feature_key_map, features, index_path="", reade
         tf_meta_data = b.TFReaderDetection(Pipeline._current_pipeline._handle ,*(kwargs_pybind.values()))
     else:
         Pipeline._current_pipeline._reader = "TFRecordReaderClassification"
-        print("TF_classification")
         kwargs_pybind = {"path": path, "is_output": True, "user_key_for_label": user_feature_key_map[
             "image/class/label"], "user_key_for_filename": user_feature_key_map["image/filename"]}
         for key in features.keys():
@@ -55,12 +53,10 @@ def tfrecord(*inputs, path, user_feature_key_map, features, index_path="", reade
                     print("image/encoded\nimage/class/label\n")
                     exit()
                 else:
-                    print(" continue   ")
+                    print(" continue ")
         tf_meta_data = b.TFReader(Pipeline._current_pipeline._handle ,*(kwargs_pybind.values()))
     features["image/encoded"] = tf_meta_data
     features["image/class/label"] = labels
-    print("features[image/encoded]  ",features["image/encoded"])
-    print("features[image/class/label]  ",features["image/class/label"])
     return features
 
 

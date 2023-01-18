@@ -74,7 +74,6 @@ static vx_status VX_CALLBACK refreshCropMirrorNormalize(vx_node node, const vx_r
         data->roi_tensor_ptr[i].xywhROI.xy.y = data->start_y[i];
         data->roi_tensor_ptr[i].xywhROI.roiWidth =data->crop_w[i];
         data->roi_tensor_ptr[i].xywhROI.roiHeight =data->crop_h[i];
-        std::cerr<<"\ndata->roi_tensor_ptr[i].xywhROI.xy.x  "<<data->roi_tensor_ptr[i].xywhROI.xy.x<<"  "<<data->roi_tensor_ptr[i].xywhROI.xy.y<<"  "<<data->roi_tensor_ptr[i].xywhROI.roiWidth<<"  "<<data->roi_tensor_ptr[i].xywhROI.roiHeight<<"\n";
     }
     if(data->layout == 2 || data->layout == 3) // For NFCHW and NFHWC formats
     {
@@ -205,33 +204,8 @@ static vx_status VX_CALLBACK processCropMirrorNormalize(vx_node node, const vx_r
     else if(data->device_type == AGO_TARGET_AFFINITY_CPU)
     {
         refreshCropMirrorNormalize(node, parameters, num, data);
-        std::cerr<<"\ndata->src_desc_ptr in openvx "<<data->src_desc_ptr->n<<"  "<<data->src_desc_ptr->h<<"  "<<data->src_desc_ptr->w<<"  "<<data->src_desc_ptr->c<<"  "<<data->src_desc_ptr->strides.nStride<<"  "<<data->src_desc_ptr->strides.hStride<<"  "<<data->src_desc_ptr->strides.wStride<<"  "<<data->src_desc_ptr->strides.cStride<<"\n";
-        std::cerr<<"\ndata->dst_desc_ptr in openvx "<<data->dst_desc_ptr->n<<"  "<<data->dst_desc_ptr->h<<"  "<<data->dst_desc_ptr->w<<"  "<<data->dst_desc_ptr->c<<"  "<<data->dst_desc_ptr->strides.nStride<<"  "<<data->dst_desc_ptr->strides.hStride<<"  "<<data->dst_desc_ptr->strides.wStride<<"  "<<data->dst_desc_ptr->strides.cStride<<"\n";
-        std::cerr<<"\n mirror val in openvx "<< data->mirror[0];
-        std::cerr<<"\n data->roiType in openvx "<<data->roiType;
-        std::cerr<<"\n data->pSrc \n";
-        std::cerr << "data->pSrc\n\n";
-        if (1) {
-            float *temp1 = ((float *)calloc(100, sizeof(float)));
-            for (int i = 0; i < 100; i++) {
-                temp1[i] = (float)*((unsigned char *)(data->pSrc) + i);
-                std::cout << temp1[i] << " ";
-            }
-        }
-        // data->src_desc_ptr->strides.cStride=3;
-        // data->dst_desc_ptr->strides.cStride=3;
         rpp_status = rppt_crop_mirror_normalize_host(data->pSrc, data->src_desc_ptr, data->pDst, data->dst_desc_ptr, data->mean, data->std_dev,
                                                      data->mirror, data->roi_tensor_ptr,data->roiType, data->rppHandle);
-        std::cerr << "after rpp call \n\n";
-        
-        std::cerr << "data->pDst\n\n";
-        if (1) {
-            float *temp1 = ((float *)calloc(100, sizeof(float)));
-            for (int i = 0; i < 100; i++) {
-                temp1[i] = (float)*((unsigned char *)(data->pDst) + i);
-                std::cout << temp1[i] << " ";
-            }
-        }
         return_status = (rpp_status == RPP_SUCCESS) ? VX_SUCCESS : VX_FAILURE;
     }
     return return_status;

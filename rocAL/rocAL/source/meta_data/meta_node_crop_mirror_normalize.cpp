@@ -51,7 +51,6 @@ void CropMirrorNormalizeMetaNode::update_parameters(MetaDataBatch* input_meta_da
     vxCopyArrayRange((vx_array)_mirror, 0, _batch_size, sizeof(uint),_mirror_val.data(), VX_READ_ONLY, VX_MEMORY_TYPE_HOST);
     for(int i = 0; i < _batch_size; i++)
     {
-        std::cerr<<"\nfor loop checking in meta_nodecrop_mirror_normalize.cpp  "<<i<<"\n";
         auto bb_count = input_meta_data->get_bb_labels_batch()[i].size();
         int labels_buf[bb_count];
         BoundingBoxCords coords_buf;
@@ -62,16 +61,15 @@ void CropMirrorNormalizeMetaNode::update_parameters(MetaDataBatch* input_meta_da
         BoundingBoxCord temp_box = {0, 0, 1, 1};
         BoundingBoxLabels bb_labels;
         BoundingBoxCord crop_box;
-        std::cout<<" \nbefore ---CROP Co-ordinates in CMN: lxtxrxb::\t"<<crop_box.l<<" x "<<crop_box.t<<" x "<<crop_box.r<<" x "<<crop_box.b<<" x ";
-
+        // std::cout<<" \nbefore ---CROP Co-ordinates in CMN: lxtxrxb::\t"<<crop_box.l<<" x "<<crop_box.t<<" x "<<crop_box.r<<" x "<<crop_box.b<<" x ";
         crop_box.l = (float)(_x1_val[i]) / (float)input_roi[i].x2;
         crop_box.t = (float)(_y1_val[i]) / (float)input_roi[i].y2;
         crop_box.r = (float)(_x1_val[i] + _width_val[i]) / (float)input_roi[i].x2;
         crop_box.b = (float)(_y1_val[i] + _height_val[i]) / (float) input_roi[i].y2;
-        std::cout<<"\nAfter ---CROP Co-ordinates in CMN: lxtxrxb::\t"<<crop_box.l<<" x "<<crop_box.t<<" x "<<crop_box.r<<" x "<<crop_box.b<<" x ";
+        // std::cout<<"\nAfter ---CROP Co-ordinates in CMN: lxtxrxb::\t"<<crop_box.l<<" x "<<crop_box.t<<" x "<<crop_box.r<<" x "<<crop_box.b<<" x ";
         for(uint j = 0; j < bb_count; j++)
         {
-            std::cout<<"\nIn BEFORE CMN: Box Co-ordinates lxtxrxb::\t"<<coords_buf[j].l<<"x\t"<<coords_buf[j].t<<"x\t"<<coords_buf[j].r<<"x\t"<<coords_buf[j].b<<"x\t"<<std::endl;
+            // std::cout<<"\nIn BEFORE CMN: Box Co-ordinates lxtxrxb::\t"<<coords_buf[j].l<<"x\t"<<coords_buf[j].t<<"x\t"<<coords_buf[j].r<<"x\t"<<coords_buf[j].b<<"x\t"<<std::endl;
             if (BBoxIntersectionOverUnion(coords_buf[j], crop_box) >= _iou_threshold)
             {
                 float xA = std::max(crop_box.l, coords_buf[j].l);

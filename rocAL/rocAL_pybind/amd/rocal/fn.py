@@ -56,7 +56,6 @@ def crop_mirror_normalize(*inputs, bytes_per_sample_hint=0, crop=[0, 0], crop_d=
             mirror = b.CreateIntParameter(0)
         else:
             mirror = b.CreateIntParameter(1)
-    print("mirror in fn.py ",mirror)
     # pybind call arguments
     kwargs_pybind = {"input_image0": inputs[0],"rocal_tensor_layout" : rocal_tensor_layout, "rocal_tensor_output_type" : rocal_tensor_output_type, "crop_depth":crop_depth, "crop_height":crop_height, "crop_width":crop_width, "start_x":0, "start_y":0, "start_z":0, "mean":mean, "std_dev":std,
                      "is_output": False, "mirror": mirror}

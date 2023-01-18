@@ -3,23 +3,12 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 import random
-
-# from amd.rali.pipeline import Pipeline
-# import amd.rali.fn as fn
-# import amd.rali.types as types
-# import rali_pybind.tensor
 import sys
 import cv2
 import os
 import tensorflow as tf
-# from amd.rali.plugin.tf import ROCALIterator, ROCAL_iterator
-# from amd.rali.pipeline import Pipeline
-# import amd.rali.types as types
-# import amd.rali.fn as fn
-
 from amd.rocal.plugin.pytorch import ROCALClassificationIterator
 from amd.rocal.plugin.tf import ROCALIterator
-
 from amd.rocal.pipeline import Pipeline
 import amd.rocal.fn as fn
 import amd.rocal.types as types
@@ -50,42 +39,20 @@ def get_weights(num_bboxes):
 
 
 def draw_patches(img, idx, bboxes):
-    #image is expected as a tensor, bboxes as numpy
     import cv2
-    # image = img.detach().numpy()
     print("*************************************draw_patches**********************************")
-    # image = img.transpose([0, 1, 2])
     image =img
-    print("image shape in draw patch ",image.shape)
-    print(image.dtype)
-    # print("image",image)
-    # image =image.astype(int)
-    
     image = cv2.cvtColor(image, cv2.COLOR_RGB2BGR)
     cv2.imwrite("OUTPUT_IMAGES_PYTHON/NEW_API/TF_READER/DETECTION/"+str(idx)+"_"+"aki"+".png", image)
-
-    # image = cv2.normalize(image, None, alpha = 0, beta = 255, norm_type = cv2.NORM_MINMAX, dtype = cv2.CV_32F)
     htot, wtot ,_ = image.shape
-    # htot, wtot =300,300
-    print("shape",htot,wtot)
-    # print("bboxes",bboxes)
-
     for (l, t, r, b) in bboxes:
         loc_ = [l, t, r, b]
-        # print("loc_",loc_)
-        print("ch1")
         color = (255, 0, 0)
         thickness = 2
-        print("ch2")
-        
-        # image = cv2.UMat(image).get()
-        print("ch3")
-        
-        print("valuessssss",loc_[0]*wtot,loc_[1] * htot,loc_[2] * wtot,loc_[3] * htot,color,thickness)
+        # print("values",loc_[0]*wtot,loc_[1] * htot,loc_[2] * wtot,loc_[3] * htot,color,thickness)
         image = cv2.rectangle(image, (int(loc_[0]*wtot), int(loc_[1] * htot)), (int(
             (loc_[2] * wtot)), int((loc_[3] * htot))), color, thickness)
         cv2.imwrite("OUTPUT_IMAGES_PYTHON/NEW_API/TF_READER/DETECTION/"+str(idx)+"_"+"aki"+".png", image)
-        print("end of draw_patch")
 def main():
     if  len(sys.argv) < 1:
         print ('Please pass image_folder cpu/gpu batch_size')
@@ -144,84 +111,32 @@ def main():
                     'image/filename': tf.io.FixedLenFeature((), tf.string, "")
                     }
         )
-        print("after reader")
         jpegs = inputs["image/encoded"]
-        # images = fn.decoders.image(jpegs, user_feature_key_map=featureKeyMap, output_type=types.RGB, path=data_path,random_shuffle=True)
         images = fn.decoders.image_random_crop(jpegs,user_feature_key_map=featureKeyMap, output_type=types.RGB,
                                                       random_aspect_ratio=[0.8, 1.25],
                                                       random_area=[0.1, 1.0],
                                                       num_attempts=100,path = data_path)
                                                       
-        print("after decoderrrr ")
         
         resized = fn.resize(images, resize_width=400, resize_height=400,rocal_tensor_output_type = types.UINT8, rocal_tensor_layout = types.NHWC)
-        print("before cmn ")
         cmnp = fn.crop_mirror_normalize(resized, device="cpu",
                                             rocal_tensor_layout = types.NHWC,
                                             rocal_tensor_output_type = types.FLOAT,
                                             output_dtype = types.FLOAT,
-                                            crop=[250, 250],
+                                            crop=[300, 300],
                                             mirror=0,
                                             image_type=types.RGB,
                                             mean=[0,0,0],
                                             std=[1,1,1],crop_d=3)
-        print("after cmn ")
-        # bright = fn .brightness(images)
-
-
         pipe.set_outputs(cmnp)
-        # exit(0)
-
-        # pipe.set_outputs(images)
 
         # Build the pipeline
-        print("before build ")
         pipe.build()
         # Dataloader
-        print("before iterator call ",pipe._tensor_dtype)
         imageIterator = ROCALIterator(pipe)
         cnt = 0
-        print("imageIterator in unittest    ",imageIterator)
-        if imageIterator is None:
-            print("image iterator is none ")
-        else: 
-            print("image iterator is  full ")
-    #     for i, (images_array, bboxes_array, labels_array,num_bboxes_array) in enumerate(imageIterator, 0):
-    #         print("images_array",images_array)
-    #         # images_array = np.transpose(images_array, [0, 2, 3, 1])
-    #         # print("images_array1",images_array)
-    #         print("ROCAL augmentation pipeline - Processing batch %d....." % i)
-
-    #     for element in list(range(batch_size)):
-    #         cnt = cnt + 1
-    #         print("image shape ",images_array[element].shape)
-    #         # if args.print_tensor:
-    #         print("Processing image %d....." % element)
-    #         features_dict = {
-    #             "image": images_array[element],
-    #             "true_image_shape": np.array([len(images_array[element]), len(images_array[element, 0]), len(images_array[element, 0, 0])])
-    #         }
-            
-    #         draw_patches(images_array[element],cnt,bboxes_array[element])
-
-    #         labels_dict = {
-    #             "num_groundtruth_boxes": num_bboxes_array[element],
-    #             "groundtruth_boxes": bboxes_array[element],
-    #             "groundtruth_classes": get_onehot(labels_array[element], numClasses),
-    #             "groundtruth_weights": get_weights(num_bboxes_array[element])
-    #         }
-    #         processed_tensors = (features_dict, labels_dict)
-    #         # if args.print_tensor:
-    #         #     print("\nPROCESSED_TENSORS:\n", processed_tensors)
-    #         draw_patches(images_array[element],cnt,bboxes_array[element])
-    #     print("\n\nPrinted first batch with", (batch_size), "images!")
-    #     # break
-    # imageIterator.reset()
-    print("unittest check ")
     for i, (images_array, bboxes_array, labels_array, num_bboxes_array) in enumerate(imageIterator, 0):
-        # images_array = np.transpose(images_array, [0, 2, 3, 1])
         print("ROCAL augmentation pipeline - Processing batch %d....." % i)
-        print("shape of image  ", images_array.shape )
         for element in list(range(batch_size)):
             cnt = cnt + 1
             if 1:
@@ -237,8 +152,8 @@ def main():
                 "groundtruth_weights": get_weights(num_bboxes_array[element])
             }
             processed_tensors = (features_dict, labels_dict)
-            if 1:
-                print("\nPROCESSED_TENSORS:\n", processed_tensors)
+            # if 1:
+                # print("\nPROCESSED_TENSORS:\n", processed_tensors)
             draw_patches(images_array[element],cnt,bboxes_array[element])
         print("\n\nPrinted first batch with", (batch_size), "images!")
         break
@@ -247,24 +162,7 @@ def main():
     print("###############################################    TF DETECTION    ###############################################")
     print("###############################################    SUCCESS              ###############################################")
     exit(0)
-    #     jpegs, labels = fn.readers.file(file_root=data_path)
-    #     images = fn.decoders.image(jpegs,file_root=data_path, output_type=types.RGB, shard_id=0, num_shards=1, random_shuffle=False)
-    #     brightend_images = fn.gamma_correction(images, rocal_tensor_layout=types.NHWC, rocal_tensor_output_type=types.UINT8)
-    #     # brightend_images2 = fn.brightness(brightend_images)
 
-    #     pipe.set_outputs(brightend_images)
-
-    # pipe.build()
-    # imageIterator = ROCALClassificationIterator(pipe)
-    # cnt = 0
-    # for i , it in enumerate(imageIterator):
-    #     print("************************************** i *************************************",i)
-    #     for img in it[0]:
-    #         print(img.shape)
-    #         cnt = cnt + 1
-    #         draw_patches(img, cnt, "cpu")
-
-    print("*********************************************************************")
 
     
     exit(0)

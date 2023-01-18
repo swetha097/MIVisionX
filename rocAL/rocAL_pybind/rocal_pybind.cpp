@@ -170,9 +170,7 @@ namespace rocal
             .def("copy_data_numpy", [](rocalTensor &output_tensor, py::array_t<unsigned char> array) {
                 auto buf = array.request();
                 unsigned char *ptr = (unsigned char *)buf.ptr;
-                std::cerr << "Copy DATA PY";
                 output_tensor.copy_data((void *)ptr);
-                std::cerr << "Copy DATA PY 11";
 
             },
             "idx"_a,
@@ -184,13 +182,7 @@ namespace rocal
             .def("copy_data_numpy1", [](rocalTensor &output_tensor, py::array_t<float> array) {
                 auto buf = array.request();
                 unsigned char *ptr = (unsigned char *)buf.ptr;
-                std::cerr << "\nCopy DATA \n";
-                for (int i=0;i<100 ;i++)
-                {
-                    std::cerr<<(unsigned char *)(ptr);
-                }
                 output_tensor.copy_data((void *)ptr);
-                std::cerr << "\nCopy DATA PY 11";
 
             },
             "idx"_a,
@@ -408,11 +400,6 @@ namespace rocal
             "rocalGetImageLabels", [](RocalContext context)
     {
             rocalTensorList *labels = rocalGetImageLabels(context);
-            // std::cerr<<"LABELS SIZE ::"<<labels->size();
-            // for (int i = 0; i < labels->size(); i++) {
-            //     int *labels_buffer = (int *)(labels->at(i)->buffer());
-            //     std::cerr << ">>>>> LABELS : " << labels_buffer[0] << "\t";
-            // }
             return py::array(py::buffer_info(
                             (int *)(labels->at(0)->buffer()),
                             sizeof(int),
@@ -425,16 +412,13 @@ namespace rocal
         
          m.def("rocalGetBoundingBoxLabel", [](RocalContext context)
               {
-            std::cerr<<"***************************rocalGetBoundingBoxLabel**********************************";
             rocalTensorList * bbox_labels = rocalGetBoundingBoxLabel(context);
             py::list list,list2;
             for(int i = 0; i < bbox_labels->size(); i++)
                 {
                     auto labels_buffer = (int *)(bbox_labels->at(i)->buffer());
                     // auto bbox_buffer = (float *)(bbox_coords->at(i)->buffer());
-                    std::cerr << "\n>>>>> BBOX LABELS : ";
                     int label_size = bbox_labels->at(i)->info().dims().at(0);
-                    std::cerr<<"label_size "<<label_size;
                     py::array_t<int> labels_array = py::array_t<int>(py::buffer_info(
                             labels_buffer,
                             sizeof(int),
@@ -442,29 +426,21 @@ namespace rocal
                             1,
                             {label_size},
                             {sizeof(int)}));
-                    std::cerr<<"***********************"<<list<<"\n";
                     list.append(labels_array);
                     // list = list +labels_array;
                     // list.merge(labels_array);
-
-                    std::cerr<<"***********************"<<list<<"\n";
-
                 }
-                std::cerr<<"list"<<list;
                 return list;
             });
 
         m.def("rocalGetBoundingBoxCords", [](RocalContext context)
               {
-            std::cerr<<"***************************rocalGetBoundingBoxCords**********************************";
             rocalTensorList* bbox_coords = rocalGetBoundingBoxCords(context);
             py::list list;
             for(int i = 0; i < bbox_coords->size(); i++)
                 {
                     auto bbox_buffer = (float *)(bbox_coords->at(i)->buffer());
-                    std::cerr << "\n>>>>> BBOXX : ";
                     int label_size = bbox_coords->at(i)->info().dims().at(0);
-                    std::cerr<<"label_size "<<bbox_coords;
                     py::array_t<float> bboxes_array = py::array_t<float>(py::buffer_info(
                             bbox_buffer,
                             sizeof(float),
@@ -474,27 +450,9 @@ namespace rocal
                             {sizeof(float)}));
 
                     list.append(bboxes_array);
-                    std::cerr<<"bboxes_array",bboxes_array;
                 }
-                std::cerr<<"list"<<list;
                 return list;
             });
-        // m.def(
-        //     "copy_data_ptr", [](RocalContext context, py::object p)
-        // {
-        // auto ptr = ctypes_void_ptr(p);
-        // RocalTensorList output_tensor_list = rocalGetOutputTensors(context);
-        // // ptr = output_tensor_list->at(0)->buffer();
-
-        // rocalTensor::copy_data((unsigned char *) ptr, 0);
-        // // for (uint i =0; i<10; i++)
-        // // {
-        // //     std::cerr<<"\n TEMP ::"<< (float) (unsigned char *) ptr[i];
-        // // }
-        // // std::exit(0);
-        // return py::reinterpret_borrow<py::object>(PyLong_FromVoidPtr(ptr));
-        // }
-        //     );
         m.def(
             "rocalGetEncodedBoxesAndLables", [](RocalContext context,uint batch_size, uint num_anchors)
             {

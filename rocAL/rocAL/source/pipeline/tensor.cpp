@@ -238,7 +238,6 @@ unsigned rocalTensor::copy_data(cl_command_queue queue, unsigned char *user_buff
             THROW("clEnqueueReadBuffer failed: " + TOSTR(status))
         }
     } else {
-        std::cerr<<"checking intensor.cpp "<< _info.data_size()<<"   ";
         memcpy(user_buffer, _mem_handle, _info.data_size());
     }
     return 0;
@@ -278,17 +277,7 @@ unsigned rocalTensor::copy_data(void *user_buffer) {
 #endif
     {
         // copy from host to host
-        std::cerr<<"checking host to host  in tensor.cpp "<< _info.data_size()<<"   ";
-        for ( int i=0;i<100;i++)
-        {
-            std::cerr<<(float)*((float  *)user_buffer+i)<<"  ";
-        }
         memcpy(user_buffer, _mem_handle, _info.data_size());
-        std::cerr<<"\nAfter\n";
-        for ( int i=0;i<100;i++)
-        {
-            std::cerr<<(float )*((float *)user_buffer+i)<<"  ";
-        }
     }
     return 0;
 }
