@@ -47,8 +47,8 @@ AudioDecoder::Status SndFileDecoder::decode_info(int* samples, int* channels)
     // Set the samples and channels using the struct variables _sfinfo.samples and _sfinfo.channels
     *samples = _sfinfo.frames;
     *channels = _sfinfo.channels;
-    // std::cerr << "\n _sfinfo.frames;" << _sfinfo.frames;
-    // std::cerr << "\n _sfinfo.channels;" << _sfinfo.channels;;
+    std::cerr << "\n _sfinfo.frames;" << _sfinfo.frames;
+    std::cerr << "\n _sfinfo.channels;" << _sfinfo.channels;;
 
     if (_sfinfo.channels < 1)
 	{	printf("Not able to process less than %d channels\n", *channels);
@@ -70,30 +70,32 @@ AudioDecoder::Status SndFileDecoder::decode_info(int* samples, int* channels)
 AudioDecoder::Status SndFileDecoder::initialize(const char *src_filename)
 {
     _src_filename = src_filename;
-    // std::cerr<<"\n SRC FILE NAME: "<<src_filename;
+    std::cerr<<"\n SRC FILE NAME: "<<src_filename;
     memset(&_sfinfo, 0, sizeof(_sfinfo)) ;
     if (!(_sf_ptr = sf_open(src_filename, SFM_READ, &_sfinfo)))
-	{	/* Open failed so print an error message. */
-		printf("Not able to open input file %s.\n", src_filename);
-		/* Print the error message from libsndfile. */
-		puts(sf_strerror(NULL));
+    {   /* Open failed so print an error message. */
+        printf("Not able to open input file %s.\n", src_filename);
+        /* Print the error message from libsndfile. */
+        puts(sf_strerror(NULL));
         sf_close(_sf_ptr);
         AudioDecoder::Status status = Status::HEADER_DECODE_FAILED;
-		return status;
-	};
-
+        return status;
+    };
+    std::cerr << "\n Comes to Open";
+    // release();
     AudioDecoder::Status status = Status::OK;
     return status;
 }
 
 void SndFileDecoder::release()
 {
-    if(_sf_ptr != NULL) {
+    if(_sf_ptr) {
+        std::cerr << "Release () ";
       sf_close(_sf_ptr);
     }
 }
 
 SndFileDecoder::~SndFileDecoder()
 {
-    release();
+    // release();
 }

@@ -165,7 +165,7 @@ AudioReadAndDecode::load(float* buff,
         for (size_t i = 0; i < _batch_size; i++){
             _decompressed_buff_ptrs[i] = buff + (audio_size * i);
         }
-#pragma omp parallel for num_threads(24)  // default(none) TBD: option disabled in Ubuntu 20.04
+// #pragma omp parallel for num_threads(16)  // default(none) TBD: option disabled in Ubuntu 20.04
         for (size_t i = 0; i < _batch_size; i++)
         {
             // initialize the actual decoded channels and samples with the maximum
@@ -187,6 +187,7 @@ AudioReadAndDecode::load(float* buff,
             if (_decoder[i]->decode(_decompressed_buff_ptrs[i]) != AudioDecoder::Status::OK) {
                 THROW("Decoder failed for file: " + _audio_names[i].c_str())
             }
+        _decoder[i]->release();
         }
         for (size_t i = 0; i < _batch_size; i++) {
             names[i] = _audio_names[i];
