@@ -44,4 +44,5 @@ private:
     std::vector<float> _mean, _std_dev;
     ParameterVX<int> _mirror;
     constexpr static int   MIRROR_RANGE [2] =  {0, 1};
+    void * _crop_coordinates;
 };

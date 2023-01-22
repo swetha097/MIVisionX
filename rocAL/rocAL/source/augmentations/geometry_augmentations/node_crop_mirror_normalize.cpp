@@ -82,7 +82,36 @@ void CropMirrorNormalizeNode::create_node() {
     vx_scalar in_layout_vx = vxCreateScalar(vxGetContext((vx_reference)_graph->get()), VX_TYPE_INT32, &input_layout);
     vx_scalar out_layout_vx = vxCreateScalar(vxGetContext((vx_reference)_graph->get()), VX_TYPE_INT32, &output_layout);
     vx_scalar roi_type_vx = vxCreateScalar(vxGetContext((vx_reference)_graph->get()), VX_TYPE_INT32, &roi_type);
-    _node = vxExtrppNode_CropMirrorNormalize(_graph->get(), _inputs[0]->handle(), _src_tensor_roi_, _outputs[0]->handle(),
+    
+    // Create vx_tensor for the crop coordinates
+    vx_size num_of_dims = 2;
+    vx_size stride[num_of_dims];
+    std::vector<size_t> crop_dims = {_batch_size, 4};
+    stride[0] = sizeof(vx_uint32);
+    stride[1] = stride[0] * crop_dims[0];
+    vx_enum mem_type = VX_MEMORY_TYPE_HOST;
+    size_t crop_buffer_size = stride[1] * 4;
+    if (_inputs[0]->info().mem_type() == RocalMemType::HIP) {
+        mem_type = VX_MEMORY_TYPE_HIP;
+#if ENABLE_HIP
+    hipError_t err = hipHostMalloc((void **)&_crop_coordinates, crop_buffer_size, hipHostMallocDefault);
+    if(err != hipSuccess || !_crop_coordinates)
+        THROW("hipHostMalloc of size " + TOSTR(crop_buffer_size) + " failed " + TOSTR(err))
+    err = hipMemset((void *)_crop_coordinates, 0, crop_buffer_size);
+    if(err != hipSuccess)
+        THROW("hipMemset of size " + TOSTR(crop_buffer_size) + " failed " + TOSTR(err))
+#endif
+    } else {
+        _crop_coordinates = (void *)malloc(crop_buffer_size);
+        memset((void *) _crop_coordinates, 0, crop_buffer_size);
+    }
+    
+    vx_tensor crop_tensor = vxCreateTensorFromHandle(vxGetContext((vx_reference) _graph->get()), num_of_dims, crop_dims.data(), VX_TYPE_UINT32, 0, 
+                                                                  stride, (void *)_crop_coordinates, mem_type);
+    if ((status = vxGetStatus((vx_reference)crop_tensor)) != VX_SUCCESS)
+        THROW("Error: vxCreateTensorFromHandle(crop_tensor: failed " + TOSTR(status))
+    
+    _node = vxExtrppNode_CropMirrorNormalize(_graph->get(), _inputs[0]->handle(), crop_tensor, _outputs[0]->handle(),
                                              _multiplier_vx_array, _offset_vx_array, _mirror.default_array(), in_layout_vx, out_layout_vx, roi_type_vx);
     if((status = vxGetStatus((vx_reference)_node)) != VX_SUCCESS)
         THROW("Error adding the crop mirror normalize (vxExtrppNode_CropMirrorNormalize) failed: " + TOSTR(status))
@@ -99,7 +128,7 @@ void CropMirrorNormalizeNode::update_node() {
     // Obtain the crop coordinates and update the roi
     auto x1 = _crop_param->get_x1_arr_val();
     auto y1 = _crop_param->get_y1_arr_val();
-    auto src_roi = _inputs[0]->info().get_roi();
+    RocalROI *src_roi = (RocalROI *)_crop_coordinates;
     for(unsigned i = 0; i < _batch_size; i++) {
         src_roi[i].x1 = x1[i];
         src_roi[i].y1 = y1[i];
