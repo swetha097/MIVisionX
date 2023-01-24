@@ -86,15 +86,15 @@ void CropMirrorNormalizeNode::create_node() {
     // Create vx_tensor for the crop coordinates
     vx_size num_of_dims = 2;
     vx_size stride[num_of_dims];
-    std::vector<size_t> crop_dims = {_batch_size, 4};
+    std::vector<size_t> crop_tensor_dims = {_batch_size, 4};
     stride[0] = sizeof(vx_uint32);
-    stride[1] = stride[0] * crop_dims[0];
+    stride[1] = stride[0] * crop_tensor_dims[0];
     vx_enum mem_type = VX_MEMORY_TYPE_HOST;
     if (_inputs[0]->info().mem_type() == RocalMemType::HIP)
         mem_type = VX_MEMORY_TYPE_HIP;
     allocate_host_or_pinned_mem(&_crop_coordinates, stride[1] * 4, _inputs[0]->info().mem_type());
     
-    _crop_tensor = vxCreateTensorFromHandle(vxGetContext((vx_reference) _graph->get()), num_of_dims, crop_dims.data(), VX_TYPE_UINT32, 0, 
+    _crop_tensor = vxCreateTensorFromHandle(vxGetContext((vx_reference) _graph->get()), num_of_dims, crop_tensor_dims.data(), VX_TYPE_UINT32, 0, 
                                                                   stride, (void *)_crop_coordinates, mem_type);
     if ((status = vxGetStatus((vx_reference)_crop_tensor)) != VX_SUCCESS)
         THROW("Error: vxCreateTensorFromHandle(crop_tensor: failed " + TOSTR(status))
@@ -130,7 +130,7 @@ void CropMirrorNormalizeNode::init(int crop_h, int crop_w, float start_x, float 
     _crop_param->y1 = start_y;
     _crop_param->crop_h = crop_h;
     _crop_param->crop_w = crop_w;
-    _mean   = mean;
+    _mean = mean;
     _std_dev = std_dev;
     _mirror.set_param(core(mirror));
 }
@@ -138,9 +138,9 @@ void CropMirrorNormalizeNode::init(int crop_h, int crop_w, float start_x, float 
 CropMirrorNormalizeNode::~CropMirrorNormalizeNode() {
     if (_inputs[0]->info().mem_type() == RocalMemType::HIP) {
 #if ENABLE_HIP
-    hipError_t err = hipFree(_crop_coordinates);
-    if(err != hipSuccess)
-        std::cerr << "\nhipFree failed  " << std::to_string(err) << "\n";
+        hipError_t err = hipFree(_crop_coordinates);
+        if(err != hipSuccess)
+            std::cerr << "\n[ERR] hipFree failed  " << std::to_string(err) << "\n";
 #endif
     } else {
         free(_crop_coordinates);
