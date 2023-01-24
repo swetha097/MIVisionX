@@ -31,7 +31,6 @@ THE SOFTWARE.
 
 #include "internal_rpp.h"
 #define RPP_MAX_TENSOR_DIMS 5
-#define RPP_MAX_BATCH_SIZE 512
 
 extern "C" SHARED_PUBLIC vx_status VX_API_CALL vxPublishKernels(vx_context context);
 vx_status ADD_KERENEL(std::function<vx_status(vx_context)>);

@@ -183,7 +183,6 @@ static vx_status VX_CALLBACK processCropMirrorNormalize(vx_node node, const vx_r
 }
 
 static vx_status VX_CALLBACK initializeCropMirrorNormalize(vx_node node, const vx_reference *parameters, vx_uint32 num) {
-    std::cerr << "INIT CMN\n";
     CropMirrorNormalizeLocalData *data = new CropMirrorNormalizeLocalData;
     memset(data, 0, sizeof(*data));
     

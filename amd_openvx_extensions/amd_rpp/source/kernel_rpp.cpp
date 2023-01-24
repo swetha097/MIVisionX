@@ -2164,34 +2164,21 @@ int getEnvironmentVariable(const char *name)
 }
 #endif
 
-vx_status createGraphHandle(vx_node node, RPPCommonHandle **pHandle, Rpp32u batchSize, Rpp32u deviceType)
-{
-    std::cerr << "CREATE GRAPH HANDLE\t";
+vx_status createGraphHandle(vx_node node, RPPCommonHandle **pHandle, Rpp32u batchSize, Rpp32u deviceType) {
     RPPCommonHandle *handle = NULL;
     STATUS_ERROR_CHECK(vxGetModuleHandle(node, OPENVX_KHR_RPP, (void **)&handle));
 
-    if (handle)
-    {
-        std::cerr << "increment\n";
-        
+    if (handle) {
         handle->count++;
-    }
-    else
-    {
-        std::cerr << "new\t";
-        
+    } else {
         handle = new RPPCommonHandle;
         memset(handle, 0, sizeof(*handle));
-        // const char *searchEnvName = "NN_MIOPEN_SEARCH";
-        // int isEnvSet = getEnvironmentVariable(searchEnvName);
-        // if (isEnvSet > 0)
-        handle->exhaustiveSearch = true;
-
         handle->count = 1;
         
         if(deviceType == AGO_TARGET_AFFINITY_GPU) {
 #if ENABLE_OPENCL
             STATUS_ERROR_CHECK(vxQueryNode(node, VX_NODE_ATTRIBUTE_AMD_OPENCL_COMMAND_QUEUE, &handle->cmdq, sizeof(handle->cmdq)));
+            rppCreateWithStreamAndBatchSize(&data->rppHandle, handle->cmdq, batchSize);
 #elif ENABLE_HIP
             STATUS_ERROR_CHECK(vxQueryNode(node, VX_NODE_ATTRIBUTE_AMD_HIP_STREAM, &handle->hipstream, sizeof(handle->hipstream)));
             rppCreateWithStreamAndBatchSize(&handle->rppHandle, handle->hipstream, batchSize);
@@ -2206,12 +2193,9 @@ vx_status createGraphHandle(vx_node node, RPPCommonHandle **pHandle, Rpp32u batc
     return VX_SUCCESS;
 }
 
-vx_status releaseGraphHandle(vx_node node, RPPCommonHandle *handle, Rpp32u deviceType)
-{
+vx_status releaseGraphHandle(vx_node node, RPPCommonHandle *handle, Rpp32u deviceType) {
     handle->count--;
-    if (handle->count == 0)
-    {
-        std::cerr << "HANDLE destroyed!!\n";
+    if (handle->count == 0) {
         if(deviceType == AGO_TARGET_AFFINITY_GPU) {
 #if ENABLE_HIP
             rppDestroyGPU(handle->rppHandle);

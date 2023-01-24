@@ -62,7 +62,6 @@ struct RPPCommonHandle {
 #endif
     rppHandle_t rppHandle;
     int count;
-    bool exhaustiveSearch;
 };
 
 //! Brief The utility functions

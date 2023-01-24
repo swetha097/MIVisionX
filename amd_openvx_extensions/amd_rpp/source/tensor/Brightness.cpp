@@ -167,7 +167,6 @@ static vx_status VX_CALLBACK processBrightness(vx_node node, const vx_reference 
 }
 
 static vx_status VX_CALLBACK initializeBrightness(vx_node node, const vx_reference *parameters, vx_uint32 num) {
-    std::cerr << "INIT BRIGHTNESS\n";
     BrightnessLocalData *data = new BrightnessLocalData;
     memset(data, 0, sizeof(*data));
 
