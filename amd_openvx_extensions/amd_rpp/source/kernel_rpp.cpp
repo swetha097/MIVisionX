@@ -2164,7 +2164,7 @@ int getEnvironmentVariable(const char *name)
 }
 #endif
 
-vx_status createGraphHandle(vx_node node, RPPCommonHandle **pHandle)
+vx_status createGraphHandle(vx_node node, RPPCommonHandle **pHandle, Rpp32u batchSize, Rpp32u deviceType)
 {
     std::cerr << "CREATE GRAPH HANDLE\t";
     RPPCommonHandle *handle = NULL;
@@ -2188,30 +2188,37 @@ vx_status createGraphHandle(vx_node node, RPPCommonHandle **pHandle)
         handle->exhaustiveSearch = true;
 
         handle->count = 1;
+        
+        if(deviceType == AGO_TARGET_AFFINITY_GPU) {
 #if ENABLE_OPENCL
-        STATUS_ERROR_CHECK(vxQueryNode(node, VX_NODE_ATTRIBUTE_AMD_OPENCL_COMMAND_QUEUE, &handle->cmdq, sizeof(handle->cmdq)));
+            STATUS_ERROR_CHECK(vxQueryNode(node, VX_NODE_ATTRIBUTE_AMD_OPENCL_COMMAND_QUEUE, &handle->cmdq, sizeof(handle->cmdq)));
 #elif ENABLE_HIP
-        STATUS_ERROR_CHECK(vxQueryNode(node, VX_NODE_ATTRIBUTE_AMD_HIP_STREAM, &handle->hipstream, sizeof(handle->hipstream)));
-        // rppCreateWithStreamAndBatchSize(&handle->rppHandle, handle->hipstream, RPP_MAX_BATCH_SIZE);
+            STATUS_ERROR_CHECK(vxQueryNode(node, VX_NODE_ATTRIBUTE_AMD_HIP_STREAM, &handle->hipstream, sizeof(handle->hipstream)));
+            rppCreateWithStreamAndBatchSize(&handle->rppHandle, handle->hipstream, batchSize);
 #endif
-        rppCreateWithBatchSize(&handle->rppHandle, RPP_MAX_BATCH_SIZE);
+        } else {
+            rppCreateWithBatchSize(&handle->rppHandle, batchSize);
+        }
+        
         STATUS_ERROR_CHECK(vxSetModuleHandle(node, OPENVX_KHR_RPP, handle));
     }
     *pHandle = handle;
     return VX_SUCCESS;
 }
 
-vx_status releaseGraphHandle(vx_node node, RPPCommonHandle *handle)
+vx_status releaseGraphHandle(vx_node node, RPPCommonHandle *handle, Rpp32u deviceType)
 {
     handle->count--;
     if (handle->count == 0)
     {
         std::cerr << "HANDLE destroyed!!\n";
-        //TBD: release miopen_handle
+        if(deviceType == AGO_TARGET_AFFINITY_GPU) {
 #if ENABLE_HIP
-        // rppDestroyGPU(handle->rppHandle);
-#endif
-        rppDestroyHost(handle->rppHandle);
+            rppDestroyGPU(handle->rppHandle);
+#endif   
+        } else {
+            rppDestroyHost(handle->rppHandle);
+        }
 
         delete handle;
         STATUS_ERROR_CHECK(vxSetModuleHandle(node, OPENVX_KHR_RPP, NULL));
