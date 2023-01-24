@@ -90,28 +90,16 @@ void CropMirrorNormalizeNode::create_node() {
     stride[0] = sizeof(vx_uint32);
     stride[1] = stride[0] * crop_dims[0];
     vx_enum mem_type = VX_MEMORY_TYPE_HOST;
-    size_t crop_buffer_size = stride[1] * 4;
-    if (_inputs[0]->info().mem_type() == RocalMemType::HIP) {
+    if (_inputs[0]->info().mem_type() == RocalMemType::HIP)
         mem_type = VX_MEMORY_TYPE_HIP;
-#if ENABLE_HIP
-    hipError_t err = hipHostMalloc((void **)&_crop_coordinates, crop_buffer_size, hipHostMallocDefault);
-    if(err != hipSuccess || !_crop_coordinates)
-        THROW("hipHostMalloc of size " + TOSTR(crop_buffer_size) + " failed " + TOSTR(err))
-    err = hipMemset((void *)_crop_coordinates, 0, crop_buffer_size);
-    if(err != hipSuccess)
-        THROW("hipMemset of size " + TOSTR(crop_buffer_size) + " failed " + TOSTR(err))
-#endif
-    } else {
-        _crop_coordinates = (void *)malloc(crop_buffer_size);
-        memset((void *) _crop_coordinates, 0, crop_buffer_size);
-    }
+    allocate_host_or_pinned_mem(&_crop_coordinates, stride[1] * 4, _inputs[0]->info().mem_type());
     
-    vx_tensor crop_tensor = vxCreateTensorFromHandle(vxGetContext((vx_reference) _graph->get()), num_of_dims, crop_dims.data(), VX_TYPE_UINT32, 0, 
+    _crop_tensor = vxCreateTensorFromHandle(vxGetContext((vx_reference) _graph->get()), num_of_dims, crop_dims.data(), VX_TYPE_UINT32, 0, 
                                                                   stride, (void *)_crop_coordinates, mem_type);
-    if ((status = vxGetStatus((vx_reference)crop_tensor)) != VX_SUCCESS)
+    if ((status = vxGetStatus((vx_reference)_crop_tensor)) != VX_SUCCESS)
         THROW("Error: vxCreateTensorFromHandle(crop_tensor: failed " + TOSTR(status))
     
-    _node = vxExtrppNode_CropMirrorNormalize(_graph->get(), _inputs[0]->handle(), crop_tensor, _outputs[0]->handle(),
+    _node = vxExtrppNode_CropMirrorNormalize(_graph->get(), _inputs[0]->handle(), _crop_tensor, _outputs[0]->handle(),
                                              _multiplier_vx_array, _offset_vx_array, _mirror.default_array(), in_layout_vx, out_layout_vx, roi_type_vx);
     if((status = vxGetStatus((vx_reference)_node)) != VX_SUCCESS)
         THROW("Error adding the crop mirror normalize (vxExtrppNode_CropMirrorNormalize) failed: " + TOSTR(status))
@@ -145,4 +133,17 @@ void CropMirrorNormalizeNode::init(int crop_h, int crop_w, float start_x, float 
     _mean   = mean;
     _std_dev = std_dev;
     _mirror.set_param(core(mirror));
+}
+
+CropMirrorNormalizeNode::~CropMirrorNormalizeNode() {
+    if (_inputs[0]->info().mem_type() == RocalMemType::HIP) {
+#if ENABLE_HIP
+    hipError_t err = hipFree(_crop_coordinates);
+    if(err != hipSuccess)
+        std::cerr << "\nhipFree failed  " << std::to_string(err) << "\n";
+#endif
+    } else {
+        free(_crop_coordinates);
+    }
+    vxReleaseTensor(&_crop_tensor);
 }
