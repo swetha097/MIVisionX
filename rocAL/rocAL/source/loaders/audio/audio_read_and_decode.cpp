@@ -186,12 +186,11 @@ AudioReadAndDecode::load(float* buff,
             _original_channels[i] = original_channels;
             _original_samples[i] = original_samples;
             _original_sample_rates[i] = original_sample_rates;
-            // std::cerr << "\n _original_channels" << _original_channels[i];
-            // std::cerr << "\n  _original_samples" << _original_samples[i];
 
             if (_decoder[i]->decode(_decompressed_buff_ptrs[i]) != AudioDecoder::Status::OK) {
                 THROW("Decoder failed for file: " + _audio_names[i].c_str())
             }
+            _decoder[i]->release();
         }
         for (size_t i = 0; i < _batch_size; i++) {
             names[i] = _audio_names[i];
