@@ -33,7 +33,7 @@ void TensorAddTensorNode::create_node()
     std::cerr <<" \n Here in create Node of Tensor to Tensor addition ";
 
 
-    _node = vxExtrppNode_TensorAddTensor(_graph->get(), _inputs[0]->handle(), _inputs[1]->handle(), _outputs[0]->handle(), _src_tensor_roi, _batch_size);
+    // _node = vxExtrppNode_TensorAddTensor(_graph->get(), _inputs[0]->handle(), _inputs[1]->handle(), _outputs[0]->handle(), _src_tensor_roi, _batch_size);
 
     vx_status status;
     if((status = vxGetStatus((vx_reference)_node)) != VX_SUCCESS)

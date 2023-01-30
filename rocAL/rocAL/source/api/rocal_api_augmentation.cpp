@@ -955,7 +955,6 @@ rocalNonSilentRegion(RocalContext p_context,
         std::vector<size_t> dims;
         dims.resize(num_of_dims);
         dims.at(0) = context->user_batch_size();
-        // dims.at(1) = context->user_batch_size();
         dims.at(1) = 1;
         dims.at(2) = 1;
         dims.at(3) = 1;

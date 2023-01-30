@@ -70,10 +70,10 @@ void ResizeMirrorNormalizeNode::create_node()
     vx_scalar is_packed = vxCreateScalar(vxGetContext((vx_reference)_graph->get()),VX_TYPE_BOOL,&packed);
     vx_scalar layout = vxCreateScalar(vxGetContext((vx_reference)_graph->get()),VX_TYPE_UINT32,&_layout);
     vx_scalar roi_type = vxCreateScalar(vxGetContext((vx_reference)_graph->get()),VX_TYPE_UINT32,&_roi_type);
-   _node = vxExtrppNode_ResizeMirrorNormalize(_graph->get(), _inputs[0]->handle(),
-                                             _src_tensor_roi,_outputs[0]->handle(),_src_tensor_roi,_dst_roi_width,_dst_roi_height,
-                                             interpolation,_mean_array, _std_dev_array, _mirror.default_array() ,
-                                             is_packed, chnToggle,layout, roi_type, _batch_size);
+//    _node = vxExtrppNode_ResizeMirrorNormalize(_graph->get(), _inputs[0]->handle(),
+//                                              _src_tensor_roi,_outputs[0]->handle(),_src_tensor_roi,_dst_roi_width,_dst_roi_height,
+//                                              interpolation,_mean_array, _std_dev_array, _mirror.default_array() ,
+//                                              is_packed, chnToggle,layout, roi_type, _batch_size);
     if((status = vxGetStatus((vx_reference)_node)) != VX_SUCCESS)
         THROW("Adding the resize (vxExtrppNode_ResizebatchPD) node failed: "+ TOSTR(status))
 }

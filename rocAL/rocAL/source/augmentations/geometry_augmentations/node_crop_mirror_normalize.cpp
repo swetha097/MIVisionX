@@ -63,9 +63,9 @@ void CropMirrorNormalizeNode::create_node()
 
     vx_scalar layout = vxCreateScalar(vxGetContext((vx_reference)_graph->get()),VX_TYPE_UINT32,&_layout);
     vx_scalar roi_type = vxCreateScalar(vxGetContext((vx_reference)_graph->get()),VX_TYPE_UINT32,&_roi_type);
-    _node = vxExtrppNode_CropMirrorNormalize(_graph->get(), _inputs[0]->handle(),
-                                                   _src_tensor_roi, _outputs[0]->handle(),_src_tensor_roi,_crop_param->cropw_arr, _crop_param->croph_arr, _crop_param->x1_arr, _crop_param->y1_arr,
-                                                    _mean_array, _std_dev_array, _mirror.default_array(), layout, roi_type, _batch_size);
+    // _node = vxExtrppNode_CropMirrorNormalize(_graph->get(), _inputs[0]->handle(),
+    //                                                _src_tensor_roi, _outputs[0]->handle(),_src_tensor_roi,_crop_param->cropw_arr, _crop_param->croph_arr, _crop_param->x1_arr, _crop_param->y1_arr,
+    //                                                 _mean_array, _std_dev_array, _mirror.default_array(), layout, roi_type, _batch_size);
     if((status = vxGetStatus((vx_reference)_node)) != VX_SUCCESS)
         THROW("Error adding the crop mirror normalize tensor (vxExtrppNode_CropMirrorNormalizeCropbatchPD    ) failed: "+TOSTR(status))
 

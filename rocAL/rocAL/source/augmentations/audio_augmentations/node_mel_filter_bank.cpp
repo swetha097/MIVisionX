@@ -41,8 +41,8 @@ void MelFilterBankNode::create_node()
     vx_scalar normalize= vxCreateScalar(vxGetContext((vx_reference)_graph->get()), VX_TYPE_BOOL, &_normalize);
     vx_scalar sample_rate = vxCreateScalar(vxGetContext((vx_reference)_graph->get()), VX_TYPE_FLOAT32, &_sample_rate);
 
-    _node = vxExtrppNode_MelFilterBank(_graph->get(), _inputs[0]->handle(), _outputs[0]->handle(), _src_tensor_roi, freq_high,
-                                        freq_low, formula, nfilter, normalize, sample_rate, _batch_size);
+    // _node = vxExtrppNode_MelFilterBank(_graph->get(), _inputs[0]->handle(), _outputs[0]->handle(), _src_tensor_roi, freq_high,
+    //                                     freq_low, formula, nfilter, normalize, sample_rate, _batch_size);
 
     vx_status status;
     if((status = vxGetStatus((vx_reference)_node)) != VX_SUCCESS)

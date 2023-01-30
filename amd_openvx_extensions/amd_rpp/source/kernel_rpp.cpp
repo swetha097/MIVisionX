@@ -2291,7 +2291,7 @@ VX_API_ENTRY vx_node VX_API_CALL vxExtrppNode_MelFilterBank(vx_graph graph, vx_t
     return node;
 }
 
-VX_API_ENTRY vx_node VX_API_CALL vxExtrppNode_Slice(vx_graph graph, vx_tensor pSrc, vx_tensor pDst, vx_array srcDims, vx_tensor anchor, vx_tensor shape, vx_array fill_value,
+VX_API_ENTRY vx_node VX_API_CALL vxExtrppNode_Slice(vx_graph graph, vx_tensor pSrc, vx_tensor pDst, vx_tensor srcDims, vx_tensor dstDims, vx_tensor anchor, vx_tensor shape, vx_array fill_value,
                                                     vx_scalar axes, vx_scalar normalized_anchor, vx_scalar normalized_shape, vx_scalar policy, vx_uint32 nbatchSize)
 {
     vx_node node = NULL;
@@ -2305,6 +2305,7 @@ VX_API_ENTRY vx_node VX_API_CALL vxExtrppNode_Slice(vx_graph graph, vx_tensor pS
             (vx_reference)pSrc,
             (vx_reference)pDst,
             (vx_reference)srcDims,
+            (vx_reference)dstDims,
             (vx_reference)anchor,
             (vx_reference)shape,
             (vx_reference)fill_value,
@@ -2314,7 +2315,7 @@ VX_API_ENTRY vx_node VX_API_CALL vxExtrppNode_Slice(vx_graph graph, vx_tensor pS
             (vx_reference)policy,
             (vx_reference)NBATCHSIZE,
             (vx_reference)DEV_TYPE};
-        node = createNode(graph, VX_KERNEL_RPP_SLICE, params, 12);
+        node = createNode(graph, VX_KERNEL_RPP_SLICE, params, 13);
     }
     return node;
 }

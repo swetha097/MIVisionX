@@ -47,7 +47,7 @@ void ToDeciblesNode::create_node()
     vx_scalar cut_off_db = vxCreateScalar(vxGetContext((vx_reference)_graph->get()), VX_TYPE_FLOAT32, &_cut_off_db);
     vx_scalar multiplier = vxCreateScalar(vxGetContext((vx_reference)_graph->get()), VX_TYPE_FLOAT32, &_multiplier);
     vx_scalar magnitude_reference= vxCreateScalar(vxGetContext((vx_reference)_graph->get()), VX_TYPE_FLOAT32, &_magnitude_reference);
-    _node = vxExtrppNode_ToDecibels(_graph->get(), _inputs[0]->handle(), _outputs[0]->handle(), _src_samples_length_array, _src_samples_channels_array, cut_off_db, multiplier, magnitude_reference, _batch_size);
+    // _node = vxExtrppNode_ToDecibels(_graph->get(), _inputs[0]->handle(), _outputs[0]->handle(), _src_samples_length_array, _src_samples_channels_array, cut_off_db, multiplier, magnitude_reference, _batch_size);
 
     if((status = vxGetStatus((vx_reference)_node)) != VX_SUCCESS)
         THROW("Adding the copy (vxExtrppNode_ToDecibels) node failed: "+ TOSTR(status))
