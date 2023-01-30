@@ -80,8 +80,8 @@ void ResampleNode::update_node()
     _max_dst_width = 0;
     for (uint i=0; i < _batch_size; i++)
     {
-        _src_frames[i] = audio_roi->at(i).x1;
-        _src_channels[i] = audio_roi->at(i).y1;
+        _src_frames[i] = audio_roi[i].x1;
+        _src_channels[i] = audio_roi[i].y1;
         // TODO: Formula shared by Sampath - update the dst width & height later - calc ratio & then update it.
         std::cerr << "\n _out_sample_rate_array[i] :" << _out_sample_rate_array[i];
         std::cerr << "\n audio_input_sample_rate->at(i) : " << audio_input_sample_rate->at(i);

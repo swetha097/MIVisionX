@@ -56,7 +56,7 @@ void NonSilentRegionNode::update_node()
     auto audio_roi = _inputs[0]->info().get_roi();
     for (uint i=0; i < _batch_size; i++)
     {
-        _src_samples_size[i] = audio_roi->at(i).x1 * audio_roi->at(i).y1;
+        _src_samples_size[i] = audio_roi[i].x1 * audio_roi[i].y1;
     }
     vx_status src_roi_status;
     src_roi_status = vxCopyArrayRange((vx_array)_src_samples_size_array, 0, _batch_size, sizeof(vx_uint32), _src_samples_size.data(), VX_WRITE_ONLY, VX_MEMORY_TYPE_HOST);

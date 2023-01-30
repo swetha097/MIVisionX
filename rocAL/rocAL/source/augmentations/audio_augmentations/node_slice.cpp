@@ -72,7 +72,7 @@ void SliceNode::update_node()
     {
         std::cerr << "\n in_sample_rate : " << in_sample_rate->at(i);
     }
-    vx_status src_roi_status = vxCopyArrayRange((vx_array)_src_tensor_roi, 0, _batch_size * 4, sizeof(vx_uint32), _inputs[0]->info().get_roi()->data(), VX_WRITE_ONLY, VX_MEMORY_TYPE_HOST);
+    vx_status src_roi_status = vxCopyArrayRange((vx_array)_src_tensor_roi, 0, _batch_size * 4, sizeof(vx_uint32), _inputs[0]->info().get_roi(), VX_WRITE_ONLY, VX_MEMORY_TYPE_HOST);
     vx_status anchor_status  =  (vxQueryTensor((vx_tensor)_anchor->handle(), VX_TENSOR_BUFFER_HOST, &_anchor_array, sizeof(vx_float32)));
     vx_status shape_status = (vxQueryTensor((vx_tensor)_shape->handle(), VX_TENSOR_BUFFER_HOST, &_shape_array, sizeof(vx_float32)));
 
@@ -92,8 +92,8 @@ void SliceNode::update_node()
     for(unsigned i = 0; i < _batch_size; i++) {
         int idx = i * num_of_dims_shapes_anchors;
         //TODO: Swetha : To clean up the debug code
-            // std::cerr << "\n roi x1 " << audio_roi->at(i).x1;
-            // std::cerr << "\n roi y1 " << audio_roi->at(i).y1;
+            // std::cerr << "\n roi x1 " << audio_roi[i].x1;
+            // std::cerr << "\n roi y1 " << audio_roi[i].y1;
         for(unsigned d = 0; d < num_of_dims_shapes_anchors; d++) {
         // std::cerr << "\n Anchor : " << _anchor_array[idx + d] << "|\t Shape Array : " << (_shape_array[idx + d] - _anchor_array[idx + d]);
         //TODO: Swetha : To handle 3d data by checking NCHW / NHWC format for images
@@ -103,11 +103,11 @@ void SliceNode::update_node()
             }
             else if (_shape_array[i] > 0 && num_of_dims_shapes_anchors == 1) { // 1d anchors & shapes
                 _output_width_vector[i] = (_shape_array[i] - _anchor_array[i]);
-                _output_height_vector[i] = audio_roi->at(i).y1;
+                _output_height_vector[i] = audio_roi[i].y1;
             }
             else {
-                _output_width_vector[i] = audio_roi->at(i).x1;
-                _output_height_vector[i] = audio_roi->at(i).y1;
+                _output_width_vector[i] = audio_roi[i].x1;
+                _output_height_vector[i] = audio_roi[i].y1;
             }
             _fill_values_vec[idx + d] = _fill_values[0];
 

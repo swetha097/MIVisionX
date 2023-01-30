@@ -18,25 +18,21 @@ import matplotlib.pyplot as plt
 import os
 
 def draw_patches(img, idx, device):
+    print("Draw Patches")
     #image is expected as a tensor, bboxes as numpy
     import cv2
     if device == "cpu":
             image = img.detach().numpy()
     else:
         image = img.cpu().numpy()
-    # image = image.transpose([1, 2, 0])
-    # print(img.shape)
-    # print(idx)
-    # print(img.cpu().detach().numpy().flatten())
+    print(img.cpu().detach().numpy().flatten())
     # print(idx)
     audio_data = img.flatten()
     label = idx.cpu().detach().numpy()
     print("label: ", label)
-    if(label == 8300):
-        print(audio_data)
-        plt.plot(audio_data)
-        plt.savefig("rocal_audio_data"+str(label)+".png")
-    # cv2.imwrite("OUTPUT_IMAGES_PYTHON/NEW_API/FILE_READER/" + "brightness" + "/" + str(idx)+"_"+"train"+".png", image * 255)
+    print("audio_data",audio_data)
+    plt.plot(audio_data)
+    plt.savefig("rocal_audio_data"+str(label)+".png")
 
 def main():
     if  len(sys.argv) < 3:
@@ -76,7 +72,8 @@ def main():
             file_root=data_path,
             file_list=file_list,
             shard_id=0,
-            num_shards=1,)
+            num_shards=1,
+            random_shuffle=True)
         sample_rate = 16000
         nfft=512
         window_size=0.02
@@ -84,23 +81,19 @@ def main():
         nfilter=80 #nfeatures
         resample = 16000.00
         # dither = 0.001
-        audio_decode = fn.decoders.audio(audio, file_root=data_path, downmix=True, shard_id=0, num_shards=1)
-        uniform_distribution = fn.random.uniform(audio_decode, range=[0.855, 0.855])
-        sample_rate = uniform_distribution * resample
-        resample_output = fn.resample(audio_decode, resample_rate = sample_rate, resample_hint=522320*1.15, )
-        # mul_dist1 = uniform_distribution * 16000.00
-        # dither = 0.001
-        # distribution = fn.random.normal(audio_decode, mean=0.0, stddev=1.0)
-        # mul_dist1 = distribution * 0.0001
-        # begin, length = fn.nonsilent_region(audio_decode, cutoff_db=-60)
-        # trim_silence = fn.slice(
-        #     audio_decode,
-        #     anchor=[begin],
-        #     shape=[length],
-        #     normalized_anchor=False,
-        #     normalized_shape=False,
-        #     axes=[0]
-        # )
+        audio_decode = fn.decoders.audio(audio, file_root=data_path, downmix=True, shard_id=0, num_shards=1,random_shuffle=True)
+        # uniform_distribution = fn.random.uniform(audio_decode, range=[0.855, 0.855])
+        # sample_rate = uniform_distribution * resample
+        # resample_output = fn.resample(audio_decode, resample_rate = sample_rate, resample_hint=522320*1.15, )
+        begin, length = fn.nonsilent_region(audio_decode, cutoff_db=-60)
+        trim_silence = fn.slice(
+            audio_decode,
+            anchor=[begin],
+            shape=[length],
+            normalized_anchor=False,
+            normalized_shape=False,
+            axes=[0]
+        )
 
         # mul_dist = audio_decode + distribution * 0.0001 
         # p = distribution
@@ -129,7 +122,7 @@ def main():
         # )
         # normalize_audio = fn.normalize(to_decibels_audio, axes=[1])
         # pad_audio = fn.pad(normalize_audio, fill_value=0)
-        audio_pipeline.set_outputs(resample_output)
+        audio_pipeline.set_outputs(trim_silence)
 
     audio_pipeline.build()
     audioIteratorPipeline = ROCALClassificationIterator(audio_pipeline)
@@ -138,9 +131,11 @@ def main():
         torch.set_printoptions(threshold=5000, profile="full", edgeitems=100)
         for i , it in enumerate(audioIteratorPipeline):
             print("************************************** i *************************************",i)
-            # for data in it:
             print(it)
-                # draw_patches(data[0], data[1], "cpu")
+            for img, label in zip(it[0],it[1]):
+                print(img.shape)
+                draw_patches(img, label, "cpu")
+                cnt = cnt + 1
         print("EPOCH DONE", e)
         audioIteratorPipeline.reset()
 

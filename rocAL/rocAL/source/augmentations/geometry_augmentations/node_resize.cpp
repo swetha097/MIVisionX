@@ -64,10 +64,10 @@ void ResizeNode::create_node()
 }
 
 void ResizeNode::update_node() {
-    std::shared_ptr<std::vector<RocalROI>> src_roi = _inputs[0]->info().get_roi();
+    RocalROI* src_roi = _inputs[0]->info().get_roi();
     for (unsigned i = 0; i < _batch_size; i++) {
-        _src_width = src_roi->at(i).x2;
-        _src_height = src_roi->at(i).y2;
+        _src_width = src_roi[i].x2;
+        _src_height = src_roi[i].y2;
         _dst_width = _out_width;
         _dst_height = _out_height;
         adjust_out_roi_size();

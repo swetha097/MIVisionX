@@ -62,10 +62,10 @@ void NormalizeNode::update_node() {
     auto audio_roi = _inputs[0]->info().get_roi();
     bool has_same_dim = true;
     for (uint i=0; i < _batch_size; i++) {
-        _src_frames[i] = audio_roi->at(i).y1;
-        _src_channels[i] = audio_roi->at(i).x1;
-        _dst_roi_width_vec[i] =audio_roi->at(i).y1;
-        _dst_roi_height_vec[i] =  audio_roi->at(i).x1;
+        _src_frames[i] = audio_roi[i].y1;
+        _src_channels[i] = audio_roi[i].x1;
+        _dst_roi_width_vec[i] =audio_roi[i].y1;
+        _dst_roi_height_vec[i] =  audio_roi[i].x1;
 
     }
 

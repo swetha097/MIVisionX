@@ -43,7 +43,7 @@ void CropMirrorNormalizeMetaNode::update_parameters(MetaDataBatch* input_meta_da
     _dstImgHeight = _meta_crop_param->croph_arr;
     _x1 = _meta_crop_param->x1_arr;
     _y1 = _meta_crop_param->y1_arr;
-    std::vector<RocalROI> input_roi = _meta_crop_param->in_roi;
+    RocalROI* input_roi = _meta_crop_param->in_roi;
     vxCopyArrayRange((vx_array)_dstImgWidth, 0, _batch_size, sizeof(uint),_width_val.data(), VX_READ_ONLY, VX_MEMORY_TYPE_HOST);
     vxCopyArrayRange((vx_array)_dstImgHeight, 0, _batch_size, sizeof(uint),_height_val.data(), VX_READ_ONLY, VX_MEMORY_TYPE_HOST);
     vxCopyArrayRange((vx_array)_x1, 0, _batch_size, sizeof(uint),_x1_val.data(), VX_READ_ONLY, VX_MEMORY_TYPE_HOST);

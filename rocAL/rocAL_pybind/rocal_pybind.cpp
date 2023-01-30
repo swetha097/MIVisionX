@@ -168,7 +168,7 @@ namespace rocal
                 [](rocalTensor &output_tensor, uint idx)
                 {
                     // return *(output_tensor.info().get_roi());
-                    return std::make_pair(output_tensor.info().get_roi()->at(idx).x1, output_tensor.info().get_roi()->at(idx).y1);
+                    return std::make_pair(output_tensor.info().get_roi()[idx].x1, output_tensor.info().get_roi()[idx].y1);
                 },
                 R"code(
                 Returns a tensor ROI

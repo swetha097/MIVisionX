@@ -52,13 +52,13 @@ void MelFilterBankNode::create_node()
 
 void MelFilterBankNode::update_node()
 {
-    vx_status src_roi_status = vxCopyArrayRange((vx_array)_src_tensor_roi, 0, _batch_size * 4, sizeof(vx_uint32), _inputs[0]->info().get_roi()->data(), VX_WRITE_ONLY, VX_MEMORY_TYPE_HOST);
+    vx_status src_roi_status = vxCopyArrayRange((vx_array)_src_tensor_roi, 0, _batch_size * 4, sizeof(vx_uint32), _inputs[0]->info().get_roi(), VX_WRITE_ONLY, VX_MEMORY_TYPE_HOST);
     if(src_roi_status != 0)
         THROW(" Failed calling vxCopyArrayRange for src / dst roi status : "+ TOSTR(src_roi_status))
         auto audio_roi = _inputs[0]->info().get_roi();
     for (uint i=0; i < _batch_size; i++)
     {
-        _dst_roi_width_vec[i] = (audio_roi->at(i).x1);
+        _dst_roi_width_vec[i] = (audio_roi[i].x1);
         _dst_roi_height_vec[i] = (_nfilter);
     }
     // TODO - Swetha -check the layout FT - vice versa for TF 

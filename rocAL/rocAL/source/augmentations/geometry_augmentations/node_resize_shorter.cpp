@@ -71,12 +71,12 @@ void ResizeShorterNode::create_node()
 
 void ResizeShorterNode::update_node()
 {
-    std::shared_ptr<std::vector<RocalROI>> src_roi = _inputs[0]->info().get_roi();
+    RocalROI* src_roi = _inputs[0]->info().get_roi();
 
     for (uint i = 0; i < _batch_size; i++)
     {
-        uint w = src_roi->at(i).x2;
-        uint h = src_roi->at(i).y2;
+        uint w = src_roi[i].x2;
+        uint h = src_roi[i].y2;
 
         uint old_short, old_long, new_short, new_long, new_w, new_h;
 

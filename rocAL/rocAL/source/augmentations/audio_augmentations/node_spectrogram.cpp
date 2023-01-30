@@ -68,10 +68,10 @@ void SpectrogramNode::update_node()
     auto audio_roi = _inputs[0]->info().get_roi();
     for (uint i=0; i < _batch_size; i++)
     {
-        _src_samples_length[i] = audio_roi->at(i).x1;
+        _src_samples_length[i] = audio_roi[i].x1;
         // std::cerr << "\n spec :: _src_samples_length"<< _src_samples_length[i];
-        // std::cerr<<"\n  audio_roi->at(i).x1 :" <<  audio_roi->at(i).x1;
-        // std::cerr<<"\n  audio_roi->at(i).y1 :" <<  audio_roi->at(i).y1;
+        // std::cerr<<"\n  audio_roi[i].x1 :" <<  audio_roi[i].x1;
+        // std::cerr<<"\n  audio_roi[i].y1 :" <<  audio_roi[i].y1;
         _dst_roi_width_vec[i] =(( _src_samples_length[i] - _window_offset ) / _window_step) + 1;
         _dst_roi_height_vec[i] =  (_nfft_size / 2 )+ 1;
     }

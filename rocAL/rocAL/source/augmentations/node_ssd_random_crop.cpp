@@ -82,7 +82,7 @@ void SSDRandomCropNode::update_node()
     std::pair<float, float> iou;
     float min_iou, max_iou;
     float w_factor = 0.0f, h_factor = 0.0f;
-    std::vector<RocalROI> input_roi = _crop_param->in_roi;
+    RocalROI* input_roi = _crop_param->in_roi;
     bool invalid_bboxes = true;
     _entire_iou = true;
     BoundingBoxCord crop_box, jth_box;
