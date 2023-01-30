@@ -1,4 +1,4 @@
-# Copyright (c) 2018 - 2022 Advanced Micro Devices, Inc. All rights reserved.
+# Copyright (c) 2018 - 2023 Advanced Micro Devices, Inc. All rights reserved.
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -424,7 +424,7 @@ def crop_mirror_normalize(*inputs, bytes_per_sample_hint=0, crop=[0, 0], crop_d=
             mirror = b.CreateIntParameter(1)
 
     # pybind call arguments
-    kwargs_pybind = {"input_image0": inputs[0], "crop_depth":crop_depth, "crop_height":crop_height, "crop_width":crop_width, "start_x":0, "start_y":0, "start_z":0, "mean":mean, "std_dev":std,
+    kwargs_pybind = {"input_image0": inputs[0], "crop_depth":crop_depth, "crop_height":crop_height, "crop_width":crop_width, "start_x":crop_pos_x, "start_y":crop_pos_y, "start_z":crop_pos_z, "mean":mean, "std_dev":std,
                      "is_output": False, "mirror": mirror}
     cmn = b.CropMirrorNormalize(Pipeline._current_pipeline._handle ,*(kwargs_pybind.values()))
     Pipeline._current_pipeline._tensor_layout = output_layout

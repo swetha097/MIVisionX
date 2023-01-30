@@ -1,4 +1,4 @@
-# Copyright (c) 2018 - 2022 Advanced Micro Devices, Inc. All rights reserved.
+# Copyright (c) 2018 - 2023 Advanced Micro Devices, Inc. All rights reserved.
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -28,7 +28,7 @@ else:
     import subprocess
 
 __author__ = "Kiriti Nagesh Gowda"
-__copyright__ = "Copyright 2018 - 2022, AMD ROCm MIVisionX"
+__copyright__ = "Copyright 2018 - 2023, AMD ROCm MIVisionX"
 __license__ = "MIT"
 __version__ = "2.4.0"
 __maintainer__ = "Kiriti Nagesh Gowda"
@@ -53,6 +53,8 @@ parser.add_argument('--inference',	type=str, default='ON',
                     help='MIVisionX Neural Net Inference Dependency Install - optional (default:ON) [options:ON/OFF]')
 parser.add_argument('--rocal',	 	type=str, default='ON',
                     help='MIVisionX rocAL Dependency Install - optional (default:ON) [options:ON/OFF]')
+parser.add_argument('--developer', 	type=str, default='ON',
+                    help='Setup Developer Options - optional (default:ON) [options:ON/OFF]')
 parser.add_argument('--reinstall', 	type=str, default='OFF',
                     help='Remove previous setup and reinstall - optional (default:OFF) [options:ON/OFF]')
 parser.add_argument('--backend', 	type=str, default='HIP',
@@ -69,6 +71,7 @@ ffmpegInstall = args.ffmpeg
 neuralNetInstall = args.neural_net
 inferenceInstall = args.inference
 rocalInstall = args.rocal
+developerInstall = args.developer
 reinstall = args.reinstall
 backend = args.backend
 ROCM_PATH = args.rocm_path
@@ -79,27 +82,37 @@ print("\nROCm PATH set to -- "+ROCM_PATH+"\n")
 
 if ffmpegInstall not in ('OFF', 'ON'):
     print(
-        "ERROR: FFMPEG Install Option Not Supported - [Supported Options: OFF or ON]")
+        "ERROR: FFMPEG Install Option Not Supported - [Supported Options: OFF or ON]\n")
+    parser.print_help()
     exit()
 if neuralNetInstall not in ('OFF', 'ON'):
     print(
-        "ERROR: Neural Net Install Option Not Supported - [Supported Options: OFF or ON]")
+        "ERROR: Neural Net Install Option Not Supported - [Supported Options: OFF or ON]\n")
+    parser.print_help()
     exit()
 if inferenceInstall not in ('OFF', 'ON'):
     print(
-        "ERROR: Inference Install Option Not Supported - [Supported Options: OFF or ON]")
+        "ERROR: Inference Install Option Not Supported - [Supported Options: OFF or ON]\n")
+    parser.print_help()
     exit()
 if rocalInstall not in ('OFF', 'ON'):
     print(
-        "ERROR: Neural Net Install Option Not Supported - [Supported Options: OFF or ON]")
+        "ERROR: Neural Net Install Option Not Supported - [Supported Options: OFF or ON]\n")
+    parser.print_help()
+    exit()
+if developerInstall not in ('OFF', 'ON'):
+    print(
+        "ERROR: Developer Option Not Supported - [Supported Options: OFF or ON]\n")
     exit()
 if reinstall not in ('OFF', 'ON'):
     print(
-        "ERROR: Re-Install Option Not Supported - [Supported Options: OFF or ON]")
+        "ERROR: Re-Install Option Not Supported - [Supported Options: OFF or ON]\n")
+    parser.print_help()
     exit()
 if backend not in ('OCL', 'HIP', 'CPU'):
     print(
-        "ERROR: Backend Option Not Supported - [Supported Options: CPU or OCL or HIP]")
+        "ERROR: Backend Option Not Supported - [Supported Options: CPU or OCL or HIP]\n")
+    parser.print_help()
     exit()
 
 # check ROCm installation
@@ -169,7 +182,7 @@ elif os.path.exists('/usr/bin/zypper'):
     platfromInfo = platfromInfo+'-SLES'
 else:
     print("\nMIVisionX Setup on "+platfromInfo+" is unsupported\n")
-    print("\nMIVisionX Setup Supported on: Ubuntu 20/22; CentOS 7/8; RedHat 7/8/9; & SLES 15-SP2\n")
+    print("\nMIVisionX Setup Supported on: Ubuntu 20/22; CentOS 7/8; RedHat 8/9; & SLES 15 SP3\n")
     exit()
 
 # MIVisionX Setup
@@ -195,17 +208,25 @@ if os.path.exists(deps_dir):
                   linuxFlag+' make install -j8)')
 
     if neuralNetInstall == 'ON' and backend != 'CPU':
+        os.system('sudo -v')
         if backend == 'OCL':
-            os.system('sudo -v')
-            os.system('sudo '+linuxFlag+' '+linuxSystemInstall+' ' +
-                      linuxSystemInstall_check+' autoremove -y rocblas rocblas-dev miopen-hip miopen-hip-dev migraphx')
+            if "Ubuntu" in platfromInfo:
+                os.system('sudo '+linuxFlag+' '+linuxSystemInstall+' ' +
+                          linuxSystemInstall_check+' autoremove -y rocblas rocblas-dev miopen-hip miopen-hip-dev migraphx-devel')
+            else:
+                os.system('sudo '+linuxFlag+' '+linuxSystemInstall+' ' +
+                          linuxSystemInstall_check+' autoremove -y rocblas rocblas-devel miopen-hip miopen-hip-devel migraphx-devel')
             os.system('sudo '+linuxFlag+' '+linuxSystemInstall +
-                      ' '+linuxSystemInstall_check+' install -y --reinstall miopengemm miopen-opencl')
+                      ' '+linuxSystemInstall_check+' install -y miopengemm miopen-opencl')
         else:
             os.system('sudo '+linuxFlag+' '+linuxSystemInstall+' ' +
                       linuxSystemInstall_check+' autoremove -y miopengemm miopen-opencl')
-            os.system('sudo '+linuxFlag+' '+linuxSystemInstall +
-                      ' '+linuxSystemInstall_check+' install -y --reinstall rocblas rocblas-dev miopen-hip miopen-hip-dev migraphx')
+            if "Ubuntu" in platfromInfo:
+                os.system('sudo '+linuxFlag+' '+linuxSystemInstall +
+                          ' '+linuxSystemInstall_check+' install -y rocblas-dev miopen-hip-dev migraphx-dev')
+            else:
+                os.system('sudo '+linuxFlag+' '+linuxSystemInstall +
+                          ' '+linuxSystemInstall_check+' install -y rocblas-devel miopen-hip-devel migraphx-devel')
 
     if (rocalInstall == 'ON' or neuralNetInstall == 'ON') and backend != 'CPU':
         # ProtoBuf
@@ -335,6 +356,47 @@ else:
                 os.system('sudo '+linuxFlag+' '+linuxSystemInstall +
                           ' '+linuxSystemInstall_check+' install -y rocblas-devel miopen-hip-devel migraphx-devel')
 
+        # Install Model Compiler Deps
+        if inferenceInstall == 'ON':
+            modelCompilerDeps = os.path.expanduser(
+                '~/.mivisionx-model-compiler-deps')
+
+            # Delete previous install
+            if os.path.exists(modelCompilerDeps) and reinstall == 'ON':
+                os.system('sudo -v')
+                os.system('sudo rm -rf '+modelCompilerDeps)
+                print("\nMIVisionX Setup: Removing Previous Inference Install -- "+modelCompilerDeps+"\n")
+
+            if not os.path.exists(modelCompilerDeps):
+                print("STATUS: Model Compiler Deps Install - " +
+                      modelCompilerDeps+"\n")
+                os.makedirs(modelCompilerDeps)
+                os.system('sudo -v')
+                if "Ubuntu" in platfromInfo:
+                    os.system(
+                        'sudo '+linuxSystemInstall+' ' +
+                        linuxSystemInstall_check+' install git inxi python3 python3-pip protobuf-compiler libprotoc-dev')
+                elif "centos" in platfromInfo or "redhat" in platfromInfo:
+                    os.system(
+                        'sudo '+linuxSystemInstall+' ' +
+                        linuxSystemInstall_check+' install git inxi python3-devel python3-pip protobuf python3-protobuf')
+                os.system('sudo pip3 install future pytz numpy')
+                # Install CAFFE Deps
+                os.system('sudo pip3 install google protobuf==3.12.4')
+                # Install ONNX Deps
+                os.system('sudo pip3 install onnx')
+                # Install NNEF Deps
+                os.system('mkdir -p '+modelCompilerDeps+'/nnef-deps')
+                os.system(
+                    '(cd '+modelCompilerDeps+'/nnef-deps; git clone https://github.com/KhronosGroup/NNEF-Tools.git)')
+                os.system(
+                    '(cd '+modelCompilerDeps+'/nnef-deps/NNEF-Tools/parser/cpp; mkdir -p build && cd build; '+linuxCMake+' ..; make)')
+                os.system(
+                    '(cd '+modelCompilerDeps+'/nnef-deps/NNEF-Tools/parser/python; sudo python3 setup.py install)')
+            else:
+                print("STATUS: Model Compiler Deps Pre-Installed - " +
+                      modelCompilerDeps+"\n")
+
     # Install OpenCV
     os.system('(cd '+deps_dir+'/build; mkdir OpenCV )')
     # Install pre-reqs
@@ -383,7 +445,7 @@ else:
             os.system('sudo -v')
             os.system('sudo '+linuxFlag+' '+linuxSystemInstall+' ' +
                       linuxSystemInstall_check+' install clang')
-        elif "redhat" in platfromInfo:
+        elif "redhat" in platfromInfo or "SLES" in platfromInfo:
             # Nasm & Yasm
             os.system('sudo -v')
             os.system('sudo '+linuxFlag+' '+linuxSystemInstall +
@@ -391,11 +453,11 @@ else:
             # JSON-cpp
             os.system('sudo -v')
             os.system('sudo '+linuxFlag+' '+linuxSystemInstall+' ' +
-                      linuxSystemInstall_check+' install jsoncpp')
-            # clang+boost
+                      linuxSystemInstall_check+' install jsoncpp-devel')
+            # boost
             os.system('sudo -v')
             os.system('sudo '+linuxFlag+' '+linuxSystemInstall+' ' +
-                      linuxSystemInstall_check+' install boost-devel clang')
+                      linuxSystemInstall_check+' install boost-devel')
             # lmbd
             os.system('sudo -v')
             os.system('sudo '+linuxFlag+' '+linuxSystemInstall+' ' +
@@ -479,5 +541,23 @@ else:
             os.system('sudo -v')
             os.system('(cd '+deps_dir+'/FFmpeg-n4.4.2; sudo ' +
                       linuxFlag+' make install )')
+
+    if developerInstall == 'ON':
+        if "Ubuntu" in platfromInfo:
+            os.system('sudo -v')
+            os.system('sudo '+linuxFlag+' '+linuxSystemInstall+' '+linuxSystemInstall_check +
+                      ' install autoconf build-essential texinfo libgmp-dev')
+        else:
+            os.system('sudo -v')
+            os.system('sudo '+linuxFlag+' '+linuxSystemInstall+' '+linuxSystemInstall_check +
+                      ' install autoconf texinfo gmp-devel')
+            os.system('sudo '+linuxFlag+' '+linuxSystemInstall+' '+linuxSystemInstall_check +
+                      ' groupinstall \'Development Tools\' ')
+        os.system(
+            '(cd '+deps_dir+'; wget https://ftp.gnu.org/gnu/gdb/gdb-12.1.tar.gz )')
+        os.system('(cd '+deps_dir+'; tar -xvzf gdb-12.1.tar.gz )')
+        os.system('sudo -v')
+        os.system(
+            '(cd '+deps_dir+'/gdb-12.1; ./configure --with-python3; make CXXFLAGS="-static-libstdc++" -j8; sudo make install -j8 )')
 
     print("\nMIVisionX Dependencies Installed with MIVisionX-setup.py V-"+__version__+"\n")
