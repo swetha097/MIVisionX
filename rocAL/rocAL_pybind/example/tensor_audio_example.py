@@ -1,3 +1,4 @@
+
 from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
@@ -7,7 +8,6 @@ from amd.rocal.plugin.pytorch import ROCALClassificationIterator
 import torch
 # torch.set_printoptions(threshold=10_000)
 np.set_printoptions(threshold=1000, edgeitems=10000)
-
 from amd.rocal.pipeline import Pipeline
 import amd.rocal.fn as fn
 import amd.rocal.types as types
@@ -16,7 +16,6 @@ import sys
 import cv2
 import matplotlib.pyplot as plt
 import os
-
 def draw_patches(img, idx, device):
     print("Draw Patches")
     #image is expected as a tensor, bboxes as numpy
@@ -33,11 +32,9 @@ def draw_patches(img, idx, device):
     content = str(audio_data)
     file.write(content)
     file.close()
-
     plt.plot(audio_data)
     plt.savefig("results/normalize_audio/rocal_audio_data"+str(label)+".png")
     plt.close()
-
 def main():
     if  len(sys.argv) < 3:
         print ('Please pass audio_folder file_list cpu/gpu batch_size')
@@ -60,16 +57,11 @@ def main():
     device_id = 0
     random_seed = random.SystemRandom().randint(0, 2**32 - 1)
     crop=300
-
     pipe = Pipeline(batch_size=batch_size, num_threads=num_threads,device_id=device_id, seed=random_seed, rocal_cpu=_rali_cpu)
     local_rank = 0
     world_size = 1
-
     print("*********************************************************************")
-
-
     audio_pipeline = Pipeline(batch_size=batch_size, num_threads=num_threads, device_id=device_id, seed=random_seed, rocal_cpu=_rali_cpu)
-
     with audio_pipeline:
         audio, label = fn.readers.file(
             # **files_arg,
@@ -123,9 +115,6 @@ def main():
         )
         normalize_audio = fn.normalize(to_decibels_audio, axes=[1])
         audio_pipeline.set_outputs(normalize_audio)
-
-
-
     audio_pipeline.build()
     audioIteratorPipeline = ROCALClassificationIterator(audio_pipeline)
     cnt = 0
@@ -140,8 +129,6 @@ def main():
             #     cnt = cnt + 1
         print("EPOCH DONE", e)
         audioIteratorPipeline.reset()
-
-
-
 if __name__ == '__main__':
     main()
+

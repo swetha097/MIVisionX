@@ -53,7 +53,7 @@ void SliceNode::create_node()
 
     _node = vxExtrppNode_Slice(_graph->get(), _inputs[0]->handle(), _outputs[0]->handle(), _src_tensor_roi, _dst_tensor_roi, _anchor->handle(),
                                 _shape->handle(), _fill_values_array, axis_mask, normalized_anchor , normalized_shape, policy, _batch_size);
-    
+
     if((status = vxGetStatus((vx_reference)_node)) != VX_SUCCESS)
         THROW("Adding the copy (vxExtrppNode_Slice) node failed: "+ TOSTR(status))
 
@@ -61,6 +61,7 @@ void SliceNode::create_node()
 
 void SliceNode::update_node()
 {
+
 
     // The Audio Data is always assumed to be 2d (Keeping 2nd dim as "1" if its a 1d data)
     // Hence introducing the variable num_of_dims_shapes_anchors which can just be a 1d data from NSR
@@ -79,6 +80,7 @@ void SliceNode::update_node()
             _fill_values_vec[idx + d] = _fill_values[0];
         }
     }
+
     vx_status status = VX_SUCCESS;
     status |= vxCopyArrayRange((vx_array)_fill_values_array, 0, _batch_size * _num_of_dims, sizeof(vx_float32), _fill_values_vec.data(), VX_WRITE_ONLY, VX_MEMORY_TYPE_HOST);
     if(status != 0)

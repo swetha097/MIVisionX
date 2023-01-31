@@ -250,15 +250,12 @@ MasterGraph::create_single_graph()
         for(auto& tensor: node->output())
             if(tensor->info().type() == rocalTensorInfo::Type::UNKNOWN)
             {
-                std::cerr << "Doesnt come here";
                 tensor->create_virtual(_context, _graph->get());
                 _internal_tensors.push_back(tensor);
             }
         node->create(_graph);
     }
-    std::cerr << "\n Before verify ::" ;
     _graph->verify();
-    std::cerr << "\n After verify ::" ;
 }
 
 MasterGraph::Status
@@ -335,7 +332,7 @@ rocalTensor * MasterGraph::create_tensor(const rocalTensorInfo &info, bool is_ou
 
         _internal_tensor_list.push_back(new_tensor);
 
-        auto * output = new rocalTensor(info); 
+        auto * output = new rocalTensor(info);
         if (output->create_from_handle(_context) != 0)
             THROW("Cannot create the tensor from handle")
 
@@ -665,7 +662,7 @@ void MasterGraph::output_routine()
     std::cerr << "output routine";
     INFO("Output routine started with "+TOSTR(_remaining_count) + " to load");
     size_t batch_ratio = _is_sequence_reader_output ? _sequence_batch_ratio : _user_to_internal_batch_ratio;
-    if(!_is_sequence_reader_output) 
+    if(!_is_sequence_reader_output)
     {
 #if !ENABLE_HIP
     if(processing_on_device_ocl() && batch_ratio != 1)
@@ -924,8 +921,8 @@ std::vector<rocalTensorList *> MasterGraph::create_cifar10_label_reader(const ch
         _labels_tensor_list.push_back(tensor);
     }
     _metadata_output_tensor_list.emplace_back(&_labels_tensor_list);
-    
-    
+
+
     _ring_buffer.init_metadata(RocalMemType::HOST, _meta_data_buffer_size, _meta_data_buffer_size.size());
     if (_augmented_meta_data)
         THROW("Metadata can only have a single output")
@@ -1020,7 +1017,7 @@ std::vector<rocalTensorList *> MasterGraph::create_coco_meta_data_reader(const c
                                             RocalTensorDataType::FP32);
         default_mask_info.set_metadata();
         default_mask_info.set_tensor_layout(RocalTensorlayout::NONE);
-        _meta_data_buffer_size.emplace_back(dims.at(0) * dims.at(1)  * _user_batch_size * sizeof(vx_float32)); // TODO - replace with data size from info  
+        _meta_data_buffer_size.emplace_back(dims.at(0) * dims.at(1)  * _user_batch_size * sizeof(vx_float32)); // TODO - replace with data size from info
     }
 
     for(unsigned i = 0; i < _user_batch_size; i++)

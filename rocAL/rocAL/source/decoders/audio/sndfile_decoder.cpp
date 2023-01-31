@@ -79,7 +79,7 @@ AudioDecoder::Status SndFileDecoder::initialize(const char *src_filename)
         AudioDecoder::Status status = Status::HEADER_DECODE_FAILED;
 		return status;
 	};
-
+    //std::cout << "SRC FILENAME:" << src_filename << std::endl;
     AudioDecoder::Status status = Status::OK;
     return status;
 }

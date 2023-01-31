@@ -24,6 +24,7 @@ THE SOFTWARE.
 #include <memory>
 #include "reader_factory.h"
 #include "file_source_reader.h"
+#include "file_list_reader.h"
 #include "sequence_file_source_reader.h"
 #include "coco_file_source_reader.h"
 #include "cifar10_data_reader.h"
@@ -36,8 +37,15 @@ std::shared_ptr<Reader> create_reader(ReaderConfig config) {
     switch(config.type()) {
         case StorageType ::FILE_SYSTEM:
         {
-            std::cerr<<"\n CASE FILE SYS";
             auto ret = std::make_shared<FileSourceReader>();
+            if(ret->initialize(config) != Reader::Status::OK)
+                throw std::runtime_error("File reader cannot access the storage");
+            return ret;
+        }
+        break;
+        case StorageType ::TEXT_FILE_SYSTEM:
+        {
+            auto ret = std::make_shared<FileListReader>();
             if(ret->initialize(config) != Reader::Status::OK)
                 throw std::runtime_error("File reader cannot access the storage");
             return ret;

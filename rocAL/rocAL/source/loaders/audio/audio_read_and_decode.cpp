@@ -123,7 +123,6 @@ AudioReadAndDecode::load(float* buff,
                          std::vector<uint32_t> &actual_channels,
                          std::vector<float> &actual_sample_rates)
 {
-    std::cerr << "LOAD --------------------------------------";
     if(max_decoded_samples == 0 || max_decoded_channels == 0 )
         THROW("Zero audio dimension is not valid")
     if(!buff)
