@@ -41,8 +41,8 @@ void MelFilterBankNode::create_node()
     vx_scalar normalize= vxCreateScalar(vxGetContext((vx_reference)_graph->get()), VX_TYPE_BOOL, &_normalize);
     vx_scalar sample_rate = vxCreateScalar(vxGetContext((vx_reference)_graph->get()), VX_TYPE_FLOAT32, &_sample_rate);
 
-    // _node = vxExtrppNode_MelFilterBank(_graph->get(), _inputs[0]->handle(), _outputs[0]->handle(), _src_tensor_roi, freq_high,
-    //                                     freq_low, formula, nfilter, normalize, sample_rate, _batch_size);
+    _node = vxExtrppNode_MelFilterBank(_graph->get(), _inputs[0]->handle(), _outputs[0]->handle(), _src_tensor_roi, _dst_tensor_roi, freq_high,
+                                        freq_low, formula, nfilter, normalize, sample_rate, _batch_size);
 
     vx_status status;
     if((status = vxGetStatus((vx_reference)_node)) != VX_SUCCESS)
@@ -52,10 +52,7 @@ void MelFilterBankNode::create_node()
 
 void MelFilterBankNode::update_node()
 {
-    vx_status src_roi_status = vxCopyArrayRange((vx_array)_src_tensor_roi, 0, _batch_size * 4, sizeof(vx_uint32), _inputs[0]->info().get_roi(), VX_WRITE_ONLY, VX_MEMORY_TYPE_HOST);
-    if(src_roi_status != 0)
-        THROW(" Failed calling vxCopyArrayRange for src / dst roi status : "+ TOSTR(src_roi_status))
-        auto audio_roi = _inputs[0]->info().get_roi();
+    auto audio_roi = _inputs[0]->info().get_roi();
     for (uint i=0; i < _batch_size; i++)
     {
         _dst_roi_width_vec[i] = (audio_roi[i].x1);

@@ -2266,7 +2266,7 @@ VX_API_ENTRY vx_node VX_API_CALL vxExtrppNode_NonSilentRegion(vx_graph graph, vx
     return node;
 }
 
-VX_API_ENTRY vx_node VX_API_CALL vxExtrppNode_MelFilterBank(vx_graph graph, vx_tensor pSrc, vx_tensor pDst, vx_array srcDims, vx_scalar freqHigh, vx_scalar freqLow, vx_scalar melFormula,
+VX_API_ENTRY vx_node VX_API_CALL vxExtrppNode_MelFilterBank(vx_graph graph, vx_tensor pSrc, vx_tensor pDst, vx_tensor srcDims,  vx_tensor dstDims, vx_scalar freqHigh, vx_scalar freqLow, vx_scalar melFormula,
                                                             vx_scalar nfilter, vx_scalar normalize, vx_scalar sampleRate, vx_uint32 nbatchSize)
 {
     vx_node node = NULL;
@@ -2280,6 +2280,7 @@ VX_API_ENTRY vx_node VX_API_CALL vxExtrppNode_MelFilterBank(vx_graph graph, vx_t
             (vx_reference)pSrc,
             (vx_reference)pDst,
             (vx_reference)srcDims,
+            (vx_reference)dstDims,
             (vx_reference)freqHigh,
             (vx_reference)freqLow,
             (vx_reference)melFormula,
@@ -2288,7 +2289,7 @@ VX_API_ENTRY vx_node VX_API_CALL vxExtrppNode_MelFilterBank(vx_graph graph, vx_t
             (vx_reference)sampleRate,
             (vx_reference)NBATCHSIZE,
             (vx_reference)DEV_TYPE};
-        node = createNode(graph, VX_KERNEL_RPP_MELFILTERBANK, params, 11);
+        node = createNode(graph, VX_KERNEL_RPP_MELFILTERBANK, params, 12);
     }
     return node;
 }

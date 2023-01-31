@@ -108,11 +108,11 @@ def main():
             window_step= 160, # Change to 160
             rocal_tensor_output_type=types.FLOAT,
         )
-        # mel_filter_bank_audio = fn.mel_filter_bank(
-        #     spectrogram_audio,
-        #     sample_rate=sample_rate,
-        #     nfilter=nfilter,
-        # )
+        mel_filter_bank_audio = fn.mel_filter_bank(
+            spectrogram_audio,
+            sample_rate=sample_rate,
+            nfilter=nfilter,
+        )
         # to_decibels_audio = fn.to_decibels(
         #     mel_filter_bank_audio,
         #     multiplier=np.log(10),
@@ -122,7 +122,7 @@ def main():
         # )
         # normalize_audio = fn.normalize(to_decibels_audio, axes=[1])
         # pad_audio = fn.pad(normalize_audio, fill_value=0)
-        audio_pipeline.set_outputs(spectrogram_audio)
+        audio_pipeline.set_outputs(mel_filter_bank_audio)
 
     audio_pipeline.build()
     audioIteratorPipeline = ROCALClassificationIterator(audio_pipeline)
