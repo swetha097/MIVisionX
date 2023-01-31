@@ -677,6 +677,7 @@ RocalTensor  ROCAL_API_CALL
 rocalAudioFileSourceSingleShard(
         RocalContext p_context,
         const char* source_path,
+        const char* source_file_list_path,
         unsigned shard_id,
         unsigned shard_count,
         bool is_output,
@@ -685,7 +686,8 @@ rocalAudioFileSourceSingleShard(
         float sample_rate,
         bool downmix,
         unsigned max_frames,
-        unsigned max_channels)
+        unsigned max_channels,
+        unsigned storage_type)
 {
     rocalTensor* output = nullptr;
     auto context = static_cast<Context*>(p_context);
@@ -723,7 +725,8 @@ rocalAudioFileSourceSingleShard(
         output->reset_audio_sample_rate();
         context->master_graph->add_node<AudioLoaderSingleShardNode>({}, {output})->init(shard_id, shard_count,
                                                                                         source_path,
-                                                                                        StorageType::FILE_SYSTEM,
+                                                                                        source_file_list_path,
+                                                                                        StorageType(storage_type),
                                                                                         DecoderType::SNDFILE,
                                                                                         shuffle,
                                                                                         loop,
@@ -809,7 +812,6 @@ rocalAudioFileSource(
         // TODO - Add support with max_frames and channels passed by user
         auto [max_frames, max_channels] = evaluate_audio_data_set(StorageType::FILE_SYSTEM, DecoderType::SNDFILE,
                                                        source_path, "");
-        std::cerr<<"\n Completed the evaluation of audio data set max_frame:: "<<max_frames<<"\t max_channels ::"<<max_channels;
         INFO("Internal buffer size for audio frames = "+ TOSTR(max_frames))
 
         // RocalTensorlayout tensor_format = RocalTensorlayout::NONE;

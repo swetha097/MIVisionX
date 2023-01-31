@@ -75,8 +75,8 @@ def main():
             # **files_arg,
             file_root=data_path,
             file_list=file_list,
-            shard_id=0,
-            num_shards=1,)
+            shard_id=1,
+            num_shards=2,)
         sample_rate = 16000
         nfft=512
         window_size=0.02
@@ -84,25 +84,25 @@ def main():
         nfilter=80 #nfeatures
         resample = 16000.00
         # dither = 0.001
-        audio_decode = fn.decoders.audio(audio, file_root=data_path, downmix=True, shard_id=0, num_shards=1)
-        uniform_distribution = fn.random.uniform(audio_decode, range=[0.855, 0.855])
-        sample_rate = uniform_distribution * resample
-        resample_output = fn.resample(audio_decode, resample_rate = sample_rate, resample_hint=522320*1.15, )
-        # mul_dist1 = uniform_distribution * 16000.00
+        audio_decode = fn.decoders.audio(audio, file_root=data_path, file_list_path=file_list, downmix=True, shard_id=1, num_shards=2, storage_type=9)
+        # uniform_distribution = fn.random.uniform(audio_decode, range=[0.855, 0.855])
+        # sample_rate = uniform_distribution * resample
+        # resample_output = fn.resample(audio_decode, resample_rate = sample_rate, resample_hint=522320*1.15, )
+        # # mul_dist1 = uniform_distribution * 16000.00
         # dither = 0.001
         # distribution = fn.random.normal(audio_decode, mean=0.0, stddev=1.0)
         # mul_dist1 = distribution * 0.0001
-        # begin, length = fn.nonsilent_region(audio_decode, cutoff_db=-60)
-        # trim_silence = fn.slice(
-        #     audio_decode,
-        #     anchor=[begin],
-        #     shape=[length],
-        #     normalized_anchor=False,
-        #     normalized_shape=False,
-        #     axes=[0]
-        # )
+        begin, length = fn.nonsilent_region(audio_decode, cutoff_db=-60)
+        trim_silence = fn.slice(
+            audio_decode,
+            anchor=[begin],
+            shape=[length],
+            normalized_anchor=False,
+            normalized_shape=False,
+            axes=[0]
+        )
 
-        # mul_dist = audio_decode + distribution * 0.0001 
+        # mul_dist = audio_decode + distribution * 0.0001
         # p = distribution
         # new_dist =  trim_silence
         # distributed_normalied_audio = trim_silence * new_dist
@@ -129,7 +129,7 @@ def main():
         # )
         # normalize_audio = fn.normalize(to_decibels_audio, axes=[1])
         # pad_audio = fn.pad(normalize_audio, fill_value=0)
-        audio_pipeline.set_outputs(resample_output)
+        audio_pipeline.set_outputs(trim_silence)
 
     audio_pipeline.build()
     audioIteratorPipeline = ROCALClassificationIterator(audio_pipeline)
@@ -137,7 +137,6 @@ def main():
     for e in range(1):
         torch.set_printoptions(threshold=5000, profile="full", edgeitems=100)
         for i , it in enumerate(audioIteratorPipeline):
-            print("************************************** i *************************************",i)
             # for data in it:
             print(it)
                 # draw_patches(data[0], data[1], "cpu")

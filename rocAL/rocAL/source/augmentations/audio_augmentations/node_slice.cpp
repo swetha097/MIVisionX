@@ -34,11 +34,7 @@ void SliceNode::create_node()
     if(_node)
         return;
 
-           auto in_sample_rate = _inputs[0]->info().get_sample_rate();
-    for (uint i=0;i < _batch_size; i++)
-    {
-        std::cerr << "\n in_sample_rate : " << in_sample_rate->at(i);
-    }
+    auto in_sample_rate = _inputs[0]->info().get_sample_rate();
     std::vector<float> anchors(_batch_size * _num_of_dims, 0);
     std::vector<float> shape(_batch_size * _num_of_dims, 0);
     std::vector<float> fill_value(_batch_size * _num_of_dims, 0);
@@ -58,7 +54,7 @@ void SliceNode::create_node()
 
     _node = vxExtrppNode_Slice(_graph->get(), _inputs[0]->handle(), _outputs[0]->handle(), _src_tensor_roi, _anchor->handle(),
                                 _shape->handle(), _fill_values_array, axis_mask, normalized_anchor , normalized_shape, policy, _batch_size);
-    
+
     if((status = vxGetStatus((vx_reference)_node)) != VX_SUCCESS)
         THROW("Adding the copy (vxExtrppNode_Slice) node failed: "+ TOSTR(status))
 
@@ -68,10 +64,6 @@ void SliceNode::update_node()
 {
     // std::cerr<<"\n SliceNode::update_node()";
     auto in_sample_rate = _inputs[0]->info().get_sample_rate();
-    for (uint i=0;i < _batch_size; i++)
-    {
-        std::cerr << "\n in_sample_rate : " << in_sample_rate->at(i);
-    }
     vx_status src_roi_status = vxCopyArrayRange((vx_array)_src_tensor_roi, 0, _batch_size * 4, sizeof(vx_uint32), _inputs[0]->info().get_roi()->data(), VX_WRITE_ONLY, VX_MEMORY_TYPE_HOST);
     vx_status anchor_status  =  (vxQueryTensor((vx_tensor)_anchor->handle(), VX_TENSOR_BUFFER_HOST, &_anchor_array, sizeof(vx_float32)));
     vx_status shape_status = (vxQueryTensor((vx_tensor)_shape->handle(), VX_TENSOR_BUFFER_HOST, &_shape_array, sizeof(vx_float32)));
@@ -114,10 +106,10 @@ void SliceNode::update_node()
             // std::cerr << "\n Slice.cpp" << _output_width_vector[i] << " : " << _output_height_vector[i] << " : " << _fill_values_vec[idx + d] << "\t";
         }
 
-        
+
         // std::cerr << "\n";
     }
-    
+
     vx_status status = VX_SUCCESS;
     status |= vxCopyArrayRange((vx_array)_fill_values_array, 0, _batch_size * _num_of_dims, sizeof(vx_float32), _fill_values_vec.data(), VX_WRITE_ONLY, VX_MEMORY_TYPE_HOST);
     if(status != 0)

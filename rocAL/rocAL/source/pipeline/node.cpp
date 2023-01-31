@@ -55,7 +55,6 @@ Node::create(std::shared_ptr<Graph> graph)
     }
 
     create_node();
-    std::cerr <<"After create node :: ";
 }
 
 void

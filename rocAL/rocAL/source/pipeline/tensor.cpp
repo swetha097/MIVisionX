@@ -160,10 +160,7 @@ void rocalTensor::update_audio_tensor_sample_rate(const std::vector<float> &samp
         // _info.get_sample_rate()->resize(_info.batch_size());
         for (unsigned i = 0; i < info().batch_size(); i++)
         {
-            std::cerr<< "\n Printing sample_rate[i] "<< sample_rate[i];
             _info.get_sample_rate()->at(i) = sample_rate[i];
-            std::cerr<< "\n Printing sample_rate[i] 1 "<< _info.get_sample_rate()->at(i);
-           
         }
     }
 }
@@ -239,14 +236,12 @@ void rocalTensor::update_tensor_roi(const std::vector<uint32_t> &width,
 }
 
 rocalTensor::~rocalTensor() {
-    std::cerr << "\n Destructor called : ";
     _mem_handle = nullptr;
     if (_vx_handle) vxReleaseTensor(&_vx_handle);
 }
 
 rocalTensor::rocalTensor(const rocalTensorInfo &tensor_info)
     : _info(tensor_info) {
-        std::cerr << "\n Constructor called";
     _info._type = rocalTensorInfo::Type::UNKNOWN;
     _mem_handle = nullptr;
 }

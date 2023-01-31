@@ -35,7 +35,7 @@ AudioLoaderSingleShardNode::AudioLoaderSingleShardNode(rocalTensor *output, Devi
 }
 
 void
-AudioLoaderSingleShardNode::init(unsigned shard_id, unsigned shard_count, const std::string &source_path,
+AudioLoaderSingleShardNode::init(unsigned shard_id, unsigned shard_count, const std::string &source_path, const std::string &source_list_path,
                                  StorageType storage_type, DecoderType decoder_type, bool shuffle, bool loop,
                                  size_t load_batch_count, RocalMemType mem_type, std::shared_ptr<MetaDataReader> meta_data_reader)
 {
@@ -47,7 +47,7 @@ AudioLoaderSingleShardNode::init(unsigned shard_id, unsigned shard_count, const 
         THROW("Shard is should be smaller than shard count")
     _loader_module->set_output(_outputs[0]);
     // Set reader and decoder config accordingly for the AudioLoaderNode
-    auto reader_cfg = ReaderConfig(storage_type, source_path, "", std::map<std::string, std::string>(), shuffle, loop);
+    auto reader_cfg = ReaderConfig(storage_type, source_path, source_list_path, std::map<std::string, std::string>(), shuffle, loop);
     reader_cfg.set_shard_count(shard_count);
     reader_cfg.set_shard_id(shard_id);
     reader_cfg.set_batch_count(load_batch_count);

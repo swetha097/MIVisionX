@@ -206,7 +206,6 @@ AudioLoader::load_routine()
                                             _decoded_img_info._original_audio_samples,
                                             _decoded_img_info._original_audio_channels,
                                             _decoded_img_info._original_audio_sample_rates);
-            std::cerr << "COMES OUT OF THE LOAD FUNCTION SUCCESSFULLY";
             if(load_status == LoaderModuleStatus::OK)
             {
                 // if (_randombboxcrop_meta_data_reader)
@@ -246,7 +245,6 @@ AudioLoader::load_routine()
         }
 
     }
-    std::cerr << "--------------- LOAD ROUTINE DONE _----------------------";
     return LoaderModuleStatus::OK;
 }
 
@@ -292,7 +290,6 @@ AudioLoader::update_output_audio()
     // }
     _output_names = _output_decoded_img_info._image_names;
     _output_tensor->update_tensor_roi(_output_decoded_img_info._roi_audio_samples, _output_decoded_img_info._roi_audio_channels);
-    std::cerr << "Update the ROI & sample rate";
     _output_tensor->update_audio_tensor_sample_rate(_output_decoded_img_info._original_audio_sample_rates);
     _circ_buff.pop();
     if (!_loop)

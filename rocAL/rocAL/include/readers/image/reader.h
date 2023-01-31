@@ -42,6 +42,7 @@ enum class StorageType
     VIDEO_FILE_SYSTEM = 6,
     MXNET_RECORDIO = 7,
     SEQUENCE_FILE_SYSTEM = 8,
+    TEXT_FILE_SYSTEM = 9,
 };
 
 #ifdef ROCAL_VIDEO
@@ -164,13 +165,13 @@ public:
     virtual std::string id() = 0;
     //! Returns the number of items remained in this resource
     virtual unsigned count_items() = 0;
-    
+
     //! return shuffle_time if applicable
     virtual unsigned long long get_shuffle_time() = 0;
-    
+
     virtual std::string file_path() = 0;
 
     virtual ~Reader() = default;
-    
-    
+
+
 };
