@@ -38,6 +38,7 @@ struct SpectrogramLocalData
     int power;
     int nfftSize;
     int windowLength;
+    int windowOffset;
     int windowStep;
     bool isWindowEmpty;
     RpptDescPtr src_desc_ptr;
@@ -46,9 +47,10 @@ struct SpectrogramLocalData
     RpptDescPtr dst_desc_ptr;
     Rpp32u *sampleLength;
     float *windowFn;
-    // RpptROI *roi_tensor_Ptr;
-    // RpptRoiType roiType;
-    // Rpp32u layout;
+    void* roi_tensor_ptr_src;
+    RpptROI* roi_ptr_src;
+    void* roi_tensor_ptr_dst;
+    RpptROI* roi_ptr_dst;
     size_t in_tensor_dims[NUM_OF_DIMS];
     size_t out_tensor_dims[NUM_OF_DIMS];
     vx_enum in_tensor_type;
@@ -63,13 +65,26 @@ struct SpectrogramLocalData
 #endif
 };
 
+void update_destination_roi(const vx_reference *parameters, SpectrogramLocalData *data)
+{
+    data->roi_ptr_dst = (RpptROI *)data->roi_tensor_ptr_dst;
+    data->roi_ptr_src = (RpptROI *)data->roi_tensor_ptr_src;
+    if(!data->centerWindow)
+        data->windowOffset = data->windowLength;
+    //TODO: Check with Sampath on else condition
+    for (uint i=0; i < data->nbatchSize; i++)
+    {
+        data->roi_ptr_dst[i].xywhROI.xy.x =(( data->sampleLength[i] - data->windowOffset ) / data->windowStep) + 1;
+        data->roi_ptr_dst[i].xywhROI.xy.y =  (data->nfftSize / 2 )+ 1;
+    }
+}
+
 static vx_status VX_CALLBACK refreshSpectrogram(vx_node node, const vx_reference *parameters, vx_uint32 num, SpectrogramLocalData *data)
 {
     vx_status status = VX_SUCCESS;
-    STATUS_ERROR_CHECK(vxCopyArrayRange((vx_array)parameters[2], 0, data->nbatchSize, sizeof(unsigned), data->sampleLength, VX_READ_ONLY, VX_MEMORY_TYPE_HOST));
     if(!data->isWindowEmpty)
     {
-        STATUS_ERROR_CHECK(vxCopyArrayRange((vx_array)parameters[3], 0, data->windowLength, sizeof(float), data->windowFn, VX_READ_ONLY, VX_MEMORY_TYPE_HOST));
+        STATUS_ERROR_CHECK(vxCopyArrayRange((vx_array)parameters[4], 0, data->windowLength, sizeof(float), data->windowFn, VX_READ_ONLY, VX_MEMORY_TYPE_HOST));
     }
     else
     {
@@ -83,6 +98,8 @@ static vx_status VX_CALLBACK refreshSpectrogram(vx_node node, const vx_reference
 #elif ENABLE_HIP
         STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[0], VX_TENSOR_BUFFER_HIP, &data->hip_pSrc, sizeof(data->hip_pSrc)));
         STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[1], VX_TENSOR_BUFFER_HIP, &data->hip_pDst, sizeof(data->hip_pDst)));
+        STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[2], VX_TENSOR_BUFFER_HIP, &data->roi_tensor_ptr_src, sizeof(data->roi_tensor_ptr_src)));
+        STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[3], VX_TENSOR_BUFFER_HIP, &data->roi_tensor_ptr_dst, sizeof(data->roi_tensor_ptr_dst)));
 #endif
     }
     if (data->deviceType == AGO_TARGET_AFFINITY_CPU)
@@ -91,8 +108,16 @@ static vx_status VX_CALLBACK refreshSpectrogram(vx_node node, const vx_reference
         {
             STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[0], VX_TENSOR_BUFFER_HOST, &data->pSrc, sizeof(vx_float32)));
             STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[1], VX_TENSOR_BUFFER_HOST, &data->pDst, sizeof(vx_float32)));
+            STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[2], VX_TENSOR_BUFFER_HOST, &data->roi_tensor_ptr_src, sizeof(vx_uint32)));
+            STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[3], VX_TENSOR_BUFFER_HOST, &data->roi_tensor_ptr_dst, sizeof(vx_uint32)));
         }
     }
+    data->roi_ptr_src = (RpptROI *)data->roi_tensor_ptr_src;
+        for (uint i=0; i < data->nbatchSize; i++)
+    {
+        data->sampleLength[i] = data->roi_ptr_src[i].xywhROI.xy.x;
+    }
+    update_destination_roi(parameters, data);
     return status;
 }
 
@@ -100,28 +125,28 @@ static vx_status VX_CALLBACK validateSpectrogram(vx_node node, const vx_referenc
 {
     vx_status status = VX_SUCCESS;
     vx_enum scalar_type;
-    STATUS_ERROR_CHECK(vxQueryScalar((vx_scalar)parameters[4], VX_SCALAR_TYPE, &scalar_type, sizeof(scalar_type)));
-    if (scalar_type != VX_TYPE_BOOL)
-        return ERRMSG(VX_ERROR_INVALID_TYPE, "validate: Paramter: #4 type=%d (must be size)\n", scalar_type);
     STATUS_ERROR_CHECK(vxQueryScalar((vx_scalar)parameters[5], VX_SCALAR_TYPE, &scalar_type, sizeof(scalar_type)));
     if (scalar_type != VX_TYPE_BOOL)
-        return ERRMSG(VX_ERROR_INVALID_TYPE, "validate: Paramter: #5 type=%d (must be size)\n", scalar_type);
+        return ERRMSG(VX_ERROR_INVALID_TYPE, "validate: Paramter: #4 type=%d (must be size)\n", scalar_type);
     STATUS_ERROR_CHECK(vxQueryScalar((vx_scalar)parameters[6], VX_SCALAR_TYPE, &scalar_type, sizeof(scalar_type)));
+    if (scalar_type != VX_TYPE_BOOL)
+        return ERRMSG(VX_ERROR_INVALID_TYPE, "validate: Paramter: #5 type=%d (must be size)\n", scalar_type);
+    STATUS_ERROR_CHECK(vxQueryScalar((vx_scalar)parameters[7], VX_SCALAR_TYPE, &scalar_type, sizeof(scalar_type)));
     if (scalar_type != VX_TYPE_UINT32)
         return ERRMSG(VX_ERROR_INVALID_TYPE, "validate: Paramter: #6 type=%d (must be size)\n", scalar_type);
-    STATUS_ERROR_CHECK(vxQueryScalar((vx_scalar)parameters[7], VX_SCALAR_TYPE, &scalar_type, sizeof(scalar_type)));
-    if (scalar_type != VX_TYPE_INT32)
-        return ERRMSG(VX_ERROR_INVALID_TYPE, "validate: Paramter: #7 type=%d (must be size)\n", scalar_type);
     STATUS_ERROR_CHECK(vxQueryScalar((vx_scalar)parameters[8], VX_SCALAR_TYPE, &scalar_type, sizeof(scalar_type)));
     if (scalar_type != VX_TYPE_INT32)
-        return ERRMSG(VX_ERROR_INVALID_TYPE, "validate: Paramter: #8 type=%d (must be size)\n", scalar_type);
+        return ERRMSG(VX_ERROR_INVALID_TYPE, "validate: Paramter: #7 type=%d (must be size)\n", scalar_type);
     STATUS_ERROR_CHECK(vxQueryScalar((vx_scalar)parameters[9], VX_SCALAR_TYPE, &scalar_type, sizeof(scalar_type)));
     if (scalar_type != VX_TYPE_INT32)
-        return ERRMSG(VX_ERROR_INVALID_TYPE, "validate: Paramter: #9 type=%d (must be size)\n", scalar_type);
+        return ERRMSG(VX_ERROR_INVALID_TYPE, "validate: Paramter: #8 type=%d (must be size)\n", scalar_type);
     STATUS_ERROR_CHECK(vxQueryScalar((vx_scalar)parameters[10], VX_SCALAR_TYPE, &scalar_type, sizeof(scalar_type)));
     if (scalar_type != VX_TYPE_INT32)
-        return ERRMSG(VX_ERROR_INVALID_TYPE, "validate: Paramter: #10 type=%d (must be size)\n", scalar_type);
+        return ERRMSG(VX_ERROR_INVALID_TYPE, "validate: Paramter: #9 type=%d (must be size)\n", scalar_type);
     STATUS_ERROR_CHECK(vxQueryScalar((vx_scalar)parameters[11], VX_SCALAR_TYPE, &scalar_type, sizeof(scalar_type)));
+    if (scalar_type != VX_TYPE_INT32)
+        return ERRMSG(VX_ERROR_INVALID_TYPE, "validate: Paramter: #10 type=%d (must be size)\n", scalar_type);
+    STATUS_ERROR_CHECK(vxQueryScalar((vx_scalar)parameters[12], VX_SCALAR_TYPE, &scalar_type, sizeof(scalar_type)));
     if (scalar_type != VX_TYPE_BOOL)
         return ERRMSG(VX_ERROR_INVALID_TYPE, "validate: Paramter: #11 type=%d (must be size)\n", scalar_type);
 
@@ -182,16 +207,16 @@ static vx_status VX_CALLBACK initializeSpectrogram(vx_node node, const vx_refere
 #elif ENABLE_HIP
     STATUS_ERROR_CHECK(vxQueryNode(node, VX_NODE_ATTRIBUTE_AMD_HIP_STREAM, &data->handle.hipstream, sizeof(data->handle.hipstream)));
 #endif
-    STATUS_ERROR_CHECK(vxCopyScalar((vx_scalar)parameters[13], &data->deviceType, VX_READ_ONLY, VX_MEMORY_TYPE_HOST));
-    STATUS_ERROR_CHECK(vxReadScalarValue((vx_scalar)parameters[4], &data->centerWindow));
-    STATUS_ERROR_CHECK(vxReadScalarValue((vx_scalar)parameters[5], &data->reflectPadding));
-    STATUS_ERROR_CHECK(vxReadScalarValue((vx_scalar)parameters[6], &data->specLayout));
-    STATUS_ERROR_CHECK(vxReadScalarValue((vx_scalar)parameters[7], &data->power));
-    STATUS_ERROR_CHECK(vxReadScalarValue((vx_scalar)parameters[8], &data->nfftSize));
-    STATUS_ERROR_CHECK(vxReadScalarValue((vx_scalar)parameters[9], &data->windowLength));
-    STATUS_ERROR_CHECK(vxReadScalarValue((vx_scalar)parameters[10], &data->windowStep));
-    STATUS_ERROR_CHECK(vxReadScalarValue((vx_scalar)parameters[11], &data->isWindowEmpty));
-    STATUS_ERROR_CHECK(vxReadScalarValue((vx_scalar)parameters[12], &data->nbatchSize));
+    STATUS_ERROR_CHECK(vxCopyScalar((vx_scalar)parameters[14], &data->deviceType, VX_READ_ONLY, VX_MEMORY_TYPE_HOST));
+    STATUS_ERROR_CHECK(vxReadScalarValue((vx_scalar)parameters[5], &data->centerWindow));
+    STATUS_ERROR_CHECK(vxReadScalarValue((vx_scalar)parameters[6], &data->reflectPadding));
+    STATUS_ERROR_CHECK(vxReadScalarValue((vx_scalar)parameters[7], &data->specLayout));
+    STATUS_ERROR_CHECK(vxReadScalarValue((vx_scalar)parameters[8], &data->power));
+    STATUS_ERROR_CHECK(vxReadScalarValue((vx_scalar)parameters[9], &data->nfftSize));
+    STATUS_ERROR_CHECK(vxReadScalarValue((vx_scalar)parameters[10], &data->windowLength));
+    STATUS_ERROR_CHECK(vxReadScalarValue((vx_scalar)parameters[11], &data->windowStep));
+    STATUS_ERROR_CHECK(vxReadScalarValue((vx_scalar)parameters[12], &data->isWindowEmpty));
+    STATUS_ERROR_CHECK(vxReadScalarValue((vx_scalar)parameters[13], &data->nbatchSize));
 
     // Querying for input tensor
     data->src_desc_ptr = &data->srcDesc;
@@ -303,7 +328,7 @@ vx_status Spectrogram_Register(vx_context context)
     vx_kernel kernel = vxAddUserKernel(context, "org.rpp.Spectrogram",
                                        VX_KERNEL_RPP_SPECTROGRAM,
                                        processSpectrogram,
-                                       14,
+                                       15,
                                        validateSpectrogram,
                                        initializeSpectrogram,
                                        uninitializeSpectrogram);
@@ -325,9 +350,9 @@ vx_status Spectrogram_Register(vx_context context)
         STATUS_ERROR_CHECK(vxSetKernelAttribute(kernel, VX_KERNEL_ATTRIBUTE_AMD_QUERY_TARGET_SUPPORT, &query_target_support_f, sizeof(query_target_support_f)));
         PARAM_ERROR_CHECK(vxAddParameterToKernel(kernel, 0, VX_INPUT, VX_TYPE_TENSOR, VX_PARAMETER_STATE_REQUIRED));
         PARAM_ERROR_CHECK(vxAddParameterToKernel(kernel, 1, VX_OUTPUT, VX_TYPE_TENSOR, VX_PARAMETER_STATE_REQUIRED));
-        PARAM_ERROR_CHECK(vxAddParameterToKernel(kernel, 2, VX_INPUT, VX_TYPE_ARRAY, VX_PARAMETER_STATE_REQUIRED));
-        PARAM_ERROR_CHECK(vxAddParameterToKernel(kernel, 3, VX_INPUT, VX_TYPE_ARRAY, VX_PARAMETER_STATE_REQUIRED));
-        PARAM_ERROR_CHECK(vxAddParameterToKernel(kernel, 4, VX_INPUT, VX_TYPE_SCALAR, VX_PARAMETER_STATE_REQUIRED));
+        PARAM_ERROR_CHECK(vxAddParameterToKernel(kernel, 2, VX_INPUT, VX_TYPE_TENSOR, VX_PARAMETER_STATE_REQUIRED));
+        PARAM_ERROR_CHECK(vxAddParameterToKernel(kernel, 3, VX_INPUT, VX_TYPE_TENSOR, VX_PARAMETER_STATE_REQUIRED));
+        PARAM_ERROR_CHECK(vxAddParameterToKernel(kernel, 4, VX_INPUT, VX_TYPE_ARRAY, VX_PARAMETER_STATE_REQUIRED));
         PARAM_ERROR_CHECK(vxAddParameterToKernel(kernel, 5, VX_INPUT, VX_TYPE_SCALAR, VX_PARAMETER_STATE_REQUIRED));
         PARAM_ERROR_CHECK(vxAddParameterToKernel(kernel, 6, VX_INPUT, VX_TYPE_SCALAR, VX_PARAMETER_STATE_REQUIRED));
         PARAM_ERROR_CHECK(vxAddParameterToKernel(kernel, 7, VX_INPUT, VX_TYPE_SCALAR, VX_PARAMETER_STATE_REQUIRED));
@@ -337,6 +362,7 @@ vx_status Spectrogram_Register(vx_context context)
         PARAM_ERROR_CHECK(vxAddParameterToKernel(kernel, 11, VX_INPUT, VX_TYPE_SCALAR, VX_PARAMETER_STATE_REQUIRED));
         PARAM_ERROR_CHECK(vxAddParameterToKernel(kernel, 12, VX_INPUT, VX_TYPE_SCALAR, VX_PARAMETER_STATE_REQUIRED));
         PARAM_ERROR_CHECK(vxAddParameterToKernel(kernel, 13, VX_INPUT, VX_TYPE_SCALAR, VX_PARAMETER_STATE_REQUIRED));
+        PARAM_ERROR_CHECK(vxAddParameterToKernel(kernel, 14, VX_INPUT, VX_TYPE_SCALAR, VX_PARAMETER_STATE_REQUIRED));
         PARAM_ERROR_CHECK(vxFinalizeKernel(kernel));
     }
     if (status != VX_SUCCESS)

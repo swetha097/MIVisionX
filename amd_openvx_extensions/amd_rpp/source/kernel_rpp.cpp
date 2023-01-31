@@ -2210,7 +2210,7 @@ VX_API_ENTRY vx_node VX_API_CALL vxExtrppNode_PreemphasisFilter(vx_graph graph, 
     return node;
 }
 
-VX_API_ENTRY vx_node VX_API_CALL vxExtrppNode_Spectrogram(vx_graph graph, vx_tensor pSrc, vx_tensor pDst, vx_array srcSamplesLength, vx_array windowFn, vx_scalar centerWindow, vx_scalar reflectPadding, vx_scalar specLayout,
+VX_API_ENTRY vx_node VX_API_CALL vxExtrppNode_Spectrogram(vx_graph graph, vx_tensor pSrc, vx_tensor pDst, vx_tensor srcSamplesLength, vx_tensor dstSamplesLength, vx_array windowFn, vx_scalar centerWindow, vx_scalar reflectPadding, vx_scalar specLayout,
                                                           vx_scalar power, vx_scalar nfftSize, vx_scalar windowLength, vx_scalar windowStep, vx_scalar isWindowEmpty, vx_uint32 nbatchSize)
 {
     vx_node node = NULL;
@@ -2224,6 +2224,7 @@ VX_API_ENTRY vx_node VX_API_CALL vxExtrppNode_Spectrogram(vx_graph graph, vx_ten
             (vx_reference)pSrc,
             (vx_reference)pDst,
             (vx_reference)srcSamplesLength,
+            (vx_reference)dstSamplesLength,
             (vx_reference)windowFn,
             (vx_reference)centerWindow,
             (vx_reference)reflectPadding,
@@ -2235,7 +2236,7 @@ VX_API_ENTRY vx_node VX_API_CALL vxExtrppNode_Spectrogram(vx_graph graph, vx_ten
             (vx_reference)isWindowEmpty,
             (vx_reference)NBATCHSIZE,
             (vx_reference)DEV_TYPE};
-        node = createNode(graph, VX_KERNEL_RPP_SPECTROGRAM, params, 14);
+        node = createNode(graph, VX_KERNEL_RPP_SPECTROGRAM, params, 15);
     }
     return node;
 }
