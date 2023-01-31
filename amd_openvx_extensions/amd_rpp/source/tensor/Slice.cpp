@@ -101,8 +101,6 @@ void update_destination_roi(const vx_reference *parameters, SliceLocalData *data
         }
         
     }
-    // vx_status status = vxCopyTensorPatch((vx_tensor)parameters[3], 2 , nullptr, nullptr, stride, data->roi_ptr_dst.data(), VX_WRITE_ONLY, VX_MEMORY_TYPE_HOST);
-
 }
 
 static vx_status VX_CALLBACK refreshSlice(vx_node node, const vx_reference *parameters, vx_uint32 num, SliceLocalData *data)

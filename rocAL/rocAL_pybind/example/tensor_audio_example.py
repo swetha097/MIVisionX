@@ -100,7 +100,7 @@ def main():
         # new_dist =  trim_silence
         # distributed_normalied_audio = trim_silence * new_dist
         # distribution_new = distribution * dither
-        # premph_audio = fn.preemphasis_filter(audio_decode)
+        premph_audio = fn.preemphasis_filter(trim_silence)
         # spectrogram_audio = fn.spectrogram(
         #     premph_audio,
         #     nfft=nfft,
@@ -122,7 +122,7 @@ def main():
         # )
         # normalize_audio = fn.normalize(to_decibels_audio, axes=[1])
         # pad_audio = fn.pad(normalize_audio, fill_value=0)
-        audio_pipeline.set_outputs(trim_silence)
+        audio_pipeline.set_outputs(premph_audio)
 
     audio_pipeline.build()
     audioIteratorPipeline = ROCALClassificationIterator(audio_pipeline)

@@ -2187,7 +2187,7 @@ VX_API_ENTRY vx_node VX_API_CALL vxExtrppNode_ToDecibels(vx_graph graph, vx_tens
     return node;
 }
 
-VX_API_ENTRY vx_node VX_API_CALL vxExtrppNode_PreemphasisFilter(vx_graph graph, vx_tensor pSrc, vx_tensor pDst, vx_array srcSamplesSize, vx_array preemphCoeff, vx_scalar borderType, vx_uint32 nbatchSize)
+VX_API_ENTRY vx_node VX_API_CALL vxExtrppNode_PreemphasisFilter(vx_graph graph, vx_tensor pSrc, vx_tensor pDst, vx_tensor srcSamplesSize, vx_tensor dstSamplesSize, vx_array preemphCoeff, vx_scalar borderType, vx_uint32 nbatchSize)
 {
     vx_node node = NULL;
     vx_context context = vxGetContext((vx_reference)graph);
@@ -2200,11 +2200,12 @@ VX_API_ENTRY vx_node VX_API_CALL vxExtrppNode_PreemphasisFilter(vx_graph graph, 
             (vx_reference)pSrc,
             (vx_reference)pDst,
             (vx_reference)srcSamplesSize,
+            (vx_reference)dstSamplesSize,
             (vx_reference)preemphCoeff,
             (vx_reference)borderType,
             (vx_reference)NBATCHSIZE,
             (vx_reference)DEV_TYPE};
-        node = createNode(graph, VX_KERNEL_RPP_PREEMPHASISFILTER, params, 7);
+        node = createNode(graph, VX_KERNEL_RPP_PREEMPHASISFILTER, params, 8);
     }
     return node;
 }
