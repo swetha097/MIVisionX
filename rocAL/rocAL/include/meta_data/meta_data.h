@@ -400,7 +400,7 @@ struct BoundingBoxBatch: public MetaDataBatch
         _buffer_size.emplace_back(_total_objects_count * sizeof(int));
         _buffer_size.emplace_back(_total_objects_count * 4 * sizeof(float));
         if(is_box_iou_matcher)
-            _buffer_size.emplace_back(ANCHOR_SIZE * sizeof(int));
+            _buffer_size.emplace_back(_bb_cords.size() * ANCHOR_SIZE * sizeof(int));
         if(is_segmentation)
             _buffer_size.emplace_back(_total_mask_coords_count * sizeof(float));
         return _buffer_size;
