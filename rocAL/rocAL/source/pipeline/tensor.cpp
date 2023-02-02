@@ -108,8 +108,14 @@ bool operator==(const rocalTensorInfo &rhs, const rocalTensorInfo &lhs) {
 
 
 void rocalTensorInfo::reset_tensor_roi_buffers() {
-    if(!_roi_buf)
-        allocate_host_or_pinned_mem(&_roi_buf, _batch_size * 4 * sizeof(unsigned), _mem_type);
+    allocate_host_or_pinned_mem((void **)&_roi_buf, _batch_size * 4 * sizeof(unsigned), _mem_type);
+    if (_mem_type == RocalMemType::HIP) {
+#if ENABLE_HIP
+        _roi.reset(_roi_buf, hipHostFree);
+#endif
+    } else {
+        _roi.reset(_roi_buf, free);
+    }
     if (_is_image) {
         auto roi = get_roi();
         for (unsigned i = 0; i < _batch_size; i++) {
@@ -141,45 +147,6 @@ rocalTensorInfo::rocalTensorInfo(std::vector<size_t> dims,
     for (unsigned i = 0; i < _num_of_dims; i++) _data_size *= dims.at(i);
 
     if (_num_of_dims <= 3) _is_image = false;
-}
-
-rocalTensorInfo::rocalTensorInfo(const rocalTensorInfo &other) {
-    _type = other._type;
-    _num_of_dims = other._num_of_dims;
-    _dims = other._dims;
-    _batch_size = other._batch_size;
-    _mem_type = other._mem_type;
-    _roi_type = other._roi_type;
-    _data_type = other._data_type;
-    _layout = other._layout;
-    _color_format = other._color_format;
-    _data_type_size = other._data_type_size;
-    _data_size = other._data_size;
-    _max_shape = other._max_shape;
-    _is_image = other._is_image;
-    _is_metadata = other._is_metadata;
-    _channels = other._channels;
-    if(!other.is_metadata()) {  // For Metadata ROI buffer is not required
-        allocate_host_or_pinned_mem(&_roi_buf, _batch_size * 4 * sizeof(unsigned), _mem_type);
-        memcpy((void *)_roi_buf, (const void *)other.get_roi(), _batch_size * 4 * sizeof(unsigned));
-    }
-}
-
-rocalTensorInfo::~rocalTensorInfo() {
-    if(!_is_metadata) {
-        if(_mem_type == RocalMemType::HIP) {
-#if ENABLE_HIP
-            if(_roi_buf) {
-                hipError_t err = hipHostFree(_roi_buf);
-                if (err != hipSuccess)
-                    ERR("hipHostFree failed " + TOSTR(err));
-            }
-#endif
-        } else {
-            if(_roi_buf) free(_roi_buf);
-        }
-        _roi_buf = nullptr;
-    } 
 }
 
 void rocalTensor::update_tensor_roi(const std::vector<uint32_t> &width,
