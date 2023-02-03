@@ -117,7 +117,8 @@ int test(int test_case, const char *path, float sample_rate, int downmix, unsign
     // metadata_output = rocalCreateCOCOReader(handle, json_path, true, false);
 
     if (METADATA) {
-        const char* file_list_path = "/media/MIVisionX-data/rocal_data/audio_samples/file_list.txt" ; // TODO: Add this as an arg in main() 
+        std::cerr << "META DATA READER";
+        const char* file_list_path = "/workspace/rnnt/AMD/MIVisionX-data/rocal_data/audio_samples/audio_file_list.txt" ; // TODO: Add this as an arg in main() 
         metadata_output = rocalCreateFileListLabelReader(handle, path, file_list_path);
     }
 
@@ -269,6 +270,10 @@ int test(int test_case, const char *path, float sample_rate, int downmix, unsign
             // {
             //     std::cerr << (float)buffer[n] << "\n";
             // }
+            for (uint i=0; i<inputBatchSize; i++) {
+            std::cerr << "\n*************** ROI x1 *************: " <<output_tensor_list->at(idx)->info().get_roi()[i].x1;
+            std::cerr << "\n*************** ROI y1 *************: " <<output_tensor_list->at(idx)->info().get_roi()[i].y1;
+            }
             for(int n = 0; n < 5; n++)
             {
                 std::cerr << buffer[n] << "\n";
@@ -284,7 +289,10 @@ int test(int test_case, const char *path, float sample_rate, int downmix, unsign
             {
                 int * labels_buffer = (int *)(labels->at(i)->buffer());
                 std::cerr << ">>>>> LABELS : " << labels_buffer[0] << "\t";
+
+
             }
+
         }
         std::cerr<<"******************************************************************************\n";
     }

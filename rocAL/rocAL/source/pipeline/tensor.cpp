@@ -89,28 +89,31 @@ bool operator==(const rocalTensorInfo &rhs, const rocalTensorInfo &lhs) {
             rhs.layout() == lhs.layout());
 }
 
-void rocalTensorInfo::allocate_tensor_roi_buffers() {
-    size_t roi_size = _batch_size * 4 * sizeof(unsigned);
-    if(_mem_type == RocalMemType::HIP) {
+void allocate_host_or_pinned_mem(void **ptr, size_t size, RocalMemType mem_type) {
+    if (mem_type == RocalMemType::HIP) {
 #if ENABLE_HIP
-    hipError_t err = hipHostMalloc((void **)&_roi_buf, roi_size, hipHostMallocDefault/*hipHostMallocMapped|hipHostMallocWriteCombined*/);
-    if(err != hipSuccess || !_roi_buf)
-        THROW("hipHostMalloc of size " + TOSTR(roi_size) + " failed " + TOSTR(err))
-    err = hipMemset((void *)_roi_buf, 0, roi_size);
+    hipError_t err = hipHostMalloc((void **)ptr, size, hipHostMallocDefault);
+    if(err != hipSuccess || !*ptr)
+        THROW("hipHostMalloc of size " + TOSTR(size) + " failed " + TOSTR(err))
+    err = hipMemset((void *)*ptr, 0, size);
     if(err != hipSuccess)
-        THROW("hipMemset of size " + TOSTR(roi_size) + " failed " + TOSTR(err))
+        THROW("hipMemset of size " + TOSTR(size) + " failed " + TOSTR(err))
 #endif
     } else {
-        _roi_buf = (void *)malloc(roi_size);
-        memset((void *) _roi_buf, 0, roi_size);
+        *ptr = (void *)malloc(size);
+        memset((void *)*ptr, 0, size);
     }
 }
 
 void rocalTensorInfo::reset_tensor_roi_buffers() {
-    
-    if(!_roi_buf)
-        allocate_tensor_roi_buffers();
-
+    allocate_host_or_pinned_mem((void **)&_roi_buf, _batch_size * 4 * sizeof(unsigned), _mem_type);
+    if (_mem_type == RocalMemType::HIP) {
+#if ENABLE_HIP
+        _roi.reset(_roi_buf, hipHostFree);
+#endif
+    } else {
+        _roi.reset(_roi_buf, free);
+    }
     if (_is_image) {
         auto roi = get_roi();
         for (unsigned i = 0; i < _batch_size; i++) {
@@ -122,44 +125,7 @@ void rocalTensorInfo::reset_tensor_roi_buffers() {
     }
 }
 
-rocalTensorInfo::rocalTensorInfo(const rocalTensorInfo &other) {
-    _type = other._type;
-    _num_of_dims = other._num_of_dims;
-    _dims = other._dims;
-    _batch_size = other._batch_size;
-    _mem_type = other._mem_type;
-    _roi_type = other._roi_type;
-    _data_type = other._data_type;
-    _layout = other._layout;
-    _color_format = other._color_format;
-    _data_type_size = other._data_type_size;
-    _data_size = other._data_size;
-    _max_dims = other._max_dims;
-    _is_image = other._is_image;
-    _is_metadata = other._is_metadata;
-    _channels = other._channels;
-    if(!other.is_metadata()) {  // For Metadata ROI buffer is not required
-        allocate_tensor_roi_buffers();
-        if(!other.get_roi())
-            memcpy((void *)_roi_buf, (const void *)other.get_roi(), _batch_size * 4 * sizeof(unsigned));
-    }
-}
 
-rocalTensorInfo::~rocalTensorInfo() {
-    if(!_is_metadata) {
-        if(_mem_type == RocalMemType::HIP) {
-#if ENABLE_HIP
-            if(!_roi_buf) {
-                hipError_t err = hipHostFree(_roi_buf);
-                if (err != hipSuccess)
-                    ERR("hipHostFree failed " + TOSTR(err));
-            }
-#endif
-        } else {
-            if(!_roi_buf) free(_roi_buf);
-        }
-    } 
-}
 
 void rocalTensorInfo::reallocate_tensor_sample_rate_buffers() {
     _sample_rate = std::make_shared<std::vector<float>>(_batch_size);
@@ -296,7 +262,6 @@ rocalTensor::~rocalTensor() {
 
 rocalTensor::rocalTensor(const rocalTensorInfo &tensor_info)
     : _info(tensor_info) {
-        std::cerr << "\n Constructor called";
     _info._type = rocalTensorInfo::Type::UNKNOWN;
     _mem_handle = nullptr;
 }

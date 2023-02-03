@@ -53,6 +53,16 @@ vx_enum vx_mem_type(RocalMemType mem);
 vx_size tensor_data_size(RocalTensorDataType data_type);
 
 /*! \brief Holds the information about a rocalTensor */
+
+/*! \brief Allocated memory for given size
+ *
+ * @param void * The ptr for which memory is allocated
+ * @param size_t size of the buffer
+ * @param RocalMemType For HIP memType pinned memory is allocated
+ *        else HOST memory is allocated
+ */
+void allocate_host_or_pinned_mem(void **ptr, size_t size, RocalMemType mem_type);
+
 class rocalTensorInfo {
 public:
     friend class rocalTensor;
@@ -72,8 +82,6 @@ public:
                     RocalTensorDataType data_type);
 
     //! Copy constructor
-    rocalTensorInfo(const rocalTensorInfo& info);
-    ~rocalTensorInfo();
 
     // Setting properties required for Image / Video
     void set_roi_type(RocalROIType roi_type) { _roi_type = roi_type; }
@@ -133,7 +141,7 @@ public:
     RocalROIType roi_type() const { return _roi_type; }
     RocalTensorDataType data_type() const { return _data_type; }
     RocalTensorlayout layout() const { return _layout; }
-    RocalROI * get_roi() const { return (RocalROI *)_roi_buf; }
+    RocalROI * get_roi() const { return (RocalROI *)_roi.get(); }
     std::shared_ptr<std::vector<float>> get_sample_rate() const { return _sample_rate; }
     RocalColorFormat color_format() const { return _color_format; }
     Type type() const { return _type; }
@@ -155,17 +163,17 @@ private:
     RocalTensorDataType _data_type = RocalTensorDataType::FP32;  //!< tensor data type
     RocalTensorlayout _layout = RocalTensorlayout::NONE;     //!< layout of the tensor
     RocalColorFormat _color_format;  //!< color format of the image
-    void *_roi_buf;
     std::shared_ptr<std::vector<float>> _sample_rate;
     size_t _data_type_size = tensor_data_size(_data_type);
     size_t _data_size = 0;
     std::vector<size_t> _max_dims;  //!< stores the the width and height dimensions in the tensor
     void reallocate_tensor_sample_rate_buffers();
-    void allocate_tensor_roi_buffers();
     void reset_tensor_roi_buffers();
     bool _is_image = false;
     bool _is_metadata = false;
     size_t _channels = 3;   //!< stores the channel dimensions in the tensor
+    unsigned *_roi_buf = nullptr;
+    std::shared_ptr<unsigned> _roi;
 };
 
 bool operator==(const rocalTensorInfo& rhs, const rocalTensorInfo& lhs);

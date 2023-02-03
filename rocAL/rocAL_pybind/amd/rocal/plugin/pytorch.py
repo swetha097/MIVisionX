@@ -55,21 +55,17 @@ class RALIGenericIterator(object):
     def __init__(self, pipeline, tensor_layout = types.NCHW, reverse_channels = False, multiplier = [1.0,1.0,1.0], offset = [0.0, 0.0, 0.0], tensor_dtype=types.FLOAT):
         self.loader = pipeline
         self.tensor_format =tensor_layout
-        # print("HERE 1")
         self.multiplier = multiplier
         self.offset = offset
         self.reverse_channels = reverse_channels
-        # print("HERE 2")
         self.tensor_dtype = tensor_dtype
         self.len = b.getRemainingImages(self.loader._handle)
-        # print("HERE 3")
 
 
     def next(self):
         return self.__next__()
 
     def __next__(self):
-        # print("Comes to next")
         torch.set_printoptions(threshold=10_000, profile="full", edgeitems=100)
         if(b.isEmpty(self.loader._handle)):
             raise StopIteration
@@ -123,13 +119,7 @@ class RALIGenericIterator(object):
             # print("\n The ROI Shapes",torch.tensor(self.output_tensor_list[0].get_roi_at(0)))
             for i in range(self.batch_size):
                 self.audio_length_roi.append((self.output_tensor_list[0].get_roi_at(i)))
-            # print("\n The tensor ROI", torch.tensor(self.audio_length_roi))
-            
-            #try q
-            # self.roi_size = torch.empty(self.batch_size, 2)
-            # print("THE ROOOOOI SHAPESSS:",self.output_tensor_list[0].get_rois())
-            # print("****", self.roi_size)
-            
+            print("\n The tensor ROI", torch.tensor(self.audio_length_roi))
 
             # print(self.batch_size * self.channels * self.samples)
             self.output = torch.empty((self.batch_size, self.samples, self.channels,), dtype=torch.float32)
@@ -138,7 +128,6 @@ class RALIGenericIterator(object):
             self.output_tensor_list[0].copy_data(ctypes.c_void_p(self.output.data_ptr()))
             self.labels = self.loader.rocalGetImageLabels()
             self.labels_tensor = torch.from_numpy(self.labels).type(torch.LongTensor)
-            # print("LABELS : ", self.labels_tensor)
             
             return self.output, self.labels_tensor, torch.tensor(self.audio_length_roi)
 

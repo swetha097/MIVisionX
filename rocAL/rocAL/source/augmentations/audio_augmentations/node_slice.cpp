@@ -69,6 +69,7 @@ void SliceNode::update_node()
 
     vx_status anchor_status  =  (vxQueryTensor((vx_tensor)_anchor->handle(), VX_TENSOR_BUFFER_HOST, &_anchor_array, sizeof(vx_float32)));
     vx_status shape_status = (vxQueryTensor((vx_tensor)_shape->handle(), VX_TENSOR_BUFFER_HOST, &_shape_array, sizeof(vx_float32)));
+    auto output_audio_roi = _outputs[0]->info().get_roi();
 
     if((anchor_status || shape_status) != 0)
         THROW(" Failed calling vxCopyArrayRange for src / dst roi status : "+ TOSTR(anchor_status) + TOSTR(shape_status))
@@ -83,6 +84,7 @@ void SliceNode::update_node()
         num_of_dims_shapes_anchors = 2;
     for(unsigned i = 0; i < _batch_size; i++) {
         int idx = i * num_of_dims_shapes_anchors;
+        std::cerr << "\n In Slice ::  output_audio_roi[i].x1 ::  " <<  output_audio_roi[i].x1;
         for(unsigned d = 0; d < num_of_dims_shapes_anchors; d++) {
         // std::cerr << "\n Anchor : " << _anchor_array[idx + d] << "|\t Shape Array : " << (_shape_array[idx + d] - _anchor_array[idx + d]);
         //TODO: Swetha : To handle 3d data by checking NCHW / NHWC format for images
