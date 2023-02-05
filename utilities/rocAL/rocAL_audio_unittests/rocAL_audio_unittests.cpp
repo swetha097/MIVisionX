@@ -273,6 +273,8 @@ int test(int test_case, const char *path, float sample_rate, int downmix, unsign
             for (uint i=0; i<inputBatchSize; i++) {
             std::cerr << "\n*************** ROI x1 *************: " <<output_tensor_list->at(idx)->info().get_roi()[i].x1;
             std::cerr << "\n*************** ROI y1 *************: " <<output_tensor_list->at(idx)->info().get_roi()[i].y1;
+            // std::cerr << "\n*************** ROI x2 *************: " <<output_tensor_list->at(idx)->info().get_roi()[i].x2;
+            // std::cerr << "\n*************** ROI y2 *************: " <<output_tensor_list->at(idx)->info().get_roi()[i].y2;
             }
             for(int n = 0; n < 5; n++)
             {

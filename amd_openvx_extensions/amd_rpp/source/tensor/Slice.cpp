@@ -77,6 +77,7 @@ void update_destination_roi(const vx_reference *parameters, SliceLocalData *data
         {
             dimsTotal*=data->out_tensor_dims[numDims];
         }
+    std::cerr << "\n dimsTotal" << dimsTotal;
     if (dimsTotal == data->nbatchSize)
         num_of_dims_shapes_anchors = 1;
     else if ((dimsTotal == (data->nbatchSize*2)))
@@ -86,7 +87,7 @@ void update_destination_roi(const vx_reference *parameters, SliceLocalData *data
         for(unsigned i = 0; i < data->nbatchSize; i++) {
         int idx = i * num_of_dims_shapes_anchors;
         for(unsigned d = 0; d < num_of_dims_shapes_anchors; d++) {
-        // std::cerr << "\n Anchor : " << data->anchor[idx + d] << "|\t Shape Array : " << (_shape_array[idx + d] - data->anchor[idx + d]);
+        std::cerr << "\n Anchor : " << data->anchor[idx + d] << "|\t Shape Array : " << (data->shape[idx + d] - data->anchor[idx + d]);
         //TODO: Swetha : To handle 3d data by checking NCHW / NHWC format for images
             if(data->shape[i + data->nbatchSize] > 0  ) { // 2d anchors & shapes
                 if (d==0) data->roi_ptr_dst[i].xywhROI.xy.x = (data->shape[idx + d] - data->anchor[idx + d]);

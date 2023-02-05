@@ -25,12 +25,12 @@ def draw_patches(img, idx, device):
             image = img.detach().numpy()
     else:
         image = img.cpu().numpy()
-    print(img.cpu().detach().numpy().flatten())
+    # print(img.cpu().detach().numpy().flatten())
     # print(idx)
     audio_data = img.flatten()
     label = idx.cpu().detach().numpy()
-    print("label: ", label)
-    print("audio_data",audio_data)
+    # print("label: ", label)
+    # print("audio_data",audio_data)
     plt.plot(audio_data)
     plt.savefig("rocal_audio_data"+str(label)+".png")
 

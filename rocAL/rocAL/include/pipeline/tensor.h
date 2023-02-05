@@ -132,6 +132,10 @@ public:
     void set_color_format(RocalColorFormat color_format) {
         _color_format = color_format;
     }
+    void copy_roi(void *roi_buffer) {
+        if(_roi != nullptr)
+            memcpy((void *)roi_buffer, (const void *)_roi.get(), _batch_size * sizeof(RocalROI));
+    }
     unsigned num_of_dims() const { return _num_of_dims; }
     unsigned batch_size() const { return _batch_size; }
     size_t data_size() const { return _data_size; }
@@ -152,6 +156,7 @@ public:
     bool is_image() const { return _is_image; }
     void set_metadata() { _is_metadata = true; }
     bool is_metadata() const { return _is_metadata; }
+    void swap_roi_ptr(std::shared_ptr<unsigned> &ptr) { _roi.swap(ptr); };
 
 private:
     Type _type = Type::UNKNOWN;  //!< tensor type, whether is virtual tensor, created from handle or is a regular tensor
@@ -208,6 +213,7 @@ public:
     void update_tensor_roi(const std::vector<uint32_t>& width, const std::vector<uint32_t>& height);
     void update_audio_tensor_sample_rate(const std::vector<float>& sample_rate);
     void reset_tensor_roi() { _info.reset_tensor_roi_buffers(); }
+    void swap_tensor_roi(std::shared_ptr<unsigned> &roi_ptr) { _info.swap_roi_ptr(roi_ptr); }
     void reset_audio_sample_rate() {_info.reallocate_tensor_sample_rate_buffers();}
     // create_from_handle() no internal memory allocation is done here since
     // tensor's handle should be swapped with external buffers before usage
@@ -215,6 +221,7 @@ public:
     int create_virtual(vx_context context, vx_graph graph);
     bool is_handle_set() { return (_vx_handle != 0); }
     void set_dims(std::vector<size_t>& dims) { _info.set_dims(dims); }
+    void copy_roi(void *roi_buffer) { _info.copy_roi(roi_buffer); }
 
 private:
     vx_tensor _vx_handle = nullptr;  //!< The OpenVX tensor
