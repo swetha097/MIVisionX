@@ -2364,7 +2364,7 @@ VX_API_ENTRY vx_node VX_API_CALL vxExtrppNode_TensorAddTensor(vx_graph graph, vx
     return node;
 }
 
-VX_API_ENTRY vx_node VX_API_CALL vxExtrppNode_Resample(vx_graph graph, vx_tensor pSrc, vx_tensor pDst, 
+VX_API_ENTRY vx_node VX_API_CALL vxExtrppNode_Resample(vx_graph graph, vx_tensor pSrc, vx_tensor pDst, vx_tensor srcDims, vx_tensor dstDims,
                                                     vx_tensor outRateTensor, vx_array inRateTensor, vx_array srcSamples, vx_array srcChannels, 
                                                     vx_scalar quality,  vx_uint32 nbatchSize, vx_scalar maxDstWidth)
 {
@@ -2378,6 +2378,8 @@ VX_API_ENTRY vx_node VX_API_CALL vxExtrppNode_Resample(vx_graph graph, vx_tensor
         vx_reference params[] = {
             (vx_reference)pSrc,
             (vx_reference)pDst,
+            (vx_reference)srcDims,
+            (vx_reference)dstDims,
             (vx_reference)outRateTensor,
             (vx_reference)inRateTensor,
             (vx_reference)srcSamples,
@@ -2386,7 +2388,7 @@ VX_API_ENTRY vx_node VX_API_CALL vxExtrppNode_Resample(vx_graph graph, vx_tensor
             (vx_reference)maxDstWidth,
             (vx_reference)NBATCHSIZE,
             (vx_reference)DEV_TYPE};
-        node = createNode(graph, VX_KERNEL_RPP_RESAMPLE, params, 10);
+        node = createNode(graph, VX_KERNEL_RPP_RESAMPLE, params, 12);
         std::cerr << "Node created";
     }
     return node;

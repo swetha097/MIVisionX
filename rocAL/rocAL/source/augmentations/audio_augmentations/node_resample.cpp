@@ -58,8 +58,8 @@ void ResampleNode::create_node()
 
     vx_scalar quality = vxCreateScalar(vxGetContext((vx_reference)_graph->get()), VX_TYPE_FLOAT32, &_quality);
     vx_scalar _max_dst_width_scalar = vxCreateScalar(vxGetContext((vx_reference)_graph->get()), VX_TYPE_UINT32, &_max_dst_width);
-    // _node = vxExtrppNode_Resample(_graph->get(), _inputs[0]->handle(), _outputs[0]->handle(), 
-    //                              _resample_rate->handle(), _src_sample_rate_array, _src_frames_array, _src_channels_array, quality, _batch_size, _max_dst_width_scalar);
+    _node = vxExtrppNode_Resample(_graph->get(), _inputs[0]->handle(), _outputs[0]->handle(), _src_tensor_roi, _dst_tensor_roi,
+                                 _resample_rate->handle(), _src_sample_rate_array, _src_frames_array, _src_channels_array, quality, _batch_size, _max_dst_width_scalar);
     
     if((status = vxGetStatus((vx_reference)_node)) != VX_SUCCESS)
         THROW("Adding the copy (vxExtrppNode_Resample) node failed: "+ TOSTR(status))
@@ -75,40 +75,37 @@ void ResampleNode::update_node()
     if((src_roi_status || resample_rate_status) != 0)
         THROW(" Failed calling vxCopyArrayRange with status in resample node : "+ TOSTR(src_roi_status) + TOSTR(resample_rate_status))
 
-    auto audio_roi = _inputs[0]->info().get_roi();
-    auto audio_input_sample_rate = _inputs[0]->info().get_sample_rate();
+    // auto audio_roi = _inputs[0]->info().get_roi();
+    // auto audio_input_sample_rate = _inputs[0]->info().get_sample_rate();
     _max_dst_width = 0;
-    for (uint i=0; i < _batch_size; i++)
-    {
-        _src_frames[i] = audio_roi[i].x1;
-        _src_channels[i] = audio_roi[i].y1;
-        // TODO: Formula shared by Sampath - update the dst width & height later - calc ratio & then update it.
-        std::cerr << "\n _out_sample_rate_array[i] :" << _out_sample_rate_array[i];
-        std::cerr << "\n audio_input_sample_rate->at(i) : " << audio_input_sample_rate->at(i);
-        _scale_ratio = _out_sample_rate_array[i] / (float)audio_input_sample_rate->at(i);
-        _resample_rate_vec[i] = _out_sample_rate_array[i];
-        _dst_roi_width_vec[i] = (int)std::ceil(_scale_ratio * _src_frames[i]); 
-        _dst_roi_height_vec[i] = _src_channels[i];
-        std::cerr << "_dst_roi_width_vec[i] : " <<_dst_roi_width_vec[i];
-        std::cerr << "_dst_roi_height_vec[i] :" << _dst_roi_height_vec[i];
-        _max_dst_width = std::max(_max_dst_width, _dst_roi_width_vec[i]);
-        std::cerr << "_max_dst_width : " << _max_dst_width;
-    }
+    // for (uint i=0; i < _batch_size; i++)
+    // {
+        // _src_frames[i] = audio_roi[i].x1;
+        // _src_channels[i] = audio_roi[i].y1;
+        // // TODO: Formula shared by Sampath - update the dst width & height later - calc ratio & then update it.
+        // std::cerr << "\n _out_sample_rate_array[i] :" << _out_sample_rate_array[i];
+        // std::cerr << "\n audio_input_sample_rate->at(i) : " << audio_input_sample_rate->at(i);
+        // _scale_ratio = _out_sample_rate_array[i] / (float)audio_input_sample_rate->at(i);
+        // _resample_rate_vec[i] = _out_sample_rate_array[i];
+        // _dst_roi_width_vec[i] = (int)std::ceil(_scale_ratio * _src_frames[i]); 
+        // _dst_roi_height_vec[i] = _src_channels[i];
+        // std::cerr << "_dst_roi_width_vec[i] : " <<_dst_roi_width_vec[i];
+        // std::cerr << "_dst_roi_height_vec[i] :" << _dst_roi_height_vec[i];
+        // _max_dst_width = std::max(_max_dst_width, _dst_roi_width_vec[i]);
+        // std::cerr << "_max_dst_width : " << _max_dst_width;
+    // }
 
     vx_status status1, status2, status3;
-    // status1 = vxCopyScalar((vx_scalar)_max_dst_width_scalar, &_max_dst_width, VX_WRITE_ONLY, VX_MEMORY_TYPE_HOST);
     status2 = vxCopyArrayRange((vx_array)_src_frames_array, 0, _batch_size, sizeof(vx_int32), _src_frames.data(), VX_WRITE_ONLY, VX_MEMORY_TYPE_HOST);
     status3 = vxCopyArrayRange((vx_array)_src_channels_array, 0, _batch_size, sizeof(vx_int32), _src_channels.data(), VX_WRITE_ONLY, VX_MEMORY_TYPE_HOST);
 
-    // if(status1 != 0 )
-    //     THROW("ERROR: vxCopyArrayRange failed in the resample node (vxExtrppNode_Resample)  node for _max_dst_width_scalar: "+ TOSTR(status1))
     if(status2 != 0 )
         THROW("ERROR: vxCopyArrayRange failed in the resample node (vxExtrppNode_Resample)  node for _src_frames_array: "+ TOSTR(status2))
     if(status3 != 0 )
         THROW("ERROR: vxCopyArrayRange failed in the resample node (vxExtrppNode_Resample)  node for _src_channels_arra: "+ TOSTR(status3))
 
-    _outputs[0]->update_tensor_roi(_dst_roi_width_vec, _dst_roi_height_vec);
-    _outputs[0]->update_audio_tensor_sample_rate(_resample_rate_vec);
+    // _outputs[0]->update_tensor_roi(_dst_roi_width_vec, _dst_roi_height_vec);
+    // _outputs[0]->update_audio_tensor_sample_rate(_resample_rate_vec);
 
 }
 

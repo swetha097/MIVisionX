@@ -82,18 +82,18 @@ def main():
         resample = 16000.00
         # dither = 0.001
         audio_decode = fn.decoders.audio(audio, file_root=data_path, downmix=True, shard_id=0, num_shards=1,random_shuffle=True)
-        # uniform_distribution = fn.random.uniform(audio_decode, range=[0.855, 0.855])
-        # sample_rate = uniform_distribution * resample
-        # resample_output = fn.resample(audio_decode, resample_rate = sample_rate, resample_hint=522320*1.15, )
-        begin, length = fn.nonsilent_region(audio_decode, cutoff_db=-60)
-        trim_silence = fn.slice(
-            audio_decode,
-            anchor=[begin],
-            shape=[length],
-            normalized_anchor=False,
-            normalized_shape=False,
-            axes=[0]
-        )
+        uniform_distribution = fn.random.uniform(audio_decode, range=[0.855, 0.8556])
+        sample_rate = uniform_distribution * resample
+        resample_output = fn.resample(audio_decode, resample_rate = sample_rate, resample_hint=522320*1.15, )
+        # begin, length = fn.nonsilent_region(audio_decode, cutoff_db=-60)
+        # trim_silence = fn.slice(
+        #     audio_decode,
+        #     anchor=[begin],
+        #     shape=[length],
+        #     normalized_anchor=False,
+        #     normalized_shape=False,
+        #     axes=[0]
+        # )
 
         # mul_dist = audio_decode + distribution * 0.0001 
         # p = distribution
@@ -122,7 +122,7 @@ def main():
         # )
         # normalize_audio = fn.normalize(to_decibels_audio, axes=[1])
         # pad_audio = fn.pad(normalize_audio, fill_value=0)
-        audio_pipeline.set_outputs(trim_silence)
+        audio_pipeline.set_outputs(resample_output)
 
     audio_pipeline.build()
     audioIteratorPipeline = ROCALClassificationIterator(audio_pipeline)

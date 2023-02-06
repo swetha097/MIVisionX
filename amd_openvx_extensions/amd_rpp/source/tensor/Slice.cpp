@@ -68,9 +68,6 @@ void update_destination_roi(const vx_reference *parameters, SliceLocalData *data
 {
     int num_of_dims_shapes_anchors;
     int dimsTotal=1;
-    vx_size stride[2];
-    stride[0] = sizeof(vx_uint32);
-    stride[1] = stride[0] * data->nbatchSize;
     data->roi_ptr_dst = (RpptROI *)data->roi_tensor_ptr_dst;
     data->roi_ptr_src = (RpptROI *)data->roi_tensor_ptr_src;
     for(unsigned numDims=0; numDims < data->dst_desc_ptr->numDims ; numDims++)
