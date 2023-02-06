@@ -581,8 +581,11 @@ MasterGraph::get_output_tensors()
         std::cerr << "\n ********** ROI in master_graph.cpp from output_tensor_list" << roi_ptr[i][0] << roi_ptr[i][1] << roi_ptr[i][2];
         std::shared_ptr<unsigned> roi_ptr_sh;
         roi_ptr_sh.reset(roi_ptr[i], deleter);
+        // std::cerr << "\n ********** ROI in master_graph.cpp from output_tensor_list" << roi_ptr_sh.get()[i][0] << roi_ptr_sh.get()[i][1] << roi_ptr_sh.get()[i][2];
+
         _output_tensor_list[i]->swap_handle(output_ptr[i]);
         _output_tensor_list[i]->swap_tensor_roi(roi_ptr_sh);
+
     }
     return &_output_tensor_list;
 }
@@ -727,7 +730,7 @@ void MasterGraph::output_routine()
                 {
                     // if(_internal_tensor_list.size() != 0)
                     size_t tensor_each_cycle_size = tensor_each_cycle_size_vec[idx]; // TODO - Batch ratio calculation TO be removed
-                    _internal_tensor_list[idx]->copy_roi(tensor_roi_buffer[idx]);
+                    // _internal_tensor_list[idx]->copy_roi(tensor_roi_buffer[idx]);
                     if(_affinity == RocalAffinity::GPU)
                     {
                         _internal_tensor_list[idx]->swap_handle(tensor_write_buffer[idx]);
@@ -795,6 +798,8 @@ void MasterGraph::output_routine()
                 _resize_width.insert(_resize_width.begin(), temp_width_arr);
                 _resize_height.insert(_resize_height.begin(), temp_height_arr);
                 _graph->process();
+                for (size_t idx = 0; idx < _internal_tensor_list.size(); idx++)
+                    _internal_tensor_list[idx]->copy_roi(tensor_roi_buffer[idx]);
             }
             _bencode_time.start();
             if(_is_box_encoder )
