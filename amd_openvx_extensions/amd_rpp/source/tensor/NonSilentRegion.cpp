@@ -42,9 +42,8 @@ struct NonSilentRegionLocalData
     RpptDesc dstDesc;
     RpptDescPtr dst_desc_ptr;
     Rpp32u *sample_size;
-    // RpptROI *roi_tensor_Ptr;
-    // RpptRoiType roiType;
-    // Rpp32u layout;
+    void* roi_tensor_ptr_src;
+    RpptROI* roi_ptr_src;
     RpptImagePatch *srcDims;
     size_t in_tensor_dims[NUM_OF_DIMS];
     size_t out_tensor_dims[NUM_OF_DIMS];
@@ -65,7 +64,7 @@ struct NonSilentRegionLocalData
 static vx_status VX_CALLBACK refreshNonSilentRegion(vx_node node, const vx_reference *parameters, vx_uint32 num, NonSilentRegionLocalData *data)
 {
     vx_status status = VX_SUCCESS;
-    STATUS_ERROR_CHECK(vxCopyArrayRange((vx_array)parameters[3], 0, data->nbatchSize, sizeof(unsigned), data->sample_size, VX_READ_ONLY, VX_MEMORY_TYPE_HOST));
+    // STATUS_ERROR_CHECK(vxCopyArrayRange((vx_array)parameters[3], 0, data->nbatchSize, sizeof(unsigned), data->sample_size, VX_READ_ONLY, VX_MEMORY_TYPE_HOST));
     if (data->deviceType == AGO_TARGET_AFFINITY_GPU)
     {
 #if ENABLE_OPENCL
@@ -76,6 +75,7 @@ static vx_status VX_CALLBACK refreshNonSilentRegion(vx_node node, const vx_refer
         STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[0], VX_TENSOR_BUFFER_HIP, &data->hip_pSrc, sizeof(data->hip_pSrc)));
         STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[1], VX_TENSOR_BUFFER_HIP, &data->hip_pDst1, sizeof(data->hip_pDst1)));
         STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[2], VX_TENSOR_BUFFER_HIP, &data->hip_pDst1, sizeof(data->hip_pDst2)));
+        STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[3], VX_TENSOR_BUFFER_HIP, &data->roi_tensor_ptr_src, sizeof(data->roi_tensor_ptr_src)));
 #endif
     }
     if (data->deviceType == AGO_TARGET_AFFINITY_CPU)
@@ -85,7 +85,13 @@ static vx_status VX_CALLBACK refreshNonSilentRegion(vx_node node, const vx_refer
             STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[0], VX_TENSOR_BUFFER_HOST, &data->pSrc, sizeof(vx_float32)));
             STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[1], VX_TENSOR_BUFFER_HOST, &data->pDst1, sizeof(vx_float32)));
             STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[2], VX_TENSOR_BUFFER_HOST, &data->pDst2, sizeof(vx_float32)));
+            STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[3], VX_TENSOR_BUFFER_HOST, &data->roi_tensor_ptr_src, sizeof(vx_uint32)));
         // }
+    }
+    data->roi_ptr_src = (RpptROI *)data->roi_tensor_ptr_src;
+    for (uint i = 0; i < data->nbatchSize; i++) {
+        data->sample_size[i] = data->roi_ptr_src[i].xywhROI.xy.x * data->roi_ptr_src[i].xywhROI.xy.y;
+        std::cerr << "\n NSR data->sample_size[i] : " << data->sample_size[i];
     }
     return status;
 }
@@ -161,6 +167,7 @@ static vx_status VX_CALLBACK processNonSilentRegion(vx_node node, const vx_refer
     if (data->deviceType == AGO_TARGET_AFFINITY_CPU)
     {
         refreshNonSilentRegion(node, parameters, num, data);
+        
         rpp_status = rppt_non_silent_region_detection_host((float *)data->pSrc, data->src_desc_ptr,(int *) data->sample_size, (float *)data->pDst1, (float *)data->pDst2, data->cutOffDB, data->windowLength, data->referencePower, data->resetInterval);
         // float * buffer = (float *)data->pDst1;
         //     for(int n = 0; n < data->nbatchSize; n++) 
@@ -311,7 +318,7 @@ vx_status NonSilentRegion_Register(vx_context context)
         PARAM_ERROR_CHECK(vxAddParameterToKernel(kernel, 0, VX_INPUT, VX_TYPE_TENSOR, VX_PARAMETER_STATE_REQUIRED));
         PARAM_ERROR_CHECK(vxAddParameterToKernel(kernel, 1, VX_OUTPUT, VX_TYPE_TENSOR, VX_PARAMETER_STATE_REQUIRED));
         PARAM_ERROR_CHECK(vxAddParameterToKernel(kernel, 2, VX_OUTPUT, VX_TYPE_TENSOR, VX_PARAMETER_STATE_REQUIRED));
-        PARAM_ERROR_CHECK(vxAddParameterToKernel(kernel, 3, VX_INPUT, VX_TYPE_ARRAY, VX_PARAMETER_STATE_REQUIRED));
+        PARAM_ERROR_CHECK(vxAddParameterToKernel(kernel, 3, VX_INPUT, VX_TYPE_TENSOR, VX_PARAMETER_STATE_REQUIRED));
         PARAM_ERROR_CHECK(vxAddParameterToKernel(kernel, 4, VX_INPUT, VX_TYPE_SCALAR, VX_PARAMETER_STATE_REQUIRED));
         PARAM_ERROR_CHECK(vxAddParameterToKernel(kernel, 5, VX_INPUT, VX_TYPE_SCALAR, VX_PARAMETER_STATE_REQUIRED));
         PARAM_ERROR_CHECK(vxAddParameterToKernel(kernel, 6, VX_INPUT, VX_TYPE_SCALAR, VX_PARAMETER_STATE_REQUIRED));

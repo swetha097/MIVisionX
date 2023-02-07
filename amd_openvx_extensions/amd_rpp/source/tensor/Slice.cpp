@@ -233,7 +233,7 @@ static vx_status VX_CALLBACK processSlice(vx_node node, const vx_reference *para
 //                     std::cerr <<"src psrc:  "<<(float)psrc[(int)dimSrc[n] * n + j] << "\n";
 //             }
 
-        rpp_status = rppt_slice_host((float *)data->pSrc, data->src_desc_ptr, (float *)data->pDst, data->dst_desc_ptr, data->srcDims, (float*)data->anchor, (float*)data->shape, data->fill_values); // FIXME: Swetha to check with Sampath/Fiona if any changes is required for slice other than these.
+        rpp_status = rppt_slice_host((float *)data->pSrc, data->src_desc_ptr, (float *)data->pDst, data->dst_desc_ptr, data->srcDims, (float*)data->anchor, (float*)data->shape, data->fill_values);
 // float * pdst = (float*) data->pDst;
 //  for(int n = 0; n < data->nbatchSize; n++) 
 //             {

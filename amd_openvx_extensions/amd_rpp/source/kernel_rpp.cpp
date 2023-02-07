@@ -2241,7 +2241,7 @@ VX_API_ENTRY vx_node VX_API_CALL vxExtrppNode_Spectrogram(vx_graph graph, vx_ten
     return node;
 }
 
-VX_API_ENTRY vx_node VX_API_CALL vxExtrppNode_NonSilentRegion(vx_graph graph, vx_tensor pSrc, vx_tensor pDst1, vx_tensor pDst2, vx_array srcSamplesSize, vx_scalar cutOffDB, vx_scalar referencePower, vx_scalar window_length, vx_scalar resetInterval, vx_uint32 nbatchSize)
+VX_API_ENTRY vx_node VX_API_CALL vxExtrppNode_NonSilentRegion(vx_graph graph, vx_tensor pSrc, vx_tensor pDst1, vx_tensor pDst2, vx_tensor srcDims, vx_scalar cutOffDB, vx_scalar referencePower, vx_scalar window_length, vx_scalar resetInterval, vx_uint32 nbatchSize)
 {
     vx_node node = NULL;
     vx_context context = vxGetContext((vx_reference)graph);
@@ -2254,7 +2254,7 @@ VX_API_ENTRY vx_node VX_API_CALL vxExtrppNode_NonSilentRegion(vx_graph graph, vx
             (vx_reference)pSrc,
             (vx_reference)pDst1,
             (vx_reference)pDst2,
-            (vx_reference)srcSamplesSize,
+            (vx_reference)srcDims,
             (vx_reference)cutOffDB,
             (vx_reference)referencePower,
             (vx_reference)window_length,

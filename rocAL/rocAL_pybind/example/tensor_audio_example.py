@@ -85,22 +85,22 @@ def main():
         uniform_distribution = fn.random.uniform(audio_decode, range=[0.855, 0.8556])
         sample_rate = uniform_distribution * resample
         resample_output = fn.resample(audio_decode, resample_rate = sample_rate, resample_hint=522320*1.15, )
-        # begin, length = fn.nonsilent_region(audio_decode, cutoff_db=-60)
-        # trim_silence = fn.slice(
-        #     audio_decode,
-        #     anchor=[begin],
-        #     shape=[length],
-        #     normalized_anchor=False,
-        #     normalized_shape=False,
-        #     axes=[0]
-        # )
+        begin, length = fn.nonsilent_region(resample_output, cutoff_db=-60)
+        trim_silence = fn.slice(
+            resample_output,
+            anchor=[begin],
+            shape=[length],
+            normalized_anchor=False,
+            normalized_shape=False,
+            axes=[0]
+        )
 
         # mul_dist = audio_decode + distribution * 0.0001 
         # p = distribution
         # new_dist =  trim_silence
         # distributed_normalied_audio = trim_silence * new_dist
         # distribution_new = distribution * dither
-        # premph_audio = fn.preemphasis_filter(trim_silence)
+        # premph_audio = fn.preemphasis_filter(resample_output)
         # spectrogram_audio = fn.spectrogram(
         #     premph_audio,
         #     nfft=nfft,
@@ -120,9 +120,9 @@ def main():
         #     cutoff_db=np.log(1e-20),
         #     rocal_tensor_output_type=types.FLOAT,
         # )
-        # normalize_audio = fn.normalize(to_decibels_audio, axes=[1])
+        normalize_audio = fn.normalize(trim_silence, axes=[1])
         # pad_audio = fn.pad(normalize_audio, fill_value=0)
-        audio_pipeline.set_outputs(resample_output)
+        audio_pipeline.set_outputs(normalize_audio)
 
     audio_pipeline.build()
     audioIteratorPipeline = ROCALClassificationIterator(audio_pipeline)

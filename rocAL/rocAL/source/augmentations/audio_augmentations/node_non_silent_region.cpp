@@ -33,17 +33,14 @@ void NonSilentRegionNode::create_node()
 {
     if(_node)
         return;
-    _src_samples_size.resize(_batch_size);
-    _src_samples_size_array = vxCreateArray(vxGetContext((vx_reference)_graph->get()), VX_TYPE_INT32, _batch_size);
     vx_status status = VX_SUCCESS;
-    status |= vxAddArrayItems(_src_samples_size_array, _batch_size, _src_samples_size.data(), sizeof(vx_int32));
 
     vx_scalar cutOffDB = vxCreateScalar(vxGetContext((vx_reference)_graph->get()), VX_TYPE_FLOAT32, &_cutOffDB);
     vx_scalar reference_power = vxCreateScalar(vxGetContext((vx_reference)_graph->get()), VX_TYPE_FLOAT32, &_reference_power);
     vx_scalar window_length = vxCreateScalar(vxGetContext((vx_reference)_graph->get()), VX_TYPE_INT32, &_window_length);
     vx_scalar reset_interval = vxCreateScalar(vxGetContext((vx_reference)_graph->get()), VX_TYPE_INT32, &_reset_interval);
 
-    _node = vxExtrppNode_NonSilentRegion(_graph->get(), _inputs[0]->handle(), _outputs[0]->handle(), _outputs[1]->handle(), _src_samples_size_array,
+    _node = vxExtrppNode_NonSilentRegion(_graph->get(), _inputs[0]->handle(), _outputs[0]->handle(), _outputs[1]->handle(), _src_tensor_roi,
                                          cutOffDB, reference_power, window_length, reset_interval, _batch_size);
 
     if((status = vxGetStatus((vx_reference)_node)) != VX_SUCCESS)
@@ -53,15 +50,7 @@ void NonSilentRegionNode::create_node()
 
 void NonSilentRegionNode::update_node()
 {
-    auto audio_roi = _inputs[0]->info().get_roi();
-    for (uint i=0; i < _batch_size; i++)
-    {
-        _src_samples_size[i] = audio_roi[i].x1 * audio_roi[i].y1;
-    }
-    vx_status src_roi_status;
-    src_roi_status = vxCopyArrayRange((vx_array)_src_samples_size_array, 0, _batch_size, sizeof(vx_uint32), _src_samples_size.data(), VX_WRITE_ONLY, VX_MEMORY_TYPE_HOST);
-    if(src_roi_status != 0)
-        THROW(" Failed calling vxCopyArrayRange for src / dst roi status : "+ TOSTR(src_roi_status))
+
 }
 
 void NonSilentRegionNode::init(float cutOffDB, float reference_power, int window_length, int reset_interval)
