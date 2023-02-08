@@ -6,7 +6,7 @@ import numpy as np
 from amd.rocal.plugin.pytorch import ROCALClassificationIterator
 import torch
 # torch.set_printoptions(threshold=10_000)
-# np.set_printoptions(threshold=1000, edgeitems=10000)
+np.set_printoptions(threshold=1000, edgeitems=10000)
 
 from amd.rocal.pipeline import Pipeline
 import amd.rocal.fn as fn
@@ -21,18 +21,22 @@ def draw_patches(img, idx, device):
     print("Draw Patches")
     #image is expected as a tensor, bboxes as numpy
     import cv2
-    if device == "cpu":
-            image = img.detach().numpy()
-    else:
-        image = img.cpu().numpy()
+    image = img.detach().numpy()
     # print(img.cpu().detach().numpy().flatten())
     # print(idx)
-    audio_data = img.flatten()
+    audio_data = image.flatten()
     label = idx.cpu().detach().numpy()
-    # print("label: ", label)
+    print("label: ", label)
     # print("audio_data",audio_data)
+    # Saving the array in a text file
+    file = open("results/normalize_audio/rocal_audio_data"+str(label)+".txt", "w+")
+    content = str(audio_data)
+    file.write(content)
+    file.close()
+
     plt.plot(audio_data)
-    plt.savefig("rocal_audio_data"+str(label)+".png")
+    plt.savefig("results/normalize_audio/rocal_audio_data"+str(label)+".png")
+    plt.close()
 
 def main():
     if  len(sys.argv) < 3:
@@ -82,8 +86,9 @@ def main():
         resample = 16000.00
         # dither = 0.001
         audio_decode = fn.decoders.audio(audio, file_root=data_path, downmix=True, shard_id=0, num_shards=1,random_shuffle=True)
-        uniform_distribution_resample = fn.random.uniform(audio_decode, range=[0.855, 0.8556])
+        uniform_distribution_resample = fn.random.uniform(audio_decode, range=[0.85555550, 0.85555550])
         resampled_rate = uniform_distribution_resample * resample
+        # resample_output = fn.resample(audio_decode, resample_rate = resampled_rate, resample_hint=250000, )
         resample_output = fn.resample(audio_decode, resample_rate = resampled_rate, resample_hint=522320*1.15, )
         begin, length = fn.nonsilent_region(resample_output, cutoff_db=-60)
         trim_silence = fn.slice(
@@ -94,9 +99,9 @@ def main():
             normalized_shape=False,
             axes=[0]
         )
-        normal_distribution = fn.random.normal(trim_silence, mean=0.0, stddev=1.0)
-        distribution_new = trim_silence + normal_distribution * 0.0001 
-        premph_audio = fn.preemphasis_filter(distribution_new)
+        normal_distribution = fn.random.normal(trim_silence, mean=0.0, stddev=0.0000001)
+        dist_audio = trim_silence + normal_distribution * 0.00001 
+        premph_audio = fn.preemphasis_filter(dist_audio)
         spectrogram_audio = fn.spectrogram(
             premph_audio,
             nfft=nfft,
@@ -129,9 +134,9 @@ def main():
         for i , it in enumerate(audioIteratorPipeline):
             print("************************************** i *************************************",i)
             print(it)
-            # for img, label in zip(it[0],it[1]):
+            for img, label in zip(it[0],it[1]):
             #     print(img.shape)
-            #     # draw_patches(img, label, "cpu")
+                draw_patches(img, label, "cpu")
             #     cnt = cnt + 1
         print("EPOCH DONE", e)
         audioIteratorPipeline.reset()
