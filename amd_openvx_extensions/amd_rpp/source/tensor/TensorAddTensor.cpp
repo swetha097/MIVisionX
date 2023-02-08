@@ -66,23 +66,7 @@ static vx_status VX_CALLBACK refreshTensorAddTensor(vx_node node, const vx_refer
 {
 
     vx_status status = VX_SUCCESS;
-    std::cerr << "refresh";
-    // TODO: Facing issue in getting the ROI of the first tensor - Swetha : TODO - Work on this Later
-    // STATUS_ERROR_CHECK(vxCopyArrayRange((vx_array)parameters[3], 0, data->nbatchSize * 4, sizeof(unsigned), data->roi_tensor_ptr1, VX_READ_ONLY, VX_MEMORY_TYPE_HOST));
-    // // STATUS_ERROR_CHECK(vxCopyArrayRange((vx_array)parameters[5], 0, data->nbatchSize * 4, sizeof(unsigned), data->roi_tensor_ptr2, VX_READ_ONLY, VX_MEMORY_TYPE_HOST));
 
-    // for (uint i = 0, j = 0; i < data->nbatchSize * 2, j < data->nbatchSize; i = i + 2, j = j + 1) {
-    //   data->srcDims1[i] = data->roi_tensor_ptr1[j].xywhROI.xy.x;
-    //   data->srcDims1[i + 1] = data->roi_tensor_ptr1[j].xywhROI.xy.y;
-    // //   data->srcDims2[i] = data->roi_tensor_ptr2[j].xywhROI.xy.x;
-    // //   data->srcDims2[i + 1] = data->roi_tensor_ptr2[j].xywhROI.xy.y;
-    // //TODO: Swetha : To clean up the debug code
-    //   std::cerr << " \n TensorAddTensor 1  data->srcDims[i].width " << data->roi_tensor_ptr1[j].xywhROI.xy.x;
-    //   std::cerr << "\n TensorAddTensor 1 data->srcDims[i].height " << data->roi_tensor_ptr1[j].xywhROI.xy.y;
-    // //     std::cerr << " \n TensorAddTensor 1  data->srcDims[i].width " << data->roi_tensor_ptr2[j].xywhROI.xy.x;
-    // //   std::cerr << "\n TensorAddTensor 1 data->srcDims[i].height " << data->roi_tensor_ptr2[j].xywhROI.xy.y;
-    // }
-    std::cerr << "Finished the roi copy";
     if (data->device_type == AGO_TARGET_AFFINITY_GPU)
     {
 #if ENABLE_HIP
@@ -177,16 +161,10 @@ static vx_status VX_CALLBACK processTensorAddTensor(vx_node node, const vx_refer
         data->roi_ptr_src = (RpptROI *)data->roi_tensor_ptr_src;
         for (uint i = 0; i < data->nbatchSize; i++)
             {
-                std::cerr << "Batch TAT : "<< i;
                 //start ptr of the tensor1
                 size_t size_psrc1_elements = data->roi_ptr_src[i].xywhROI.xy.x * data->roi_ptr_src[i].xywhROI.xy.y * channels;
                 for (uint j = 0; j < size_psrc1_elements ; j++) {
                     ((float *)(data->pDst))[i * size_psrc1_elements + j] = ((float *)(data->pSrc1))[i * size_psrc1_elements + j] + ((float *)(data->pSrc2))[i] ;
-                    if (j>0 && j<10) {
-                    std::cerr << "\n TAT (float *)(data->pSrc1))[i * size_psrc1_elements + j] : " << ((float *)(data->pSrc1))[i * size_psrc1_elements + j];
-                    std::cerr << "\n TAT ((float *)(data->pSrc2))[i] : " << ((float *)(data->pSrc2))[i];
-                    std::cerr << "\n TAT ((float *)(data->pDst))[i * size_psrc1_elements + j] : " <<   ((float *)(data->pDst))[i * size_psrc1_elements + j];
-                    }
                 }
             }
         }
