@@ -50,8 +50,8 @@ void NormalizeNode::create_node() {
     vx_scalar ddof = vxCreateScalar(vxGetContext((vx_reference)_graph->get()), VX_TYPE_INT32, &_ddof);
     vx_scalar axis_mask = vxCreateScalar(vxGetContext((vx_reference)_graph->get()), VX_TYPE_INT32, &_axis_mask);
 
-    // _node = vxExtrppNode_Normalize(_graph->get(), _inputs[0]->handle(), _outputs[0]->handle(), _src_frames_array, _src_channels_array, axis_mask, mean, std_dev,
-    //                                scale, shift, epsilon, ddof, _num_of_dims, _batch_size);
+    _node = vxExtrppNode_Normalize(_graph->get(), _inputs[0]->handle(), _outputs[0]->handle(), _src_tensor_roi, _dst_tensor_roi, axis_mask, mean, std_dev,
+                                   scale, shift, epsilon, ddof, _num_of_dims, _batch_size);
 
     if((status = vxGetStatus((vx_reference)_node)) != VX_SUCCESS)
         THROW("Adding the copy (vxExtrppNode_Downmix) node failed: "+ TOSTR(status))
@@ -59,27 +59,7 @@ void NormalizeNode::create_node() {
 }
 
 void NormalizeNode::update_node() {
-    auto audio_roi = _inputs[0]->info().get_roi();
-    bool has_same_dim = true;
-    for (uint i=0; i < _batch_size; i++) {
-        _src_frames[i] = audio_roi[i].y1;
-        _src_channels[i] = audio_roi[i].x1;
-        _dst_roi_width_vec[i] =audio_roi[i].y1;
-        _dst_roi_height_vec[i] =  audio_roi[i].x1;
 
-    }
-
-    if(!has_same_dim && _batch_size)
-        THROW("All the tensor must have same dimension to perform Batch Normalization")
-
-    vx_status status = VX_SUCCESS;
-    status |= vxCopyArrayRange((vx_array)_src_frames_array, 0, _batch_size, sizeof(vx_uint32), _src_frames.data(), VX_WRITE_ONLY, VX_MEMORY_TYPE_HOST);
-    status |= vxCopyArrayRange((vx_array)_src_channels_array, 0, _batch_size, sizeof(vx_uint32), _src_channels.data(), VX_WRITE_ONLY, VX_MEMORY_TYPE_HOST);
-
-    if(status != 0)
-        WRN("ERROR: vxCopyArrayRange failed in the normalize node (vxExtrppNode_Normalize)  node: "+ TOSTR(status))
-    _src_frames.clear();
-    _src_channels.clear();
 }
 
 void NormalizeNode::init(float mean, float std_dev, std::vector<int> axes, bool batch,

@@ -736,8 +736,10 @@ rocalNormalize(RocalContext p_context,
         RocalTensorDataType op_tensorDataType;
         get_rocal_tensor_data_type(rocal_tensor_output_type, op_tensorDataType);
         output_info.set_data_type(op_tensorDataType);
+        
 
         output = context->master_graph->create_tensor(output_info, is_output);
+        output->reset_tensor_roi();
         context->master_graph->add_node<NormalizeNode>({input}, {output})->init(mean, std_dev, axes, batch, scale, shift, ddof, epsilon);
     }
     catch(const std::exception& e) {

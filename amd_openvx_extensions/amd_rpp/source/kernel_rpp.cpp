@@ -2078,7 +2078,7 @@ VX_API_ENTRY vx_node VX_API_CALL vxExtrppNode_Downmix(vx_graph graph, vx_tensor 
     return node;
 }
 
-VX_API_ENTRY vx_node VX_API_CALL vxExtrppNode_Normalize(vx_graph graph, vx_tensor pSrc, vx_tensor pDst, vx_array srcSamples, vx_array srcChannels, vx_scalar axisMask, vx_scalar mean, vx_scalar stdDev, vx_scalar scale,
+VX_API_ENTRY vx_node VX_API_CALL vxExtrppNode_Normalize(vx_graph graph, vx_tensor pSrc, vx_tensor pDst, vx_tensor srcROI, vx_tensor dstROI, vx_scalar axisMask, vx_scalar mean, vx_scalar stdDev, vx_scalar scale,
                                                         vx_scalar shift, vx_scalar epsilon, vx_scalar ddof, vx_uint32 numOfDims, vx_uint32 nbatchSize)
 {
     vx_node node = NULL;
@@ -2092,8 +2092,8 @@ VX_API_ENTRY vx_node VX_API_CALL vxExtrppNode_Normalize(vx_graph graph, vx_tenso
         vx_reference params[] = {
             (vx_reference)pSrc,
             (vx_reference)pDst,
-            (vx_reference)srcSamples,
-            (vx_reference)srcChannels,
+            (vx_reference)srcROI,
+            (vx_reference)dstROI,
             (vx_reference)axisMask,
             (vx_reference)mean,
             (vx_reference)stdDev,

@@ -52,17 +52,11 @@ void MelFilterBankNode::create_node()
 
 void MelFilterBankNode::update_node()
 {
-    auto audio_roi = _inputs[0]->info().get_roi();
-    for (uint i=0; i < _batch_size; i++)
-    {
-        _dst_roi_width_vec[i] = (audio_roi[i].x1);
-        _dst_roi_height_vec[i] = (_nfilter);
-    }
+
     // TODO - Swetha -check the layout FT - vice versa for TF 
     // Check the input tensor layout & decide weather height / width would differ for the output
     // height will differ = nfilter (80)
     // width will remain same
-    _outputs[0]->update_tensor_roi(_dst_roi_width_vec, _dst_roi_height_vec);
 }
 
 void MelFilterBankNode::init(float freq_high, float freq_low, RocalMelScaleFormula formula,

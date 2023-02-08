@@ -174,7 +174,6 @@ static vx_status VX_CALLBACK processMelFilterBank(vx_node node, const vx_referen
     if (data->deviceType == AGO_TARGET_AFFINITY_CPU)
     {
         refreshMelFilterBank(node, parameters, num, data);
-        // rppt_spectrogram_host(inputf32, srcDescPtr, spectrogramf32, dstDescPtr, srcLengthTensor, freqHighs, freqLow, windowFn, nfft, nfilter, sampleRate, windowStep, layout);
         rpp_status = rppt_mel_filter_bank_host((float *)data->pSrc, data->src_desc_ptr, (float *)data->pDst, data->dst_desc_ptr, data->srcDims, data->freqHigh, data->freqLow,
                                             RpptMelScaleFormula(data->melFormula), data->nfilter, data->sampleRate, data->normalize);
         return_status = (rpp_status == RPP_SUCCESS) ? VX_SUCCESS : VX_FAILURE;

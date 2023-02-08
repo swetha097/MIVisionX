@@ -206,7 +206,6 @@ AudioLoader::load_routine()
                                             _decoded_img_info._original_audio_samples,
                                             _decoded_img_info._original_audio_channels,
                                             _decoded_img_info._original_audio_sample_rates);
-            std::cerr << "COMES OUT OF THE LOAD FUNCTION SUCCESSFULLY";
             if(load_status == LoaderModuleStatus::OK)
             {
                 // if (_randombboxcrop_meta_data_reader)
@@ -246,7 +245,6 @@ AudioLoader::load_routine()
         }
 
     }
-    std::cerr << "--------------- LOAD ROUTINE DONE _----------------------";
     return LoaderModuleStatus::OK;
 }
 
@@ -285,7 +283,6 @@ AudioLoader::update_output_audio()
     if (_stopped)
         return LoaderModuleStatus::OK;
 
-    // std::cerr << "\nAfter load next\n";
     _output_decoded_img_info = _circ_buff.get_image_info();
     // if (_randombboxcrop_meta_data_reader) {
     //   _output_cropped_img_info = _circ_buff.get_cropped_audio_info();
