@@ -48,6 +48,6 @@ private:
     bool _normalized_anchor = false;
     bool _normalized_shape = false;
     RocalOutOfBoundsPolicy _policy = RocalOutOfBoundsPolicy::ERROR;
-    unsigned _num_of_dims;
+    unsigned _num_of_dims, _total_dims;
     int _axis_mask = 0;
 };

@@ -94,35 +94,33 @@ def main():
             normalized_shape=False,
             axes=[0]
         )
-
-        # mul_dist = audio_decode + distribution * 0.0001 
-        # p = distribution
-        # new_dist =  trim_silence
-        # distributed_normalied_audio = trim_silence * new_dist
-        # distribution_new = distribution * dither
-        # premph_audio = fn.preemphasis_filter(resample_output)
-        # spectrogram_audio = fn.spectrogram(
-        #     premph_audio,
-        #     nfft=nfft,
-        #     window_length=320, # Change to 320
-        #     window_step= 160, # Change to 160
-        #     rocal_tensor_output_type=types.FLOAT,
-        # )
+        normal_distribution = fn.random.normal(trim_silence, mean=0.0, stddev=1.0)
+        distribution_new = trim_silence + normal_distribution * 0.0001 
+        premph_audio = fn.preemphasis_filter(distribution_new)
+        spectrogram_audio = fn.spectrogram(
+            premph_audio,
+            nfft=nfft,
+            window_length=320, # Change to 320
+            window_step= 160, # Change to 160
+            rocal_tensor_output_type=types.FLOAT,
+        )
         # mel_filter_bank_audio = fn.mel_filter_bank(
         #     spectrogram_audio,
         #     sample_rate=sample_rate,
         #     nfilter=nfilter,
         # )
-        # to_decibels_audio = fn.to_decibels(
-        #     mel_filter_bank_audio,
-        #     multiplier=np.log(10),
-        #     reference=1.0,
-        #     cutoff_db=np.log(1e-20),
-        #     rocal_tensor_output_type=types.FLOAT,
-        # )
-        normalize_audio = fn.normalize(trim_silence, axes=[1])
+        to_decibels_audio = fn.to_decibels(
+            spectrogram_audio,
+            multiplier=np.log(10),
+            reference=1.0,
+            cutoff_db=np.log(1e-20),
+            rocal_tensor_output_type=types.FLOAT,
+        )
+        # normalize_audio = fn.normalize(trim_silence, axes=[1])
         # pad_audio = fn.pad(normalize_audio, fill_value=0)
-        audio_pipeline.set_outputs(normalize_audio)
+        audio_pipeline.set_outputs(to_decibels_audio)
+
+
 
     audio_pipeline.build()
     audioIteratorPipeline = ROCALClassificationIterator(audio_pipeline)
@@ -134,7 +132,7 @@ def main():
             print(it)
             for img, label in zip(it[0],it[1]):
                 print(img.shape)
-                draw_patches(img, label, "cpu")
+                # draw_patches(img, label, "cpu")
                 cnt = cnt + 1
         print("EPOCH DONE", e)
         audioIteratorPipeline.reset()

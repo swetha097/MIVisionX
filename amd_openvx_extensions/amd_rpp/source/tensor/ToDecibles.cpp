@@ -39,11 +39,10 @@ struct ToDecibelsLocalData
     RpptDesc srcDesc;
     RpptDesc dstDesc;
     RpptDescPtr dst_desc_ptr;
-    Rpp32u *sample_length;
-    Rpp32u *sample_channel;
-    // RpptROI *roi_tensor_Ptr;
-    // RpptRoiType roiType;
-    // Rpp32u layout;
+    void* roi_tensor_ptr_src;
+    RpptROI* roi_ptr_src;
+    void* roi_tensor_ptr_dst;
+    RpptROI* roi_ptr_dst;
     RpptImagePatch *srcDims;
     size_t in_tensor_dims[NUM_OF_DIMS];
     size_t out_tensor_dims[NUM_OF_DIMS];
@@ -59,16 +58,20 @@ struct ToDecibelsLocalData
 #endif
 };
 
+void update_destination_roi(const vx_reference *parameters, ToDecibelsLocalData *data)
+{
+    data->roi_ptr_dst = (RpptROI *)data->roi_tensor_ptr_dst;
+    data->roi_ptr_src = (RpptROI *)data->roi_tensor_ptr_src;
+    for (uint i=0; i < data->nbatchSize; i++)
+    {
+        data->roi_ptr_dst[i].xywhROI.xy.x = data->roi_ptr_src[i].xywhROI.xy.x;
+        data->roi_ptr_dst[i].xywhROI.xy.y = data->roi_ptr_src[i].xywhROI.xy.y;
+    }
+}
+
 static vx_status VX_CALLBACK refreshToDecibels(vx_node node, const vx_reference *parameters, vx_uint32 num, ToDecibelsLocalData *data)
 {
     vx_status status = VX_SUCCESS;
-    STATUS_ERROR_CHECK(vxCopyArrayRange((vx_array)parameters[2], 0, data->nbatchSize, sizeof(unsigned), data->sample_length, VX_READ_ONLY, VX_MEMORY_TYPE_HOST));
-    STATUS_ERROR_CHECK(vxCopyArrayRange((vx_array)parameters[3], 0, data->nbatchSize, sizeof(unsigned), data->sample_channel, VX_READ_ONLY, VX_MEMORY_TYPE_HOST));
-    for(uint i = 0; i < data->nbatchSize; i++)
-    {
-        data->srcDims[i].height = data->sample_channel[i];
-        data->srcDims[i].width = data->sample_length[i];
-    }
     if (data->deviceType == AGO_TARGET_AFFINITY_GPU)
     {
 #if ENABLE_OPENCL
@@ -77,6 +80,8 @@ static vx_status VX_CALLBACK refreshToDecibels(vx_node node, const vx_reference 
 #elif ENABLE_HIP
         STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[0], VX_TENSOR_BUFFER_HIP, &data->hip_pSrc, sizeof(data->hip_pSrc)));
         STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[1], VX_TENSOR_BUFFER_HIP, &data->hip_pDst, sizeof(data->hip_pDst)));
+        STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[2], VX_TENSOR_BUFFER_HIP, &data->roi_tensor_ptr_src, sizeof(data->roi_tensor_ptr_src)));
+        STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[3], VX_TENSOR_BUFFER_HIP, &data->roi_tensor_ptr_dst, sizeof(data->roi_tensor_ptr_dst)));
 #endif
     }
     if (data->deviceType == AGO_TARGET_AFFINITY_CPU)
@@ -85,8 +90,16 @@ static vx_status VX_CALLBACK refreshToDecibels(vx_node node, const vx_reference 
         {
             STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[0], VX_TENSOR_BUFFER_HOST, &data->pSrc, sizeof(vx_float32)));
             STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[1], VX_TENSOR_BUFFER_HOST, &data->pDst, sizeof(vx_float32)));
+            STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[2], VX_TENSOR_BUFFER_HOST, &data->roi_tensor_ptr_src, sizeof(vx_uint32)));
+            STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[3], VX_TENSOR_BUFFER_HOST, &data->roi_tensor_ptr_dst, sizeof(vx_uint32)));
         }
     }
+    data->roi_ptr_src = (RpptROI *)data->roi_tensor_ptr_src;
+    for (uint i = 0; i < data->nbatchSize; i++) {
+        data->srcDims[i].height = data->roi_ptr_src[i].xywhROI.xy.y;
+        data->srcDims[i].width = data->roi_ptr_src[i].xywhROI.xy.x;
+    }
+    update_destination_roi(parameters, data);
     return status;
 }
 
@@ -207,9 +220,6 @@ static vx_status VX_CALLBACK initializeToDecibels(vx_node node, const vx_referen
     data->dst_desc_ptr->strides.wStride = data->dst_desc_ptr->c;
     data->dst_desc_ptr->strides.cStride = 1;
     data->dst_desc_ptr->numDims = 4;
-
-    data->sample_length = (unsigned int *)calloc(data->src_desc_ptr->n, sizeof(unsigned int));
-    data->sample_channel = (unsigned int *)calloc(data->src_desc_ptr->n, sizeof(unsigned int));
     data->srcDims = (RpptImagePatch *)calloc(data->src_desc_ptr->n, sizeof(RpptImagePatch));
 
 
@@ -243,8 +253,6 @@ static vx_status VX_CALLBACK uninitializeToDecibels(vx_node node, const vx_refer
 #endif
     if (data->deviceType == AGO_TARGET_AFFINITY_CPU)
         rppDestroyHost(data->rppHandle);
-    free(data->sample_length);
-    free(data->sample_channel);
     free(data->srcDims);
     // free(data->roi_tensor_Ptr);
 // #if ENABLE_HIP
@@ -302,8 +310,8 @@ vx_status ToDecibels_Register(vx_context context)
         STATUS_ERROR_CHECK(vxSetKernelAttribute(kernel, VX_KERNEL_ATTRIBUTE_AMD_QUERY_TARGET_SUPPORT, &query_target_support_f, sizeof(query_target_support_f)));
         PARAM_ERROR_CHECK(vxAddParameterToKernel(kernel, 0, VX_INPUT, VX_TYPE_TENSOR, VX_PARAMETER_STATE_REQUIRED));
         PARAM_ERROR_CHECK(vxAddParameterToKernel(kernel, 1, VX_OUTPUT, VX_TYPE_TENSOR, VX_PARAMETER_STATE_REQUIRED));
-        PARAM_ERROR_CHECK(vxAddParameterToKernel(kernel, 2, VX_INPUT, VX_TYPE_ARRAY, VX_PARAMETER_STATE_REQUIRED));
-        PARAM_ERROR_CHECK(vxAddParameterToKernel(kernel, 3, VX_INPUT, VX_TYPE_ARRAY, VX_PARAMETER_STATE_REQUIRED));
+        PARAM_ERROR_CHECK(vxAddParameterToKernel(kernel, 2, VX_INPUT, VX_TYPE_TENSOR, VX_PARAMETER_STATE_REQUIRED));
+        PARAM_ERROR_CHECK(vxAddParameterToKernel(kernel, 3, VX_INPUT, VX_TYPE_TENSOR, VX_PARAMETER_STATE_REQUIRED));
         PARAM_ERROR_CHECK(vxAddParameterToKernel(kernel, 4, VX_INPUT, VX_TYPE_SCALAR, VX_PARAMETER_STATE_REQUIRED));
         PARAM_ERROR_CHECK(vxAddParameterToKernel(kernel, 5, VX_INPUT, VX_TYPE_SCALAR, VX_PARAMETER_STATE_REQUIRED));
         PARAM_ERROR_CHECK(vxAddParameterToKernel(kernel, 6, VX_INPUT, VX_TYPE_SCALAR, VX_PARAMETER_STATE_REQUIRED));

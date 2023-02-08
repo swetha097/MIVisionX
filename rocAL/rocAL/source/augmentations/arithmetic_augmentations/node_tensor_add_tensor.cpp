@@ -32,8 +32,7 @@ void TensorAddTensorNode::create_node()
         return;
     std::cerr <<" \n Here in create Node of Tensor to Tensor addition ";
 
-
-    // _node = vxExtrppNode_TensorAddTensor(_graph->get(), _inputs[0]->handle(), _inputs[1]->handle(), _outputs[0]->handle(), _src_tensor_roi, _batch_size);
+    _node = vxExtrppNode_TensorAddTensor(_graph->get(), _inputs[0]->handle(), _inputs[1]->handle(), _outputs[0]->handle(), _src_tensor_roi, _dst_tensor_roi, _batch_size);
 
     vx_status status;
     if((status = vxGetStatus((vx_reference)_node)) != VX_SUCCESS)
@@ -43,9 +42,9 @@ void TensorAddTensorNode::create_node()
 
 void TensorAddTensorNode::update_node()
 {
-    vx_status src1_roi_status = vxCopyArrayRange((vx_array)_src_tensor_roi, 0, _batch_size  * 4, sizeof(vx_uint32), _inputs[0]->info().get_roi(), VX_WRITE_ONLY, VX_MEMORY_TYPE_HOST);
-    if(src1_roi_status != 0)
-        THROW(" Failed calling vxCopyArrayRange for src / dst roi status : "+ TOSTR(src1_roi_status))
+    // vx_status src1_roi_status = vxCopyArrayRange((vx_array)_src_tensor_roi, 0, _batch_size  * 4, sizeof(vx_uint32), _inputs[0]->info().get_roi(), VX_WRITE_ONLY, VX_MEMORY_TYPE_HOST);
+    // if(src1_roi_status != 0)
+    //     THROW(" Failed calling vxCopyArrayRange for src / dst roi status : "+ TOSTR(src1_roi_status))
 }
 
 void TensorAddTensorNode::init()

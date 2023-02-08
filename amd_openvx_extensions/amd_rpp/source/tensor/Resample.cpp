@@ -169,6 +169,7 @@ static vx_status VX_CALLBACK validateResample(vx_node node, const vx_reference p
 
 static vx_status VX_CALLBACK processResample(vx_node node, const vx_reference *parameters, vx_uint32 num)
 {
+    std::cerr << "Process REsample";
     RppStatus rpp_status = RPP_SUCCESS;
     vx_status return_status = VX_SUCCESS;
     ResampleLocalData *data = NULL;
@@ -191,10 +192,26 @@ static vx_status VX_CALLBACK processResample(vx_node node, const vx_reference *p
         for (int n = 0; n < data->nbatchSize ; n++) {
             std::cerr << "data->outRateTensor:  " << (float)buffer[n] << "\n";
         }
+
+        uint *sampleArray = (uint *)data->sampleArray;
+        for (int n = 0; n < data->nbatchSize ; n++) {
+            std::cerr << "\n data->sampleArray:  " << (uint)sampleArray[n] << "\n";
+        }
+        uint *sampleChannels = (uint *)data->sampleChannels;
+        for (int n = 0; n < data->nbatchSize ; n++) {
+            std::cerr << "data->sampleChannels:  " << (uint)sampleChannels[n] << "\n";
+        }
+        buffer = (float*)data->pSrc;
+        for (int n = 0; n < data->nbatchSize; n++) {
+            std::cerr << "\n ***** Resample Batch : "<< n;
+            // for (int j = 0; j < data->sampleArray[n] * data->sampleChannels[n]; j++)
+            //     std::cerr << "\n data :: " << (float)buffer[j] << "\t";
+            std::cerr << "\n";
+        }
         rpp_status = rppt_resample_host((float *)data->pSrc, data->src_desc_ptr, (float *)data->pDst, data->dst_desc_ptr,
                                        (float *)data->inRateTensor,(float *)data->outRateTensor, data->sampleArray, data->sampleChannels,
                                         data->quality);
-        std::cerr << "Out of RPP call";
+        // std::cerr << "Out of RPP call";
 
         return_status = (rpp_status == RPP_SUCCESS) ? VX_SUCCESS : VX_FAILURE;
     }

@@ -47,7 +47,7 @@ void ToDeciblesNode::create_node()
     vx_scalar cut_off_db = vxCreateScalar(vxGetContext((vx_reference)_graph->get()), VX_TYPE_FLOAT32, &_cut_off_db);
     vx_scalar multiplier = vxCreateScalar(vxGetContext((vx_reference)_graph->get()), VX_TYPE_FLOAT32, &_multiplier);
     vx_scalar magnitude_reference= vxCreateScalar(vxGetContext((vx_reference)_graph->get()), VX_TYPE_FLOAT32, &_magnitude_reference);
-    // _node = vxExtrppNode_ToDecibels(_graph->get(), _inputs[0]->handle(), _outputs[0]->handle(), _src_samples_length_array, _src_samples_channels_array, cut_off_db, multiplier, magnitude_reference, _batch_size);
+    _node = vxExtrppNode_ToDecibels(_graph->get(), _inputs[0]->handle(), _outputs[0]->handle(), _src_tensor_roi, _dst_tensor_roi, cut_off_db, multiplier, magnitude_reference, _batch_size);
 
     if((status = vxGetStatus((vx_reference)_node)) != VX_SUCCESS)
         THROW("Adding the copy (vxExtrppNode_ToDecibels) node failed: "+ TOSTR(status))
@@ -63,17 +63,7 @@ auto audio_roi = _inputs[0]->info().get_roi();
         _src_samples_channels[i] = audio_roi[i].y1;
         _dst_roi_width_vec[i] = (audio_roi[i].x1);
         _dst_roi_height_vec[i] = (audio_roi[i].y1);
-        // std::cerr << "todecibels _src_samples_length[i] = audio_roi[i].x1; " <<  audio_roi[i].x1;
-        // std::cerr << "todecibels _src_samples_channels[i] = audio_roi[i].y1" << audio_roi[i].y1;
     }
-    vx_status src_roi_status;
-    src_roi_status = vxCopyArrayRange((vx_array)_src_samples_length_array, 0, _batch_size, sizeof(vx_uint32), _src_samples_length.data(), VX_WRITE_ONLY, VX_MEMORY_TYPE_HOST);
-    if(src_roi_status != 0)
-        THROW(" Failed calling vxCopyArrayRange for src / dst roi status : "+ TOSTR(src_roi_status))
-    src_roi_status = vxCopyArrayRange((vx_array)_src_samples_channels_array, 0, _batch_size, sizeof(vx_uint32), _src_samples_channels.data(), VX_WRITE_ONLY, VX_MEMORY_TYPE_HOST);
-    if(src_roi_status != 0)
-        THROW(" Failed calling vxCopyArrayRange for src / dst roi status : "+ TOSTR(src_roi_status))
-    _outputs[0]->update_tensor_roi(_dst_roi_width_vec, _dst_roi_height_vec);
 }
 
 void ToDeciblesNode::init(float cut_off_db, float multiplier, float magnitude_reference)

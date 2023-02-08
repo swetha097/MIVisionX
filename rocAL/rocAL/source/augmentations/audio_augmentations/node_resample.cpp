@@ -70,10 +70,10 @@ void ResampleNode::update_node()
     std::cerr << "ResampleNode::update_node()";
 
     vx_status src_roi_status = vxCopyArrayRange((vx_array)_src_sample_rate_array, 0, _batch_size , sizeof(vx_float32), _inputs[0]->info().get_sample_rate()->data(), VX_WRITE_ONLY, VX_MEMORY_TYPE_HOST);
-    vx_status resample_rate_status  = vxQueryTensor((vx_tensor)_resample_rate->handle(), VX_TENSOR_BUFFER_HOST, &_out_sample_rate_array, sizeof(vx_float32));
+    // vx_status resample_rate_status  = vxQueryTensor((vx_tensor)_resample_rate->handle(), VX_TENSOR_BUFFER_HOST, &_out_sample_rate_array, sizeof(vx_float32));
     
-    if((src_roi_status || resample_rate_status) != 0)
-        THROW(" Failed calling vxCopyArrayRange with status in resample node : "+ TOSTR(src_roi_status) + TOSTR(resample_rate_status))
+    if((src_roi_status) != 0)
+        THROW(" Failed calling vxCopyArrayRange with status in resample node : "+ TOSTR(src_roi_status) )
 
     // auto audio_roi = _inputs[0]->info().get_roi();
     // auto audio_input_sample_rate = _inputs[0]->info().get_sample_rate();
@@ -95,14 +95,14 @@ void ResampleNode::update_node()
         // std::cerr << "_max_dst_width : " << _max_dst_width;
     // }
 
-    vx_status status1, status2, status3;
-    status2 = vxCopyArrayRange((vx_array)_src_frames_array, 0, _batch_size, sizeof(vx_int32), _src_frames.data(), VX_WRITE_ONLY, VX_MEMORY_TYPE_HOST);
-    status3 = vxCopyArrayRange((vx_array)_src_channels_array, 0, _batch_size, sizeof(vx_int32), _src_channels.data(), VX_WRITE_ONLY, VX_MEMORY_TYPE_HOST);
+    // vx_status status1, status2, status3;
+    // status2 = vxCopyArrayRange((vx_array)_src_frames_array, 0, _batch_size, sizeof(vx_int32), _src_frames.data(), VX_WRITE_ONLY, VX_MEMORY_TYPE_HOST);
+    // status3 = vxCopyArrayRange((vx_array)_src_channels_array, 0, _batch_size, sizeof(vx_int32), _src_channels.data(), VX_WRITE_ONLY, VX_MEMORY_TYPE_HOST);
 
-    if(status2 != 0 )
-        THROW("ERROR: vxCopyArrayRange failed in the resample node (vxExtrppNode_Resample)  node for _src_frames_array: "+ TOSTR(status2))
-    if(status3 != 0 )
-        THROW("ERROR: vxCopyArrayRange failed in the resample node (vxExtrppNode_Resample)  node for _src_channels_arra: "+ TOSTR(status3))
+    // if(status2 != 0 )
+    //     THROW("ERROR: vxCopyArrayRange failed in the resample node (vxExtrppNode_Resample)  node for _src_frames_array: "+ TOSTR(status2))
+    // if(status3 != 0 )
+    //     THROW("ERROR: vxCopyArrayRange failed in the resample node (vxExtrppNode_Resample)  node for _src_channels_arra: "+ TOSTR(status3))
 
     // _outputs[0]->update_tensor_roi(_dst_roi_width_vec, _dst_roi_height_vec);
     // _outputs[0]->update_audio_tensor_sample_rate(_resample_rate_vec);

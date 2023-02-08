@@ -32,6 +32,10 @@ struct TensorAddTensorLocalData
     RppPtr_t pDst;
     int *srcDims1;
     int *srcDims2;
+    void* roi_tensor_ptr_src;
+    RpptROI* roi_ptr_src;
+    void* roi_tensor_ptr_dst;
+    RpptROI* roi_ptr_dst;
     RpptROI *roi_tensor_ptr1;
     RpptROI *roi_tensor_ptr2;
     size_t in_tensor_dims1[NUM_OF_DIMS];
@@ -47,6 +51,17 @@ struct TensorAddTensorLocalData
 #endif
 };
 
+void update_destination_roi(const vx_reference *parameters, TensorAddTensorLocalData *data)
+{
+    data->roi_ptr_dst = (RpptROI *)data->roi_tensor_ptr_dst;
+    data->roi_ptr_src = (RpptROI *)data->roi_tensor_ptr_src;
+    for (uint i=0; i < data->nbatchSize; i++)
+    {
+        data->roi_ptr_dst[i].xywhROI.xy.x = data->roi_ptr_src[i].xywhROI.xy.x;
+        data->roi_ptr_dst[i].xywhROI.xy.y = data->roi_ptr_src[i].xywhROI.xy.y;
+    }
+}
+
 static vx_status VX_CALLBACK refreshTensorAddTensor(vx_node node, const vx_reference *parameters, vx_uint32 num, TensorAddTensorLocalData *data)
 {
 
@@ -54,7 +69,7 @@ static vx_status VX_CALLBACK refreshTensorAddTensor(vx_node node, const vx_refer
     std::cerr << "refresh";
     // TODO: Facing issue in getting the ROI of the first tensor - Swetha : TODO - Work on this Later
     // STATUS_ERROR_CHECK(vxCopyArrayRange((vx_array)parameters[3], 0, data->nbatchSize * 4, sizeof(unsigned), data->roi_tensor_ptr1, VX_READ_ONLY, VX_MEMORY_TYPE_HOST));
-    // // STATUS_ERROR_CHECK(vxCopyArrayRange((vx_array)parameters[4], 0, data->nbatchSize * 4, sizeof(unsigned), data->roi_tensor_ptr2, VX_READ_ONLY, VX_MEMORY_TYPE_HOST));
+    // // STATUS_ERROR_CHECK(vxCopyArrayRange((vx_array)parameters[5], 0, data->nbatchSize * 4, sizeof(unsigned), data->roi_tensor_ptr2, VX_READ_ONLY, VX_MEMORY_TYPE_HOST));
 
     // for (uint i = 0, j = 0; i < data->nbatchSize * 2, j < data->nbatchSize; i = i + 2, j = j + 1) {
     //   data->srcDims1[i] = data->roi_tensor_ptr1[j].xywhROI.xy.x;
@@ -74,6 +89,9 @@ static vx_status VX_CALLBACK refreshTensorAddTensor(vx_node node, const vx_refer
         STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[0], VX_TENSOR_BUFFER_HIP, &data->pSrc_dev1, sizeof(data->pSrc_dev1)));
         STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[1], VX_TENSOR_BUFFER_HIP, &data->pSrc_dev2, sizeof(data->pSrc_dev2)));
         STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[2], VX_TENSOR_BUFFER_HIP, &data->pDst_dev, sizeof(data->pDst_dev)));
+        STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[3], VX_TENSOR_BUFFER_HIP, &data->roi_tensor_ptr_src, sizeof(data->roi_tensor_ptr_src)));
+        STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[4], VX_TENSOR_BUFFER_HIP, &data->roi_tensor_ptr_dst, sizeof(data->roi_tensor_ptr_dst)));
+
 #endif
     }
     else if (data->device_type == AGO_TARGET_AFFINITY_CPU)
@@ -91,8 +109,11 @@ static vx_status VX_CALLBACK refreshTensorAddTensor(vx_node node, const vx_refer
             STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[0], VX_TENSOR_BUFFER_HOST, &data->pSrc1, sizeof(vx_float32)));
             STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[1], VX_TENSOR_BUFFER_HOST, &data->pSrc2, sizeof(vx_float32)));
             STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[2], VX_TENSOR_BUFFER_HOST, &data->pDst, sizeof(vx_float32)));
-
         }
+        STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[3], VX_TENSOR_BUFFER_HOST, &data->roi_tensor_ptr_src, sizeof(vx_uint32)));
+        STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[4], VX_TENSOR_BUFFER_HOST, &data->roi_tensor_ptr_dst, sizeof(vx_uint32)));
+
+        update_destination_roi(parameters, data);
     }
     return status;
 }
@@ -101,10 +122,10 @@ static vx_status VX_CALLBACK validateTensorAddTensor(vx_node node, const vx_refe
 {
     vx_status status = VX_SUCCESS;
     vx_enum scalar_type;
-    STATUS_ERROR_CHECK(vxQueryScalar((vx_scalar)parameters[4], VX_SCALAR_TYPE, &scalar_type, sizeof(scalar_type)));
+    STATUS_ERROR_CHECK(vxQueryScalar((vx_scalar)parameters[5], VX_SCALAR_TYPE, &scalar_type, sizeof(scalar_type)));
     if (scalar_type != VX_TYPE_UINT32)
         return ERRMSG(VX_ERROR_INVALID_TYPE, "validate: Paramter: #4 type=%d (must be size)\n", scalar_type);
-    STATUS_ERROR_CHECK(vxQueryScalar((vx_scalar)parameters[5], VX_SCALAR_TYPE, &scalar_type, sizeof(scalar_type)));
+    STATUS_ERROR_CHECK(vxQueryScalar((vx_scalar)parameters[6], VX_SCALAR_TYPE, &scalar_type, sizeof(scalar_type)));
     if (scalar_type != VX_TYPE_UINT32)
         return ERRMSG(VX_ERROR_INVALID_TYPE, "validate: Paramter: #5 type=%d (must be size)\n", scalar_type);
 
@@ -153,12 +174,19 @@ static vx_status VX_CALLBACK processTensorAddTensor(vx_node node, const vx_refer
          if (data->in_tensor_type == vx_type_e::VX_TYPE_FLOAT32 && data->out_tensor_type == vx_type_e::VX_TYPE_FLOAT32)
         {
         uint channels = 1; // for audio data
+        data->roi_ptr_src = (RpptROI *)data->roi_tensor_ptr_src;
         for (uint i = 0; i < data->nbatchSize; i++)
             {
+                std::cerr << "Batch TAT : "<< i;
                 //start ptr of the tensor1
-                size_t size_psrc1_elements = data->in_tensor_dims1[1] * data->in_tensor_dims1[2] * channels;
-                for (uint j = 0; j < size_psrc1_elements ; j++) { // TODO: Swetha - restrict this loop to just ROI - else adding number to 0 becomes a different value
+                size_t size_psrc1_elements = data->roi_ptr_src[i].xywhROI.xy.x * data->roi_ptr_src[i].xywhROI.xy.y * channels;
+                for (uint j = 0; j < size_psrc1_elements ; j++) {
                     ((float *)(data->pDst))[i * size_psrc1_elements + j] = ((float *)(data->pSrc1))[i * size_psrc1_elements + j] + ((float *)(data->pSrc2))[i] ;
+                    if (j>0 && j<10) {
+                    std::cerr << "\n TAT (float *)(data->pSrc1))[i * size_psrc1_elements + j] : " << ((float *)(data->pSrc1))[i * size_psrc1_elements + j];
+                    std::cerr << "\n TAT ((float *)(data->pSrc2))[i] : " << ((float *)(data->pSrc2))[i];
+                    std::cerr << "\n TAT ((float *)(data->pDst))[i * size_psrc1_elements + j] : " <<   ((float *)(data->pDst))[i * size_psrc1_elements + j];
+                    }
                 }
             }
         }
@@ -175,8 +203,8 @@ static vx_status VX_CALLBACK initializeTensorAddTensor(vx_node node, const vx_re
 #elif ENABLE_HIP
     STATUS_ERROR_CHECK(vxQueryNode(node, VX_NODE_ATTRIBUTE_AMD_HIP_STREAM, &data->handle.hipstream, sizeof(data->handle.hipstream)));
 #endif
-    STATUS_ERROR_CHECK(vxCopyScalar((vx_scalar)parameters[5], &data->device_type, VX_READ_ONLY, VX_MEMORY_TYPE_HOST));
-    STATUS_ERROR_CHECK(vxReadScalarValue((vx_scalar)parameters[4], &data->nbatchSize));
+    STATUS_ERROR_CHECK(vxCopyScalar((vx_scalar)parameters[6], &data->device_type, VX_READ_ONLY, VX_MEMORY_TYPE_HOST));
+    STATUS_ERROR_CHECK(vxReadScalarValue((vx_scalar)parameters[5], &data->nbatchSize));
 
     vx_size num_of_dims1, num_of_dims2;
     size_t tensor_dims1[NUM_OF_DIMS], tensor_dims2[NUM_OF_DIMS];
@@ -232,7 +260,7 @@ vx_status TensorAddTensor_Register(vx_context context)
     vx_kernel kernel = vxAddUserKernel(context, "org.rpp.TensorAddTensor",
                                        VX_KERNEL_RPP_TENSORADDTENSOR,
                                        processTensorAddTensor,
-                                       6,
+                                       7,
                                        validateTensorAddTensor,
                                        initializeTensorAddTensor,
                                        uninitializeTensorAddTensor);
@@ -254,9 +282,10 @@ vx_status TensorAddTensor_Register(vx_context context)
         PARAM_ERROR_CHECK(vxAddParameterToKernel(kernel, 0, VX_INPUT, VX_TYPE_TENSOR, VX_PARAMETER_STATE_REQUIRED));
         PARAM_ERROR_CHECK(vxAddParameterToKernel(kernel, 1, VX_INPUT, VX_TYPE_TENSOR, VX_PARAMETER_STATE_REQUIRED));
         PARAM_ERROR_CHECK(vxAddParameterToKernel(kernel, 2, VX_OUTPUT, VX_TYPE_TENSOR, VX_PARAMETER_STATE_REQUIRED));
-        PARAM_ERROR_CHECK(vxAddParameterToKernel(kernel, 3, VX_INPUT, VX_TYPE_ARRAY, VX_PARAMETER_STATE_REQUIRED));
-        PARAM_ERROR_CHECK(vxAddParameterToKernel(kernel, 4, VX_INPUT, VX_TYPE_SCALAR, VX_PARAMETER_STATE_REQUIRED));
+        PARAM_ERROR_CHECK(vxAddParameterToKernel(kernel, 3, VX_INPUT, VX_TYPE_TENSOR, VX_PARAMETER_STATE_REQUIRED));
+        PARAM_ERROR_CHECK(vxAddParameterToKernel(kernel, 4, VX_INPUT, VX_TYPE_TENSOR, VX_PARAMETER_STATE_REQUIRED)); // New Arg
         PARAM_ERROR_CHECK(vxAddParameterToKernel(kernel, 5, VX_INPUT, VX_TYPE_SCALAR, VX_PARAMETER_STATE_REQUIRED));
+        PARAM_ERROR_CHECK(vxAddParameterToKernel(kernel, 6, VX_INPUT, VX_TYPE_SCALAR, VX_PARAMETER_STATE_REQUIRED));
         PARAM_ERROR_CHECK(vxFinalizeKernel(kernel));
     }
     if (status != VX_SUCCESS)
