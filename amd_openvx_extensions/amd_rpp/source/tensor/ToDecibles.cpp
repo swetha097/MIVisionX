@@ -66,7 +66,10 @@ void update_destination_roi(const vx_reference *parameters, ToDecibelsLocalData 
     {
         data->roi_ptr_dst[i].xywhROI.xy.x = data->roi_ptr_src[i].xywhROI.xy.x;
         data->roi_ptr_dst[i].xywhROI.xy.y = data->roi_ptr_src[i].xywhROI.xy.y;
+        std::cerr<< "\n ToDecibels :" << data->roi_ptr_dst[i].xywhROI.xy.x;
+        std::cerr << "\n ToDecibels :" << data->roi_ptr_dst[i].xywhROI.xy.y;
     }
+
 }
 
 static vx_status VX_CALLBACK refreshToDecibels(vx_node node, const vx_reference *parameters, vx_uint32 num, ToDecibelsLocalData *data)

@@ -11,6 +11,7 @@ np.set_printoptions(threshold=1000, edgeitems=10000)
 from amd.rocal.pipeline import Pipeline
 import amd.rocal.fn as fn
 import amd.rocal.types as types
+import math
 # import rocal_pybind.tensor
 import sys
 import cv2
@@ -77,7 +78,8 @@ def main():
         nfilter=80 #nfeatures
         resample = 16000.00
         # dither = 0.001
-        audio_decode = fn.decoders.audio(audio, file_root=data_path, downmix=True, shard_id=0, num_shards=1,random_shuffle=True)
+        # audio_decode = fn.decoders.audio(audio, file_root=data_path, downmix=True, shard_id=0, num_shards=1,random_shuffle=True)
+        audio_decode = fn.decoders.audio(audio, file_root=data_path, file_list_path=file_list, downmix=True, shard_id=0, num_shards=1, storage_type=9)
         uniform_distribution_resample = fn.random.uniform(audio_decode, range=[0.85555550, 0.85555550])
         resampled_rate = uniform_distribution_resample * resample
         # resample_output = fn.resample(audio_decode, resample_rate = resampled_rate, resample_hint=250000, )
@@ -91,8 +93,9 @@ def main():
             normalized_shape=False,
             axes=[0]
         )
-        normal_distribution = fn.random.normal(trim_silence, mean=0.0, stddev=0.0000001)
-        dist_audio = trim_silence + normal_distribution * 0.00001 
+        normal_distribution = fn.random.normal(audio_decode, mean=0.0, stddev=0.0000001)
+        newAudio = normal_distribution * 0.00001
+        dist_audio = trim_silence + newAudio
         premph_audio = fn.preemphasis_filter(dist_audio)
         spectrogram_audio = fn.spectrogram(
             premph_audio,
@@ -108,9 +111,9 @@ def main():
         )
         to_decibels_audio = fn.to_decibels(
             mel_filter_bank_audio,
-            multiplier=np.log(10),
+            multiplier=math.log(10),
             reference=1.0,
-            cutoff_db=np.log(1e-20),
+            cutoff_db=math.log(1e-20),
             rocal_tensor_output_type=types.FLOAT,
         )
         normalize_audio = fn.normalize(to_decibels_audio, axes=[1])

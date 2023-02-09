@@ -828,6 +828,7 @@ rocalToDecibels(RocalContext p_context,
         output_info.set_data_type(op_tensorDataType);
 
         output = context->master_graph->create_tensor(output_info, is_output);
+        output->reset_tensor_roi();
         context->master_graph->add_node<ToDeciblesNode>({input}, {output})->init(cut_off_DB, multiplier, magnitude_reference);
     }
     catch(const std::exception& e)
@@ -1278,6 +1279,7 @@ rocalResample(RocalContext p_context,
             output_info.set_dims(dims);
         }
         resampled_output = context->master_graph->create_tensor(output_info, is_output);
+        // resampled_output->reset_tensor_roi();
         context->master_graph->add_node<ResampleNode>({input}, {resampled_output})->init(input_resample_rate, 50.0);
     }
     catch(const std::exception& e)

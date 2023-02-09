@@ -162,9 +162,18 @@ static vx_status VX_CALLBACK processTensorAddTensor(vx_node node, const vx_refer
         for (uint i = 0; i < data->nbatchSize; i++)
             {
                 //start ptr of the tensor1
-                size_t size_psrc1_elements = data->roi_ptr_src[i].xywhROI.xy.x * data->roi_ptr_src[i].xywhROI.xy.y * channels;
-                for (uint j = 0; j < size_psrc1_elements ; j++) {
+                std::cerr << "TAT Batch :: " << i;
+                size_t size_psrc1_elements = data->in_tensor_dims1[1] * data->in_tensor_dims1[2] * channels;
+                size_t size_psrc1_roi = data->roi_ptr_src[i].xywhROI.xy.x * data->roi_ptr_src[i].xywhROI.xy.y * channels;
+                for (uint j = 0; j < size_psrc1_roi ; j++) {
                     ((float *)(data->pDst))[i * size_psrc1_elements + j] = ((float *)(data->pSrc1))[i * size_psrc1_elements + j] + ((float *)(data->pSrc2))[i] ;
+                    if (j >= 0 && j <  10) {
+                        std::cerr << "\n i * size_psrc1_elements + j : " << i * size_psrc1_elements + j;
+                        std::cerr << "\n size_psrc1_elements" << size_psrc1_elements;
+                    //     std::cerr << "\n TAT ((float *)(data->pSrc1))[i * size_psrc1_elements + j] " << ((float *)(data->pSrc1))[i * size_psrc1_elements + j] ;
+                    //     std::cerr << "\n TAT ((float *)(data->pSrc2))[i]  " << ((float *)(data->pSrc2))[i];
+                    //     std::cerr << "\n TAT ((float *)(data->pDst))[i * size_psrc1_elements + j] " << ((float *)(data->pDst))[i * size_psrc1_elements + j] ;
+                    }
                 }
             }
         }

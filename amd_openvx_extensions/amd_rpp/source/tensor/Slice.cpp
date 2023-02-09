@@ -83,14 +83,18 @@ void update_destination_roi(const vx_reference *parameters, SliceLocalData *data
         num_of_dims_shapes_anchors = 3;
         for(unsigned i = 0; i < data->nbatchSize; i++) {
         int idx = i * num_of_dims_shapes_anchors;
+            std::cerr << "\n data->roi_ptr_src[i].xywhROI.xy.x - upper loop" << data->roi_ptr_src[i].xywhROI.xy.x;
+            std::cerr << "\n data->roi_ptr_src[i].xywhROI.xy.y - upper loop" << data->roi_ptr_src[i].xywhROI.xy.y;
         for(unsigned d = 0; d < num_of_dims_shapes_anchors; d++) {
         std::cerr << "\n Anchor : " << data->anchor[idx + d] << "|\t Shape Array : " << (data->shape[idx + d] - data->anchor[idx + d]);
         //TODO: Swetha : To handle 3d data by checking NCHW / NHWC format for images
-            if(data->shape[i + data->nbatchSize] > 0  ) { // 2d anchors & shapes
+
+            if(num_of_dims_shapes_anchors == 2  ) { // 2d anchors & shapes
                 if (d==0) data->roi_ptr_dst[i].xywhROI.xy.x = (data->shape[idx + d] - data->anchor[idx + d]);
                 if (d==1) data->roi_ptr_dst[i].xywhROI.xy.y = (data->shape[idx + d] - data->anchor[idx + d]);
             }
-            else if (data->shape[i] > 0 && num_of_dims_shapes_anchors == 1) { // 1d anchors & shapes
+            else if (num_of_dims_shapes_anchors == 1) { // 1d anchors & shapes
+            std::cerr << "\n 1d Array";
                 data->roi_ptr_dst[i].xywhROI.xy.x = (data->shape[i] - data->anchor[i]);
                 data->roi_ptr_dst[i].xywhROI.xy.y = data->roi_ptr_src[i].xywhROI.xy.y;
             }
@@ -220,7 +224,7 @@ static vx_status VX_CALLBACK processSlice(vx_node node, const vx_reference *para
 //                 std::cerr <<"slice length:  "<<(float)buffer1[n] << "\n";
 //             }
 
-// int * dimSrc = (int*) data->srcDims;
+int * dimSrc = (int*) data->srcDims;
 //  for(int n = 0; n < data->nbatchSize*2; n++) 
 //             {
 //                 std::cerr <<"src length:  "<<(int)dimSrc[n] << "\n";
@@ -234,13 +238,13 @@ static vx_status VX_CALLBACK processSlice(vx_node node, const vx_reference *para
 //             }
 
         rpp_status = rppt_slice_host((float *)data->pSrc, data->src_desc_ptr, (float *)data->pDst, data->dst_desc_ptr, data->srcDims, (float*)data->anchor, (float*)data->shape, data->fill_values);
-// float * pdst = (float*) data->pDst;
-//  for(int n = 0; n < data->nbatchSize; n++) 
-//             {
-//                 for (int j=0; j<(int)dimSrc[n];j++)
+float * pdst = (float*) data->pDst;
+ for(int n = 0; n < data->nbatchSize; n++) 
+            {
+                // for (int j=0; j<(int)dimSrc[n];j++)
 
-//                     std::cerr <<"src pdst:  "<<(float)pdst[(int)dimSrc[n] * n + j] << "\n";
-//             }
+                    std::cerr <<"Slice src pdst:  "<<(float)pdst[(int)dimSrc[n] * n + 0] << "\n";
+            }
         return_status = (rpp_status == RPP_SUCCESS) ? VX_SUCCESS : VX_FAILURE;
     }
     return return_status;

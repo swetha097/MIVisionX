@@ -117,6 +117,7 @@ static vx_status VX_CALLBACK refreshResample(vx_node node, const vx_reference *p
     data->roi_ptr_src = (RpptROI *)data->roi_tensor_ptr_src;
     for (uint i = 0; i < data->nbatchSize ; i++) {
         std::cerr << "\n Resample Rate : data->roi_ptr_src[i].xywhROI.xy.x" << data->roi_ptr_src[i].xywhROI.xy.x;
+        std::cerr << "\n Resample Rate : data->roi_ptr_src[i].xywhROI.xy.y" << data->roi_ptr_src[i].xywhROI.xy.y;
         data->sampleArray[i] = data->roi_ptr_src[i].xywhROI.xy.x;
         data->sampleChannels[i] = data->roi_ptr_src[i].xywhROI.xy.y;
         std::cerr << "\n data->sampleArray[i] :" << data->sampleArray[i];
