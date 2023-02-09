@@ -67,7 +67,6 @@ void ResampleNode::create_node()
 
 void ResampleNode::update_node()
 {
-    std::cerr << "ResampleNode::update_node()";
 
     vx_status src_roi_status = vxCopyArrayRange((vx_array)_src_sample_rate_array, 0, _batch_size , sizeof(vx_float32), _inputs[0]->info().get_sample_rate()->data(), VX_WRITE_ONLY, VX_MEMORY_TYPE_HOST);
     // vx_status resample_rate_status  = vxQueryTensor((vx_tensor)_resample_rate->handle(), VX_TENSOR_BUFFER_HOST, &_out_sample_rate_array, sizeof(vx_float32));
