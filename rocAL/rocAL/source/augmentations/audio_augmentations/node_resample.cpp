@@ -31,7 +31,7 @@ ResampleNode::ResampleNode(const std::vector<rocalTensor *> &inputs, const std::
 
 void ResampleNode::create_node()
 {
-    std::cerr << "ResampleNode::create_node()";
+    // std::cerr << "ResampleNode::create_node()";
     if(_node)
         return;
     //        auto in_sample_rate = _inputs[0]->info().get_sample_rate();

@@ -287,9 +287,7 @@ MasterGraph::build()
 #endif
     // _output_tensor_list = _internal_tensor_list;
     create_single_graph();
-    std::cerr << "Out of create_single_graph";
     start_processing();
-    std::cerr << "Out of start_processing";
     return Status::OK;
 }
 
@@ -345,10 +343,8 @@ rocalTensor * MasterGraph::create_tensor(const rocalTensorInfo &info, bool is_ou
 void
 MasterGraph::set_output(rocalTensor* output_tensor)
 {
-    std::cerr << "In set_output";
     if(output_tensor->is_handle_set() == false)
     {
-        std::cerr << "Is_handle_set";
         if (output_tensor->create_from_handle(_context) != 0)
                 THROW("Cannot create the tensor from handle")
 
@@ -362,7 +358,6 @@ MasterGraph::set_output(rocalTensor* output_tensor)
     }
     else
     {
-        std::cerr << "Comes here - is_handle_not set";
         // Decoder case only
         auto actual_output = create_tensor(output_tensor->info(), true);
         add_node<CopyNode>({output_tensor}, {actual_output});
@@ -575,11 +570,8 @@ MasterGraph::get_output_tensors()
     auto deleter=[&](unsigned* ptr){ };
     for(unsigned i = 0; i < _internal_tensor_list.size(); i++)
     {
-        std::cerr << "\n ********** ROI in master_graph.cpp from output_tensor_list" << roi_ptr[i][0] << roi_ptr[i][1] << roi_ptr[i][2];
         std::shared_ptr<unsigned> roi_ptr_sh;
         roi_ptr_sh.reset(roi_ptr[i], deleter);
-        // std::cerr << "\n ********** ROI in master_graph.cpp from output_tensor_list" << roi_ptr_sh.get()[i][0] << roi_ptr_sh.get()[i][1] << roi_ptr_sh.get()[i][2];
-
         _output_tensor_list[i]->swap_handle(output_ptr[i]);
         _output_tensor_list[i]->swap_tensor_roi(roi_ptr_sh);
 
