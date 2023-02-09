@@ -43,7 +43,7 @@ void UniformDistributionNode::create_node()
     for(uint i = 0; i < _batch_size; i++) {
     update_param();
     _uniform_distribution_array[i] = _dist_uniform(_generator);
-    std::cerr << "\n _uniform_distribution_array :"<< _uniform_distribution_array[i];
+    // std::cerr << "\n _uniform_distribution_array :"<< _uniform_distribution_array[i];
     }
     _outputs[0]->swap_handle((void *)_uniform_distribution_array.data());
 
@@ -57,7 +57,7 @@ void UniformDistributionNode::update_node()
     for(uint i = 0; i < _batch_size; i++) {
     update_param();
     _uniform_distribution_array[i] = _dist_uniform(_generator);
-    std::cerr << "\n _uniform_distribution_array :"<< _uniform_distribution_array[i];
+    // std::cerr << "\n _uniform_distribution_array :"<< _uniform_distribution_array[i];
     }
  if(status != 0)
         THROW("ERROR: vxCopyArrayRange failed in the pad node (vxExtrppNode_Slice)  node: "+ TOSTR(status))

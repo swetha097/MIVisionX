@@ -60,8 +60,8 @@ void PreemphasisFilterNode::update_node()
         _src_samples_size[i] = audio_roi[i].x1 * audio_roi[i].y1;
         _dst_roi_width_vec[i] = audio_roi[i].x1;
         _dst_roi_height_vec[i] = audio_roi[i].y1;
-        std::cerr << "\n In PreEmphasis Filter : " <<"\n audio_roi[i].x1" << _src_samples_size[i]<< "\n audio_roi[i].y1" << audio_roi[i].y1;
-        std::cerr << "\n In PreEmphasis Filter : " << "\n output_audio_roi[i].x1 : " << output_audio_roi[i].x1;
+        // std::cerr << "\n In PreEmphasis Filter : " <<"\n audio_roi[i].x1" << _src_samples_size[i]<< "\n audio_roi[i].y1" << audio_roi[i].y1;
+        // std::cerr << "\n In PreEmphasis Filter : " << "\n output_audio_roi[i].x1 : " << output_audio_roi[i].x1;
     }
     // vx_status src_roi_status;
     // src_roi_status = vxCopyArrayRange((vx_array)_src_samples_size_array, 0, _batch_size, sizeof(vx_uint32), _src_samples_size.data(), VX_WRITE_ONLY, VX_MEMORY_TYPE_HOST);

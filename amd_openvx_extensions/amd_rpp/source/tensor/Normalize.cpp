@@ -72,16 +72,16 @@ void update_destination_roi(const vx_reference *parameters, NormalizeLocalData *
     {
         data->roi_ptr_dst[i].xywhROI.xy.x = data->roi_ptr_src[i].xywhROI.xy.y;
         data->roi_ptr_dst[i].xywhROI.xy.y = data->roi_ptr_src[i].xywhROI.xy.x;
-        std::cerr << "\nNormalize data->roi_ptr_src[i].xywhROI.xy.x :" << data->roi_ptr_src[i].xywhROI.xy.x;
-        std::cerr << "\nNormalize data->roi_ptr_src[i].xywhROI.xy.y :" << data->roi_ptr_src[i].xywhROI.xy.y;
-        std::cerr << "\nNormalize data->roi_ptr_dst[i].xywhROI.xy.x :" << data->roi_ptr_dst[i].xywhROI.xy.x;
-        std::cerr << "\nNormalize data->roi_ptr_dst[i].xywhROI.xy.y :" << data->roi_ptr_dst[i].xywhROI.xy.y;
+        // std::cerr << "\nNormalize data->roi_ptr_src[i].xywhROI.xy.x :" << data->roi_ptr_src[i].xywhROI.xy.x;
+        // std::cerr << "\nNormalize data->roi_ptr_src[i].xywhROI.xy.y :" << data->roi_ptr_src[i].xywhROI.xy.y;
+        // std::cerr << "\nNormalize data->roi_ptr_dst[i].xywhROI.xy.x :" << data->roi_ptr_dst[i].xywhROI.xy.x;
+        // std::cerr << "\nNormalize data->roi_ptr_dst[i].xywhROI.xy.y :" << data->roi_ptr_dst[i].xywhROI.xy.y;
     }
 }
 
 static vx_status VX_CALLBACK refreshNormalize(vx_node node, const vx_reference *parameters, vx_uint32 num, NormalizeLocalData *data)
 {
-    std::cerr << "\n refreshNormalize";
+    // std::cerr << "\n refreshNormalize";
     vx_status status = VX_SUCCESS;
     // STATUS_ERROR_CHECK(vxCopyArrayRange((vx_array)parameters[2], 0, data->nbatchSize, sizeof(unsigned), data->sampleArray, VX_READ_ONLY, VX_MEMORY_TYPE_HOST));
     // STATUS_ERROR_CHECK(vxCopyArrayRange((vx_array)parameters[3], 0, data->nbatchSize, sizeof(float), data->sampleChannels, VX_READ_ONLY, VX_MEMORY_TYPE_HOST));
@@ -111,8 +111,8 @@ static vx_status VX_CALLBACK refreshNormalize(vx_node node, const vx_reference *
     for (uint i = 0; i < data->nbatchSize; i++) {
         data->sampleArray[i] = data->roi_ptr_src[i].xywhROI.xy.y;
         data->sampleChannels[i] = data->roi_ptr_src[i].xywhROI.xy.x;
-        std::cerr << "\nNormalize data->roi_ptr_src[i].xywhROI.xy.x :" << data->roi_ptr_src[i].xywhROI.xy.x;
-        std::cerr << "\nNormalize data->roi_ptr_src[i].xywhROI.xy.y :" << data->roi_ptr_src[i].xywhROI.xy.y;
+        // std::cerr << "\nNormalize data->roi_ptr_src[i].xywhROI.xy.x :" << data->roi_ptr_src[i].xywhROI.xy.x;
+        // std::cerr << "\nNormalize data->roi_ptr_src[i].xywhROI.xy.y :" << data->roi_ptr_src[i].xywhROI.xy.y;
 
 
     }
@@ -196,7 +196,7 @@ static vx_status VX_CALLBACK processNormalize(vx_node node, const vx_reference *
 
 static vx_status VX_CALLBACK initializeNormalize(vx_node node, const vx_reference *parameters, vx_uint32 num)
 {
-    std::cerr<< "\n initializeNormalize";
+    // std::cerr<< "\n initializeNormalize";
     NormalizeLocalData *data = new NormalizeLocalData;
     // unsigned roiType;
     memset(data, 0, sizeof(*data));

@@ -80,7 +80,7 @@ static vx_status VX_CALLBACK refreshTensorAddTensor(vx_node node, const vx_refer
     }
     else if (data->device_type == AGO_TARGET_AFFINITY_CPU)
     {
-        std::cerr << "CPU";
+        // std::cerr << "CPU";
         if (data->in_tensor_type == vx_type_e::VX_TYPE_UINT8 && data->out_tensor_type == vx_type_e::VX_TYPE_UINT8)
         {
             STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[0], VX_TENSOR_BUFFER_HOST, &data->pSrc1, sizeof(vx_uint8)));
@@ -89,7 +89,7 @@ static vx_status VX_CALLBACK refreshTensorAddTensor(vx_node node, const vx_refer
         }
         else if (data->in_tensor_type == vx_type_e::VX_TYPE_FLOAT32 && data->out_tensor_type == vx_type_e::VX_TYPE_FLOAT32)
         {
-            std::cerr << "FLOAT data";
+            // std::cerr << "FLOAT data";
             STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[0], VX_TENSOR_BUFFER_HOST, &data->pSrc1, sizeof(vx_float32)));
             STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[1], VX_TENSOR_BUFFER_HOST, &data->pSrc2, sizeof(vx_float32)));
             STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[2], VX_TENSOR_BUFFER_HOST, &data->pDst, sizeof(vx_float32)));
@@ -147,7 +147,7 @@ static vx_status VX_CALLBACK processTensorAddTensor(vx_node node, const vx_refer
         refreshTensorAddTensor(node, parameters, num, data);
         // make the rpp call or add the implementation here
         // hipMemcpy(data->pDst_dev, data->pSrc_dev, data->tensor_size, hipMemcpyDeviceToDevice);
-        std::cerr << "process :  TensorAddTensor , HIP backend not supported as of date";
+        // std::cerr << "process :  TensorAddTensor , HIP backend not supported as of date";
 #endif
     }
     else if (data->device_type == AGO_TARGET_AFFINITY_CPU)
@@ -162,14 +162,14 @@ static vx_status VX_CALLBACK processTensorAddTensor(vx_node node, const vx_refer
         for (uint i = 0; i < data->nbatchSize; i++)
             {
                 //start ptr of the tensor1
-                std::cerr << "TAT Batch :: " << i;
+                // std::cerr << "TAT Batch :: " << i;
                 size_t size_psrc1_elements = data->in_tensor_dims1[1] * data->in_tensor_dims1[2] * channels;
                 size_t size_psrc1_roi = data->roi_ptr_src[i].xywhROI.xy.x * data->roi_ptr_src[i].xywhROI.xy.y * channels;
                 for (uint j = 0; j < size_psrc1_roi ; j++) {
                     ((float *)(data->pDst))[i * size_psrc1_elements + j] = ((float *)(data->pSrc1))[i * size_psrc1_elements + j] + ((float *)(data->pSrc2))[i] ;
                     if (j >= 0 && j <  10) {
-                        std::cerr << "\n i * size_psrc1_elements + j : " << i * size_psrc1_elements + j;
-                        std::cerr << "\n size_psrc1_elements" << size_psrc1_elements;
+                        // std::cerr << "\n i * size_psrc1_elements + j : " << i * size_psrc1_elements + j;
+                        // std::cerr << "\n size_psrc1_elements" << size_psrc1_elements;
                     //     std::cerr << "\n TAT ((float *)(data->pSrc1))[i * size_psrc1_elements + j] " << ((float *)(data->pSrc1))[i * size_psrc1_elements + j] ;
                     //     std::cerr << "\n TAT ((float *)(data->pSrc2))[i]  " << ((float *)(data->pSrc2))[i];
                     //     std::cerr << "\n TAT ((float *)(data->pDst))[i * size_psrc1_elements + j] " << ((float *)(data->pDst))[i * size_psrc1_elements + j] ;

@@ -74,7 +74,7 @@ void update_destination_roi(const vx_reference *parameters, SliceLocalData *data
         {
             dimsTotal*=data->out_tensor_dims[numDims];
         }
-    std::cerr << "\n dimsTotal" << dimsTotal;
+    // std::cerr << "\n dimsTotal" << dimsTotal;
     if (dimsTotal == data->nbatchSize)
         num_of_dims_shapes_anchors = 1;
     else if ((dimsTotal == (data->nbatchSize*2)))
@@ -83,10 +83,10 @@ void update_destination_roi(const vx_reference *parameters, SliceLocalData *data
         num_of_dims_shapes_anchors = 3;
         for(unsigned i = 0; i < data->nbatchSize; i++) {
         int idx = i * num_of_dims_shapes_anchors;
-            std::cerr << "\n data->roi_ptr_src[i].xywhROI.xy.x - upper loop" << data->roi_ptr_src[i].xywhROI.xy.x;
-            std::cerr << "\n data->roi_ptr_src[i].xywhROI.xy.y - upper loop" << data->roi_ptr_src[i].xywhROI.xy.y;
+            // std::cerr << "\n data->roi_ptr_src[i].xywhROI.xy.x - upper loop" << data->roi_ptr_src[i].xywhROI.xy.x;
+            // std::cerr << "\n data->roi_ptr_src[i].xywhROI.xy.y - upper loop" << data->roi_ptr_src[i].xywhROI.xy.y;
         for(unsigned d = 0; d < num_of_dims_shapes_anchors; d++) {
-        std::cerr << "\n Anchor : " << data->anchor[idx + d] << "|\t Shape Array : " << (data->shape[idx + d] - data->anchor[idx + d]);
+        // std::cerr << "\n Anchor : " << data->anchor[idx + d] << "|\t Shape Array : " << (data->shape[idx + d] - data->anchor[idx + d]);
         //TODO: Swetha : To handle 3d data by checking NCHW / NHWC format for images
 
             if(num_of_dims_shapes_anchors == 2  ) { // 2d anchors & shapes
@@ -94,12 +94,12 @@ void update_destination_roi(const vx_reference *parameters, SliceLocalData *data
                 if (d==1) data->roi_ptr_dst[i].xywhROI.xy.y = (data->shape[idx + d] - data->anchor[idx + d]);
             }
             else if (num_of_dims_shapes_anchors == 1) { // 1d anchors & shapes
-            std::cerr << "\n 1d Array";
+            // std::cerr << "\n 1d Array";
                 data->roi_ptr_dst[i].xywhROI.xy.x = (data->shape[i] - data->anchor[i]);
                 data->roi_ptr_dst[i].xywhROI.xy.y = data->roi_ptr_src[i].xywhROI.xy.y;
             }
-            std::cerr << "\n data->roi_ptr_dst[i].xywhROI.xy.x" << data->roi_ptr_dst[i].xywhROI.xy.x;
-            std::cerr << "\n data->roi_ptr_dst[i].xywhROI.xy.y" << data->roi_ptr_dst[i].xywhROI.xy.y;
+            // std::cerr << "\n data->roi_ptr_dst[i].xywhROI.xy.x" << data->roi_ptr_dst[i].xywhROI.xy.x;
+            // std::cerr << "\n data->roi_ptr_dst[i].xywhROI.xy.y" << data->roi_ptr_dst[i].xywhROI.xy.y;
         }
         
     }
@@ -107,7 +107,6 @@ void update_destination_roi(const vx_reference *parameters, SliceLocalData *data
 
 static vx_status VX_CALLBACK refreshSlice(vx_node node, const vx_reference *parameters, vx_uint32 num, SliceLocalData *data)
 {
-    std::cerr << "\n REFRESH SLICE !!";
     vx_status status = VX_SUCCESS;
     STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[4], VX_TENSOR_BUFFER_HOST, &data->anchor, sizeof(vx_float32)));
     STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[5], VX_TENSOR_BUFFER_HOST, &data->shape, sizeof(vx_float32)));
@@ -136,21 +135,15 @@ static vx_status VX_CALLBACK refreshSlice(vx_node node, const vx_reference *para
     }
     data->roi_ptr_src = (RpptROI *)data->roi_tensor_ptr_src;
     for (uint i = 0, j = 0; i < data->nbatchSize * 2, j < data->nbatchSize; i = i + 2, j = j + 1) {
-        std::cerr << "\n j ::"<< j;
-        std::cerr << "\n data->roi_ptr_src[j].xywhROI.xy.x" << data->roi_ptr_src[j].xywhROI.xy.x;
       data->srcDims[i] = data->roi_ptr_src[j].xywhROI.xy.x;
       data->srcDims[i + 1] = data->roi_ptr_src[j].xywhROI.xy.y;
-      std::cerr << "\n j ::"<< j;
     }
-    std::cerr << "\n QUERIED TENSORS 2";
 
     // Get the dimensions of the shapes / anchors tensor
     data->dst_desc_ptr = &data->dstDesc;
     STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[5], VX_TENSOR_NUMBER_OF_DIMS, &data->dst_desc_ptr->numDims, sizeof(data->dst_desc_ptr->numDims)));
     STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[5], VX_TENSOR_DIMS, &data->out_tensor_dims, sizeof(vx_size) * data->dst_desc_ptr->numDims));
-    std::cerr << "Before update ROI ";
     update_destination_roi(parameters, data);
-    std::cerr << "Out of update ROI";
     return status;
 }
 
@@ -224,7 +217,7 @@ static vx_status VX_CALLBACK processSlice(vx_node node, const vx_reference *para
 //                 std::cerr <<"slice length:  "<<(float)buffer1[n] << "\n";
 //             }
 
-int * dimSrc = (int*) data->srcDims;
+// int * dimSrc = (int*) data->srcDims;
 //  for(int n = 0; n < data->nbatchSize*2; n++) 
 //             {
 //                 std::cerr <<"src length:  "<<(int)dimSrc[n] << "\n";
@@ -238,13 +231,13 @@ int * dimSrc = (int*) data->srcDims;
 //             }
 
         rpp_status = rppt_slice_host((float *)data->pSrc, data->src_desc_ptr, (float *)data->pDst, data->dst_desc_ptr, data->srcDims, (float*)data->anchor, (float*)data->shape, data->fill_values);
-float * pdst = (float*) data->pDst;
- for(int n = 0; n < data->nbatchSize; n++) 
-            {
-                // for (int j=0; j<(int)dimSrc[n];j++)
+// float * pdst = (float*) data->pDst;
+//  for(int n = 0; n < data->nbatchSize; n++) 
+//             {
+//                 // for (int j=0; j<(int)dimSrc[n];j++)
 
-                    std::cerr <<"Slice src pdst:  "<<(float)pdst[(int)dimSrc[n] * n + 0] << "\n";
-            }
+//                     std::cerr <<"Slice src pdst:  "<<(float)pdst[(int)dimSrc[n] * n + 0] << "\n";
+//             }
         return_status = (rpp_status == RPP_SUCCESS) ? VX_SUCCESS : VX_FAILURE;
     }
     return return_status;

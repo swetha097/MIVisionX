@@ -43,7 +43,7 @@ void NormalDistributionNode::create_node()
     for(uint i = 0; i < _batch_size; i++) {
     update_param();
     _normal_distribution_array[i] = _dist_normal(_generator);
-    std::cerr << "\n _normal_distribution_array :"<< _normal_distribution_array[i];
+    // std::cerr << "\n _normal_distribution_array :"<< _normal_distribution_array[i];
     }
     _outputs[0]->swap_handle((void *)_normal_distribution_array.data());
     // create tensor
@@ -68,7 +68,7 @@ void NormalDistributionNode::update_node()
     for(uint i = 0; i < _batch_size; i++) {
     update_param();
     _normal_distribution_array[i] = _dist_normal(_generator);
-    std::cerr << "\n _normal_distribution_array :"<< _normal_distribution_array[i];
+    // std::cerr << "\n _normal_distribution_array :"<< _normal_distribution_array[i];
     }
     // status = vxCopyTensorPatch((vx_tensor)_outputs[0]->handle(), _num_of_dims, nullptr, nullptr, _stride, _normal_distribution_array.data(), VX_WRITE_ONLY, VX_MEMORY_TYPE_HOST);
  if(status != 0)

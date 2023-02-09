@@ -67,8 +67,6 @@ void update_destination_roi(const vx_reference *parameters, ResampleLocalData *d
     float _scale_ratio;
     // std::vector<float> _resample_rate_vec;
     for(unsigned i = 0; i < data->nbatchSize; i++) {
-        std::cerr << "\n data->outRateTensor[i] :" << data->outRateTensor[i];
-        std::cerr << "\n data->inRateTensor[i] : " << data->inRateTensor[i];
         if (data->inRateTensor[i]!=0)
             _scale_ratio = data->outRateTensor[i] / (float)data->inRateTensor[i];
         else 
@@ -76,8 +74,6 @@ void update_destination_roi(const vx_reference *parameters, ResampleLocalData *d
         //_resample_rate_vec[i] = data->outRateTensor[i]; // TODO : Swetha -Update the dst Resample Rate Later
         data->roi_ptr_dst[i].xywhROI.xy.x = (int)std::ceil(_scale_ratio * data->roi_ptr_src[i].xywhROI.xy.x); 
         data->roi_ptr_dst[i].xywhROI.xy.y = data->roi_ptr_src[i].xywhROI.xy.y;
-        std::cerr << "\n data->roi_ptr_dst[i].xywhROI.xy.x : " << data->roi_ptr_dst[i].xywhROI.xy.x;
-        std::cerr << "\n data->roi_ptr_dst[i].xywhROI.xy.y :" << data->roi_ptr_dst[i].xywhROI.xy.y;
         // _max_dst_width = std::max(_max_dst_width, data->roi_ptr_dst[i].xywhROI.xy.x);
         // std::cerr << "_max_dst_width : " << _max_dst_width;
         
@@ -116,12 +112,8 @@ static vx_status VX_CALLBACK refreshResample(vx_node node, const vx_reference *p
     }
     data->roi_ptr_src = (RpptROI *)data->roi_tensor_ptr_src;
     for (uint i = 0; i < data->nbatchSize ; i++) {
-        std::cerr << "\n Resample Rate : data->roi_ptr_src[i].xywhROI.xy.x" << data->roi_ptr_src[i].xywhROI.xy.x;
-        std::cerr << "\n Resample Rate : data->roi_ptr_src[i].xywhROI.xy.y" << data->roi_ptr_src[i].xywhROI.xy.y;
         data->sampleArray[i] = data->roi_ptr_src[i].xywhROI.xy.x;
         data->sampleChannels[i] = data->roi_ptr_src[i].xywhROI.xy.y;
-        std::cerr << "\n data->sampleArray[i] :" << data->sampleArray[i];
-        std::cerr << "\n data->sampleChannels[i] : " << data->sampleChannels[i];
     }
     update_destination_roi(parameters, data);
     return status;
@@ -164,13 +156,11 @@ static vx_status VX_CALLBACK validateResample(vx_node node, const vx_reference p
     STATUS_ERROR_CHECK(vxSetMetaFormatAttribute(metas[1], VX_TENSOR_FIXED_POINT_POSITION, &tensor_fixed_point_position, sizeof(tensor_fixed_point_position)));
     vxReleaseTensor(&output);
     vxReleaseParameter(&output_param);
-    std::cerr << "\n in validateResample";
     return status;
 }
 
 static vx_status VX_CALLBACK processResample(vx_node node, const vx_reference *parameters, vx_uint32 num)
 {
-    std::cerr << "Process REsample";
     RppStatus rpp_status = RPP_SUCCESS;
     vx_status return_status = VX_SUCCESS;
     ResampleLocalData *data = NULL;
@@ -185,30 +175,30 @@ static vx_status VX_CALLBACK processResample(vx_node node, const vx_reference *p
     if (data->deviceType == AGO_TARGET_AFFINITY_CPU)
     {
         refreshResample(node, parameters, num, data);
-        float *buffer_in_rate = (float *)data->inRateTensor;
-        for (int n = 0; n < data->nbatchSize ; n++) {
-            std::cerr << "\n data->inRateTensor:  " << (float)buffer_in_rate[n] << "\n";
-        }
-        float *buffer = (float *)data->outRateTensor;
-        for (int n = 0; n < data->nbatchSize ; n++) {
-            std::cerr << "data->outRateTensor:  " << (float)buffer[n] << "\n";
-        }
+        // float *buffer_in_rate = (float *)data->inRateTensor;
+        // for (int n = 0; n < data->nbatchSize ; n++) {
+        //     std::cerr << "\n data->inRateTensor:  " << (float)buffer_in_rate[n] << "\n";
+        // }
+        // float *buffer = (float *)data->outRateTensor;
+        // for (int n = 0; n < data->nbatchSize ; n++) {
+        //     std::cerr << "data->outRateTensor:  " << (float)buffer[n] << "\n";
+        // }
 
-        uint *sampleArray = (uint *)data->sampleArray;
-        for (int n = 0; n < data->nbatchSize ; n++) {
-            std::cerr << "\n data->sampleArray:  " << (uint)sampleArray[n] << "\n";
-        }
-        uint *sampleChannels = (uint *)data->sampleChannels;
-        for (int n = 0; n < data->nbatchSize ; n++) {
-            std::cerr << "data->sampleChannels:  " << (uint)sampleChannels[n] << "\n";
-        }
-        buffer = (float*)data->pSrc;
-        for (int n = 0; n < data->nbatchSize; n++) {
-            std::cerr << "\n ***** Resample Batch : "<< n;
-            // for (int j = 0; j < data->sampleArray[n] * data->sampleChannels[n]; j++)
-            //     std::cerr << "\n data :: " << (float)buffer[j] << "\t";
-            std::cerr << "\n";
-        }
+        // uint *sampleArray = (uint *)data->sampleArray;
+        // for (int n = 0; n < data->nbatchSize ; n++) {
+        //     std::cerr << "\n data->sampleArray:  " << (uint)sampleArray[n] << "\n";
+        // }
+        // uint *sampleChannels = (uint *)data->sampleChannels;
+        // for (int n = 0; n < data->nbatchSize ; n++) {
+        //     std::cerr << "data->sampleChannels:  " << (uint)sampleChannels[n] << "\n";
+        // }
+        // buffer = (float*)data->pSrc;
+        // for (int n = 0; n < data->nbatchSize; n++) {
+        //     std::cerr << "\n ***** Resample Batch : "<< n;
+        //     // for (int j = 0; j < data->sampleArray[n] * data->sampleChannels[n]; j++)
+        //     //     std::cerr << "\n data :: " << (float)buffer[j] << "\t";
+        //     std::cerr << "\n";
+        // }
         rpp_status = rppt_resample_host((float *)data->pSrc, data->src_desc_ptr, (float *)data->pDst, data->dst_desc_ptr,
                                        (float *)data->inRateTensor,(float *)data->outRateTensor, data->sampleArray, data->sampleChannels,
                                         data->quality);
@@ -275,14 +265,6 @@ static vx_status VX_CALLBACK initializeResample(vx_node node, const vx_reference
     data->dst_desc_ptr->strides.wStride = data->dst_desc_ptr->c;
     data->dst_desc_ptr->strides.cStride = 1;
     data->dst_desc_ptr->numDims = 4;
-    std::cerr << "\n Src desc ptr : ";
-    std::cerr << "\n data->src_desc_ptr->n : "<< data->src_desc_ptr->n;
-    std::cerr << "\n data->src_desc_ptr->h : " << data->src_desc_ptr->h;
-    std::cerr << "\n data->src_desc_ptr->w : " << data->src_desc_ptr->w;
-    std::cerr << "\n Dst Desc Ptr : ";
-    std::cerr << "\n data->dst_desc_ptr->n : "<< data->dst_desc_ptr->n;
-    std::cerr << "\n data->dst_desc_ptr->h : " << data->dst_desc_ptr->h;
-    std::cerr << "\n data->dst_desc_ptr->w : " << data->dst_desc_ptr->w;
 
     data->sampleArray = (signed int *)calloc(data->src_desc_ptr->n, sizeof(signed int));
     data->sampleChannels = (signed int *)calloc(data->src_desc_ptr->n, sizeof(signed int));
@@ -386,6 +368,5 @@ vx_status Resample_Register(vx_context context)
         vxRemoveKernel(kernel);
         return VX_FAILURE;
     }
-    std::cerr << "HEREEEEEEEEEEEEEEEEEEEEEEEEEEEE";
     return status;
 }

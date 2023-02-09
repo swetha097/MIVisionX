@@ -77,7 +77,7 @@ void update_destination_roi(const vx_reference *parameters, PreemphasisFilterLoc
 
 static vx_status VX_CALLBACK refreshPreemphasisFilter(vx_node node, const vx_reference *parameters, vx_uint32 num, PreemphasisFilterLocalData *data)
 {
-    std::cerr << "\n Refresh PreEmphasis Filter :";
+    // std::cerr << "\n Refresh PreEmphasis Filter :";
     vx_status status = VX_SUCCESS;
     // STATUS_ERROR_CHECK(vxCopyArrayRange((vx_array)parameters[2], 0, data->nbatchSize, sizeof(unsigned), data->sampleSize, VX_READ_ONLY, VX_MEMORY_TYPE_HOST));
     STATUS_ERROR_CHECK(vxCopyArrayRange((vx_array)parameters[4], 0, data->nbatchSize, sizeof(float), data->preemphCoeff, VX_READ_ONLY, VX_MEMORY_TYPE_HOST));
@@ -146,7 +146,7 @@ static vx_status VX_CALLBACK validatePreemphasisFilter(vx_node node, const vx_re
 
 static vx_status VX_CALLBACK processPreemphasisFilter(vx_node node, const vx_reference *parameters, vx_uint32 num)
 {
-    std::cerr << "Process PreEmphasis Filter";
+    // std::cerr << "Process PreEmphasis Filter";
     RppStatus rpp_status = RPP_SUCCESS;
     vx_status return_status = VX_SUCCESS;
     PreemphasisFilterLocalData *data = NULL;

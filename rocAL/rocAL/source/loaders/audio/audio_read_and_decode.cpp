@@ -197,9 +197,6 @@ AudioReadAndDecode::load(float* buff,
             actual_samples[i] = roi_samples[i] = _original_samples[i]; // TODO - Needs to be checked
             actual_channels[i] = roi_channels[i] = _original_channels[i];
             actual_sample_rates[i] = _original_sample_rates[i];
-            std::cerr << "\n actual names : " << names[i];
-            std::cerr << "\n actual samples :" << actual_samples[i];
-            std::cerr << "\n actual channels :" << actual_channels[i];
             // actual_samples[i] = _actual_decoded_samples[i];
             // actual_channels[i] = _actual_decoded_channels[i];
         }

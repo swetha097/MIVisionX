@@ -91,7 +91,7 @@ static vx_status VX_CALLBACK refreshNonSilentRegion(vx_node node, const vx_refer
     data->roi_ptr_src = (RpptROI *)data->roi_tensor_ptr_src;
     for (uint i = 0; i < data->nbatchSize; i++) {
         data->sample_size[i] = data->roi_ptr_src[i].xywhROI.xy.x * data->roi_ptr_src[i].xywhROI.xy.y;
-        std::cerr << "\n NSR data->sample_size[i] : " << data->sample_size[i];
+        // std::cerr << "\n NSR data->sample_size[i] : " << data->sample_size[i];
     }
     return status;
 }
@@ -169,16 +169,16 @@ static vx_status VX_CALLBACK processNonSilentRegion(vx_node node, const vx_refer
         refreshNonSilentRegion(node, parameters, num, data);
         
         rpp_status = rppt_non_silent_region_detection_host((float *)data->pSrc, data->src_desc_ptr,(int *) data->sample_size, (float *)data->pDst1, (float *)data->pDst2, data->cutOffDB, data->windowLength, data->referencePower, data->resetInterval);
-        float * buffer = (float *)data->pDst1;
-            for(int n = 0; n < data->nbatchSize; n++) 
-            {
-                std::cerr <<"Non silent region begin:  "<<(float)buffer[n] << "\n";
-            }
-        float * buffer1 = (float *)data->pDst2;
-         for(int n = 0; n < data->nbatchSize; n++) 
-            {
-                std::cerr <<"Non silent region length :  "<<(float)buffer1[n] << "\n";
-            }
+        // float * buffer = (float *)data->pDst1;
+        //     for(int n = 0; n < data->nbatchSize; n++) 
+        //     {
+        //         std::cerr <<"Non silent region begin:  "<<(float)buffer[n] << "\n";
+        //     }
+        // float * buffer1 = (float *)data->pDst2;
+        //  for(int n = 0; n < data->nbatchSize; n++) 
+        //     {
+        //         std::cerr <<"Non silent region length :  "<<(float)buffer1[n] << "\n";
+        //     }
         return_status = (rpp_status == RPP_SUCCESS) ? VX_SUCCESS : VX_FAILURE;
     }
     return return_status;
