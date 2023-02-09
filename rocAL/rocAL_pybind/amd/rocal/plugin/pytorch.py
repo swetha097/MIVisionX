@@ -119,7 +119,7 @@ class RALIGenericIterator(object):
             # print("\n The ROI Shapes",torch.tensor(self.output_tensor_list[0].get_roi_at(0)))
             for i in range(self.batch_size):
                 self.audio_length_roi.append((self.output_tensor_list[0].get_roi_at(i)))
-            print("\n The tensor ROI", torch.tensor(self.audio_length_roi))
+            # print("\n The tensor ROI", torch.tensor(self.audio_length_roi))
 
             # print(self.batch_size * self.channels * self.samples)
             self.output = torch.empty((self.batch_size, self.samples, self.channels,), dtype=torch.float32)
