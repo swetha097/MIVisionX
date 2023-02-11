@@ -67,7 +67,7 @@ void PadNode::create_node() {
 
 void PadNode::update_node() {
     bool has_same_dim = true;
-    std::cerr << "\n Num of dims in pad :" << _num_of_dims;
+    // std::cerr << "\n Num of dims in pad :" << _num_of_dims;
     for(unsigned i = 0; i < _batch_size; i++) {
         int idx = i * _num_of_dims;
         for(unsigned d = 0; d < _num_of_dims; d++) {
