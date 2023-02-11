@@ -204,7 +204,7 @@ static vx_status VX_CALLBACK processSlice(vx_node node, const vx_reference *para
     }
     if (data->deviceType == AGO_TARGET_AFFINITY_CPU)
     {
-        refreshSlice(node, parameters, num, data);
+    refreshSlice(node, parameters, num, data);
 //TODO: Swetha : To clean up the debug code
 //  float * buffer = (float *)data->anchor;
 //             for(int n = 0; n < data->nbatchSize * 2; n++) 
@@ -316,9 +316,9 @@ static vx_status VX_CALLBACK initializeSlice(vx_node node, const vx_reference *p
 // #endif
 //     data->roi_tensor_ptr = (RpptROI *)calloc(data->src_desc_ptr->n, sizeof(RpptROI));
 //TODO: Swetha : To clean up the debug code
-std::cerr<<"\n Gonna call refresh slice in initialize";
+// std::cerr<<"\n Gonna call refresh slice in initialize";
     refreshSlice(node, parameters, num, data);
-    std::cerr << "Calling refersh ";
+    // std::cerr << "Calling refersh ";
 #if ENABLE_OPENCL
     if (data->deviceType == AGO_TARGET_AFFINITY_GPU)
         rppCreateWithStreamAndBatchSize(&data->rppHandle, data->handle.cmdq, data->nbatchSize);

@@ -76,8 +76,8 @@ void update_destination_roi(const vx_reference *parameters, SpectrogramLocalData
     {
         data->roi_ptr_dst[i].xywhROI.xy.x = (( data->sampleLength[i] - data->windowOffset ) / data->windowStep) + 1;
         data->roi_ptr_dst[i].xywhROI.xy.y =  (data->nfftSize / 2 )+ 1;
-        std::cerr << "\n data->roi_ptr_dst[i].xywhROI.xy.x" << data->roi_ptr_dst[i].xywhROI.xy.x;
-        std::cerr << "\n data->roi_ptr_dst[i].xywhROI.xy.y" << data->roi_ptr_dst[i].xywhROI.xy.y;
+        // std::cerr << "\n data->roi_ptr_dst[i].xywhROI.xy.x" << data->roi_ptr_dst[i].xywhROI.xy.x;
+        // std::cerr << "\n data->roi_ptr_dst[i].xywhROI.xy.y" << data->roi_ptr_dst[i].xywhROI.xy.y;
     }
 }
 
@@ -118,7 +118,7 @@ static vx_status VX_CALLBACK refreshSpectrogram(vx_node node, const vx_reference
         for (uint i=0; i < data->nbatchSize; i++)
     {
         data->sampleLength[i] = data->roi_ptr_src[i].xywhROI.xy.x;
-        std::cerr << "\n data->sampleLength[i]" << data->sampleLength[i];
+        // std::cerr << "\n data->sampleLength[i]" << data->sampleLength[i];
     }
     update_destination_roi(parameters, data);
     return status;

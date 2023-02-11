@@ -71,17 +71,17 @@ void update_destination_roi_pad(const vx_reference *parameters, PadLocalData *da
     data->roi_ptr_dst = (RpptROI *)data->roi_tensor_ptr_dst;
     data->roi_ptr_src = (RpptROI *)data->roi_tensor_ptr_src;
     num_of_dims_shapes_anchors = data->dst_desc_ptr->numDims;
-    std::cerr << "\n dimsTotal \t" << data->dst_desc_ptr->numDims;
+    // std::cerr << "\n dimsTotal \t" << data->dst_desc_ptr->numDims;
 
         for(unsigned i = 0; i < data->nbatchSize; i++) {
         int idx = i * num_of_dims_shapes_anchors;
-            std::cerr << "\n data->roi_ptr_src[i].xywhROI.xy.x - upper loop" << data->roi_ptr_src[i].xywhROI.xy.x;
-            std::cerr << "\n data->roi_ptr_src[i].xywhROI.xy.y - upper loop" << data->roi_ptr_src[i].xywhROI.xy.y;
+            // std::cerr << "\n data->roi_ptr_src[i].xywhROI.xy.x - upper loop" << data->roi_ptr_src[i].xywhROI.xy.x;
+            // std::cerr << "\n data->roi_ptr_src[i].xywhROI.xy.y - upper loop" << data->roi_ptr_src[i].xywhROI.xy.y;
         for(unsigned d = 0; d < num_of_dims_shapes_anchors; d++) {
         // std::cerr << "\n Anchor : " << data->anchor[idx + d] << "|\t Shape Array : " << (data->shape[idx + d] - data->anchor[idx + d]);
             data->anchor[idx + d] = 0;
             data->shape[idx + d] = (d==0) ? data->in_tensor_dims[2] : data->in_tensor_dims[1];
-            std::cerr << "\n Anchor : " << data->anchor[idx + d] << "|\t Shape Array : " << (data->shape[idx + d] - data->anchor[idx + d]);
+            // std::cerr << "\n Anchor : " << data->anchor[idx + d] << "|\t Shape Array : " << (data->shape[idx + d] - data->anchor[idx + d]);
 
             if(num_of_dims_shapes_anchors == 2  ) { // 2d anchors & shapes
                 if (d==0) data->roi_ptr_dst[i].xywhROI.xy.x = (data->shape[idx + d] - data->anchor[idx + d]);
@@ -131,8 +131,8 @@ static vx_status VX_CALLBACK refreshPad(vx_node node, const vx_reference *parame
     for (uint i = 0, j = 0; i < data->nbatchSize * 2, j < data->nbatchSize; i = i + 2, j = j + 1) {
       data->srcDims[i] = data->roi_ptr_src[j].xywhROI.xy.x; // Needs to be interchanged for Spectrogram
       data->srcDims[i + 1] = data->roi_ptr_src[j].xywhROI.xy.y;
-      std::cerr << "\n data->srcDims[i] : "<< data->srcDims[i];
-      std::cerr << "\n data->srcDims[i+1] :"<< data->srcDims[i+1];
+    //   std::cerr << "\n data->srcDims[i] : "<< data->srcDims[i];
+    //   std::cerr << "\n data->srcDims[i+1] :"<< data->srcDims[i+1];
 
     }
 
@@ -204,22 +204,22 @@ static vx_status VX_CALLBACK processPad(vx_node node, const vx_reference *parame
     {
         refreshPad(node, parameters, num, data);
 //TODO: Swetha : To clean up the debug code
- float * buffer = (float *)data->anchor;
-            for(int n = 0; n < data->nbatchSize * 2; n++) 
-            {
-                std::cerr <<"slice begin:  "<<(float)buffer[n] << "\n";
-            }
- float * buffer1 = (float *)data->shape;
-            for(int n = 0; n < data->nbatchSize * 2; n++) 
-            {
-                std::cerr <<"slice length:  "<<(float)buffer1[n] << "\n";
-            }
+//  float * buffer = (float *)data->anchor;
+//             for(int n = 0; n < data->nbatchSize * 2; n++) 
+//             {
+//                 std::cerr <<"slice begin:  "<<(float)buffer[n] << "\n";
+//             }
+//  float * buffer1 = (float *)data->shape;
+//             for(int n = 0; n < data->nbatchSize * 2; n++) 
+//             {
+//                 std::cerr <<"slice length:  "<<(float)buffer1[n] << "\n";
+//             }
 
-int * dimSrc = (int*) data->srcDims;
- for(int n = 0; n < data->nbatchSize*2; n++) 
-            {
-                std::cerr <<"src length:  "<<(int)dimSrc[n] << "\n";
-            }
+// int * dimSrc = (int*) data->srcDims;
+//  for(int n = 0; n < data->nbatchSize*2; n++) 
+//             {
+//                 std::cerr <<"src length:  "<<(int)dimSrc[n] << "\n";
+//             }
 // float * psrc = (float*) data->pSrc;
 //  for(int n = 0; n < data->nbatchSize; n++) 
 //             {
@@ -244,7 +244,7 @@ int * dimSrc = (int*) data->srcDims;
 static vx_status VX_CALLBACK initializePad(vx_node node, const vx_reference *parameters, vx_uint32 num)
 {
     //TODO: Swetha : To clean up the debug code
-    std::cerr<<"\n static vx_status VX_CALLBACK initializePad ";
+    // std::cerr<<"\n static vx_status VX_CALLBACK initializePad ";
     PadLocalData *data = new PadLocalData;
     // unsigned roiType;
     memset(data, 0, sizeof(*data));
@@ -278,7 +278,7 @@ static vx_status VX_CALLBACK initializePad(vx_node node, const vx_reference *par
     if (data->out_tensor_type == vx_type_e::VX_TYPE_FLOAT32)
         data->dst_desc_ptr->dataType = RpptDataType::F32;
     data->dst_desc_ptr->offsetInBytes = 0;
-    std::cerr << "data->src_desc_ptr->numDims" << data->src_desc_ptr->numDims;
+    // std::cerr << "data->src_desc_ptr->numDims" << data->src_desc_ptr->numDims;
     // source_description_ptr
     data->src_desc_ptr->n = data->in_tensor_dims[0];
     data->src_desc_ptr->h = data->in_tensor_dims[2];
@@ -312,9 +312,9 @@ static vx_status VX_CALLBACK initializePad(vx_node node, const vx_reference *par
 // #endif
 //     data->roi_tensor_ptr = (RpptROI *)calloc(data->src_desc_ptr->n, sizeof(RpptROI));
 //TODO: Swetha : To clean up the debug code
-std::cerr<<"\n Gonna call refresh pad in initialize";
+// std::cerr<<"\n Gonna call refresh pad in initialize";
     refreshPad(node, parameters, num, data);
-    std::cerr << "Calling refersh ";
+    // std::cerr << "Calling refersh ";
 #if ENABLE_OPENCL
     if (data->deviceType == AGO_TARGET_AFFINITY_GPU)
         rppCreateWithStreamAndBatchSize(&data->rppHandle, data->handle.cmdq, data->nbatchSize);
