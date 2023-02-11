@@ -792,6 +792,7 @@ rocalPad(RocalContext p_context,
         output_info.set_data_type(op_tensorDataType);
 
         output = context->master_graph->create_tensor(output_info, is_output);
+        output->reset_tensor_roi();
         context->master_graph->add_node<PadNode>({input}, {output})->init(fill_value);
 
     } catch(const std::exception& e) {
@@ -864,6 +865,7 @@ rocalPreEmphasisFilter(RocalContext p_context,
         output_info.set_data_type(op_tensorDataType);
 
         output = context->master_graph->create_tensor(output_info, is_output);
+        output->reset_tensor_roi();
         context->master_graph->add_node<PreemphasisFilterNode>({input}, {output})->init(preemph_coeff, preemph_border_type);;
         // std::shared_ptr<PreemphasisFilterNode> preemphasis_node =  context->master_graph->add_node<PreemphasisFilterNode>({input}, {output});
         // preemphasis_node->init(preemph_coeff, preemph_border_type);
@@ -926,9 +928,11 @@ rocalSpectrogram(RocalContext p_context,
         }
 
         output = context->master_graph->create_tensor(output_info, is_output);
+        output->reset_tensor_roi();
         context->master_graph->add_node<SpectrogramNode>({input}, {output})->init(center_windows, reflect_padding, spec_layout,
                                                                                   power, nfft_size, window_length,
                                                                                   window_step, window_fn);
+
     }
     catch(const std::exception& e) {
         context->capture_error(e.what());

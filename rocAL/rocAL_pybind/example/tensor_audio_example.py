@@ -29,12 +29,12 @@ def draw_patches(img, idx, device):
     print("label: ", label)
     # print("audio_data",audio_data)
     # Saving the array in a text file
-    file = open("results/normalize_audio/rocal_audio_data"+str(label)+".txt", "w+")
+    file = open("results/rocal/NORMALIZE_PAD/rocal_data"+str(label)+".txt", "w+")
     content = str(audio_data)
     file.write(content)
     file.close()
     plt.plot(audio_data)
-    plt.savefig("results/normalize_audio/rocal_audio_data"+str(label)+".png")
+    plt.savefig("results/rocal/NORMALIZE_PAD/rocal_data"+str(label)+".png")
     plt.close()
 def main():
     if  len(sys.argv) < 3:
@@ -80,10 +80,10 @@ def main():
         # dither = 0.001
         # audio_decode = fn.decoders.audio(audio, file_root=data_path, downmix=True, shard_id=0, num_shards=1,random_shuffle=True)
         audio_decode = fn.decoders.audio(audio, file_root=data_path, file_list_path=file_list, downmix=True, shard_id=0, num_shards=1, storage_type=9)
-        uniform_distribution_resample = fn.random.uniform(audio_decode, range=[0.85555550, 0.85555550])
+        uniform_distribution_resample = fn.random.uniform(audio_decode, range=[0.8555555, 0.8555555])
         resampled_rate = uniform_distribution_resample * resample
-        # resample_output = fn.resample(audio_decode, resample_rate = resampled_rate, resample_hint=250000, )
-        resample_output = fn.resample(audio_decode, resample_rate = resampled_rate, resample_hint=522320*1.15, )
+        # # resample_output = fn.resample(audio_decode, resample_rate = resampled_rate, resample_hint=250000, )
+        resample_output = fn.resample(audio_decode, resample_rate = resampled_rate, resample_hint=0.85555 * 258160, )
         begin, length = fn.nonsilent_region(resample_output, cutoff_db=-60)
         trim_silence = fn.slice(
             resample_output,
@@ -117,7 +117,9 @@ def main():
             rocal_tensor_output_type=types.FLOAT,
         )
         normalize_audio = fn.normalize(to_decibels_audio, axes=[1])
-        audio_pipeline.set_outputs(normalize_audio)
+        pad_audio = fn.pad(normalize_audio, fill_value=0)
+
+        audio_pipeline.set_outputs(pad_audio)
     audio_pipeline.build()
     audioIteratorPipeline = ROCALClassificationIterator(audio_pipeline)
     cnt = 0

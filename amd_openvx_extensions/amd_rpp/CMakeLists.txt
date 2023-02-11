@@ -141,6 +141,7 @@ list(APPEND SOURCES
         source/tensor/TensorMulScalar.cpp
         source/tensor/TensorAddTensor.cpp
         source/tensor/Resample.cpp
+        source/tensor/Pad.cpp
         source/kernel_rpp.cpp
         source/internal_publishKernels.cpp
     )

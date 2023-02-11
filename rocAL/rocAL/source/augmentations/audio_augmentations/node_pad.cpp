@@ -57,8 +57,8 @@ void PadNode::create_node() {
     vx_scalar normalized_shape = vxCreateScalar(vxGetContext((vx_reference)_graph->get()), VX_TYPE_BOOL, &_normalized_shape);
     vx_scalar policy = vxCreateScalar(vxGetContext((vx_reference)_graph->get()), VX_TYPE_UINT32, &_policy);
     vx_scalar axis_mask = vxCreateScalar(vxGetContext((vx_reference)_graph->get()), VX_TYPE_INT32, &_axis_mask);
-    // _node = vxExtrppNode_Slice(_graph->get(), _inputs[0]->handle(), _outputs[0]->handle(), _src_tensor_roi, _anchors_tensor,
-    //                             _shapes_tensor, _fill_values_array, axis_mask, normalized_anchor , normalized_shape, policy, _batch_size);
+    _node = vxExtrppNode_Pad(_graph->get(), _inputs[0]->handle(), _outputs[0]->handle(), _src_tensor_roi, _dst_tensor_roi, _anchors_tensor,
+                                _shapes_tensor, _fill_values_array, axis_mask, normalized_anchor , normalized_shape, policy, _batch_size);
     
     if((status = vxGetStatus((vx_reference)_node)) != VX_SUCCESS)
         THROW("Adding the pad (vxExtrppNode_Slice) node failed: "+ TOSTR(status))
@@ -66,18 +66,11 @@ void PadNode::create_node() {
 }
 
 void PadNode::update_node() {
-    vx_status src_roi_status = vxCopyArrayRange((vx_array)_src_tensor_roi, 0, _batch_size * 4, sizeof(vx_uint32), _inputs[0]->info().get_roi(), VX_WRITE_ONLY, VX_MEMORY_TYPE_HOST);
-    if(src_roi_status != 0)
-        THROW(" Failed calling vxCopyArrayRange for src / dst roi status : "+ TOSTR(src_roi_status))
-    auto audio_roi = _inputs[0]->info().get_roi();
     bool has_same_dim = true;
     std::cerr << "\n Num of dims in pad :" << _num_of_dims;
     for(unsigned i = 0; i < _batch_size; i++) {
         int idx = i * _num_of_dims;
         for(unsigned d = 0; d < _num_of_dims; d++) {
-            _anchor_vec[idx + d] = 0;
-            _shape_vec[idx + d] = (d == 0) ? audio_roi[i].x1 : audio_roi[i].y1;
-            std::cerr << "\n  _shape_vec[idx + d]  : " << _shape_vec[idx + d];
             _fill_values_vec[idx + d] = _fill_value;
         }
     }
@@ -86,13 +79,9 @@ void PadNode::update_node() {
         THROW("All the tensor must have same dimension to perform Batch Normalization")
 
     vx_status status = VX_SUCCESS;
-    status |= vxCopyTensorPatch((vx_tensor)_anchors_tensor, (_num_of_dims), nullptr, nullptr, _stride, _anchor_vec.data(), VX_WRITE_ONLY, VX_MEMORY_TYPE_HOST);
-    status |= vxCopyTensorPatch((vx_tensor)_shapes_tensor, (_num_of_dims), nullptr, nullptr, _stride, _shape_vec.data(), VX_WRITE_ONLY, VX_MEMORY_TYPE_HOST);
     status |= vxCopyArrayRange((vx_array)_fill_values_array, 0, _batch_size * _num_of_dims, sizeof(vx_float32), _fill_values_vec.data(), VX_WRITE_ONLY, VX_MEMORY_TYPE_HOST);
     if(status != 0)
         THROW("ERROR: vxCopyArrayRange failed in the pad node (vxExtrppNode_Slice)  node: "+ TOSTR(status))
-    _anchor_vec.clear();
-    _shape_vec.clear();
     _fill_values_vec.clear();
 }
 
