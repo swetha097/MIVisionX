@@ -71,7 +71,9 @@ void update_destination_roi_pad(const vx_reference *parameters, PadLocalData *da
     data->roi_ptr_dst = (RpptROI *)data->roi_tensor_ptr_dst;
     data->roi_ptr_src = (RpptROI *)data->roi_tensor_ptr_src;
     num_of_dims_shapes_anchors = data->dst_desc_ptr->numDims;
-    // std::cerr << "\n dimsTotal \t" << data->dst_desc_ptr->numDims;
+
+    if (data->out_tensor_dims[2] == 1)
+        num_of_dims_shapes_anchors = 1;
 
         for(unsigned i = 0; i < data->nbatchSize; i++) {
         int idx = i * num_of_dims_shapes_anchors;
@@ -79,22 +81,19 @@ void update_destination_roi_pad(const vx_reference *parameters, PadLocalData *da
             // std::cerr << "\n data->roi_ptr_src[i].xywhROI.xy.y - upper loop" << data->roi_ptr_src[i].xywhROI.xy.y;
         for(unsigned d = 0; d < num_of_dims_shapes_anchors; d++) {
         // std::cerr << "\n Anchor : " << data->anchor[idx + d] << "|\t Shape Array : " << (data->shape[idx + d] - data->anchor[idx + d]);
+            if(num_of_dims_shapes_anchors == 2 ) {
             data->anchor[idx + d] = 0;
             data->shape[idx + d] = (d==0) ? data->in_tensor_dims[2] : data->in_tensor_dims[1];
-            // std::cerr << "\n Anchor : " << data->anchor[idx + d] << "|\t Shape Array : " << (data->shape[idx + d] - data->anchor[idx + d]);
-
-            if(num_of_dims_shapes_anchors == 2  ) { // 2d anchors & shapes
-                if (d==0) data->roi_ptr_dst[i].xywhROI.xy.x = (data->shape[idx + d] - data->anchor[idx + d]);
-                if (d==1) data->roi_ptr_dst[i].xywhROI.xy.y = (data->shape[idx + d] - data->anchor[idx + d]);
             }
-            else if (num_of_dims_shapes_anchors == 1) { // 1d anchors & shapes
-            // std::cerr << "\n 1d Array";
-                data->roi_ptr_dst[i].xywhROI.xy.x = (data->shape[i] - data->anchor[i]);
-                data->roi_ptr_dst[i].xywhROI.xy.y = data->roi_ptr_src[i].xywhROI.xy.y;
+            else if(num_of_dims_shapes_anchors == 1) {
+                data->anchor[idx + d] = 0;
+                data->shape[idx + d] = data->in_tensor_dims[2] * data->in_tensor_dims[1];
             }
             // std::cerr << "\n data->roi_ptr_dst[i].xywhROI.xy.x" << data->roi_ptr_dst[i].xywhROI.xy.x;
             // std::cerr << "\n data->roi_ptr_dst[i].xywhROI.xy.y" << data->roi_ptr_dst[i].xywhROI.xy.y;
         }
+            data->roi_ptr_dst[i].xywhROI.xy.x = data->roi_ptr_src[i].xywhROI.xy.x;
+            data->roi_ptr_dst[i].xywhROI.xy.y = data->roi_ptr_src[i].xywhROI.xy.y;
         
     }
 }
@@ -278,7 +277,8 @@ static vx_status VX_CALLBACK initializePad(vx_node node, const vx_reference *par
     if (data->out_tensor_type == vx_type_e::VX_TYPE_FLOAT32)
         data->dst_desc_ptr->dataType = RpptDataType::F32;
     data->dst_desc_ptr->offsetInBytes = 0;
-    // std::cerr << "data->src_desc_ptr->numDims" << data->src_desc_ptr->numDims;
+
+    if (data->out_tensor_dims[2] != 1) {
     // source_description_ptr
     data->src_desc_ptr->n = data->in_tensor_dims[0];
     data->src_desc_ptr->h = data->in_tensor_dims[2];
@@ -301,6 +301,32 @@ static vx_status VX_CALLBACK initializePad(vx_node node, const vx_reference *par
     data->dst_desc_ptr->strides.wStride = data->dst_desc_ptr->c;
     data->dst_desc_ptr->strides.cStride = 1;
     data->dst_desc_ptr->numDims = 4;
+    }
+    else if (data->out_tensor_dims[2] == 1)
+    {
+        // source_description_ptr
+    data->src_desc_ptr->n = data->in_tensor_dims[0];
+    data->src_desc_ptr->h = data->in_tensor_dims[2];
+    data->src_desc_ptr->w = data->in_tensor_dims[1];
+    data->src_desc_ptr->c = 1;
+    data->src_desc_ptr->strides.nStride = data->src_desc_ptr->c * data->src_desc_ptr->w * data->src_desc_ptr->h;
+    data->src_desc_ptr->strides.hStride = data->src_desc_ptr->c * data->src_desc_ptr->w;
+    data->src_desc_ptr->strides.wStride = data->src_desc_ptr->c;
+    data->src_desc_ptr->strides.cStride = 1;
+    data->numDims = data->src_desc_ptr->numDims - 1;
+    data->src_desc_ptr->numDims = 4;
+
+    // source_description_ptr
+    data->dst_desc_ptr->n = data->out_tensor_dims[0];
+    data->dst_desc_ptr->w = data->out_tensor_dims[1];
+    data->dst_desc_ptr->h = data->out_tensor_dims[2];;
+    data->dst_desc_ptr->c = 1;
+    data->dst_desc_ptr->strides.nStride = data->dst_desc_ptr->c * data->dst_desc_ptr->w * data->dst_desc_ptr->h;
+    data->dst_desc_ptr->strides.hStride = data->dst_desc_ptr->c * data->dst_desc_ptr->w;
+    data->dst_desc_ptr->strides.wStride = data->dst_desc_ptr->c;
+    data->dst_desc_ptr->strides.cStride = 1;
+    data->dst_desc_ptr->numDims = 4;
+    }
 
     data->srcDims = (int *) calloc(data->src_desc_ptr->n * 2, sizeof(int));
     data->fill_values = (float *) calloc(data->src_desc_ptr->n * data->numDims, sizeof(float));
