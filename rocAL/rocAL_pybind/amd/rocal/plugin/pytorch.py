@@ -52,7 +52,7 @@ torch.set_printoptions(threshold=10_000, profile="full")
 
 
 class RALIGenericIterator(object):
-    def __init__(self, pipeline, tensor_layout = types.NCHW, reverse_channels = False, multiplier = [1.0,1.0,1.0], offset = [0.0, 0.0, 0.0], tensor_dtype=types.FLOAT):
+    def __init__(self, pipeline, tensor_layout = types.NCHW, reverse_channels = False, multiplier = [1.0,1.0,1.0], offset = [0.0, 0.0, 0.0], tensor_dtype=types.FLOAT, size = -1, auto_reset=False):
         self.loader = pipeline
         self.tensor_format =tensor_layout
         self.multiplier = multiplier
@@ -60,6 +60,10 @@ class RALIGenericIterator(object):
         self.reverse_channels = reverse_channels
         self.tensor_dtype = tensor_dtype
         self.len = b.getRemainingImages(self.loader._handle)
+        self.shard_size = size
+        self.auto_reset = auto_reset
+        self.batch_count = 0
+        self.batch_size = self.loader._batch_size
 
 
     def next(self):
@@ -67,15 +71,30 @@ class RALIGenericIterator(object):
 
     def __next__(self):
         torch.set_printoptions(threshold=10_000, profile="full", edgeitems=100)
-        if(b.isEmpty(self.loader._handle)):
+        
+        if(b.isEmpty(self.loader._handle)) and self.shard_size < 0:
+            print("Stop Iteration")
+            print("shard size", self.shard_size)
+            if self.auto_reset:
+                self.reset()
             raise StopIteration
 
-        if self.loader.rocalRun() != 0:
+        if (self.loader.rocalRun() != 0 and self.shard_size < 0):
             print("Stop Iteration")
+            if self.auto_reset:
+                self.reset()
             raise StopIteration
+
+        elif self.shard_size > 0 and self.batch_count == self.shard_size :
+            print("Stop Iteration")
+            if self.auto_reset:
+                self.reset()
+            raise StopIteration
+
         else:
             self.output_tensor_list = self.loader.rocalGetOutputTensors()
 
+        self.batch_count+=self.batch_size
         #From init
 
         # print(self.output_tensor_list)
@@ -132,6 +151,7 @@ class RALIGenericIterator(object):
             return self.output, self.labels_tensor, torch.tensor(self.audio_length_roi)
 
     def reset(self):
+        self.batch_count = 0
         b.rocalResetLoaders(self.loader._handle)
 
     def __iter__(self):
@@ -205,14 +225,14 @@ class ROCALClassificationIterator(RALIGenericIterator):
     """
     def __init__(self,
                  pipelines,
-                 size = 0,
+                 size = -1,
                  auto_reset=False,
                  fill_last_batch=True,
                  dynamic_shape=False,
                  last_batch_padded=False):
         pipe = pipelines
         super(ROCALClassificationIterator, self).__init__(pipe, tensor_layout = pipe._tensor_layout, tensor_dtype = pipe._tensor_dtype,
-                                                            multiplier=pipe._multiplier, offset=pipe._offset)
+                                                            multiplier=pipe._multiplier, offset=pipe._offset, size = size, auto_reset = auto_reset)
 
 
 # class RALI_iterator(RALIGenericImageIterator):
