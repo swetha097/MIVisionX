@@ -90,12 +90,12 @@ void update_destination_roi(const vx_reference *parameters, SliceLocalData *data
         //TODO: Swetha : To handle 3d data by checking NCHW / NHWC format for images
 
             if(num_of_dims_shapes_anchors == 2  ) { // 2d anchors & shapes
-                if (d==0) data->roi_ptr_dst[i].xywhROI.xy.x = (data->shape[idx + d] - data->anchor[idx + d]);
-                if (d==1) data->roi_ptr_dst[i].xywhROI.xy.y = (data->shape[idx + d] - data->anchor[idx + d]);
+                if (d==0) data->roi_ptr_dst[i].xywhROI.xy.x = (data->shape[idx + d]);
+                if (d==1) data->roi_ptr_dst[i].xywhROI.xy.y = (data->shape[idx + d]);
             }
             else if (num_of_dims_shapes_anchors == 1) { // 1d anchors & shapes
             // std::cerr << "\n 1d Array";
-                data->roi_ptr_dst[i].xywhROI.xy.x = (data->shape[i] - data->anchor[i]);
+                data->roi_ptr_dst[i].xywhROI.xy.x = (data->shape[i]);
                 data->roi_ptr_dst[i].xywhROI.xy.y = data->roi_ptr_src[i].xywhROI.xy.y;
             }
             // std::cerr << "\n data->roi_ptr_dst[i].xywhROI.xy.x" << data->roi_ptr_dst[i].xywhROI.xy.x;
