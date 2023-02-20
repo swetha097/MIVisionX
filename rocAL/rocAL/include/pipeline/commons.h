@@ -54,7 +54,8 @@ enum class RocalTensorDataType
     FP16,
     UINT8,
     UINT32,
-    INT32
+    INT32,
+    FP64
 };
 
 enum class RocalAffinity

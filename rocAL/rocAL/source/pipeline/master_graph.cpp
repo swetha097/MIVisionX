@@ -974,10 +974,10 @@ std::vector<rocalTensorList *> MasterGraph::create_coco_meta_data_reader(const c
     dims.at(1) = BBOX_COUNT;
     auto default_bbox_info  = rocalTensorInfo(dims,
                                         _mem_type,
-                                        RocalTensorDataType::FP32);
+                                        RocalTensorDataType::FP64);
     default_bbox_info.set_metadata();
     default_bbox_info.set_tensor_layout(RocalTensorlayout::NONE);
-    _meta_data_buffer_size.emplace_back(dims.at(0) * dims.at(1)  * _user_batch_size * sizeof(vx_float32)); // TODO - replace with data size from info
+    _meta_data_buffer_size.emplace_back(dims.at(0) * dims.at(1)  * _user_batch_size * sizeof(vx_float64)); // TODO - replace with data size from info   // shobi check if this needs to be changed to double
     rocalTensorInfo default_mask_info, default_matches_info;
     //check if box coder - then add matched idxs meta data
     if(_is_box_iou_matcher)
@@ -990,7 +990,7 @@ std::vector<rocalTensorList *> MasterGraph::create_coco_meta_data_reader(const c
                                         RocalTensorDataType::INT32);
         default_matches_info.set_metadata();
         default_matches_info.set_tensor_layout(RocalTensorlayout::NONE);
-        _meta_data_buffer_size.emplace_back(dims.at(0) * _user_batch_size * sizeof(vx_int32)); // TODO - replace with data size from info
+        _meta_data_buffer_size.emplace_back(dims.at(0) * _user_batch_size * sizeof(vx_int32)); // TODO - replace with data size from info   // shobi check if this needs to be changed to double
     }
     if(mask)
     {
@@ -1003,7 +1003,7 @@ std::vector<rocalTensorList *> MasterGraph::create_coco_meta_data_reader(const c
                                             RocalTensorDataType::FP32);
         default_mask_info.set_metadata();
         default_mask_info.set_tensor_layout(RocalTensorlayout::NONE);
-        _meta_data_buffer_size.emplace_back(dims.at(0) * dims.at(1)  * _user_batch_size * sizeof(vx_float32)); // TODO - replace with data size from info  
+        _meta_data_buffer_size.emplace_back(dims.at(0) * dims.at(1)  * _user_batch_size * sizeof(vx_float32)); // TODO - replace with data size from info
     }
 
 
@@ -1024,7 +1024,7 @@ std::vector<rocalTensorList *> MasterGraph::create_coco_meta_data_reader(const c
             _matches_tensor_list.push_back(new rocalTensor(matches_info));
         }
     }
-    //std::cerr <<"\n Before init metadata in coco reader : " << _meta_data_buffer_size.size(); 
+    //std::cerr <<"\n Before init metadata in coco reader : " << _meta_data_buffer_size.size();
     _ring_buffer.init_metadata(RocalMemType::HOST, _meta_data_buffer_size, _meta_data_buffer_size.size());
     if(is_output)
     {

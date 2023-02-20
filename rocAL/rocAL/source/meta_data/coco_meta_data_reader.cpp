@@ -276,7 +276,7 @@ void COCOMetaDataReader::read_all(const std::string &path)
             while (parser.NextArrayValue())
             {
                 int id = 1, label = 0, iscrowd = 0;
-                std::array<float, 4> bbox = {};
+                std::array<double, 4> bbox = {};
                 std::vector<float> mask;
                 std::vector<int> vertices_array;
                 if (parser.PeekType() != kObjectType)
@@ -331,7 +331,7 @@ void COCOMetaDataReader::read_all(const std::string &path)
                                 parser.EnterArray();
                                 while (parser.NextArrayValue())
                                 {
-                                    
+
                                     mask.push_back(parser.GetDouble());
                                     vertex_count += 1;
                                 }
@@ -344,7 +344,7 @@ void COCOMetaDataReader::read_all(const std::string &path)
                         parser.SkipValue();
                     }
                 }
-                
+
                 auto itr = _map_img_names.find(id);
                 auto it = _map_img_sizes.find(itr->second);
                 ImgSize image_size = it->second; //Normalizing the co-ordinates & convert to "ltrb" format
@@ -369,10 +369,10 @@ void COCOMetaDataReader::read_all(const std::string &path)
                 }
                 else if (!_mask)
                 {
-                    box.l = bbox[0] / image_size.w;
-                    box.t = bbox[1] / image_size.h;
-                    box.r = (bbox[0] + bbox[2]) / image_size.w;
-                    box.b = (bbox[1] + bbox[3]) / image_size.h;
+                    box.l = bbox[0] / static_cast<double>(image_size.w);
+                    box.t = bbox[1] / static_cast<double>(image_size.h);
+                    box.r = (bbox[0] + bbox[2]) / static_cast<double>(image_size.w);
+                    box.b = (bbox[1] + bbox[3]) / static_cast<double>(image_size.h);
                     bb_coords.push_back(box);
                     bb_labels.push_back(label);
                     add(itr->second, bb_coords, bb_labels, image_size);
