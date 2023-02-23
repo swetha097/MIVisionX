@@ -63,8 +63,8 @@ void RocalCropParam::fill_crop_dims()
                 float x_drift, y_drift;
                 x_drift = x_drift_factor->get();
                 y_drift = y_drift_factor->get();
-                x1_arr_val[img_idx] = static_cast<size_t>(0.5 * (in_roi[img_idx].x2 - cropw_arr_val[img_idx]));
-                y1_arr_val[img_idx] = static_cast<size_t>(0.5 * (in_roi[img_idx].y2 - croph_arr_val[img_idx]));
+                x1_arr_val[img_idx] = static_cast<size_t>(std::nearbyintf(0.5 * (in_roi[img_idx].x2 - cropw_arr_val[img_idx])));
+                y1_arr_val[img_idx] = static_cast<size_t>(std::nearbyintf(0.5 * (in_roi[img_idx].y2 - croph_arr_val[img_idx])));
             }
             else
             {

@@ -21,6 +21,7 @@ THE SOFTWARE.
 */
 
 #include "circular_buffer.h"
+#include <chrono>
 #include "log.h"
 #if !ENABLE_HIP
 CircularBuffer::CircularBuffer(DeviceResources ocl):
@@ -29,7 +30,9 @@ CircularBuffer::CircularBuffer(DeviceResources ocl):
         _device_id(ocl.device_id),
         _write_ptr(0),
         _read_ptr(0),
-        _level(0)
+        _level(0),
+        _cb_block_if_empty_time("Circular Buffer Block IF Empty Time"),
+        _cb_block_if_full_time("Circular Buffer Block IF Full Time")
 {
 
 }
@@ -40,7 +43,9 @@ CircularBuffer::CircularBuffer(DeviceResourcesHip hipres):
         _hip_canMapHostMemory(hipres.dev_prop.canMapHostMemory),
         _write_ptr(0),
         _read_ptr(0),
-        _level(0)
+        _level(0),
+        _cb_block_if_empty_time("Circular Buffer Block IF Empty Time"),
+        _cb_block_if_full_time("Circular Buffer Block IF Full Time")
 {
 }
 #endif
@@ -78,7 +83,11 @@ void CircularBuffer::unblock_writer()
 
 void* CircularBuffer::get_read_buffer_dev()
 {
+    //std::cerr << std::endl << "Cb block empty start: " << std::chrono::duration_cast< std::chrono::milliseconds >(std::chrono::system_clock::now().time_since_epoch()).count() << std::endl;
+    _cb_block_if_empty_time.start();
     block_if_empty();
+    //std::cerr << std::endl << "Cb block empty end: " << std::chrono::duration_cast< std::chrono::milliseconds >(std::chrono::system_clock::now().time_since_epoch()).count() << std::endl;
+    _cb_block_if_empty_time.end();
     return _dev_buffer[_read_ptr];
 }
 
@@ -86,7 +95,11 @@ unsigned char* CircularBuffer::get_read_buffer_host()
 {
     if(!_initialized)
         THROW("Circular buffer not initialized")
+    //std::cerr << std::endl << "Cb block empty start: " << std::chrono::duration_cast< std::chrono::milliseconds >(std::chrono::system_clock::now().time_since_epoch()).count() << std::endl;
+    _cb_block_if_empty_time.start();
     block_if_empty();
+    //std::cerr << std::endl << "Cb block empty end: " << std::chrono::duration_cast< std::chrono::milliseconds >(std::chrono::system_clock::now().time_since_epoch()).count() << std::endl;
+    _cb_block_if_empty_time.end();
     return _host_buffer_ptrs[_read_ptr];
 }
 
@@ -94,7 +107,11 @@ unsigned char*  CircularBuffer::get_write_buffer()
 {
     if(!_initialized)
         THROW("Circular buffer not initialized")
+    //std::cerr << std::endl << "Cb block full start: " << std::chrono::duration_cast< std::chrono::milliseconds >(std::chrono::system_clock::now().time_since_epoch()).count() << std::endl;
+    _cb_block_if_full_time.start();
     block_if_full();
+    //std::cerr << std::endl << "Cb block full end: " << std::chrono::duration_cast< std::chrono::milliseconds >(std::chrono::system_clock::now().time_since_epoch()).count() << std::endl;
+    _cb_block_if_full_time.end();
     return(_host_buffer_ptrs[_write_ptr]);
 }
 
@@ -372,7 +389,11 @@ CircularBuffer::~CircularBuffer()
 
 decoded_image_info &CircularBuffer::get_image_info()
 {
+    //std::cerr << std::endl << "Cb block empty start: " << std::chrono::duration_cast< std::chrono::milliseconds >(std::chrono::system_clock::now().time_since_epoch()).count() << std::endl;
+    _cb_block_if_empty_time.start();
     block_if_empty();
+    //std::cerr << std::endl << "Cb block empty end: " << std::chrono::duration_cast< std::chrono::milliseconds >(std::chrono::system_clock::now().time_since_epoch()).count() << std::endl;
+    _cb_block_if_empty_time.end();
     std::unique_lock<std::mutex> lock(_names_buff_lock);
     if(_level != _circ_image_info.size())
         THROW("CircularBuffer internals error, image and image info sizes not the same "+TOSTR(_level) + " != "+TOSTR(_circ_image_info.size()))
@@ -381,7 +402,11 @@ decoded_image_info &CircularBuffer::get_image_info()
 
 crop_image_info &CircularBuffer::get_cropped_image_info()
 {
+    //std::cerr << std::endl << "Cb block empty start: " << std::chrono::duration_cast< std::chrono::milliseconds >(std::chrono::system_clock::now().time_since_epoch()).count() << std::endl;
+    _cb_block_if_empty_time.start();
     block_if_empty();
+    //std::cerr << std::endl << "Cb block empty end: " << std::chrono::duration_cast< std::chrono::milliseconds >(std::chrono::system_clock::now().time_since_epoch()).count() << std::endl;
+    _cb_block_if_empty_time.end();
     std::unique_lock<std::mutex> lock(_names_buff_lock);
     if(_level != _circ_crop_image_info.size())
         THROW("CircularBuffer internals error, image and image info sizes not the same "+TOSTR(_level) + " != "+TOSTR(_circ_crop_image_info.size()))

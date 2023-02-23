@@ -90,7 +90,7 @@ def image_slice(*inputs,file_root='',path='',annotations_file='',shard_id = 0, n
                 device_memory_padding_jpeg2k = 0, host_memory_padding = 8388608,
                 host_memory_padding_jpeg2k = 0, hybrid_huffman_threshold = 1000000,
                  memory_stats = False, normalized_anchor = True, normalized_shape = True, output_type = types.RGB,
-                preserve = False, seed = 1, split_stages = False, use_chunk_allocator = False, use_fast_idct = False, random_aspect_ratio=[0.8, 1.25], random_area=[0.08, 1.0], num_attempts=100, device = None):
+                preserve = False, seed = 1, split_stages = False, use_chunk_allocator = False, use_fast_idct = False, random_aspect_ratio=[0.75, 1.33], random_area=[0.08, 1.0], num_attempts=100, device = None):
 
     reader = Pipeline._current_pipeline._reader
     b.setSeed(seed)

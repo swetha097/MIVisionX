@@ -101,7 +101,11 @@ namespace rocal
             .def_readwrite("decode_time",&TimingInfo::decode_time)
             .def_readwrite("process_time",&TimingInfo::process_time)
             .def_readwrite("transfer_time",&TimingInfo::transfer_time)
-            .def_readwrite("output_routine_time",&TimingInfo::output_routine_time);
+            .def_readwrite("output_routine_time",&TimingInfo::output_routine_time)
+            .def_readwrite("wait_if_empty_time",&TimingInfo::wait_if_empty_time)
+            .def_readwrite("wait_if_full_time",&TimingInfo::wait_if_full_time)
+            .def_readwrite("cb_wait_if_empty_time",&TimingInfo::cb_wait_if_empty_time)
+            .def_readwrite("cb_wait_if_full_time",&TimingInfo::cb_wait_if_full_time);
         py::class_<rocalTensor>(m, "rocalTensor")
                 .def(
                 "batch_height",

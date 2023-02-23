@@ -60,7 +60,7 @@ class ROCALGenericIterator(object):
         self.tensor_dtype = tensor_dtype
         self.device = device
         self.device_id = device_id
-        print("self.device", self.device)
+        # print("self.device", self.device)
         self.len = b.getRemainingImages(self.loader._handle)
 
 
@@ -70,11 +70,15 @@ class ROCALGenericIterator(object):
     def __next__(self):
         if(b.isEmpty(self.loader._handle)):
             timing_info = self.loader.Timing_Info()
-            print("Load     time ::", timing_info.load_time/1000000)
-            print("Decode   time ::", timing_info.decode_time/1000000)
-            print("Process  time ::", timing_info.process_time/1000000)
-            print("Output routine time ::", timing_info.output_routine_time/1000000)
-            print("Transfer time ::", timing_info.transfer_time/1000000)
+            # print("Load     time ::", timing_info.load_time/1000000)
+            # print("Decode   time ::", timing_info.decode_time/1000000)
+            # print("Process  time ::", timing_info.process_time/1000000)
+            # print("Output routine time ::", timing_info.output_routine_time/1000000)
+            # print("Transfer time ::", timing_info.transfer_time/1000000)
+            # print("Wait if empty time ::", timing_info.wait_if_empty_time/1000000, flush=True)
+            # print("Wait if full time ::", timing_info.wait_if_full_time/1000000, flush=True)
+            # print("Circular buffer Wait if empty time ::", timing_info.cb_wait_if_empty_time/1000000, flush=True)
+            # print("Circular buffer Wait if full time ::", timing_info.cb_wait_if_full_time/1000000, flush=True)
             raise StopIteration
 
         if self.loader.rocalRun() != 0:

@@ -44,7 +44,7 @@ THE SOFTWARE.
 #include "commons.h"
 #include "context.h"
 #include "rocal_api.h"
-#define MAX_ASPECT_RATIO 3.0f
+#define MAX_ASPECT_RATIO 6.0f
 
 void get_rocal_tensor_layout(RocalTensorLayout &tensor_layout, RocalTensorlayout &op_tensor_layout, int &layout)
 {

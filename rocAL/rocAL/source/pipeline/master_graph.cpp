@@ -35,6 +35,7 @@ THE SOFTWARE.
 #include "meta_data_graph_factory.h"
 #include "randombboxcrop_meta_data_reader_factory.h"
 #include "node_copy.h"
+#include <chrono>
 
 using half_float::half;
 
@@ -530,6 +531,8 @@ MasterGraph::timing()
     t.copy_to_output += _convert_time.get_timing();
     t.bb_process_time += _bencode_time.get_timing();
     t.image_output_routine_time += _output_routine_time.get_timing();
+    t.wait_if_empty_time += _ring_buffer._rb_block_if_empty_time.get_timing();
+    t.wait_if_full_time += _ring_buffer._rb_block_if_full_time.get_timing();
     return t;
 }
 
@@ -543,7 +546,9 @@ MasterGraph::copy_output(
         return MasterGraph::Status::NO_MORE_DATA;
 
     return Status::NOT_IMPLEMENTED;
+    //std::cerr << std::endl << "Transfer start: " << std::chrono::duration_cast< std::chrono::milliseconds >(std::chrono::system_clock::now().time_since_epoch()).count() << std::endl;
     _convert_time.start();
+    //std::cerr << std::endl << "Transfer end: " << std::chrono::duration_cast< std::chrono::milliseconds >(std::chrono::system_clock::now().time_since_epoch()).count() << std::endl;
     _convert_time.end();
     return Status::OK;
 }
@@ -669,7 +674,8 @@ void MasterGraph::output_routine()
             // _ring_buffer.get_write_buffers() is blocking and blocks here until user uses processed image by calling run() and frees space in the ring_buffer
             auto tensor_write_buffer = _ring_buffer.get_write_buffers();
             _rb_block_if_full_time.end();
-
+            
+            //std::cerr << std::endl << "Output routine start: " << std::chrono::duration_cast< std::chrono::milliseconds >(std::chrono::system_clock::now().time_since_epoch()).count() << std::endl;
             _output_routine_time.start();
             // When executing on CPU the internal batch count can be smaller than the user batch count
             // In that case the user_batch_size will be an integer multiple of the _internal_batch_size
@@ -757,19 +763,10 @@ void MasterGraph::output_routine()
                     else
                         full_batch_meta_data = _augmented_meta_data->clone();
                 }
-
-                // get roi width and height of output image
-                std::vector<uint32_t> temp_width_arr;
-                std::vector<uint32_t> temp_height_arr;
-                for (unsigned int i = 0; i < _internal_batch_size; i++)
-                {
-                    temp_width_arr.push_back(_output_tensor_info.get_roi()->at(i).x2);
-                    temp_height_arr.push_back(_output_tensor_info.get_roi()->at(i).y2);
-                }
-                _resize_width.insert(_resize_width.begin(), temp_width_arr);
-                _resize_height.insert(_resize_height.begin(), temp_height_arr);
+                //std::cerr << std::endl << "Graph process start: " << std::chrono::duration_cast< std::chrono::milliseconds >(std::chrono::system_clock::now().time_since_epoch()).count() << std::endl;
                 _process_time.start();
                 _graph->process();
+                //std::cerr << std::endl << "Graph process end: " << std::chrono::duration_cast< std::chrono::milliseconds >(std::chrono::system_clock::now().time_since_epoch()).count() << std::endl;
                 _process_time.end();                
             }
             _bencode_time.start();
@@ -788,6 +785,7 @@ void MasterGraph::output_routine()
             _bencode_time.end();
             _ring_buffer.set_meta_data(full_batch_image_names, full_batch_meta_data, _is_segmentation);
             _ring_buffer.push();
+            //std::cerr << std::endl << "Output routine end: " << std::chrono::duration_cast< std::chrono::milliseconds >(std::chrono::system_clock::now().time_since_epoch()).count() << std::endl;
             _output_routine_time.end();
             // full_batch_meta_data->clear();
         }
@@ -1434,7 +1432,7 @@ size_t MasterGraph::compute_optimum_internal_batch_size(size_t user_batch_size, 
             break;
         }
     INFO("User batch size "+ TOSTR(user_batch_size)+" Internal batch size set to "+ TOSTR(ret))
-    return ret;
+    return user_batch_size;
 }
 
 std::vector<size_t> MasterGraph::tensor_output_byte_size()

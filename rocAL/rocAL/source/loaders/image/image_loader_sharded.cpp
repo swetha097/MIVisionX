@@ -175,6 +175,8 @@ Timing ImageLoaderSharded::timing()
     Timing t;
     long long unsigned  max_decode_time = 0;
     long long unsigned  max_read_time = 0;
+    long long unsigned  max_cb_wait_if_empty_time = 0;
+    long long unsigned  max_cb_wait_if_full_time = 0;
     long long unsigned  swap_handle_time = 0;
 
     // image read and decode runs in parallel using multiple loaders, and the observable latency that the ImageLoaderSharded user
@@ -184,10 +186,14 @@ Timing ImageLoaderSharded::timing()
         auto info = loader->timing();
         max_read_time = (info.image_read_time > max_read_time) ?  info.image_read_time : max_read_time;
         max_decode_time = (info.image_decode_time > max_decode_time) ? info.image_decode_time : max_decode_time;
+        max_cb_wait_if_empty_time = (info.cb_wait_if_empty_time > max_cb_wait_if_empty_time) ?  info.cb_wait_if_empty_time : max_cb_wait_if_empty_time;
+        max_cb_wait_if_full_time = (info.cb_wait_if_full_time > max_cb_wait_if_full_time) ? info.cb_wait_if_full_time : max_cb_wait_if_full_time;
         swap_handle_time += info.image_process_time;
     }
     t.image_decode_time = max_decode_time;
     t.image_read_time = max_read_time;
     t.image_process_time = swap_handle_time;
+    t.cb_wait_if_empty_time = max_cb_wait_if_empty_time;
+    t.cb_wait_if_full_time = max_cb_wait_if_full_time;
     return t;
 }

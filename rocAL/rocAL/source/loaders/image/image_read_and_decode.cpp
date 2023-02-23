@@ -23,6 +23,7 @@ THE SOFTWARE.
 
 #include <iterator>
 #include <cstring>
+#include <chrono>
 #include "decoder_factory.h"
 #include "image_read_and_decode.h"
 
@@ -160,6 +161,7 @@ ImageReadAndDecode::load(unsigned char* buff,
 
     // Decode with the height and size equal to a single image
     // File read is done serially since I/O parallelization does not work very well.
+    //std::cerr << std::endl << "Load start: " << std::chrono::duration_cast< std::chrono::milliseconds >(std::chrono::system_clock::now().time_since_epoch()).count() << std::endl;
     _file_load_time.start();// Debug timing
     if (_decoder_config._type == DecoderType::SKIP_DECODE) {
         while ((file_counter != _batch_size) && _reader->count_items() > 0)
@@ -210,8 +212,10 @@ ImageReadAndDecode::load(unsigned char* buff,
         }
     }
 
+    //std::cerr << std::endl << "Load end: " << std::chrono::duration_cast< std::chrono::milliseconds >(std::chrono::system_clock::now().time_since_epoch()).count() << std::endl;
     _file_load_time.end();// Debug timing
 
+    //std::cerr << std::endl << "Decode start: " << std::chrono::duration_cast< std::chrono::milliseconds >(std::chrono::system_clock::now().time_since_epoch()).count() << std::endl;
     _decode_time.start();// Debug timing
     if (_decoder_config._type != DecoderType::SKIP_DECODE) {
         for (size_t i = 0; i < _batch_size; i++)
@@ -226,7 +230,27 @@ ImageReadAndDecode::load(unsigned char* buff,
             int original_width, original_height, jpeg_sub_samp;
             if (_decoder[i]->decode_info(_compressed_buff[i].data(), _actual_read_size[i], &original_width, &original_height,
                                          &jpeg_sub_samp) != Decoder::Status::OK) {
-                    continue;
+                    // Substituting the image which failed decoding with other image from the same batch
+                    int j = ((i + 1) != _batch_size) ? _batch_size - 1 : _batch_size - 2;
+                    while ((j >= 0)) 
+                    {
+                        if (_decoder[i]->decode_info(_compressed_buff[j].data(), _actual_read_size[j], &original_width, &original_height,
+                            &jpeg_sub_samp) == Decoder::Status::OK) 
+                        {
+                                _image_names[i] =  _image_names[j];
+                                _compressed_buff[i] =  _compressed_buff[j];
+                                _actual_read_size[i] =  _actual_read_size[j];
+                                _compressed_image_size[i] =  _compressed_image_size[j];
+                                break;                                
+
+                        }
+                        else
+                            j--;
+                        if(j < 0) 
+                        {
+                            THROW("All images in the batch failed decoding\n");
+                        }                                    
+                    }
             }
             _original_height[i] = original_height;
             _original_width[i] = original_width;
@@ -259,6 +283,7 @@ ImageReadAndDecode::load(unsigned char* buff,
         }
     }
     _bbox_coords.clear();
+    //std::cerr << std::endl << "Decode end: " << std::chrono::duration_cast< std::chrono::milliseconds >(std::chrono::system_clock::now().time_since_epoch()).count() << std::endl;
     _decode_time.end();// Debug timing
     return LoaderModuleStatus::OK;
 }
