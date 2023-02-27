@@ -784,7 +784,7 @@ void MasterGraph::output_routine()
             if(_is_box_iou_matcher)
             {
                 //TODO - to add call for hip kernel.
-                _meta_data_graph->update_box_iou_matcher(&_anchors, full_batch_meta_data, _criteria, _high_threshold, _low_threshold, _allow_low_quality_matches);
+                _meta_data_graph->update_box_iou_matcher(&_anchors_double, full_batch_meta_data, _criteria, _high_threshold, _low_threshold, _allow_low_quality_matches);
             }
             _bencode_time.end();
             _ring_buffer.set_meta_data(full_batch_image_names, full_batch_meta_data, _is_segmentation, _is_box_iou_matcher);
@@ -1270,6 +1270,11 @@ void MasterGraph::box_iou_matcher(std::vector<float> &anchors, float criteria, f
     //do nothing for now - have to add gpu kernels
 #endif
     _anchors = anchors;
+    _anchors_double.resize(anchors.size());
+    for(unsigned b = 0; b < anchors.size(); b++) {
+        _anchors_double[b] = static_cast<double>(anchors.data()[b]);
+    }
+
     _high_threshold = high_threshold;
     _low_threshold = low_threshold;
     _allow_low_quality_matches = allow_low_quality_matches;

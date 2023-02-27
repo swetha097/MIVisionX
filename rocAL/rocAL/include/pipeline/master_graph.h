@@ -190,6 +190,7 @@ private:
     bool _is_box_encoder = false; //bool variable to set the box encoder
     bool _is_box_iou_matcher = true; // bool variable to set the box iou matcher
     std::vector<float> _anchors; // Anchors to be used for encoding, as the array of floats is in the ltrb format of size 8732x4
+    std::vector<double> _anchors_double; // Anchors to be used for encoding, as the array of floats is in the ltrb format of size 8732x4
     size_t _num_anchors;       // number of bbox anchors
     float _criteria = 0.5; // Threshold IoU for matching bounding boxes with anchors. The value needs to be between 0 and 1.
     float _scale; // Rescales the box and anchor values before the offset is calculated (for example, to return to the absolute values).

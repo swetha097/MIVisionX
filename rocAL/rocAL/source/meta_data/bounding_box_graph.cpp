@@ -277,20 +277,16 @@ void BoundingBoxGraph::update_box_encoder_meta_data(std::vector<float> *anchors,
     }
 }
 
-void BoundingBoxGraph::update_box_iou_matcher(std::vector<float> *anchors, pMetaDataBatch full_batch_meta_data ,float criteria, float high_threshold, float low_threshold, bool allow_low_quality_matches)
+void BoundingBoxGraph::update_box_iou_matcher(std::vector<double> *anchors, pMetaDataBatch full_batch_meta_data ,float criteria, float high_threshold, float low_threshold, bool allow_low_quality_matches)
 {
-    std::vector<double> anchors_double(anchors->size());
-    for(unsigned b = 0; b < anchors->size(); b++) {
-        anchors_double[b] = static_cast<double>(anchors->data()[b]);
-    }
-    #pragma omp parallel for
+#pragma omp parallel for
     for (int i = 0; i < full_batch_meta_data->size(); i++)
     {
 
-        BoundingBoxCord *bbox_anchors = reinterpret_cast<BoundingBoxCord *>(anchors_double.data());
+        BoundingBoxCord *bbox_anchors = reinterpret_cast<BoundingBoxCord *>(anchors->data());
         auto bb_count = full_batch_meta_data->get_bb_labels_batch()[i].size();
         BoundingBoxCord bb_coords[bb_count];
-        unsigned anchors_size = anchors_double.size() / 4; // divide the anchors_size by 4 to get the total number of anchors
+        unsigned anchors_size = anchors->size() / 4; // divide the anchors_size by 4 to get the total number of anchors
         memcpy(bb_coords, full_batch_meta_data->get_bb_cords_batch()[i].data(), full_batch_meta_data->get_bb_cords_batch()[i].size() * sizeof(BoundingBoxCord));
         //Calculate Ious
         //ious size - bboxes count x anchors count
