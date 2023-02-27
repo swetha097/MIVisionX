@@ -336,6 +336,7 @@ void MasterGraph::release()
     stop_processing();
     _nodes.clear();
     _root_nodes.clear();
+    _meta_data_nodes.clear();
     _tensor_map.clear();
     _ring_buffer.release_gpu_res();
     //shut_down loader:: required for releasing any allocated resourses
@@ -345,8 +346,9 @@ void MasterGraph::release()
     _internal_tensor_list.release(); // It will call the vxReleaseTensor internally in the destructor for each tensor in the list
     _output_tensor_list.release();   // It will call the vxReleaseTensor internally in the destructor for each tensor in the list
     for(auto& tensor: _internal_tensors)
-        delete tensor;  // It will call the vxReleaseTensor internally in the destructor
-
+        delete tensor;  // It will call the vxReleaseTensor internally in the destructor for each tensor in the list
+    for(auto tensor_list: _metadata_output_tensor_list)
+        tensor_list->release(); // It will call the vxReleaseTensor internally in the destructor for each tensor in the list
 
     if(_graph != nullptr)
         _graph->release();
@@ -1063,8 +1065,7 @@ std::vector<rocalTensorList *> MasterGraph::create_label_reader(const char *sour
     for(unsigned i = 0; i < _user_batch_size; i++)
     {
         auto info = default_labels_info;
-        auto tensor = new rocalTensor(info);
-        _labels_tensor_list.push_back(tensor);
+        _labels_tensor_list.push_back(new rocalTensor(info));
     }
     _ring_buffer.init_metadata(RocalMemType::HOST, _meta_data_buffer_size, _meta_data_buffer_size.size());
     if (_augmented_meta_data)
