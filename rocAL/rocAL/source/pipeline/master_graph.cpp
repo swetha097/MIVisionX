@@ -267,7 +267,6 @@ MasterGraph::build()
     _ring_buffer.init(_mem_type, nullptr, _internal_tensor_list.data_size(), _internal_tensor_list.size());
 #endif
     if (_is_box_encoder) _ring_buffer.initBoxEncoderMetaData(_mem_type, _user_batch_size*_num_anchors*4*sizeof(float), _user_batch_size*_num_anchors*sizeof(int));
-#endif
     // _output_tensor_list = _internal_tensor_list;
     create_single_graph();
     start_processing();
@@ -493,7 +492,7 @@ void MasterGraph::output_routine()
             }
             _rb_block_if_full_time.start();
             // _ring_buffer.get_write_buffers() is blocking and blocks here until user uses processed image by calling run() and frees space in the ring_buffer
-            auto tensor_write_buffer = _ring_buffer.get_write_buffers();
+            auto write_buffers = _ring_buffer.get_write_buffers();
             _rb_block_if_full_time.end();
 
             // Swap handles on the input tensor, so that new tensor is loaded to be processed
@@ -1009,7 +1008,7 @@ void MasterGraph::box_encoder(std::vector<float> &anchors, float criteria, const
 #if ENABLE_HIP
     // Intialize gpu box encoder if _mem_type is HIP
     if(_mem_type == RocalMemType::HIP) {
-        _box_encoder_gpu = new BoxEncoderGpu(_user_batch_size, anchors, criteria, means, inv_stds, offset, scale, _device.resources().hip_stream, _device.resources().dev_prop.canMapHostMemory);
+        _box_encoder_gpu = new BoxEncoderGpu(_user_batch_size, anchors, criteria, means, inv_stds, offset, scale, _device.resources()->hip_stream, _device.resources()->dev_prop.canMapHostMemory);
         return;
     }
 #endif

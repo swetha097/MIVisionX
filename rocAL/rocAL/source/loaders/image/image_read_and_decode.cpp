@@ -184,7 +184,7 @@ ImageReadAndDecode::load(unsigned char* buff,
     const Decoder::ColorFormat decoder_color_format = std::get<0>(ret);
     const unsigned output_planes = std::get<1>(ret);
     const bool keep_original = decoder_keep_original;
-    const uint64_t image_size = max_decoded_width * max_decoded_height * output_planes * sizeof(unsigned char);
+    const size_t image_size = max_decoded_width * max_decoded_height * output_planes * sizeof(unsigned char);
 
     // Decode with the height and size equal to a single image
     // File read is done serially since I/O parallelization does not work very well.
@@ -193,7 +193,7 @@ ImageReadAndDecode::load(unsigned char* buff,
         while ((file_counter != _batch_size) && _reader->count_items() > 0)
         {
             auto read_ptr = buff + image_size * file_counter;
-            uint64_t fsize = _reader->open();
+            size_t fsize = _reader->open();
             if (fsize == 0) {
                 WRN("Opened file " + _reader->id() + " of size 0");
                 continue;
@@ -215,16 +215,13 @@ ImageReadAndDecode::load(unsigned char* buff,
         }
         //_file_load_time.end();// Debug timing
         //return LoaderModuleStatus::OK;
-    }
-    else {
+    } else {
         while ((file_counter != _batch_size) && _reader->count_items() > 0) {
-
-            uint64_t fsize = _reader->open();
+            size_t fsize = _reader->open();
             if (fsize == 0) {
                 WRN("Opened file " + _reader->id() + " of size 0");
                 continue;
             }
-
             _compressed_buff[file_counter].reserve(fsize);
             _actual_read_size[file_counter] = _reader->read_data(_compressed_buff[file_counter].data(), fsize);
             _image_names[file_counter] = _reader->id();
@@ -232,9 +229,7 @@ ImageReadAndDecode::load(unsigned char* buff,
             _compressed_image_size[file_counter] = fsize;
             file_counter++;
         }
-
-        if (_randombboxcrop_meta_data_reader)
-        {
+        if (_randombboxcrop_meta_data_reader) {
             //Fetch the crop co-ordinates for a batch of images
             _bbox_coords = _randombboxcrop_meta_data_reader->get_batch_crop_coords(_image_names);
             set_batch_random_bbox_crop_coords(_bbox_coords);
@@ -283,7 +278,6 @@ ImageReadAndDecode::load(unsigned char* buff,
             roi_height[i] = _actual_decoded_height[i];
             actual_width[i] = _original_width[i];
             actual_height[i] = _original_height[i];
-            
         }
     }
     _bbox_coords.clear();

@@ -143,7 +143,7 @@ private:
 
 #if ENABLE_HIP
     DeviceManagerHip   _device;//!< Keeps the device related constructs needed for running on GPU
-#else
+#elif ENABLE_OPENCL
     DeviceManager   _device;//!< Keeps the device related constructs needed for running on GPU
 #endif
     std::shared_ptr<Graph> _graph = nullptr;
@@ -227,7 +227,11 @@ template<> inline std::shared_ptr<ImageLoaderNode> MasterGraph::add_node(const s
 {
     if(_loader_module)
         THROW("A loader already exists, cannot have more than one loader")
-    auto node = std::make_shared<ImageLoaderNode>(outputs[0], _device.resources());
+#if ENABLE_HIP || ENABLE_OPENCL
+    auto node = std::make_shared<ImageLoaderNode>(outputs[0], (void *)_device.resources());
+#else
+    auto node = std::make_shared<ImageLoaderNode>(outputs[0], nullptr);
+#endif
     _loader_module = node->get_loader_module();
     _loader_module->set_prefetch_queue_depth(_prefetch_queue_depth);
     _root_nodes.push_back(node);
@@ -241,7 +245,11 @@ template<> inline std::shared_ptr<ImageLoaderSingleShardNode> MasterGraph::add_n
 {
     if(_loader_module)
         THROW("A loader already exists, cannot have more than one loader")
-    auto node = std::make_shared<ImageLoaderSingleShardNode>(outputs[0], _device.resources());
+#if ENABLE_HIP || ENABLE_OPENCL
+    auto node = std::make_shared<ImageLoaderSingleShardNode>(outputs[0], (void *)_device.resources());
+#else
+    auto node = std::make_shared<ImageLoaderSingleShardNode>(outputs[0], nullptr);
+#endif    
     _loader_module = node->get_loader_module();
     _loader_module->set_prefetch_queue_depth(_prefetch_queue_depth);
     _root_nodes.push_back(node);
@@ -255,7 +263,11 @@ template<> inline std::shared_ptr<FusedJpegCropNode> MasterGraph::add_node(const
 {
     if(_loader_module)
         THROW("A loader already exists, cannot have more than one loader")
-    auto node = std::make_shared<FusedJpegCropNode>(outputs[0], _device.resources());
+#if ENABLE_HIP || ENABLE_OPENCL
+    auto node = std::make_shared<FusedJpegCropNode>(outputs[0], (void *)_device.resources());
+#else
+    auto node = std::make_shared<FusedJpegCropNode>(outputs[0], nullptr);
+#endif
     _loader_module = node->get_loader_module();
     _loader_module->set_prefetch_queue_depth(_prefetch_queue_depth);
     _loader_module->set_random_bbox_data_reader(_randombboxcrop_meta_data_reader);
@@ -270,7 +282,11 @@ template<> inline std::shared_ptr<FusedJpegCropSingleShardNode> MasterGraph::add
 {
     if(_loader_module)
         THROW("A loader already exists, cannot have more than one loader")
-    auto node = std::make_shared<FusedJpegCropSingleShardNode>(outputs[0], _device.resources());
+#if ENABLE_HIP || ENABLE_OPENCL
+    auto node = std::make_shared<FusedJpegCropSingleShardNode>(outputs[0], (void *)_device.resources());
+#else
+    auto node = std::make_shared<FusedJpegCropSingleShardNode>(outputs[0], nullptr);
+#endif    
     _loader_module = node->get_loader_module();
     _loader_module->set_prefetch_queue_depth(_prefetch_queue_depth);
     _loader_module->set_random_bbox_data_reader(_randombboxcrop_meta_data_reader);
@@ -288,10 +304,14 @@ template<> inline std::shared_ptr<Cifar10LoaderNode> MasterGraph::add_node(const
 {
     if(_loader_module)
         THROW("A loader already exists, cannot have more than one loader")
-    auto node = std::make_shared<Cifar10LoaderNode>(outputs[0], _device.resources());
+#if ENABLE_HIP || ENABLE_OPENCL
+    auto node = std::make_shared<Cifar10LoaderNode>(outputs[0], (void *)_device.resources());
+#else
+    auto node = std::make_shared<Cifar10LoaderNode>(outputs[0], nullptr);
+#endif
     _loader_module = node->get_loader_module();
     _loader_module->set_prefetch_queue_depth(_prefetch_queue_depth);
-    // _root_nodes.push_back(node);
+    _root_nodes.push_back(node);
     for(auto& output: outputs)
         _tensor_map.insert(std::make_pair(output, node));
 
