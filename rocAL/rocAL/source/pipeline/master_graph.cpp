@@ -261,11 +261,11 @@ MasterGraph::build()
     if(_internal_tensor_list.empty())
         THROW("No output tensors are there, cannot create the pipeline")
 
-#if ENABLE_HIP
-    _ring_buffer.initHip(_mem_type, _device.resources(), _internal_tensor_list.data_size(), _internal_tensor_list.size());
-    if (_is_box_encoder) _ring_buffer.initBoxEncoderMetaData(_mem_type, _user_batch_size*_num_anchors*4*sizeof(float), _user_batch_size*_num_anchors*sizeof(int));
+#if ENABLE_HIP || ENABLE_OPENCL
+    _ring_buffer.init(_mem_type, (void *)_device.resources(), _internal_tensor_list.data_size(), _internal_tensor_list.size());
 #else
-    _ring_buffer.init(_mem_type, _device.resources(), _internal_tensor_list.data_size(), _internal_tensor_list.size());
+    _ring_buffer.init(_mem_type, nullptr, _internal_tensor_list.data_size(), _internal_tensor_list.size());
+#endif
     if (_is_box_encoder) _ring_buffer.initBoxEncoderMetaData(_mem_type, _user_batch_size*_num_anchors*4*sizeof(float), _user_batch_size*_num_anchors*sizeof(int));
 #endif
     // _output_tensor_list = _internal_tensor_list;
@@ -343,10 +343,10 @@ void MasterGraph::release()
     _loader_module->shut_down();
     // release all openvx resources.
     vx_status status;
+    for(auto& tensor: _internal_tensors)
+        delete tensor;  // It will call the vxReleaseTensor internally in the destructor
     _internal_tensor_list.release(); // It will call the vxReleaseTensor internally in the destructor for each tensor in the list
     _output_tensor_list.release();   // It will call the vxReleaseTensor internally in the destructor for each tensor in the list
-    for(auto& tensor: _internal_tensors)
-        delete tensor;  // It will call the vxReleaseTensor internally in the destructor for each tensor in the list
     for(auto tensor_list: _metadata_output_tensor_list)
         tensor_list->release(); // It will call the vxReleaseTensor internally in the destructor for each tensor in the list
 
@@ -453,21 +453,6 @@ MasterGraph::timing()
     return t;
 }
 
-
-MasterGraph::Status
-MasterGraph::copy_output(
-        void* out_ptr,
-        size_t out_size)
-{
-    if(no_more_processed_data())
-        return MasterGraph::Status::NO_MORE_DATA;
-
-    return Status::NOT_IMPLEMENTED;
-    _convert_time.start();
-    _convert_time.end();
-    return Status::OK;
-}
-
 rocalTensorList *
 MasterGraph::get_output_tensors()
 {
@@ -480,69 +465,6 @@ MasterGraph::get_output_tensors()
     return &_output_tensor_list;
 }
 
-MasterGraph::Status
-MasterGraph::copy_output(std::vector<void *> &out_ptr)
-{
-    if(no_more_processed_data())
-        return MasterGraph::Status::NO_MORE_DATA;
-
-    _convert_time.start();
-    // Copies to the output context given by the user
-    std::vector<size_t> size = tensor_output_byte_size();
-#if !ENABLE_HIP
-    if(processing_on_device_ocl())
-    {
-        //NOTE: the CL_TRUE flag is only used on the last buffer read call,
-        // to avoid unnecessary sequence of synchronizations
-
-        // get_read_buffers() calls block_if_empty() internally and blocks if buffers are empty until a new batch is processed
-        auto output_buffers =_ring_buffer.get_read_buffers();
-        auto out_image_idx = output_buffers.size();
-        for(unsigned i = 0; i < _internal_tensor_list.size(); i++)
-        {
-            bool sync_flag = (--out_image_idx == 0) ? CL_TRUE : CL_FALSE;
-            cl_int status;
-            if((status = clEnqueueReadBuffer(_device.resources().cmd_queue,
-                                             (cl_mem) output_buffers[i],
-                                             sync_flag?(CL_TRUE):CL_FALSE,
-                                             0,
-                                             size[i],
-                                             out_ptr[i],
-                                             0 , nullptr, nullptr)) != CL_SUCCESS)
-                THROW("clEnqueueReadBuffer failed: " + TOSTR(status))
-        }
-    }
-#else
-    if(processing_on_device_hip())
-    {
-        //NOTE: the CL_TRUE flag is only used on the last buffer read call,
-        // to avoid unnecessary sequence of synchronizations
-
-        // get_read_buffers() calls block_if_empty() internally and blocks if buffers are empty until a new batch is processed
-        auto output_buffers =_ring_buffer.get_read_buffers();
-        for(unsigned i = 0; i < _internal_tensor_list.size(); i++)
-        {
-            hipError_t err = hipMemcpyDtoHAsync((void *)(out_ptr[i]), output_buffers[i], size[i], _device.resources().hip_stream);
-            if (err) {
-                THROW("hipMemcpyDtoHAsync failed: " + TOSTR(err))
-            }
-        }
-        // sync to finish copy
-        if (hipStreamSynchronize(_device.resources().hip_stream) != hipSuccess)
-            THROW("hipStreamSynchronize failed for hipMemcpy ")
-
-    }
-#endif
-    else
-    {
-        // get_host_master_read_buffer is blocking if _ring_buffer is empty, and blocks this thread till internal processing thread process a new batch and store in the _ring_buffer
-        auto output_buffers = _ring_buffer.get_read_buffers();
-        for(unsigned i = 0; i < _internal_tensor_list.size(); i++)
-            memcpy(out_ptr[i], output_buffers[i], size[i]);
-    }
-    _convert_time.end();
-    return Status::OK;
-}
 
 ImageNameBatch& operator+=(ImageNameBatch& dest, const ImageNameBatch& src)
 {
@@ -553,20 +475,9 @@ ImageNameBatch& operator+=(ImageNameBatch& dest, const ImageNameBatch& src)
 void MasterGraph::output_routine()
 {
     INFO("Output routine started with "+TOSTR(_remaining_count) + " to load");
-//     if(!_is_sequence_reader_output) 
-//     {
-// #if !ENABLE_HIP
-//     if(!processing_on_device_ocl())
-//         THROW("Internal failure, in the GPU processing case")
-// #else
-//     if(!processing_on_device_hip())
-//         THROW("Internal failure, in the GPU processing case")
-// #endif
-//     }
     try {
         while (_processing)
         {
-            // std::vector<size_t> tensor_each_cycle_size_vec = tensor_output_byte_size();;
             ImageNameBatch full_batch_image_names = {};
             pMetaDataBatch full_batch_meta_data = nullptr;
             pMetaDataBatch augmented_batch_meta_data = nullptr;
@@ -610,9 +521,7 @@ void MasterGraph::output_routine()
             // Swap handles on the output tensor, so that new processed tensor will be written to the a new buffer
             for (size_t idx = 0; idx < _internal_tensor_list.size(); idx++)
             {
-                // if(_internal_tensor_list.size() != 0)
-                // size_t tensor_each_cycle_size = tensor_each_cycle_size_vec[idx]; // TODO - Batch ratio calculation TO be removed
-                _internal_tensor_list[idx]->swap_handle(tensor_write_buffer[idx]);
+                _internal_tensor_list[idx]->swap_handle(write_buffers[idx]);
             }
 
             if (!_processing)
@@ -1283,20 +1192,6 @@ bool MasterGraph::no_more_processed_data()
 {
     return (_output_routine_finished_processing && _ring_buffer.empty());
 }
-
-// MasterGraph::Status
-// MasterGraph::get_bbox_encoded_buffers(float **boxes_buf_ptr, int **labels_buf_ptr, size_t num_encoded_boxes)
-// {
-//     if (_is_box_encoder) {
-//       if (num_encoded_boxes != _user_batch_size*_num_anchors) {
-//           THROW("num_encoded_boxes is not correct");
-//       }
-//       auto encoded_boxes_and_lables = _ring_buffer.get_box_encode_read_buffers();
-//       *boxes_buf_ptr = (float *) encoded_boxes_and_lables.first;
-//       *labels_buf_ptr = (int *) encoded_boxes_and_lables.second;
-//     }
-//     return Status::OK;
-// }
 
 std::vector<rocalTensorList *>
 MasterGraph::get_bbox_encoded_buffers(size_t num_encoded_boxes)

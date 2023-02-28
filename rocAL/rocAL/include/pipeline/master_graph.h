@@ -57,10 +57,9 @@ public:
     ~MasterGraph();
     Status reset();
     size_t remaining_count();
-    MasterGraph::Status copy_output(std::vector<void *> &out_ptr);
-    Status copy_output(void* out_ptr, size_t out_size);
     std::vector<uint32_t> output_resize_width();
     std::vector<uint32_t> output_resize_height();
+    rocalTensorList *get_output_tensors();
     std::vector<size_t> tensor_output_byte_size();
     void sequence_start_frame_number(std::vector<size_t> &sequence_start_framenum); // Returns the starting frame number of the sequences
     void sequence_frame_timestamps(std::vector<std::vector<float>> &sequence_frame_timestamp); // Returns the timestamps of the frames in the sequences
@@ -74,7 +73,6 @@ public:
     template <typename T, typename M> std::shared_ptr<T> meta_add_node(std::shared_ptr<M> node);
     rocalTensor *create_tensor(const rocalTensorInfo &info, bool is_output);
     rocalTensor *create_loader_output_tensor(const rocalTensorInfo &info);
-    rocalTensorList * get_output_tensors();
     std::vector<rocalTensorList *> create_label_reader(const char *source_path, MetaDataReaderType reader_type);
     std::vector<rocalTensorList *> create_video_label_reader(const char *source_path, MetaDataReaderType reader_type, unsigned sequence_length, unsigned frame_step, unsigned frame_stride, bool file_list_frame_num = true);
     std::vector<rocalTensorList *> create_coco_meta_data_reader(const char *source_path, bool is_output, bool mask, MetaDataReaderType reader_type, MetaDataType label_type, bool is_box_encoder = false);
@@ -94,18 +92,21 @@ public:
     ImgSizes& get_image_sizes();
 
     void set_loop(bool val) { _loop = val; }
-    void set_output(rocalTensor* output_image);
+    void set_output(rocalTensor* output_tensor);
     bool empty() { return (remaining_count() < (_is_sequence_reader_output ? _sequence_batch_size : _user_batch_size)); }
     size_t sequence_batch_size() { return _sequence_batch_size; }
     std::shared_ptr<MetaDataGraph> meta_data_graph() { return _meta_data_graph; }
     std::shared_ptr<MetaDataReader> meta_data_reader() { return _meta_data_reader; }
     bool is_random_bbox_crop() {return _is_random_bbox_crop; }
     bool is_segmentation() { return _is_segmentation; };
-    std::vector<rocalTensorList *> get_bbox_encoded_buffers(size_t num_encoded_boxes);
-    size_t bounding_box_batch_count(int* buf, pMetaDataBatch meta_data_batch);
     bool is_sequence_reader_output() {return _is_sequence_reader_output; }
     void set_sequence_reader_output() { _is_sequence_reader_output = true; }
     void set_sequence_batch_size(size_t sequence_length) { _sequence_batch_size = _user_batch_size * sequence_length; }
+    std::vector<rocalTensorList *> get_bbox_encoded_buffers(size_t num_encoded_boxes);
+    size_t bounding_box_batch_count(int* buf, pMetaDataBatch meta_data_batch);
+#if ENABLE_OPENCL
+    cl_command_queue get_ocl_cmd_q() { return _device.resources()->cmd_queue; }
+#endif
 private:
     Status update_node_parameters();
     void create_single_graph();
@@ -113,8 +114,6 @@ private:
     void stop_processing();
     void output_routine();
     void decrease_image_count();
-    bool processing_on_device_ocl() { return _internal_tensor_list.front()->info().mem_type() == RocalMemType::OCL; };
-    bool processing_on_device_hip() { return _internal_tensor_list.front()->info().mem_type() == RocalMemType::HIP; };
     /// notify_user_thread() is called when the internal processing thread is done with processing all available images
     void notify_user_thread();
     /// no_more_processed_data() is logically linked to the notify_user_thread() and is used to tell the user they've already consumed all the processed images
@@ -171,6 +170,10 @@ private:
     bool _is_segmentation = false;
     std::vector<std::vector<uint32_t>> _resize_width;
     std::vector<std::vector<uint32_t>> _resize_height;
+    std::vector<std::vector<size_t>> _sequence_start_framenum_vec; //!< Stores the starting frame number of the sequences.
+    std::vector<std::vector<std::vector<float>>>_sequence_frame_timestamps_vec; //!< Stores the timestamps of the frames in a sequences.
+    size_t _sequence_batch_size = 0; //!< Indicates the _user_batch_size when sequence reader outputs are required
+    bool _is_sequence_reader_output = false; //!< Set to true if Sequence Reader is invoked.
     // box encoder variables
     bool _is_box_encoder = false; //bool variable to set the box encoder
     std::vector<float> _anchors; // Anchors to be used for encoding, as the array of floats is in the ltrb format of size 8732x4
@@ -182,10 +185,6 @@ private:
 #if ENABLE_HIP
     BoxEncoderGpu *_box_encoder_gpu = nullptr;
 #endif
-    std::vector<std::vector<size_t>> _sequence_start_framenum_vec; //!< Stores the starting frame number of the sequences.
-    std::vector<std::vector<std::vector<float>>>_sequence_frame_timestamps_vec; //!< Stores the timestamps of the frames in a sequences.
-    size_t _sequence_batch_size = 0; //!< Indicates the _user_batch_size when sequence reader outputs are required
-    bool _is_sequence_reader_output = false; //!< Set to true if Sequence Reader is invoked.
     TimingDBG _rb_block_if_empty_time, _rb_block_if_full_time;
 };
 
@@ -206,7 +205,7 @@ std::shared_ptr<T> MasterGraph::add_node(const std::vector<rocalTensor *> &input
     }
 
     for(auto& output: outputs)
-        _tensor_map.insert(make_pair(output, node));
+        _tensor_map.insert(std::make_pair(output, node));
 
     return node;
 }
@@ -218,7 +217,6 @@ std::shared_ptr<T> MasterGraph::meta_add_node(std::shared_ptr<M> node)
     _meta_data_graph->_meta_nodes.push_back(meta_node);
     meta_node->_node = node;
     meta_node->_batch_size = _user_batch_size;
-    // meta_node->_batch_size = _is_sequence_reader_output ? _sequence_batch_size : _user_batch_size;
     return meta_node;
 }
 
@@ -234,7 +232,7 @@ template<> inline std::shared_ptr<ImageLoaderNode> MasterGraph::add_node(const s
     _loader_module->set_prefetch_queue_depth(_prefetch_queue_depth);
     _root_nodes.push_back(node);
     for(auto& output: outputs)
-        _tensor_map.insert(make_pair(output, node));
+        _tensor_map.insert(std::make_pair(output, node));
 
     return node;
 }
@@ -248,7 +246,7 @@ template<> inline std::shared_ptr<ImageLoaderSingleShardNode> MasterGraph::add_n
     _loader_module->set_prefetch_queue_depth(_prefetch_queue_depth);
     _root_nodes.push_back(node);
     for(auto& output: outputs)
-        _tensor_map.insert(make_pair(output, node));
+        _tensor_map.insert(std::make_pair(output, node));
 
     return node;
 }
@@ -263,7 +261,7 @@ template<> inline std::shared_ptr<FusedJpegCropNode> MasterGraph::add_node(const
     _loader_module->set_random_bbox_data_reader(_randombboxcrop_meta_data_reader);
     _root_nodes.push_back(node);
     for(auto& output: outputs)
-        _tensor_map.insert(make_pair(output, node));
+        _tensor_map.insert(std::make_pair(output, node));
 
     return node;
 }
@@ -278,7 +276,7 @@ template<> inline std::shared_ptr<FusedJpegCropSingleShardNode> MasterGraph::add
     _loader_module->set_random_bbox_data_reader(_randombboxcrop_meta_data_reader);
     _root_nodes.push_back(node);
     for(auto& output: outputs)
-        _tensor_map.insert(make_pair(output, node));
+        _tensor_map.insert(std::make_pair(output, node));
 
     return node;
 }
@@ -295,7 +293,7 @@ template<> inline std::shared_ptr<Cifar10LoaderNode> MasterGraph::add_node(const
     _loader_module->set_prefetch_queue_depth(_prefetch_queue_depth);
     // _root_nodes.push_back(node);
     for(auto& output: outputs)
-        _tensor_map.insert(make_pair(output, node));
+        _tensor_map.insert(std::make_pair(output, node));
 
     return node;
 }
@@ -307,12 +305,16 @@ template<> inline std::shared_ptr<VideoLoaderNode> MasterGraph::add_node(const s
 {
     if(_loader_module)
         THROW("A loader already exists, cannot have more than one loader")
-    auto node = std::make_shared<VideoLoaderNode>(outputs[0], _device.resources());
+#if ENABLE_HIP || ENABLE_OPENCL
+    auto node = std::make_shared<VideoLoaderNode>(outputs[0], (void *)_device.resources());
+#else    
+    auto node = std::make_shared<VideoLoaderNode>(outputs[0], nullptr);
+#endif 
     _loader_module = node->get_loader_module();
     _loader_module->set_prefetch_queue_depth(_prefetch_queue_depth);
     _root_nodes.push_back(node);
     for(auto& output: outputs)
-        _tensor_map.insert(make_pair(output, node));
+        _tensor_map.insert(std::make_pair(output, node));
 
     return node;
 }
@@ -321,12 +323,16 @@ template<> inline std::shared_ptr<VideoLoaderSingleShardNode> MasterGraph::add_n
 {
     if(_loader_module)
         THROW("A loader already exists, cannot have more than one loader")
-    auto node = std::make_shared<VideoLoaderSingleShardNode>(outputs[0], _device.resources());
+#if ENABLE_HIP || ENABLE_OPENCL
+    auto node = std::make_shared<VideoLoaderSingleShardNode>(outputs[0], (void *)_device.resources());
+#else
+    auto node = std::make_shared<VideoLoaderSingleShardNode>(outputs[0], nullptr);
+#endif    
     _loader_module = node->get_loader_module();
     _loader_module->set_prefetch_queue_depth(_prefetch_queue_depth);
     _root_nodes.push_back(node);
     for(auto& output: outputs)
-        _tensor_map.insert(make_pair(output, node));
+        _tensor_map.insert(std::make_pair(output, node));
 
     return node;
 }
