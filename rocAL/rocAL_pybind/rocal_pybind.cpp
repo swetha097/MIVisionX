@@ -453,12 +453,7 @@ namespace rocal
         m.def("rocalResetLoaders", &rocalResetLoaders);
         // rocal_api_augmentation.h
         m.def("Brightness", &rocalBrightness,
-              py::return_value_policy::reference,
-              py::arg("context"),
-              py::arg("input"),
-              py::arg("is_output"),
-              py::arg("alpha") = NULL,
-              py::arg("beta") = NULL);
+              py::return_value_policy::reference);
         m.def("CropMirrorNormalize",&rocalCropMirrorNormalize, py::return_value_policy::reference);
         // m.def("Crop", &rocalCrop, py::return_value_policy::reference);
         m.def("CenterCropFixed", &rocalCropCenterFixed, py::return_value_policy::reference);
