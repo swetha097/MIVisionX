@@ -34,16 +34,11 @@ THE SOFTWARE.
 // it uses a circular buffer to store decoded frames and images for the user
 class ImageLoader : public LoaderModule {
 public:
-#if ENABLE_HIP
-    explicit ImageLoader(DeviceResourcesHip dev_resources);
-#else
-    explicit ImageLoader(DeviceResources dev_resources);
-#endif
+    explicit ImageLoader(void *dev_resources);
     ~ImageLoader() override;
     LoaderModuleStatus load_next() override;
     void initialize(ReaderConfig reader_cfg, DecoderConfig decoder_cfg, RocalMemType mem_type, unsigned batch_size, bool keep_orig_size=false) override;
     void set_output (rocalTensor* output_image) override;
-    // void set_output_tensor(rocalTensor* output_image) override;
     void set_random_bbox_data_reader(std::shared_ptr<RandomBBoxCrop_MetaDataReader> randombboxcrop_meta_data_reader) override;
     size_t remaining_count() override; // returns number of remaining items to be loaded
     void reset() override; // Resets the loader to load from the beginning of the media
@@ -64,9 +59,11 @@ private:
     std::shared_ptr<ImageReadAndDecode> _image_loader;
     LoaderModuleStatus update_output_image();
     LoaderModuleStatus load_routine();
+
+    std::shared_ptr<RandomBBoxCrop_MetaDataReader> _randombboxcrop_meta_data_reader = nullptr;
     rocalTensor* _output_tensor;
     std::vector<std::string> _output_names;//!< image name/ids that are stores in the _output_image
-    uint64_t _output_mem_size;
+    size_t _output_mem_size;
     MetaDataBatch* _meta_data = nullptr;//!< The output of the meta_data_graph,
     std::vector<std::vector <float>> _bbox_coords;
     bool _internal_thread_running;
@@ -88,6 +85,5 @@ private:
     bool _decoder_keep_original = false;
     int _device_id;
     size_t _max_decoded_width, _max_decoded_height;
-    std::shared_ptr<RandomBBoxCrop_MetaDataReader> _randombboxcrop_meta_data_reader = nullptr;
 };
 

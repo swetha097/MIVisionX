@@ -22,7 +22,6 @@ THE SOFTWARE.
 
 #include "internal_publishKernels.h"
 #include "vx_ext_amd.h"
-#define NUM_OF_DIMS 4
 
 struct CropLocalData
 {
@@ -41,8 +40,8 @@ struct CropLocalData
     vx_uint32 *crop_h;
     vx_uint32 *crop_w;
     vx_bool is_packed;                  // if true NHWC else NCHW
-    size_t in_tensor_dims[NUM_OF_DIMS]; // will have NHWC info
-    size_t out_tensor_dims[NUM_OF_DIMS];
+    size_t in_tensor_dims[RPP_MAX_TENSOR_DIMS]; // will have NHWC info
+    size_t out_tensor_dims[RPP_MAX_TENSOR_DIMS];
     vx_uint32 channels;
     vx_uint32 batch_size;
     RpptROI *roi_tensor_Ptr;
@@ -57,10 +56,7 @@ struct CropLocalData
     cl_mem cl_pSrc;
     cl_mem cl_pDst;
 #elif ENABLE_HIP
-    void *hip_pSrc;
-    void *hip_pDst;
     RpptROI *hip_roi_tensor_Ptr;
-
 #endif
 };
 /*
@@ -113,41 +109,16 @@ static vx_status VX_CALLBACK refreshCrop(vx_node node, const vx_reference *param
         STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[0], VX_TENSOR_BUFFER_OPENCL, &data->cl_pSrc, sizeof(data->cl_pSrc)));
         STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[2], VX_TENSOR_BUFFER_OPENCL, &data->cl_pDst, sizeof(data->cl_pDst)));
 #elif ENABLE_HIP
-        STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[0], VX_TENSOR_BUFFER_HIP, &data->hip_pSrc, sizeof(data->hip_pSrc)));
-        STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[2], VX_TENSOR_BUFFER_HIP, &data->hip_pDst, sizeof(data->hip_pDst)));
+        STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[0], VX_TENSOR_BUFFER_HIP, &data->pSrc, sizeof(data->pSrc)));
+        STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[2], VX_TENSOR_BUFFER_HIP, &data->pDst, sizeof(data->pDst)));
         hipMemcpy(data->hip_roi_tensor_Ptr, data->roi_tensor_Ptr, data->nbatchSize * sizeof(RpptROI), hipMemcpyHostToDevice);
 
 #endif
     }
     if (data->device_type == AGO_TARGET_AFFINITY_CPU)
     {
-        if (data->in_tensor_type == vx_type_e::VX_TYPE_UINT8 && data->out_tensor_type == vx_type_e::VX_TYPE_UINT8)
-        {
-            STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[0], VX_TENSOR_BUFFER_HOST, &data->pSrc, sizeof(vx_uint8)));
-            STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[2], VX_TENSOR_BUFFER_HOST, &data->pDst, sizeof(vx_uint8)));
-        }
-        else if (data->in_tensor_type == vx_type_e::VX_TYPE_FLOAT32 && data->out_tensor_type == vx_type_e::VX_TYPE_FLOAT32)
-        {
-
-            STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[0], VX_TENSOR_BUFFER_HOST, &data->pSrc, sizeof(vx_float32)));
-            STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[2], VX_TENSOR_BUFFER_HOST, &data->pDst, sizeof(vx_float32)));
-        }
-        else if (data->in_tensor_type == vx_type_e::VX_TYPE_INT8 && data->out_tensor_type == vx_type_e::VX_TYPE_INT8)
-        {
-            STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[0], VX_TENSOR_BUFFER_HOST, &data->pSrc, sizeof(vx_int8)));
-            STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[2], VX_TENSOR_BUFFER_HOST, &data->pDst, sizeof(vx_int8)));
-        }
-        else if (data->in_tensor_type == vx_type_e::VX_TYPE_UINT8 && data->out_tensor_type == vx_type_e::VX_TYPE_FLOAT32)
-        {
-            STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[0], VX_TENSOR_BUFFER_HOST, &data->pSrc, sizeof(vx_uint8)));
-            STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[2], VX_TENSOR_BUFFER_HOST, &data->pDst, sizeof(vx_float32)));
-        }
-        // vx_float16 is not supported. Have to disable it once it is done.
-        // else if(in_tensor_type == vx_type_e::VX_TYPE_UINT8 && out_tensor_type == vx_type_e::VX_TYPE_FLOAT16)
-        // {
-        //     STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[0], VX_TENSOR_BUFFER_HOST, &data->pSrc, sizeof(vx_uint8)));
-        //     STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[3], VX_TENSOR_BUFFER_HOST, &data->pDst, sizeof(vx_float16)));
-        // }
+        STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[0], VX_TENSOR_BUFFER_HOST, &data->pSrc, sizeof(data->pSrc)));
+        STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[2], VX_TENSOR_BUFFER_HOST, &data->pDst, sizeof(data->pDst)));
     }
     return status;
 }
@@ -210,7 +181,7 @@ static vx_status VX_CALLBACK processCrop(vx_node node, const vx_reference *param
         return_status = (rpp_status == RPP_SUCCESS) ? VX_SUCCESS : VX_FAILURE;
 #elif ENABLE_HIP
         refreshCrop(node, parameters, num, data);
-        rpp_status = rppt_crop_gpu((void *)data->hip_pSrc, data->src_desc_ptr, (void *)data->hip_pDst, data->dst_desc_ptr, data->hip_roi_tensor_Ptr, data->roiType, data->rppHandle);
+        rpp_status = rppt_crop_gpu((void *)data->pSrc, data->src_desc_ptr, (void *)data->pDst, data->dst_desc_ptr, data->hip_roi_tensor_Ptr, data->roiType, data->rppHandle);
         return_status = (rpp_status == RPP_SUCCESS) ? VX_SUCCESS : VX_FAILURE;
 #endif
     }
@@ -346,10 +317,10 @@ static vx_status VX_CALLBACK initializeCrop(vx_node node, const vx_reference *pa
         data->src_desc_ptr->strides.cStride = 1;
         data->src_desc_ptr->layout = RpptLayout::NHWC;
     
-        data->dst_desc_ptr->n = data->out_tensor_dims[0] * data->in_tensor_dims[1];
+        data->dst_desc_ptr->n = data->out_tensor_dims[0] * data->out_tensor_dims[1];
         data->dst_desc_ptr->h = data->out_tensor_dims[2];
         data->dst_desc_ptr->w = data->out_tensor_dims[3];
-        data->dst_desc_ptr->c = data->out_tensor_dims[1];
+        data->dst_desc_ptr->c = data->out_tensor_dims[4];
         data->dst_desc_ptr->strides.nStride = data->dst_desc_ptr->c * data->dst_desc_ptr->w * data->dst_desc_ptr->h;
         data->dst_desc_ptr->strides.cStride = data->dst_desc_ptr->w * data->dst_desc_ptr->h;
         data->dst_desc_ptr->strides.hStride = data->dst_desc_ptr->w;
@@ -368,10 +339,10 @@ static vx_status VX_CALLBACK initializeCrop(vx_node node, const vx_reference *pa
         data->src_desc_ptr->strides.wStride = 1;
         data->src_desc_ptr->layout = RpptLayout::NCHW;
 
-        data->dst_desc_ptr->n = data->out_tensor_dims[0];
-        data->dst_desc_ptr->h = data->out_tensor_dims[2];
-        data->dst_desc_ptr->w = data->out_tensor_dims[3];
-        data->dst_desc_ptr->c = data->out_tensor_dims[1];
+        data->dst_desc_ptr->n = data->out_tensor_dims[0] * data->out_tensor_dims[1];
+        data->dst_desc_ptr->h = data->out_tensor_dims[3];
+        data->dst_desc_ptr->w = data->out_tensor_dims[4];
+        data->dst_desc_ptr->c = data->out_tensor_dims[2];
         data->dst_desc_ptr->strides.nStride = data->dst_desc_ptr->c * data->dst_desc_ptr->w * data->dst_desc_ptr->h;
         data->dst_desc_ptr->strides.cStride = data->dst_desc_ptr->w * data->dst_desc_ptr->h;
         data->dst_desc_ptr->strides.hStride = data->dst_desc_ptr->w;

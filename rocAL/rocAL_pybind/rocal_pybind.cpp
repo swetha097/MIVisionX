@@ -107,7 +107,7 @@ namespace rocal
                 "batch_height",
                 [](rocalTensor &output_tensor)
                 {
-                    return output_tensor.info().max_dims().at(1);
+                    return output_tensor.info().max_shape().at(1);
                 },
                 R"code(
                 Returns a tensor buffer's height.
@@ -117,7 +117,7 @@ namespace rocal
                 "batch_width",
                 [](rocalTensor &output_tensor)
                 {
-                    return output_tensor.info().max_dims().at(0);
+                    return output_tensor.info().max_shape().at(0);
                 },
                 R"code(
                 Returns a tensor buffer's width.
@@ -157,8 +157,8 @@ namespace rocal
                 "at",
                 [](rocalTensor &output_tensor, uint idx)
                 {
-                    uint h = output_tensor.info().max_dims().at(1);
-                    uint w = output_tensor.info().max_dims().at(0);
+                    uint h = output_tensor.info().max_shape().at(1);
+                    uint w = output_tensor.info().max_shape().at(0);
 
                     if (output_tensor.info().layout() == RocalTensorlayout::NHWC)
                     {
@@ -206,8 +206,8 @@ namespace rocal
             .def("at",
                 [](rocalTensorList &output_tensor_list, uint idx)
                 {
-                    uint h = output_tensor_list.at(idx)->info().max_dims().at(1);
-                    uint w = output_tensor_list.at(idx)->info().max_dims().at(0);
+                    uint h = output_tensor_list.at(idx)->info().max_shape().at(1);
+                    uint w = output_tensor_list.at(idx)->info().max_shape().at(0);
 
                     if (output_tensor_list.at(idx)->info().layout() == RocalTensorlayout::NHWC)
                     {

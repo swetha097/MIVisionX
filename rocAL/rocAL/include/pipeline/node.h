@@ -38,19 +38,19 @@ public:
     void update_parameters();
     std::vector<rocalTensor *> input() { return _inputs; };
     std::vector<rocalTensor *> output() { return _outputs; };
-    void add_next(const std::shared_ptr<rocalTensor>& node) {} // To be implemented
-    void add_previous(const std::shared_ptr<rocalTensor>& node) {} //To be implemented
+    void add_next(const std::shared_ptr<Node>& node) {} // To be implemented
+    void add_previous(const std::shared_ptr<Node>& node) {} //To be implemented
     std::shared_ptr<Graph> graph() { return _graph; }
     void set_meta_data(MetaDataBatch* meta_data_info){_meta_data_info = meta_data_info;}
     bool _is_ssd = false;
 protected:
     virtual void create_node() = 0;
     virtual void update_node() = 0;
-    virtual void update_src_roi();
     const std::vector<rocalTensor *> _inputs;
     const std::vector<rocalTensor *> _outputs;
     std::shared_ptr<Graph> _graph = nullptr;
     vx_array _src_tensor_roi = nullptr, _dst_tensor_roi = nullptr;
+    vx_tensor _src_tensor_roi_ = nullptr, _dst_tensor_roi_ = nullptr; // TODO - To be removed
     vx_array _src_roi_width = nullptr; // TODO - To be removed
     vx_array _src_roi_height = nullptr; // TODO - To be removed
     vx_node _node = nullptr;

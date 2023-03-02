@@ -180,7 +180,9 @@ int test(int test_case, int reader_type, int pipeline_type, const char *path, co
         {
             std::cout << ">>>>>>> Running PARTIAL DECODE" << std::endl;
             rocalCreateLabelReader(handle, path);
-            input1 = rocalFusedJpegCrop(handle, path, color_format, num_threads, false, false);
+            std::vector<float> area = {0.08, 1};
+            std::vector<float> aspect_ratio = {3.0f/4, 4.0f/3};
+            input1 = rocalFusedJpegCrop(handle, path, color_format, num_threads, false, area, aspect_ratio, 10, false, false, ROCAL_USE_USER_GIVEN_SIZE_RESTRICTED, decode_max_width, decode_max_height);
         }
         break;
         case 2: //coco detection
@@ -213,7 +215,9 @@ int test(int test_case, int reader_type, int pipeline_type, const char *path, co
 #if defined RANDOMBBOXCROP
             rocalRandomBBoxCrop(handle, all_boxes_overlap, no_crop);
 #endif
-            input1 = rocalJpegCOCOFileSourcePartial(handle, path, json_path, color_format, num_threads, false, true, false);
+            std::vector<float> area = {0.08, 1};
+            std::vector<float> aspect_ratio = {3.0f/4, 4.0f/3};
+            input1 = rocalJpegCOCOFileSourcePartial(handle, path, json_path, color_format, num_threads, false, area, aspect_ratio, 10, false, false, ROCAL_USE_USER_GIVEN_SIZE_RESTRICTED, decode_max_width, decode_max_height);
         }
         break;
         case 4: //tf classification
@@ -321,21 +325,21 @@ int test(int test_case, int reader_type, int pipeline_type, const char *path, co
         std::vector<float> sdev{1, 1, 1};
         std::cout << ">>>>>>> Running "
                   << " Crop Mirror Normalize " << std::endl;
-        image1 = rocalCropMirrorNormalize(handle, input1, tensorLayout, tensorOutputType, 3, resize_h, resize_w, 0, 0, 0, mean, sdev, true);
+        image1 = rocalCropMirrorNormalize(handle, input1, resize_h, resize_w, 0, 0, mean, sdev, true, NULL, tensorLayout, tensorOutputType);
         break;
     }
     case 1:
     {
         std::cout << ">>>>>>> Running "
                   << "Brightness" << std::endl;
-        image1 = rocalBrightness(handle, input1, true);
+        image1 = rocalBrightness(handle, input1, true, NULL, NULL, tensorLayout, tensorOutputType);
     }
     break;
     case 3:
     {
          std::cout << ">>>>>>> Running "
                   << "rocalResize" << std::endl;
-        image1 = rocalResize(handle, input1, tensorLayout, tensorOutputType, 0, 0, true, ROCAL_SCALING_MODE_NOT_SMALLER, {}, 256);
+        image1 = rocalResize(handle, input1, 0, 0, true, ROCAL_SCALING_MODE_NOT_SMALLER, {}, 256, 0, ROCAL_LINEAR_INTERPOLATION, tensorLayout, tensorOutputType);
     }
     break;
     case 26:
@@ -350,7 +354,7 @@ int test(int test_case, int reader_type, int pipeline_type, const char *path, co
     {
         std::cout << ">>>>>>> Running "
                   << "rocalColorTwist" << std::endl;
-        image1 = rocalColorTwist(handle, input1, tensorLayout, tensorOutputType, true);
+        image1 = rocalColorTwist(handle, input1, true, NULL, NULL, NULL, NULL, tensorLayout, tensorOutputType);
     }
     break;
     case 10:
@@ -359,7 +363,7 @@ int test(int test_case, int reader_type, int pipeline_type, const char *path, co
         std::vector<float> sdev{1, 1, 1};
         std::cout << ">>>>>>> Running "
                   << " Resize Mirror Normalize " << std::endl;
-        image1 = rocalResizeMirrorNormalize(handle, input1, tensorLayout, tensorOutputType, 3,resize_w , resize_h, 0, mean, sdev,true);
+        image1 = rocalResizeMirrorNormalize(handle, input1, resize_w , resize_h, 0, mean, sdev, true, NULL, tensorLayout, tensorOutputType);
         break;
     }
     default:
@@ -509,8 +513,8 @@ int test(int test_case, int reader_type, int pipeline_type, const char *path, co
         cv::Mat mat_output;
         for(int idx = 0; idx < output_tensor_list->size(); idx++)
         {
-            int h = output_tensor_list->at(idx)->info().max_dims().at(1) * output_tensor_list->at(idx)->info().dims().at(0);
-            int w = output_tensor_list->at(idx)->info().max_dims().at(0);
+            int h = output_tensor_list->at(idx)->info().max_shape().at(1) * output_tensor_list->at(idx)->info().dims().at(0);
+            int w = output_tensor_list->at(idx)->info().max_shape().at(0);
             mat_input = cv::Mat(h, w, cv_color_format);
             mat_output = cv::Mat(h, w, cv_color_format);
             unsigned char *out_buffer;

@@ -4,8 +4,8 @@
 #include "exception.h"
 
 SSDRandomCropNode::SSDRandomCropNode(const std::vector<rocalTensor *> &inputs, const std::vector<rocalTensor *> &outputs) : Node(inputs, outputs),
-                                                                                                          _dest_width(_outputs[0]->info().max_dims()[0]),
-                                                                                                          _dest_height(_outputs[0]->info().max_dims()[1])
+                                                                                                          _dest_width(_outputs[0]->info().max_shape()[0]),
+                                                                                                          _dest_height(_outputs[0]->info().max_shape()[1])
 {
     _crop_param = std::make_shared<RocalRandomCropParam>(_batch_size);
     _is_ssd     = true;
@@ -82,7 +82,7 @@ void SSDRandomCropNode::update_node()
     std::pair<float, float> iou;
     float min_iou, max_iou;
     float w_factor = 0.0f, h_factor = 0.0f;
-    std::vector<RocalROI> input_roi = _crop_param->in_roi;
+    auto input_roi = _crop_param->in_roi;
     bool invalid_bboxes = true;
     _entire_iou = true;
     BoundingBoxCord crop_box, jth_box;

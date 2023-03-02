@@ -100,14 +100,17 @@ enum RocalDecodeDevice
 enum RocalTensorLayout
 {
     ROCAL_NHWC = 0,
-    ROCAL_NCHW = 1
+    ROCAL_NCHW = 1,
+    ROCAL_NFHWC = 2,
+    ROCAL_NFCHW = 3
 };
 
 enum RocalTensorOutputType
 {
     ROCAL_FP32 = 0,
     ROCAL_FP16 = 1,
-    ROCAL_UINT8 = 2
+    ROCAL_UINT8 = 2,
+    ROCAL_INT8 = 3
 };
 
 enum RocalDecoderType
