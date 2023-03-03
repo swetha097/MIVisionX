@@ -128,8 +128,8 @@ static vx_status VX_CALLBACK refreshPad(vx_node node, const vx_reference *parame
     }
     data->roi_ptr_src = (RpptROI *)data->roi_tensor_ptr_src;
     for (uint i = 0, j = 0; i < data->nbatchSize * 2, j < data->nbatchSize; i = i + 2, j = j + 1) {
-      data->srcDims[i] = data->roi_ptr_src[j].xywhROI.xy.x; // Needs to be interchanged for Spectrogram
-      data->srcDims[i + 1] = data->roi_ptr_src[j].xywhROI.xy.y;
+      data->srcDims[i] = data->roi_ptr_src[j].xywhROI.xy.y; // Needs to be interchanged for Spectrogram
+      data->srcDims[i + 1] = data->roi_ptr_src[j].xywhROI.xy.x;
     //   std::cerr << "\n data->srcDims[i] : "<< data->srcDims[i];
     //   std::cerr << "\n data->srcDims[i+1] :"<< data->srcDims[i+1];
 

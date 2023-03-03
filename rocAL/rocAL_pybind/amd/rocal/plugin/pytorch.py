@@ -63,6 +63,11 @@ class RALIGenericIterator(object):
         self.shard_size = size
         self.auto_reset = auto_reset
         self.batch_count = 0
+        self.batch_size = None
+        self.audio_length = None
+        self.samples = None
+        self.channels = None
+        self.output = None
         self.batch_size = self.loader._batch_size
 
 
@@ -101,7 +106,6 @@ class RALIGenericIterator(object):
         self.num_of_dims = self.output_tensor_list[0].num_of_dims()
         # print("Number of dims", self.num_of_dims)
         if self.num_of_dims == 4: # In the case of the Image data
-            self.augmentation_count = len(self.output_tensor_list)
             self.w = self.output_tensor_list[0].batch_width()
             self.h = self.output_tensor_list[0].batch_height()
             self.batch_size = self.output_tensor_list[0].batch_size()
@@ -126,22 +130,15 @@ class RALIGenericIterator(object):
                 return (self.out.astype(np.float16)), self.labels_tensor
         elif self.num_of_dims == 3: #In case of an audio data
             # print("AUDIO DATA !!!!")
-            self.augmentation_count = len(self.output_tensor_list)
-            self.batch_size = self.output_tensor_list[0].batch_size()
-            self.channels = self.output_tensor_list[0].batch_width() #Max Channels
-            self.samples = self.output_tensor_list[0].batch_height() #Max Samples
-            self.audio_length = self.channels * self.samples
-            # print("\n Batch Size",self.batch_size)
-            # print("\n Channels",self.channels)
-            # print("\n Samples",self.samples)
+            self.batch_size = self.output_tensor_list[0].batch_size() if self.batch_size is None else self.batch_size
+            self.channels = self.output_tensor_list[0].batch_width() if self.channels is None else self.channels #Max Channels
+            self.samples = self.output_tensor_list[0].batch_height() if self.samples is None else self.samples #Max Samples
+            self.audio_length = self.channels * self.samples if self.audio_length is None else self.audio_length
             self.audio_length_roi = []
-            # print("\n The ROI Shapes",torch.tensor(self.output_tensor_list[0].get_roi_at(0)))
             for i in range(self.batch_size):
                 self.audio_length_roi.append((self.output_tensor_list[0].get_roi_at(i)))
-            # print("\n The tensor ROI", torch.tensor(self.audio_length_roi))
-
-            # print(self.batch_size * self.channels * self.samples)
-            self.output = torch.empty((self.batch_size, self.samples, self.channels,), dtype=torch.float32)
+            if self.output is None:
+                self.output = torch.empty((self.batch_size, self.samples, self.channels,), dtype=torch.float32)
             
             # next
             self.output_tensor_list[0].copy_data(ctypes.c_void_p(self.output.data_ptr()))
