@@ -51,7 +51,12 @@ vx_size tensor_data_size(RocalTensorDataType data_type) {
         case RocalTensorDataType::FP32:
             return sizeof(vx_float32);
         case RocalTensorDataType::FP16:
-            return sizeof(vx_int16);
+#if defined(AMD_FP16_SUPPORT)
+            return sizeof(vx_float16);
+#else
+            THROW("FLOAT16 type tensor not supported")
+            return 0;
+#endif
         case RocalTensorDataType::UINT8:
             return sizeof(vx_uint8);
         case RocalTensorDataType::UINT32:
@@ -77,6 +82,22 @@ vx_enum interpret_tensor_data_type(RocalTensorDataType data_type) {
     }
 }
 
+void allocate_host_or_pinned_mem(void **ptr, size_t size, RocalMemType mem_type) {
+    if (mem_type == RocalMemType::HIP) {
+#if ENABLE_HIP
+        hipError_t err = hipHostMalloc((void **)ptr, size, hipHostMallocDefault);
+        if(err != hipSuccess || !*ptr)
+            THROW("hipHostMalloc of size " + TOSTR(size) + " failed " + TOSTR(err))
+        err = hipMemset((void *)*ptr, 0, size);
+        if(err != hipSuccess)
+            THROW("hipMemset of size " + TOSTR(size) + " failed " + TOSTR(err))
+#endif
+    } else {
+        *ptr = (void *)malloc(size);
+        memset((void *)*ptr, 0, size);
+    }
+}
+
 bool operator==(const rocalTensorInfo &rhs, const rocalTensorInfo &lhs) {
     return (rhs.dims() == lhs.dims() &&
             rhs.mem_type() == lhs.mem_type() &&
@@ -85,17 +106,15 @@ bool operator==(const rocalTensorInfo &rhs, const rocalTensorInfo &lhs) {
             rhs.layout() == lhs.layout());
 }
 
-void rocalTensorInfo::reallocate_tensor_roi_buffers() {
-    _roi = std::make_shared<std::vector<RocalROI>>(_batch_size);
 
-    if (_roi->size()) _roi->clear();
-    _roi->resize(_batch_size);
+void rocalTensorInfo::reset_tensor_roi_buffers() {
+    if(!_roi_buf)
+        allocate_host_or_pinned_mem(&_roi_buf, _batch_size * 4 * sizeof(unsigned), _mem_type);
     if (_is_image) {
+        auto roi = get_roi();
         for (unsigned i = 0; i < _batch_size; i++) {
-            _roi->at(i).x1 = 0;
-            _roi->at(i).y1 = 0;
-            _roi->at(i).x2 = _max_shape.at(0);
-            _roi->at(i).y2 = _max_shape.at(1);
+            roi[i].x2 = _max_shape.at(0);
+            roi[i].y2 = _max_shape.at(1);
         }
     } else {
         // TODO - For other tensor types
@@ -124,6 +143,45 @@ rocalTensorInfo::rocalTensorInfo(std::vector<size_t> dims,
     if (_num_of_dims <= 3) _is_image = false;
 }
 
+rocalTensorInfo::rocalTensorInfo(const rocalTensorInfo &other) {
+    _type = other._type;
+    _num_of_dims = other._num_of_dims;
+    _dims = other._dims;
+    _batch_size = other._batch_size;
+    _mem_type = other._mem_type;
+    _roi_type = other._roi_type;
+    _data_type = other._data_type;
+    _layout = other._layout;
+    _color_format = other._color_format;
+    _data_type_size = other._data_type_size;
+    _data_size = other._data_size;
+    _max_shape = other._max_shape;
+    _is_image = other._is_image;
+    _is_metadata = other._is_metadata;
+    _channels = other._channels;
+    if(!other.is_metadata()) {  // For Metadata ROI buffer is not required
+        allocate_host_or_pinned_mem(&_roi_buf, _batch_size * 4 * sizeof(unsigned), _mem_type);
+        memcpy((void *)_roi_buf, (const void *)other.get_roi(), _batch_size * 4 * sizeof(unsigned));
+    }
+}
+
+rocalTensorInfo::~rocalTensorInfo() {
+    if(!_is_metadata) {
+        if(_mem_type == RocalMemType::HIP) {
+#if ENABLE_HIP
+            if(_roi_buf) {
+                hipError_t err = hipHostFree(_roi_buf);
+                if (err != hipSuccess)
+                    ERR("hipHostFree failed " + TOSTR(err));
+            }
+#endif
+        } else {
+            if(_roi_buf) free(_roi_buf);
+        }
+        _roi_buf = nullptr;
+    } 
+}
+
 void rocalTensor::update_tensor_roi(const std::vector<uint32_t> &width,
                                     const std::vector<uint32_t> &height) {
     if (_info.is_image()) {
@@ -140,15 +198,15 @@ void rocalTensor::update_tensor_roi(const std::vector<uint32_t> &width,
         for (unsigned i = 0; i < info().batch_size(); i++) {
             if (width[i] > max_width) {
                 WRN("Given ROI width is larger than buffer width for tensor[" + TOSTR(i) + "] " + TOSTR(width[i]) + " > " + TOSTR(max_width))
-                _info.get_roi()->at(i).x2 = max_width;
+                _info.get_roi()[i].x2 = max_width;
             } else {
-                _info.get_roi()->at(i).x2 = width[i];
+                _info.get_roi()[i].x2 = width[i];
             }
             if (height[i] > max_height) {
                 WRN("Given ROI height is larger than buffer height for tensor[" + TOSTR(i) + "] " + TOSTR(height[i]) + " > " + TOSTR(max_height))
-                _info.get_roi()->at(i).y2 = max_height;
+                _info.get_roi()[i].y2 = max_height;
             } else {
-                _info.get_roi()->at(i).y2 = height[i];
+                _info.get_roi()[i].y2 = height[i];
             }
         }
     }

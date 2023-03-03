@@ -1849,7 +1849,7 @@ VX_API_CALL vx_node VX_API_CALL  vxExtrppNode_SequenceRearrange(vx_graph graph,v
 	return node;
 }
 
-VX_API_ENTRY vx_node VX_API_CALL vxExtrppNode_Brightness(vx_graph graph, vx_tensor pSrc, vx_array srcROI, vx_tensor pDst, vx_array alpha, vx_array beta, vx_scalar layout, vx_scalar roiType, vx_uint32 nbatchSize)
+VX_API_ENTRY vx_node VX_API_CALL vxExtrppNode_Brightness(vx_graph graph, vx_tensor pSrc, vx_tensor srcROI, vx_tensor pDst, vx_array alpha, vx_array beta, vx_scalar inputLayout, vx_scalar outputLayout, vx_scalar roiType)
 {
     vx_node node = NULL;
     vx_context context = vxGetContext((vx_reference)graph);
@@ -1857,16 +1857,15 @@ VX_API_ENTRY vx_node VX_API_CALL vxExtrppNode_Brightness(vx_graph graph, vx_tens
     {
         vx_uint32 dev_type = getGraphAffinity(graph);
         vx_scalar DEV_TYPE = vxCreateScalar(vxGetContext((vx_reference)graph), VX_TYPE_UINT32, &dev_type);
-        vx_scalar NBATCHSIZE = vxCreateScalar(vxGetContext((vx_reference)graph), VX_TYPE_UINT32, &nbatchSize);
         vx_reference params[] = {
             (vx_reference)pSrc,
             (vx_reference)srcROI,
             (vx_reference)pDst,
             (vx_reference)alpha,
             (vx_reference)beta,
-            (vx_reference)layout,
+            (vx_reference)inputLayout,
+            (vx_reference)outputLayout,
             (vx_reference)roiType,
-            (vx_reference)NBATCHSIZE,
             (vx_reference)DEV_TYPE};
         node = createNode(graph, VX_KERNEL_RPP_BRIGHTNESS, params, 9);
     }
@@ -1890,7 +1889,7 @@ VX_API_ENTRY vx_node VX_API_CALL vxExtrppNode_Copy(vx_graph graph, vx_tensor pSr
     return node;
 }
 
-VX_API_ENTRY vx_node VX_API_CALL vxExtrppNode_CropMirrorNormalize(vx_graph graph, vx_tensor pSrc, vx_array srcROI, vx_tensor pDst, vx_array dstROI,vx_array crop_w,vx_array crop_h, vx_array x1, vx_array y1, vx_array mean, vx_array std_dev, vx_array flip, vx_scalar layout, vx_scalar roiType, vx_uint32 nbatchSize)
+VX_API_ENTRY vx_node VX_API_CALL vxExtrppNode_CropMirrorNormalize(vx_graph graph, vx_tensor pSrc, vx_tensor srcROI, vx_tensor pDst, vx_array multiplier, vx_array offset, vx_array mirror, vx_scalar inputLayout, vx_scalar outputLayout, vx_scalar roiType)
 {
     vx_node node = NULL;
     vx_context context = vxGetContext((vx_reference)graph);
@@ -1898,24 +1897,18 @@ VX_API_ENTRY vx_node VX_API_CALL vxExtrppNode_CropMirrorNormalize(vx_graph graph
     {
         vx_uint32 dev_type = getGraphAffinity(graph);
         vx_scalar DEV_TYPE = vxCreateScalar(vxGetContext((vx_reference)graph), VX_TYPE_UINT32, &dev_type);
-        vx_scalar NBATCHSIZE = vxCreateScalar(vxGetContext((vx_reference)graph), VX_TYPE_UINT32, &nbatchSize);
         vx_reference params[] = {
             (vx_reference)pSrc,
             (vx_reference)srcROI,
             (vx_reference)pDst,
-            (vx_reference)dstROI,
-            (vx_reference)crop_w,
-            (vx_reference)crop_h,
-            (vx_reference)x1,
-            (vx_reference)y1,
-            (vx_reference)mean,
-            (vx_reference)std_dev,
-            (vx_reference)flip,
-            (vx_reference)layout,
+            (vx_reference)multiplier,
+            (vx_reference)offset,
+            (vx_reference)mirror,
+            (vx_reference)inputLayout,
+            (vx_reference)outputLayout,
             (vx_reference)roiType,
-            (vx_reference)NBATCHSIZE,
             (vx_reference)DEV_TYPE};
-        node = createNode(graph, VX_KERNEL_RPP_CROPMIRRORNORMALIZE, params, 15);
+        node = createNode(graph, VX_KERNEL_RPP_CROPMIRRORNORMALIZE, params, 10);
     }
     return node;
 }
@@ -1986,36 +1979,115 @@ vx_node createNode(vx_graph graph, vx_enum kernelEnum, vx_reference params[], vx
     return node;
 }
 
-// looks like following code is not used
-#if 0//ENABLE_OPENCL
-
-vx_status createGraphHandle(vx_node node, RPPCommonHandle **pHandle)
-{
+vx_status createGraphHandle(vx_node node, RPPCommonHandle **pHandle, Rpp32u batchSize, Rpp32u deviceType) {
     RPPCommonHandle *handle = NULL;
     STATUS_ERROR_CHECK(vxGetModuleHandle(node, OPENVX_KHR_RPP, (void **)&handle));
-    if (handle)
-    {
+
+    if (handle) {
         handle->count++;
-    }
-    else
-    {
+    } else {
         handle = new RPPCommonHandle;
         memset(handle, 0, sizeof(*handle));
         handle->count = 1;
-        STATUS_ERROR_CHECK(vxQueryNode(node, VX_NODE_ATTRIBUTE_AMD_OPENCL_COMMAND_QUEUE, &handle->cmdq, sizeof(handle->cmdq)));
+        
+        if (deviceType == AGO_TARGET_AFFINITY_GPU) {
+#if ENABLE_OPENCL
+            STATUS_ERROR_CHECK(vxQueryNode(node, VX_NODE_ATTRIBUTE_AMD_OPENCL_COMMAND_QUEUE, &handle->cmdq, sizeof(handle->cmdq)));
+            rppCreateWithStreamAndBatchSize(&data->rppHandle, handle->cmdq, batchSize);
+#elif ENABLE_HIP
+            STATUS_ERROR_CHECK(vxQueryNode(node, VX_NODE_ATTRIBUTE_AMD_HIP_STREAM, &handle->hipstream, sizeof(handle->hipstream)));
+            rppCreateWithStreamAndBatchSize(&handle->rppHandle, handle->hipstream, batchSize);
+#endif
+        } else if (deviceType == AGO_TARGET_AFFINITY_CPU) {
+            rppCreateWithBatchSize(&handle->rppHandle, batchSize);
+        }
+        
+        STATUS_ERROR_CHECK(vxSetModuleHandle(node, OPENVX_KHR_RPP, handle));
     }
     *pHandle = handle;
     return VX_SUCCESS;
 }
 
-vx_status releaseGraphHandle(vx_node node, RPPCommonHandle *handle)
-{
+vx_status releaseGraphHandle(vx_node node, RPPCommonHandle *handle, Rpp32u deviceType) {
     handle->count--;
-    if (handle->count == 0)
-    {
+    if (handle->count == 0) {
+        if(deviceType == AGO_TARGET_AFFINITY_GPU) {
+#if ENABLE_OPENCL || ENABLE_HIP
+            rppDestroyGPU(handle->rppHandle);
+#endif   
+        } else if (deviceType == AGO_TARGET_AFFINITY_CPU) {
+            rppDestroyHost(handle->rppHandle);
+        }
+
         delete handle;
         STATUS_ERROR_CHECK(vxSetModuleHandle(node, OPENVX_KHR_RPP, NULL));
     }
     return VX_SUCCESS;
 }
-#endif
+
+void fillDescriptionPtrfromDims(RpptDescPtr &descPtr, Rpp32s layout, size_t *tensorDims) {
+    switch(layout) {
+        case 0: { // For NHWC
+            descPtr->n = tensorDims[0];
+            descPtr->h = tensorDims[1];
+            descPtr->w = tensorDims[2];
+            descPtr->c = tensorDims[3];
+            descPtr->strides.nStride = descPtr->c * descPtr->w * descPtr->h;
+            descPtr->strides.hStride = descPtr->c * descPtr->w;
+            descPtr->strides.wStride = descPtr->c;
+            descPtr->strides.cStride = 1;
+            descPtr->layout = RpptLayout::NHWC;
+            break; 
+        }
+        case 1: { // For NCHW
+            descPtr->n = tensorDims[0];
+            descPtr->h = tensorDims[2];
+            descPtr->w = tensorDims[3];
+            descPtr->c = tensorDims[1];
+            descPtr->strides.nStride = descPtr->c * descPtr->w * descPtr->h;
+            descPtr->strides.cStride = descPtr->w * descPtr->h;
+            descPtr->strides.hStride = descPtr->w;
+            descPtr->strides.wStride = 1;
+            descPtr->layout = RpptLayout::NCHW;
+            break;
+        }
+        case 2: { // For NFHWC
+            descPtr->n = tensorDims[0] * tensorDims[1];
+            descPtr->h = tensorDims[2];
+            descPtr->w = tensorDims[3];
+            descPtr->c = tensorDims[4];
+            descPtr->strides.nStride = descPtr->c * descPtr->w * descPtr->h;
+            descPtr->strides.hStride = descPtr->c * descPtr->w;
+            descPtr->strides.wStride = descPtr->c;
+            descPtr->strides.cStride = 1;
+            descPtr->layout = RpptLayout::NHWC;
+            break;
+        }
+        case 3: { // For NFCHW
+            // source_description_ptr
+            descPtr->n = tensorDims[0] * tensorDims[1];
+            descPtr->h = tensorDims[3];
+            descPtr->w = tensorDims[4];
+            descPtr->c = tensorDims[2];
+            descPtr->strides.nStride = descPtr->c * descPtr->w * descPtr->h;
+            descPtr->strides.cStride = descPtr->w * descPtr->h;
+            descPtr->strides.hStride = descPtr->w;
+            descPtr->strides.wStride = 1;
+            descPtr->layout = RpptLayout::NCHW;
+            break;
+        }
+    }
+}
+
+RpptDataType getRpptDataType(vx_enum dataType) {
+    switch(dataType) {
+        case vx_type_e::VX_TYPE_FLOAT32:
+            return RpptDataType::F32;
+        case vx_type_e::VX_TYPE_FLOAT16:
+            return RpptDataType::F16;
+        case vx_type_e::VX_TYPE_INT8:
+            return RpptDataType::I8;
+        default:
+            return RpptDataType::U8;
+    }
+}

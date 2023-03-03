@@ -39,8 +39,9 @@ using half_float::half;
 typedef void * RocalFloatParam;
 typedef void * RocalIntParam;
 typedef void * RocalContext;
-typedef void * RocalImage;
 typedef void * RocalMetaData;
+typedef rocalTensor * RocalTensor;
+typedef rocalTensorList * RocalTensorList;
 
 typedef std::vector<int> ImageIDBatch,AnnotationIDBatch;
 typedef std::vector<std::string> ImagePathBatch;
@@ -118,7 +119,9 @@ enum RocalDecodeDevice
 enum RocalTensorLayout
 {
     ROCAL_NHWC = 0,
-    ROCAL_NCHW = 1
+    ROCAL_NCHW = 1,
+    ROCAL_NFHWC = 2,
+    ROCAL_NFCHW = 3
 };
 
 enum RocalTensorOutputType
