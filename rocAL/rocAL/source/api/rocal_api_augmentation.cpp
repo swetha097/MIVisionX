@@ -43,7 +43,7 @@ THE SOFTWARE.
 #include "commons.h"
 #include "context.h"
 #include "rocal_api.h"
-#define MAX_ASPECT_RATIO 3.0f
+#define MAX_ASPECT_RATIO 6.0f
 
 RocalTensor  ROCAL_API_CALL
 rocalSequenceRearrange(

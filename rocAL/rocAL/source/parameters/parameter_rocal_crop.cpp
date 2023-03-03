@@ -58,13 +58,13 @@ void RocalCropParam::fill_crop_dims()
             // Evaluating user given crop
             cropw_arr_val[img_idx] = (crop_w > in_roi[img_idx].x2) ? in_roi[img_idx].x2 : crop_w;
             croph_arr_val[img_idx] = (crop_h > in_roi[img_idx].y2) ? in_roi[img_idx].y2 : crop_h;
-            if(_is_center_crop)
+            if(_is_fixed_crop)
             {
                 float x_drift, y_drift;
                 x_drift = x_drift_factor->get();
                 y_drift = y_drift_factor->get();
-                x1_arr_val[img_idx] = static_cast<size_t>(0.5 * (in_roi[img_idx].x2 - cropw_arr_val[img_idx]));
-                y1_arr_val[img_idx] = static_cast<size_t>(0.5 * (in_roi[img_idx].y2 - croph_arr_val[img_idx]));
+                x1_arr_val[img_idx] = static_cast<size_t>(std::nearbyintf(_crop_anchor[0] * (in_roi[img_idx].x2 - cropw_arr_val[img_idx])));
+                y1_arr_val[img_idx] = static_cast<size_t>(std::nearbyintf(_crop_anchor[1] * (in_roi[img_idx].y2 - croph_arr_val[img_idx])));
             }
             else
             {

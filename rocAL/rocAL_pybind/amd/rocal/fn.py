@@ -58,7 +58,7 @@ def crop_mirror_normalize(*inputs, bytes_per_sample_hint=0, crop=[0, 0], crop_d=
             mirror = b.CreateIntParameter(1)
 
     # pybind call arguments
-    kwargs_pybind = {"input_image0": inputs[0], "crop_height":crop_height, "crop_width":crop_width, "start_x":0, "start_y":0, "mean":mean, "std_dev":std,
+    kwargs_pybind = {"input_image0": inputs[0], "crop_height":crop_height, "crop_width":crop_width, "start_x":crop_pos_x, "start_y":crop_pos_y, "mean":mean, "std_dev":std,
                      "is_output": False, "mirror": mirror, "rocal_tensor_layout" : rocal_tensor_layout, "rocal_tensor_output_type" : rocal_tensor_output_type}
     b.setSeed(seed)
     cmn = b.CropMirrorNormalize(Pipeline._current_pipeline._handle ,*(kwargs_pybind.values()))
