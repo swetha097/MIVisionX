@@ -212,7 +212,7 @@ rocalCrop(RocalContext p_context,
         // }
         // output_info.set_dims(out_dims);
         output = context->master_graph->create_tensor(output_info, is_output);
-        // output->reset_tensor_roi();
+        output->reset_tensor_roi();
         std::shared_ptr<CropNode> crop_node = context->master_graph->add_node<CropNode>({input}, {output});
         crop_node->init(crop_h, crop_w, x_drift, y_drift);
         if (context->master_graph->meta_data_graph())
@@ -346,7 +346,7 @@ rocalCropFixed(
         }
         output_info.set_dims(out_dims);
         output = context->master_graph->create_tensor(output_info, is_output);
-        // output->reset_tensor_roi();
+        output->reset_tensor_roi();
         std::shared_ptr<CropNode> crop_node =  context->master_graph->add_node<CropNode>({input}, {output});
         crop_node->init(crop_height, crop_width, crop_pos_x, crop_pos_y);
         if (context->master_graph->meta_data_graph())
@@ -412,7 +412,7 @@ rocalCropCenterFixed(
         }
         output_info.set_dims(out_dims);
         output = context->master_graph->create_tensor(output_info, is_output);
-        // output->reset_tensor_roi();
+        output->reset_tensor_roi();
         std::shared_ptr<CropNode> crop_node = context->master_graph->add_node<CropNode>({input}, {output});
         crop_node->init(crop_height, crop_width);
         if (context->master_graph->meta_data_graph())
@@ -468,6 +468,7 @@ rocalCropMirrorNormalize(RocalContext p_context, RocalTensor p_input, unsigned c
         }
         output_info.set_dims(out_dims);
         output = context->master_graph->create_tensor(output_info, is_output);
+        output->reset_tensor_roi();
         std::shared_ptr<CropMirrorNormalizeNode> cmn_node = context->master_graph->add_node<CropMirrorNormalizeNode>({input}, {output});
         cmn_node->init(crop_height, crop_width, start_x, start_y, mean, std_dev , mirror);
         if (context->master_graph->meta_data_graph())
@@ -586,7 +587,7 @@ rocalResize(RocalContext p_context,
         }
         output_info.set_dims(out_dims);
         output = context->master_graph->create_tensor(output_info, is_output);
-        // output->reset_tensor_roi();
+        output->reset_tensor_roi();
         std::shared_ptr<ResizeNode> resize_node =  context->master_graph->add_node<ResizeNode>({input}, {output});
         resize_node->init(out_width, out_height, resize_scaling_mode, maximum_size, interpolation_type);
         if (context->master_graph->meta_data_graph())
