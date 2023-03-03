@@ -22,7 +22,7 @@ if [[ $# -eq 1 ]]; then
     do
         echo "Going to install $WHEEL_NAME"
     done
-    pip$PYTHON_VERSION uninstall $WHEEL_NAME -Y
+    pip$PYTHON_VERSION uninstall -y $WHEEL_NAME
     pip$PYTHON_VERSION install $WHEEL_NAME
   else
     echo
@@ -43,7 +43,7 @@ else
   do
     echo "Going to install $WHEEL_NAME"
   done
-  pip$PYTHON_VERSION uninstall $WHEEL_NAME
+  pip$PYTHON_VERSION uninstall -y $WHEEL_NAME
   pip$PYTHON_VERSION install $WHEEL_NAME
 fi
 
