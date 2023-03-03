@@ -116,6 +116,8 @@ void rocalTensorInfo::reset_tensor_roi_buffers() {
     } else {
         _roi.reset(_roi_buf, free);
     }
+    _orig_roi_height = std::make_shared<std::vector<uint32_t>>(_batch_size);    // TODO - Check if this needs to be reallocated every time
+    _orig_roi_width = std::make_shared<std::vector<uint32_t>>(_batch_size);
     if (_is_image) {
         auto roi = get_roi();
         for (unsigned i = 0; i < _batch_size; i++) {
@@ -176,6 +178,22 @@ void rocalTensor::update_tensor_roi(const std::vector<uint32_t> &width,
                 _info.get_roi()[i].y2 = height[i];
             }
         }
+    }
+}
+
+void rocalTensor::update_tensor_orig_roi(const std::vector<uint32_t> &width, const std::vector<uint32_t> &height)
+{
+    if(width.size() != height.size())
+        THROW("Batch size of image height and width info does not match")
+
+    if(width.size() != info().batch_size())
+        THROW("The batch size of actual image height and width different from image batch size "+ TOSTR(width.size())+ " != " +  TOSTR(info().batch_size()))
+    if(! _info._orig_roi_width || !_info._orig_roi_height)
+        THROW("ROI width or ROI height vector not created")
+    for(unsigned i = 0; i < info().batch_size(); i++)
+    {
+        _info._orig_roi_width->at(i) = width[i];
+        _info._orig_roi_height->at(i)= height[i];
     }
 }
 
