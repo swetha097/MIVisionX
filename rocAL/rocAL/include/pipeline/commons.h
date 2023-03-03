@@ -53,6 +53,7 @@ enum class RocalTensorDataType
     FP32 = 0,
     FP16,
     UINT8,
+    INT8,
     UINT32,
     INT32
 };
@@ -128,4 +129,5 @@ struct Timing
     long long unsigned video_read_time= 0;
     long long unsigned video_decode_time= 0;
     long long unsigned video_process_time= 0;
+    long long unsigned image_output_routine_time= 0;
 };

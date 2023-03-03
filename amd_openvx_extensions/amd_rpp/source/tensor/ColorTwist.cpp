@@ -21,7 +21,6 @@ THE SOFTWARE.
 */
 
 #include "internal_publishKernels.h"
-#define NUM_OF_DIMS 4
 
 struct ColorTwistLocalData
 {
@@ -40,10 +39,11 @@ struct ColorTwistLocalData
     RpptDescPtr dst_desc_ptr;
     RpptDesc srcDesc;
     RpptDesc dstDesc;
-    RpptROI *roi_tensor_Ptr;
+    void *roi_tensor_Ptr;
+    RpptROI *roiPtr;
     RpptRoiType roiType;
-    size_t in_tensor_dims[NUM_OF_DIMS];
-    size_t out_tensor_dims[NUM_OF_DIMS];
+    size_t in_tensor_dims[RPP_MAX_TENSOR_DIMS];
+    size_t out_tensor_dims[RPP_MAX_TENSOR_DIMS];
     vx_enum in_tensor_type ;
     vx_enum out_tensor_type;
 
@@ -52,21 +52,34 @@ struct ColorTwistLocalData
 #if ENABLE_OPENCL
     cl_mem cl_pSrc;
     cl_mem cl_pDst;
-#elif ENABLE_HIP
-    void *hip_pSrc;
-    void *hip_pDst;
-    RpptROI *hip_roi_tensor_Ptr;
 #endif
 };
 
 static vx_status VX_CALLBACK refreshColorTwist(vx_node node, const vx_reference *parameters, vx_uint32 num, ColorTwistLocalData *data)
 {
     vx_status status = VX_SUCCESS;
-    STATUS_ERROR_CHECK(vxCopyArrayRange((vx_array)parameters[1], 0, data->nbatchSize * 4, sizeof(unsigned), data->roi_tensor_Ptr, VX_READ_ONLY, VX_MEMORY_TYPE_HOST));
     STATUS_ERROR_CHECK(vxCopyArrayRange((vx_array)parameters[3], 0, data->nbatchSize, sizeof(vx_float32), data->alpha, VX_READ_ONLY, VX_MEMORY_TYPE_HOST));
     STATUS_ERROR_CHECK(vxCopyArrayRange((vx_array)parameters[4], 0, data->nbatchSize, sizeof(vx_float32), data->beta, VX_READ_ONLY, VX_MEMORY_TYPE_HOST));
     STATUS_ERROR_CHECK(vxCopyArrayRange((vx_array)parameters[5], 0, data->nbatchSize, sizeof(vx_float32), data->hue, VX_READ_ONLY, VX_MEMORY_TYPE_HOST));
     STATUS_ERROR_CHECK(vxCopyArrayRange((vx_array)parameters[6], 0, data->nbatchSize, sizeof(vx_float32), data->sat, VX_READ_ONLY, VX_MEMORY_TYPE_HOST));
+    if (data->device_type == AGO_TARGET_AFFINITY_GPU)
+    {
+#if ENABLE_OPENCL
+        STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[0], VX_TENSOR_BUFFER_OPENCL, &data->cl_pSrc, sizeof(data->cl_pSrc)));
+        STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[2], VX_TENSOR_BUFFER_OPENCL, &data->cl_pDst, sizeof(data->cl_pDst)));
+#elif ENABLE_HIP
+        STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[1], VX_TENSOR_BUFFER_HIP, &data->roi_tensor_Ptr, sizeof(data->roi_tensor_Ptr)));
+        STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[0], VX_TENSOR_BUFFER_HIP, &data->pSrc, sizeof(data->pSrc)));
+        STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[2], VX_TENSOR_BUFFER_HIP, &data->pDst, sizeof(data->pDst)));
+#endif
+    }
+    if (data->device_type == AGO_TARGET_AFFINITY_CPU)
+    {
+        STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[1], VX_TENSOR_BUFFER_HOST, &data->roi_tensor_Ptr, sizeof(data->roi_tensor_Ptr)));
+        STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[0], VX_TENSOR_BUFFER_HOST, &data->pSrc, sizeof(data->pSrc)));
+        STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[2], VX_TENSOR_BUFFER_HOST, &data->pDst, sizeof(data->pDst)));
+    }
+    data->roiPtr = (RpptROI *)data->roi_tensor_Ptr;
     if(data->layout == 2 || data->layout == 3)
     {
         unsigned num_of_frames = data->in_tensor_dims[1]; // Num of frames 'F'
@@ -79,53 +92,13 @@ static vx_status VX_CALLBACK refreshColorTwist(vx_node node, const vx_reference 
                 data->beta[index + f] = data->beta[n];
                 data->hue[index + f] = data->hue[n];
                 data->sat[index + f] = data->sat[n];
-                data->roi_tensor_Ptr[index + f].xywhROI.xy.x = data->roi_tensor_Ptr[n].xywhROI.xy.x;
-                data->roi_tensor_Ptr[index + f].xywhROI.xy.y = data->roi_tensor_Ptr[n].xywhROI.xy.y;
-                data->roi_tensor_Ptr[index + f].xywhROI.roiWidth = data->roi_tensor_Ptr[n].xywhROI.roiWidth;
-                data->roi_tensor_Ptr[index + f].xywhROI.roiHeight = data->roi_tensor_Ptr[n].xywhROI.roiHeight;
+                data->roiPtr[index + f].xywhROI.xy.x = data->roiPtr[n].xywhROI.xy.x;
+                data->roiPtr[index + f].xywhROI.xy.y = data->roiPtr[n].xywhROI.xy.y;
+                data->roiPtr[index + f].xywhROI.roiWidth = data->roiPtr[n].xywhROI.roiWidth;
+                data->roiPtr[index + f].xywhROI.roiHeight = data->roiPtr[n].xywhROI.roiHeight;
 
             }
         }
-    }
-    if (data->device_type == AGO_TARGET_AFFINITY_GPU)
-    {
-#if ENABLE_OPENCL
-        STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[0], VX_TENSOR_BUFFER_OPENCL, &data->cl_pSrc, sizeof(data->cl_pSrc)));
-        STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[2], VX_TENSOR_BUFFER_OPENCL, &data->cl_pDst, sizeof(data->cl_pDst)));
-#elif ENABLE_HIP
-        STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[0], VX_TENSOR_BUFFER_HIP, &data->hip_pSrc, sizeof(data->hip_pSrc)));
-        STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[2], VX_TENSOR_BUFFER_HIP, &data->hip_pDst, sizeof(data->hip_pDst)));
-        hipMemcpy(data->hip_roi_tensor_Ptr, data->roi_tensor_Ptr, data->nbatchSize * sizeof(RpptROI), hipMemcpyHostToDevice);
-#endif
-    }
-    if (data->device_type == AGO_TARGET_AFFINITY_CPU)
-    {
-        if (data->in_tensor_type == vx_type_e::VX_TYPE_UINT8 && data->out_tensor_type == vx_type_e::VX_TYPE_UINT8)
-        {
-            STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[0], VX_TENSOR_BUFFER_HOST, &data->pSrc, sizeof(vx_uint8)));
-            STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[2], VX_TENSOR_BUFFER_HOST, &data->pDst, sizeof(vx_uint8)));
-        }
-        else if (data->in_tensor_type == vx_type_e::VX_TYPE_FLOAT32 && data->out_tensor_type == vx_type_e::VX_TYPE_FLOAT32)
-        {
-            STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[0], VX_TENSOR_BUFFER_HOST, &data->pSrc, sizeof(vx_float32)));
-            STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[2], VX_TENSOR_BUFFER_HOST, &data->pDst, sizeof(vx_float32)));
-        }
-        else if (data->in_tensor_type == vx_type_e::VX_TYPE_INT8 && data->out_tensor_type == vx_type_e::VX_TYPE_INT8)
-        {
-            STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[0], VX_TENSOR_BUFFER_HOST, &data->pSrc, sizeof(vx_int8)));
-            STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[2], VX_TENSOR_BUFFER_HOST, &data->pDst, sizeof(vx_int8)));
-        }
-        else if (data->in_tensor_type == vx_type_e::VX_TYPE_UINT8 && data->out_tensor_type == vx_type_e::VX_TYPE_FLOAT32)
-        {
-            STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[0], VX_TENSOR_BUFFER_HOST, &data->pSrc, sizeof(vx_uint8)));
-            STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[2], VX_TENSOR_BUFFER_HOST, &data->pDst, sizeof(vx_float32)));
-        }
-        // vx_float16 is not supported. Have to disable it once it is done.
-        // else if(in_tensor_type == vx_type_e::VX_TYPE_UINT8 && out_tensor_type == vx_type_e::VX_TYPE_FLOAT16)
-        // {
-        //     STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[0], VX_TENSOR_BUFFER_HOST, &data->pSrc, sizeof(vx_uint8)));
-        //     STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[3], VX_TENSOR_BUFFER_HOST, &data->pDst, sizeof(vx_float16)));
-        // }
     }
     return status;
 }
@@ -178,11 +151,11 @@ static vx_status VX_CALLBACK processColorTwist(vx_node node, const vx_reference 
     {
 #if ENABLE_OPENCL
         refreshColorTwist(node, parameters, num, data);
-        rpp_status = rppt_color_twist_gpu((void *)data->cl_pSrc, data->src_desc_ptr, (void *)data->cl_pDst, data->src_desc_ptr,  data->alpha, data->beta, data->hue, data->sat, data->roi_tensor_Ptr, data->roiType, data->rppHandle);
+        rpp_status = rppt_color_twist_gpu((void *)data->cl_pSrc, data->src_desc_ptr, (void *)data->cl_pDst, data->src_desc_ptr,  data->alpha, data->beta, data->hue, data->sat, data->roiPtr, data->roiType, data->rppHandle);
         return_status = (rpp_status == RPP_SUCCESS) ? VX_SUCCESS : VX_FAILURE;
 #elif ENABLE_HIP
         refreshColorTwist(node, parameters, num, data);
-        rpp_status = rppt_color_twist_gpu((void *)data->hip_pSrc, data->src_desc_ptr, (void *)data->hip_pDst, data->src_desc_ptr,  data->alpha, data->beta, data->hue, data->sat, data->hip_roi_tensor_Ptr, data->roiType, data->rppHandle);
+        rpp_status = rppt_color_twist_gpu((void *)data->pSrc, data->src_desc_ptr, (void *)data->pDst, data->src_desc_ptr,  data->alpha, data->beta, data->hue, data->sat, data->roiPtr, data->roiType, data->rppHandle);
         return_status = (rpp_status == RPP_SUCCESS) ? VX_SUCCESS : VX_FAILURE;
 #endif
     }
@@ -193,7 +166,7 @@ static vx_status VX_CALLBACK processColorTwist(vx_node node, const vx_reference 
         // {
         //     std::cerr<<"\n bbox values :: "<<data->roi_tensor_Ptr[i].xywhROI.xy.x<<" "<<data->roi_tensor_Ptr[i].xywhROI.xy.y<<" "<<data->roi_tensor_Ptr[i].xywhROI.roiWidth<<" "<<data->roi_tensor_Ptr[i].xywhROI.roiHeight;
         // }
-        rpp_status = rppt_color_twist_host(data->pSrc, data->src_desc_ptr, data->pDst, data->src_desc_ptr, data->alpha, data->beta,data->hue, data->sat, data->roi_tensor_Ptr, data->roiType, data->rppHandle);
+        rpp_status = rppt_color_twist_host(data->pSrc, data->src_desc_ptr, data->pDst, data->src_desc_ptr, data->alpha, data->beta,data->hue, data->sat, data->roiPtr, data->roiType, data->rppHandle);
         return_status = (rpp_status == RPP_SUCCESS) ? VX_SUCCESS : VX_FAILURE;
     }
     return return_status;
@@ -323,10 +296,10 @@ static vx_status VX_CALLBACK initializeColorTwist(vx_node node, const vx_referen
         data->src_desc_ptr->layout = RpptLayout::NHWC;
 
         //destination_description_ptr
-        data->dst_desc_ptr->n = data->out_tensor_dims[0] * data->in_tensor_dims[1];
-        data->dst_desc_ptr->h = data->out_tensor_dims[1];
-        data->dst_desc_ptr->w = data->out_tensor_dims[2];
-        data->dst_desc_ptr->c = data->out_tensor_dims[3];
+        data->dst_desc_ptr->n = data->out_tensor_dims[0] * data->out_tensor_dims[1];
+        data->dst_desc_ptr->h = data->out_tensor_dims[2];
+        data->dst_desc_ptr->w = data->out_tensor_dims[3];
+        data->dst_desc_ptr->c = data->out_tensor_dims[4];
         data->dst_desc_ptr->strides.nStride = data->dst_desc_ptr->c * data->dst_desc_ptr->w * data->dst_desc_ptr->h;
         data->dst_desc_ptr->strides.hStride = data->dst_desc_ptr->c * data->dst_desc_ptr->w;
         data->dst_desc_ptr->strides.wStride = data->dst_desc_ptr->c;
@@ -345,21 +318,17 @@ static vx_status VX_CALLBACK initializeColorTwist(vx_node node, const vx_referen
         data->src_desc_ptr->strides.wStride = 1;
         data->src_desc_ptr->layout = RpptLayout::NCHW;
 
-        data->dst_desc_ptr->n = data->out_tensor_dims[0] * data->in_tensor_dims[1];
-        data->dst_desc_ptr->h = data->out_tensor_dims[1];
-        data->dst_desc_ptr->w = data->out_tensor_dims[2];
-        data->dst_desc_ptr->c = data->out_tensor_dims[3];
+        data->dst_desc_ptr->n = data->out_tensor_dims[0] * data->out_tensor_dims[1];
+        data->dst_desc_ptr->h = data->out_tensor_dims[3];
+        data->dst_desc_ptr->w = data->out_tensor_dims[4];
+        data->dst_desc_ptr->c = data->out_tensor_dims[2];
         data->dst_desc_ptr->strides.nStride = data->dst_desc_ptr->c * data->dst_desc_ptr->w * data->dst_desc_ptr->h;
         data->dst_desc_ptr->strides.hStride = data->dst_desc_ptr->c * data->dst_desc_ptr->w;
         data->dst_desc_ptr->strides.wStride = data->dst_desc_ptr->c;
         data->dst_desc_ptr->strides.cStride = 1;
         data->dst_desc_ptr->layout = RpptLayout::NCHW;
     }
-#if ENABLE_HIP
-    if (data->device_type == AGO_TARGET_AFFINITY_GPU)
-        hipMalloc(&data->hip_roi_tensor_Ptr, data->src_desc_ptr->n * sizeof(RpptROI));
-#endif
-    data->roi_tensor_Ptr = (RpptROI *) calloc(data->nbatchSize, sizeof(RpptROI));
+
     data->alpha = (vx_float32 *)malloc(sizeof(vx_float32) * data->src_desc_ptr->n);
     data->beta = (vx_float32 *)malloc(sizeof(vx_float32) * data->src_desc_ptr->n);
     data->hue = (vx_float32 *)malloc(sizeof(vx_float32) * data->src_desc_ptr->n);
@@ -389,15 +358,10 @@ static vx_status VX_CALLBACK uninitializeColorTwist(vx_node node, const vx_refer
 #endif
     if (data->device_type == AGO_TARGET_AFFINITY_CPU)
         rppDestroyHost(data->rppHandle);
-    free(data->roi_tensor_Ptr);
     free(data->alpha);
     free(data->beta);
     free(data->hue);
     free(data->sat);
-#if ENABLE_HIP
-    if (data->device_type == AGO_TARGET_AFFINITY_GPU)
-        hipFree(data->hip_roi_tensor_Ptr);
-#endif
     delete (data);
     return VX_SUCCESS;
 }
@@ -452,7 +416,7 @@ vx_status ColorTwist_Register(vx_context context)
     {
         STATUS_ERROR_CHECK(vxSetKernelAttribute(kernel, VX_KERNEL_ATTRIBUTE_AMD_QUERY_TARGET_SUPPORT, &query_target_support_f, sizeof(query_target_support_f)));
         PARAM_ERROR_CHECK(vxAddParameterToKernel(kernel, 0, VX_INPUT, VX_TYPE_TENSOR, VX_PARAMETER_STATE_REQUIRED));
-        PARAM_ERROR_CHECK(vxAddParameterToKernel(kernel, 1, VX_INPUT, VX_TYPE_ARRAY, VX_PARAMETER_STATE_REQUIRED));
+        PARAM_ERROR_CHECK(vxAddParameterToKernel(kernel, 1, VX_INPUT, VX_TYPE_TENSOR, VX_PARAMETER_STATE_REQUIRED));
         PARAM_ERROR_CHECK(vxAddParameterToKernel(kernel, 2, VX_OUTPUT, VX_TYPE_TENSOR, VX_PARAMETER_STATE_REQUIRED));
         PARAM_ERROR_CHECK(vxAddParameterToKernel(kernel, 3, VX_INPUT, VX_TYPE_ARRAY, VX_PARAMETER_STATE_REQUIRED));
         PARAM_ERROR_CHECK(vxAddParameterToKernel(kernel, 4, VX_INPUT, VX_TYPE_ARRAY, VX_PARAMETER_STATE_REQUIRED));

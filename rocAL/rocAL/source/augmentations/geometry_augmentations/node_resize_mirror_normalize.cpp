@@ -35,8 +35,8 @@ void ResizeMirrorNormalizeNode::create_node()
 {
     if(_node)
         return;
-    std::vector<uint32_t> dst_roi_width(_batch_size,_outputs[0]->info().max_dims()[0]);
-    std::vector<uint32_t> dst_roi_height(_batch_size, _outputs[0]->info().max_dims()[1]);
+    std::vector<uint32_t> dst_roi_width(_batch_size,_outputs[0]->info().max_shape()[0]);
+    std::vector<uint32_t> dst_roi_height(_batch_size, _outputs[0]->info().max_shape()[1]);
     _mean_vx.resize(_batch_size*3);
     _std_dev_vx.resize(_batch_size*3);
     for (uint i=0; i < _batch_size; i++ ) {
@@ -79,15 +79,15 @@ void ResizeMirrorNormalizeNode::create_node()
 }
 void ResizeMirrorNormalizeNode::update_node()
 {
-    std::shared_ptr<std::vector<RocalROI>> src_roi = _inputs[0]->info().get_roi();
+    RocalROI* src_roi = _inputs[0]->info().get_roi();   // Check if it needs to be similar to resize
     for (unsigned i = 0; i < _batch_size; i++) {
-        _src_width = src_roi->at(i).x2;
-        _src_height = src_roi->at(i).y2;
+        _src_width = src_roi[i].x2;
+        _src_height = src_roi[i].y2;
         _dst_width = _out_width;
         _dst_height = _out_height;
         adjust_out_roi_size();
-        _dst_width = std::min(_dst_width, (unsigned)_outputs[0]->info().max_dims()[0]);
-        _dst_height = std::min(_dst_height, (unsigned)_outputs[0]->info().max_dims()[1]);
+        _dst_width = std::min(_dst_width, (unsigned)_outputs[0]->info().max_shape()[0]);
+        _dst_height = std::min(_dst_height, (unsigned)_outputs[0]->info().max_shape()[1]);
         _dst_roi_width_vec.push_back(_dst_width);
         _dst_roi_height_vec.push_back(_dst_height);
     }

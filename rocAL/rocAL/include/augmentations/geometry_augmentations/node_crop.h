@@ -31,9 +31,10 @@ class CropNode : public Node
 public:
     CropNode(const std::vector<rocalTensor *> &inputs, const std::vector<rocalTensor *> &outputs);
     CropNode() = delete;
-    void init(unsigned int crop_h, unsigned int crop_w, float x_drift, float y_drift, int layout);
-    void init(unsigned int crop_h, unsigned int crop_w, int layout);
-    void init( FloatParam *crop_h_factor, FloatParam *crop_w_factor, FloatParam * x_drift, FloatParam * y_drift, int layout);
+    ~CropNode();
+    void init(unsigned int crop_h, unsigned int crop_w, float x_drift, float y_drift);
+    void init(unsigned int crop_h, unsigned int crop_w);
+    void init( FloatParam *crop_h_factor, FloatParam *crop_w_factor, FloatParam * x_drift, FloatParam * y_drift);
     unsigned int get_dst_width() { return _dest_width; }
     unsigned int get_dst_height() { return _dest_height; }
     std::shared_ptr<RocalCropParam> get_crop_param() { return _crop_param; }
@@ -45,5 +46,6 @@ private:
     size_t _dest_width;
     size_t _dest_height;
     std::shared_ptr<RocalCropParam> _crop_param;
-    unsigned _layout, _roi_type;
+    void * _crop_coordinates;
+    vx_tensor _crop_tensor;
 };

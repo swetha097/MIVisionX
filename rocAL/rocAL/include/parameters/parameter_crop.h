@@ -45,22 +45,20 @@ class CropParam
 // V Y directoin
 public:
     CropParam() = delete;
-    CropParam(unsigned int batch_size): batch_size(batch_size), _random(false), _is_center_crop(false)
+    CropParam(unsigned int batch_size): batch_size(batch_size), _random(false), _is_fixed_crop(false)
     {
         x_drift_factor     = default_x_drift_factor();
         y_drift_factor     = default_y_drift_factor();
     }
-    void set_image_dimensions( const std::shared_ptr<std::vector<RocalROI>> roi)
+    void set_image_dimensions(RocalROI *roi)
     {
-        if(in_roi.size() != roi->size())
-            THROW("wrong input width or height size")
-        in_roi = *roi;
+        in_roi = roi;
     }
     void set_random() {_random = true;}
-    void set_center() { _is_center_crop = true; }
+    void set_fixed_crop(float anchor_x, float anchor_y) { _is_fixed_crop = true; _random = false; _crop_anchor[0] = anchor_x; _crop_anchor[1] = anchor_y;}
     void set_x_drift_factor(Parameter<float>* x_drift);
     void set_y_drift_factor(Parameter<float>* y_drift);
-    std::vector<RocalROI> in_roi;
+    const RocalROI * in_roi;
     unsigned int  x1, y1, x2, y2;
     const unsigned int batch_size;
     void set_batch_size(unsigned int batch_size);
@@ -82,8 +80,8 @@ protected:
     Parameter<float>* default_x_drift_factor();
     Parameter<float>* default_y_drift_factor();
     std::vector<uint32_t> x1_arr_val, y1_arr_val, croph_arr_val, cropw_arr_val, x2_arr_val, y2_arr_val;
-    bool _random;
-    bool _is_center_crop = false;
+    bool _random, _is_fixed_crop;
+    float _crop_anchor [2] = {0.5, 0.5};
     virtual void fill_crop_dims(){};
     void update_crop_array();
 };

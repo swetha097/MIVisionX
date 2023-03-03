@@ -28,8 +28,8 @@ THE SOFTWARE.
 
 CropNode::CropNode(const std::vector<rocalTensor *> &inputs, const std::vector<rocalTensor *> &outputs) :
         Node(inputs, outputs),
-        _dest_width(_outputs[0]->info().max_dims()[0]),
-        _dest_height(_outputs[0]->info().max_dims()[1])
+        _dest_width(_outputs[0]->info().max_shape()[0]),
+        _dest_height(_outputs[0]->info().max_shape()[1])
 {
     _crop_param = std::make_shared<RocalCropParam>(_batch_size);
 }
@@ -44,18 +44,33 @@ void CropNode::create_node()
 
     _crop_param->create_array(_graph);
 
-    unsigned int chnShift = 0;
-    vx_scalar  chnToggle = vxCreateScalar(vxGetContext((vx_reference)_graph->get()),VX_TYPE_UINT32,&chnShift);
-    bool packed;
-    if(_inputs[0]->info().color_format() != RocalColorFormat::RGB_PLANAR)
-    {
-        packed = true;
-    }
-    vx_scalar is_packed = vxCreateScalar(vxGetContext((vx_reference)_graph->get()),VX_TYPE_BOOL,&packed);
-    vx_scalar layout = vxCreateScalar(vxGetContext((vx_reference)_graph->get()),VX_TYPE_UINT32,&_layout);
-    vx_scalar roi_type = vxCreateScalar(vxGetContext((vx_reference)_graph->get()),VX_TYPE_UINT32,&_roi_type);
-    _node = vxExtrppNode_Crop(_graph->get(), _inputs[0]->handle(),_src_tensor_roi,_outputs[0]->handle(),_src_tensor_roi,_crop_param->cropw_arr, _crop_param->croph_arr, _crop_param->x1_arr, _crop_param->y1_arr,is_packed, chnToggle,layout, roi_type, _batch_size);
+    int input_layout = (int)_inputs[0]->info().layout();
+    int output_layout = (int)_outputs[0]->info().layout();
+    int roi_type = (int)_inputs[0]->info().roi_type();
+    vx_scalar in_layout_vx = vxCreateScalar(vxGetContext((vx_reference)_graph->get()), VX_TYPE_INT32, &input_layout);
+    vx_scalar out_layout_vx = vxCreateScalar(vxGetContext((vx_reference)_graph->get()), VX_TYPE_INT32, &output_layout);
+    vx_scalar roi_type_vx = vxCreateScalar(vxGetContext((vx_reference)_graph->get()), VX_TYPE_INT32, &roi_type);
+
+    // Create vx_tensor for the crop coordinates
+    vx_size num_of_dims = 2;
+    vx_size stride[num_of_dims];
+    std::vector<size_t> crop_tensor_dims = {_batch_size, 4};
+    stride[0] = sizeof(vx_uint32);
+    stride[1] = stride[0] * crop_tensor_dims[0];
+    vx_enum mem_type = VX_MEMORY_TYPE_HOST;
+    if (_inputs[0]->info().mem_type() == RocalMemType::HIP)
+        mem_type = VX_MEMORY_TYPE_HIP;
+    allocate_host_or_pinned_mem(&_crop_coordinates, stride[1] * 4, _inputs[0]->info().mem_type());
+    
+    _crop_tensor = vxCreateTensorFromHandle(vxGetContext((vx_reference) _graph->get()), num_of_dims, crop_tensor_dims.data(), VX_TYPE_UINT32, 0, 
+                                                                  stride, (void *)_crop_coordinates, mem_type);
     vx_status status;
+    if ((status = vxGetStatus((vx_reference)_crop_tensor)) != VX_SUCCESS)
+        THROW("Error: vxCreateTensorFromHandle(crop_tensor: failed " + TOSTR(status))
+    
+    _node = vxExtrppNode_Crop(_graph->get(), _inputs[0]->handle(), _crop_tensor, _outputs[0]->handle(),
+                              in_layout_vx, out_layout_vx, roi_type_vx);
+    
     if((status = vxGetStatus((vx_reference)_node)) != VX_SUCCESS)
         THROW("Error adding the crop tensor (vxExtrppNode_Crop) failed: "+TOSTR(status))
 }
@@ -67,9 +82,20 @@ void CropNode::update_node()
     std::vector<uint32_t> crop_h_dims, crop_w_dims;
     _crop_param->get_crop_dimensions(crop_w_dims, crop_h_dims);
     _outputs[0]->update_tensor_roi(crop_w_dims, crop_h_dims);
+    
+    // Obtain the crop coordinates and update the roi
+    auto x1 = _crop_param->get_x1_arr_val();
+    auto y1 = _crop_param->get_y1_arr_val();
+    RocalROI *src_roi = (RocalROI *)_crop_coordinates;
+    for(unsigned i = 0; i < _batch_size; i++) {
+        src_roi[i].x1 = x1[i];
+        src_roi[i].y1 = y1[i];
+        src_roi[i].x2 = crop_w_dims[i];
+        src_roi[i].y2 = crop_h_dims[i];
+    }
 }
 
-void CropNode::init(unsigned int crop_h, unsigned int crop_w, float x_drift_, float y_drift_, int layout)
+void CropNode::init(unsigned int crop_h, unsigned int crop_w, float x_drift_, float y_drift_)
 {
     _crop_param->crop_w = crop_w;
     _crop_param->crop_h = crop_h;
@@ -79,26 +105,35 @@ void CropNode::init(unsigned int crop_h, unsigned int crop_w, float x_drift_, fl
     FloatParam *y_drift  = ParameterFactory::instance()->create_single_value_float_param(y_drift_);
     _crop_param->set_x_drift_factor(core(x_drift));
     _crop_param->set_y_drift_factor(core(y_drift));
-    _layout=layout;
-    // _layout = (unsigned) _outputs[0]->layout();
 }
 
-void CropNode::init(unsigned int crop_h, unsigned int crop_w, int layout)
+void CropNode::init(unsigned int crop_h, unsigned int crop_w)
 {
     _crop_param->crop_w = crop_w;
     _crop_param->crop_h = crop_h;
     _crop_param->x1 = 0; 
     _crop_param->y1 = 0;
-    _crop_param->set_center();
-    _layout = layout;
+    _crop_param->set_fixed_crop(0.5, 0.5);    // for center_crop
 }
 
-void CropNode::init(FloatParam *crop_h_factor, FloatParam  *crop_w_factor, FloatParam *x_drift, FloatParam *y_drift, int layout)
+void CropNode::init(FloatParam *crop_h_factor, FloatParam  *crop_w_factor, FloatParam *x_drift, FloatParam *y_drift)
 {
     _crop_param->set_x_drift_factor(core(x_drift));
     _crop_param->set_y_drift_factor(core(y_drift));
     _crop_param->set_crop_height_factor(core(crop_h_factor));
     _crop_param->set_crop_width_factor(core(crop_w_factor));
     _crop_param->set_random();
-    _layout = layout;
+}
+
+CropNode::~CropNode() {
+    if (_inputs[0]->info().mem_type() == RocalMemType::HIP) {
+#if ENABLE_HIP
+        hipError_t err = hipFree(_crop_coordinates);
+        if(err != hipSuccess)
+            std::cerr << "\n[ERR] hipFree failed  " << std::to_string(err) << "\n";
+#endif
+    } else {
+        free(_crop_coordinates);
+    }
+    vxReleaseTensor(&_crop_tensor);
 }
