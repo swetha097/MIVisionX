@@ -32,13 +32,13 @@ THE SOFTWARE.
 
 typedef struct BoundingBoxCord_
 {
-  float l; float t; float r; float b;
+  double l; double t; double r; double b;
   BoundingBoxCord_() {}
-  BoundingBoxCord_(float l_, float t_, float r_, float b_): l(l_), t(t_), r(r_), b(b_) {}   // constructor
+  BoundingBoxCord_(double l_, double t_, double r_, double b_): l(l_), t(t_), r(r_), b(b_) {}   // constructor
   BoundingBoxCord_(const BoundingBoxCord_& cord) : l(cord.l), t(cord.t), r(cord.r), b(cord.b) {}  //copy constructor
 } BoundingBoxCord;
 
-typedef  struct { float xc; float yc; float w; float h; } BoundingBoxCord_xcycwh;
+typedef  struct { double xc; double yc; double w; double h; } BoundingBoxCord_xcycwh;
 typedef  std::vector<BoundingBoxCord> BoundingBoxCords;
 typedef  std::vector<BoundingBoxCord_xcycwh> BoundingBoxCords_xcycwh;
 typedef  std::vector<int> BoundingBoxLabels;
@@ -353,7 +353,7 @@ struct BoundingBoxBatch: public MetaDataBatch
         if(buffer.size() < buffer_size)
             THROW("The buffers are insufficient") // TODO -change
         int *labels_buffer = (int *)buffer[0];
-        float *bbox_buffer = (float *)buffer[1];
+        double *bbox_buffer = (double *)buffer[1];
         auto bb_labels_dims = _metadata_dimensions.bb_labels_dims();
         auto bb_coords_dims = _metadata_dimensions.bb_cords_dims();
         if(is_segmentation)
@@ -398,7 +398,7 @@ struct BoundingBoxBatch: public MetaDataBatch
     std::vector<size_t>& get_buffer_size(bool is_segmentation, bool is_box_iou_matcher) override
     {
         _buffer_size.emplace_back(_total_objects_count * sizeof(int));
-        _buffer_size.emplace_back(_total_objects_count * 4 * sizeof(float));
+        _buffer_size.emplace_back(_total_objects_count * 4 * sizeof(double));
         if(is_box_iou_matcher)
             _buffer_size.emplace_back(_bb_cords.size() * ANCHOR_SIZE * sizeof(int));
         if(is_segmentation)

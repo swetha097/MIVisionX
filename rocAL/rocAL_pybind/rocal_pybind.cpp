@@ -399,16 +399,16 @@ namespace rocal
     {
             rocalTensorList *boxes = rocalGetBoundingBoxCords(context);
             py::list boxes_list;
-            py::array_t<float> boxes_array;
+            py::array_t<double> boxes_array;
             for (int i = 0; i < boxes->size(); i++) {
-                float *box_buffer = (float *)(boxes->at(i)->buffer());
+                double *box_buffer = (double *)(boxes->at(i)->buffer());
                 boxes_array = py::array(py::buffer_info(
-                            (float *)(boxes->at(i)->buffer()),
-                            sizeof(float),
-                            py::format_descriptor<float>::format(),
+                            (double *)(boxes->at(i)->buffer()),
+                            sizeof(double),
+                            py::format_descriptor<double>::format(),
                             1,
                             { boxes->at(i)->info().dims().at(0) * 4},
-                            {sizeof(float) }));
+                            {sizeof(double) }));
                 boxes_list.append(boxes_array);
             }
             return boxes_list;

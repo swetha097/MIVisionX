@@ -72,15 +72,15 @@ void BoundingBoxGraph::update_meta_data(MetaDataBatch *input_meta_data, decoded_
 
 //update_meta_data is not required since the bbox are normalized in the very beggining -> removed the call in master graph also except for MaskRCNN
 
-inline float ssd_BBoxIntersectionOverUnion(const BoundingBoxCord &box1, const float &box1_area, const BoundingBoxCord &box2)
+inline double ssd_BBoxIntersectionOverUnion(const BoundingBoxCord &box1, const double &box1_area, const BoundingBoxCord &box2)
 {
-    float xA = std::max(box1.l, box2.l);
-    float yA = std::max(box1.t, box2.t);
-    float xB = std::min(box1.r, box2.r);
-    float yB = std::min(box1.b, box2.b);
-    float intersection_area = std::max((float)0.0, xB - xA) * std::max((float)0.0, yB - yA);
-    float box2_area = (box2.b - box2.t) * (box2.r - box2.l);
-    return (float) (intersection_area / (box1_area + box2_area - intersection_area));
+    double xA = std::max(box1.l, box2.l);
+    double yA = std::max(box1.t, box2.t);
+    double xB = std::min(box1.r, box2.r);
+    double yB = std::min(box1.b, box2.b);
+    double intersection_area = std::max((double)0.0, xB - xA) * std::max((double)0.0, yB - yA);
+    double box2_area = (box2.b - box2.t) * (box2.r - box2.l);
+    return (double) (intersection_area / (box1_area + box2_area - intersection_area));
 }
 
 void BoundingBoxGraph::update_random_bbox_meta_data(MetaDataBatch *input_meta_data, decoded_image_info decode_image_info, crop_image_info crop_image_info)
@@ -138,9 +138,9 @@ void BoundingBoxGraph::update_random_bbox_meta_data(MetaDataBatch *input_meta_da
     }
 }
 
-inline void calculate_ious(std::vector<std::vector<float>> &ious, BoundingBoxCord &box, BoundingBoxCord *anchors, unsigned int num_anchors, int bb_idx)
+inline void calculate_ious(std::vector<std::vector<double>> &ious, BoundingBoxCord &box, BoundingBoxCord *anchors, unsigned int num_anchors, int bb_idx)
 {
-    float box_area = (box.b - box.t) * (box.r - box.l);
+    double box_area = (box.b - box.t) * (box.r - box.l);
     for (unsigned int anchor_idx = 0; anchor_idx < num_anchors; anchor_idx++)
         ious[bb_idx][anchor_idx] = ssd_BBoxIntersectionOverUnion(box, box_area, anchors[anchor_idx]);
 }
@@ -277,28 +277,29 @@ void BoundingBoxGraph::update_box_encoder_meta_data(std::vector<float> *anchors,
     }
 }
 
-void BoundingBoxGraph::update_box_iou_matcher(std::vector<float> *anchors, pMetaDataBatch full_batch_meta_data ,float criteria, float high_threshold, float low_threshold, bool allow_low_quality_matches)
+void BoundingBoxGraph::update_box_iou_matcher(std::vector<double> *anchors, pMetaDataBatch full_batch_meta_data ,float criteria, float high_threshold, float low_threshold, bool allow_low_quality_matches)
 {
-    #pragma omp parallel for
+#pragma omp parallel for
     for (int i = 0; i < full_batch_meta_data->size(); i++)
     {
+
         BoundingBoxCord *bbox_anchors = reinterpret_cast<BoundingBoxCord *>(anchors->data());
         auto bb_count = full_batch_meta_data->get_bb_labels_batch()[i].size();
         BoundingBoxCord bb_coords[bb_count];
         unsigned anchors_size = anchors->size() / 4; // divide the anchors_size by 4 to get the total number of anchors
         memcpy(bb_coords, full_batch_meta_data->get_bb_cords_batch()[i].data(), full_batch_meta_data->get_bb_cords_batch()[i].size() * sizeof(BoundingBoxCord));
         //Calculate Ious
-        //ious size - bboxes count x anchors count        
-        std::vector<std::vector<float>> iou_matrix(bb_count, std::vector<float> (anchors_size, 0));
+        //ious size - bboxes count x anchors count
+        std::vector<std::vector<double>> iou_matrix(bb_count, std::vector<double> (anchors_size, 0));
 
         for(uint bb_idx = 0; bb_idx < bb_count; bb_idx++)
             calculate_ious(iou_matrix, bb_coords[bb_idx], bbox_anchors, anchors_size, bb_idx);        
             
-        std::vector<float> matched_vals;
+        std::vector<double> matched_vals;
         Matches matches, all_matches;
         //for each prediction, find gt
         for(uint row = 0; row < iou_matrix[0].size(); row++) {
-            float max_col = iou_matrix[0][row];
+            double max_col = iou_matrix[0][row];
             int max_col_index = 0;
             for(uint col = 0; col < iou_matrix.size(); col++) {
                 if(iou_matrix[col][row] > max_col) {
@@ -313,16 +314,17 @@ void BoundingBoxGraph::update_box_iou_matcher(std::vector<float> *anchors, pMeta
         all_matches = matches;
 
         for(uint idx = 0; idx < matches.size(); idx++){
-            if(matched_vals[idx] < low_threshold) matches[idx] = -1;
-            if((matched_vals[idx] >= low_threshold) && (matched_vals[idx] < high_threshold)) matches[idx] = -2;
+            if(matched_vals[idx] < 0.4) {matches[idx] = -1;
+            }
+            else if ((matched_vals[idx] < 0.5)) matches[idx] = -2;
         }
 
         if(allow_low_quality_matches) {
-            std::vector<float> highest_foreground;
+            std::vector<double> highest_foreground;
             std::vector<uint>  preds;
             //for each gt, find max prediction - for each row f
             for(uint index = 0; index < iou_matrix.size(); index++) {
-                float max_row = *std::max_element(iou_matrix[index].begin(), iou_matrix[index].end());
+                double max_row = *std::max_element(iou_matrix[index].begin(), iou_matrix[index].end());
                 highest_foreground.push_back(max_row);
             }
             for(uint row = 0; row < iou_matrix.size(); row++) {

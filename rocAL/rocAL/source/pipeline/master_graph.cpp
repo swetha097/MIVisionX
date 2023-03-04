@@ -577,7 +577,7 @@ void MasterGraph::output_routine()
             if(_is_box_iou_matcher)
             {
                 //TODO - to add call for hip kernel.
-                _meta_data_graph->update_box_iou_matcher(&_anchors, full_batch_meta_data, _criteria, _high_threshold, _low_threshold, _allow_low_quality_matches);
+                _meta_data_graph->update_box_iou_matcher(&_anchors_double, full_batch_meta_data, _criteria, _high_threshold, _low_threshold, _allow_low_quality_matches);
             }
             _bencode_time.end();
             _ring_buffer.set_meta_data(full_batch_image_names, full_batch_meta_data, _is_segmentation, _is_box_iou_matcher);
@@ -734,7 +734,7 @@ std::vector<rocalTensorList *> MasterGraph::create_video_label_reader(const char
     return _metadata_output_tensor_list;
 }
 
-std::vector<rocalTensorList *> MasterGraph::create_coco_meta_data_reader(const char *source_path, bool is_output, bool mask, MetaDataReaderType reader_type, MetaDataType label_type, bool is_box_encoder)
+std::vector<rocalTensorList *> MasterGraph::create_coco_meta_data_reader(const char *source_path, bool is_output, bool mask, MetaDataReaderType reader_type, MetaDataType label_type, bool is_box_encoder, bool is_box_iou_matcher)
 {
     if(_meta_data_reader)
         THROW("A metadata reader has already been created")
@@ -761,13 +761,14 @@ std::vector<rocalTensorList *> MasterGraph::create_coco_meta_data_reader(const c
     dims.at(1) = BBOX_COUNT;
     auto default_bbox_info  = rocalTensorInfo(dims,
                                         _mem_type,
-                                        RocalTensorDataType::FP32);
+                                        RocalTensorDataType::FP64);
     default_bbox_info.set_metadata();
-    _meta_data_buffer_size.emplace_back(dims.at(0) * dims.at(1)  * _user_batch_size * sizeof(vx_float32)); // TODO - replace with data size from info
+    _meta_data_buffer_size.emplace_back(dims.at(0) * dims.at(1)  * _user_batch_size * sizeof(vx_float64)); // TODO - replace with data size from info
     rocalTensorInfo default_mask_info, default_matches_info;
     //check if box coder - then add matched idxs meta data
-    if(_is_box_iou_matcher)
+    if(is_box_iou_matcher)
     {
+        _is_box_iou_matcher = true;
         num_of_dims = 1;
         dims.resize(num_of_dims);
         dims.at(0) = MAX_ANCHORS;
@@ -776,7 +777,7 @@ std::vector<rocalTensorList *> MasterGraph::create_coco_meta_data_reader(const c
                                         RocalTensorDataType::INT32);
         default_matches_info.set_metadata();
         default_matches_info.set_tensor_layout(RocalTensorlayout::NONE);
-        _meta_data_buffer_size.emplace_back(dims.at(0) * _user_batch_size * sizeof(vx_int32)); // TODO - replace with data size from info
+        _meta_data_buffer_size.emplace_back(dims.at(0) * _user_batch_size * sizeof(vx_int32)); // TODO - replace with data size from info   // shobi check if this needs to be changed to double
     }
     if(mask)
     {
@@ -803,13 +804,13 @@ std::vector<rocalTensorList *> MasterGraph::create_coco_meta_data_reader(const c
             auto mask_info = default_mask_info;
             _mask_tensor_list.push_back(new rocalTensor(mask_info));
         }
-        if(_is_box_iou_matcher)
+        if(is_box_iou_matcher)
         {
             auto matches_info = default_matches_info;
             _matches_tensor_list.push_back(new rocalTensor(matches_info));
         }
     }
-    //std::cerr <<"\n Before init metadata in coco reader : " << _meta_data_buffer_size.size(); 
+    //std::cerr <<"\n Before init metadata in coco reader : " << _meta_data_buffer_size.size();
     _ring_buffer.init_metadata(RocalMemType::HOST, _meta_data_buffer_size, _meta_data_buffer_size.size());
     if(is_output)
     {
@@ -822,7 +823,7 @@ std::vector<rocalTensorList *> MasterGraph::create_coco_meta_data_reader(const c
     _metadata_output_tensor_list.emplace_back(&_bbox_tensor_list);
     if(mask)
         _metadata_output_tensor_list.emplace_back(&_mask_tensor_list);
-    if(_is_box_iou_matcher)
+    if(is_box_iou_matcher)
         _metadata_output_tensor_list.emplace_back(&_matches_tensor_list);
 
     return _metadata_output_tensor_list;
@@ -1039,14 +1040,19 @@ void MasterGraph::box_encoder(std::vector<float> &anchors, float criteria, const
 
 void MasterGraph::box_iou_matcher(std::vector<float> &anchors, float criteria, float high_threshold, float low_threshold, bool allow_low_quality_matches)
 {
-    _is_box_iou_matcher = true;
+    if (!_is_box_iou_matcher)
+        THROW("Box IOU matcher variable not set cannot return matched idx")
     _num_anchors = anchors.size() / 4;
-    std::cerr << "\n num anchors : " << _num_anchors << std::endl;
  
 #if ENABLE_HIP
     //do nothing for now - have to add gpu kernels
 #endif
     _anchors = anchors;
+    _anchors_double.resize(anchors.size());
+    for(unsigned b = 0; b < anchors.size(); b++) {
+        _anchors_double[b] = static_cast<double>(anchors.data()[b]);
+    }
+
     _high_threshold = high_threshold;
     _low_threshold = low_threshold;
     _allow_low_quality_matches = allow_low_quality_matches;

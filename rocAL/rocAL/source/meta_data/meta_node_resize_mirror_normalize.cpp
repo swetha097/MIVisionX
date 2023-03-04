@@ -51,18 +51,18 @@ void ResizeMirrorNormalizeMetaNode::update_parameters(MetaDataBatch *input_meta_
         BoundingBoxCords bb_coords;
         BoundingBoxLabels bb_labels;
         for (uint j = 0; j < bb_count; j++)
-        {            
+        {
             /*if(_mirror_val[i] == 1)
             {
                 float one_by_width_coeff = 1 / float(dst_roi[i].x2);
                 float l = 1 - coords_buf[j].r - one_by_width_coeff;
                 coords_buf[j].r = 1 - coords_buf[j].l - one_by_width_coeff;
-                coords_buf[j].l = l; 
+                coords_buf[j].l = l;
             }*/
             if (_mirror_val[i] == 1)
             {
 
-                float l = 1 - coords_buf[j].r;
+                double l = 1 - coords_buf[j].r;
                 coords_buf[j].r = 1 - coords_buf[j].l;
                 coords_buf[j].l = l;
             }
