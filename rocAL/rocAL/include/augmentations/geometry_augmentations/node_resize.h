@@ -39,7 +39,6 @@ protected:
     void update_node() override;
 private:
     vx_array  _dst_roi_width , _dst_roi_height;
-    unsigned _layout, _roi_type;
     int _interpolation_type;
     RocalResizeScalingMode _scaling_mode;
     unsigned _src_width, _src_height, _dst_width, _dst_height, _out_width, _out_height;

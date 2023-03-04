@@ -310,23 +310,19 @@ ROCAL_API_CALL rocalResizeMirrorNormalize(RocalContext p_context,
             }
         }
 
-        int layout=0;
         RocalTensorlayout op_tensorLayout = (RocalTensorlayout)rocal_tensor_output_layout;
         RocalTensorDataType op_tensorDataType = (RocalTensorDataType)rocal_tensor_output_datatype;
         rocalTensorInfo output_info = input->info();
         output_info.set_tensor_layout(op_tensorLayout);
         output_info.set_data_type(op_tensorDataType);
-
         std::vector<size_t> out_dims = output_info.dims();
         if(op_tensorLayout == RocalTensorlayout::NHWC)
         {
             out_dims[1] = max_out_height;
             out_dims[2] = max_out_width;
-            out_dims[3] = 3;
         }
         else if(op_tensorLayout == RocalTensorlayout::NCHW)
         {
-            out_dims[1] = 3;
             out_dims[2] = max_out_height;
             out_dims[3] = max_out_width;
         }
@@ -344,7 +340,7 @@ ROCAL_API_CALL rocalResizeMirrorNormalize(RocalContext p_context,
         output = context->master_graph->create_tensor(output_info, is_output);
         output->reset_tensor_roi();
         std::shared_ptr<ResizeMirrorNormalizeNode> rmn_node = context->master_graph->add_node<ResizeMirrorNormalizeNode>({input}, {output});
-        rmn_node->init( out_width, out_height, resize_scaling_mode, maximum_size, interpolation_type, mean,std_dev , mirror, layout);
+        rmn_node->init(out_width, out_height, resize_scaling_mode, maximum_size, interpolation_type, mean, std_dev, mirror);
         if (context->master_graph->meta_data_graph())
             context->master_graph->meta_add_node<ResizeMirrorNormalizeMetaNode,ResizeMirrorNormalizeNode>(rmn_node);
     }
