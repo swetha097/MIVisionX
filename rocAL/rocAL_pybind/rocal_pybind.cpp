@@ -97,16 +97,17 @@ namespace rocal
         m.def("rocalRelease", &rocalRelease);
         // rocal_api_types.h
         py::class_<TimingInfo>(m, "TimingInfo")
-            .def_readwrite("load_time", &TimingInfo::load_time)
-            .def_readwrite("decode_time", &TimingInfo::decode_time)
-            .def_readwrite("process_time", &TimingInfo::process_time)
-            .def_readwrite("transfer_time", &TimingInfo::transfer_time);
+            .def_readwrite("load_time",&TimingInfo::load_time)
+            .def_readwrite("decode_time",&TimingInfo::decode_time)
+            .def_readwrite("process_time",&TimingInfo::process_time)
+            .def_readwrite("transfer_time",&TimingInfo::transfer_time)
+            .def_readwrite("output_routine_time",&TimingInfo::output_routine_time);
         py::class_<rocalTensor>(m, "rocalTensor")
                 .def(
                 "batch_height",
                 [](rocalTensor &output_tensor)
                 {
-                    return output_tensor.info().max_dims().at(1);
+                    return output_tensor.info().max_shape().at(1);
                 },
                 R"code(
                 Returns a tensor buffer's height.
@@ -116,7 +117,7 @@ namespace rocal
                 "batch_width",
                 [](rocalTensor &output_tensor)
                 {
-                    return output_tensor.info().max_dims().at(0);
+                    return output_tensor.info().max_shape().at(0);
                 },
                 R"code(
                 Returns a tensor buffer's width.
@@ -156,8 +157,8 @@ namespace rocal
                 "at",
                 [](rocalTensor &output_tensor, uint idx)
                 {
-                    uint h = output_tensor.info().max_dims().at(1);
-                    uint w = output_tensor.info().max_dims().at(0);
+                    uint h = output_tensor.info().max_shape().at(1);
+                    uint w = output_tensor.info().max_shape().at(0);
 
                     if (output_tensor.info().layout() == RocalTensorlayout::NHWC)
                     {
@@ -205,8 +206,8 @@ namespace rocal
             .def("at",
                 [](rocalTensorList &output_tensor_list, uint idx)
                 {
-                    uint h = output_tensor_list.at(idx)->info().max_dims().at(1);
-                    uint w = output_tensor_list.at(idx)->info().max_dims().at(0);
+                    uint h = output_tensor_list.at(idx)->info().max_shape().at(1);
+                    uint w = output_tensor_list.at(idx)->info().max_shape().at(0);
 
                     if (output_tensor_list.at(idx)->info().layout() == RocalTensorlayout::NHWC)
                     {
@@ -307,6 +308,7 @@ namespace rocal
         m.def("getStatus", rocalGetStatus);
         m.def("rocalGetErrorMessage", &rocalGetErrorMessage);
         m.def("rocalGetTimingInfo", &rocalGetTimingInfo);
+        m.def("getTimingInfo", &rocalGetTimingInfo);
         m.def("setOutputImages", &rocalSetOutputs);
         m.def("labelReader", &rocalCreateLabelReader, py::return_value_policy::reference);
         m.def("COCOReader", &rocalCreateCOCOReader, py::return_value_policy::reference);
@@ -506,12 +508,7 @@ namespace rocal
         m.def("rocalResetLoaders", &rocalResetLoaders);
         // rocal_api_augmentation.h
         m.def("Brightness", &rocalBrightness,
-              py::return_value_policy::reference,
-              py::arg("context"),
-              py::arg("input"),
-              py::arg("is_output"),
-              py::arg("alpha") = NULL,
-              py::arg("beta") = NULL);
+              py::return_value_policy::reference);
         m.def("CropMirrorNormalize",&rocalCropMirrorNormalize, py::return_value_policy::reference);
         m.def("ResizeMirrorNormalize",&rocalResizeMirrorNormalize, py::return_value_policy::reference);
         // m.def("Crop", &rocalCrop, py::return_value_policy::reference);

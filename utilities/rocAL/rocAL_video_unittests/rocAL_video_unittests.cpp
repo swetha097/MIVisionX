@@ -264,14 +264,14 @@ int main(int argc, const char **argv)
         counter += input_batch_size;
         if (save_frames)
         {
-            std::string batch_path = "output_frames/" + std::to_string(count);
+            std::string batch_path = "output_images/" + std::to_string(count);
             int status = mkdir(batch_path.c_str(), S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
             if (status) continue;
             for(unsigned idx = 0; idx < output_tensor_list->size(); idx++)
             {
                 RocalTensor output_tensor = output_tensor_list->at(idx);
-                int h = output_tensor->info().max_dims().at(1);
-                int w = output_tensor->info().max_dims().at(0);
+                int h = output_tensor->info().max_shape().at(1);
+                int w = output_tensor->info().max_shape().at(0);
                 int frames = output_tensor->info().dims().at(1);
                 if(output_tensor->info().num_of_dims() < 5)
                     THROW("Number of dims in Video tensor is lesser than 5")
@@ -283,7 +283,7 @@ int main(int argc, const char **argv)
                 if(output_tensor_list->at(idx)->info().mem_type() == RocalMemType::HIP)
                 {
                     out_tensor_buffer = (unsigned char *)malloc(output_tensor_list->at(idx)->info().data_size());
-                    output_tensor_list->at(idx)->copy_data(out_tensor_buffer, false);
+                    output_tensor_list->at(idx)->copy_data(out_tensor_buffer);
                 }
                 else if(output_tensor_list->at(idx)->info().mem_type() == RocalMemType::HOST)
                     out_tensor_buffer = (unsigned char *)(output_tensor_list->at(idx)->buffer());

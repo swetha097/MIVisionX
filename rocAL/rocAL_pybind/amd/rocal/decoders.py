@@ -32,8 +32,8 @@ def image(*inputs, user_feature_key_map = None, path='', file_root ='', annotati
             "shuffle": random_shuffle,
             "loop": False,
             "decode_size_policy": types.USER_GIVEN_SIZE,
-            "max_width": 2000,
-            "max_height":2000,
+            "max_width": 1000,
+            "max_height":1000,
             "dec_type":types.DECODER_TJPEG
             }
         decoded_image = b.ImageDecoderShard(Pipeline._current_pipeline._handle ,*(kwargs_pybind.values()))
@@ -42,7 +42,7 @@ def image(*inputs, user_feature_key_map = None, path='', file_root ='', annotati
 
 
 def image_random_crop(*inputs, user_feature_key_map=None, path='', file_root='', annotations_file='', num_shards=1, shard_id=0, random_shuffle=False, affine=True, bytes_per_sample_hint=0, device_memory_padding=16777216, host_memory_padding=8388608, hybrid_huffman_threshold=1000000,
-                      output_type=types.RGB, preserve=False, seed=1, split_stages=False, use_chunk_allocator=False, use_fast_idct=False, random_aspect_ratio=[0.8, 1.25], random_area=[0.08, 1.0], num_attempts=100, device=None):
+                      output_type=types.RGB, preserve=False, seed=1, split_stages=False, use_chunk_allocator=False, use_fast_idct=False, random_aspect_ratio=[0.75, 1.3333], random_area=[0.08, 1.0], num_attempts=100, device=None):
 
     reader = Pipeline._current_pipeline._reader
     # Internally calls the C++ Partial decoder's
@@ -90,7 +90,7 @@ def image_slice(*inputs,file_root='',path='',annotations_file='',shard_id = 0, n
                 device_memory_padding_jpeg2k = 0, host_memory_padding = 8388608,
                 host_memory_padding_jpeg2k = 0, hybrid_huffman_threshold = 1000000,
                  memory_stats = False, normalized_anchor = True, normalized_shape = True, output_type = types.RGB,
-                preserve = False, seed = 1, split_stages = False, use_chunk_allocator = False, use_fast_idct = False, random_aspect_ratio=[0.8, 1.25], random_area=[0.08, 1.0], num_attempts=100, device = None):
+                preserve = False, seed = 1, split_stages = False, use_chunk_allocator = False, use_fast_idct = False, random_aspect_ratio=[0.75, 1.333], random_area=[0.08, 1.0], num_attempts=100, device = None):
 
     reader = Pipeline._current_pipeline._reader
     b.setSeed(seed)

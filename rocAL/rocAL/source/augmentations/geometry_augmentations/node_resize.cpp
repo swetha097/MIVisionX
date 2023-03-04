@@ -32,8 +32,8 @@ void ResizeNode::create_node()
 {
     if(_node)
         return;
-    std::vector<uint32_t> dst_roi_width(_batch_size,_outputs[0]->info().max_dims()[0]);
-    std::vector<uint32_t> dst_roi_height(_batch_size, _outputs[0]->info().max_dims()[1]);
+    std::vector<uint32_t> dst_roi_width(_batch_size,_outputs[0]->info().max_shape()[0]);
+    std::vector<uint32_t> dst_roi_height(_batch_size, _outputs[0]->info().max_shape()[1]);
 
     _dst_roi_width = vxCreateArray(vxGetContext((vx_reference)_graph->get()), VX_TYPE_UINT32, _batch_size);
     _dst_roi_height = vxCreateArray(vxGetContext((vx_reference)_graph->get()), VX_TYPE_UINT32, _batch_size);
@@ -44,18 +44,16 @@ void ResizeNode::create_node()
     height_status = vxAddArrayItems(_dst_roi_height, _batch_size, dst_roi_height.data(), sizeof(vx_uint32));
     if(width_status != 0 || height_status != 0)
         THROW(" vxAddArrayItems failed in the resize (vxExtrppNode_ResizebatchPD) node: "+ TOSTR(width_status) + "  "+ TOSTR(height_status));
-    bool packed;
-    vx_scalar interpolation = vxCreateScalar(vxGetContext((vx_reference)_graph->get()),VX_TYPE_UINT32,&_interpolation_type);
 
-    unsigned int chnShift = 0;
-    vx_scalar  chnToggle = vxCreateScalar(vxGetContext((vx_reference)_graph->get()),VX_TYPE_UINT32,&chnShift);
-    vx_scalar is_packed = vxCreateScalar(vxGetContext((vx_reference)_graph->get()),VX_TYPE_BOOL,&packed);
-
-    vx_scalar layout = vxCreateScalar(vxGetContext((vx_reference)_graph->get()),VX_TYPE_UINT32,&_layout);
-    vx_scalar roi_type = vxCreateScalar(vxGetContext((vx_reference)_graph->get()),VX_TYPE_UINT32,&_roi_type);
-   _node = vxExtrppNode_Resize(_graph->get(), _inputs[0]->handle(),
-                                                   _src_tensor_roi, _outputs[0]->handle(), _dst_tensor_roi, _dst_roi_width, _dst_roi_height, interpolation,
-                                                 is_packed, chnToggle,layout, roi_type, _batch_size);
+    int input_layout = (int)_inputs[0]->info().layout();
+    int output_layout = (int)_outputs[0]->info().layout();
+    int roi_type = (int)_inputs[0]->info().roi_type();
+    vx_scalar in_layout_vx = vxCreateScalar(vxGetContext((vx_reference)_graph->get()), VX_TYPE_INT32, &input_layout);
+    vx_scalar out_layout_vx = vxCreateScalar(vxGetContext((vx_reference)_graph->get()), VX_TYPE_INT32, &output_layout);
+    vx_scalar roi_type_vx = vxCreateScalar(vxGetContext((vx_reference)_graph->get()), VX_TYPE_INT32, &roi_type);
+    vx_scalar interpolation_vx = vxCreateScalar(vxGetContext((vx_reference)_graph->get()),VX_TYPE_INT32,&_interpolation_type);
+   _node = vxExtrppNode_Resize(_graph->get(), _inputs[0]->handle(), _src_tensor_roi_, _outputs[0]->handle(), _dst_roi_width, 
+                               _dst_roi_height, interpolation_vx, in_layout_vx , out_layout_vx, roi_type_vx, _batch_size);
 
     vx_status status;
     if((status = vxGetStatus((vx_reference)_node)) != VX_SUCCESS)
@@ -63,15 +61,18 @@ void ResizeNode::create_node()
 }
 
 void ResizeNode::update_node() {
-    std::shared_ptr<std::vector<RocalROI>> src_roi = _inputs[0]->info().get_roi();
+    std::vector<uint32_t> orig_h_dims, orig_w_dims;
+    // Using original width and height instead of the decoded width and height for computing resize dimensions
+    orig_w_dims = _inputs[0]->info().get_orig_roi_width_vec();
+    orig_h_dims = _inputs[0]->info().get_orig_roi_height_vec();
     for (unsigned i = 0; i < _batch_size; i++) {
-        _src_width = src_roi->at(i).x2;
-        _src_height = src_roi->at(i).y2;
+        _src_width = orig_w_dims[i];
+        _src_height = orig_h_dims[i];
         _dst_width = _out_width;
         _dst_height = _out_height;
         adjust_out_roi_size();
-        _dst_width = std::min(_dst_width, (unsigned)_outputs[0]->info().max_dims()[0]);
-        _dst_height = std::min(_dst_height, (unsigned)_outputs[0]->info().max_dims()[1]);
+        _dst_width = std::min(_dst_width, (unsigned)_outputs[0]->info().max_shape()[0]);
+        _dst_height = std::min(_dst_height, (unsigned)_outputs[0]->info().max_shape()[1]);
         _dst_roi_width_vec.push_back(_dst_width);
         _dst_roi_height_vec.push_back(_dst_height);
     }
@@ -86,7 +87,7 @@ void ResizeNode::update_node() {
 }
 
 void ResizeNode::init(unsigned dest_width, unsigned dest_height, RocalResizeScalingMode scaling_mode,
-                      std::vector<unsigned> max_size, RocalResizeInterpolationType interpolation_type, int layout)
+                      std::vector<unsigned> max_size, RocalResizeInterpolationType interpolation_type)
 {
     _interpolation_type = (int)interpolation_type;
     _scaling_mode = scaling_mode;
@@ -96,8 +97,6 @@ void ResizeNode::init(unsigned dest_width, unsigned dest_height, RocalResizeScal
         _max_width = max_size[0];
         _max_height = max_size[1];
     }
-  _layout=layout;
-    // _layout = (unsigned) _outputs[0]->layout();
 }
 
 void ResizeNode::adjust_out_roi_size() {
