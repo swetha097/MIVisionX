@@ -288,13 +288,14 @@ void BoundingBoxGraph::update_box_iou_matcher(std::vector<double> *anchors, pMet
         BoundingBoxCord bb_coords[bb_count];
         unsigned anchors_size = anchors->size() / 4; // divide the anchors_size by 4 to get the total number of anchors
         memcpy(bb_coords, full_batch_meta_data->get_bb_cords_batch()[i].data(), full_batch_meta_data->get_bb_cords_batch()[i].size() * sizeof(BoundingBoxCord));
+
         //Calculate Ious
         //ious size - bboxes count x anchors count
         std::vector<std::vector<double>> iou_matrix(bb_count, std::vector<double> (anchors_size, 0));
 
         for(uint bb_idx = 0; bb_idx < bb_count; bb_idx++)
-            calculate_ious(iou_matrix, bb_coords[bb_idx], bbox_anchors, anchors_size, bb_idx);        
-            
+            calculate_ious(iou_matrix, bb_coords[bb_idx], bbox_anchors, anchors_size, bb_idx);
+
         std::vector<double> matched_vals;
         Matches matches, all_matches;
         //for each prediction, find gt
@@ -311,17 +312,10 @@ void BoundingBoxGraph::update_box_iou_matcher(std::vector<double> *anchors, pMet
             matched_vals.push_back(max_col);
         }
 
-        all_matches = matches;
-
-        for(uint idx = 0; idx < matches.size(); idx++){
-            if(matched_vals[idx] < 0.4) {matches[idx] = -1;
-            }
-            else if ((matched_vals[idx] < 0.5)) matches[idx] = -2;
-        }
-
-        if(allow_low_quality_matches) {
+        std::vector<int> low_quality_preds(anchors_size, -1);
+        if(allow_low_quality_matches)
+        {
             std::vector<double> highest_foreground;
-            std::vector<uint>  preds;
             //for each gt, find max prediction - for each row f
             for(uint index = 0; index < iou_matrix.size(); index++) {
                 double max_row = *std::max_element(iou_matrix[index].begin(), iou_matrix[index].end());
@@ -330,23 +324,25 @@ void BoundingBoxGraph::update_box_iou_matcher(std::vector<double> *anchors, pMet
             for(uint row = 0; row < iou_matrix.size(); row++) {
                 for(uint col = 0; col < iou_matrix[row].size(); col++) {
                     // if the element is found
-                    //for(uint idx = 0; idx < highest_foreground.size(); idx++) {
-                        if(fabs(iou_matrix[row][col] - highest_foreground[row]) < 1e-6)
-                        {
-                            preds.push_back(col);
-                        }
-                    //}
+                    if(fabs(iou_matrix[row][col] - highest_foreground[row]) < 1e-6)
+                        low_quality_preds[col] = col;
                 }
             }
+        }
 
-            for(uint pred_idx = 0; pred_idx < preds.size(); pred_idx++)
-                matches[preds[pred_idx]] = all_matches[preds[pred_idx]];
+        for(uint pred_idx = 0; pred_idx < anchors_size; pred_idx++)
+        {
+            if(!(allow_low_quality_matches && low_quality_preds[pred_idx] != -1))
+            {
+                if(matched_vals[pred_idx] < 0.4) { matches[pred_idx] = -1; }
+                else if ((matched_vals[pred_idx] < 0.5)) { matches[pred_idx] = -2; }
+            }
         }
 
         full_batch_meta_data->get_matches_batch()[i] = matches;
         full_batch_meta_data->get_metadata_dimensions_batch().matches_dims()[i][0] = anchors_size;
 
         matches.clear();
-        all_matches.clear();
+        low_quality_preds.clear();
     }
 }
