@@ -121,8 +121,8 @@ vx_status get_kernels_to_publish()
     STATUS_ERROR_CHECK(ADD_KERNEL(CropMirrorNormalizePD_Register));
     STATUS_ERROR_CHECK(ADD_KERNEL(CropPD_Register));
     STATUS_ERROR_CHECK(ADD_KERNEL(ResizeCropMirrorPD_Register));
-    STATUS_ERROR_CHECK(ADD_KERNEL(Copy_Register));
-    STATUS_ERROR_CHECK(ADD_KERNEL(Nop_Register));
+    STATUS_ERROR_CHECK(ADD_KERNEL(CopybatchPD_Register));
+    STATUS_ERROR_CHECK(ADD_KERNEL(NopbatchPD_Register));
     STATUS_ERROR_CHECK(ADD_KERNEL(ResizeMirrorNormalizeTensor_Register));
     STATUS_ERROR_CHECK(ADD_KERNEL(SequenceRearrange_Register));
     STATUS_ERROR_CHECK(ADD_KERNEL(Resizetensor_Register));

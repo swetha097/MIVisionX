@@ -63,7 +63,7 @@ list(APPEND SOURCES
         source/ColorTemperaturebatchPD.cpp
         source/ColorTwistbatchPD.cpp
         source/ContrastbatchPD.cpp
-        source/copy.cpp
+        source/CopybatchPD.cpp
         source/CropMirrorNormalizePD.cpp
         source/CropPD.cpp
         source/CustomConvolutionbatchPD.cpp
@@ -100,7 +100,7 @@ list(APPEND SOURCES
         source/NoisebatchPD.cpp
         source/NonLinearFilterbatchPD.cpp
         source/NonMaxSupressionbatchPD.cpp
-        source/nop.cpp
+        source/NopbatchPD.cpp
         source/PhasebatchPD.cpp
         source/PixelatebatchPD.cpp
         source/RainbatchPD.cpp

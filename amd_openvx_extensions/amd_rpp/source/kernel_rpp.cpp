@@ -1817,7 +1817,7 @@ VX_API_ENTRY vx_node VX_API_CALL vxExtrppNode_ResizeMirrorNormalizeTensor(vx_gra
     return node;
 }
 
-VX_API_ENTRY vx_node VX_API_CALL vxExtrppNode_Copy(vx_graph graph, vx_image pSrc, vx_image pDst)
+VX_API_ENTRY vx_node VX_API_CALL vxExtrppNode_CopybatchPD(vx_graph graph, vx_image pSrc, vx_image pDst)
 {
     vx_node node = NULL;
     vx_context context = vxGetContext((vx_reference)graph);
@@ -1829,13 +1829,13 @@ VX_API_ENTRY vx_node VX_API_CALL vxExtrppNode_Copy(vx_graph graph, vx_image pSrc
             (vx_reference)pSrc,
             (vx_reference)pDst,
             (vx_reference)DEV_TYPE};
-        node = createNode(graph, VX_KERNEL_RPP_COPY, params, 3);
+        node = createNode(graph, VX_KERNEL_RPP_COPYBATCHPD, params, 3);
     }
     return node;
 }
 
 //Creating node for Pixelate effect
-VX_API_CALL vx_node VX_API_CALL vxExtrppNode_Nop(vx_graph graph, vx_image pSrc, vx_image pDst)
+VX_API_CALL vx_node VX_API_CALL vxExtrppNode_NopbatchPD(vx_graph graph, vx_image pSrc, vx_image pDst)
 {
     vx_node node = NULL;
     vx_context context = vxGetContext((vx_reference)graph);
@@ -1847,7 +1847,7 @@ VX_API_CALL vx_node VX_API_CALL vxExtrppNode_Nop(vx_graph graph, vx_image pSrc, 
             (vx_reference)pSrc,
             (vx_reference)pDst,
             (vx_reference)DEV_TYPE};
-        node = createNode(graph, VX_KERNEL_RPP_NOP, params, 3);
+        node = createNode(graph, VX_KERNEL_RPP_NOPBATCHPD, params, 3);
     }
     return node;
 }
