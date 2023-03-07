@@ -185,12 +185,12 @@ namespace rocal
                     // ptr = (output_tensor.info().get_roi().get());
                     // return py::memoryview::from_buffer( output_tensor.info().get_roi().get(), output_tensor.info().dims().at(0) * 2 );
                     return py::array(py::buffer_info(
-                            (unsigned int *)(output_tensor.info().get_roi()),
-                            sizeof(unsigned int),
-                            py::format_descriptor<unsigned int>::format(),
+                            (int *)(output_tensor.info().get_roi()),
+                            sizeof(int),
+                            py::format_descriptor< int>::format(),
                             1,
                             {output_tensor.info().dims().at(0) * 4},
-                            {sizeof(unsigned int) })); //Giving wrong outputs - TODO : DEBUG
+                            {sizeof(int) })); //Giving wrong outputs - TODO : DEBUG
                 },
                 R"code(
                 Returns a tensor ROI
