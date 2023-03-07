@@ -78,20 +78,16 @@ class RALIGenericIterator(object):
         torch.set_printoptions(threshold=10_000, profile="full", edgeitems=100)
         
         if(b.isEmpty(self.loader._handle)) and self.shard_size < 0:
-            print("Stop Iteration")
-            print("shard size", self.shard_size)
             if self.auto_reset:
                 self.reset()
             raise StopIteration
 
         if (self.loader.rocalRun() != 0 and self.shard_size < 0):
-            print("Stop Iteration")
             if self.auto_reset:
                 self.reset()
             raise StopIteration
 
         elif self.shard_size > 0 and self.batch_count == self.shard_size :
-            print("Stop Iteration")
             if self.auto_reset:
                 self.reset()
             raise StopIteration
@@ -101,25 +97,15 @@ class RALIGenericIterator(object):
 
         self.batch_count+=self.batch_size
         #From init
-
-        # print(self.output_tensor_list)
         self.num_of_dims = self.output_tensor_list[0].num_of_dims()
-        # print("Number of dims", self.num_of_dims)
         if self.num_of_dims == 4: # In the case of the Image data
             self.w = self.output_tensor_list[0].batch_width()
             self.h = self.output_tensor_list[0].batch_height()
             self.batch_size = self.output_tensor_list[0].batch_size()
-            # print("\n Batch Size",self.batch_size)
             self.color_format = self.output_tensor_list[0].color_format()
-            # print(self.color_format)
-            # print(self.batch_size * self.h * self.color_format * self.w)
-            #NHWC default for now
-            # if self.tensor_format == types.NHWC:
             self.output = torch.empty((self.batch_size, self.h, self.w, self.color_format,), dtype=torch.uint8)
             self.out = torch.permute(self.output, (0,3,1,2)) #NCHW expected by classification
 
-            #     self.out = torch.empty((self.batch_size, self.color_format, self.h, self.w, ), dtype=torch.uint8)
-            # next
             self.output_tensor_list[0].copy_data(ctypes.c_void_p(self.out.data_ptr()))
             self.labels = self.loader.rocalGetImageLabels()
             self.labels_tensor = torch.from_numpy(self.labels).type(torch.LongTensor)
@@ -135,8 +121,10 @@ class RALIGenericIterator(object):
             self.samples = self.output_tensor_list[0].batch_height() if self.samples is None else self.samples #Max Samples
             self.audio_length = self.channels * self.samples if self.audio_length is None else self.audio_length
             self.audio_length_roi = []
-            for i in range(self.batch_size):
-                self.audio_length_roi.append((self.output_tensor_list[0].get_roi_at(i)))
+            # for i in range(self.batch_size):
+            #     self.audio_length_roi.append((self.output_tensor_list[0].get_roi_at(i)))
+            # print("ROI appended :: ", self.audio_length_roi)
+            # print("ROI::",self.output_tensor_list[0].get_rois().reshape(self.batch_size,4)[...,0:2])
             if self.output is None:
                 self.output = torch.empty((self.batch_size, self.samples, self.channels,), dtype=torch.float32)
             
@@ -145,7 +133,7 @@ class RALIGenericIterator(object):
             self.labels = self.loader.rocalGetImageLabels()
             self.labels_tensor = torch.from_numpy(self.labels).type(torch.LongTensor)
             
-            return self.output, self.labels_tensor, torch.tensor(self.audio_length_roi)
+            return self.output, self.labels_tensor, torch.tensor(self.output_tensor_list[0].get_rois().reshape(self.batch_size,4)[...,0:2])
 
     def reset(self):
         self.batch_count = 0

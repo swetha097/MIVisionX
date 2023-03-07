@@ -189,7 +189,7 @@ namespace rocal
                             sizeof(unsigned int),
                             py::format_descriptor<unsigned int>::format(),
                             1,
-                            {output_tensor.info().dims().at(0) * 2},
+                            {output_tensor.info().dims().at(0) * 4},
                             {sizeof(unsigned int) })); //Giving wrong outputs - TODO : DEBUG
                 },
                 R"code(
