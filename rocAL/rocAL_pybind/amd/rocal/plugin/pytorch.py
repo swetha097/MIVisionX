@@ -79,6 +79,7 @@ class ROCALGenericIterator(object):
         self.reverse_channels = reverse_channels
         self.tensor_dtype = tensor_dtype
         self.len = b.getRemainingImages(self.loader._handle)
+        self.last_batch_padded_size = b.getLastBatchPaddedSize(self.loader._handle)
         self.last_batch_policy = self.loader._last_batch_policy
         self.shard_size = size
         self.auto_reset = auto_reset
@@ -90,17 +91,18 @@ class ROCALGenericIterator(object):
         self.output = None
         self.batch_size = self.loader._batch_size
 
-
     def next(self):
         return self.__next__()
 
     def __next__(self):
         if(b.isEmpty(self.loader._handle)) and self.shard_size < 0:
+            print("Handle Empty")
             if self.auto_reset:
                 self.reset()
             raise StopIteration
 
         if (self.loader.rocalRun() != 0 and self.shard_size < 0):
+            print("rocALRun() ! =0")
             if self.auto_reset:
                 self.reset()
             raise StopIteration

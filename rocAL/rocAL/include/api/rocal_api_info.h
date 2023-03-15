@@ -29,6 +29,11 @@ THE SOFTWARE.
 /// \return The number of images yet to be processed
 extern "C"  size_t  ROCAL_API_CALL rocalGetRemainingImages(RocalContext rocal_context);
 
+///
+/// \param rocal_context
+/// \return The number of images yet to be processed
+extern "C"  size_t  ROCAL_API_CALL rocalGetLastBatchPaddedSize(RocalContext rocal_context);
+
 /// Returned value valid only after rocalVerify is called
 /// \param rocal_context
 /// \return 1 if all images have been processed, otherwise 0

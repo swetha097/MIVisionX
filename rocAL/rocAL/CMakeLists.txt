@@ -160,13 +160,16 @@ if(${BUILD_ROCAL})
                 ./include/augmentations/color_augmentations/
                 ./include/augmentations/effects_augmentations/
                 ./include/augmentations/geometry_augmentations/
+                ./include/augmentations/audio_augmentations/
                 ./include/augmentations/
                 ./include/decoders/image/
                 ./include/decoders/video/
+                ./include/decoders/audio/
                 ./include/device/
                 ./include/loaders/
                 ./include/loaders/image/
                 ./include/loaders/video/
+                ./include/loaders/audio/
                 ./include/meta_data/
                 ./include/parameters/
                 ./include/readers/image/
