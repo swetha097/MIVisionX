@@ -372,6 +372,24 @@ unsigned rocalTensor::copy_data(void *user_buffer) {
     return 0;
 }
 
+unsigned rocalTensor::copy_data(void *user_buffer, uint last_batch_size) {
+    if (_info._type != rocalTensorInfo::Type::HANDLE) return 0;
+
+#if ENABLE_HIP
+    if (_info._mem_type == RocalMemType::HIP) {
+        // copy from device to host
+        hipError_t status;
+        if ((status = hipMemcpyDtoH((void *)user_buffer, _mem_handle, _info.data_size()/_info._batch_size*last_batch_size)))
+            THROW("copy_data::hipMemcpyDtoH failed: " + TOSTR(status))
+    } else
+#endif
+    {
+        // copy from host to host
+        memcpy(user_buffer, _mem_handle, _info.data_size()/_info._batch_size*last_batch_size);
+    }
+    return 0;
+}
+
 int rocalTensor::swap_handle(void *handle) {
     vx_status status;
     if ((status = vxSwapTensorHandle(_vx_handle, handle, nullptr)) != VX_SUCCESS) {

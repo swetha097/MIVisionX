@@ -257,6 +257,13 @@ namespace rocal
             }
             )
             .def(
+            "copy_data", [](rocalTensor &output_tensor, py::object p, uint last_batch_size)
+            {
+            auto ptr = ctypes_void_ptr(p);
+            output_tensor.copy_data(ptr, last_batch_size);
+            }
+            )
+            .def(
                 "at",
                 [](rocalTensor &output_tensor, uint idx)
                 {

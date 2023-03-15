@@ -203,6 +203,7 @@ public:
     unsigned copy_data(hipStream_t stream, void* host_memory, bool sync);
 #endif
     unsigned copy_data(void* user_buffer);
+    unsigned copy_data(void *user_buffer, uint last_batch_size);
     //! Default destructor
     /*! Releases the OpenVX Tensor object */
     ~rocalTensor();
