@@ -228,6 +228,11 @@ bool VideoLoader::is_out_of_data()
     return (remaining_count() < _sequence_count);
 }
 
+size_t VideoLoader::last_batch_padded_size()
+{
+    return _video_loader->last_batch_padded_size();
+}
+
 LoaderModuleStatus
 VideoLoader::update_output_image()
 {

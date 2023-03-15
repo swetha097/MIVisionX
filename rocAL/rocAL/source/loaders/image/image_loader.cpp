@@ -250,8 +250,14 @@ ImageLoader::load_routine()
 
 bool ImageLoader::is_out_of_data()
 {
-    return (remaining_count() < _batch_size);
+    return (remaining_count() < 0);
 }
+
+size_t ImageLoader::last_batch_padded_size()
+{
+    return _image_loader->last_batch_padded_size();
+}
+
 LoaderModuleStatus
 ImageLoader::update_output_image()
 {

@@ -195,13 +195,13 @@ namespace rocal{
         m.doc() = "Python bindings for the C++ portions of ROCAL";
         // rocal_api.h
         m.def("rocalCreate", &rocalCreate, "Creates context with the arguments sent and returns it",
-              py::return_value_policy::reference,
-              py::arg("batch_size"),
-              py::arg("affinity"),
-              py::arg("gpu_id") = 0,
-              py::arg("cpu_thread_count") = 1,
-              py::arg("prefetch_queue_depth") = 3,
-              py::arg("output_data_type") = 0);
+              py::return_value_policy::reference);
+            //   py::arg("batch_size"),
+            //   py::arg("affinity"),
+            //   py::arg("gpu_id") = 0,
+            //   py::arg("cpu_thread_count") = 1,
+            //   py::arg("prefetch_queue_depth") = 3,
+            //   py::arg("output_data_type") = 0);
         m.def("rocalVerify", &rocalVerify);
         m.def("rocalRun", &rocalRun);
         m.def("rocalRelease", &rocalRelease);
@@ -482,6 +482,11 @@ namespace rocal{
             .value("DECODER_VIDEO_FFMPEG_SW",ROCAL_DECODER_VIDEO_FFMPEG_SW)
             .value("DECODER_VIDEO_FFMPEG_HW",ROCAL_DECODER_VIDEO_FFMPEG_HW)
             .export_values();
+        py::enum_<RocalLastBatchPolicy>(types_m,"RocalLastBatchPolicy", "Rocal Last Batch Policy")
+            .value("LAST_BATCH_FILL",ROCAL_LAST_BATCH_FILL)
+            .value("LAST_BATCH_DROP",ROCAL_LAST_BATCH_DROP)
+            .value("LAST_BATCH_PARTIAL",ROCAL_LAST_BATCH_PARTIAL)
+            .export_values();
         // rocal_api_info.h
         m.def("getOutputWidth",&rocalGetOutputWidth);
         m.def("getOutputHeight",&rocalGetOutputHeight);
@@ -518,14 +523,16 @@ namespace rocal{
         m.def("getOneHotEncodedLabels",&wrapper_one_hot_label_copy);
         m.def("isEmpty",&rocalIsEmpty);
         m.def("getRemainingImages", &rocalGetRemainingImages);
+        // rocal_api_info.h
+        m.def("getRemainingImages", &rocalGetRemainingImages, py::return_value_policy::reference);
         m.def("getLastBatchPaddedSize", &rocalGetLastBatchPaddedSize, py::return_value_policy::reference);
-        m.def("isEmpty", &rocalIsEmpty);
-        m.def("getStatus", rocalGetStatus);
-        m.def("rocalGetErrorMessage", &rocalGetErrorMessage);
-        m.def("rocalGetTimingInfo", &rocalGetTimingInfo);
-        m.def("getTimingInfo", &rocalGetTimingInfo);
-        m.def("setOutputImages", &rocalSetOutputs);
+        m.def("isEmpty", &rocalIsEmpty, py::return_value_policy::reference);
+        m.def("getStatus", rocalGetStatus, py::return_value_policy::reference);
+        m.def("rocalGetErrorMessage", &rocalGetErrorMessage, py::return_value_policy::reference);
+        m.def("rocalGetTimingInfo", &rocalGetTimingInfo, py::return_value_policy::reference);
+        m.def("setOutputImages", &rocalSetOutputs, py::return_value_policy::reference);
         m.def("labelReader", &rocalCreateLabelReader, py::return_value_policy::reference);
+        m.def("labelReaderFileList", &rocalCreateFileListLabelReader, py::return_value_policy::reference);
         m.def("COCOReader", &rocalCreateCOCOReader, py::return_value_policy::reference);
         m.def("Audio_DecoderSliceShard",&rocalAudioFileSourceSingleShard,"Reads file from the source given and decodes it according to the policy", py::return_value_policy::reference);
         m.def("Audio_decoder",&rocalAudioFileSource,"Reads file from the source given and decodes it according to the policy", py::return_value_policy::reference);

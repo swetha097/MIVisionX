@@ -121,6 +121,7 @@ class ROCALGenericIterator(object):
                 self.labels = torch.empty(self.labels_size, dtype = torch.int32, device = torch_gpu_device)
 
         self.len = b.getRemainingImages(self.loader._handle)
+        self.last_batch_padded_size = b.getLastBatchPaddedSize(self.loader._handle)
         self.last_batch_policy = self.loader._last_batch_policy
         self.shard_size = size
         self.auto_reset = auto_reset
@@ -142,11 +143,13 @@ class ROCALGenericIterator(object):
 
     def __next__(self):
         if(b.isEmpty(self.loader._handle)) and self.shard_size < 0:
+            print("Handle Empty")
             if self.auto_reset:
                 self.reset()
             raise StopIteration
 
         if (self.loader.rocalRun() != 0 and self.shard_size < 0):
+            print("rocALRun() ! =0")
             if self.auto_reset:
                 self.reset()
             raise StopIteration

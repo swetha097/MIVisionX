@@ -67,8 +67,7 @@ public:
     int close() override;
 
     Caffe2LMDBRecordReader();
-
-private:
+    size_t last_batch_padded_size() override { return 0;}
     //! opens the folder containnig the images
     Reader::Status Caffe2_LMDB_reader();
     Reader::Status folder_reading();

@@ -48,7 +48,7 @@ class MasterGraph
 {
 public:
     enum class Status { OK = 0,  NOT_RUNNING = 1, NO_MORE_DATA = 2, NOT_IMPLEMENTED = 3, INVALID_ARGUMENTS };
-    MasterGraph(size_t batch_size, RocalAffinity affinity, int gpu_id, size_t prefetch_queue_depth, RocalTensorDataType output_tensor_data_type);
+    MasterGraph(size_t batch_size, RocalAffinity affinity, int gpu_id, size_t prefetch_queue_depth, RocalTensorDataType output_tensor_data_type, RocalBatchPolicy last_batch_policy, bool last_batch_padded);
     ~MasterGraph();
     Status reset();
     size_t remaining_count();
@@ -59,6 +59,9 @@ public:
     Status run();
     Timing timing();
     RocalMemType mem_type();
+    RocalBatchPolicy last_batch_policy();
+    bool last_batch_padded();
+    uint last_batch_size();
     void release();
     template <typename T>
     std::shared_ptr<T> add_node(const std::vector<rocalTensor *> &inputs, const std::vector<rocalTensor *> &outputs);
@@ -135,6 +138,8 @@ private:
     int _remaining_count;//!< Keeps the count of remaining tensors yet to be processed for the user,
     bool _loop;//!< Indicates if user wants to indefinitely loops through tensors or not
     size_t _prefetch_queue_depth;
+    RocalBatchPolicy _last_batch_policy;
+    bool _last_batch_padded;
     bool _output_routine_finished_processing = false;
     const RocalTensorDataType _out_data_type;
     bool _is_random_bbox_crop = false;

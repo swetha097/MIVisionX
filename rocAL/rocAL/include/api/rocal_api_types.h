@@ -167,4 +167,17 @@ enum RocalLastBatchPolicy {
     ROCAL_LAST_BATCH_PARTIAL
 };
 
+enum RocalOutOfBoundsPolicy
+{
+    PAD = 0,
+    TRIMTOSHAPE,
+    ERROR
+};
+
+enum RocalLastBatchPolicy {
+    ROCAL_LAST_BATCH_FILL = 0,
+    ROCAL_LAST_BATCH_DROP = 1,
+    ROCAL_LAST_BATCH_PARTIAL
+};
+
 #endif //MIVISIONX_ROCAL_API_TYPES_H
