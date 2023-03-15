@@ -105,6 +105,16 @@ enum class RocalROIType
     LTRB
 };
 
+/*! \brief Last Batch Policies
+ *
+ * currently supports following formats
+ */
+enum RocalBatchPolicy {
+    BATCH_FILL = 0,
+    DROP,
+    PARTIAL
+};
+
 typedef struct
 {
     unsigned x1, y1, x2, y2;

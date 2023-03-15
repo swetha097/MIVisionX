@@ -82,20 +82,16 @@ namespace rocal
 
     PYBIND11_MODULE(rocal_pybind, m)
     {
-        // Importing the python modules
-        // py::object pipeline_class = py::module::import("amd.rocal.pipeline").attr("Pipeline");
-        
-
         m.doc() = "Python bindings for the C++ portions of ROCAL";
         // rocal_api.h
         m.def("rocalCreate", &rocalCreate, "Creates context with the arguments sent and returns it",
-              py::return_value_policy::reference,
-              py::arg("batch_size"),
-              py::arg("affinity"),
-              py::arg("gpu_id") = 0,
-              py::arg("cpu_thread_count") = 1,
-              py::arg("prefetch_queue_depth") = 3,
-              py::arg("output_data_type") = 0);
+              py::return_value_policy::reference);
+            //   py::arg("batch_size"),
+            //   py::arg("affinity"),
+            //   py::arg("gpu_id") = 0,
+            //   py::arg("cpu_thread_count") = 1,
+            //   py::arg("prefetch_queue_depth") = 3,
+            //   py::arg("output_data_type") = 0);
         m.def("rocalVerify", &rocalVerify);
         m.def("rocalRun", &rocalRun);
         m.def("rocalRelease", &rocalRelease);
@@ -413,15 +409,21 @@ namespace rocal
             .value("TRIMTOSHAPE",TRIMTOSHAPE)
             .value("ERROR",ERROR)
             .export_values();
+        py::enum_<RocalLastBatchPolicy>(types_m,"RocalLastBatchPolicy", "Rocal Last Batch Policy")
+            .value("LAST_BATCH_FILL",ROCAL_LAST_BATCH_FILL)
+            .value("LAST_BATCH_DROP",ROCAL_LAST_BATCH_DROP)
+            .value("LAST_BATCH_PARTIAL",ROCAL_LAST_BATCH_PARTIAL)
+            .export_values();
         // rocal_api_info.h
         m.def("getRemainingImages", &rocalGetRemainingImages, py::return_value_policy::reference);
+        m.def("getLastBatchPaddedSize", &rocalGetLastBatchPaddedSize, py::return_value_policy::reference);
         m.def("isEmpty", &rocalIsEmpty, py::return_value_policy::reference);
         m.def("getStatus", rocalGetStatus, py::return_value_policy::reference);
         m.def("rocalGetErrorMessage", &rocalGetErrorMessage, py::return_value_policy::reference);
         m.def("rocalGetTimingInfo", &rocalGetTimingInfo, py::return_value_policy::reference);
         m.def("setOutputImages", &rocalSetOutputs, py::return_value_policy::reference);
         m.def("labelReader", &rocalCreateLabelReader, py::return_value_policy::reference);
-        m.def("labelReaderFileList",&rocalCreateFileListLabelReader, py::return_value_policy::reference);
+        m.def("labelReaderFileList", &rocalCreateFileListLabelReader, py::return_value_policy::reference);
         m.def("COCOReader", &rocalCreateCOCOReader, py::return_value_policy::reference);
         // rocal_api_meta_data.h
         m.def("RandomBBoxCrop", &rocalRandomBBoxCrop);
@@ -528,32 +530,9 @@ namespace rocal
         );
         // rocal_api_data_loaders.h
         m.def("ImageDecoder", &rocalJpegFileSource, "Reads file from the source given and decodes it according to the policy",
-              py::return_value_policy::reference,
-              py::arg("context"),
-              py::arg("source_path"),
-              py::arg("color_format"),
-              py::arg("num_threads"),
-              py::arg("is_output") = false,
-              py::arg("shuffle") = false,
-              py::arg("loop") = false,
-              py::arg("decode_size_policy") = ROCAL_USE_MOST_FREQUENT_SIZE,
-              py::arg("max_width") = 0,
-              py::arg("max_height") = 0,
-              py::arg("dec_type") = 0);
+              py::return_value_policy::reference);
         m.def("ImageDecoderShard", &rocalJpegFileSourceSingleShard, "Reads file from the source given and decodes it according to the shard id and number of shards",
-              py::return_value_policy::reference,
-              py::arg("context"),
-              py::arg("source_path"),
-              py::arg("color_format"),
-              py::arg("shard_id"),
-              py::arg("shard_count"),
-              py::arg("is_output") = false,
-              py::arg("shuffle") = false,
-              py::arg("loop") = false,
-              py::arg("decode_size_policy") = ROCAL_USE_MOST_FREQUENT_SIZE,
-              py::arg("max_width") = 0,
-              py::arg("max_height") = 0,
-              py::arg("dec_type") = 0);
+              py::return_value_policy::reference);
         m.def("FusedDecoderCropShard",&rocalFusedJpegCropSingleShard,"Reads file from the source and decodes them partially to output random crops",
             py::return_value_policy::reference);
         m.def("COCO_ImageDecoderShard",&rocalJpegCOCOFileSourceSingleShard,"Reads file from the source given and decodes it according to the shard id and number of shards",

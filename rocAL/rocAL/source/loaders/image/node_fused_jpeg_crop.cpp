@@ -35,7 +35,7 @@ FusedJpegCropNode::FusedJpegCropNode(rocalTensor *output, DeviceResources device
 
 void FusedJpegCropNode::init(unsigned internal_shard_count, const std::string &source_path, const std::string &json_path, StorageType storage_type,
                            DecoderType decoder_type, bool shuffle, bool loop, size_t load_batch_count, RocalMemType mem_type, std::shared_ptr<MetaDataReader> meta_data_reader,
-                           FloatParam *area_factor, FloatParam *aspect_ratio, FloatParam *x_drift, FloatParam *y_drift)
+                           FloatParam *area_factor, FloatParam *aspect_ratio, FloatParam *x_drift, FloatParam *y_drift, RocalBatchPolicy _last_batch_policy, bool last_batch_padded)
 {
     if(!_loader_module)
         THROW("ERROR: loader module is not set for FusedJpegCropNode, cannot initialize")

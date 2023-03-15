@@ -58,6 +58,8 @@ public:
 
     unsigned count_items() override;
 
+    size_t last_batch_padded_size() override { return 0;}
+
     ~SequenceFileSourceReader() override;
 
     int close() override;

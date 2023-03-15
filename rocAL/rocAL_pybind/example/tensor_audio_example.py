@@ -29,12 +29,12 @@ def draw_patches(img, idx, device):
     print("label: ", label)
     # print("audio_data",audio_data)
     # Saving the array in a text file
-    file = open("results/rocal/NORMALIZE_PAD/rocal_data"+str(label)+".txt", "w+")
+    file = open("results/rocal_data"+str(label)+".txt", "w+")
     content = str(audio_data)
     file.write(content)
     file.close()
     plt.plot(audio_data)
-    plt.savefig("results/rocal/NORMALIZE_PAD/rocal_data"+str(label)+".png")
+    plt.savefig("results/rocal_data"+str(label)+".png")
     plt.close()
 def main():
     if  len(sys.argv) < 3:
@@ -58,18 +58,18 @@ def main():
     device_id = 0
     random_seed = random.SystemRandom().randint(0, 2**32 - 1)
     crop=300
-    pipe = Pipeline(batch_size=batch_size, num_threads=num_threads,device_id=device_id, seed=random_seed, rocal_cpu=_rali_cpu)
+    # pipe = Pipeline(batch_size=batch_size, num_threads=num_threads,device_id=device_id, seed=random_seed, rocal_cpu=_rali_cpu)
     local_rank = 0
     world_size = 1
     print("*********************************************************************")
-    audio_pipeline = Pipeline(batch_size=batch_size, num_threads=num_threads, device_id=device_id, seed=random_seed, rocal_cpu=_rali_cpu)
+    audio_pipeline = Pipeline(batch_size=batch_size, num_threads=num_threads, device_id=device_id, seed=random_seed, rocal_cpu=_rali_cpu, last_batch_policy=types.LAST_BATCH_PARTIAL)
     with audio_pipeline:
         audio, label = fn.readers.file(
             # **files_arg,
             file_root=data_path,
             file_list=file_list,
             shard_id=0,
-            num_shards=1,
+            num_shards=2,
             random_shuffle=True)
         sample_rate = 16000
         nfft=512
@@ -78,8 +78,8 @@ def main():
         nfilter=80 #nfeatures
         resample = 16000.00
         # dither = 0.001
-        # audio_decode = fn.decoders.audio(audio, file_root=data_path, downmix=True, shard_id=0, num_shards=1,random_shuffle=True)
-        audio_decode = fn.decoders.audio(audio, file_root=data_path, file_list_path=file_list, downmix=True, shard_id=0, num_shards=1, storage_type=9)
+        # audio_decode = fn.decoders.audio(audio, file_root=data_path, downmix=True, shard_id=0, num_shards=2,random_shuffle=True)
+        audio_decode = fn.decoders.audio(audio, file_root=data_path, file_list_path=file_list, downmix=True, shard_id=0, num_shards=2, storage_type=9)
         uniform_distribution_resample = fn.random.uniform(audio_decode, range=[0.8555555, 0.8555555])
         resampled_rate = uniform_distribution_resample * resample
         # # resample_output = fn.resample(audio_decode, resample_rate = resampled_rate, resample_hint=250000, )
@@ -127,9 +127,11 @@ def main():
         torch.set_printoptions(threshold=5000, profile="full", edgeitems=100)
         for i , it in enumerate(audioIteratorPipeline):
             print("************************************** i *************************************",i)
-            print(it)
-            for img, label in zip(it[0],it[1]):
-            #     print(img.shape)
+            # print(it)
+            for img, label, roi in zip(it[0],it[1],it[2]):
+                print("label", label)
+                print("roi", roi)
+                # print("img",img)
                 draw_patches(img, label, "cpu")
             #     cnt = cnt + 1
         print("EPOCH DONE", e)

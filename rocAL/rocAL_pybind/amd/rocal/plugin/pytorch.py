@@ -60,6 +60,13 @@ class RALIGenericIterator(object):
         self.reverse_channels = reverse_channels
         self.tensor_dtype = tensor_dtype
         self.len = b.getRemainingImages(self.loader._handle)
+        print("self.len",self.len)
+        self.last_batch_padded_size = b.getLastBatchPaddedSize(self.loader._handle)
+        self.last_batch_policy = self.loader._last_batch_policy
+        print("in pytorch.py ", self.last_batch_policy)
+        print("\n self.loader._batch_size", self.loader._batch_size)
+        print("\n self.len % self.loader._batch_size ", self.len % self.loader._batch_size )
+        print("\n self.last_batch_padded_size: ", self.last_batch_padded_size)
         self.shard_size = size
         self.auto_reset = auto_reset
         self.batch_count = 0
@@ -70,7 +77,6 @@ class RALIGenericIterator(object):
         self.output = None
         self.batch_size = self.loader._batch_size
 
-
     def next(self):
         return self.__next__()
 
@@ -78,23 +84,25 @@ class RALIGenericIterator(object):
         torch.set_printoptions(threshold=10_000, profile="full", edgeitems=100)
         
         if(b.isEmpty(self.loader._handle)) and self.shard_size < 0:
+            print("Handle Empty")
             if self.auto_reset:
                 self.reset()
             raise StopIteration
 
         if (self.loader.rocalRun() != 0 and self.shard_size < 0):
+            print("rocALRun() ! =0")
             if self.auto_reset:
                 self.reset()
             raise StopIteration
 
-        elif self.shard_size > 0 and self.batch_count == self.shard_size :
+        elif self.shard_size > 0 and self.batch_count >= self.shard_size :
             if self.auto_reset:
                 self.reset()
             raise StopIteration
 
         else:
             self.output_tensor_list = self.loader.rocalGetOutputTensors()
-
+        self.last_batch_size = self.batch_size - b.getLastBatchPaddedSize(self.loader._handle)
         self.batch_count+=self.batch_size
         #From init
         self.num_of_dims = self.output_tensor_list[0].num_of_dims()
@@ -115,16 +123,10 @@ class RALIGenericIterator(object):
             elif self.tensor_dtype == types.FLOAT16:
                 return (self.out.astype(np.float16)), self.labels_tensor
         elif self.num_of_dims == 3: #In case of an audio data
-            # print("AUDIO DATA !!!!")
             self.batch_size = self.output_tensor_list[0].batch_size() if self.batch_size is None else self.batch_size
             self.channels = self.output_tensor_list[0].batch_width() if self.channels is None else self.channels #Max Channels
             self.samples = self.output_tensor_list[0].batch_height() if self.samples is None else self.samples #Max Samples
             self.audio_length = self.channels * self.samples if self.audio_length is None else self.audio_length
-            self.audio_length_roi = []
-            # for i in range(self.batch_size):
-            #     self.audio_length_roi.append((self.output_tensor_list[0].get_roi_at(i)))
-            # print("ROI appended :: ", self.audio_length_roi)
-            # print("ROI::",self.output_tensor_list[0].get_rois().reshape(self.batch_size,4)[...,0:2])
             if self.output is None:
                 self.output = torch.empty((self.batch_size, self.samples, self.channels,), dtype=torch.float32)
             
@@ -132,8 +134,14 @@ class RALIGenericIterator(object):
             self.output_tensor_list[0].copy_data(ctypes.c_void_p(self.output.data_ptr()))
             self.labels = self.loader.rocalGetImageLabels()
             self.labels_tensor = torch.from_numpy(self.labels).type(torch.LongTensor)
-            
-            return self.output, self.labels_tensor, torch.tensor(self.output_tensor_list[0].get_rois().reshape(self.batch_size,4)[...,0:2])
+            print(self.labels_tensor)
+            # print("self.output[0:self.last_batch_size,:,:,:]", self.output[0:self.last_batch_size,:,:])
+            print("b.getRemainingImages(self.loader._handle)", b.getRemainingImages(self.loader._handle) + self.batch_size)
+            print(" b.getLastBatchPaddedSize(self.loader._handle)",  b.getLastBatchPaddedSize(self.loader._handle))
+            if (self.last_batch_policy is (types.LAST_BATCH_PARTIAL)) and b.getRemainingImages(self.loader._handle) <= 0 :
+                return self.output[0:self.last_batch_size,:], self.labels_tensor[0:self.last_batch_size], torch.tensor(self.output_tensor_list[0].get_rois().reshape(self.batch_size,4)[...,0:2][0:self.last_batch_size,:])
+            else:
+                return self.output, self.labels_tensor, torch.tensor(self.output_tensor_list[0].get_rois().reshape(self.batch_size,4)[...,0:2])
 
     def reset(self):
         self.batch_count = 0

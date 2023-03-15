@@ -186,6 +186,7 @@ rocalJpegFileSourceSingleShard(
         info.set_color_format(color_format);
         info.set_tensor_layout(tensor_format);
         output = context->master_graph->create_loader_output_tensor(info);
+        std::cerr<<"\n Last batch policy :: "<<context->master_graph->last_batch_policy()<<"\t last batch padded:: "<<context->master_graph->last_batch_padded();
         context->master_graph->add_node<ImageLoaderSingleShardNode>({}, {output})->init(shard_id, shard_count,
                                                                                         source_path, "",
                                                                                         StorageType::FILE_SYSTEM,
@@ -195,7 +196,9 @@ rocalJpegFileSourceSingleShard(
                                                                                         context->user_batch_size(),
                                                                                         context->master_graph->mem_type(),
                                                                                         context->master_graph->meta_data_reader(),
-                                                                                        decoder_keep_original
+                                                                                        decoder_keep_original,
+                                                                                        context->master_graph->last_batch_policy(),
+                                                                                        context->master_graph->last_batch_padded()
                                                                                         );
         context->master_graph->set_loop(loop);
 
@@ -276,6 +279,7 @@ rocalJpegFileSource(
         info.set_color_format(color_format);
         info.set_tensor_layout(tensor_format);
         output = context->master_graph->create_loader_output_tensor(info);
+        std::cerr<<"\n Last batch policy :: "<<context->master_graph->last_batch_policy()<<"\t last batch padded:: "<<context->master_graph->last_batch_padded();
         context->master_graph->add_node<ImageLoaderNode>({}, {output})->init(internal_shard_count,
                                                                           source_path, "",
                                                                           std::map<std::string, std::string>(),
@@ -286,7 +290,9 @@ rocalJpegFileSource(
                                                                           context->user_batch_size(),
                                                                           context->master_graph->mem_type(),
                                                                           context->master_graph->meta_data_reader(),
-                                                                          decoder_keep_original);
+                                                                          decoder_keep_original,
+                                                                          context->master_graph->last_batch_policy(),
+                                                                          context->master_graph->last_batch_padded());
         context->master_graph->set_loop(loop);
 
         if(is_output)
@@ -379,7 +385,10 @@ rocalSequenceReader(
                                                                             context->master_graph->sequence_batch_size(),
                                                                             context->master_graph->mem_type(),
                                                                             context->master_graph->meta_data_reader(),
-                                                                            decoder_keep_original, "",
+                                                                            decoder_keep_original,
+                                                                            context->master_graph->last_batch_policy(),
+                                                                            context->master_graph->last_batch_padded(),
+                                                                            "",
                                                                             sequence_length,
                                                                             step, stride);
         context->master_graph->set_loop(loop);
@@ -477,6 +486,8 @@ rocalSequenceReaderSingleShard(
                                                                                         context->master_graph->mem_type(),
                                                                                         context->master_graph->meta_data_reader(),
                                                                                         decoder_keep_original,
+                                                                                        context->master_graph->last_batch_policy(),
+                                                                                        context->master_graph->last_batch_padded(),
                                                                                         std::map<std::string, std::string>(),
                                                                                         sequence_length,
                                                                                         step, stride);
@@ -565,7 +576,9 @@ rocalJpegCaffe2LMDBRecordSource(
                                                                              context->user_batch_size(),
                                                                              context->master_graph->mem_type(),
                                                                              context->master_graph->meta_data_reader(),
-                                                                             decoder_keep_original);
+                                                                             decoder_keep_original,
+                                                                             context->master_graph->last_batch_policy(),
+                                                                             context->master_graph->last_batch_padded());
         context->master_graph->set_loop(loop);
 
         if(is_output)
@@ -655,7 +668,9 @@ rocalJpegCaffe2LMDBRecordSourceSingleShard(
                                                                                         context->user_batch_size(),
                                                                                         context->master_graph->mem_type(),
                                                                                         context->master_graph->meta_data_reader(),
-                                                                                        decoder_keep_original);
+                                                                                        decoder_keep_original,
+                                                                                        context->master_graph->last_batch_policy(),
+                                                                                        context->master_graph->last_batch_padded());
         context->master_graph->set_loop(loop);
 
         if(is_output)
@@ -691,7 +706,7 @@ rocalAudioFileSourceSingleShard(
 {
     rocalTensor* output = nullptr;
     auto context = static_cast<Context*>(p_context);
-    // std::cerr << "Inside the rocALAudioFileSourceSingleShard" ;
+    std::cerr << "Inside the rocALAudioFileSourceSingleShard" ;
     try
     {
         if(shard_count < 1 )
@@ -732,7 +747,9 @@ rocalAudioFileSourceSingleShard(
                                                                                         loop,
                                                                                         context->user_batch_size(),
                                                                                         context->master_graph->mem_type(),
-                                                                                        context->master_graph->meta_data_reader()
+                                                                                        context->master_graph->meta_data_reader(),
+                                                                                        context->master_graph->last_batch_policy(),
+                                                                                        context->master_graph->last_batch_padded()
                                                                                         );
         context->master_graph->set_loop(loop);
 
@@ -956,7 +973,9 @@ rocalJpegCaffeLMDBRecordSource(
                                                                              context->user_batch_size(),
                                                                              context->master_graph->mem_type(),
                                                                              context->master_graph->meta_data_reader(),
-                                                                             decoder_keep_original);
+                                                                             decoder_keep_original,
+                                                                             context->master_graph->last_batch_policy(),
+                                                                             context->master_graph->last_batch_padded());
 
         context->master_graph->set_loop(loop);
 
@@ -1046,7 +1065,9 @@ rocalJpegCaffeLMDBRecordSourceSingleShard(
                                                                                         context->user_batch_size(),
                                                                                         context->master_graph->mem_type(),
                                                                                         context->master_graph->meta_data_reader(),
-                                                                                        decoder_keep_original);
+                                                                                        decoder_keep_original,
+                                                                                        context->master_graph->last_batch_policy(),
+                                                                                        context->master_graph->last_batch_padded());
         context->master_graph->set_loop(loop);
 
         if(is_output)
@@ -1137,7 +1158,9 @@ rocalMXNetRecordSource(
                                                                              context->user_batch_size(),
                                                                              context->master_graph->mem_type(),
                                                                              context->master_graph->meta_data_reader(),
-                                                                             decoder_keep_original);
+                                                                             decoder_keep_original,
+                                                                             context->master_graph->last_batch_policy(),
+                                                                             context->master_graph->last_batch_padded());
 
         context->master_graph->set_loop(loop);
 
@@ -1231,7 +1254,9 @@ rocalMXNetRecordSourceSingleShard(
                                                                                         context->user_batch_size(),
                                                                                         context->master_graph->mem_type(),
                                                                                         context->master_graph->meta_data_reader(),
-                                                                                        decoder_keep_original);
+                                                                                        decoder_keep_original,
+                                                                                        context->master_graph->last_batch_policy(),
+                                                                                        context->master_graph->last_batch_padded());
         context->master_graph->set_loop(loop);
 
         if(is_output)
@@ -1320,7 +1345,9 @@ rocalJpegCOCOFileSource(
                                                                             context->user_batch_size(),
                                                                             context->master_graph->mem_type(),
                                                                             context->master_graph->meta_data_reader(),
-                                                                            decoder_keep_original);
+                                                                            decoder_keep_original,
+                                                                            context->master_graph->last_batch_policy(),
+                                                                            context->master_graph->last_batch_padded());
 
         context->master_graph->set_loop(loop);
 
@@ -1413,7 +1440,9 @@ rocalJpegCOCOFileSourceSingleShard(
                                                                                         context->user_batch_size(),
                                                                                         context->master_graph->mem_type(),
                                                                                         context->master_graph->meta_data_reader(),
-                                                                                        decoder_keep_original);
+                                                                                        decoder_keep_original,
+                                                                                        context->master_graph->last_batch_policy(),
+                                                                                        context->master_graph->last_batch_padded());
         context->master_graph->set_loop(loop);
 
         if(is_output)
@@ -1595,7 +1624,9 @@ rocalJpegCOCOFileSourcePartial(
                                                                             context->user_batch_size(),
                                                                             context->master_graph->mem_type(),
                                                                             context->master_graph->meta_data_reader(),
-                                                                            area_factor, aspect_ratio, x_drift_factor, y_drift_factor);
+                                                                            area_factor, aspect_ratio, x_drift_factor, y_drift_factor,
+                                                                            context->master_graph->last_batch_policy(),
+                                                                            context->master_graph->last_batch_padded());
 
         context->master_graph->set_loop(loop);
 
@@ -1691,7 +1722,9 @@ rocalJpegCOCOFileSourcePartialSingleShard(
                                                                             context->user_batch_size(),
                                                                             context->master_graph->mem_type(),
                                                                             context->master_graph->meta_data_reader(),
-                                                                            area_factor, aspect_ratio, x_drift_factor, y_drift_factor);
+                                                                            area_factor, aspect_ratio, x_drift_factor, y_drift_factor,
+                                                                            context->master_graph->last_batch_policy(),
+                                                                            context->master_graph->last_batch_padded());
 
         context->master_graph->set_loop(loop);
 
@@ -1739,6 +1772,7 @@ rocalJpegTFRecordSource(
 
 
         bool use_input_dimension = (decode_size_policy == ROCAL_USE_USER_GIVEN_SIZE) || (decode_size_policy == ROCAL_USE_USER_GIVEN_SIZE_RESTRICTED);
+        bool decoder_keep_original = (decode_size_policy == ROCAL_USE_USER_GIVEN_SIZE_RESTRICTED) || (decode_size_policy == ROCAL_USE_MAX_SIZE_RESTRICTED);
 
         if(internal_shard_count < 1 )
             THROW("internal shard count should be bigger than 0")
@@ -1786,7 +1820,10 @@ rocalJpegTFRecordSource(
                                                                              loop,
                                                                              context->user_batch_size(),
                                                                              context->master_graph->mem_type(),
-                                                                             context->master_graph->meta_data_reader());
+                                                                             context->master_graph->meta_data_reader(),
+                                                                             decoder_keep_original,
+                                                                             context->master_graph->last_batch_policy(),
+                                                                             context->master_graph->last_batch_padded());
         context->master_graph->set_loop(loop);
 
         if(is_output)
@@ -1870,7 +1907,9 @@ rocalJpegTFRecordSourceSingleShard(
                                                                                         loop,
                                                                                         context->user_batch_size(),
                                                                                         context->master_graph->mem_type(),
-                                                                                        context->master_graph->meta_data_reader());
+                                                                                        context->master_graph->meta_data_reader(), false,
+                                                                                        context->master_graph->last_batch_policy(),
+                                                                                        context->master_graph->last_batch_padded());
         context->master_graph->set_loop(loop);
 
         if(is_output)
@@ -1963,7 +2002,9 @@ rocalFusedJpegCropSingleShard(
                                                                           context->user_batch_size(),
                                                                           context->master_graph->mem_type(),
                                                                           context->master_graph->meta_data_reader(),
-                                                                          area_factor, aspect_ratio, x_drift_factor, y_drift_factor);
+                                                                          area_factor, aspect_ratio, x_drift_factor, y_drift_factor,
+                                                                          context->master_graph->last_batch_policy(),
+                                                                          context->master_graph->last_batch_padded());
         context->master_graph->set_loop(loop);
 
         if(is_output)

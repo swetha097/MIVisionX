@@ -55,7 +55,7 @@ class MasterGraph
 {
 public:
     enum class Status { OK = 0,  NOT_RUNNING = 1, NO_MORE_DATA = 2, NOT_IMPLEMENTED = 3, INVALID_ARGUMENTS };
-    MasterGraph(size_t batch_size, RocalAffinity affinity, int gpu_id, size_t prefetch_queue_depth, RocalTensorDataType output_tensor_data_type);
+    MasterGraph(size_t batch_size, RocalAffinity affinity, int gpu_id, size_t prefetch_queue_depth, RocalTensorDataType output_tensor_data_type, RocalBatchPolicy last_batch_policy, bool last_batch_padded);
     ~MasterGraph();
     Status reset();
     size_t remaining_count();
@@ -70,6 +70,9 @@ public:
     Status run();
     Timing timing();
     RocalMemType mem_type();
+    RocalBatchPolicy last_batch_policy();
+    bool last_batch_padded();
+    uint last_batch_size();
     void release();
     template <typename T>
     std::shared_ptr<T> add_node(const std::vector<rocalTensor *> &input, const std::vector<rocalTensor *> &output);
@@ -175,11 +178,14 @@ private:
     const static unsigned OUTPUT_RING_BUFFER_DEPTH = 3;
     const static unsigned SAMPLE_SIZE = sizeof(vx_float32); // unsigned char
     int _remaining_count;//!< Keeps the count of remaining images yet to be processed for the user,
+    size_t _final_batch_padded_size;
     bool _loop;//!< Indicates if user wants to indefinitely loops through images or not
     static size_t compute_optimum_internal_batch_size(size_t user_batch_size, RocalAffinity affinity);
     const size_t _internal_batch_size;//!< In the host processing case , internal batch size can be different than _user_batch_size. This batch size used internally throughout.
     const size_t _user_to_internal_batch_ratio;
     size_t _prefetch_queue_depth;
+    RocalBatchPolicy _last_batch_policy;
+    bool _last_batch_padded;
     bool _output_routine_finished_processing = false;
     const RocalTensorDataType _out_data_type;
     bool _is_random_bbox_crop = false;

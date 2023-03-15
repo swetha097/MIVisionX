@@ -49,6 +49,8 @@ public:
     Timing timing() override;
     void set_prefetch_queue_depth(size_t prefetch_queue_depth) override;
     void shut_down() override;
+    size_t last_batch_padded_size() override;
+
 private:
     void increment_loader_idx();
 #if ENABLE_HIP

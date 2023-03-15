@@ -68,6 +68,7 @@ public:
 
     CaffeLMDBRecordReader();
     unsigned long long get_shuffle_time() override {return 0;}
+    size_t last_batch_padded_size() override { return 0;}
 private:
     //! opens the folder containnig the images
     Reader::Status folder_reading();
