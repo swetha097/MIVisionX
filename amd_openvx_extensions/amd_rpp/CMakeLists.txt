@@ -128,6 +128,16 @@ list(APPEND SOURCES
         source/VignettebatchPD.cpp
         source/WarpAffinebatchPD.cpp
         source/WarpPerspectivebatchPD.cpp
+        source/Brightness.cpp
+        source/Copy.cpp
+        source/CropMirrorNormalize.cpp
+        source/GammaCorrection.cpp
+        source/Nop.cpp
+        source/Resize.cpp
+        source/Crop.cpp
+        source/ColorTwist.cpp
+        source/ResizeMirrorNormalize.cpp
+        source/SequenceRearrange.cpp
         source/kernel_rpp.cpp
         source/internal_publishKernels.cpp
     )

@@ -24,8 +24,15 @@ THE SOFTWARE.
 #define MIVISIONX_ROCAL_API_DATA_TRANSFER_H
 #include "rocal_api_types.h"
 
+/*! \brief
+ *
+*/
 extern "C"  RocalStatus   ROCAL_API_CALL rocalCopyToOutput(RocalContext context, unsigned char * out_ptr, size_t out_size);
 
+extern "C"  RocalStatus   ROCAL_API_CALL rocalCopyToTensorOutput(RocalContext context, std::vector<void *> &out_ptr);
+/*! \brief
+ *
+*/
 extern "C"  RocalStatus   ROCAL_API_CALL rocalCopyToOutputTensor32(RocalContext rocal_context, float *out_ptr,
                                                               RocalTensorLayout tensor_format, float multiplier0,
                                                               float multiplier1, float multiplier2, float offset0,
@@ -38,15 +45,11 @@ extern "C"  RocalStatus   ROCAL_API_CALL rocalCopyToOutputTensor16(RocalContext 
                                                               float offset1, float offset2,
                                                               bool reverse_channels);
 
-extern "C"  RocalStatus   ROCAL_API_CALL rocalCopyToOutputTensor(RocalContext rocal_context, void *out_ptr,
-                                                              RocalTensorLayout tensor_format, RocalTensorOutputType tensor_output_type,
-                                                              float multiplier0, float multiplier1, float multiplier2, float offset0,
-                                                              float offset1, float offset2,
-                                                              bool reverse_channels);
+extern "C"  RocalTensorList ROCAL_API_CALL rocalGetOutputTensors(RocalContext p_context);
+
 ///
 /// \param rocal_context
 /// \param output_images The buffer that will be filled with output images with set_output = True
-extern "C" void ROCAL_API_CALL rocalSetOutputs(RocalContext p_context, unsigned int num_of_outputs, std::vector<RocalImage> &output_images);
-
+extern "C" void ROCAL_API_CALL rocalSetOutputs(RocalContext p_context, unsigned int num_of_outputs, std::vector<RocalTensor> &output_images);
 
 #endif //MIVISIONX_ROCAL_API_DATA_TRANSFER_H

@@ -45,4 +45,3 @@ private:
     Parameter<float>* default_aspect_ratio();
     Parameter<float> *area_factor, *aspect_ratio;
 };
-

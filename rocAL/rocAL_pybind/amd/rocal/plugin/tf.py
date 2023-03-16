@@ -21,7 +21,7 @@
 import numpy as np
 import rocal_pybind as b
 import amd.rocal.types as types
-class ROCALGenericImageIterator(object):
+class RALIGenericImageIterator(object):
     def __init__(self, pipeline):
         self.loader = pipeline
         self.w = b.getOutputWidth(self.loader._handle)
@@ -48,12 +48,12 @@ class ROCALGenericImageIterator(object):
         return self.out_image , self.out_tensor
 
     def reset(self):
-        b.rocalResetLoaders(self.loader._handle)
+        b.raliResetLoaders(self.loader._handle)
 
     def __iter__(self):
         return self
 
-class ROCALGenericIteratorDetection(object):
+class RALIGenericIteratorDetection(object):
     def __init__(self, pipeline, tensor_layout = types.NCHW, reverse_channels = False, multiplier = [1.0,1.0,1.0], offset = [0.0, 0.0, 0.0], tensor_dtype=types.FLOAT):
         self.loader = pipeline
         self.tensor_format =tensor_layout
@@ -65,8 +65,6 @@ class ROCALGenericIteratorDetection(object):
         self.h = b.getOutputHeight(self.loader._handle)
         self.n = b.getOutputImageCount(self.loader._handle)
         self.bs = pipeline._batch_size
-        if self.loader._name is None:
-            self.loader._name = self.loader._reader
         color_format = b.getOutputColorFormat(self.loader._handle)
         self.p = (1 if (color_format == int(types.GRAY)) else 3)
         if self.tensor_dtype == types.FLOAT:
@@ -89,18 +87,15 @@ class ROCALGenericIteratorDetection(object):
             print("Decode   time ::",timing_info.decode_time)
             print("Process  time ::",timing_info.process_time)
             print("Transfer time ::",timing_info.transfer_time)
-            self.reset()
             raise StopIteration
 
         if self.loader.run() != 0:
-            self.reset()
             raise StopIteration
         
         if(types.NCHW == self.tensor_format):
             self.loader.copyToTensorNCHW(self.out, self.multiplier, self.offset, self.reverse_channels, int(self.tensor_dtype))
         else:
             self.loader.copyToTensorNHWC(self.out, self.multiplier, self.offset, self.reverse_channels, int(self.tensor_dtype))
-
         if(self.loader._name == "TFRecordReaderDetection"):
             self.bbox_list =[]
             self.label_list=[]
@@ -165,24 +160,24 @@ class ROCALGenericIteratorDetection(object):
                 return self.out.astype(np.float32), self.labels
             elif self.tensor_dtype == types.TensorDataType.FLOAT16:
                 return self.out.astype(np.float16), self.labels
-
+        
     def reset(self):
-        b.rocalResetLoaders(self.loader._handle)
+        b.raliResetLoaders(self.loader._handle)
 
     def __iter__(self):
         return self
 
 
-class ROCALIterator(ROCALGenericIteratorDetection):
+class RALIIterator(RALIGenericIteratorDetection):
     """
-    ROCAL iterator for detection and classification tasks for PyTorch. It returns 2 or 3 outputs
+    RALI iterator for detection and classification tasks for PyTorch. It returns 2 or 3 outputs
     (data and label) or (data , bbox , labels) in the form of PyTorch's Tensor.
     Calling
     .. code-block:: python
-       ROCALIterator(pipelines, size)
+       RALIIterator(pipelines, size)
     is equivalent to calling
     .. code-block:: python
-       ROCALGenericIteratorDetection(pipelines, ["data", "label"], size)
+       RALIGenericIteratorDetection(pipelines, ["data", "label"], size)
 
 
     """
@@ -194,16 +189,16 @@ class ROCALIterator(ROCALGenericIteratorDetection):
                  dynamic_shape=False,
                  last_batch_padded=False):
         pipe = pipelines
-        super(ROCALIterator, self).__init__(pipe, tensor_layout = pipe._tensor_layout, tensor_dtype = pipe._tensor_dtype,
+        super(RALIIterator, self).__init__(pipe, tensor_layout = pipe._tensor_layout, tensor_dtype = pipe._tensor_dtype,
                                                             multiplier=pipe._multiplier, offset=pipe._offset)
 
 
 
-class ROCAL_iterator(ROCALGenericImageIterator):
+class RALI_iterator(RALIGenericImageIterator):
     """
-    ROCAL iterator for classification tasks for PyTorch. It returns 2 outputs
+    RALI iterator for classification tasks for PyTorch. It returns 2 outputs
     (data and label) in the form of PyTorch's Tensor.
-
+   
     """
     def __init__(self,
                  pipelines,
@@ -213,4 +208,4 @@ class ROCAL_iterator(ROCALGenericImageIterator):
                  dynamic_shape=False,
                  last_batch_padded=False):
         pipe = pipelines
-        super(ROCAL_iterator, self).__init__(pipe)
+        super(RALI_iterator, self).__init__(pipe)

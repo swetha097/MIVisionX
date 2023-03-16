@@ -26,12 +26,10 @@ THE SOFTWARE.
 
 class ResizeNode : public Node {
 public:
-    ResizeNode(const std::vector<Image *> &inputs, const std::vector<Image *> &outputs);
+    ResizeNode(const std::vector<rocalTensor *> &inputs, const std::vector<rocalTensor *> &outputs);
     ResizeNode() = delete;
-    unsigned int get_dst_width() { return _outputs[0]->info().width(); }
-    unsigned int get_dst_height() { return _outputs[0]->info().height_single(); }
-    vx_array get_src_width() { return _src_roi_width; }
-    vx_array get_src_height() { return _src_roi_height; }
+    unsigned int get_dst_width() { return _outputs[0]->info().max_shape()[0]; }
+    unsigned int get_dst_height() { return _outputs[0]->info().max_shape()[1]; }
     void init(unsigned dest_width, unsigned dest_height, RocalResizeScalingMode scaling_mode,
               const std::vector<unsigned>& max_size, RocalResizeInterpolationType interpolation_type);
     void adjust_out_roi_size();
@@ -40,6 +38,7 @@ protected:
     void update_node() override;
 private:
     vx_array  _dst_roi_width , _dst_roi_height;
+    unsigned _layout, _roi_type;
     int _interpolation_type;
     RocalResizeScalingMode _scaling_mode;
     unsigned _src_width, _src_height, _dst_width, _dst_height, _out_width, _out_height;

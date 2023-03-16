@@ -35,18 +35,14 @@ THE SOFTWARE.
 
 #include <half/half.hpp>
 using half_float::half;
+#include "tensor.h"
 
 typedef void * RocalFloatParam;
 typedef void * RocalIntParam;
 typedef void * RocalContext;
-typedef void * RocalImage;
-typedef void * RocalMetaData;
-
-typedef std::vector<int> ImageIDBatch,AnnotationIDBatch;
-typedef std::vector<std::string> ImagePathBatch;
-typedef std::vector<float> ScoreBatch,RotationBatch;
-typedef std::vector<std::vector<float>> CenterBatch, ScaleBatch;
-typedef std::vector<std::vector<std::vector<float>>> JointsBatch, JointsVisibilityBatch;
+typedef std::vector<rocalTensorList *> RocalMetaData;
+typedef rocalTensor * RocalTensor;
+typedef rocalTensorList * RocalTensorList;
 
 struct TimingInfo
 {
@@ -55,21 +51,6 @@ struct TimingInfo
     long long unsigned process_time;
     long long unsigned transfer_time;
 };
-
-//HRNet training expects meta data (joints_data) in below format, so added here as a type for exposing to user
-struct RocalJointsData
-{
-    ImageIDBatch image_id_batch;
-    AnnotationIDBatch annotation_id_batch;
-    ImagePathBatch image_path_batch;
-    CenterBatch center_batch;
-    ScaleBatch scale_batch;
-    JointsBatch joints_batch;
-    JointsVisibilityBatch joints_visibility_batch;
-    ScoreBatch score_batch;
-    RotationBatch rotation_batch;
-};
-
 enum RocalStatus
 {
     ROCAL_OK = 0,
@@ -118,14 +99,17 @@ enum RocalDecodeDevice
 enum RocalTensorLayout
 {
     ROCAL_NHWC = 0,
-    ROCAL_NCHW = 1
+    ROCAL_NCHW = 1,
+    ROCAL_NFHWC = 2,
+    ROCAL_NFCHW = 3
 };
 
 enum RocalTensorOutputType
 {
     ROCAL_FP32 = 0,
     ROCAL_FP16 = 1,
-    ROCAL_U8   = 2,
+    ROCAL_UINT8 = 2,
+    ROCAL_INT8 = 3
 };
 
 enum RocalDecoderType
@@ -134,10 +118,10 @@ enum RocalDecoderType
     ROCAL_DECODER_OPENCV = 1,
     ROCAL_DECODER_HW_JPEG = 2,
     ROCAL_DECODER_VIDEO_FFMPEG_SW = 3,
-    ROCAL_DECODER_VIDEO_FFMPEG_HW = 4
+    ROCAL_DECODER_VIDEO_FFMPEG_HW = 4,
 };
 
-// rocal external memcpy flags 
+// rocal external memcpy flags
 #define    ROCAL_MEMCPY_TO_HOST      1      // force copy to user provided host memory
 #define    ROCAL_MEMCPY_TO_DEVICE    2      // force copy to user provided device memory (gpu)
 #define    ROCAL_MEMCPY_IS_PINNED    4      // for future use

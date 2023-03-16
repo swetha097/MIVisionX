@@ -25,15 +25,10 @@ THE SOFTWARE.
 #include <utility>
 #include <vector>
 #include <memory>
+#include <cstring>
 #include "commons.h"
 
 
-//Defined constants since needed in reader and meta nodes for Pose Estimation
-#define NUMBER_OF_JOINTS 17
-#define NUMBER_OF_JOINTS_HALFBODY 8
-#define PIXEL_STD  200
-#define SCALE_CONSTANT_CS 1.25
-#define SCALE_CONSTANT_HALF_BODY 1.5
 typedef struct BoundingBoxCord_
 {
   float l; float t; float r; float b;
@@ -49,37 +44,6 @@ typedef  std::vector<int> BoundingBoxLabels;
 typedef  struct { int w; int h; } ImgSize;
 typedef  std::vector<ImgSize> ImgSizes;
 
-typedef std::vector<int> ImageIDBatch,AnnotationIDBatch;
-typedef std::vector<std::string> ImagePathBatch;
-typedef std::vector<float> Joint,JointVisibility,ScoreBatch,RotationBatch;
-typedef std::vector<std::vector<float>> Joints,JointsVisibility, CenterBatch, ScaleBatch;
-typedef std::vector<std::vector<std::vector<float>>> JointsBatch, JointsVisibilityBatch;
-
-typedef struct
-{
-    int image_id;
-    int annotation_id;
-    std::string image_path;
-    float center[2];
-    float scale[2];
-    Joints joints;
-    JointsVisibility joints_visibility;
-    float score;
-    float rotation;
-}JointsData;
-
-typedef struct
-{
-    ImageIDBatch image_id_batch;
-    AnnotationIDBatch annotation_id_batch;
-    ImagePathBatch image_path_batch;
-    CenterBatch center_batch;
-    ScaleBatch scale_batch;
-    JointsBatch joints_batch;
-    JointsVisibilityBatch joints_visibility_batch;
-    ScoreBatch score_batch;
-    RotationBatch rotation_batch;
-}JointsDataBatch;
 
 struct MetaData
 {
@@ -87,21 +51,41 @@ struct MetaData
     BoundingBoxCords& get_bb_cords() { return _bb_cords; }
     BoundingBoxCords_xcycwh& get_bb_cords_xcycwh() { return _bb_cords_xcycwh; }
     BoundingBoxLabels& get_bb_labels() { return _bb_label_ids; }
-    void set_bb_labels(BoundingBoxLabels bb_label_ids) {_bb_label_ids = std::move(bb_label_ids); }
-    ImgSize& get_img_size() { return _img_size; }
-    const JointsData& get_joints_data(){ return _joints_data; }
+    void set_bb_labels(BoundingBoxLabels bb_label_ids)
+    {
+        _bb_label_ids = std::move(bb_label_ids);
+        _object_count = _bb_label_ids.size();
+    }
+    ImgSize& get_img_size() {return _img_size; }
+    int get_object_count() { return _object_count; }
+    std::vector<size_t> get_bb_label_dims()
+    {
+        _bb_labels_dims = {_bb_label_ids.size()};
+        return _bb_labels_dims;
+    }
+    std::vector<size_t> get_bb_cords_dims()
+    {
+        _bb_coords_dims = {_bb_cords.size(), 4};
+        return _bb_coords_dims;
+    }
 protected:
     BoundingBoxCords _bb_cords = {}; // For bb use
     BoundingBoxCords_xcycwh _bb_cords_xcycwh = {}; // For bb use
     BoundingBoxLabels _bb_label_ids = {};// For bb use
     ImgSize _img_size = {};
-    JointsData _joints_data = {};
     int _label_id = -1; // For label use only
+    std::vector<size_t> _bb_labels_dims = {};
+    std::vector<size_t> _bb_coords_dims = {};
+    int _object_count = 0;
 };
 
 struct Label : public MetaData
 {
-    Label(int label) { _label_id = label; }
+    Label(int label)
+    {
+        _label_id = label;
+        _object_count = 1;
+    }
     Label(){ _label_id = -1; }
 };
 
@@ -136,15 +120,28 @@ struct BoundingBox : public MetaData
     void set_img_size(ImgSize img_size) { _img_size = std::move(img_size); }
 };
 
-struct KeyPoint : public MetaData
+struct MetaDataDimensionsBatch
 {
-    KeyPoint()= default;
-    KeyPoint(ImgSize img_size, JointsData *joints_data)
+    std::vector<std::vector<size_t>>& bb_labels_dims() { return _bb_labels_dims; }
+    std::vector<std::vector<size_t>>& bb_cords_dims() { return _bb_coords_dims; }
+    void clear()
     {
-        _img_size = std::move(img_size);
-        _joints_data = std::move(*joints_data);
+        _bb_labels_dims.clear();
+        _bb_coords_dims.clear();
     }
-    void set_joints_data(JointsData *joints_data) { _joints_data = std::move(*joints_data); }
+    void resize(size_t size)
+    {
+        _bb_labels_dims.resize(size);
+        _bb_coords_dims.resize(size);
+    }
+    void insert(MetaDataDimensionsBatch &other)
+    {
+        _bb_labels_dims.insert(_bb_labels_dims.end(), other.bb_labels_dims().begin(), other.bb_labels_dims().end());
+        _bb_coords_dims.insert(_bb_coords_dims.end(), other.bb_cords_dims().begin(), other.bb_cords_dims().end());
+    }
+private:
+    std::vector<std::vector<size_t>> _bb_labels_dims = {};
+    std::vector<std::vector<size_t>> _bb_coords_dims = {};
 };
 
 struct MetaDataBatch
@@ -153,6 +150,8 @@ struct MetaDataBatch
     virtual void clear() = 0;
     virtual void resize(int batch_size) = 0;
     virtual int size() = 0;
+    virtual void copy_data(std::vector<void*> buffer) = 0;
+    virtual std::vector<size_t>& get_buffer_size() = 0;
     virtual MetaDataBatch&  operator += (MetaDataBatch& other) = 0;
     MetaDataBatch* concatenate(MetaDataBatch* other)
     {
@@ -165,14 +164,21 @@ struct MetaDataBatch
     std::vector<BoundingBoxCords_xcycwh>& get_bb_cords_batch_xcycxwh() { return _bb_cords_xcycwh; }
     std::vector<BoundingBoxLabels>& get_bb_labels_batch() { return _bb_label_ids; }
     ImgSizes & get_img_sizes_batch() { return _img_sizes; }
-    JointsDataBatch & get_joints_data_batch() { return _joints_data; }
+    void reset_objects_count() { 
+        _total_objects_count = 0;
+    }
+    void increment_object_count(int count) { _total_objects_count += count; }
+    int get_batch_object_count() { return _total_objects_count; }
+    MetaDataDimensionsBatch& get_metadata_dimensions_batch() { return _metadata_dimensions; }
 protected:
     std::vector<int> _label_id = {}; // For label use only
     std::vector<BoundingBoxCords> _bb_cords = {};
     std::vector<BoundingBoxCords_xcycwh> _bb_cords_xcycwh = {};
     std::vector<BoundingBoxLabels> _bb_label_ids = {};
-    std::vector<ImgSize> _img_sizes = {};
-    JointsDataBatch _joints_data = {};
+    ImgSizes _img_sizes = {};
+    std::vector<size_t> _buffer_size;
+    int _total_objects_count = 0;
+    MetaDataDimensionsBatch _metadata_dimensions;
 };
 
 struct LabelBatch : public MetaDataBatch
@@ -180,6 +186,8 @@ struct LabelBatch : public MetaDataBatch
     void clear() override
     {
         _label_id.clear();
+        _buffer_size.clear();
+        _total_objects_count = 0;
     }
     MetaDataBatch&  operator += (MetaDataBatch& other) override
     {
@@ -203,6 +211,17 @@ struct LabelBatch : public MetaDataBatch
         _label_id = std::move(labels);
     }
     LabelBatch() = default;
+    void copy_data(std::vector<void*> buffer) override
+    {
+        if(buffer.size() < 1)
+            THROW("The buffers are insufficient") // TODO -change
+        memcpy((int *)buffer[0], _label_id.data(), _label_id.size() * sizeof(int));
+    }
+    std::vector<size_t>& get_buffer_size() override
+    {
+        _buffer_size.emplace_back(_total_objects_count * sizeof(int));
+        return _buffer_size;
+    }
 };
 
 struct BoundingBoxBatch: public MetaDataBatch
@@ -212,12 +231,16 @@ struct BoundingBoxBatch: public MetaDataBatch
         _bb_cords.clear();
         _bb_label_ids.clear();
         _img_sizes.clear();
+        _metadata_dimensions.clear();
+        _total_objects_count = 0;
+        _buffer_size.clear();
     }
     MetaDataBatch&  operator += (MetaDataBatch& other) override
     {
         _bb_cords.insert(_bb_cords.end(), other.get_bb_cords_batch().begin(), other.get_bb_cords_batch().end());
         _bb_label_ids.insert(_bb_label_ids.end(), other.get_bb_labels_batch().begin(), other.get_bb_labels_batch().end());
         _img_sizes.insert(_img_sizes.end(), other.get_img_sizes_batch().begin(), other.get_img_sizes_batch().end());
+        _metadata_dimensions.insert(other.get_metadata_dimensions_batch());
         return *this;
     }
     void resize(int batch_size) override
@@ -225,6 +248,7 @@ struct BoundingBoxBatch: public MetaDataBatch
         _bb_cords.resize(batch_size);
         _bb_label_ids.resize(batch_size);
         _img_sizes.resize(batch_size);
+        _metadata_dimensions.resize(batch_size);
     }
     int size() override
     {
@@ -234,56 +258,32 @@ struct BoundingBoxBatch: public MetaDataBatch
     {
         return std::make_shared<BoundingBoxBatch>(*this);
     }
-};
-
-struct KeyPointBatch : public MetaDataBatch
-{
-    void clear() override
+    void copy_data(std::vector<void*> buffer) override
     {
-        _img_sizes.clear();
-        _joints_data = {};
-        _bb_cords.clear();
-        _bb_label_ids.clear();
+        if(buffer.size() < 2)
+            THROW("The buffers are insufficient") // TODO -change
+        int *labels_buffer = (int *)buffer[0];
+        float *bbox_buffer = (float *)buffer[1];
+        auto bb_labels_dims = _metadata_dimensions.bb_labels_dims();
+        auto bb_coords_dims = _metadata_dimensions.bb_cords_dims();
+        for(unsigned i = 0; i < _bb_label_ids.size(); i++)
+        {
+            memcpy(labels_buffer, _bb_label_ids[i].data(), bb_labels_dims[i][0] * sizeof(int));
+            memcpy(bbox_buffer, _bb_cords[i].data(), bb_coords_dims[i][0] * sizeof(BoundingBoxCord));
+            labels_buffer += bb_labels_dims[i][0];
+            bbox_buffer += (bb_coords_dims[i][0] * 4);
+        }
     }
-    MetaDataBatch&  operator += (MetaDataBatch& other) override
+    std::vector<size_t>& get_buffer_size() override
     {
-        _img_sizes.insert(_img_sizes.end(), other.get_img_sizes_batch().begin(), other.get_img_sizes_batch().end());
-        _joints_data.image_id_batch.insert(_joints_data.image_id_batch.end(), other.get_joints_data_batch().image_id_batch.begin(), other.get_joints_data_batch().image_id_batch.end());
-        _joints_data.annotation_id_batch.insert(_joints_data.annotation_id_batch.end(), other.get_joints_data_batch().annotation_id_batch.begin(), other.get_joints_data_batch().annotation_id_batch.end());
-        _joints_data.center_batch.insert(_joints_data.center_batch.end(), other.get_joints_data_batch().center_batch.begin(), other.get_joints_data_batch().center_batch.end());
-        _joints_data.scale_batch.insert(_joints_data.scale_batch.end(), other.get_joints_data_batch().scale_batch.begin(), other.get_joints_data_batch().scale_batch.end());
-        _joints_data.joints_batch.insert(_joints_data.joints_batch.end(), other.get_joints_data_batch().joints_batch.begin() ,other.get_joints_data_batch().joints_batch.end());
-        _joints_data.joints_visibility_batch.insert(_joints_data.joints_visibility_batch.end(), other.get_joints_data_batch().joints_visibility_batch.begin(), other.get_joints_data_batch().joints_visibility_batch.end());
-        _joints_data.score_batch.insert(_joints_data.score_batch.end(), other.get_joints_data_batch().score_batch.begin(), other.get_joints_data_batch().score_batch.end());
-        _joints_data.rotation_batch.insert(_joints_data.rotation_batch.end(), other.get_joints_data_batch().rotation_batch.begin(), other.get_joints_data_batch().rotation_batch.end());
-        return *this;
-    }
-    void resize(int batch_size) override
-    {
-        _joints_data.image_id_batch.resize(batch_size);
-        _joints_data.annotation_id_batch.resize(batch_size);
-        _joints_data.center_batch.resize(batch_size);
-        _joints_data.scale_batch.resize(batch_size);
-        _joints_data.joints_batch.resize(batch_size);
-        _joints_data.joints_visibility_batch.resize(batch_size);
-        _joints_data.score_batch.resize(batch_size);
-        _joints_data.rotation_batch.resize(batch_size);
-        _bb_cords.resize(batch_size);
-        _bb_label_ids.resize(batch_size);
-    }
-    int size() override
-    {
-        return _joints_data.image_id_batch.size();
-    }
-    std::shared_ptr<MetaDataBatch> clone() override
-    {
-        return std::make_shared<KeyPointBatch>(*this);
+        _buffer_size.emplace_back(_total_objects_count * sizeof(int));
+        _buffer_size.emplace_back(_total_objects_count * 4 * sizeof(float));
+        return _buffer_size;
     }
 };
 
 using ImageNameBatch = std::vector<std::string>;
 using pMetaData = std::shared_ptr<Label>;
 using pMetaDataBox = std::shared_ptr<BoundingBox>;
-using pMetaDataKeyPoint = std::shared_ptr<KeyPoint>;
 using pMetaDataBatch = std::shared_ptr<MetaDataBatch>;
 

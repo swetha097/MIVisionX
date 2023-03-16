@@ -23,7 +23,8 @@ THE SOFTWARE.
 #include "node.h"
 Node::~Node()
 {
-
+    vxReleaseTensor(&_src_tensor_roi_);
+    vxReleaseTensor(&_dst_tensor_roi_);
     if(!_node)
         vxReleaseNode(&_node);
     _node = nullptr;
@@ -37,35 +38,32 @@ Node::create(std::shared_ptr<Graph> graph)
 
     _graph = graph;
 
-    if(!_inputs.empty())
+    if(!_inputs.empty() && !_outputs.empty())
     {
-        vx_status width_status, height_status;
-        std::vector<uint32_t> roi_width(_batch_size, _inputs[0]->info().width());
-        std::vector<uint32_t> roi_height(_batch_size, _inputs[0]->info().height_single());
-        _src_roi_width = vxCreateArray(vxGetContext((vx_reference) _graph->get()), VX_TYPE_UINT32, _batch_size);
-        _src_roi_height = vxCreateArray(vxGetContext((vx_reference) _graph->get()), VX_TYPE_UINT32, _batch_size);
-        width_status = vxAddArrayItems(_src_roi_width, _batch_size, roi_width.data(), sizeof(vx_uint32));
-        height_status = vxAddArrayItems(_src_roi_height, _batch_size, roi_height.data(), sizeof(vx_uint32));
-        if (width_status != 0 || height_status != 0)
-            THROW(" vxAddArrayItems failed : " + TOSTR(width_status) + "  " + TOSTR(height_status))
+        vx_size num_of_dims = 2;
+        vx_size stride[num_of_dims];
+        std::vector<size_t> roi_dims = {_batch_size, 4};
+        stride[0] = sizeof(vx_uint32);
+        stride[1] = stride[0] * roi_dims[0];
+        vx_enum mem_type = VX_MEMORY_TYPE_HOST;
+        if (_inputs[0]->info().mem_type() == RocalMemType::HIP)
+            mem_type = VX_MEMORY_TYPE_HIP;
+            
+        _src_tensor_roi_ = vxCreateTensorFromHandle(vxGetContext((vx_reference) _graph->get()), num_of_dims, roi_dims.data(), VX_TYPE_UINT32, 0, 
+                                                                 stride, (void *)_inputs[0]->info().get_roi(), mem_type);
+        _dst_tensor_roi_ = vxCreateTensorFromHandle(vxGetContext((vx_reference) _graph->get()), num_of_dims, roi_dims.data(), VX_TYPE_UINT32, 0,
+                                                                 stride, (void *)_outputs[0]->info().get_roi(), mem_type);
+        vx_status status;
+        if ((status = vxGetStatus((vx_reference)_src_tensor_roi_)) != VX_SUCCESS)
+            THROW("Error: vxCreateTensorFromHandle(src tensor roi: failed " + TOSTR(status))
+        if ((status = vxGetStatus((vx_reference)_dst_tensor_roi_)) != VX_SUCCESS)
+            THROW("Error: vxCreateTensorFromHandle(dst tensor roi: failed " + TOSTR(status))
     }
-
     create_node();
 }
 
 void
 Node::update_parameters()
 {
-    update_src_roi();
     update_node();
-}
-
-void
-Node::update_src_roi()
-{
-    vx_status width_status, height_status;
-    width_status = vxCopyArrayRange((vx_array)_src_roi_width, 0, _batch_size, sizeof(vx_uint32), _inputs[0]->info().get_roi_width(), VX_WRITE_ONLY, VX_MEMORY_TYPE_HOST);
-    height_status = vxCopyArrayRange((vx_array)_src_roi_height, 0, _batch_size, sizeof(vx_uint32), _inputs[0]->info().get_roi_height(), VX_WRITE_ONLY, VX_MEMORY_TYPE_HOST);
-    if(width_status != 0 || height_status != 0)
-        THROW(" Failed calling vxCopyArrayRange for width / height status : "+ TOSTR(width_status) + " / "+ TOSTR(height_status))
 }
