@@ -1,9 +1,5 @@
 /*
-<<<<<<< HEAD:amd_openvx_extensions/amd_rpp/source/SequenceRearrange.cpp
 SequenceRearrangeright (c) 2019 - 2023 Advanced Micro Devices, Inc. All rights reserved.
-=======
-SequenceRearrangebatchPDright (c) 2019 - 2022 Advanced Micro Devices, Inc. All rights reserved.
->>>>>>> 0072ae1421f3f07fa53efc121dfe87a58177c21e:amd_openvx_extensions/amd_rpp/source/image/SequenceRearrangebatchPD.cpp
 
 Permission is hereby granted, free of charge, to any person obtaining a SequenceRearrangebatchPD
 of this software and associated documentation files (the "Software"), to deal
