@@ -125,20 +125,15 @@ class RALIGenericIterator(object):
             if self.output is None:
                 self.output = torch.empty((self.batch_size, self.samples, self.channels,), dtype=torch.float32)
             # next
-            # TODO:Swetha : 
-            # To pass the self.last_batch_size to the copy_data function as an argument & copy only for this much size
-            # To allocate the empty torch tensor only of size - self.last_batch_size
 
+            self.labels = self.loader.rocalGetImageLabels()
+            self.labels_tensor = torch.from_numpy(self.labels).type(torch.LongTensor)
             if (self.last_batch_policy is (types.LAST_BATCH_PARTIAL)) and b.getRemainingImages(self.loader._handle) <= 0 :
                 self.output = torch.empty((self.last_batch_size, self.samples, self.channels,), dtype=torch.float32)
                 self.output_tensor_list[0].copy_data(ctypes.c_void_p(self.output.data_ptr()), self.last_batch_size)
-                self.labels = self.loader.rocalGetImageLabels()
-                self.labels_tensor = torch.from_numpy(self.labels).type(torch.LongTensor)
                 return self.output[0:self.last_batch_size,:], self.labels_tensor[0:self.last_batch_size], torch.tensor(self.output_tensor_list[0].get_rois().reshape(self.batch_size,4)[...,0:2][0:self.last_batch_size,:])
             else:
                 self.output_tensor_list[0].copy_data(ctypes.c_void_p(self.output.data_ptr()))
-                self.labels = self.loader.rocalGetImageLabels()
-                self.labels_tensor = torch.from_numpy(self.labels).type(torch.LongTensor)
                 return self.output, self.labels_tensor, torch.tensor(self.output_tensor_list[0].get_rois().reshape(self.batch_size,4)[...,0:2])
 
     def reset(self):
