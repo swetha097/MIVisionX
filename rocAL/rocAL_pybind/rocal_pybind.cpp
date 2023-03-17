@@ -329,6 +329,7 @@ namespace rocal
         m.def("getStatus", rocalGetStatus);
         m.def("rocalGetErrorMessage", &rocalGetErrorMessage);
         m.def("rocalGetTimingInfo", &rocalGetTimingInfo);
+        m.def("getTimingInfo", &rocalGetTimingInfo);
         m.def("setOutputImages", &rocalSetOutputs);
         m.def("labelReader", &rocalCreateLabelReader, py::return_value_policy::reference);
         m.def("COCOReader", &rocalCreateCOCOReader, py::return_value_policy::reference);
@@ -473,12 +474,7 @@ namespace rocal
         m.def("rocalResetLoaders", &rocalResetLoaders);
         // rocal_api_augmentation.h
         m.def("Brightness", &rocalBrightness,
-              py::return_value_policy::reference,
-              py::arg("context"),
-              py::arg("input"),
-              py::arg("is_output"),
-              py::arg("alpha") = NULL,
-              py::arg("beta") = NULL);
+              py::return_value_policy::reference);
         m.def("CropMirrorNormalize",&rocalCropMirrorNormalize, py::return_value_policy::reference);
         // m.def("Crop", &rocalCrop, py::return_value_policy::reference);
         m.def("CenterCropFixed", &rocalCropCenterFixed, py::return_value_policy::reference);

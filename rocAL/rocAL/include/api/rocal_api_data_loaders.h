@@ -182,11 +182,12 @@ extern "C"  RocalTensor  ROCAL_API_CALL rocalJpegCOCOFileSourcePartial(RocalCont
 /// \param shard_id Shard id for this loader
 /// \param shard_count Defines the parallelism level by internally sharding the input dataset and load/decode using multiple decoder/loader instances. Using shard counts bigger than 1 improves the load/decode performance if compute resources (CPU cores) are available.
 /// \param is_output Determines if the user wants the loaded images to be part of the output or not.
+/// \param area_factor Determines how much area to be cropped. Ranges from from 0.08 - 1.
+/// \param aspect_ratio Determines the aspect ration of crop. Ranges from 0.75 to 1.33.
+/// \param num_attempts Maximum number of attempts to generate crop. Default 100
 /// \param decode_size_policy
 /// \param max_width The maximum width of the decoded images, larger or smaller will be resized to closest
 /// \param max_height The maximum height of the decoded images, larger or smaller will be resized to closest
-/// \param area_factor Determines how much area to be cropped. Ranges from from 0.08 - 1.
-/// \param aspect_ratio Determines the aspect ration of crop. Ranges from 0.75 to 1.33.
 /// \return Reference to the output image
 extern "C"  RocalTensor  ROCAL_API_CALL rocalJpegCOCOFileSourcePartialSingleShard(RocalContext p_context,
                                                             const char* source_path,
