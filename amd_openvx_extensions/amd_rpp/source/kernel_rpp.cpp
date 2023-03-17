@@ -2020,6 +2020,7 @@ VX_API_ENTRY vx_node VX_API_CALL vxExtrppNode_Resize(vx_graph graph, vx_tensor p
             (vx_reference)srcROI,
             (vx_reference)pDst,
             (vx_reference)dst_width,
+            (vx_reference)dst_height,
             (vx_reference)interpolation_type,
             (vx_reference)inputLayout,
             (vx_reference)outputLayout,
