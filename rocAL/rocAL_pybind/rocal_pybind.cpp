@@ -366,13 +366,12 @@ namespace rocal
         m.def("GetIntValue", &rocalGetIntValue);
         m.def("GetFloatValue", &rocalGetFloatValue);
         // rocal_api_data_transfer.h
-<<<<<<< HEAD
-        m.def("rocalCopyToOutput",&wrapper_copy_to_output);
-        m.def("rocalCopyToOutputTensor",&wrapper_tensor);
-        m.def("rocalCopyToOutputTensor32",&wrapper_tensor32);
-        m.def("rocalCopyToOutputTensor16",&wrapper_tensor16);
-        m.def("rocalCopyCupyToOutputTensor32",&wrapper_copy_cupy_tensor32);
-        m.def("rocalCopyCupyToOutputTensor16",&wrapper_copy_cupy_tensor16);
+        // m.def("rocalCopyToOutput",&wrapper_copy_to_output);
+        // m.def("rocalCopyToOutputTensor",&wrapper_tensor);
+        // m.def("rocalCopyToOutputTensor32",&wrapper_tensor32);
+        // m.def("rocalCopyToOutputTensor16",&wrapper_tensor16);
+        // m.def("rocalCopyCupyToOutputTensor32",&wrapper_copy_cupy_tensor32);
+        // m.def("rocalCopyCupyToOutputTensor16",&wrapper_copy_cupy_tensor16);
         // rocal_api_data_loaders.h
         m.def("COCO_ImageDecoderSlice",&rocalJpegCOCOFileSourcePartial,"Reads file from the source given and decodes it according to the policy",
             py::return_value_policy::reference);
@@ -392,8 +391,36 @@ namespace rocal
             py::return_value_policy::reference);
         m.def("Caffe_ImageDecoderShard",&rocalJpegCaffeLMDBRecordSourceSingleShard, "Reads file from the source given and decodes it according to the shard id and number of shards",
             py::return_value_policy::reference);
-        m.def("Caffe_ImageDecoderPartialShard",&rocalJpegCaffeLMDBRecordSourcePartialSingleShard);
-        m.def("Caffe2_ImageDecoder",&rocalJpegCaffe2LMDBRecordSource,"Reads file from the source given and decodes it according to the policy only for TFRecords",
+        m.def("Caffe_ImageDecoderPartialShard",&rocalJpegCaffeLMDBRecordSourcePartialSingleShard, py::return_value_policy::reference);
+        m.def("Caffe2_ImageDecoder",&rocalJpegCaffe2LMDBRecordSource,"Reads file from the source given and decodes it according to the policy only for TFRecords", py::return_value_policy::reference);
+	        // m.def("rocalGetOutputTensors",&rocalGetOutputTensors, return_value_policy::reference);
+        m.def("rocalGetOutputTensors", [](RocalContext context)
+              {
+            rocalTensorList * tl = rocalGetOutputTensors(context);
+            py::list list;
+            unsigned int size_of_tensor_list = tl->size();
+            for (uint i =0; i< size_of_tensor_list; i++)
+                list.append(tl->at(i));
+            return list; });
+        m.def(
+            "rocalGetImageLabels", [](RocalContext context)
+    {
+            rocalTensorList *labels = rocalGetImageLabels(context);
+            // std::cerr<<"LABELS SIZE ::"<<labels->size();
+            // for (int i = 0; i < labels->size(); i++) {
+            //     int *labels_buffer = (int *)(labels->at(i)->buffer());
+            //     std::cerr << ">>>>> LABELS : " << labels_buffer[0] << "\t";
+            // }
+            return py::array(py::buffer_info(
+                            (int *)(labels->at(0)->buffer()),
+                            sizeof(int),
+                            py::format_descriptor<int>::format(),
+                            1,
+                            {labels->size()},
+                            {sizeof(int) }));
+    }
+            );
+        // m.def(
         //     "copy_data_ptr", [](RocalContext context, py::object p)
         // {
         // auto ptr = ctypes_void_ptr(p);
@@ -478,7 +505,5 @@ namespace rocal
         m.def("CropMirrorNormalize",&rocalCropMirrorNormalize, py::return_value_policy::reference);
         // m.def("Crop", &rocalCrop, py::return_value_policy::reference);
         m.def("CenterCropFixed", &rocalCropCenterFixed, py::return_value_policy::reference);
-
->>>>>>> 0072ae1421f3f07fa53efc121dfe87a58177c21e
     }
 }
