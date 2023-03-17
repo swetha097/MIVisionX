@@ -26,7 +26,7 @@ THE SOFTWARE.
 #include "file_list_reader.h"
 #include <boost/filesystem.hpp>
 #include <fstream>
-
+#include <cmath>
 
 namespace filesys = boost::filesystem;
 
@@ -313,7 +313,7 @@ Reader::Status FileListReader::open_folder()
         _file_count_all_shards++;
         incremenet_file_id();
     }
-    uint images_to_pad_shard = _file_count_all_shards % _shard_count;
+    uint images_to_pad_shard = _file_count_all_shards - (ceil(_file_count_all_shards / _shard_count) * _shard_count);
     if(!images_to_pad_shard) {
         for(int i = 0; i < images_to_pad_shard; i++) {
             if(get_file_shard_id() != _shard_id )

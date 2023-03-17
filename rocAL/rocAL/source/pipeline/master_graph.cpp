@@ -691,7 +691,6 @@ void MasterGraph::output_routine()
             ImageNameBatch full_batch_image_names = {};
             pMetaDataBatch full_batch_meta_data = nullptr;
             pMetaDataBatch augmented_batch_meta_data = nullptr;
-        std::cerr << " \n loader_module->remaining_count()" <<_loader_module->remaining_count();
             if (_loader_module->remaining_count() <= (_is_sequence_reader_output ? _sequence_batch_size : _user_batch_size))
             {
                 _final_batch_padded_size = _loader_module->last_batch_padded_size();
