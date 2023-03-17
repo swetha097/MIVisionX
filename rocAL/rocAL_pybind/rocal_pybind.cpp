@@ -425,8 +425,7 @@ namespace rocal
                             1,
                             {matches->size() * 120087},
                             {sizeof(int) }));
-    }
-            );
+    }, py::return_value_policy::reference);
         // m.def(
         //     "copy_data_ptr", [](RocalContext context, py::object p)
         // {

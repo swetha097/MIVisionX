@@ -574,13 +574,13 @@ void MasterGraph::output_routine()
 #endif
                     _meta_data_graph->update_box_encoder_meta_data(&_anchors, full_batch_meta_data, _criteria, _offset, _scale, _means, _stds);
             }
-            if(_is_box_iou_matcher)
-            {
+            if(_is_box_iou_matcher) {
                 //TODO - to add call for hip kernel.
-                _meta_data_graph->update_box_iou_matcher(&_anchors_double, full_batch_meta_data, _criteria, _high_threshold, _low_threshold, _allow_low_quality_matches);
+                auto matches_write_buffer = _is_segmentation ? _ring_buffer.get_meta_write_buffers()[3] : _ring_buffer.get_meta_write_buffers()[2];
+                _meta_data_graph->update_box_iou_matcher(&_anchors_double, (int *)matches_write_buffer, full_batch_meta_data, _criteria, _high_threshold, _low_threshold, _allow_low_quality_matches);
             }
             _bencode_time.end();
-            _ring_buffer.set_meta_data(full_batch_image_names, full_batch_meta_data, _is_segmentation, _is_box_iou_matcher);
+            _ring_buffer.set_meta_data(full_batch_image_names, full_batch_meta_data, _is_segmentation);
             _ring_buffer.push();
             // full_batch_meta_data->clear();
         }
@@ -766,6 +766,18 @@ std::vector<rocalTensorList *> MasterGraph::create_coco_meta_data_reader(const c
     _meta_data_buffer_size.emplace_back(dims.at(0) * dims.at(1)  * _user_batch_size * sizeof(vx_float64)); // TODO - replace with data size from info
     rocalTensorInfo default_mask_info, default_matches_info;
     //check if box coder - then add matched idxs meta data
+    if(mask)
+    {
+        num_of_dims = 2;
+        dims.resize(num_of_dims);
+        dims.at(0) = MAX_MASK_BUFFER;
+        dims.at(1) = 1;
+        default_mask_info  = rocalTensorInfo(dims,
+                                            _mem_type,
+                                            RocalTensorDataType::FP32);
+        default_mask_info.set_metadata();
+        _meta_data_buffer_size.emplace_back(dims.at(0) * dims.at(1)  * _user_batch_size * sizeof(vx_float32)); // TODO - replace with data size from info  
+    }
     if(is_box_iou_matcher)
     {
         _is_box_iou_matcher = true;
@@ -779,19 +791,6 @@ std::vector<rocalTensorList *> MasterGraph::create_coco_meta_data_reader(const c
         default_matches_info.set_tensor_layout(RocalTensorlayout::NONE);
         _meta_data_buffer_size.emplace_back(dims.at(0) * _user_batch_size * sizeof(vx_int32)); // TODO - replace with data size from info   // shobi check if this needs to be changed to double
     }
-    if(mask)
-    {
-        num_of_dims = 2;
-        dims.resize(num_of_dims);
-        dims.at(0) = MAX_MASK_BUFFER;
-        dims.at(1) = 1;
-        default_mask_info  = rocalTensorInfo(dims,
-                                            _mem_type,
-                                            RocalTensorDataType::FP32);
-        default_mask_info.set_metadata();
-        _meta_data_buffer_size.emplace_back(dims.at(0) * dims.at(1)  * _user_batch_size * sizeof(vx_float32)); // TODO - replace with data size from info  
-    }
-
 
     for(unsigned i = 0; i < _user_batch_size; i++)
     {
@@ -1167,11 +1166,9 @@ rocalTensorList * MasterGraph::matches_meta_data()
 {
     if(_ring_buffer.level() == 0)
         THROW("No meta data has been loaded")
-    auto meta_data_buffers = (unsigned char *)_ring_buffer.get_meta_read_buffers()[2]; // Get labels buffer from ring buffer
-    auto matches_tensor_dims = _ring_buffer.get_meta_data_info().matches_dims();
+    auto meta_data_buffers = (unsigned char *)( _is_segmentation ? _ring_buffer.get_meta_read_buffers()[3] : _ring_buffer.get_meta_read_buffers()[2]); // Get labels buffer from ring buffer
     for(unsigned i = 0; i < _matches_tensor_list.size(); i++)
     {
-        _matches_tensor_list[i]->set_dims(matches_tensor_dims[i]);
         _matches_tensor_list[i]->set_mem_handle((void *)meta_data_buffers);
         meta_data_buffers += _matches_tensor_list[i]->info().data_size();
     }

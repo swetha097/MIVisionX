@@ -62,11 +62,9 @@ void COCOMetaDataReader::lookup(const std::vector<std::string> &image_names)
         _output->get_bb_cords_batch()[i] = it->second->get_bb_cords();
         _output->get_bb_labels_batch()[i] = it->second->get_bb_labels();
         _output->get_img_sizes_batch()[i] = it->second->get_img_size();
-        _output->get_matches_batch()[i] = it->second->get_matches();
         _output->increment_object_count(it->second->get_object_count());
         _output->get_metadata_dimensions_batch().bb_labels_dims()[i] = it->second->get_bb_label_dims();
         _output->get_metadata_dimensions_batch().bb_cords_dims()[i] = it->second->get_bb_cords_dims();
-        _output->get_metadata_dimensions_batch().matches_dims()[i] = it->second->get_matches_dims();
         if (_mask)
         {
             _output->get_mask_cords_batch()[i] = it->second->get_mask_cords();
@@ -104,20 +102,6 @@ void COCOMetaDataReader::add(std::string image_name, BoundingBoxCords bb_coords,
         return;
     }
     pMetaDataBox info = std::make_shared<BoundingBox>(bb_coords, bb_labels, image_size);
-    _map_content.insert(pair<std::string, std::shared_ptr<BoundingBox>>(image_name, info));
-}
-
-void COCOMetaDataReader::add(std::string image_name, BoundingBoxCords bb_coords, BoundingBoxLabels bb_labels, ImgSize image_size, Matches match)
-{
-    if (exists(image_name))
-    {
-        auto it = _map_content.find(image_name);
-        it->second->get_bb_cords().push_back(bb_coords[0]);
-        it->second->get_bb_labels().push_back(bb_labels[0]);
-        //it->second->get_matches().insert(it->second->get_matches().end(), match.begin(), match.end());
-        return;
-    }
-    pMetaDataBox info = std::make_shared<BoundingBox>(bb_coords, bb_labels, image_size, match);
     _map_content.insert(pair<std::string, std::shared_ptr<BoundingBox>>(image_name, info));
 }
 

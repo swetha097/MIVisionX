@@ -94,6 +94,12 @@ std::vector<void*> RingBuffer::get_meta_read_buffers()
     return _host_meta_data_buffers[_read_ptr];
 }
 
+std::vector<void*> RingBuffer::get_meta_write_buffers()
+{
+    block_if_full();
+    return _host_meta_data_buffers[_write_ptr];
+}
+
 void RingBuffer::unblock_reader()
 {
     // Wake up the reader thread in case it's waiting for a load
@@ -413,7 +419,7 @@ void RingBuffer::increment_write_ptr()
     _wait_for_load.notify_all();
 }
 
-void RingBuffer::set_meta_data(ImageNameBatch names, pMetaDataBatch meta_data, bool is_segmentation, bool is_box_iou_matcher)
+void RingBuffer::set_meta_data(ImageNameBatch names, pMetaDataBatch meta_data, bool is_segmentation)
 {
     if(meta_data == nullptr)
         _last_image_meta_data = std::move(std::make_pair(std::move(names), pMetaDataBatch()));
@@ -422,13 +428,13 @@ void RingBuffer::set_meta_data(ImageNameBatch names, pMetaDataBatch meta_data, b
         _last_image_meta_data = std::move(std::make_pair(std::move(names), meta_data));
         if(!_box_encoder_gpu)
         {
-            auto actual_buffer_size = meta_data->get_buffer_size(is_segmentation, is_box_iou_matcher);
-            for(unsigned i = 0; i < _meta_data_sub_buffer_count; i++)
+            auto actual_buffer_size = meta_data->get_buffer_size(is_segmentation);
+            for(unsigned i = 0; i < actual_buffer_size.size(); i++)
             {
                 if(actual_buffer_size[i] > _meta_data_sub_buffer_size[_write_ptr][i])
                     rellocate_meta_data_buffer(_host_meta_data_buffers[_write_ptr][i], actual_buffer_size[i], i);
             }
-            meta_data->copy_data(_host_meta_data_buffers[_write_ptr], is_segmentation, is_box_iou_matcher);
+            meta_data->copy_data(_host_meta_data_buffers[_write_ptr], is_segmentation);
         }
     }
 }

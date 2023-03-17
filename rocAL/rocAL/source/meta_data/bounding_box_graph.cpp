@@ -277,12 +277,17 @@ void BoundingBoxGraph::update_box_encoder_meta_data(std::vector<float> *anchors,
     }
 }
 
-void BoundingBoxGraph::update_box_iou_matcher(std::vector<double> *anchors, pMetaDataBatch full_batch_meta_data ,float criteria, float high_threshold, float low_threshold, bool allow_low_quality_matches)
+void BoundingBoxGraph::update_box_iou_matcher(std::vector<double> *anchors, int * matches_idx_buffer, pMetaDataBatch full_batch_meta_data ,float criteria, float high_threshold, float low_threshold, bool allow_low_quality_matches)
 {
     auto bb_coords_batch = full_batch_meta_data->get_bb_cords_batch();
     unsigned anchors_size = anchors->size() / 4; // divide the anchors_size by 4 to get the total number of anchors
     BoundingBoxCord *bbox_anchors = reinterpret_cast<BoundingBoxCord *>(anchors->data());
-
+    
+    std::vector<int *> matches(full_batch_meta_data->size());
+    for (int i = 0; i < full_batch_meta_data->size(); i++) {
+        matches[i] = reinterpret_cast<int *>(matches_idx_buffer + i * anchors_size);
+    }
+    
 #pragma omp parallel for
     for (int i = 0; i < full_batch_meta_data->size(); i++)
     {
@@ -290,11 +295,10 @@ void BoundingBoxGraph::update_box_iou_matcher(std::vector<double> *anchors, pMet
         auto bb_count = bb_coords.size();
 
         std::vector<double> matched_vals(anchors_size, -1.0);
-        std::vector<int> matches(anchors_size);
         std::vector<int> low_quality_preds(anchors_size, -1);
 
         // Calculate IoU's, The number of IoU Values calculated will be (bb_count x anchors_size)
-        for(uint bb_idx = 0; bb_idx < bb_count; bb_idx++) {
+        for(int bb_idx = 0; bb_idx < bb_count; bb_idx++) {
             BoundingBoxCord box = bb_coords[bb_idx];
             double box_area = (box.b - box.t) * (box.r - box.l);
             double best_bbox_iou = -1.0;
@@ -306,7 +310,7 @@ void BoundingBoxGraph::update_box_iou_matcher(std::vector<double> *anchors, pMet
                 // Find col maximum in (bb_count x anchors_size) IoU values calculated
                 if (iou_val > matched_vals[anchor_idx]) {
                     matched_vals[anchor_idx] = iou_val;
-                    matches[anchor_idx] = bb_idx;
+                    matches[i][anchor_idx] = bb_idx;
                 }
 
                 // Find row maximum in (bb_count x anchors_size) IoU values calculated
@@ -328,15 +332,11 @@ void BoundingBoxGraph::update_box_iou_matcher(std::vector<double> *anchors, pMet
         // Update matched indices based on thresholds and low quality matches
         for(uint pred_idx = 0; pred_idx < anchors_size; pred_idx++) {
             if(!(allow_low_quality_matches && low_quality_preds[pred_idx] != -1)) {
-                if(matched_vals[pred_idx] < 0.4) { matches[pred_idx] = -1; }
-                else if ((matched_vals[pred_idx] < 0.5)) { matches[pred_idx] = -2; }
+                if(matched_vals[pred_idx] < 0.4) { matches[i][pred_idx] = -1; }
+                else if ((matched_vals[pred_idx] < 0.5)) { matches[i][pred_idx] = -2; }
             }
         }
 
-        full_batch_meta_data->get_matches_batch()[i] = matches;
-        full_batch_meta_data->get_metadata_dimensions_batch().matches_dims()[i][0] = anchors_size;
-
-        matches.clear();
         matched_vals.clear();
         low_quality_preds.clear();
     }

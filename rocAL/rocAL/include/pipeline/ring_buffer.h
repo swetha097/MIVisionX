@@ -57,7 +57,8 @@ public:
     MetaDataNamePair& get_meta_data();
     MetaDataDimensionsBatch& get_meta_data_info();
     std::vector<void*> get_meta_read_buffers();
-    void set_meta_data(ImageNameBatch names, pMetaDataBatch meta_data, bool is_segmentation = false, bool is_box_iou_matcher = false);
+    std::vector<void*> get_meta_write_buffers();
+    void set_meta_data(ImageNameBatch names, pMetaDataBatch meta_data, bool is_segmentation = false);
     void rellocate_meta_data_buffer(void * buffer, size_t buffer_size, unsigned buff_idx);
     void reset();
     void pop();
