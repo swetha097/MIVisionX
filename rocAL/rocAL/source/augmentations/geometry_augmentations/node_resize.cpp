@@ -42,7 +42,7 @@ void ResizeNode::create_node() {
     width_status = vxAddArrayItems(_dst_roi_width, _batch_size, dst_roi_width.data(), sizeof(vx_uint32));
     height_status = vxAddArrayItems(_dst_roi_height, _batch_size, dst_roi_height.data(), sizeof(vx_uint32));
     if(width_status != 0 || height_status != 0)
-        THROW(" vxAddArrayItems failed in the resize (vxExtrppNode_ResizebatchPD) node: "+ TOSTR(width_status) + "  "+ TOSTR(height_status));
+        THROW(" vxAddArrayItems failed in the resize (vxExtrppNode_Resize) node: "+ TOSTR(width_status) + "  "+ TOSTR(height_status));
 
     int input_layout = (int)_inputs[0]->info().layout();
     int output_layout = (int)_outputs[0]->info().layout();
@@ -51,7 +51,7 @@ void ResizeNode::create_node() {
     vx_scalar out_layout_vx = vxCreateScalar(vxGetContext((vx_reference)_graph->get()), VX_TYPE_INT32, &output_layout);
     vx_scalar roi_type_vx = vxCreateScalar(vxGetContext((vx_reference)_graph->get()), VX_TYPE_INT32, &roi_type);
     vx_scalar interpolation_vx = vxCreateScalar(vxGetContext((vx_reference)_graph->get()),VX_TYPE_INT32,&_interpolation_type);
-   _node = vxExtrppNode_Resize(_graph->get(), _inputs[0]->handle(), _src_tensor_roi_, _outputs[0]->handle(), _dst_roi_width, 
+   _node = vxExtrppNode_Resize(_graph->get(), _inputs[0]->handle(), _src_tensor_roi, _outputs[0]->handle(), _dst_roi_width, 
                                _dst_roi_height, interpolation_vx, in_layout_vx , out_layout_vx, roi_type_vx, _batch_size);
 
     vx_status status;

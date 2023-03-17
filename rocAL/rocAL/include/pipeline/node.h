@@ -49,7 +49,7 @@ protected:
     const std::vector<rocalTensor *> _inputs;
     const std::vector<rocalTensor *> _outputs;
     std::shared_ptr<Graph> _graph = nullptr;
-    vx_tensor _src_tensor_roi_ = nullptr, _dst_tensor_roi_ = nullptr; // TODO - To be removed
+    vx_tensor _src_tensor_roi = nullptr, _dst_tensor_roi = nullptr; // TODO - To be removed
     vx_node _node = nullptr;
     size_t _batch_size;
     MetaDataBatch* _meta_data_info;

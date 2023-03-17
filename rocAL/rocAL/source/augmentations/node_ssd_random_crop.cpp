@@ -55,7 +55,7 @@ void SSDRandomCropNode::create_node()
     vx_scalar in_layout_vx = vxCreateScalar(vxGetContext((vx_reference)_graph->get()), VX_TYPE_INT32, &input_layout);
     vx_scalar out_layout_vx = vxCreateScalar(vxGetContext((vx_reference)_graph->get()), VX_TYPE_INT32, &output_layout);
     vx_scalar roi_type_vx = vxCreateScalar(vxGetContext((vx_reference)_graph->get()), VX_TYPE_INT32, &roi_type);
-    _node = vxExtrppNode_Crop(_graph->get(), _inputs[0]->handle(), _src_tensor_roi_, _outputs[0]->handle(), in_layout_vx, out_layout_vx, roi_type_vx);
+    _node = vxExtrppNode_Crop(_graph->get(), _inputs[0]->handle(), _src_tensor_roi, _outputs[0]->handle(), in_layout_vx, out_layout_vx, roi_type_vx);
 
     vx_status status;
     if ((status = vxGetStatus((vx_reference)_node)) != VX_SUCCESS)
