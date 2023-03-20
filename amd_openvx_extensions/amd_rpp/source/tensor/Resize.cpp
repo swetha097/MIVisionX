@@ -21,6 +21,10 @@ THE SOFTWARE.
 */
 
 #include "internal_publishKernels.h"
+#include <chrono>
+using namespace std::chrono;
+
+double resize_acc_time = 0.0;
 
 struct ResizeLocalData
 {
@@ -44,7 +48,7 @@ struct ResizeLocalData
     vx_enum in_tensor_type;
     vx_enum out_tensor_type;
     RpptImagePatch *dstImgSize;
-    Rpp32s interpolation_type; 
+    Rpp32s interpolation_type;
 };
 
 static vx_status VX_CALLBACK refreshResize(vx_node node, const vx_reference *parameters, vx_uint32 num, ResizeLocalData *data)
@@ -158,14 +162,20 @@ static vx_status VX_CALLBACK processResize(vx_node node, const vx_reference *par
     {
 #if ENABLE_HIP
         refreshResize(node, parameters, num, data);
+        high_resolution_clock::time_point c1 = high_resolution_clock::now();
         rpp_status = rppt_resize_gpu((void *)data->pSrc, data->src_desc_ptr, (void *)data->pDst, data->dst_desc_ptr, data->dstImgSize, (RpptInterpolationType)data->interpolation_type, data->roi_ptr, data->roiType, data->handle->rppHandle);
+        high_resolution_clock::time_point c2 = high_resolution_clock::now();
+        resize_acc_time += (double)duration_cast<microseconds>( c2 - c1 ).count();
         return_status = (rpp_status == RPP_SUCCESS) ? VX_SUCCESS : VX_FAILURE;
 #endif
     }
     if (data->device_type == AGO_TARGET_AFFINITY_CPU)
     {
         refreshResize(node, parameters, num, data);
+        high_resolution_clock::time_point c1 = high_resolution_clock::now();
         rpp_status = rppt_resize_host(data->pSrc, data->src_desc_ptr, data->pDst, data->dst_desc_ptr, data->dstImgSize, (RpptInterpolationType)data->interpolation_type, data->roi_ptr, data->roiType, data->handle->rppHandle);
+        high_resolution_clock::time_point c2 = high_resolution_clock::now();
+        resize_acc_time += (double)duration_cast<microseconds>( c2 - c1 ).count();
         return_status = (rpp_status == RPP_SUCCESS) ? VX_SUCCESS : VX_FAILURE;
     }
     return return_status;
@@ -219,6 +229,7 @@ static vx_status VX_CALLBACK uninitializeResize(vx_node node, const vx_reference
 {
     ResizeLocalData *data;
     STATUS_ERROR_CHECK(vxQueryNode(node, VX_NODE_LOCAL_DATA_PTR, &data, sizeof(data)));
+    std::cerr << "Time taken for resize: " << resize_acc_time/1000000 << " secs\n";
     STATUS_ERROR_CHECK(releaseGraphHandle(node, data->handle, data->device_type));
     free(data->resize_w);
     free(data->resize_h);

@@ -442,16 +442,21 @@ MasterGraph::timing()
     t.copy_to_output += _convert_time.get_timing();
     t.bb_process_time += _bencode_time.get_timing();
     t.image_output_routine_time += _output_routine_time.get_timing();
+    t.wait_if_empty_time += _ring_buffer._rb_block_if_empty_time.get_timing();
+    t.wait_if_full_time += _ring_buffer._rb_block_if_full_time.get_timing();
     return t;
 }
 
 rocalTensorList *
 MasterGraph::get_output_tensors()
 {
+    _convert_time.start();
     std::vector<void*> output_ptr = _ring_buffer.get_read_buffers();
+    _convert_time.end();
     for(unsigned i = 0; i < _internal_tensor_list.size(); i++)
         _output_tensor_list[i]->set_mem_handle(output_ptr[i]);
     
+    // _output_tensor_list[0]->set_mem_handle(_ring_buffer.get_read_buffers()[0]);
     return &_output_tensor_list;
 }
 

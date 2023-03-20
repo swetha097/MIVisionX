@@ -66,7 +66,7 @@ ROCAL_API_CALL rocalGetTimingInfo(RocalContext p_context)
     // INFO("shuffle time "+ TOSTR(info.shuffle_time)); to display time taken for shuffling dataset
     // INFO("bbencode time "+ TOSTR(info.bb_process_time)); //to display time taken for bbox encoder
 
-    return {info.image_read_time, info.image_decode_time, info.image_process_time, info.copy_to_output, info.image_output_routine_time};
+    return {info.image_read_time, info.image_decode_time, info.image_process_time, info.copy_to_output, info.image_output_routine_time, info.wait_if_empty_time, info.wait_if_full_time};
 }
 
 void ROCAL_API_CALL rocalGetOutputResizeWidth(RocalContext p_context, unsigned int *buf)

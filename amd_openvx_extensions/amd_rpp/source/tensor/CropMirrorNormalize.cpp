@@ -21,6 +21,10 @@ THE SOFTWARE.
 */
 
 #include "internal_publishKernels.h"
+#include <chrono>
+using namespace std::chrono;
+
+double cmn_acc_time = 0.0;
 
 struct CropMirrorNormalizeLocalData {
     RPPCommonHandle * handle;
@@ -145,14 +149,20 @@ static vx_status VX_CALLBACK processCropMirrorNormalize(vx_node node, const vx_r
     if (data->deviceType == AGO_TARGET_AFFINITY_GPU) {
 #if ENABLE_HIP
         refreshCropMirrorNormalize(node, parameters, num, data);
+        high_resolution_clock::time_point c1 = high_resolution_clock::now();
         rpp_status = rppt_crop_mirror_normalize_gpu((void *)data->pSrc, data->srcDescPtr, (void *)data->pDst, data->dstDescPtr, data->multiplier, data->offset,
                                                     data->mirror, data->roiPtr, data->roiType, data->handle->rppHandle);
+        high_resolution_clock::time_point c2 = high_resolution_clock::now();
+        cmn_acc_time += (double)duration_cast<microseconds>( c2 - c1 ).count();
         return_status = (rpp_status == RPP_SUCCESS) ? VX_SUCCESS : VX_FAILURE;
 #endif
     } else if(data->deviceType == AGO_TARGET_AFFINITY_CPU) {
         refreshCropMirrorNormalize(node, parameters, num, data);
+        high_resolution_clock::time_point c1 = high_resolution_clock::now();
         rpp_status = rppt_crop_mirror_normalize_host(data->pSrc, data->srcDescPtr, data->pDst, data->dstDescPtr, data->multiplier, data->offset,
                                                      data->mirror, data->roiPtr, data->roiType, data->handle->rppHandle);
+        high_resolution_clock::time_point c2 = high_resolution_clock::now();
+        cmn_acc_time += (double)duration_cast<microseconds>( c2 - c1 ).count();
         return_status = (rpp_status == RPP_SUCCESS) ? VX_SUCCESS : VX_FAILURE;
     }
     return return_status;
@@ -199,6 +209,7 @@ static vx_status VX_CALLBACK initializeCropMirrorNormalize(vx_node node, const v
 static vx_status VX_CALLBACK uninitializeCropMirrorNormalize(vx_node node, const vx_reference *parameters, vx_uint32 num) {
     CropMirrorNormalizeLocalData *data;
     STATUS_ERROR_CHECK(vxQueryNode(node, VX_NODE_LOCAL_DATA_PTR, &data, sizeof(data)));
+    std::cerr << "Time taken for CMN: " << cmn_acc_time/1000000 << " secs\n";
     STATUS_ERROR_CHECK(releaseGraphHandle(node, data->handle, data->deviceType));
     free(data->multiplier);
     free(data->offset);

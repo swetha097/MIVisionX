@@ -130,4 +130,6 @@ struct Timing
     long long unsigned video_decode_time= 0;
     long long unsigned video_process_time= 0;
     long long unsigned image_output_routine_time= 0;
+    long long unsigned wait_if_empty_time= 0;
+    long long unsigned wait_if_full_time= 0;
 };
