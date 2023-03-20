@@ -33,6 +33,7 @@ void COCOMetaDataReader::init(const MetaDataConfig &cfg)
 {
     _path = cfg.path();
     _mask = cfg.mask();
+    _pixelwise_mask = cfg.pixelwise_mask();
     _output = new BoundingBoxBatch();
 }
 
@@ -309,7 +310,7 @@ void COCOMetaDataReader::read_all(const std::string &path)
                                 parser.EnterArray();
                                 while (parser.NextArrayValue())
                                 {
-                                    
+
                                     mask.push_back(parser.GetDouble());
                                     vertex_count += 1;
                                 }

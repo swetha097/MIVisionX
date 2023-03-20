@@ -59,6 +59,7 @@ struct MetaData
         _object_count = _bb_label_ids.size();
     }
     std::vector<int>& get_polygon_count() { return _polygon_count; }
+    std::vector<int>& get_pixelwise_mask() { return _pixelwise_mask; }
     std::vector<std::vector<int>>& get_vertices_count() { return _vertices_count; }
     ImgSize& get_img_size() {return _img_size; }
     MaskCords& get_mask_cords() { return _mask_cords;}
@@ -90,6 +91,7 @@ protected:
     std::vector<size_t> _bb_coords_dims = {};
     std::vector<size_t> _mask_coords_dims = {};
     std::vector<int> _polygon_count = {};
+    std::vector<int> _pixelwise_mask = {};
     std::vector<std::vector<int>> _vertices_count = {};
     int _object_count = 0;
     int _mask_coords_count = 0;
@@ -134,15 +136,26 @@ struct BoundingBox : public MetaData
         _polygon_count = std::move(polygon_count);
         _vertices_count = std::move(vertices_count);
     }
+    BoundingBox(BoundingBoxCords bb_cords,BoundingBoxLabels bb_label_ids ,ImgSize img_size, MaskCords mask_cords, std::vector<int> polygon_count, std::vector<std::vector<int>> vertices_count, std::vector<int> pixelwise_mask)
+    {
+        _bb_cords = std::move(bb_cords);
+        _bb_label_ids = std::move(bb_label_ids);
+        _img_size = std::move(img_size);
+        _mask_cords = std::move(mask_cords);
+        _polygon_count = std::move(polygon_count);
+        _vertices_count = std::move(vertices_count);
+        _pixelwise_mask = std::move(pixelwise_mask);
+    }
     void set_bb_cords_xcycwh(BoundingBoxCords_xcycwh bb_cords_xcycwh) { _bb_cords_xcycwh =std::move(bb_cords_xcycwh); }
     void set_bb_labels(BoundingBoxLabels bb_label_ids) { _bb_label_ids = std::move(bb_label_ids); }
     void set_img_sizes(ImgSize img_size) { _img_size =std::move(img_size); }
-    void set_mask_cords(MaskCords mask_cords) 
-    { 
+    void set_mask_cords(MaskCords mask_cords)
+    {
         _mask_cords = std::move(mask_cords);
         _mask_coords_count = mask_cords.size();
     }
     void set_polygon_counts(std::vector<int> polygon_count) { _polygon_count = std::move(polygon_count); }
+    void set_pixelwise_mask(std::vector<int> pixelwise_mask) { _pixelwise_mask = std::move(pixelwise_mask); }
     void set_vertices_counts(std::vector<std::vector<int>> vertices_count) { _vertices_count = std::move(vertices_count); }
 };
 
@@ -198,8 +211,9 @@ struct MetaDataBatch
     ImgSizes& get_img_sizes_batch() { return _img_sizes; }
     std::vector<MaskCords>& get_mask_cords_batch() { return _mask_cords; }
     std::vector<std::vector<int>>& get_mask_polygons_count_batch() { return _polygon_counts; }
+    std::vector<std::vector<int>>& get_pixelwise_mask_batch() { return _pixelwise_masks; }
     std::vector<std::vector<std::vector<int>>>& get_mask_vertices_count_batch() { return _vertices_counts; }
-    void reset_objects_count() { 
+    void reset_objects_count() {
         _total_objects_count = 0;
         _total_mask_coords_count = 0;
     }
@@ -215,6 +229,7 @@ protected:
     ImgSizes _img_sizes = {};
     std::vector<MaskCords> _mask_cords = {};
     std::vector<std::vector<int>> _polygon_counts = {};
+    std::vector<std::vector<int>> _pixelwise_masks = {};
     std::vector<std::vector<std::vector<int>>> _vertices_counts = {};
     std::vector<size_t> _buffer_size;
     int _total_objects_count = 0;
@@ -288,6 +303,7 @@ struct BoundingBoxBatch: public MetaDataBatch
         _img_sizes.insert(_img_sizes.end(),other.get_img_sizes_batch().begin(), other.get_img_sizes_batch().end());
         _mask_cords.insert(_mask_cords.end(),other.get_mask_cords_batch().begin(), other.get_mask_cords_batch().end());
         _polygon_counts.insert(_polygon_counts.end(),other.get_mask_polygons_count_batch().begin(), other.get_mask_polygons_count_batch().end());
+        _pixelwise_masks.insert(_pixelwise_masks.end(),other.get_pixelwise_mask_batch().begin(), other.get_pixelwise_mask_batch().end());
         _vertices_counts.insert(_vertices_counts.end(),other.get_mask_vertices_count_batch().begin(), other.get_mask_vertices_count_batch().end());
         _metadata_dimensions.insert(other.get_metadata_dimensions_batch());
         return *this;
@@ -299,6 +315,7 @@ struct BoundingBoxBatch: public MetaDataBatch
         _img_sizes.resize(batch_size);
         _mask_cords.resize(batch_size);
         _polygon_counts.resize(batch_size);
+        _pixelwise_masks.resize(batch_size);
         _vertices_counts.resize(batch_size);
         _metadata_dimensions.resize(batch_size);
     }
@@ -334,7 +351,7 @@ struct BoundingBoxBatch: public MetaDataBatch
                 labels_buffer += bb_labels_dims[i][0];
                 bbox_buffer += (bb_coords_dims[i][0] * 4);
                 mask_buffer += mask_coords_dims[i][0];
-            }            
+            }
         }
         else
         {

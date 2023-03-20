@@ -42,7 +42,7 @@ using namespace cv;
 #define CV_RGB2BGR COLOR_RGB2BGR
 #define CV_FONT_HERSHEY_SIMPLEX FONT_HERSHEY_SIMPLEX
 #define CV_FILLED FILLED
-#define CV_WINDOW_AUTOSIZE WINDOW_AUTOSIZE 
+#define CV_WINDOW_AUTOSIZE WINDOW_AUTOSIZE
 #endif
 
 #define DISPLAY 0
@@ -50,7 +50,7 @@ using namespace cv;
 
 using namespace std::chrono;
 
-template <typename T> 
+template <typename T>
 void convert_float_to_uchar_buffer(T * input_float_buffer, unsigned char * output_uchar_buffer, size_t data_size)
 {
     for(size_t i = 0; i < data_size; i++)
@@ -188,7 +188,7 @@ int test(int test_case, int reader_type, int pipeline_type, const char *path, co
         case 2: //coco detection
         {
             std::cout << ">>>>>>> Running COCO READER" << std::endl;
-            char const *json_path = "";
+            char const *json_path = "/media/kamal/coco_format_5_img/annotations/instances_train2017.json";
             if (strcmp(json_path, "") == 0)
             {
                 std::cout << "\n json_path has to be set in rocal_unit test manually";
@@ -205,7 +205,7 @@ int test(int test_case, int reader_type, int pipeline_type, const char *path, co
         case 3: //coco detection partial
         {
             std::cout << ">>>>>>> Running COCO READER PARTIAL" << std::endl;
-            char const *json_path = "";
+            char const *json_path = "/media/kamal/coco_format_5_img/annotations/instances_train2017.json";
             if (strcmp(json_path, "") == 0)
             {
                 std::cout << "\n json_path has to be set in rocal_unit test manually";
@@ -279,7 +279,7 @@ int test(int test_case, int reader_type, int pipeline_type, const char *path, co
         case 10: //coco reader keypoints
         {
             std::cout << ">>>>>>> Running COCO KEYPOINTS READER" << std::endl;
-            char const *json_path = "";
+            char const *json_path = "/media/kamal/coco_format_5_img/annotations/instances_train2017.json";
             if (strcmp(json_path, "") == 0)
             {
                 std::cout << "\n json_path has to be set in rocal_unit test manually";
@@ -441,7 +441,7 @@ int test(int test_case, int reader_type, int pipeline_type, const char *path, co
                 int mask_size = rocalGetMaskCount(handle, mask_count.data());
                 polygon_size.resize(mask_size);
                 RocalTensorList mask_data = rocalGetMaskCoordinates(handle, polygon_size.data());
-                
+
                 for(int i = 0; i < bbox_labels->size(); i++)
                 {
                     int * labels_buffer = (int *)(bbox_labels->at(i)->buffer());
@@ -565,7 +565,7 @@ int test(int test_case, int reader_type, int pipeline_type, const char *path, co
                 // mat_input_nchw = (unsigned char *)out_buffer;
                 // cv::transposeND(mat_input_nchw, {0, 3, 1, 2}, mat_input); // Can be enabled only with OpenCV 4.6.0
                 convert_nchw_to_nhwc(out_buffer, mat_input.data, output_tensor_list->at(idx)->info().dims().at(0), output_tensor_list->at(idx)->info().dims().at(2),
-                                     output_tensor_list->at(idx)->info().dims().at(3), output_tensor_list->at(idx)->info().dims().at(1));            
+                                     output_tensor_list->at(idx)->info().dims().at(3), output_tensor_list->at(idx)->info().dims().at(1));
             }
             else
                 mat_input.data = (unsigned char *)out_buffer;

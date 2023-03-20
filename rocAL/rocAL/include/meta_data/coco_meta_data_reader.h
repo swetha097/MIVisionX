@@ -45,6 +45,7 @@ private:
     BoundingBoxBatch* _output;
     std::string _path;
     bool _mask;
+    bool _pixelwise_mask;
     int meta_data_reader_type;
     void add(std::string image_name, BoundingBoxCords bbox, BoundingBoxLabels b_labels, ImgSize image_size, MaskCords mask_cords, std::vector<int> polygon_count, std::vector<std::vector<int>> vertices_count);
     void add(std::string image_name, BoundingBoxCords bbox, BoundingBoxLabels b_labels, ImgSize image_size);
