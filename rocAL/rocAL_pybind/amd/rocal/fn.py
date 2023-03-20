@@ -86,12 +86,37 @@ def crop_mirror_normalize(*inputs, bytes_per_sample_hint=0, crop=[0, 0], crop_d=
     Pipeline._current_pipeline._offset = list(map(lambda x,y: -(x/y), mean, std))
     return (cmn)
 
-# def resize_shorter(*inputs, resize_size=0, rocal_tensor_layout=types.NHWC, rocal_tensor_output_type=types.UINT8):
-#     # pybind call arguments
-#     kwargs_pybind = {"input_image0": inputs[0], "rocal_tensor_layout": rocal_tensor_layout, "rocal_tensor_output_type" :rocal_tensor_output_type, "resize_size": resize_size,
-#                      "is_output": False}
-#     resized_image = b.ResizeShorter(Pipeline._current_pipeline._handle ,*(kwargs_pybind.values()))
-#     return (resized_image)
+def resize_mirror_normalize(*inputs, bytes_per_sample_hint=0, interp_type=1, mag_filter= 1, max_size = [], min_filter = 1, minibatch_size=32,
+                            resize_longer=0, resize_shorter= 0, resize_depth = 0, resize_width = 0, resize_height = 0,  scaling_mode=types.SCALING_MODE_DEFAULT,
+                            interpolation_type=types.LINEAR_INTERPOLATION, image_type=0, mean=[0.0], mirror=1, output_dtype=types.FLOAT, rocal_tensor_layout =types.NHWC,
+                            rocal_tensor_output_type = types.FLOAT, output_layout=types.NHWC, pad_output=False, preserve=False, seed=1, std=[1.0], device=None):
+    #Set Seed
+    b.setSeed(seed)
+
+    if isinstance(mirror,int):
+        if(mirror == 0):
+            mirror = b.CreateIntParameter(0)
+        else:
+            mirror = b.CreateIntParameter(1)
+
+    # pybind call arguments
+    kwargs_pybind = {"input_image0": inputs[0],  "dest_width:" : resize_width , "dest_height": resize_height, "mean":mean, "std_dev":std, "is_output": False,
+                     "scaling_mode": scaling_mode, "max_size": max_size, "resize_shorter": resize_shorter, "resize_longer": resize_longer, "interpolation_type":interpolation_type, "mirror": mirror,
+                     "rocal_tensor_layout" : rocal_tensor_layout, "rocal_tensor_output_type" : rocal_tensor_output_type}
+    b.setSeed(seed)
+    rmn = b.ResizeMirrorNormalize(Pipeline._current_pipeline._handle ,*(kwargs_pybind.values()))
+    Pipeline._current_pipeline._tensor_layout = output_layout
+    Pipeline._current_pipeline._tensor_dtype = output_dtype
+    Pipeline._current_pipeline._multiplier = list(map(lambda x: 1/x ,std))
+    Pipeline._current_pipeline._offset = list(map(lambda x,y: -(x/y), mean, std))
+    return (rmn)
+
+def resize_shorter(*inputs, resize_size=0, rocal_tensor_layout=types.NHWC, rocal_tensor_output_type=types.UINT8):
+    # pybind call arguments
+    kwargs_pybind = {"input_image0": inputs[0], "rocal_tensor_layout": rocal_tensor_layout, "rocal_tensor_output_type" :rocal_tensor_output_type, "resize_size": resize_size,
+                     "is_output": False}
+    resized_image = b.ResizeShorter(Pipeline._current_pipeline._handle ,*(kwargs_pybind.values()))
+    return (resized_image)
 
 def centre_crop(*inputs, bytes_per_sample_hint=0, crop=[100, 100], crop_d=1, crop_h= 0, crop_pos_x = 0.5, crop_pos_y = 0.5, crop_pos_z = 0.5,
                  crop_w=0, image_type=0, output_dtype=types.FLOAT, preserve = False, seed = 1,rocal_tensor_layout=types.NHWC, rocal_tensor_output_type=types.UINT8,  device = None):
@@ -164,3 +189,9 @@ def box_encoder(*inputs, anchors, bytes_per_sample_hint=0, criteria=0.5, means=N
     box_encoder = b.BoxEncoder(Pipeline._current_pipeline._handle ,*(kwargs_pybind.values()))
     Pipeline._current_pipeline._BoxEncoder = True
     return (box_encoder , [])
+
+def box_iou_matcher(*inputs, anchors, criteria=0.5, high_threshold=0.5, low_threshold=0.4, allow_low_quality_matches=True, device=None):
+    kwargs_pybind ={"anchors":anchors, "criteria":criteria, "high_threshold":high_threshold, "low_threshold":low_threshold, "allow_low_quality_matches":allow_low_quality_matches}
+    box_iou_matcher = b.BoxIOUMatcher(Pipeline._current_pipeline._handle ,*(kwargs_pybind.values()))
+    Pipeline._current_pipeline._BoxIOUMatcher = True
+    return (box_iou_matcher , []) # check what should be the return type 

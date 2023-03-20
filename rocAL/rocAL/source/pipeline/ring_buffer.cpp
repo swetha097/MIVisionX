@@ -94,6 +94,12 @@ std::vector<void*> RingBuffer::get_meta_read_buffers()
     return _host_meta_data_buffers[_read_ptr];
 }
 
+std::vector<void*> RingBuffer::get_meta_write_buffers()
+{
+    block_if_full();
+    return _host_meta_data_buffers[_write_ptr];
+}
+
 void RingBuffer::unblock_reader()
 {
     // Wake up the reader thread in case it's waiting for a load
@@ -423,7 +429,7 @@ void RingBuffer::set_meta_data(ImageNameBatch names, pMetaDataBatch meta_data)
         if(!_box_encoder_gpu)
         {
             auto actual_buffer_size = meta_data->get_buffer_size();
-            for(unsigned i = 0; i < _meta_data_sub_buffer_count; i++)
+            for(unsigned i = 0; i < actual_buffer_size.size(); i++)
             {
                 if(actual_buffer_size[i] > _meta_data_sub_buffer_size[_write_ptr][i])
                     rellocate_meta_data_buffer(_host_meta_data_buffers[_write_ptr][i], actual_buffer_size[i], i);

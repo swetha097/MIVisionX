@@ -143,6 +143,7 @@ void COCOMetaDataReader::read_all(const std::string &path)
             while (parser.NextArrayValue())
             {
                 string image_name;
+                int original_id;
                 if (parser.PeekType() != kObjectType)
                 {
                     continue;
@@ -162,11 +163,16 @@ void COCOMetaDataReader::read_all(const std::string &path)
                     {
                         image_name = parser.GetString();
                     }
+                    else if(0 == std::strcmp(internal_key, "id"))
+                    {
+                        img_size.original_id = parser.GetInt();
+                    }
                     else
                     {
                         parser.SkipValue();
                     }
                 }
+                _map_img_names.insert(pair<int, std::string>(img_size.original_id, image_name));
                 _map_img_sizes.insert(pair<std::string, ImgSize>(image_name, img_size));
                 img_size = {};
             }
@@ -237,20 +243,17 @@ void COCOMetaDataReader::read_all(const std::string &path)
                         parser.SkipValue();
                     }
                 }
-                char buffer[13];
-                sprintf(buffer, "%012d", id);
-                string str(buffer);
-                std::string file_name = str + ".jpg";
 
-                auto it = _map_img_sizes.find(file_name);
+                auto itr = _map_img_names.find(id);
+                auto it = _map_img_sizes.find(itr->second);
                 ImgSize image_size = it->second; //Normalizing the co-ordinates & convert to "ltrb" format
-                box.l = bbox[0] / image_size.w;
-                box.t = bbox[1] / image_size.h;
-                box.r = (bbox[0] + bbox[2]) / image_size.w;
-                box.b = (bbox[1] + bbox[3]) / image_size.h;
+                box.l = bbox[0] / static_cast<double>(image_size.w);
+                box.t = bbox[1] / static_cast<double>(image_size.h);
+                box.r = (bbox[0] + bbox[2]) / static_cast<double>(image_size.w);
+                box.b = (bbox[1] + bbox[3]) / static_cast<double>(image_size.h);
                 bb_coords.push_back(box);
                 bb_labels.push_back(label);
-                add(file_name, bb_coords, bb_labels, image_size);
+                add(itr->second, bb_coords, bb_labels, image_size);
                 bb_coords.clear();
                 bb_labels.clear();
                 image_size = {};
@@ -269,7 +272,8 @@ void COCOMetaDataReader::read_all(const std::string &path)
         for (unsigned int i = 0; i < bb_coords.size(); i++)
         {
             auto _it_label = _label_info.find(bb_labels[i]);
-            int cnt_idx = _it_label->second;
+            //int cnt_idx = _it_label->second;
+            int cnt_idx = _it_label->first;
             continuous_label_id.push_back(cnt_idx);
         }
         elem.second->set_bb_labels(continuous_label_id);

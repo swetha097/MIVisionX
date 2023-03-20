@@ -336,6 +336,7 @@ namespace rocal
         // rocal_api_meta_data.h
         m.def("RandomBBoxCrop", &rocalRandomBBoxCrop);
         m.def("BoxEncoder",&rocalBoxEncoder);
+        m.def("BoxIOUMatcher", &rocalBoxIOUMatcher);
         m.def("getImageId", [](RocalContext context, py::array_t<int> array)
         {
             auto buf = array.request();
@@ -365,6 +366,7 @@ namespace rocal
         m.def("UpdateFloatParameter", &rocalUpdateFloatParameter);
         m.def("GetIntValue", &rocalGetIntValue);
         m.def("GetFloatValue", &rocalGetFloatValue);
+        m.def("rocalGetBoundingBoxCount", &rocalGetBoundingBoxCount);
         // rocal_api_data_transfer.h
         // m.def("rocalCopyToOutput",&wrapper_copy_to_output);
         // m.def("rocalCopyToOutputTensor",&wrapper_tensor);
@@ -420,6 +422,58 @@ namespace rocal
                             {sizeof(int) }));
     }
             );
+        m.def(
+            "rocalGetBoundingBoxLabel", [](RocalContext context)
+    {
+            rocalTensorList *labels = rocalGetBoundingBoxLabel(context);
+            py::list labels_list;
+            py::array_t<int> labels_array;
+            for (int i = 0; i < labels->size(); i++) {
+                int *labels_buffer = (int *)(labels->at(i)->buffer());
+                labels_array = py::array(py::buffer_info(
+                            (int *)(labels->at(i)->buffer()),
+                            sizeof(int),
+                            py::format_descriptor<int>::format(),
+                            1,
+                            {labels->at(i)->info().dims().at(0)},
+                            {sizeof(int) }));
+                labels_list.append(labels_array);
+            }
+            return labels_list;
+    }
+            );
+        m.def(
+            "rocalGetBoundingBoxCords", [](RocalContext context)
+    {
+            rocalTensorList *boxes = rocalGetBoundingBoxCords(context);
+            py::list boxes_list;
+            py::array_t<double> boxes_array;
+            for (int i = 0; i < boxes->size(); i++) {
+                double *box_buffer = (double *)(boxes->at(i)->buffer());
+                boxes_array = py::array(py::buffer_info(
+                            (double *)(boxes->at(i)->buffer()),
+                            sizeof(double),
+                            py::format_descriptor<double>::format(),
+                            1,
+                            { boxes->at(i)->info().dims().at(0) * 4},
+                            {sizeof(double) }));
+                boxes_list.append(boxes_array);
+            }
+            return boxes_list;
+    }
+            );
+        m.def(
+            "rocalGetMatchedIndices", [](RocalContext context)
+    {
+            rocalTensorList *matches = rocalGetMatchedIndices(context);
+            return py::array(py::buffer_info(
+                            (int *)(matches->at(0)->buffer()),
+                            sizeof(int),
+                            py::format_descriptor<int>::format(),
+                            1,
+                            {matches->size() * 120087},
+                            {sizeof(int) }));
+    }, py::return_value_policy::reference);
         // m.def(
         //     "copy_data_ptr", [](RocalContext context, py::object p)
         // {
@@ -503,6 +557,7 @@ namespace rocal
         m.def("Brightness", &rocalBrightness,
               py::return_value_policy::reference);
         m.def("CropMirrorNormalize",&rocalCropMirrorNormalize, py::return_value_policy::reference);
+        m.def("ResizeMirrorNormalize",&rocalResizeMirrorNormalize, py::return_value_policy::reference);
         // m.def("Crop", &rocalCrop, py::return_value_policy::reference);
         m.def("CenterCropFixed", &rocalCropCenterFixed, py::return_value_policy::reference);
     }

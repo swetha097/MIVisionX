@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2019 - 2023 Advanced Micro Devices, Inc. All rights reserved.
+Copyright (c) 2019 - 2022 Advanced Micro Devices, Inc. All rights reserved.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -21,22 +21,22 @@ THE SOFTWARE.
 */
 
 #pragma once
-#include <list>
-#include "circular_buffer.h"
+#include <set>
+#include <memory>
+#include "bounding_box_graph.h"
 #include "meta_data.h"
-#include "parameter_factory.h"
 #include "node.h"
-#include "meta_node.h"
-#include "randombboxcrop_meta_data_reader.h"
-
-class MetaDataGraph
+#include "node_resize_mirror_normalize.h"
+#include "parameter_vx.h"
+class ResizeMirrorNormalizeMetaNode:public MetaNode
 {
-public:
-    virtual ~MetaDataGraph()= default;
-    virtual void process(MetaDataBatch* meta_data) = 0;
-    virtual void update_random_bbox_meta_data(MetaDataBatch* meta_data, decoded_image_info decoded_image_info,crop_image_info crop_image_info) = 0;
-    virtual void update_box_encoder_meta_data(std::vector<float> *anchors, pMetaDataBatch full_batch_meta_data , float criteria, bool offset , float scale, std::vector<float> &means, std::vector<float> &stds) = 0;
-    virtual void update_box_iou_matcher(std::vector<double> *anchors, int * matches_idx_buffer, pMetaDataBatch full_batch_meta_data ,float criteria, float high_threshold, float low_threshold, bool allow_low_quality_matches) = 0;
-    std::list<std::shared_ptr<MetaNode>> _meta_nodes;
+    public:
+        ResizeMirrorNormalizeMetaNode() {};
+        void update_parameters(MetaDataBatch* input_meta_data) override;
+        std::shared_ptr<ResizeMirrorNormalizeNode> _node = nullptr;
+    private:
+        void initialize();
+        vx_array _src_width, _src_height, _dst_width, _dst_height, _mirror;
+        std::vector<uint> _src_width_val, _src_height_val, _dst_width_val, _dst_height_val, _mirror_val;
+        float _dst_to_src_width_ratio, _dst_to_src_height_ratio;
 };
-

@@ -47,6 +47,7 @@ THE SOFTWARE.
 #define MAX_OBJECTS 50 // Max number of objects/image in COCO dataset is 93 
 #define BBOX_COUNT 4
 #define MAX_NUM_ANCHORS 8732
+#define MAX_ANCHORS 120087
 
 class MasterGraph
 {
@@ -72,7 +73,7 @@ public:
     rocalTensor *create_loader_output_tensor(const rocalTensorInfo &info);
     std::vector<rocalTensorList *> create_label_reader(const char *source_path, MetaDataReaderType reader_type);
     std::vector<rocalTensorList *> create_video_label_reader(const char *source_path, MetaDataReaderType reader_type, unsigned sequence_length, unsigned frame_step, unsigned frame_stride, bool file_list_frame_num = true);
-    std::vector<rocalTensorList *> create_coco_meta_data_reader(const char *source_path, bool is_output, MetaDataReaderType reader_type , MetaDataType label_type, bool is_box_encoder = false);
+    std::vector<rocalTensorList *> create_coco_meta_data_reader(const char *source_path, bool is_output, MetaDataReaderType reader_type, MetaDataType label_type, bool is_box_encoder = false, bool is_box_iou_matcher = false);
     std::vector<rocalTensorList *> create_tf_record_meta_data_reader(const char *source_path, MetaDataReaderType reader_type,  MetaDataType label_type, const std::map<std::string, std::string> feature_key_map);
     std::vector<rocalTensorList *> create_caffe_lmdb_record_meta_data_reader(const char *source_path, MetaDataReaderType reader_type,  MetaDataType label_type);
     std::vector<rocalTensorList *> create_caffe2_lmdb_record_meta_data_reader(const char *source_path, MetaDataReaderType reader_type,  MetaDataType label_type);
@@ -80,11 +81,13 @@ public:
     std::vector<rocalTensorList *> create_mxnet_label_reader(const char *source_path, bool is_output);
 
     void box_encoder(std::vector<float> &anchors, float criteria, const std::vector<float> &means, const std::vector<float> &stds, bool offset, float scale);
+    void box_iou_matcher(std::vector<float> &anchors, float criteria, float high_threshold, float low_threshold, bool allow_low_quality_matches);
     void create_randombboxcrop_reader(RandomBBoxCrop_MetaDataReaderType reader_type, RandomBBoxCrop_MetaDataType label_type, bool all_boxes_overlap, bool no_crop, FloatParam* aspect_ratio, bool has_shape, int crop_width, int crop_height, int num_attempts, FloatParam* scaling, int total_num_attempts, int64_t seed=0);
     const std::pair<ImageNameBatch,pMetaDataBatch>& meta_data();
     rocalTensorList * labels_meta_data();
     rocalTensorList * bbox_labels_meta_data();
     rocalTensorList * bbox_meta_data();
+    rocalTensorList * matches_meta_data();
     ImgSizes& get_image_sizes();
 
     void set_loop(bool val) { _loop = val; }
@@ -129,8 +132,10 @@ private:
     std::vector<rocalTensorList *> _metadata_output_tensor_list;
     rocalTensorList _labels_tensor_list;
     rocalTensorList _bbox_tensor_list;
+    rocalTensorList _matches_tensor_list;
     std::vector<std::vector<unsigned>> _labels_tensor_dims;
     std::vector<std::vector<unsigned>> _bbox_tensor_dims;
+    std::vector<std::vector<unsigned>> _matches_tensor_dims;
     std::vector<size_t> _meta_data_buffer_size;
 #if ENABLE_HIP
     DeviceManagerHip   _device;//!< Keeps the device related constructs needed for running on GPU
@@ -163,12 +168,17 @@ private:
     bool _is_sequence_reader_output = false; //!< Set to true if Sequence Reader is invoked.
     // box encoder variables
     bool _is_box_encoder = false; //bool variable to set the box encoder
+    bool _is_box_iou_matcher = false; // bool variable to set the box iou matcher
     std::vector<float> _anchors; // Anchors to be used for encoding, as the array of floats is in the ltrb format of size 8732x4
+    std::vector<double> _anchors_double; // Anchors to be used for encoding, as the array of floats is in the ltrb format of size 8732x4
     size_t _num_anchors;       // number of bbox anchors
     float _criteria = 0.5; // Threshold IoU for matching bounding boxes with anchors. The value needs to be between 0 and 1.
     float _scale; // Rescales the box and anchor values before the offset is calculated (for example, to return to the absolute values).
     bool _offset; // Returns normalized offsets ((encoded_bboxes*scale - anchors*scale) - mean) / stds in EncodedBBoxes that use std and the mean and scale arguments if offset="True"
     std::vector<float> _means, _stds; //_means:  [x y w h] mean values for normalization _stds: [x y w h] standard deviations for offset normalization.
+    float _high_threshold = 0.5;
+    float _low_threshold = 0.4;
+    bool _allow_low_quality_matches = true;
 #if ENABLE_HIP
     BoxEncoderGpu *_box_encoder_gpu = nullptr;
 #endif
