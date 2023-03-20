@@ -194,8 +194,8 @@ int test(int test_case, int reader_type, int pipeline_type, const char *path, co
                 std::cout << "\n json_path has to be set in rocal_unit test manually";
                 exit(0);
             }
-            metadata_output = rocalCreateCOCOReader(handle, json_path, true, false);
-            // metadata_output = rocalCreateCOCOReader(handle, json_path, true, true);
+            //metadata_output = rocalCreateCOCOReader(handle, json_path, true, false);
+            metadata_output = rocalCreateCOCOReader(handle, json_path, true, true);
             if (decode_max_height <= 0 || decode_max_width <= 0)
                 input1 = rocalJpegCOCOFileSource(handle, path, json_path, color_format, num_threads, false, true, false);
             else

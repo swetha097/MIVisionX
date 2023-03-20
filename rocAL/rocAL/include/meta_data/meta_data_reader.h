@@ -57,12 +57,13 @@ private:
     std::map<std::string, std::string> _feature_key_map;
     std::string _file_prefix;           // if we want to read only filenames with prefix (needed for cifar10 meta data)
     bool _mask;
+    bool _pixelwise_mask;
     unsigned _sequence_length;
     unsigned _frame_step;
     unsigned _frame_stride;
 public:
-    MetaDataConfig(const MetaDataType& type, const MetaDataReaderType& reader_type, const std::string& path, const std::map<std::string, std::string> &feature_key_map=std::map<std::string, std::string>(), const std::string file_prefix=std::string(), const bool mask = 0, const unsigned& sequence_length = 3, const unsigned& frame_step = 3, const unsigned& frame_stride = 1)
-                    :_type(type), _reader_type(reader_type),  _path(path), _feature_key_map(feature_key_map), _file_prefix(file_prefix), _mask(mask), _sequence_length(sequence_length), _frame_step(frame_step), _frame_stride(frame_stride) {}
+    MetaDataConfig(const MetaDataType& type, const MetaDataReaderType& reader_type, const std::string& path, const std::map<std::string, std::string> &feature_key_map=std::map<std::string, std::string>(), const std::string file_prefix=std::string(), const bool mask = 0, const unsigned& sequence_length = 3, const unsigned& frame_step = 3, const unsigned& frame_stride = 1, const bool pixelwise_mask = 0)
+                    :_type(type), _reader_type(reader_type),  _path(path), _feature_key_map(feature_key_map), _file_prefix(file_prefix), _mask(mask), _sequence_length(sequence_length), _frame_step(frame_step), _frame_stride(frame_stride), _pixelwise_mask(pixelwise_mask) {}
     MetaDataConfig() = delete;
     MetaDataType type() const { return _type; }
     MetaDataReaderType reader_type() const { return _reader_type; }
@@ -70,6 +71,7 @@ public:
     std::map<std::string, std::string> feature_key_map() const {return _feature_key_map; }
     std::string file_prefix() const { return  _file_prefix; }
     bool mask() const { return _mask;}
+    bool pixelwise_mask() const { return _pixelwise_mask;}
     unsigned sequence_length() const { return _sequence_length; }
     unsigned frame_step() const { return _frame_step; }
     unsigned frame_stride() const { return _frame_stride; }

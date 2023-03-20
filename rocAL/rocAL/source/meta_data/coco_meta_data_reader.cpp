@@ -26,6 +26,7 @@ THE SOFTWARE.
 #include <algorithm>
 #include <fstream>
 #include "lookahead_parser.h"
+#include "maskApi.h"
 
 using namespace std;
 
