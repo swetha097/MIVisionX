@@ -455,7 +455,7 @@ int test(int test_case, int reader_type, int pipeline_type, const char *path, co
                         std::cerr << bbox_buffer[j4] << " " << bbox_buffer[j4 + 1] << " " << bbox_buffer[j4 + 2] << " " << bbox_buffer[j4 + 3] << "\n";
                     std::cerr << "\n>>>>>>> MASK COORDS : ";
                     int poly_cnt = 0;
-                    for(unsigned j = 0; j < total_number_of_objects_per_batch; j++)
+                    for(unsigned j = 0; j < bbox_labels->at(i)->info().dims().at(0); j++)
                     {
                         std::cerr << "Mask idx : " << j << "Polygons : " <<  mask_count[j] << "[" ;
                         for(int k = 0; k < mask_count[j]; k++)
