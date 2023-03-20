@@ -580,7 +580,7 @@ void MasterGraph::output_routine()
                     _meta_data_graph->update_box_encoder_meta_data(&_anchors, full_batch_meta_data, _criteria, _offset, _scale, _means, _stds);
             }
             _bencode_time.end();
-            _ring_buffer.set_meta_data(full_batch_image_names, full_batch_meta_data);
+            _ring_buffer.set_meta_data(full_batch_image_names, full_batch_meta_data, _is_segmentation);
             _ring_buffer.push(); // Image data and metadata is now stored in output the ring_buffer, increases it's level by 1
         }
     }
