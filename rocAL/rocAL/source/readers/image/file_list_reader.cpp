@@ -49,9 +49,9 @@ unsigned FileListReader::count_items()
 {
     if(_loop)
         return _file_names.size();
-    std::cerr << "\n read_counter " <<_read_counter ;
-    for (auto x : _file_names)
-        std::cerr << x <<"\n";
+    // std::cerr << "\n read_counter " <<_read_counter ;
+    // for (auto x : _file_names)
+    //     std::cerr << x <<"\n";
     int ret = ((int)_file_names.size() -_read_counter);
     return ((ret < 0) ? 0 : ret);
 }
@@ -113,7 +113,7 @@ size_t FileListReader::open()
 {
     auto file_path = _file_names[_curr_file_idx];// Get next file name
     // std::cerr<< "\n In Open - file_path "<<file_path;
-    std::cerr << "\n OPEN -- current_file_idx : "<<_curr_file_idx;
+    // std::cerr << "\n OPEN -- current_file_idx : "<<_curr_file_idx;
     incremenet_read_ptr();
     _last_file_path = _last_id = file_path;
     auto last_slash_idx = _last_id.find_last_of("\\/");
@@ -177,13 +177,13 @@ FileListReader::release()
 
 void FileListReader::reset()
 {
-    std::cerr << "\n RESETTTTT";
+    // std::cerr << "\n RESETTTTT";
     _shuffle_time.start();
     if (_shuffle) std::random_shuffle(_file_names.begin(), _file_names.end());
     _shuffle_time.end();
     _read_counter = 0;
-    std::cerr << "Before :: \n";
-    std::cerr << "actual file names size :: "<< _actual_file_names.size();
+    // std::cerr << "Before :: \n";
+    // std::cerr << "actual file names size :: "<< _actual_file_names.size();
     // for (auto x : _actual_file_names)
     //     std::cerr << x <<"\n";
     std::rotate(_actual_file_names.begin(),
@@ -245,6 +245,10 @@ Reader::Status FileListReader::subfolder_reading()
                 incremenet_file_id();
             }
             
+
+        } // for loop ends
+    }
+    
             uint images_to_pad_shard = _file_count_all_shards - (ceil(_file_count_all_shards / _shard_count) * _shard_count);
             // std::cerr << "\n images_to_pad_shard :: " <<images_to_pad_shard;
             if(!images_to_pad_shard) {
@@ -262,8 +266,6 @@ Reader::Status FileListReader::subfolder_reading()
                 }
     }
     _actual_file_names = _file_names;
-        } // for loop ends
-    }
  if(_file_names.empty())
         WRN("FileReader ShardID ["+ TOSTR(_shard_id)+ "] Did not load any file from " + _folder_path)
     // std::exit(0);
@@ -297,7 +299,7 @@ void FileListReader::replicate_last_image_to_fill_last_shard()
     // std::cerr << "\n (_batch_count - _in_batch_read_count) " << (_batch_count - _in_batch_read_count);
     if(_last_batch_info.first == RocalBatchPolicy::BATCH_FILL)
     {
-        // std::cerr<<"\n RocalBatchPolicy::BATCH_FILL";
+        std::cerr<<"\n RocalBatchPolicy::BATCH_FILL";
         if(_last_batch_info.second == true) {
         for(size_t i = (_batch_count - _in_batch_read_count); i < _batch_count; i++)
             _file_names.push_back(_last_file_name);
@@ -309,14 +311,14 @@ void FileListReader::replicate_last_image_to_fill_last_shard()
     // // drop
     else if(_last_batch_info.first == RocalBatchPolicy::DROP)
     {
-        // std::cerr<<"\n RocalBatchPolicy::DROP";
+        std::cerr<<"\n RocalBatchPolicy::DROP";
         for(size_t i = 0; i < _in_batch_read_count; i++)
             _file_names.pop_back();
     }
     else if(_last_batch_info.first == RocalBatchPolicy::PARTIAL)
     {
         _last_batch_padded_size = _batch_count - _in_batch_read_count;
-        // std::cerr<<"\n RocalBatchPolicy::PARTIAL";
+        std::cerr<<"\n RocalBatchPolicy::PARTIAL";
         if(_last_batch_info.second == true) {
         for(size_t i = (_batch_count - _in_batch_read_count); i < _batch_count; i++)
             _file_names.push_back(_last_file_name);

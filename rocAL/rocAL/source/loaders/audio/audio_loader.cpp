@@ -175,7 +175,7 @@ void AudioLoader::start_loading()
 {
     if (!_is_initialized)
         THROW("start_loading() should be called after initialize() function is called")
-
+    std::cerr << "\n START LOADING";
     _remaining_audio_count = _audio_loader->count();
     std::cerr<<"\n Remaining audio count ::"<<_remaining_audio_count;
     _internal_thread_running = true;
