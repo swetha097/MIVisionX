@@ -211,8 +211,6 @@ namespace rocal
                 Returns a rocAL tensor at given position `i` in the rocalTensorlist.
                 )code",
                 py::keep_alive<0, 1>());
-
-        // .def_readwrite("swap_handle",&rocalTensor::swap_handle);
         py::class_<rocalTensorList>(m, "rocalTensorList")
             .def(
                 "__getitem__",
@@ -348,7 +346,6 @@ namespace rocal
         {
             auto buf = array.request();
             int* ptr = (int*) buf.ptr;
-            // call pure C++ function
             rocalGetImageSizes(context,ptr);
         }
         );
@@ -368,7 +365,6 @@ namespace rocal
         m.def("GetFloatValue", &rocalGetFloatValue);
         m.def("rocalGetBoundingBoxCount", &rocalGetBoundingBoxCount);
         // rocal_api_data_transfer.h
-        // m.def("rocalGetOutputTensors",&rocalGetOutputTensors, return_value_policy::reference);
         m.def("rocalGetOutputTensors", [](RocalContext context)
               {
             rocalTensorList * tl = rocalGetOutputTensors(context);
@@ -381,11 +377,6 @@ namespace rocal
             "rocalGetImageLabels", [](RocalContext context)
     {
             rocalTensorList *labels = rocalGetImageLabels(context);
-            // std::cerr<<"LABELS SIZE ::"<<labels->size();
-            // for (int i = 0; i < labels->size(); i++) {
-            //     int *labels_buffer = (int *)(labels->at(i)->buffer());
-            //     std::cerr << ">>>>> LABELS : " << labels_buffer[0] << "\t";
-            // }
             return py::array(py::buffer_info(
                             (int *)(labels->at(0)->buffer()),
                             sizeof(int),
@@ -447,22 +438,6 @@ namespace rocal
                             {matches->size() * 120087},
                             {sizeof(int) }));
     }, py::return_value_policy::reference);
-        // m.def(
-        //     "copy_data_ptr", [](RocalContext context, py::object p)
-        // {
-        // auto ptr = ctypes_void_ptr(p);
-        // RocalTensorList output_tensor_list = rocalGetOutputTensors(context);
-        // // ptr = output_tensor_list->at(0)->buffer();
-
-        // rocalTensor::copy_data((unsigned char *) ptr, 0);
-        // // for (uint i =0; i<10; i++)
-        // // {
-        // //     std::cerr<<"\n TEMP ::"<< (float) (unsigned char *) ptr[i];
-        // // }
-        // // std::exit(0);
-        // return py::reinterpret_borrow<py::object>(PyLong_FromVoidPtr(ptr));
-        // }
-        //     );
         m.def(
             "rocalGetEncodedBoxesAndLables", [](RocalContext context,uint batch_size, uint num_anchors)
             {
@@ -491,32 +466,9 @@ namespace rocal
         );
         // rocal_api_data_loaders.h
         m.def("ImageDecoder", &rocalJpegFileSource, "Reads file from the source given and decodes it according to the policy",
-              py::return_value_policy::reference,
-              py::arg("context"),
-              py::arg("source_path"),
-              py::arg("color_format"),
-              py::arg("num_threads"),
-              py::arg("is_output") = false,
-              py::arg("shuffle") = false,
-              py::arg("loop") = false,
-              py::arg("decode_size_policy") = ROCAL_USE_MOST_FREQUENT_SIZE,
-              py::arg("max_width") = 0,
-              py::arg("max_height") = 0,
-              py::arg("dec_type") = 0);
+              py::return_value_policy::reference);
         m.def("ImageDecoderShard", &rocalJpegFileSourceSingleShard, "Reads file from the source given and decodes it according to the shard id and number of shards",
-              py::return_value_policy::reference,
-              py::arg("context"),
-              py::arg("source_path"),
-              py::arg("color_format"),
-              py::arg("shard_id"),
-              py::arg("shard_count"),
-              py::arg("is_output") = false,
-              py::arg("shuffle") = false,
-              py::arg("loop") = false,
-              py::arg("decode_size_policy") = ROCAL_USE_MOST_FREQUENT_SIZE,
-              py::arg("max_width") = 0,
-              py::arg("max_height") = 0,
-              py::arg("dec_type") = 0);
+              py::return_value_policy::reference);
         m.def("FusedDecoderCropShard",&rocalFusedJpegCropSingleShard,"Reads file from the source and decodes them partially to output random crops",
             py::return_value_policy::reference);
         m.def("COCO_ImageDecoderShard",&rocalJpegCOCOFileSourceSingleShard,"Reads file from the source given and decodes it according to the shard id and number of shards",
