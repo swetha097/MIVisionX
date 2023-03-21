@@ -76,12 +76,12 @@ ROCAL_API_CALL rocalCreateVideoLabelReader(RocalContext p_context, const char* s
 }
 
 RocalMetaData
-ROCAL_API_CALL rocalCreateCOCOReader(RocalContext p_context, const char* source_path, bool is_output, bool mask, bool is_box_encoder) {
+ROCAL_API_CALL rocalCreateCOCOReader(RocalContext p_context, const char* source_path, bool is_output, bool polygon_mask, bool is_box_encoder, bool pixelwise_mask) {
     if (!p_context)
         THROW("Invalid rocal context passed to rocalCreateCOCOReader")
     auto context = static_cast<Context*>(p_context);
 
-    return context->master_graph->create_coco_meta_data_reader(source_path, is_output, mask, MetaDataReaderType::COCO_META_DATA_READER,  MetaDataType::BoundingBox, is_box_encoder);
+    return context->master_graph->create_coco_meta_data_reader(source_path, is_output, polygon_mask, MetaDataReaderType::COCO_META_DATA_READER,  MetaDataType::BoundingBox, is_box_encoder, pixelwise_mask);
 }
 
 RocalMetaData
@@ -131,7 +131,7 @@ ROCAL_API_CALL rocalCreateTFReaderDetection(RocalContext p_context, const char* 
     return context->master_graph->create_tf_record_meta_data_reader(source_path , MetaDataReaderType::TF_DETECTION_META_DATA_READER,  MetaDataType::BoundingBox, feature_key_map);
 }
 
-RocalMetaData 
+RocalMetaData
 ROCAL_API_CALL rocalCreateCaffeLMDBLabelReader(RocalContext p_context, const char *source_path)
 {
     if (!p_context)
@@ -140,7 +140,7 @@ ROCAL_API_CALL rocalCreateCaffeLMDBLabelReader(RocalContext p_context, const cha
     return context->master_graph->create_caffe_lmdb_record_meta_data_reader(source_path, MetaDataReaderType::CAFFE_META_DATA_READER, MetaDataType::Label);
 }
 
-RocalMetaData 
+RocalMetaData
 ROCAL_API_CALL rocalCreateCaffeLMDBReaderDetection(RocalContext p_context, const char *source_path)
 {
     if (!p_context)

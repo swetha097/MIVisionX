@@ -315,6 +315,7 @@ void COCOMetaDataReader::read_all(const std::string &path)
 {
     std::string rle_str;
     std::vector<uint32_t> rle_uints;
+    RLE *R = (RLE*) malloc(sizeof(RLE));
     int push_count = 0;
     _coco_metadata_read_time.start(); // Debug timing
     std::ifstream f;
@@ -344,6 +345,7 @@ void COCOMetaDataReader::read_all(const std::string &path)
     ImgSizes img_sizes;
     std::vector<int> polygon_count;
     int polygon_size = 0;
+    bool rle_flag = false;
     std::vector<std::vector<int>> vertices_count;
 
     BoundingBoxCord box;
@@ -460,7 +462,7 @@ void COCOMetaDataReader::read_all(const std::string &path)
                     }
                     else if (_polygon_mask && 0 == std::strcmp(internal_key, "segmentation"))
                     {
-                        RLE *R = (RLE*) malloc(sizeof(RLE));
+
                         if (parser.PeekType() == kObjectType)
                         {
                             parser.EnterObject();
@@ -500,7 +502,8 @@ void COCOMetaDataReader::read_all(const std::string &path)
 
                             std::cout << "Enters here 22221" << std::endl;
                             std::cout << R->h << " " << R->w << " " << R->m << std::endl;
-                            free(R);
+                            rle_flag = true;
+
                         }
                         else
                         {
@@ -526,6 +529,7 @@ void COCOMetaDataReader::read_all(const std::string &path)
                         parser.SkipValue();
                     }
                 }
+                std::cout << "Enter here 45:" << id << std::endl;
                 char buffer[13];
                 sprintf(buffer, "%012d", id);
                 string str(buffer);
@@ -565,6 +569,12 @@ void COCOMetaDataReader::read_all(const std::string &path)
                     bb_coords.clear();
                     bb_labels.clear();
                 }
+                if (rle_flag && _pixelwise_mask) {
+                    std::cout << "ok enters" << std::endl;
+                    rle_flag = false;
+                } else {
+                    std::cout << "fails enters" << std::endl;
+                }
                 image_size = {};
             }
         }
@@ -586,6 +596,7 @@ void COCOMetaDataReader::read_all(const std::string &path)
         }
         elem.second->set_bb_labels(continuous_label_id);
     }
+    free(R);
     _coco_metadata_read_time.end(); // Debug timing
     //print_map_contents();
     // std::cout << "coco read time in sec: " << _coco_metadata_read_time.get_timing() / 1000 << std::endl;

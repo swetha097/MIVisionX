@@ -451,7 +451,7 @@ MasterGraph::get_output_tensors()
     std::vector<void*> output_ptr = _ring_buffer.get_read_buffers();
     for(unsigned i = 0; i < _internal_tensor_list.size(); i++)
         _output_tensor_list[i]->set_mem_handle(output_ptr[i]);
-    
+
     return &_output_tensor_list;
 }
 
@@ -556,11 +556,11 @@ void MasterGraph::output_routine()
             }
             _resize_width.insert(_resize_width.begin(), temp_width_arr);
             _resize_height.insert(_resize_height.begin(), temp_height_arr);
-            
+
             _process_time.start();
             _graph->process();
             _process_time.end();
-            
+
             _bencode_time.start();
             if(_is_box_encoder )
             {
@@ -678,8 +678,8 @@ std::vector<rocalTensorList *> MasterGraph::create_cifar10_label_reader(const ch
         _labels_tensor_list.push_back(tensor);
     }
     _metadata_output_tensor_list.emplace_back(&_labels_tensor_list);
-    
-    
+
+
     _ring_buffer.init_metadata(RocalMemType::HOST, _meta_data_buffer_size, _meta_data_buffer_size.size());
     if (_augmented_meta_data)
         THROW("Metadata can only have a single output")
@@ -728,13 +728,13 @@ std::vector<rocalTensorList *> MasterGraph::create_video_label_reader(const char
     return _metadata_output_tensor_list;
 }
 
-std::vector<rocalTensorList *> MasterGraph::create_coco_meta_data_reader(const char *source_path, bool is_output, bool mask, MetaDataReaderType reader_type, MetaDataType label_type, bool is_box_encoder)
+std::vector<rocalTensorList *> MasterGraph::create_coco_meta_data_reader(const char *source_path, bool is_output, bool polygon_mask, MetaDataReaderType reader_type, MetaDataType label_type, bool is_box_encoder, bool pixelwise_mask)
 {
     if(_meta_data_reader)
         THROW("A metadata reader has already been created")
-    if(mask)
+    if(polygon_mask)
         _is_segmentation = true;
-    MetaDataConfig config(label_type, reader_type, source_path, std::map<std::string, std::string>(), std::string(), mask);
+    MetaDataConfig config(label_type, reader_type, source_path, std::map<std::string, std::string>(), std::string(), polygon_mask, 3,3,1, pixelwise_mask);
     _meta_data_graph = create_meta_data_graph(config);
     _meta_data_reader = create_meta_data_reader(config);
     _meta_data_reader->init(config);
@@ -760,7 +760,7 @@ std::vector<rocalTensorList *> MasterGraph::create_coco_meta_data_reader(const c
     _meta_data_buffer_size.emplace_back(dims.at(0) * dims.at(1)  * _user_batch_size * sizeof(vx_float32)); // TODO - replace with data size from info
 
     rocalTensorInfo default_mask_info;
-    if(mask)
+    if(polygon_mask)
     {
         num_of_dims = 2;
         dims.resize(num_of_dims);
@@ -770,7 +770,7 @@ std::vector<rocalTensorList *> MasterGraph::create_coco_meta_data_reader(const c
                                             _mem_type,
                                             RocalTensorDataType::FP32);
         default_mask_info.set_metadata();
-        _meta_data_buffer_size.emplace_back(dims.at(0) * dims.at(1)  * _user_batch_size * sizeof(vx_float32)); // TODO - replace with data size from info  
+        _meta_data_buffer_size.emplace_back(dims.at(0) * dims.at(1)  * _user_batch_size * sizeof(vx_float32)); // TODO - replace with data size from info
     }
 
     for(unsigned i = 0; i < _user_batch_size; i++)
@@ -779,7 +779,7 @@ std::vector<rocalTensorList *> MasterGraph::create_coco_meta_data_reader(const c
         auto bbox_info = default_bbox_info;
         _labels_tensor_list.push_back(new rocalTensor(labels_info));
         _bbox_tensor_list.push_back(new rocalTensor(bbox_info));
-        if(mask)
+        if(polygon_mask)
         {
             auto mask_info = default_mask_info;
             _mask_tensor_list.push_back(new rocalTensor(mask_info));
@@ -795,7 +795,7 @@ std::vector<rocalTensorList *> MasterGraph::create_coco_meta_data_reader(const c
     }
     _metadata_output_tensor_list.emplace_back(&_labels_tensor_list);
     _metadata_output_tensor_list.emplace_back(&_bbox_tensor_list);
-    if(mask)
+    if(polygon_mask)
         _metadata_output_tensor_list.emplace_back(&_mask_tensor_list);
 
     return _metadata_output_tensor_list;
