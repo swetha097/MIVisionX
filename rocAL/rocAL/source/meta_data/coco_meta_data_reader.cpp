@@ -82,6 +82,10 @@ void COCOMetaDataReader::add(std::string image_name, BoundingBoxCords bb_coords,
 {
     if (exists(image_name))
     {
+        std::cout << vertices_count[0][0] << std::endl;
+        if (vertices_count[0].size() == 2) {
+            std::cout << vertices_count[0][1] << std::endl;
+        }
         auto it = _map_content.find(image_name);
         it->second->get_bb_cords().push_back(bb_coords[0]);
         it->second->get_bb_labels().push_back(bb_labels[0]);
@@ -149,8 +153,169 @@ void COCOMetaDataReader::print_map_contents()
     }
 }
 
+/*
+std::vector<int> COCOMetaDataReader::generate_pixelwise_mask(RLE *R) {
+  auto pol = loader_impl.polygons(image_idx);
+  auto ver = loader_impl.vertices(image_idx);
+  auto masks_info = loader_impl.pixelwise_masks_info(image_idx);
+  int h = masks_info.shape[0];
+  int w = masks_info.shape[1];
+  auto bboxes = loader_impl.bboxes(image_idx);
+  auto labels_span = loader_impl.labels(image_idx);
+  std::set<int> labels(labels_span.data(),
+                       labels_span.data() + labels_span.size());
+  if (!labels.size()) {
+    return;
+  }
+
+  // Create a run-length encoding for each polygon, indexed by label :
+  std::map<int, std::vector<RLE> > frPoly;
+  std::vector<double> in;
+  for (uint polygon_idx = 0; polygon_idx < pol.size(); polygon_idx++) {
+    auto &polygon = pol[polygon_idx];
+    int mask_idx = polygon[0];
+    int start_idx = polygon[1];
+    int end_idx = polygon[2];
+    assert(mask_idx < labels_span.size());
+    int label = labels_span[mask_idx];
+    // Convert polygon to encoded mask
+    int nver = end_idx - start_idx;
+    auto pol_ver = span<const vec2>{ver.data() + start_idx, nver};
+    in.resize(pol_ver.size() * 2);
+    for (int i = 0, k = 0; i < pol_ver.size(); i++) {
+      in[k++] = static_cast<double>(pol_ver[i].x);
+      in[k++] = static_cast<double>(pol_ver[i].y);
+    }
+    RLE M;
+    rleInit(&M, 0, 0, 0, 0);
+    rleFrPoly(&M, in.data(), pol_ver.size(), h, w);
+    frPoly[label].push_back(M);
+  }
+
+  // Reserve run-length encodings by labels
+  RLE* R;
+  rlesInit(&R, *labels.rbegin() + 1);
+
+  // Mask was originally described in RLE format
+  for (uint ann_id = 0 ; ann_id < masks_info.mask_indices.size(); ann_id++) {
+    const auto &rle = masks_info.rles[ann_id];
+    auto mask_idx = masks_info.mask_indices[ann_id];
+    int label = labels_span[mask_idx];
+    rleInit(&R[label], (*rle)->h, (*rle)->w, (*rle)->m, (*rle)->cnts);
+  }
+
+  // Merge each label (from multi-polygons annotations)
+  uint lab_cnt = 0;
+  for (const auto &rles : frPoly)
+    rleMerge(rles.second.data(), &R[rles.first], rles.second.size(), 0);
+
+  // Merge all the labels into a pair of vectors :
+  // [2,2,2],[A,B,C] for [A,A,B,B,C,C]
+  struct Encoding {
+    uint m;
+    std::unique_ptr<uint[]> cnts;
+    std::unique_ptr<int[]> vals;
+  };
+  Encoding A;
+  A.cnts = std::make_unique<uint[]>(h * w + 1);  // upper-bound
+  A.vals = std::make_unique<int[]>(h * w + 1);
+
+  // first copy the content of the first label to the output
+  bool v = false;
+  A.m = R[*labels.begin()].m;
+  for (siz a = 0; a < R[*labels.begin()].m; a++) {
+    A.cnts[a] = R[*labels.begin()].cnts[a];
+    A.vals[a] = v ? *labels.begin() : 0;
+    v = !v;
+  }
+
+  // then merge the other labels
+  std::unique_ptr<uint[]> cnts = std::make_unique<uint[]>(h * w + 1);
+  std::unique_ptr<int[]> vals = std::make_unique<int[]>(h * w + 1);
+  for (auto label = ++labels.begin(); label != labels.end(); label++) {
+    RLE B = R[*label];
+    if (B.cnts == 0)
+      continue;
+
+    uint cnt_a = A.cnts[0];
+    uint cnt_b = B.cnts[0];
+    int next_val_a = A.vals[0];
+    int val_a = next_val_a;
+    int val_b = *label;
+    bool next_vb = false;
+    bool vb = next_vb;
+    uint nb_seq_a, nb_seq_b;
+    nb_seq_a = nb_seq_b = 1;
+    int m = 0;
+
+    int cnt_tot = 1;  // check if we advanced at all
+    while (cnt_tot > 0) {
+      uint c = std::min(cnt_a, cnt_b);
+      cnt_tot = 0;
+      // advance A
+      cnt_a -= c;
+      if (!cnt_a && nb_seq_a < A.m) {
+        cnt_a = A.cnts[nb_seq_a];  // next sequence for A
+        next_val_a = A.vals[nb_seq_a];
+        nb_seq_a++;
+      }
+      cnt_tot += cnt_a;
+      // advance B
+      cnt_b -= c;
+      if (!cnt_b && nb_seq_b < B.m) {
+        cnt_b = B.cnts[nb_seq_b++];  // next sequence for B
+        next_vb = !next_vb;
+      }
+      cnt_tot += cnt_b;
+
+      if (val_a && vb)  // there's already a class at this pixel
+                        // in this case, the last annotation wins (it's undefined by the spec)
+        vals[m] = (!cnt_a) ? val_a : val_b;
+      else if (val_a)
+        vals[m] = val_a;
+      else if (vb)
+        vals[m] = val_b;
+      else
+        vals[m] = 0;
+      cnts[m] = c;
+      m++;
+
+      // since we switched sequence for A or B, apply the new value from now on
+      val_a = next_val_a;
+      vb = next_vb;
+
+      if (cnt_a == 0) break;
+    }
+    // copy back the buffers to the destination encoding
+    A.m = m;
+    for (int i = 0; i < m; i++) A.cnts[i] = cnts[i];
+    for (int i = 0; i < m; i++) A.vals[i] = vals[i];
+  }
+
+  // Decode final pixelwise masks encoded via RLE
+  memset(mask, 0, h * w * sizeof(int));
+  int x = 0, y = 0;
+  for (uint i = 0; i < A.m; i++)
+    for (uint j = 0; j < A.cnts[i]; j++) {
+      mask[x + y * w] = A.vals[i];
+      if (++y >= h) {
+        y = 0;
+        x++;
+      }
+    }
+
+  // Destroy RLEs
+  rlesFree(&R, *labels.rbegin() + 1);
+  for (auto rles : frPoly)
+    for (auto &rle : rles.second)
+      rleFree(&rle);
+} */
+
 void COCOMetaDataReader::read_all(const std::string &path)
 {
+    std::string rle_str;
+    std::vector<uint32_t> rle_uints;
+    int push_count = 0;
     _coco_metadata_read_time.start(); // Debug timing
     std::ifstream f;
     f.open (path, std::ifstream::in|std::ios::binary);
@@ -204,10 +369,12 @@ void COCOMetaDataReader::read_all(const std::string &path)
                     if (0 == std::strcmp(internal_key, "width"))
                     {
                         img_size.w = parser.GetInt();
+                        std::cout << "width:" << img_size.w << std::endl;
                     }
                     else if (0 == std::strcmp(internal_key, "height"))
                     {
                         img_size.h = parser.GetInt();
+                        std::cout << "height:" << img_size.h << std::endl;
                     }
                     else if (0 == std::strcmp(internal_key, "file_name"))
                     {
@@ -268,7 +435,9 @@ void COCOMetaDataReader::read_all(const std::string &path)
                 {
                     if (0 == std::strcmp(internal_key, "image_id"))
                     {
+
                         id = parser.GetInt();
+                        std::cout << "Image ID:" << id << std::endl;
                     }
                     else if (0 == std::strcmp(internal_key, "category_id"))
                     {
@@ -291,14 +460,47 @@ void COCOMetaDataReader::read_all(const std::string &path)
                     }
                     else if (_polygon_mask && 0 == std::strcmp(internal_key, "segmentation"))
                     {
+                        RLE *R = (RLE*) malloc(sizeof(RLE));
                         if (parser.PeekType() == kObjectType)
                         {
                             parser.EnterObject();
-                            const char *key = parser.NextObjectKey();
-                            if (0 == std::strcmp(key, "counts"))
-                            {
-                                parser.SkipArray();
+                            rle_str.clear();
+                            rle_uints.clear();
+                            int h = -1, w = -1;
+                            while (const char* another_key = parser.NextObjectKey()) {
+                                if (0 == std::strcmp(another_key, "size")) {
+                                RAPIDJSON_ASSERT(parser.PeekType() == kArrayType);
+                                parser.EnterArray();
+                                parser.NextArrayValue();
+                                h = parser.GetInt();
+                                parser.NextArrayValue();
+                                w = parser.GetInt();
+                                parser.NextArrayValue();
+                                } else if (0 == std::strcmp(another_key, "counts")) {
+                                if (parser.PeekType() == kStringType) {
+                                    rle_str = parser.GetString();
+                                } else if (parser.PeekType() == kArrayType) {
+                                    parser.EnterArray();
+                                    while (parser.NextArrayValue()) {
+                                    rle_uints.push_back(parser.GetInt());
+                                    }
+                                } else {
+                                    parser.SkipValue();
+                                }
+                                } else {
+                                parser.SkipValue();
+                                }
                             }
+                            std::cout << "Enters here 2222" << std::endl;
+                            if (!rle_str.empty()) {
+                                rleInit(R, h, w, rle_uints.size(), const_cast<uint*>(rle_uints.data()));
+                            } else if (!rle_uints.empty()) {
+                                rleFrString(R, const_cast<char*>(rle_str.c_str()), h, w);
+                            }
+
+                            std::cout << "Enters here 22221" << std::endl;
+                            std::cout << R->h << " " << R->w << " " << R->m << std::endl;
+                            free(R);
                         }
                         else
                         {
@@ -333,6 +535,7 @@ void COCOMetaDataReader::read_all(const std::string &path)
                 ImgSize image_size = it->second; //Normalizing the co-ordinates & convert to "ltrb" format
                 if (_polygon_mask && iscrowd == 0)
                 {
+                    std::cout << "Enters here 111" << push_count++ << "\t" << file_name << std::endl;
                     box.l = bbox[0] / image_size.w;
                     box.t = bbox[1] / image_size.h;
                     box.r = (bbox[0] + bbox[2] - 1) / image_size.w;

@@ -169,7 +169,7 @@ if(${BUILD_ROCAL})
     protobuf_generate_cpp(TF_PROTO_SRCS TF_PROTO_HEADERS proto/example.proto proto/feature.proto)
     protobuf_generate_cpp(CAFFE2_PROTO_SRCS CAFFE2_PROTO_HEADERS proto/caffe2_protos.proto)
     protobuf_generate_cpp(CAFFE_PROTO_SRCS CAFFE_PROTO_HEADERS proto/caffe_protos.proto)
-    file(GLOB_RECURSE COCO_SOURCES "../third_party/coco_RLE/source/*.c")
+    file(GLOB_RECURSE COCO_SOURCES "../third_party/coco_RLE/source/*.cpp")
     link_directories(${AMDRPP_LIBRARIES_DIR} ${TurboJpeg_LIBRARIES_DIR} ${PROTOBUF_LIBRARY_DIRS} /usr/local/lib/)
 
     file(GLOB_RECURSE SOURCES "./source/*.cpp")

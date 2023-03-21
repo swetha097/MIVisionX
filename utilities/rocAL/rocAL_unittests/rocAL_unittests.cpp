@@ -188,7 +188,7 @@ int test(int test_case, int reader_type, int pipeline_type, const char *path, co
         case 2: //coco detection
         {
             std::cout << ">>>>>>> Running COCO READER" << std::endl;
-            char const *json_path = "/media/kamal/coco_format_5_img/annotations/instances_train2017.json";
+            char const *json_path = "/media/kamal/coco_meta_reader/MIVisionX/utilities/rocAL/rocAL_unittests/MIVisionX-data/mini_coco_dataset/coco_test_4/annotations/instances_val2017_small.json";
             if (strcmp(json_path, "") == 0)
             {
                 std::cout << "\n json_path has to be set in rocal_unit test manually";
@@ -205,7 +205,7 @@ int test(int test_case, int reader_type, int pipeline_type, const char *path, co
         case 3: //coco detection partial
         {
             std::cout << ">>>>>>> Running COCO READER PARTIAL" << std::endl;
-            char const *json_path = "/media/kamal/coco_format_5_img/annotations/instances_train2017.json";
+            char const *json_path = "/media/kamal/coco_meta_reader/MIVisionX/utilities/rocAL/rocAL_unittests/MIVisionX-data/mini_coco_dataset/coco_test_4/annotations/instances_val2017_small.json";
             if (strcmp(json_path, "") == 0)
             {
                 std::cout << "\n json_path has to be set in rocal_unit test manually";
@@ -434,6 +434,11 @@ int test(int test_case, int reader_type, int pipeline_type, const char *path, co
             {
                 RocalTensorList bbox_labels = rocalGetBoundingBoxLabel(handle);
                 RocalTensorList bbox_coords = rocalGetBoundingBoxCords(handle);
+                int ImageNameLen[inputBatchSize];
+                unsigned imagename_size = rocalGetImageNameLen(handle,ImageNameLen);
+                char imageNames[imagename_size];
+                rocalGetImageName(handle,imageNames);
+                std::string imageNamesStr(imageNames);
                 std::vector<int> mask_count;
                 std::vector<int> polygon_size;
                 unsigned total_number_of_objects_per_batch = rocalGetBoundingBoxCount(handle);
@@ -442,8 +447,10 @@ int test(int test_case, int reader_type, int pipeline_type, const char *path, co
                 polygon_size.resize(mask_size);
                 RocalTensorList mask_data = rocalGetMaskCoordinates(handle, polygon_size.data());
 
+                std::cout << "Size:" << bbox_labels->size() << std::endl;
                 for(int i = 0; i < bbox_labels->size(); i++)
                 {
+                    std::cout << imageNamesStr[i] << std::endl;
                     int * labels_buffer = (int *)(bbox_labels->at(i)->buffer());
                     float *bbox_buffer = (float *)(bbox_coords->at(i)->buffer());
                     float *mask_buffer = (float *)(mask_data->at(i)->buffer());
