@@ -111,6 +111,7 @@ size_t FileListReader::open()
 {
     auto file_path = _file_names[_curr_file_idx];// Get next file name
     // std::cerr<< "\n In Open - file_path "<<file_path;
+    std::cerr << "\n OPEN -- current_file_idx : "<<_curr_file_idx;
     incremenet_read_ptr();
     _last_file_path = _last_id = file_path;
     auto last_slash_idx = _last_id.find_last_of("\\/");
@@ -174,12 +175,29 @@ FileListReader::release()
 
 void FileListReader::reset()
 {
+    std::cerr << "\n RESETTTTT";
     _shuffle_time.start();
     if (_shuffle) std::random_shuffle(_file_names.begin(), _file_names.end());
     _shuffle_time.end();
     _read_counter = 0;
+    // std::cerr << "Before :: \n";
+    // for (auto x : _actual_file_names)
+    //     std::cerr << x <<"\n";
+    std::rotate(_actual_file_names.begin(),
+           _actual_file_names.begin() + _batch_count - _in_batch_read_count,
+           _actual_file_names.end());
+    // std::cerr << "After :: \n";
+    // for (auto x : _actual_file_names)
+    //     std::cerr << x <<"\n";
+    // std::cerr << "\n";
+    _file_names.clear();
+    _file_names.resize(_actual_file_names.size());
+    _file_names = _actual_file_names;
+    replicate_last_image_to_fill_last_shard();
     if(_last_batch_info.second == true)
         _curr_file_idx = 0;
+    // else
+    //     incremenet_read_ptr();
 }
 
 
@@ -220,7 +238,9 @@ Reader::Status FileListReader::subfolder_reading()
                 _file_count_all_shards++;
                 incremenet_file_id();
             }
+            _actual_file_names = _file_names;
             uint images_to_pad_shard = _file_count_all_shards - (ceil(_file_count_all_shards / _shard_count) * _shard_count);
+            // std::cerr << "\n images_to_pad_shard :: " <<images_to_pad_shard;
             if(!images_to_pad_shard) {
                 for(int i = 0; i < images_to_pad_shard; i++) {
                     if(get_file_shard_id() != _shard_id )
@@ -247,12 +267,12 @@ Reader::Status FileListReader::subfolder_reading()
     {
         // This is to pad within a batch in a shard. Need to change this according to fill / drop or partial.
         // Adjust last batch only if the last batch padded is true.
-        if(_last_batch_info.second == true)
-            replicate_last_image_to_fill_last_shard();
-        else if(_last_batch_info.first == RocalBatchPolicy::PARTIAL) {
-            std::cerr << "Partial policy";
-            _last_batch_padded_size = _batch_count - _in_batch_read_count;
-        }
+        // if(_last_batch_info.second == true)
+        replicate_last_image_to_fill_last_shard();
+        // else if(_last_batch_info.first == RocalBatchPolicy::PARTIAL) {
+        //     std::cerr << "Partial policy";
+        //     _last_batch_padded_size = _batch_count - _in_batch_read_count;
+        // }
         LOG("FileReader ShardID [" + TOSTR(_shard_id) + "] Replicated " + _folder_path+_last_file_name + " " + TOSTR((_batch_count - _in_batch_read_count) ) + " times to fill the last batch")
     }
     if(!_file_names.empty())
@@ -267,28 +287,38 @@ void FileListReader::replicate_last_image_to_fill_last_shard()
     // for(size_t i = _in_batch_read_count; i < _batch_count; i++)
     //     _file_names.push_back(_last_file_name);
     // // fill
+    // std::cerr << "\n (_batch_count - _in_batch_read_count) " << (_batch_count - _in_batch_read_count);
     if(_last_batch_info.first == RocalBatchPolicy::BATCH_FILL)
     {
-        std::cerr<<"\n RocalBatchPolicy::BATCH_FILL";
+        // std::cerr<<"\n RocalBatchPolicy::BATCH_FILL";
+        if(_last_batch_info.second == true) {
+        for(size_t i = (_batch_count - _in_batch_read_count); i < _batch_count; i++)
+            _file_names.push_back(_last_file_name);
+        } else  {
         for(size_t i = 0; i < (_batch_count - _in_batch_read_count); i++)
             _file_names.push_back(_file_names.at(i));
+        }
     }
     // // drop
     else if(_last_batch_info.first == RocalBatchPolicy::DROP)
     {
-        std::cerr<<"\n RocalBatchPolicy::DROP";
+        // std::cerr<<"\n RocalBatchPolicy::DROP";
         for(size_t i = 0; i < _in_batch_read_count; i++)
             _file_names.pop_back();
     }
     else if(_last_batch_info.first == RocalBatchPolicy::PARTIAL)
     {
         _last_batch_padded_size = _batch_count - _in_batch_read_count;
-        std::cerr<<"\n RocalBatchPolicy::PARTIAL";
+        // std::cerr<<"\n RocalBatchPolicy::PARTIAL";
+        if(_last_batch_info.second == true) {
+        for(size_t i = (_batch_count - _in_batch_read_count); i < _batch_count; i++)
+            _file_names.push_back(_last_file_name);
+        } else  {
         for(size_t i = 0; i < (_batch_count - _in_batch_read_count); i++)
             _file_names.push_back(_file_names.at(i));
+        }
     }
-    // _file_count_all_shards -= _in_batch_read_count;
-    // // partial
+
 }
 
 void FileListReader::replicate_last_batch_to_pad_partial_shard()
@@ -305,7 +335,7 @@ Reader::Status FileListReader::open_folder()
     if ((_src_dir = opendir (_folder_path.c_str())) == nullptr)
         THROW("FileReader ShardID ["+ TOSTR(_shard_id)+ "] ERROR: Failed opening the directory at " + _folder_path);
 
-    std::cerr<<"\n open_folder() -> folder_path  :  "<<_folder_path;
+    // std::cerr<<"\n open_folder() -> folder_path  :  "<<_folder_path;
     while((_entity = readdir (_src_dir)) != nullptr)
     {
         if(_entity->d_type != DT_REG)

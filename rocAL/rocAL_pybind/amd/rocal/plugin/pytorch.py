@@ -129,7 +129,7 @@ class RALIGenericIterator(object):
             self.labels = self.loader.rocalGetImageLabels()
             self.labels_tensor = torch.from_numpy(self.labels).type(torch.LongTensor)
             if (self.last_batch_policy is (types.LAST_BATCH_PARTIAL)) and b.getRemainingImages(self.loader._handle) <= 0 :
-                self.output = torch.empty((self.last_batch_size, self.samples, self.channels,), dtype=torch.float32)
+                # self.output = torch.empty((self.last_batch_size, self.samples, self.channels,), dtype=torch.float32)
                 self.output_tensor_list[0].copy_data(ctypes.c_void_p(self.output.data_ptr()))
                 return self.output[0:self.last_batch_size,:], self.labels_tensor[0:self.last_batch_size], torch.tensor(self.output_tensor_list[0].get_rois().reshape(self.batch_size,4)[...,0:2][0:self.last_batch_size,:])
             else:

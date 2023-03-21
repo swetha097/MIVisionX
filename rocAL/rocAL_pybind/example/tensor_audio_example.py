@@ -18,7 +18,7 @@ import cv2
 import matplotlib.pyplot as plt
 import os
 def draw_patches(img, idx, device):
-    print("Draw Patches")
+    # print("Draw Patches")
     #image is expected as a tensor, bboxes as numpy
     import cv2
     image = img.detach().numpy()
@@ -62,14 +62,14 @@ def main():
     local_rank = 0
     world_size = 1
     print("*********************************************************************")
-    audio_pipeline = Pipeline(batch_size=batch_size, num_threads=num_threads, device_id=device_id, seed=random_seed, rocal_cpu=_rali_cpu, last_batch_policy=types.LAST_BATCH_PARTIAL)
+    audio_pipeline = Pipeline(batch_size=batch_size, num_threads=num_threads, device_id=device_id, seed=random_seed, rocal_cpu=_rali_cpu, last_batch_policy=types.LAST_BATCH_PARTIAL, last_batch_padded=False)
     with audio_pipeline:
         audio, label = fn.readers.file(
             # **files_arg,
             file_root=data_path,
             file_list=file_list,
             shard_id=0,
-            num_shards=2,
+            num_shards=1,
             random_shuffle=True)
         sample_rate = 16000
         nfft=512
@@ -79,7 +79,7 @@ def main():
         resample = 16000.00
         # dither = 0.001
         # audio_decode = fn.decoders.audio(audio, file_root=data_path, downmix=True, shard_id=0, num_shards=2,random_shuffle=True)
-        audio_decode = fn.decoders.audio(audio, file_root=data_path, file_list_path=file_list, downmix=True, shard_id=0, num_shards=2, storage_type=9)
+        audio_decode = fn.decoders.audio(audio, file_root=data_path, file_list_path=file_list, downmix=True, shard_id=1, num_shards=2, storage_type=9)
         uniform_distribution_resample = fn.random.uniform(audio_decode, range=[0.8555555, 0.8555555])
         resampled_rate = uniform_distribution_resample * resample
         # # resample_output = fn.resample(audio_decode, resample_rate = resampled_rate, resample_hint=250000, )
@@ -123,14 +123,15 @@ def main():
     audio_pipeline.build()
     audioIteratorPipeline = ROCALClassificationIterator(audio_pipeline)
     cnt = 0
-    for e in range(1):
+    for e in range(7):
+        print("Epoch :: ", e)
         torch.set_printoptions(threshold=5000, profile="full", edgeitems=100)
         for i , it in enumerate(audioIteratorPipeline):
             print("************************************** i *************************************",i)
             # print(it)
             for img, label, roi in zip(it[0],it[1],it[2]):
                 print("label", label)
-                print("roi", roi)
+                # print("roi", roi)
                 # print("img",img)
                 draw_patches(img, label, "cpu")
             #     cnt = cnt + 1

@@ -80,6 +80,7 @@ private:
     DIR *_sub_dir;
     struct dirent *_entity;
     std::vector<std::string> _file_names;
+    std::vector<std::string> _actual_file_names;
     unsigned  _curr_file_idx;
     FILE* _current_fPtr;
     unsigned _current_file_size;
