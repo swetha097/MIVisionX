@@ -71,7 +71,7 @@ namespace rocal
         return ptr;
     }
 
-    py::object wrapper_copy_to_output(RocalContext context, py::array_t<unsigned char> array)
+    py::object wrapper(RocalContext context, py::array_t<unsigned char> array)
     {
         auto buf = array.request();
         unsigned char *ptr = (unsigned char *)buf.ptr;
@@ -368,34 +368,7 @@ namespace rocal
         m.def("GetFloatValue", &rocalGetFloatValue);
         m.def("rocalGetBoundingBoxCount", &rocalGetBoundingBoxCount);
         // rocal_api_data_transfer.h
-        // m.def("rocalCopyToOutput",&wrapper_copy_to_output);
-        // m.def("rocalCopyToOutputTensor",&wrapper_tensor);
-        // m.def("rocalCopyToOutputTensor32",&wrapper_tensor32);
-        // m.def("rocalCopyToOutputTensor16",&wrapper_tensor16);
-        // m.def("rocalCopyCupyToOutputTensor32",&wrapper_copy_cupy_tensor32);
-        // m.def("rocalCopyCupyToOutputTensor16",&wrapper_copy_cupy_tensor16);
-        // rocal_api_data_loaders.h
-        m.def("COCO_ImageDecoderSlice",&rocalJpegCOCOFileSourcePartial,"Reads file from the source given and decodes it according to the policy",
-            py::return_value_policy::reference);
-         m.def("COCO_ImageDecoderSliceShard",&rocalJpegCOCOFileSourcePartialSingleShard,"Reads file from the source given and decodes it according to the policy",
-            py::return_value_policy::reference);
-        m.def("ImageDecoder",&rocalJpegFileSource,"Reads file from the source given and decodes it according to the policy",
-            py::return_value_policy::reference);
-        m.def("ImageDecoderShard",&rocalJpegFileSourceSingleShard,"Reads file from the source given and decodes it according to the shard id and number of shards",
-            py::return_value_policy::reference);
-        m.def("COCO_ImageDecoder",&rocalJpegCOCOFileSource,"Reads file from the source given and decodes it according to the policy",
-            py::return_value_policy::reference);
-        m.def("COCO_ImageDecoderShard",&rocalJpegCOCOFileSourceSingleShard,"Reads file from the source given and decodes it according to the shard id and number of shards",
-            py::return_value_policy::reference);
-        m.def("TF_ImageDecoder",&rocalJpegTFRecordSource,"Reads file from the source given and decodes it according to the policy only for TFRecords",
-            py::return_value_policy::reference);
-        m.def("Caffe_ImageDecoder",&rocalJpegCaffeLMDBRecordSource,"Reads file from the source given and decodes it according to the policy only for TFRecords",
-            py::return_value_policy::reference);
-        m.def("Caffe_ImageDecoderShard",&rocalJpegCaffeLMDBRecordSourceSingleShard, "Reads file from the source given and decodes it according to the shard id and number of shards",
-            py::return_value_policy::reference);
-        m.def("Caffe_ImageDecoderPartialShard",&rocalJpegCaffeLMDBRecordSourcePartialSingleShard, py::return_value_policy::reference);
-        m.def("Caffe2_ImageDecoder",&rocalJpegCaffe2LMDBRecordSource,"Reads file from the source given and decodes it according to the policy only for TFRecords", py::return_value_policy::reference);
-	        // m.def("rocalGetOutputTensors",&rocalGetOutputTensors, return_value_policy::reference);
+        // m.def("rocalGetOutputTensors",&rocalGetOutputTensors, return_value_policy::reference);
         m.def("rocalGetOutputTensors", [](RocalContext context)
               {
             rocalTensorList * tl = rocalGetOutputTensors(context);
