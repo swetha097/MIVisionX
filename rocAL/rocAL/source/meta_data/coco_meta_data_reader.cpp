@@ -25,6 +25,7 @@ THE SOFTWARE.
 #include <utility>
 #include <algorithm>
 #include <fstream>
+#include <set>
 #include "lookahead_parser.h"
 #include "maskApi.h"
 
@@ -153,7 +154,7 @@ void COCOMetaDataReader::print_map_contents()
     }
 }
 
-void COCOMetaDataReader::generate_pixelwise_mask(std::string filename, RLE *R) {
+void COCOMetaDataReader::generate_pixelwise_mask(std::string filename, RLE *R_in) {
     std::cout << "generate_pixelwise_mask" << std::endl;
     std::vector<int> pixelwise_labels;
     BoundingBoxCords bb_coords;
@@ -169,7 +170,12 @@ void COCOMetaDataReader::generate_pixelwise_mask(std::string filename, RLE *R) {
     mask_cords = it->second->get_mask_cords();
     polygon_size = it->second->get_polygon_count();
     vertices_count = it->second->get_vertices_count();
+    ImgSize imgsize = it->second->get_img_size();
+
     std::map<int, std::vector<RLE> > frPoly;
+    int h = R_in->h;
+    int w = R_in->w;
+    pixelwise_labels.reserve(h*w);
     int count = 0;
     std::cout << "\nNumber of objects : " << bb_coords.size() << std::endl;
     for (unsigned int i = 0; i < bb_coords.size(); i++)
@@ -190,7 +196,131 @@ void COCOMetaDataReader::generate_pixelwise_mask(std::string filename, RLE *R) {
             frPoly[label].push_back(M);
         }
     }
-    std::cout << "RLE inside" << R->h << " " << R->w << std::endl;
+    std::cout << "RLE inside" << R_in->h << " " << R_in->w << std::endl;
+    std::set<int> labels(bb_labels.data(),
+                    bb_labels.data() + bb_labels.size());
+    if (!labels.size()) {
+        return;
+    }
+    for (auto s: labels) {
+        std::cout << s << std::endl;
+    }
+    //exit(0);
+
+    RLE* R;
+    rlesInit(&R, *labels.rbegin() + 1);
+
+    const auto &rle = R_in;
+    auto mask_idx = bb_labels.size();
+    int label = bb_labels[mask_idx];
+    rleInit(&R[label], rle->h, rle->w, rle->m, rle->cnts);
+    std::cout << "make h" << std::endl;
+
+    uint lab_cnt = 0;
+    for (const auto &rles : frPoly)
+    rleMerge(rles.second.data(), &R[rles.first], rles.second.size(), 0);
+
+    // Merge all the labels into a pair of vectors :
+    // [2,2,2],[A,B,C] for [A,A,B,B,C,C]
+    struct Encoding {
+    uint m;
+    std::unique_ptr<uint[]> cnts;
+    std::unique_ptr<int[]> vals;
+    };
+    Encoding A;
+    A.cnts = std::make_unique<uint[]>(h * w + 1);  // upper-bound
+    A.vals = std::make_unique<int[]>(h * w + 1);
+
+    // first copy the content of the first label to the output
+    bool v = false;
+    A.m = R[*labels.begin()].m;
+    for (siz a = 0; a < R[*labels.begin()].m; a++) {
+        A.cnts[a] = R[*labels.begin()].cnts[a];
+        A.vals[a] = v ? *labels.begin() : 0;
+        v = !v;
+    }
+
+    // then merge the other labels
+    std::unique_ptr<uint[]> cnts = std::make_unique<uint[]>(h * w + 1);
+    std::unique_ptr<int[]> vals = std::make_unique<int[]>(h * w + 1);
+    for (auto label = ++labels.begin(); label != labels.end(); label++) {
+        RLE B = R[*label];
+        if (B.cnts == 0)
+            continue;
+
+        uint cnt_a = A.cnts[0];
+        uint cnt_b = B.cnts[0];
+        int next_val_a = A.vals[0];
+        int val_a = next_val_a;
+        int val_b = *label;
+        bool next_vb = false;
+        bool vb = next_vb;
+        uint nb_seq_a, nb_seq_b;
+        nb_seq_a = nb_seq_b = 1;
+        int m = 0;
+
+        int cnt_tot = 1;  // check if we advanced at all
+        while (cnt_tot > 0) {
+            uint c = std::min(cnt_a, cnt_b);
+            cnt_tot = 0;
+            // advance A
+            cnt_a -= c;
+            if (!cnt_a && nb_seq_a < A.m) {
+                cnt_a = A.cnts[nb_seq_a];  // next sequence for A
+                next_val_a = A.vals[nb_seq_a];
+                nb_seq_a++;
+            }
+            cnt_tot += cnt_a;
+            // advance B
+            cnt_b -= c;
+            if (!cnt_b && nb_seq_b < B.m) {
+                cnt_b = B.cnts[nb_seq_b++];  // next sequence for B
+                next_vb = !next_vb;
+            }
+            cnt_tot += cnt_b;
+
+            if (val_a && vb)  // there's already a class at this pixel
+                            // in this case, the last annotation wins (it's undefined by the spec)
+                vals[m] = (!cnt_a) ? val_a : val_b;
+            else if (val_a)
+                vals[m] = val_a;
+            else if (vb)
+                vals[m] = val_b;
+            else
+                vals[m] = 0;
+            cnts[m] = c;
+            m++;
+
+            // since we switched sequence for A or B, apply the new value from now on
+            val_a = next_val_a;
+            vb = next_vb;
+
+            if (cnt_a == 0) break;
+        }
+        // copy back the buffers to the destination encoding
+        A.m = m;
+        for (int i = 0; i < m; i++) A.cnts[i] = cnts[i];
+        for (int i = 0; i < m; i++) A.vals[i] = vals[i];
+    }
+
+    // Decode final pixelwise masks encoded via RLE
+    memset(pixelwise_labels.data(), 0, h * w * sizeof(int));
+    int x = 0, y = 0;
+    for (uint i = 0; i < A.m; i++)
+        for (uint j = 0; j < A.cnts[i]; j++) {
+            pixelwise_labels[x + y * w] = A.vals[i];
+            if (++y >= h) {
+                y = 0;
+                x++;
+            }
+        }
+    //for (int i = 0; i < (h*w); i++)
+    //    std::cout << pixelwise_labels[i] << std::endl;
+    // Destroy RLEs
+    rlesFree(&R, *labels.rbegin() + 1);
+    for (auto rles : frPoly)
+        for (auto &rle : rles.second)
+            rleFree(&rle);
 
     /*
     auto pol = loader_impl.polygons(image_idx);
@@ -270,86 +400,7 @@ void COCOMetaDataReader::generate_pixelwise_mask(std::string filename, RLE *R) {
     v = !v;
     }
 
-    // then merge the other labels
-    std::unique_ptr<uint[]> cnts = std::make_unique<uint[]>(h * w + 1);
-    std::unique_ptr<int[]> vals = std::make_unique<int[]>(h * w + 1);
-    for (auto label = ++labels.begin(); label != labels.end(); label++) {
-    RLE B = R[*label];
-    if (B.cnts == 0)
-    continue;
 
-    uint cnt_a = A.cnts[0];
-    uint cnt_b = B.cnts[0];
-    int next_val_a = A.vals[0];
-    int val_a = next_val_a;
-    int val_b = *label;
-    bool next_vb = false;
-    bool vb = next_vb;
-    uint nb_seq_a, nb_seq_b;
-    nb_seq_a = nb_seq_b = 1;
-    int m = 0;
-
-    int cnt_tot = 1;  // check if we advanced at all
-    while (cnt_tot > 0) {
-    uint c = std::min(cnt_a, cnt_b);
-    cnt_tot = 0;
-    // advance A
-    cnt_a -= c;
-    if (!cnt_a && nb_seq_a < A.m) {
-    cnt_a = A.cnts[nb_seq_a];  // next sequence for A
-    next_val_a = A.vals[nb_seq_a];
-    nb_seq_a++;
-    }
-    cnt_tot += cnt_a;
-    // advance B
-    cnt_b -= c;
-    if (!cnt_b && nb_seq_b < B.m) {
-    cnt_b = B.cnts[nb_seq_b++];  // next sequence for B
-    next_vb = !next_vb;
-    }
-    cnt_tot += cnt_b;
-
-    if (val_a && vb)  // there's already a class at this pixel
-                    // in this case, the last annotation wins (it's undefined by the spec)
-    vals[m] = (!cnt_a) ? val_a : val_b;
-    else if (val_a)
-    vals[m] = val_a;
-    else if (vb)
-    vals[m] = val_b;
-    else
-    vals[m] = 0;
-    cnts[m] = c;
-    m++;
-
-    // since we switched sequence for A or B, apply the new value from now on
-    val_a = next_val_a;
-    vb = next_vb;
-
-    if (cnt_a == 0) break;
-    }
-    // copy back the buffers to the destination encoding
-    A.m = m;
-    for (int i = 0; i < m; i++) A.cnts[i] = cnts[i];
-    for (int i = 0; i < m; i++) A.vals[i] = vals[i];
-    }
-
-    // Decode final pixelwise masks encoded via RLE
-    memset(mask, 0, h * w * sizeof(int));
-    int x = 0, y = 0;
-    for (uint i = 0; i < A.m; i++)
-    for (uint j = 0; j < A.cnts[i]; j++) {
-    mask[x + y * w] = A.vals[i];
-    if (++y >= h) {
-    y = 0;
-    x++;
-    }
-    }
-
-    // Destroy RLEs
-    rlesFree(&R, *labels.rbegin() + 1);
-    for (auto rles : frPoly)
-    for (auto &rle : rles.second)
-    rleFree(&rle);
     */
 }
 
@@ -638,8 +689,13 @@ void COCOMetaDataReader::read_all(const std::string &path)
         }
         elem.second->set_bb_labels(continuous_label_id);
     }
+    std::cout << "_label_info:" << _label_info.size() << std::endl;
+    for (auto it = _label_info.cbegin(); it != _label_info.cend(); ++it) {
+        std::cout << "{" << (*it).first << ": " << (*it).second << "}\n";
+    }
     free(R);
     _coco_metadata_read_time.end(); // Debug timing
+    exit(0);
     //print_map_contents();
     // std::cout << "coco read time in sec: " << _coco_metadata_read_time.get_timing() / 1000 << std::endl;
 }
