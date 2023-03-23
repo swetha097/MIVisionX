@@ -29,7 +29,8 @@ THE SOFTWARE.
 CropMirrorNormalizeNode::CropMirrorNormalizeNode(const std::vector<rocalTensor *> &inputs,
                                                  const std::vector<rocalTensor *> &outputs) :
         Node(inputs, outputs),
-        _mirror(MIRROR_RANGE[0], MIRROR_RANGE[1]) {
+        _mirror(MIRROR_RANGE[0], MIRROR_RANGE[1])
+{
         _crop_param = std::make_shared<RocalCropParam>(_batch_size);
 }
 

@@ -43,7 +43,7 @@ extern  "C" {
 #endif
 
 /*!***********************************************************************************************************
-                                     RPP VX_API_ENTRY C Function NODE IMAGE
+               		         RPP VX_API_ENTRY C Function NODE BatchPD
 *************************************************************************************************************/
 
 extern  "C" SHARED_PUBLIC vx_node VX_API_CALL vxExtrppNode_AbsoluteDifferencebatchPD(vx_graph graph,vx_image pSrc1,vx_image pSrc2,vx_array srcImgWidth,vx_array srcImgHeight,vx_image pDst,vx_uint32 nbatchSize);

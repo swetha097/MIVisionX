@@ -19,6 +19,7 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
+
 #include <vx_ext_rpp.h>
 #include <graph.h>
 #include "node_resize.h"
@@ -60,13 +61,13 @@ void ResizeNode::create_node() {
 }
 
 void ResizeNode::update_node() {
-    std::vector<uint32_t> orig_h_dims, orig_w_dims;
+    std::vector<uint32_t> src_h_dims, src_w_dims;
     // Using original width and height instead of the decoded width and height for computing resize dimensions
-    orig_w_dims = _inputs[0]->info().get_orig_roi_width_vec();
-    orig_h_dims = _inputs[0]->info().get_orig_roi_height_vec();
+    src_w_dims = _inputs[0]->info().get_orig_roi_width_vec();
+    src_h_dims = _inputs[0]->info().get_orig_roi_height_vec();
     for (unsigned i = 0; i < _batch_size; i++) {
-        _src_width = orig_w_dims[i];
-        _src_height = orig_h_dims[i];
+        _src_width = src_w_dims[i];
+        _src_height = src_h_dims[i];
         _dst_width = _out_width;
         _dst_height = _out_height;
         adjust_out_roi_size();

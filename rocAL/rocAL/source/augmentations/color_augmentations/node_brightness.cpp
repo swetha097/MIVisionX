@@ -28,7 +28,9 @@ THE SOFTWARE.
 BrightnessNode::BrightnessNode(const std::vector<rocalTensor *> &inputs, const std::vector<rocalTensor *> &outputs) :
         Node(inputs, outputs),
         _alpha(ALPHA_RANGE[0], ALPHA_RANGE[1]),
-        _beta (BETA_RANGE[0], BETA_RANGE[1]) { }
+        _beta (BETA_RANGE[0], BETA_RANGE[1])
+{
+}
 
 void BrightnessNode::create_node() {
     if(_node)

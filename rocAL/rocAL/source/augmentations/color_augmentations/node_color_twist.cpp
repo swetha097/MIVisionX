@@ -30,8 +30,6 @@ ColorTwistNode::ColorTwistNode(const std::vector<rocalTensor *> &inputs,const st
         _beta (BETA_RANGE[0], BETA_RANGE[1]),
         _hue(HUE_RANGE[0], HUE_RANGE[1]),
         _sat(SAT_RANGE[0], SAT_RANGE[1])
-
-
 {
 }
 
@@ -70,8 +68,6 @@ void ColorTwistNode::init( float alpha, float beta, float hue , float sat, int l
     _hue.set_param(hue);
     _sat.set_param(sat);
     _layout = _roi_type = 0;
-    // _layout = (unsigned) _outputs[0]->layout();
-
 }
 
 void ColorTwistNode::init( FloatParam* alpha, FloatParam* beta, FloatParam* hue, FloatParam* sat, int layout)
@@ -81,8 +77,6 @@ void ColorTwistNode::init( FloatParam* alpha, FloatParam* beta, FloatParam* hue,
     _hue.set_param(core(hue));
     _sat.set_param(core(sat));
     _layout = _roi_type = 0;
-    // _layout = (unsigned) _outputs[0]->layout();
-
 }
 
 
