@@ -60,7 +60,6 @@ class RALIGenericIterator(object):
         self.reverse_channels = reverse_channels
         self.tensor_dtype = tensor_dtype
         self.len = b.getRemainingImages(self.loader._handle)
-        self.last_batch_padded_size = b.getLastBatchPaddedSize(self.loader._handle)
         self.last_batch_policy = self.loader._last_batch_policy
         self.shard_size = size
         self.auto_reset = auto_reset
@@ -71,7 +70,6 @@ class RALIGenericIterator(object):
         self.channels = None
         self.output = None
         self.batch_size = self.loader._batch_size
-        self.last_batch_size = self.batch_size - self.last_batch_padded_size
 
     def next(self):
         return self.__next__()
@@ -97,7 +95,8 @@ class RALIGenericIterator(object):
         else:
             self.output_tensor_list = self.loader.rocalGetOutputTensors()
             # Move to init
-        
+        self.last_batch_padded_size = b.getLastBatchPaddedSize(self.loader._handle)
+        self.last_batch_size = self.batch_size - self.last_batch_padded_size
         self.batch_count+=self.batch_size
         #From init
         self.num_of_dims = self.output_tensor_list[0].num_of_dims()

@@ -101,12 +101,15 @@ private:
     size_t  _file_count_all_shards;
     std::pair<RocalBatchPolicy, bool>  _last_batch_info;
     size_t _last_batch_padded_size = 0;
+    bool _stick_to_shard = false;
     void incremenet_read_ptr();
     int release();
     size_t get_file_shard_id();
     void incremenet_file_id() { _file_id++; }
     void replicate_last_image_to_fill_last_shard();
     void replicate_last_batch_to_pad_partial_shard();
+    void increment_shard_id();
+    void generate_file_names();
     TimingDBG _shuffle_time;
 };
 

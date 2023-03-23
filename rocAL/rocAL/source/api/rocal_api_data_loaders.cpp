@@ -702,7 +702,8 @@ rocalAudioFileSourceSingleShard(
         bool downmix,
         unsigned max_frames,
         unsigned max_channels,
-        unsigned storage_type)
+        unsigned storage_type,
+        bool stick_to_shard)
 {
     rocalTensor* output = nullptr;
     auto context = static_cast<Context*>(p_context);
@@ -749,7 +750,8 @@ rocalAudioFileSourceSingleShard(
                                                                                         context->master_graph->mem_type(),
                                                                                         context->master_graph->meta_data_reader(),
                                                                                         context->master_graph->last_batch_policy(),
-                                                                                        context->master_graph->last_batch_padded()
+                                                                                        context->master_graph->last_batch_padded(),
+                                                                                        stick_to_shard
                                                                                         );
         context->master_graph->set_loop(loop);
 

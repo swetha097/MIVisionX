@@ -70,7 +70,8 @@ def main():
             file_list=file_list,
             shard_id=0,
             num_shards=1,
-            random_shuffle=True)
+            random_shuffle=True,
+            )
         sample_rate = 16000
         nfft=512
         window_size=0.02
@@ -79,7 +80,7 @@ def main():
         resample = 16000.00
         # dither = 0.001
         # audio_decode = fn.decoders.audio(audio, file_root=data_path, downmix=True, shard_id=0, num_shards=2,random_shuffle=True)
-        audio_decode = fn.decoders.audio(audio, file_root=data_path, file_list_path=file_list, downmix=True, shard_id=1, num_shards=2, storage_type=9)
+        audio_decode = fn.decoders.audio(audio, file_root=data_path, file_list_path=file_list, downmix=True, shard_id=0, num_shards=2, storage_type=9, stick_to_shard=False)
         uniform_distribution_resample = fn.random.uniform(audio_decode, range=[0.8555555, 0.8555555])
         resampled_rate = uniform_distribution_resample * resample
         # # resample_output = fn.resample(audio_decode, resample_rate = resampled_rate, resample_hint=250000, )
