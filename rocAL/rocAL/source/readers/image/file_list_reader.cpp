@@ -237,7 +237,8 @@ void FileListReader::generate_file_names()
 {
     // std::cerr << "[GENERATE] _shard_id" <<_shard_id;
     std::ifstream fp (_file_list_path);
-        if (fp.is_open())  {
+
+    if (fp.is_open())  {
         while (fp) {
             std::string file_label_path;
             std::getline (fp, file_label_path);
@@ -245,38 +246,49 @@ void FileListReader::generate_file_names()
             std::string file_path;
             std::getline(ss, file_path, ' ');
             file_path = _folder_path + "/"+ file_path;
-            if (filesys::is_regular_file(file_path )) {
-                if(get_file_shard_id() != _shard_id ) {
+
+
+            // std::cout << "\n entry Path String" << entry_path << '\n';
+
+            // std::cout << filesys::is_regular_file(entry.path()) << "\n";
+            if (filesys::is_regular_file(file_path ))
+            {
+                if(get_file_shard_id() != _shard_id )
+                {
                     _file_count_all_shards++;
                     incremenet_file_id();
                     continue;
                 }
                 _in_batch_read_count++;
-                // std::cerr << "\n [GENERATE] _in_batch_read_count before mod " << _in_batch_read_count;
                 _in_batch_read_count = (_in_batch_read_count%_batch_count == 0) ? 0 : _in_batch_read_count;
-                // std::cerr << "\n [GENERATE] _in_batch_read_count " << _in_batch_read_count;
                 _last_file_name = file_path;
                 _file_names.push_back(file_path);
+                // std::cerr<<"\n _file_names : "<<file_path<<std::endl;
                 _file_count_all_shards++;
                 incremenet_file_id();
             }
-    _actual_file_names = _file_names;
+            
+
         } // for loop ends
     }
-        uint images_to_pad_shard = _file_count_all_shards - (ceil(_file_count_all_shards / _shard_count) * _shard_count);
-    if(!images_to_pad_shard) {
-        for(int i = 0; i < images_to_pad_shard; i++) {
-            if(get_file_shard_id() != _shard_id ) {
-                _file_count_all_shards++;
-                incremenet_file_id();
-                continue;
-            }
-            _last_file_name = _file_names.at(i);
-            _file_names.push_back(_last_file_name);
-            _file_count_all_shards++;
-            incremenet_file_id();
-        }
+    
+            uint images_to_pad_shard = _file_count_all_shards - (ceil(_file_count_all_shards / _shard_count) * _shard_count);
+            // std::cerr << "\n images_to_pad_shard :: " <<images_to_pad_shard;
+            if(!images_to_pad_shard) {
+                for(int i = 0; i < images_to_pad_shard; i++) {
+                    if(get_file_shard_id() != _shard_id )
+                    {
+                        _file_count_all_shards++;
+                        incremenet_file_id();
+                        continue;
+                    }
+                    _last_file_name = _file_names.at(i);
+                    _file_names.push_back(_last_file_name);
+                    _file_count_all_shards++;
+                    incremenet_file_id();
+                }
     }
+    _actual_file_names = _file_names;
 }
 
 
