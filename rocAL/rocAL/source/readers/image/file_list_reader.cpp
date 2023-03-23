@@ -260,23 +260,22 @@ void FileListReader::generate_file_names()
                 _file_count_all_shards++;
                 incremenet_file_id();
             }
-            
-            uint images_to_pad_shard = _file_count_all_shards - (ceil(_file_count_all_shards / _shard_count) * _shard_count);
-            if(!images_to_pad_shard) {
-                for(int i = 0; i < images_to_pad_shard; i++) {
-                    if(get_file_shard_id() != _shard_id ) {
-                        _file_count_all_shards++;
-                        incremenet_file_id();
-                        continue;
-                    }
-                    _last_file_name = _file_names.at(i);
-                    _file_names.push_back(_last_file_name);
-                    _file_count_all_shards++;
-                    incremenet_file_id();
-                }
-            }
     _actual_file_names = _file_names;
         } // for loop ends
+    }
+        uint images_to_pad_shard = _file_count_all_shards - (ceil(_file_count_all_shards / _shard_count) * _shard_count);
+    if(!images_to_pad_shard) {
+        for(int i = 0; i < images_to_pad_shard; i++) {
+            if(get_file_shard_id() != _shard_id ) {
+                _file_count_all_shards++;
+                incremenet_file_id();
+                continue;
+            }
+            _last_file_name = _file_names.at(i);
+            _file_names.push_back(_last_file_name);
+            _file_count_all_shards++;
+            incremenet_file_id();
+        }
     }
 }
 
