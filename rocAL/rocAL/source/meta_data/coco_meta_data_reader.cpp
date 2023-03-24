@@ -322,10 +322,11 @@ void COCOMetaDataReader::generate_pixelwise_mask(std::string filename, RLE *R_in
             }
         }
     // print pixelwise mask
-    if (R_in == NULL) {
-        for (int i = 0; i < (h*w); i++)
-            std::cout << pixelwise_labels[i] << std::endl;
+    FILE* fp = fopen((filename+".txt").c_str(), "w");
+    for (int i = 0; i < (h*w); i++) {
+        fprintf(fp, "%d\n", pixelwise_labels[i]);
     }
+    fclose(fp);
 
     // Destroy RLEs
     rlesFree(&R, *labels.rbegin() + 1);
@@ -621,7 +622,6 @@ void COCOMetaDataReader::read_all(const std::string &path)
         if (pixelwise_label.size() == 0) {
             std::cout << "Without RLE:" << elem.first << std::endl;
             generate_pixelwise_mask(elem.first,NULL);
-            exit(0);
         }
     }
     std::cout << "_label_info:{" << _label_info.size() << std::endl;
