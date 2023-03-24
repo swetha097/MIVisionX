@@ -739,6 +739,7 @@ std::vector<rocalTensorList *> MasterGraph::create_coco_meta_data_reader(const c
     _meta_data_reader = create_meta_data_reader(config);
     _meta_data_reader->init(config);
     _meta_data_reader->read_all(source_path);
+    auto max_img_size = _meta_data_reader->get_max_size();
     unsigned num_of_dims = 1;
     std::vector<size_t> dims;
     dims.resize(num_of_dims);

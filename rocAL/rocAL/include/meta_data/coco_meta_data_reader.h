@@ -36,7 +36,7 @@ public:
     void read_all(const std::string& path) override;
     void release(std::string image_name);
     void release() override;
-    std::pair<uint32_t,uint32_t> get_max_size() { return std::make_pair(_max_height,_max_width); }
+    std::pair<uint32_t,uint32_t> get_max_size() override { return std::make_pair(_max_height,_max_width); }
     void print_map_contents();
     bool set_timestamp_mode() override { return false; }
     MetaDataBatch * get_output() override { return _output; }
