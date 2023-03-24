@@ -188,7 +188,7 @@ int test(int test_case, int reader_type, int pipeline_type, const char *path, co
         case 2: //coco detection
         {
             std::cout << ">>>>>>> Running COCO READER" << std::endl;
-            char const *json_path = "/media/kamal/coco_meta_reader/MIVisionX/utilities/rocAL/rocAL_unittests/MIVisionX-data/mini_coco_dataset/coco_test_4/annotations/instances_val2017_small.json";
+            char const *json_path = "/media/coco_meta_reader/MIVisionX/utilities/rocAL/rocAL_unittests/MIVisionX-data/mini_coco_dataset/coco_test_4/annotations/instances_val2017_small.json";
             if (strcmp(json_path, "") == 0)
             {
                 std::cout << "\n json_path has to be set in rocal_unit test manually";
@@ -205,7 +205,7 @@ int test(int test_case, int reader_type, int pipeline_type, const char *path, co
         case 3: //coco detection partial
         {
             std::cout << ">>>>>>> Running COCO READER PARTIAL" << std::endl;
-            char const *json_path = "/media/kamal/coco_meta_reader/MIVisionX/utilities/rocAL/rocAL_unittests/MIVisionX-data/mini_coco_dataset/coco_test_4/annotations/instances_val2017_small.json";
+            char const *json_path = "/media/coco_meta_reader/MIVisionX/utilities/rocAL/rocAL_unittests/MIVisionX-data/mini_coco_dataset/coco_test_4/annotations/instances_val2017_small.json";
             if (strcmp(json_path, "") == 0)
             {
                 std::cout << "\n json_path has to be set in rocal_unit test manually";

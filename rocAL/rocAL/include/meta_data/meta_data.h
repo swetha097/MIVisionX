@@ -58,6 +58,7 @@ struct MetaData
         _bb_label_ids = std::move(bb_label_ids);
         _object_count = _bb_label_ids.size();
     }
+    void set_pixelwise_label(std::vector<int> pixelwise_label) { _pixelwise_label = std::move(pixelwise_label); }
     std::vector<int>& get_polygon_count() { return _polygon_count; }
     std::vector<int>& get_pixelwise_label() { return _pixelwise_label; }
     std::vector<std::vector<int>>& get_vertices_count() { return _vertices_count; }

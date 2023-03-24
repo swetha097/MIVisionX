@@ -163,6 +163,7 @@ void COCOMetaDataReader::generate_pixelwise_mask(std::string filename, RLE *R_in
     MaskCords mask_cords;
     std::vector<int> polygon_size;
     std::vector<std::vector<int>> vertices_count;
+    std::map<int, std::vector<RLE> > frPoly;
     auto it = _map_content.find(filename);
     bb_coords = it->second->get_bb_cords();
     bb_labels = it->second->get_bb_labels();
@@ -171,11 +172,15 @@ void COCOMetaDataReader::generate_pixelwise_mask(std::string filename, RLE *R_in
     polygon_size = it->second->get_polygon_count();
     vertices_count = it->second->get_vertices_count();
     ImgSize imgsize = it->second->get_img_size();
-
-    std::map<int, std::vector<RLE> > frPoly;
-    int h = R_in->h;
-    int w = R_in->w;
+    int h = imgsize.h;
+    int w = imgsize.w;
     pixelwise_labels.reserve(h*w);
+    // Modify labels based on label info
+    if (R_in) {
+        for (unsigned int i = 0; i < bb_coords.size(); i++) {
+            bb_labels[i] = _label_info.find(bb_labels[i])->second;
+        }
+    }
     int count = 0;
     std::cout << "\nNumber of objects : " << bb_coords.size() << std::endl;
     for (unsigned int i = 0; i < bb_coords.size(); i++)
@@ -186,9 +191,10 @@ void COCOMetaDataReader::generate_pixelwise_mask(std::string filename, RLE *R_in
             std::vector<double> in;
             std::cout << "\nPolygon size :" << vertices_count[i][j] << "Elements::";
             for (int k = 0; k < vertices_count[i][j]; k++, count++) {
-                std::cout << "\t " << mask_cords[count + vertices_count[i][j]];
-                in.push_back(mask_cords[count + vertices_count[i][j]]);
+                std::cout << "\t " << mask_cords[count];
+                in.push_back(mask_cords[count]);
             }
+            std::cout<< std::endl;
             auto label = bb_labels[i];
             RLE M;
             rleInit(&M, 0, 0, 0, 0);
@@ -196,25 +202,26 @@ void COCOMetaDataReader::generate_pixelwise_mask(std::string filename, RLE *R_in
             frPoly[label].push_back(M);
         }
     }
-    std::cout << "RLE inside" << R_in->h << " " << R_in->w << std::endl;
+
     std::set<int> labels(bb_labels.data(),
                     bb_labels.data() + bb_labels.size());
     if (!labels.size()) {
         return;
     }
+    std::cout << "\n\n";
     for (auto s: labels) {
         std::cout << s << std::endl;
     }
-    //exit(0);
 
     RLE* R;
     rlesInit(&R, *labels.rbegin() + 1);
 
-    const auto &rle = R_in;
-    auto mask_idx = bb_labels.size();
-    int label = bb_labels[mask_idx];
-    rleInit(&R[label], rle->h, rle->w, rle->m, rle->cnts);
-    std::cout << "make h" << std::endl;
+    if (R_in) {
+        const auto &rle = R_in;
+        auto mask_idx = bb_labels.size();
+        int label = bb_labels[mask_idx];
+        rleInit(&R[label], rle->h, rle->w, rle->m, rle->cnts);
+    }
 
     uint lab_cnt = 0;
     for (const auto &rles : frPoly)
@@ -314,94 +321,18 @@ void COCOMetaDataReader::generate_pixelwise_mask(std::string filename, RLE *R_in
                 x++;
             }
         }
-    //for (int i = 0; i < (h*w); i++)
-    //    std::cout << pixelwise_labels[i] << std::endl;
+    // print pixelwise mask
+    if (R_in == NULL) {
+        for (int i = 0; i < (h*w); i++)
+            std::cout << pixelwise_labels[i] << std::endl;
+    }
+
     // Destroy RLEs
     rlesFree(&R, *labels.rbegin() + 1);
     for (auto rles : frPoly)
         for (auto &rle : rles.second)
             rleFree(&rle);
-
-    /*
-    auto pol = loader_impl.polygons(image_idx);
-    auto ver = loader_impl.vertices(image_idx);
-    auto masks_info = loader_impl.pixelwise_masks_info(image_idx);
-    int h = masks_info.shape[0];
-    int w = masks_info.shape[1];
-    auto bboxes = loader_impl.bboxes(image_idx);
-    auto labels_span = loader_impl.labels(image_idx);
-    std::set<int> labels(labels_span.data(),
-                    labels_span.data() + labels_span.size());
-    if (!labels.size()) {
-    return;
-    }
-    */
-
-
-    /*
-    // Create a run-length encoding for each polygon, indexed by label :
-
-    std::vector<double> in;
-    for (uint polygon_idx = 0; polygon_idx < pol.size(); polygon_idx++) {
-    auto &polygon = pol[polygon_idx];
-    int mask_idx = polygon[0];
-    int start_idx = polygon[1];
-    int end_idx = polygon[2];
-    assert(mask_idx < labels_span.size());
-    int label = labels_span[mask_idx];
-    // Convert polygon to encoded mask
-    int nver = end_idx - start_idx;
-    auto pol_ver = span<const vec2>{ver.data() + start_idx, nver};
-    in.resize(pol_ver.size() * 2);
-    for (int i = 0, k = 0; i < pol_ver.size(); i++) {
-    in[k++] = static_cast<double>(pol_ver[i].x);
-    in[k++] = static_cast<double>(pol_ver[i].y);
-    }
-    RLE M;
-    rleInit(&M, 0, 0, 0, 0);
-    rleFrPoly(&M, in.data(), pol_ver.size(), h, w);
-    frPoly[label].push_back(M);
-    }
-
-    // Reserve run-length encodings by labels
-    RLE* R;
-    rlesInit(&R, *labels.rbegin() + 1);
-
-    // Mask was originally described in RLE format
-    for (uint ann_id = 0 ; ann_id < masks_info.mask_indices.size(); ann_id++) {
-    const auto &rle = masks_info.rles[ann_id];
-    auto mask_idx = masks_info.mask_indices[ann_id];
-    int label = labels_span[mask_idx];
-    rleInit(&R[label], (*rle)->h, (*rle)->w, (*rle)->m, (*rle)->cnts);
-    }
-
-    // Merge each label (from multi-polygons annotations)
-    uint lab_cnt = 0;
-    for (const auto &rles : frPoly)
-    rleMerge(rles.second.data(), &R[rles.first], rles.second.size(), 0);
-
-    // Merge all the labels into a pair of vectors :
-    // [2,2,2],[A,B,C] for [A,A,B,B,C,C]
-    struct Encoding {
-    uint m;
-    std::unique_ptr<uint[]> cnts;
-    std::unique_ptr<int[]> vals;
-    };
-    Encoding A;
-    A.cnts = std::make_unique<uint[]>(h * w + 1);  // upper-bound
-    A.vals = std::make_unique<int[]>(h * w + 1);
-
-    // first copy the content of the first label to the output
-    bool v = false;
-    A.m = R[*labels.begin()].m;
-    for (siz a = 0; a < R[*labels.begin()].m; a++) {
-    A.cnts[a] = R[*labels.begin()].cnts[a];
-    A.vals[a] = v ? *labels.begin() : 0;
-    v = !v;
-    }
-
-
-    */
+    it->second->set_pixelwise_label(pixelwise_labels);
 }
 
 void COCOMetaDataReader::read_all(const std::string &path)
@@ -488,7 +419,7 @@ void COCOMetaDataReader::read_all(const std::string &path)
         {
             RAPIDJSON_ASSERT(parser.PeekType() == kArrayType);
             parser.EnterArray();
-            int id = 1, continuous_idx = 1;
+            int id = 1;
             while (parser.NextArrayValue())
             {
                 if (parser.PeekType() != kObjectType)
@@ -507,8 +438,6 @@ void COCOMetaDataReader::read_all(const std::string &path)
                         parser.SkipValue();
                     }
                 }
-                _label_info.insert(std::make_pair(id, continuous_idx));
-                continuous_idx++;
             }
         }
         else if (0 == std::strcmp(key, "annotations"))
@@ -688,11 +617,18 @@ void COCOMetaDataReader::read_all(const std::string &path)
             continuous_label_id.push_back(cnt_idx);
         }
         elem.second->set_bb_labels(continuous_label_id);
+        std::vector<int> pixelwise_label = elem.second->get_pixelwise_label();
+        if (pixelwise_label.size() == 0) {
+            std::cout << "Without RLE:" << elem.first << std::endl;
+            generate_pixelwise_mask(elem.first,NULL);
+            exit(0);
+        }
     }
-    std::cout << "_label_info:" << _label_info.size() << std::endl;
+    std::cout << "_label_info:{" << _label_info.size() << std::endl;
     for (auto it = _label_info.cbegin(); it != _label_info.cend(); ++it) {
-        std::cout << "{" << (*it).first << ": " << (*it).second << "}\n";
+        std::cout << "{" << (*it).first << ": " << (*it).second << "},";
     }
+    std::cout << "}" << std::endl;
     free(R);
     _coco_metadata_read_time.end(); // Debug timing
     exit(0);
