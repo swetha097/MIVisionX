@@ -208,10 +208,6 @@ void COCOMetaDataReader::generate_pixelwise_mask(std::string filename, RLE *R_in
     if (!labels.size()) {
         return;
     }
-    std::cout << "\n\n";
-    for (auto s: labels) {
-        std::cout << s << std::endl;
-    }
 
     RLE* R;
     rlesInit(&R, *labels.rbegin() + 1);
@@ -631,8 +627,6 @@ void COCOMetaDataReader::read_all(const std::string &path)
     std::cout << "}" << std::endl;
     free(R);
     _coco_metadata_read_time.end(); // Debug timing
-    exit(0);
-    //print_map_contents();
     // std::cout << "coco read time in sec: " << _coco_metadata_read_time.get_timing() / 1000 << std::endl;
 }
 
