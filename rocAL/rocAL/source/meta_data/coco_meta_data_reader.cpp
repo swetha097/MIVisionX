@@ -37,6 +37,8 @@ void COCOMetaDataReader::init(const MetaDataConfig &cfg)
     _polygon_mask = cfg.polygon_mask();
     _pixelwise_mask = cfg.pixelwise_mask();
     _output = new BoundingBoxBatch();
+    _max_width = 0;
+    _max_height = 0;
 }
 
 bool COCOMetaDataReader::exists(const std::string &image_name)
@@ -68,7 +70,7 @@ void COCOMetaDataReader::lookup(const std::vector<std::string> &image_names)
         _output->increment_object_count(it->second->get_object_count());
         _output->get_metadata_dimensions_batch().bb_labels_dims()[i] = it->second->get_bb_label_dims();
         _output->get_metadata_dimensions_batch().bb_cords_dims()[i] = it->second->get_bb_cords_dims();
-        if (_polygon_mask)
+        if (_polygon_mask || _pixelwise_mask)
         {
             _output->get_mask_cords_batch()[i] = it->second->get_mask_cords();
             _output->get_mask_polygons_count_batch()[i] = it->second->get_polygon_count();
@@ -336,6 +338,7 @@ void COCOMetaDataReader::read_all(const std::string &path)
 {
     std::string rle_str;
     std::vector<uint32_t> rle_uints;
+    uint32_t max_width=0, max_height=0;
     RLE *R = (RLE*) malloc(sizeof(RLE));
     int push_count = 0;
     _coco_metadata_read_time.start(); // Debug timing
@@ -392,11 +395,13 @@ void COCOMetaDataReader::read_all(const std::string &path)
                     if (0 == std::strcmp(internal_key, "width"))
                     {
                         img_size.w = parser.GetInt();
+                        max_width = img_size.w > max_width? img_size.w : max_width;
                         std::cout << "width:" << img_size.w << std::endl;
                     }
                     else if (0 == std::strcmp(internal_key, "height"))
                     {
                         img_size.h = parser.GetInt();
+                        max_height = img_size.h > max_height? img_size.h : max_height;
                         std::cout << "height:" << img_size.h << std::endl;
                     }
                     else if (0 == std::strcmp(internal_key, "file_name"))
@@ -479,7 +484,7 @@ void COCOMetaDataReader::read_all(const std::string &path)
                             ++i;
                         }
                     }
-                    else if (_polygon_mask && 0 == std::strcmp(internal_key, "segmentation"))
+                    else if ((_polygon_mask || _pixelwise_mask) && 0 == std::strcmp(internal_key, "segmentation"))
                     {
 
                         if (parser.PeekType() == kObjectType)
@@ -555,7 +560,7 @@ void COCOMetaDataReader::read_all(const std::string &path)
 
                 auto it = _map_img_sizes.find(file_name);
                 ImgSize image_size = it->second; //Normalizing the co-ordinates & convert to "ltrb" format
-                if (_polygon_mask && iscrowd == 0)
+                if ((_polygon_mask || _pixelwise_mask) && iscrowd == 0)
                 {
                     std::cout << "Enters here 111" << push_count++ << "\t" << file_name << std::endl;
                     box.l = bbox[0] / image_size.w;
@@ -575,7 +580,7 @@ void COCOMetaDataReader::read_all(const std::string &path)
                     bb_coords.clear();
                     bb_labels.clear();
                 }
-                else if (!_polygon_mask)
+                else if (!(_polygon_mask) && !(_pixelwise_mask))
                 {
                     box.l = bbox[0] / image_size.w;
                     box.t = bbox[1] / image_size.h;
@@ -614,10 +619,12 @@ void COCOMetaDataReader::read_all(const std::string &path)
             continuous_label_id.push_back(cnt_idx);
         }
         elem.second->set_bb_labels(continuous_label_id);
-        std::vector<int> pixelwise_label = elem.second->get_pixelwise_label();
-        if (pixelwise_label.size() == 0) {
-            std::cout << "Without RLE:" << elem.first << std::endl;
-            generate_pixelwise_mask(elem.first,NULL);
+        if (_pixelwise_mask) {
+            std::vector<int> pixelwise_label = elem.second->get_pixelwise_label();
+            if (pixelwise_label.size() == 0) {
+                std::cout << "Without RLE:" << elem.first << std::endl;
+                generate_pixelwise_mask(elem.first,NULL);
+            }
         }
     }
     std::cout << "_label_info:{" << _label_info.size() << std::endl;
@@ -626,6 +633,8 @@ void COCOMetaDataReader::read_all(const std::string &path)
     }
     std::cout << "}" << std::endl;
     free(R);
+    _max_width = max_width;
+    _max_height = max_height;
     _coco_metadata_read_time.end(); // Debug timing
     // std::cout << "coco read time in sec: " << _coco_metadata_read_time.get_timing() / 1000 << std::endl;
 }

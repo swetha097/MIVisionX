@@ -732,7 +732,7 @@ std::vector<rocalTensorList *> MasterGraph::create_coco_meta_data_reader(const c
 {
     if(_meta_data_reader)
         THROW("A metadata reader has already been created")
-    if(polygon_mask)
+    if(polygon_mask || pixelwise_mask)
         _is_segmentation = true;
     MetaDataConfig config(label_type, reader_type, source_path, std::map<std::string, std::string>(), std::string(), polygon_mask, 3,3,1, pixelwise_mask);
     _meta_data_graph = create_meta_data_graph(config);
@@ -760,7 +760,7 @@ std::vector<rocalTensorList *> MasterGraph::create_coco_meta_data_reader(const c
     _meta_data_buffer_size.emplace_back(dims.at(0) * dims.at(1)  * _user_batch_size * sizeof(vx_float32)); // TODO - replace with data size from info
 
     rocalTensorInfo default_mask_info;
-    if(polygon_mask)
+    if(polygon_mask || pixelwise_mask)
     {
         num_of_dims = 2;
         dims.resize(num_of_dims);
@@ -779,7 +779,7 @@ std::vector<rocalTensorList *> MasterGraph::create_coco_meta_data_reader(const c
         auto bbox_info = default_bbox_info;
         _labels_tensor_list.push_back(new rocalTensor(labels_info));
         _bbox_tensor_list.push_back(new rocalTensor(bbox_info));
-        if(polygon_mask)
+        if(polygon_mask || pixelwise_mask)
         {
             auto mask_info = default_mask_info;
             _mask_tensor_list.push_back(new rocalTensor(mask_info));
@@ -795,7 +795,7 @@ std::vector<rocalTensorList *> MasterGraph::create_coco_meta_data_reader(const c
     }
     _metadata_output_tensor_list.emplace_back(&_labels_tensor_list);
     _metadata_output_tensor_list.emplace_back(&_bbox_tensor_list);
-    if(polygon_mask)
+    if(polygon_mask || pixelwise_mask)
         _metadata_output_tensor_list.emplace_back(&_mask_tensor_list);
 
     return _metadata_output_tensor_list;

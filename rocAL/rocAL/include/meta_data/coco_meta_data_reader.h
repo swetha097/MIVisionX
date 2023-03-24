@@ -36,6 +36,7 @@ public:
     void read_all(const std::string& path) override;
     void release(std::string image_name);
     void release() override;
+    std::pair<uint32_t,uint32_t> get_max_size() { return std::make_pair(_max_height,_max_width); }
     void print_map_contents();
     bool set_timestamp_mode() override { return false; }
     MetaDataBatch * get_output() override { return _output; }
@@ -65,6 +66,8 @@ private:
     {62,57},{63,58},{64,59},{65,60},{67,61},{70,62},{72,63},{73,64},{74,65},{75,66}, \
     {76,67},{77,68},{78,69},{79,70},{80,71},{81,72},{82,73},{84,74},{85,75},{86,76}, \
     {87,77},{88,78},{89,79},{90,80}};
+    uint32_t _max_width;
+    uint32_t _max_height;
     std::map<int, int> ::iterator _it_label;
     TimingDBG _coco_metadata_read_time;
 };
