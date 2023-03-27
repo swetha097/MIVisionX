@@ -183,21 +183,24 @@ void FileListReader::reset()
     _shuffle_time.start();
     if (_shuffle) std::random_shuffle(_file_names.begin(), _file_names.end());
     _shuffle_time.end();
-    _read_counter = 0;
+    // _read_counter = 0;
     if (_shard_count == 1) { // Single Shard
+        _read_counter-=_batch_count;
+        _curr_file_idx = (_curr_file_idx - _batch_count) % _file_names.size();
+        // _curr_file_idx = (_curr_file_idx + _batch_count) % _file_names.size();
     // Rotates the file_names vector to adjust the start of the next epoch
-        if (_last_batch_info.second == false) {
-            std::rotate(
-                _actual_file_names.begin(),
-                _actual_file_names.begin() + _batch_count - _in_batch_read_count,
-                _actual_file_names.end());
-            _file_names.clear();
-            _file_names.resize(_actual_file_names.size());
-            _file_names = _actual_file_names;
-            if (_in_batch_read_count > 0 && _in_batch_read_count < _batch_count) {
-                replicate_last_image_to_fill_last_shard();
-            }
-        }
+        // if (_last_batch_info.second == false) {
+        //     std::rotate(
+        //         _actual_file_names.begin(),
+        //         _actual_file_names.begin() + _batch_count - _in_batch_read_count,
+        //         _actual_file_names.end());
+        //     _file_names.clear();
+        //     _file_names.resize(_actual_file_names.size());
+        //     _file_names = _actual_file_names;
+        //     if (_in_batch_read_count > 0 && _in_batch_read_count < _batch_count) {
+        //         replicate_last_image_to_fill_last_shard();
+        //     }
+        // }
     }
     else { // Multiple Shards
         if(_stick_to_shard == false) {
@@ -206,6 +209,7 @@ void FileListReader::reset()
             _in_batch_read_count = 0; // reset the batch_read_count
             _curr_file_idx = 0;
             _file_id = 0;
+            _read_counter = 0;
             _file_names.clear();
             generate_file_names();
             // std::cerr << "\n  [RESET] _in_batch_read_count : " <<_in_batch_read_count;
@@ -220,7 +224,11 @@ void FileListReader::reset()
     }
     // std::cerr << "next file names size :: "<< _file_names.size();
     if(_last_batch_info.second == true)
+    {
         _curr_file_idx = 0;
+        _read_counter = 0;
+        // _file_id = 0;
+    }
     // else
     //     incremenet_read_ptr();
     // std::cerr << "\n [RESET] _last_batch_padded_size" << _last_batch_padded_size;
