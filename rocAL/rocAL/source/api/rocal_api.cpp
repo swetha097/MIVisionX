@@ -87,9 +87,13 @@ rocalRun(RocalContext p_context)
     auto context = static_cast<Context*>(p_context);
     try
     {
+        std::cerr<<"\n CP1";
         auto ret = context->master_graph->run();
         if(ret != MasterGraph::Status::OK)
-            return ROCAL_RUNTIME_ERROR;
+            {
+                std::cerr<<"\n Failed run time error";
+                return ROCAL_RUNTIME_ERROR;
+            }
     }
     catch(const std::exception& e)
     {

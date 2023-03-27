@@ -33,19 +33,24 @@ void BoundingBoxGraph::process(MetaDataBatch *meta_data, bool segmentation)
 //update_meta_data is not required since the bbox are normalized in the very beggining -> removed the call in master graph also except for MaskRCNN
 void BoundingBoxGraph::update_meta_data(MetaDataBatch *input_meta_data, decoded_image_info decode_image_info, bool segmentation)
 {
+    std::cerr<<"\n BoundingBoxGraph::update_meta_data";
     std::vector<uint32_t> original_height = decode_image_info._original_height;
     std::vector<uint32_t> original_width = decode_image_info._original_width;
     std::vector<uint32_t> roi_width = decode_image_info._roi_width;
     std::vector<uint32_t> roi_height = decode_image_info._roi_height;
+    std::cerr<<"\n BoundingBoxGraph::update_meta_data1";
     for (int i = 0; i < input_meta_data->size(); i++)
     {
+        std::cerr<<"\n BoundingBoxGraph::update_meta_data2";
         float _dst_to_src_width_ratio = roi_width[i] / float(original_width[i]);
         float _dst_to_src_height_ratio = roi_height[i] / float(original_height[i]);
         unsigned bb_count = input_meta_data->get_bb_labels_batch()[i].size();
         float mask_data[MAX_BUFFER];
         int poly_size = 0;
-        if (segmentation)
+        segmentation = false; // kamal
+        if (segmentation) // Should not come here
         {
+            std::cerr<<"\n BoundingBoxGraph::update_meta_data3";
             auto ptr = mask_data;
             auto mask_data_ptr = input_meta_data->get_mask_cords_batch()[i].data();
             for (unsigned int object_index = 0; object_index < bb_count; object_index++)

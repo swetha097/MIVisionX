@@ -58,7 +58,10 @@ struct MetaData
         _bb_label_ids = std::move(bb_label_ids);
         _object_count = _bb_label_ids.size();
     }
-    void set_pixelwise_label(std::vector<int> pixelwise_label) { _pixelwise_label = std::move(pixelwise_label); }
+    void set_pixelwise_label(std::vector<int> pixelwise_label) {
+        std::cerr<<"\n ****************** Setting pixel wise label ***********************";
+        _pixelwise_label = std::move(pixelwise_label);
+        }
     std::vector<int>& get_polygon_count() { return _polygon_count; }
     std::vector<int>& get_pixelwise_label() { return _pixelwise_label; }
     std::vector<std::vector<int>>& get_vertices_count() { return _vertices_count; }
@@ -349,13 +352,16 @@ struct BoundingBoxBatch: public MetaDataBatch
         auto bb_coords_dims = _metadata_dimensions.bb_cords_dims();
         if(is_segmentation)
         {
+            std::cerr<<"\n Copy_data is segmentation ";
             bool pixelwise_flag = false;
+            std::cerr<<"\n _pixelwise_labels.size() :: "<<_pixelwise_labels.size()<<"\t _pixelwise_labels[0].size() ::"<<_pixelwise_labels[0].size();
             if (_pixelwise_labels.size() != 0) {
                 if (_pixelwise_labels[0].size() != 0) {
                     pixelwise_flag = true;
                 }
             }
             if (pixelwise_flag == false) {
+                std::cerr<<"\n Polygon mask is set";
                 float *mask_buffer = (float *)buffer[2];
                 auto mask_coords_dims = _metadata_dimensions.mask_cords_dims();
                 for(unsigned i = 0; i < _bb_label_ids.size(); i++)
@@ -368,12 +374,17 @@ struct BoundingBoxBatch: public MetaDataBatch
                     mask_buffer += mask_coords_dims[i][0];
                 }
             } else {
+                std::cerr<<"\n Copy data pixel mask is set to true";
                 int *mask_buffer = (int *)buffer[2];
                 for(unsigned i = 0; i < _bb_label_ids.size(); i++)
                 {
-                    mempcpy(labels_buffer, _bb_label_ids[i].data(), bb_labels_dims[i][0] * sizeof(int));
+                    std::cerr<<"\n ***************** i ***********************"<<i;
+                    mempcpy(labels_buffer, _bb_label_ids[i].data(), bb_labels_dims[i][0] * sizeof(int)); // Is this required ? kAMAL
+                    std::cerr<<"\n Labels buffer copied";
                     memcpy(bbox_buffer, _bb_cords[i].data(), bb_coords_dims[i][0] * sizeof(BoundingBoxCord));
+                    std::cerr<<"\n bbox buffre copied";
                     memcpy(mask_buffer, _pixelwise_labels[i].data(), _pixelwise_labels[i].size() * sizeof(int));
+                    std::cerr<<"\n Mask buffer copied";
                     labels_buffer += bb_labels_dims[i][0];
                     bbox_buffer += (bb_coords_dims[i][0] * 4);
                     mask_buffer += _pixelwise_labels[i].size();
@@ -398,11 +409,12 @@ struct BoundingBoxBatch: public MetaDataBatch
         if(is_segmentation) {
             if (_total_pixelwise_labels_count != 0) {
                 std::cout << "Eneter here*********" << std::endl;
-                _buffer_size.emplace_back(_total_pixelwise_labels_count * sizeof(int));
+                _buffer_size.emplace_back(_total_pixelwise_labels_count * sizeof(int)); // Kamal check if this is calculated correctly
             } else {
                 _buffer_size.emplace_back(_total_mask_coords_count * sizeof(float));
             }
         }
+        std::cerr<<"\n _buffer_size :: "<<_buffer_size.size();
         return _buffer_size;
     }
 };

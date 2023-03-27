@@ -35,13 +35,18 @@ RingBuffer::RingBuffer(unsigned buffer_depth):
 
 void RingBuffer::block_if_empty()
 {
+    std::cerr<<"\n RingBuffer::block_if_empty() 1";
     std::unique_lock<std::mutex> lock(_lock);
+    std::cerr<<"\n RingBuffer::block_if_empty() 2";
     if(empty())
     { // if the current read buffer is being written wait on it
+    std::cerr<<"\n RingBuffer::block_if_empty() 3";
         if(_dont_block)
             return;
+    std::cerr<<"\n RingBuffer::block_if_empty() 4";
         _wait_for_load.wait(lock);
     }
+    std::cerr<<"\n RingBuffer::block_if_empty() 5";
 }
 
 void RingBuffer:: block_if_full()
@@ -198,7 +203,7 @@ void RingBuffer::init(RocalMemType mem_type, void *devres, std::vector<size_t> s
         }
 #if ENABLE_OPENCL || ENABLE_HIP
     }
-#endif    
+#endif
 }
 
 void RingBuffer::initBoxEncoderMetaData(RocalMemType mem_type, size_t encoded_bbox_size, size_t encoded_labels_size)
@@ -250,7 +255,7 @@ void RingBuffer::initBoxEncoderMetaData(RocalMemType mem_type, size_t encoded_bb
             }
         }
     }
-#else    
+#else
     {
         if(_meta_data_sub_buffer_count < 2)
             THROW("Insufficient HOST metadata buffers for Box Encoder");

@@ -394,13 +394,15 @@ int test(int test_case, int reader_type, int pipeline_type, const char *path, co
     std::cerr << "ok-1" << std::endl;
     while (rocalGetRemainingImages(handle) >= inputBatchSize)
     {
-        std::cerr << "ok0" << std::endl;
+        std::cerr << "caling rocal run" << std::endl;
         index++;
         if (rocalRun(handle) != 0)
             break;
         int label_id[inputBatchSize];
         int numOfClasses = 0;
         int image_name_length[inputBatchSize];
+        std::cerr<<"\n Gonna switch to pipeline";
+        // exit(0);
         switch(pipeline_type)
         {
             case 1: //classification pipeline
@@ -460,7 +462,7 @@ int test(int test_case, int reader_type, int pipeline_type, const char *path, co
                     std::cout << imageNamesStr[i] << std::endl;
                     int * labels_buffer = (int *)(bbox_labels->at(i)->buffer());
                     float *bbox_buffer = (float *)(bbox_coords->at(i)->buffer());
-                    
+
                     std::cerr << "\n>>>>> BBOX LABELS : ";
                     for(int j = 0; j < bbox_labels->at(i)->info().dims().at(0); j++)
                         std::cerr << labels_buffer[j] << " ";

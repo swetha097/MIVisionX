@@ -337,7 +337,9 @@ void COCOMetaDataReader::generate_pixelwise_mask(std::string filename, RLE *R_in
     for (auto rles : frPoly)
         for (auto &rle : rles.second)
             rleFree(&rle);
-    it->second->set_pixelwise_label(pixelwise_labels);
+    // std::cerr<<"\n pixelwise_labels[0].size() :: "<<pixelwise_labels[0].size();
+    // it->second->set_pixelwise_label(pixelwise_labels); // Kamal why this is not made similar to COCOMetaDataReader::add line 90
+    it->second->get_pixelwise_label().push_back(pixelwise_labels[0]);
 }
 
 void COCOMetaDataReader::read_all(const std::string &path)
