@@ -91,7 +91,6 @@ def resize_mirror_normalize(*inputs, bytes_per_sample_hint=0, interp_type=1, mag
                             interpolation_type=types.LINEAR_INTERPOLATION, image_type=0, mean=[0.0], mirror=1, output_dtype=types.FLOAT, rocal_tensor_layout =types.NHWC,
                             rocal_tensor_output_type = types.FLOAT, output_layout=types.NHWC, pad_output=False, preserve=False, seed=1, std=[1.0], device=None):
     #Set Seed
-    b.setSeed(seed)
 
     if isinstance(mirror,int):
         if(mirror == 0):

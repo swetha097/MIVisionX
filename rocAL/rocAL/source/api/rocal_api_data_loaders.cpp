@@ -40,7 +40,7 @@ THE SOFTWARE.
 #include "meta_node_resize.h"
 
 namespace filesys = boost::filesystem;
-#define MAX_ASPECT_RATIO 3.0f
+// #define MAX_ASPECT_RATIO 6.0f
 
 std::tuple<unsigned, unsigned>
 evaluate_image_data_set(RocalImageSizeEvaluationPolicy decode_size_policy, StorageType storage_type,
