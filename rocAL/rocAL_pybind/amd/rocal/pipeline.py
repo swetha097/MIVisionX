@@ -100,6 +100,7 @@ class Pipeline(object):
         self._num_threads = num_threads
         self._device_id = device_id
         self._seed = seed
+        b.setSeed(seed)
         self._exec_pipelined = exec_pipelined
         self._prefetch_queue_depth = prefetch_queue_depth
         self._exec_async = exec_async

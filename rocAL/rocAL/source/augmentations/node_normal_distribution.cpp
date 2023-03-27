@@ -23,6 +23,7 @@ THE SOFTWARE.
 #include <vx_ext_rpp.h>
 #include "node_normal_distribution.h"
 #include "exception.h"
+#include "parameter_factory.h"
 
 NormalDistributionNode::NormalDistributionNode(const std::vector<rocalTensor *> &inputs, const std::vector<rocalTensor *> &outputs) :
         Node(inputs, outputs)
@@ -42,7 +43,7 @@ void NormalDistributionNode::create_node()
     // create a normal distribution
     for(uint i = 0; i < _batch_size; i++) {
     update_param();
-    _normal_distribution_array[i] = _dist_normal(_generator);
+    _normal_distribution_array[i] = _dist_normal(_rngs[i]);
     // std::cerr << "\n _normal_distribution_array :"<< _normal_distribution_array[i];
     }
     _outputs[0]->swap_handle((void *)_normal_distribution_array.data());
@@ -67,7 +68,7 @@ void NormalDistributionNode::update_node()
     // create a normal distribution
     for(uint i = 0; i < _batch_size; i++) {
     update_param();
-    _normal_distribution_array[i] = _dist_normal(_generator);
+    _normal_distribution_array[i] = _dist_normal(_rngs[i]);
     // std::cerr << "\n _normal_distribution_array :"<< _normal_distribution_array[i];
     }
     // status = vxCopyTensorPatch((vx_tensor)_outputs[0]->handle(), _num_of_dims, nullptr, nullptr, _stride, _normal_distribution_array.data(), VX_WRITE_ONLY, VX_MEMORY_TYPE_HOST);
@@ -84,11 +85,9 @@ void NormalDistributionNode::update_param()
 void NormalDistributionNode::init(float mean, float std_dev) {
     _mean = mean;
     _std_dev = std_dev;
-    std::cerr << "\n _mean : " << _mean;
-    std::cerr << "\n _std_dev : " << _std_dev;
     _num_of_dims = _outputs[0]->info().num_of_dims();
     _normal_distribution_array.resize(_batch_size);
-    // unsigned seed = 0;
-    // _generator = seed;
+    BatchRNG<std::mt19937> _rng = {ParameterFactory::instance()->get_seed(), _batch_size};
+    _rngs =_rng;
     update_param();
 }

@@ -42,7 +42,7 @@ void UniformDistributionNode::create_node()
     // create a uniform distribution
     for(uint i = 0; i < _batch_size; i++) {
     update_param();
-    _uniform_distribution_array[i] = _dist_uniform(_generator);
+    _uniform_distribution_array[i] = _dist_uniform(_rngs[i]);
     // std::cerr << "\n _uniform_distribution_array :"<< _uniform_distribution_array[i];
     }
     _outputs[0]->swap_handle((void *)_uniform_distribution_array.data());
@@ -56,7 +56,7 @@ void UniformDistributionNode::update_node()
     // create a uniform distribution
     for(uint i = 0; i < _batch_size; i++) {
     update_param();
-    _uniform_distribution_array[i] = _dist_uniform(_generator);
+    _uniform_distribution_array[i] = _dist_uniform(_rngs[i]);
     // std::cerr << "\n _uniform_distribution_array :"<< _uniform_distribution_array[i];
     }
  if(status != 0)
@@ -76,5 +76,7 @@ void UniformDistributionNode::init(std::vector<float> &range) {
     std::cerr << "\n _max in uniform: " << _max;
     _num_of_dims = _outputs[0]->info().num_of_dims();
     _uniform_distribution_array.resize(_batch_size);
+    BatchRNGUniform<std::mt19937> _rng = {ParameterFactory::instance()->get_seed(), _batch_size};
+    _rngs =_rng;
     update_param();
 }
