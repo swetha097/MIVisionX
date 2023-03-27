@@ -391,8 +391,10 @@ int test(int test_case, int reader_type, int pipeline_type, const char *path, co
     RocalTensorList output_tensor_list;
     auto cv_color_format = ((color_format == RocalImageColor::ROCAL_COLOR_RGB24) ?  ((tensorOutputType == RocalTensorOutputType::ROCAL_FP32) ? CV_32FC3 : CV_8UC3) : CV_8UC1);
 
+    std::cerr << "ok-1" << std::endl;
     while (rocalGetRemainingImages(handle) >= inputBatchSize)
     {
+        std::cerr << "ok0" << std::endl;
         index++;
         if (rocalRun(handle) != 0)
             break;
@@ -432,49 +434,39 @@ int test(int test_case, int reader_type, int pipeline_type, const char *path, co
             break;
             case 3: //detection + segmentation pipeline
             {
+                std::cerr << "ok1" << std::endl;
                 RocalTensorList bbox_labels = rocalGetBoundingBoxLabel(handle);
+                std::cerr << "ok2" << std::endl;
                 RocalTensorList bbox_coords = rocalGetBoundingBoxCords(handle);
+                std::cerr << "ok3" << std::endl;
                 int ImageNameLen[inputBatchSize];
                 unsigned imagename_size = rocalGetImageNameLen(handle,ImageNameLen);
                 char imageNames[imagename_size];
                 rocalGetImageName(handle,imageNames);
                 std::string imageNamesStr(imageNames);
-                std::vector<int> mask_count;
-                std::vector<int> polygon_size;
-                unsigned total_number_of_objects_per_batch = rocalGetBoundingBoxCount(handle);
-                mask_count.resize(total_number_of_objects_per_batch);
-                int mask_size = rocalGetMaskCount(handle, mask_count.data());
-                polygon_size.resize(mask_size);
-                RocalTensorList mask_data = rocalGetMaskCoordinates(handle, polygon_size.data());
+                std::cerr << "ok4" << std::endl;
+                RocalTensorList mask_data = rocalGetPixelwiseLabels(handle);
+                std::cerr << "ok5" << std::endl;
 
                 std::cout << "Size:" << bbox_labels->size() << std::endl;
+                for(int i =0; i < bbox_labels->size(); i++) {
+                    int *mask_buffer = (int *)(mask_data->at(i)->buffer());
+                    int mask_size = mask_data->at(i)->info().dims().at(0)*mask_data->at(i)->info().dims().at(1);
+                    for (int j = 0; j < mask_size; j++) {
+                        std::cout << mask_buffer[j] << std::endl;                    }
+                }
                 for(int i = 0; i < bbox_labels->size(); i++)
                 {
                     std::cout << imageNamesStr[i] << std::endl;
                     int * labels_buffer = (int *)(bbox_labels->at(i)->buffer());
                     float *bbox_buffer = (float *)(bbox_coords->at(i)->buffer());
-                    float *mask_buffer = (float *)(mask_data->at(i)->buffer());
+                    
                     std::cerr << "\n>>>>> BBOX LABELS : ";
                     for(int j = 0; j < bbox_labels->at(i)->info().dims().at(0); j++)
                         std::cerr << labels_buffer[j] << " ";
                     std::cerr << "\n>>>>> BBOXX : " <<bbox_coords->at(i)->info().dims().at(0) << " : \n";
                     for(int j = 0, j4 = 0; j < bbox_coords->at(i)->info().dims().at(0); j++, j4 = j * 4)
                         std::cerr << bbox_buffer[j4] << " " << bbox_buffer[j4 + 1] << " " << bbox_buffer[j4 + 2] << " " << bbox_buffer[j4 + 3] << "\n";
-                    std::cerr << "\n>>>>>>> MASK COORDS : ";
-                    int poly_cnt = 0;
-                    for(unsigned j = 0; j < bbox_labels->at(i)->info().dims().at(0); j++)
-                    {
-                        std::cerr << "Mask idx : " << j << "Polygons : " <<  mask_count[j] << "[" ;
-                        for(int k = 0; k < mask_count[j]; k++)
-                        {
-                            std::cerr << "[";
-                            for(int l = 0; l < polygon_size[poly_cnt]; l++)
-                                std::cerr << mask_buffer[l] << ", ";
-                            std::cerr << "]";
-                            mask_buffer += polygon_size[poly_cnt++];
-                        }
-                        std::cerr << "]\n";
-                    }
                 }
             }
             break;

@@ -761,7 +761,7 @@ std::vector<rocalTensorList *> MasterGraph::create_coco_meta_data_reader(const c
     _meta_data_buffer_size.emplace_back(dims.at(0) * dims.at(1)  * _user_batch_size * sizeof(vx_float32)); // TODO - replace with data size from info
 
     rocalTensorInfo default_mask_info;
-    if(polygon_mask || pixelwise_mask)
+    if(polygon_mask)
     {
         num_of_dims = 2;
         dims.resize(num_of_dims);
@@ -772,7 +772,18 @@ std::vector<rocalTensorList *> MasterGraph::create_coco_meta_data_reader(const c
                                             RocalTensorDataType::FP32);
         default_mask_info.set_metadata();
         _meta_data_buffer_size.emplace_back(dims.at(0) * dims.at(1)  * _user_batch_size * sizeof(vx_float32)); // TODO - replace with data size from info
+    } else if(pixelwise_mask) {
+        num_of_dims = 2;
+        dims.resize(num_of_dims);
+        dims.at(0) = max_img_size.first;
+        dims.at(1) = max_img_size.second;
+        default_mask_info  = rocalTensorInfo(dims,
+                                            _mem_type,
+                                            RocalTensorDataType::INT32);
+        default_mask_info.set_metadata();
+        _meta_data_buffer_size.emplace_back(dims.at(0) * dims.at(1)  * _user_batch_size * sizeof(vx_int32)); // TODO - replace with data size from info
     }
+
 
     for(unsigned i = 0; i < _user_batch_size; i++)
     {

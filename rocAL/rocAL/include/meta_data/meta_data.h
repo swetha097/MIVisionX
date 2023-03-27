@@ -76,9 +76,13 @@ struct MetaData
         _bb_coords_dims = {_bb_cords.size(), 4};
         return _bb_coords_dims;
     }
-    std::vector<size_t> get_mask_cords_dims()
+    std::vector<size_t> get_mask_cords_dims(bool pixelwise_flag)
     {
-        _mask_coords_dims = {_mask_cords.size(), 1};
+        if (!pixelwise_flag) {
+            _mask_coords_dims = {_mask_cords.size(), 1};
+        } else {
+            _mask_coords_dims = {static_cast<unsigned long>(_img_size.h), static_cast<unsigned long>(_img_size.w)};
+        }
         return _mask_coords_dims;
     }
 protected:
@@ -217,9 +221,11 @@ struct MetaDataBatch
     void reset_objects_count() {
         _total_objects_count = 0;
         _total_mask_coords_count = 0;
+        _total_pixelwise_labels_count = 0;
     }
     void increment_object_count(int count) { _total_objects_count += count; }
     void increment_mask_coords_count(int count) { _total_mask_coords_count += count; }
+    void increment_pixelwise_labels_count(int count) { _total_pixelwise_labels_count += count; }
     int get_batch_object_count() { return _total_objects_count; }
     MetaDataDimensionsBatch& get_metadata_dimensions_batch() { return _metadata_dimensions; }
 protected:
@@ -235,6 +241,7 @@ protected:
     std::vector<size_t> _buffer_size;
     int _total_objects_count = 0;
     int _total_mask_coords_count;
+    int _total_pixelwise_labels_count;
     MetaDataDimensionsBatch _metadata_dimensions;
 };
 
@@ -342,16 +349,35 @@ struct BoundingBoxBatch: public MetaDataBatch
         auto bb_coords_dims = _metadata_dimensions.bb_cords_dims();
         if(is_segmentation)
         {
-            float *mask_buffer = (float *)buffer[2];
-            auto mask_coords_dims = _metadata_dimensions.mask_cords_dims();
-            for(unsigned i = 0; i < _bb_label_ids.size(); i++)
-            {
-                mempcpy(labels_buffer, _bb_label_ids[i].data(), bb_labels_dims[i][0] * sizeof(int));
-                memcpy(bbox_buffer, _bb_cords[i].data(), bb_coords_dims[i][0] * sizeof(BoundingBoxCord));
-                memcpy(mask_buffer, _mask_cords[i].data(), mask_coords_dims[i][0] * sizeof(float));
-                labels_buffer += bb_labels_dims[i][0];
-                bbox_buffer += (bb_coords_dims[i][0] * 4);
-                mask_buffer += mask_coords_dims[i][0];
+            bool pixelwise_flag = false;
+            if (_pixelwise_labels.size() != 0) {
+                if (_pixelwise_labels[0].size() != 0) {
+                    pixelwise_flag = true;
+                }
+            }
+            if (pixelwise_flag == false) {
+                float *mask_buffer = (float *)buffer[2];
+                auto mask_coords_dims = _metadata_dimensions.mask_cords_dims();
+                for(unsigned i = 0; i < _bb_label_ids.size(); i++)
+                {
+                    mempcpy(labels_buffer, _bb_label_ids[i].data(), bb_labels_dims[i][0] * sizeof(int));
+                    memcpy(bbox_buffer, _bb_cords[i].data(), bb_coords_dims[i][0] * sizeof(BoundingBoxCord));
+                    memcpy(mask_buffer, _mask_cords[i].data(), mask_coords_dims[i][0] * sizeof(float));
+                    labels_buffer += bb_labels_dims[i][0];
+                    bbox_buffer += (bb_coords_dims[i][0] * 4);
+                    mask_buffer += mask_coords_dims[i][0];
+                }
+            } else {
+                int *mask_buffer = (int *)buffer[2];
+                for(unsigned i = 0; i < _bb_label_ids.size(); i++)
+                {
+                    mempcpy(labels_buffer, _bb_label_ids[i].data(), bb_labels_dims[i][0] * sizeof(int));
+                    memcpy(bbox_buffer, _bb_cords[i].data(), bb_coords_dims[i][0] * sizeof(BoundingBoxCord));
+                    memcpy(mask_buffer, _pixelwise_labels[i].data(), _pixelwise_labels[i].size() * sizeof(int));
+                    labels_buffer += bb_labels_dims[i][0];
+                    bbox_buffer += (bb_coords_dims[i][0] * 4);
+                    mask_buffer += _pixelwise_labels[i].size();
+                }
             }
         }
         else
@@ -369,8 +395,14 @@ struct BoundingBoxBatch: public MetaDataBatch
     {
         _buffer_size.emplace_back(_total_objects_count * sizeof(int));
         _buffer_size.emplace_back(_total_objects_count * 4 * sizeof(float));
-        if(is_segmentation)
-            _buffer_size.emplace_back(_total_mask_coords_count * sizeof(float));
+        if(is_segmentation) {
+            if (_total_pixelwise_labels_count != 0) {
+                std::cout << "Eneter here*********" << std::endl;
+                _buffer_size.emplace_back(_total_pixelwise_labels_count * sizeof(int));
+            } else {
+                _buffer_size.emplace_back(_total_mask_coords_count * sizeof(float));
+            }
+        }
         return _buffer_size;
     }
 };

@@ -159,6 +159,11 @@ extern "C" RocalTensorList ROCAL_API_CALL rocalGetMaskCoordinates(RocalContext r
 
 ///
 /// \param rocal_context
+/// \param bufcount The user's buffer that will be filled with poylgon size for the mask info
+extern "C" RocalTensorList ROCAL_API_CALL rocalGetPixelwiseLabels(RocalContext p_context);
+
+///
+/// \param rocal_context
 /// \param source_path path to the file that contains the metadata file
 extern "C" RocalMetaData ROCAL_API_CALL rocalCreateTextCifar10LabelReader(RocalContext rocal_context, const char* source_path, const char* file_prefix);
 
