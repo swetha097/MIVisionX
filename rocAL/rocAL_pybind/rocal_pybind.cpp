@@ -372,6 +372,24 @@ namespace rocal
                             {sizeof(int) }));
     }
             );
+        m.def(
+            "rocalGetPixelwiseLabels", [](RocalContext context)
+    {
+            rocalTensorList *labels = rocalGetPixelwiseLabels(context);
+            // std::cerr<<"LABELS SIZE ::"<<labels->size();
+            // for (int i = 0; i < labels->size(); i++) {
+            //     int *labels_buffer = (int *)(labels->at(i)->buffer());
+            //     std::cerr << ">>>>> LABELS : " << labels_buffer[0] << "\t";
+            // }
+            return py::array(py::buffer_info(
+                            (int *)(labels->at(0)->buffer()),
+                            sizeof(int),
+                            py::format_descriptor<int>::format(),
+                            2,
+                            {labels->size()},
+                            {sizeof(int) }));
+    }
+            );
         // m.def(
         //     "copy_data_ptr", [](RocalContext context, py::object p)
         // {

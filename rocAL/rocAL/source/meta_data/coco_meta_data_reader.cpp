@@ -178,12 +178,12 @@ void COCOMetaDataReader::generate_pixelwise_mask(std::string filename, RLE *R_in
     int h = imgsize.h;
     int w = imgsize.w;
     pixelwise_labels.resize(h*w);
-    // Modify labels based on label info
     if (R_in) {
         for (unsigned int i = 0; i < bb_coords.size(); i++) {
             bb_labels[i] = _label_info.find(bb_labels[i])->second;
         }
     }
+    // Generate frPoly for all polygons in image
     int count = 0;
     for (unsigned int i = 0; i < bb_coords.size(); i++)
     {
@@ -219,10 +219,8 @@ void COCOMetaDataReader::generate_pixelwise_mask(std::string filename, RLE *R_in
 
     uint lab_cnt = 0;
     for (const auto &rles : frPoly)
-    rleMerge(rles.second.data(), &R[rles.first], rles.second.size(), 0);
+        rleMerge(rles.second.data(), &R[rles.first], rles.second.size(), 0);
 
-    // Merge all the labels into a pair of vectors :
-    // [2,2,2],[A,B,C] for [A,A,B,B,C,C]
     struct Encoding {
     uint m;
     std::unique_ptr<uint[]> cnts;
@@ -304,10 +302,10 @@ void COCOMetaDataReader::generate_pixelwise_mask(std::string filename, RLE *R_in
         for (int i = 0; i < m; i++) A.vals[i] = vals[i];
     }
 
-    // Decode final pixelwise masks encoded via RLE
+    // Decode final pixelwise masks encoded via RLE and polygons
     memset(pixelwise_labels.data(), 0, h * w * sizeof(int));
     int x = 0, y = 0;
-    for (uint i = 0; i < A.m; i++)
+    for (uint i = 0; i < A.m; i++) {
         for (uint j = 0; j < A.cnts[i]; j++) {
             pixelwise_labels[x + y * w] = A.vals[i];
             if (++y >= h) {
@@ -315,12 +313,7 @@ void COCOMetaDataReader::generate_pixelwise_mask(std::string filename, RLE *R_in
                 x++;
             }
         }
-    // print pixelwise mask
-    FILE* fp = fopen((filename+".txt").c_str(), "w");
-    for (int i = 0; i < (h*w); i++) {
-        fprintf(fp, "%d\n", pixelwise_labels[i]);
     }
-    fclose(fp);
 
     // Destroy RLEs
     rlesFree(&R, *labels.rbegin() + 1);

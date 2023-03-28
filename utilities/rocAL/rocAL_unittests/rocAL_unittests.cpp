@@ -432,6 +432,7 @@ int test(int test_case, int reader_type, int pipeline_type, const char *path, co
             break;
             case 3: //detection + segmentation + Pixelwise pipeline
             {
+                std::cout << "Enters again" << std::endl;
                 RocalTensorList bbox_labels = rocalGetBoundingBoxLabel(handle);
                 RocalTensorList bbox_coords = rocalGetBoundingBoxCords(handle);
                 int ImageNameLen[inputBatchSize];
@@ -442,13 +443,14 @@ int test(int test_case, int reader_type, int pipeline_type, const char *path, co
                 RocalTensorList mask_data = rocalGetPixelwiseLabels(handle);
                 std::cerr << "\n>>>>> PIXELWISE LABELS : ";
                 for(int i =0; i < bbox_labels->size(); i++) {
-                    std::cout << imageNamesStr[i] << std::endl;
+                    std::cout << "Imagename:" << imageNamesStr[i] << std::endl;
                     int *mask_buffer = (int *)(mask_data->at(i)->buffer());
                     int mask_size = mask_data->at(i)->info().dims().at(0)*mask_data->at(i)->info().dims().at(1);
                     for (int j = 0; j < mask_size; j++) {
-                        std::cerr << mask_buffer[j] << "\t";                    }
+                        std::cerr << mask_buffer[j] << "\t";
+                    }
+                    std::cerr << std::endl;
                 }
-                std::cerr << std::endl;
                 for(int i = 0; i < bbox_labels->size(); i++)
                 {
                     int * labels_buffer = (int *)(bbox_labels->at(i)->buffer());
