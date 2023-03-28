@@ -430,7 +430,7 @@ int test(int test_case, int reader_type, int pipeline_type, const char *path, co
                 }
             }
             break;
-            case 3: //detection + segmentation pipeline
+            case 3: //detection + segmentation + Pixelwise pipeline
             {
                 RocalTensorList bbox_labels = rocalGetBoundingBoxLabel(handle);
                 RocalTensorList bbox_coords = rocalGetBoundingBoxCords(handle);
@@ -440,16 +440,13 @@ int test(int test_case, int reader_type, int pipeline_type, const char *path, co
                 rocalGetImageName(handle,imageNames);
                 std::string imageNamesStr(imageNames);
                 RocalTensorList mask_data = rocalGetPixelwiseLabels(handle);
-
-                /*
-                std::cout << "Images Size:" << bbox_labels->size() << std::endl;
                 std::cerr << "\n>>>>> PIXELWISE LABELS : ";
                 for(int i =0; i < bbox_labels->size(); i++) {
                     std::cout << imageNamesStr[i] << std::endl;
                     int *mask_buffer = (int *)(mask_data->at(i)->buffer());
                     int mask_size = mask_data->at(i)->info().dims().at(0)*mask_data->at(i)->info().dims().at(1);
                     for (int j = 0; j < mask_size; j++) {
-                        std::cerr << mask_buffer[j] << "\t" << std::endl;                    }
+                        std::cerr << mask_buffer[j] << "\t";                    }
                 }
                 std::cerr << std::endl;
                 for(int i = 0; i < bbox_labels->size(); i++)
@@ -464,7 +461,6 @@ int test(int test_case, int reader_type, int pipeline_type, const char *path, co
                     for(int j = 0, j4 = 0; j < bbox_coords->at(i)->info().dims().at(0); j++, j4 = j * 4)
                         std::cerr << bbox_buffer[j4] << " " << bbox_buffer[j4 + 1] << " " << bbox_buffer[j4 + 2] << " " << bbox_buffer[j4 + 3] << "\n";
                 }
-                */
             }
             break;
 #if 0
