@@ -391,18 +391,14 @@ int test(int test_case, int reader_type, int pipeline_type, const char *path, co
     RocalTensorList output_tensor_list;
     auto cv_color_format = ((color_format == RocalImageColor::ROCAL_COLOR_RGB24) ?  ((tensorOutputType == RocalTensorOutputType::ROCAL_FP32) ? CV_32FC3 : CV_8UC3) : CV_8UC1);
 
-    std::cerr << "ok-1" << std::endl;
     while (rocalGetRemainingImages(handle) >= inputBatchSize)
     {
-        std::cerr << "caling rocal run" << std::endl;
         index++;
         if (rocalRun(handle) != 0)
             break;
         int label_id[inputBatchSize];
         int numOfClasses = 0;
         int image_name_length[inputBatchSize];
-        std::cerr<<"\n Gonna switch to pipeline";
-        // exit(0);
         switch(pipeline_type)
         {
             case 1: //classification pipeline
@@ -436,30 +432,28 @@ int test(int test_case, int reader_type, int pipeline_type, const char *path, co
             break;
             case 3: //detection + segmentation pipeline
             {
-                std::cerr << "ok1" << std::endl;
                 RocalTensorList bbox_labels = rocalGetBoundingBoxLabel(handle);
-                std::cerr << "ok2" << std::endl;
                 RocalTensorList bbox_coords = rocalGetBoundingBoxCords(handle);
-                std::cerr << "ok3" << std::endl;
                 int ImageNameLen[inputBatchSize];
                 unsigned imagename_size = rocalGetImageNameLen(handle,ImageNameLen);
                 char imageNames[imagename_size];
                 rocalGetImageName(handle,imageNames);
                 std::string imageNamesStr(imageNames);
-                std::cerr << "ok4" << std::endl;
                 RocalTensorList mask_data = rocalGetPixelwiseLabels(handle);
-                std::cerr << "ok5" << std::endl;
 
-                std::cout << "Size:" << bbox_labels->size() << std::endl;
+                /*
+                std::cout << "Images Size:" << bbox_labels->size() << std::endl;
+                std::cerr << "\n>>>>> PIXELWISE LABELS : ";
                 for(int i =0; i < bbox_labels->size(); i++) {
+                    std::cout << imageNamesStr[i] << std::endl;
                     int *mask_buffer = (int *)(mask_data->at(i)->buffer());
                     int mask_size = mask_data->at(i)->info().dims().at(0)*mask_data->at(i)->info().dims().at(1);
                     for (int j = 0; j < mask_size; j++) {
-                        std::cout << "ok1:" << mask_buffer[j] << std::endl;                    }
+                        std::cerr << mask_buffer[j] << "\t" << std::endl;                    }
                 }
+                std::cerr << std::endl;
                 for(int i = 0; i < bbox_labels->size(); i++)
                 {
-                    std::cout << imageNamesStr[i] << std::endl;
                     int * labels_buffer = (int *)(bbox_labels->at(i)->buffer());
                     float *bbox_buffer = (float *)(bbox_coords->at(i)->buffer());
 
@@ -470,6 +464,7 @@ int test(int test_case, int reader_type, int pipeline_type, const char *path, co
                     for(int j = 0, j4 = 0; j < bbox_coords->at(i)->info().dims().at(0); j++, j4 = j * 4)
                         std::cerr << bbox_buffer[j4] << " " << bbox_buffer[j4 + 1] << " " << bbox_buffer[j4 + 2] << " " << bbox_buffer[j4 + 3] << "\n";
                 }
+                */
             }
             break;
 #if 0

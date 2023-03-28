@@ -35,18 +35,13 @@ RingBuffer::RingBuffer(unsigned buffer_depth):
 
 void RingBuffer::block_if_empty()
 {
-    std::cerr<<"\n RingBuffer::block_if_empty() 1";
     std::unique_lock<std::mutex> lock(_lock);
-    std::cerr<<"\n RingBuffer::block_if_empty() 2";
     if(empty())
     { // if the current read buffer is being written wait on it
-    std::cerr<<"\n RingBuffer::block_if_empty() 3";
         if(_dont_block)
             return;
-    std::cerr<<"\n RingBuffer::block_if_empty() 4";
         _wait_for_load.wait(lock);
     }
-    std::cerr<<"\n RingBuffer::block_if_empty() 5";
 }
 
 void RingBuffer:: block_if_full()

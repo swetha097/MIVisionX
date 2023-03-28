@@ -199,29 +199,20 @@ MasterGraph::MasterGraph(size_t batch_size, RocalAffinity affinity, int gpu_id, 
 MasterGraph::Status
 MasterGraph::run()
 {
-    std::cerr<<" \n MasterGraph::run()1";
     if(!_processing)// The user should not call the run function before the build() is called or while reset() is happening
         return MasterGraph::Status::NOT_RUNNING;
-        std::cerr<<" \n MasterGraph::run()2";
     if(no_more_processed_data()) {
         return MasterGraph::Status::NO_MORE_DATA;
     }
-        std::cerr<<" \n MasterGraph::run()3";
     _rb_block_if_empty_time.start();
-            std::cerr<<" \n MasterGraph::run()3a";
     _ring_buffer.block_if_empty();// wait here if the user thread (caller of this function) is faster in consuming the processed images compare to th output routine in producing them
-        std::cerr<<" \n MasterGraph::run()3b";
     _rb_block_if_empty_time.end();
-        std::cerr<<" \n MasterGraph::run()4";
-
     if(_first_run)
     {
-        std::cerr<<" \n MasterGraph::run()5";
         // calling run pops the processed images that have been used by user, when user calls run() for the first time
         // they've not used anything yet, so we don't pop a batch from the _ring_buffer
         _first_run = false;
     } else {
-        std::cerr<<" \n MasterGraph::run()6";
         _ring_buffer.pop(); // Pop previously used output images and metadata from the ring buffer
     }
 
@@ -230,10 +221,8 @@ MasterGraph::run()
     if(no_more_processed_data()) {
         return MasterGraph::Status::NO_MORE_DATA;
     }
-        std::cerr<<" \n MasterGraph::run()7";
 
     decrease_image_count();
-        std::cerr<<" \n MasterGraph::run()8";
 
     return MasterGraph::Status::OK;
 }

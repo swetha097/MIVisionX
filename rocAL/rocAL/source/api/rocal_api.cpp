@@ -87,7 +87,6 @@ rocalRun(RocalContext p_context)
     auto context = static_cast<Context*>(p_context);
     try
     {
-        std::cerr<<"\n CP1";
         auto ret = context->master_graph->run();
         if(ret != MasterGraph::Status::OK)
             {

@@ -153,7 +153,7 @@ int main(int argc, const char ** argv)
     std::cout << ">>>>>>> Running CLASSIFICATION TRAIN" << std::endl;
     metadata_output = rocalCreateLabelReader(handle, folderPath1);
     input1 = rocalFusedJpegCropSingleShard(handle, folderPath1,  color_format, 0, 1, false, false, false,
-                                ROCAL_USE_USER_GIVEN_SIZE, 2000, 2000); 
+                                ROCAL_USE_USER_GIVEN_SIZE, 2000, 2000);
 #elif CLASSIFICATION_VAL
     std::cout << ">>>>>>> Running CLASSIFICATION VAL" << std::endl;
     metadata_output = rocalCreateLabelReader(handle, folderPath1);
@@ -228,7 +228,7 @@ int main(int argc, const char ** argv)
     std::vector<int> values = {0, 1};
     std::vector<double> frequencies = {0.5, 0.5};
     RocalIntParam mirror = rocalCreateIntRand(values.data(), frequencies.data(), values.size());
-    
+
     image1 = rocalResize(handle, input1, tensorLayout, tensorOutputType, 3, 224 , 224, 0, false);
     image2 = rocalColorTwist(handle, image1, tensorLayout, tensorOutputType, false, brightness, contrast, saturation, hue);
     auto image3 = rocalCropMirrorNormalize(handle, image2, tensorLayout, RocalTensorOutputType::ROCAL_FP32, 3, 224, 224, 0, 0, 0, mean, sdev, true, mirror);
@@ -257,8 +257,6 @@ int main(int argc, const char ** argv)
     int col_counter = 0;
     char * outName = "out_";
     //cv::namedWindow("output", CV_WINDOW_AUTOSIZE);
-    std::cerr << "Going to process images\n";
-    std::cerr << "Remaining images" << rocalGetRemainingImages(handle) << "\n";
     high_resolution_clock::time_point t1 = high_resolution_clock::now();
     int index = 0;
 
@@ -303,7 +301,7 @@ int main(int argc, const char ** argv)
         int mask_size = rocalGetMaskCount(handle, mask_count.data());
         polygon_size.resize(mask_size);
         RocalTensorList mask_data = rocalGetMaskCoordinates(handle, polygon_size.data());
-        
+
         for(int i = 0; i < bbox_labels->size(); i++)
         {
             int * labels_buffer = (int *)(bbox_labels->at(i)->buffer());
@@ -344,7 +342,7 @@ int main(int argc, const char ** argv)
         output_tensor_list = rocalGetOutputTensors(handle);
         std::vector<int> compression_params;
         compression_params.push_back(IMWRITE_PNG_COMPRESSION);
-        compression_params.push_back(9);  
+        compression_params.push_back(9);
 #if DISPLAY
         cv::Mat mat_input;
         cv::Mat mat_output;
@@ -387,7 +385,7 @@ int main(int argc, const char ** argv)
                 // mat_input_nchw = (unsigned char *)out_buffer;
                 // cv::transposeND(mat_input_nchw, {0, 3, 1, 2}, mat_input); // Can be enabled only with OpenCV 4.6.0
                 convert_nchw_to_nhwc(out_buffer, mat_input.data, output_tensor_list->at(idx)->info().dims().at(0), output_tensor_list->at(idx)->info().dims().at(2),
-                                     output_tensor_list->at(idx)->info().dims().at(3), output_tensor_list->at(idx)->info().dims().at(1));            
+                                     output_tensor_list->at(idx)->info().dims().at(3), output_tensor_list->at(idx)->info().dims().at(1));
             }
             else
                 mat_input.data = (unsigned char *)out_buffer;
