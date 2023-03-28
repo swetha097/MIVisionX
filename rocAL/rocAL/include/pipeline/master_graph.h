@@ -98,7 +98,8 @@ public:
     std::shared_ptr<MetaDataGraph> meta_data_graph() { return _meta_data_graph; }
     std::shared_ptr<MetaDataReader> meta_data_reader() { return _meta_data_reader; }
     bool is_random_bbox_crop() {return _is_random_bbox_crop; }
-    bool is_segmentation() { return _is_segmentation; };
+    bool is_segmentation_pixlewise() { return _is_segmentation_pixelwise; };
+    bool is_segmentation_polygon() { return _is_segmentation_polygon; };
     bool is_sequence_reader_output() {return _is_sequence_reader_output; }
     void set_sequence_reader_output() { _is_sequence_reader_output = true; }
     void set_sequence_batch_size(size_t sequence_length) { _sequence_batch_size = _user_batch_size * sequence_length; }
@@ -167,7 +168,8 @@ private:
     bool _output_routine_finished_processing = false;
     const RocalTensorDataType _out_data_type;
     bool _is_random_bbox_crop = false;
-    bool _is_segmentation = false;
+    bool _is_segmentation_pixelwise = false;
+    bool _is_segmentation_polygon = false;
     std::vector<std::vector<uint32_t>> _resize_width;
     std::vector<std::vector<uint32_t>> _resize_height;
     std::vector<std::vector<size_t>> _sequence_start_framenum_vec; //!< Stores the starting frame number of the sequences.

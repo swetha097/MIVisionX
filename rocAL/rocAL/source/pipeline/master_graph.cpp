@@ -544,9 +544,9 @@ void MasterGraph::output_routine()
                     }
                     else
                     {
-                        _meta_data_graph->update_meta_data(_augmented_meta_data, decode_image_info, _is_segmentation);
+                        _meta_data_graph->update_meta_data(_augmented_meta_data, decode_image_info, _is_segmentation_polygon, _is_segmentation_pixelwise);
                     }
-                    _meta_data_graph->process(_augmented_meta_data, _is_segmentation);
+                    _meta_data_graph->process(_augmented_meta_data, (_is_segmentation_polygon || _is_segmentation_pixelwise));
                 }
                 if (full_batch_meta_data)
                     full_batch_meta_data->concatenate(_augmented_meta_data);
@@ -583,7 +583,7 @@ void MasterGraph::output_routine()
                     _meta_data_graph->update_box_encoder_meta_data(&_anchors, full_batch_meta_data, _criteria, _offset, _scale, _means, _stds);
             }
             _bencode_time.end();
-            _ring_buffer.set_meta_data(full_batch_image_names, full_batch_meta_data, _is_segmentation);
+            _ring_buffer.set_meta_data(full_batch_image_names, full_batch_meta_data, _is_segmentation_polygon, _is_segmentation_pixelwise);
             _ring_buffer.push(); // Image data and metadata is now stored in output the ring_buffer, increases it's level by 1
         }
     }
@@ -740,8 +740,10 @@ std::vector<rocalTensorList *> MasterGraph::create_coco_meta_data_reader(const c
 {
     if(_meta_data_reader)
         THROW("A metadata reader has already been created")
-    if(polygon_mask || pixelwise_mask)
-        _is_segmentation = true;
+    if(polygon_mask)
+        _is_segmentation_polygon = true;
+    if (pixelwise_mask)
+        _is_segmentation_pixelwise = true;
     MetaDataConfig config(label_type, reader_type, source_path, std::map<std::string, std::string>(), std::string(), polygon_mask, 3,3,1, pixelwise_mask);
     _meta_data_graph = create_meta_data_graph(config);
     _meta_data_reader = create_meta_data_reader(config);

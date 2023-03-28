@@ -164,7 +164,7 @@ void COCOMetaDataReader::print_map_contents()
 
 void COCOMetaDataReader::generate_pixelwise_mask(std::string filename, RLE *R_in) {
     std::cout << "generate_pixelwise_mask" << std::endl;
-    
+
     BoundingBoxCords bb_coords;
     BoundingBoxLabels bb_labels;
     ImgSize img_size;
@@ -338,13 +338,6 @@ void COCOMetaDataReader::generate_pixelwise_mask(std::string filename, RLE *R_in
     for (auto rles : frPoly)
         for (auto &rle : rles.second)
             rleFree(&rle);
-    // std::cerr<<"\n pixelwise_labels[0].size() :: "<<pixelwise_labels[0].size();
-    // it->second->set_pixelwise_label(pixelwise_labels); // Kamal why this is not made similar to COCOMetaDataReader::add line 90
-    //std::cout  << pixelwise_labels[0] << std::endl;
-    std::cout << it->second->get_pixelwise_label().size() << std::endl;
-    //it->second->get_pixelwise_label().insert(it->second->get_pixelwise_label().end(),pixelwise_labels.begin(), pixelwise_labels.end());
-    //it->second->get_pixelwise_label().push_back(pixelwise_labels[0]);
-    std::cout << it->second->get_pixelwise_label().size() << std::endl;
 }
 
 

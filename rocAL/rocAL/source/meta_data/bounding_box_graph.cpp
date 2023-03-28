@@ -31,7 +31,7 @@ void BoundingBoxGraph::process(MetaDataBatch *meta_data, bool segmentation)
 }
 
 //update_meta_data is not required since the bbox are normalized in the very beggining -> removed the call in master graph also except for MaskRCNN
-void BoundingBoxGraph::update_meta_data(MetaDataBatch *input_meta_data, decoded_image_info decode_image_info, bool segmentation)
+void BoundingBoxGraph::update_meta_data(MetaDataBatch *input_meta_data, decoded_image_info decode_image_info, bool segmentation_polygon, bool segmentation_pixelwise)
 {
     std::cerr<<"\n BoundingBoxGraph::update_meta_data";
     std::vector<uint32_t> original_height = decode_image_info._original_height;
@@ -47,8 +47,8 @@ void BoundingBoxGraph::update_meta_data(MetaDataBatch *input_meta_data, decoded_
         unsigned bb_count = input_meta_data->get_bb_labels_batch()[i].size();
         float mask_data[MAX_BUFFER];
         int poly_size = 0;
-        segmentation = false; // kamal
-        if (segmentation) // Should not come here
+        //segmentation = false; // kamal
+        if (segmentation_polygon) // Should not come here
         {
             std::cerr<<"\n BoundingBoxGraph::update_meta_data3";
             auto ptr = mask_data;
