@@ -455,7 +455,7 @@ int test(int test_case, int reader_type, int pipeline_type, const char *path, co
                     int *mask_buffer = (int *)(mask_data->at(i)->buffer());
                     int mask_size = mask_data->at(i)->info().dims().at(0)*mask_data->at(i)->info().dims().at(1);
                     for (int j = 0; j < mask_size; j++) {
-                        std::cout << mask_buffer[j] << std::endl;                    }
+                        std::cout << "ok1:" << mask_buffer[j] << std::endl;                    }
                 }
                 for(int i = 0; i < bbox_labels->size(); i++)
                 {
