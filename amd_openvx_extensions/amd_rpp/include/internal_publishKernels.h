@@ -124,7 +124,6 @@ vx_status Resizetensor_Register(vx_context);
 vx_status Brightness_Register(vx_context);
 vx_status Copy_Register(vx_context);
 vx_status CropMirrorNormalize_Register(vx_context);
-vx_status GammaCorrection_Register(vx_context);
 vx_status Nop_Register(vx_context);
 vx_status Resize_Register(vx_context);
 vx_status Crop_Register(vx_context);
