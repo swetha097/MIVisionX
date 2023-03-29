@@ -87,7 +87,7 @@ void NormalDistributionNode::init(float mean, float std_dev) {
     _std_dev = std_dev;
     _num_of_dims = _outputs[0]->info().num_of_dims();
     _normal_distribution_array.resize(_batch_size);
-    BatchRNG<std::mt19937> _rng = {ParameterFactory::instance()->get_seed(), _batch_size};
+    BatchRNG<std::mt19937> _rng = {ParameterFactory::instance()->get_seed_from_seedsequence(), _batch_size};
     _rngs =_rng;
     update_param();
 }
