@@ -233,7 +233,6 @@ AudioLoader::load_routine()
                 }
                 last_load_status = load_status;
             }
-            std::cerr << "HERE IN LOAD ROUTINE ";
             // Here it sets the out-of-data flag and signal the circular buffer's internal
             // read semaphore using release() call
             // , and calls the release() allows the reader thread to wake up and handle
