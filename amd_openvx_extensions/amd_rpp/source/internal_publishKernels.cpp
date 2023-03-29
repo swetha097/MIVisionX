@@ -127,7 +127,6 @@ vx_status get_kernels_to_publish()
     STATUS_ERROR_CHECK(ADD_KERNEL(SequenceRearrangebatchPD_Register));
     STATUS_ERROR_CHECK(ADD_KERNEL(Resizetensor_Register));
     STATUS_ERROR_CHECK(ADD_KERNEL(Brightness_Register));
-    STATUS_ERROR_CHECK(ADD_KERNEL(GammaCorrection_Register));
     STATUS_ERROR_CHECK(ADD_KERNEL(CropMirrorNormalize_Register));
     STATUS_ERROR_CHECK(ADD_KERNEL(Copy_Register));
     STATUS_ERROR_CHECK(ADD_KERNEL(Nop_Register));
