@@ -131,7 +131,6 @@ list(APPEND SOURCES
         source/Brightness.cpp
         source/Copy.cpp
         source/CropMirrorNormalize.cpp
-        source/GammaCorrection.cpp
         source/Nop.cpp
         source/Resize.cpp
         source/Crop.cpp
