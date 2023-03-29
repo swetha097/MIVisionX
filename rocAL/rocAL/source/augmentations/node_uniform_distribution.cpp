@@ -39,11 +39,9 @@ void UniformDistributionNode::create_node()
     _stride[2] = _stride[1] * _outputs[0]->info().dims()[1];
     vx_status status;
 
-    // create a uniform distribution
     for(uint i = 0; i < _batch_size; i++) {
     update_param();
     _uniform_distribution_array[i] = _dist_uniform(_rngs[i]);
-    // std::cerr << "\n _uniform_distribution_array :"<< _uniform_distribution_array[i];
     }
     _outputs[0]->swap_handle((void *)_uniform_distribution_array.data());
 
@@ -53,11 +51,9 @@ void UniformDistributionNode::update_node()
 {
 
     vx_status status;
-    // create a uniform distribution
     for(uint i = 0; i < _batch_size; i++) {
     update_param();
     _uniform_distribution_array[i] = _dist_uniform(_rngs[i]);
-    // std::cerr << "\n _uniform_distribution_array :"<< _uniform_distribution_array[i];
     }
  if(status != 0)
         THROW("ERROR: vxCopyArrayRange failed in the pad node (vxExtrppNode_Slice)  node: "+ TOSTR(status))
@@ -72,8 +68,6 @@ void UniformDistributionNode::update_param()
 void UniformDistributionNode::init(std::vector<float> &range) {
     _min = range[0];
     _max = range[1];
-    std::cerr << "\n _min in uniform : " << _min;
-    std::cerr << "\n _max in uniform: " << _max;
     _num_of_dims = _outputs[0]->info().num_of_dims();
     _uniform_distribution_array.resize(_batch_size);
     BatchRNGUniform<std::mt19937> _rng = {ParameterFactory::instance()->get_seed_from_seedsequence(), _batch_size};

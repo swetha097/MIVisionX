@@ -2361,7 +2361,6 @@ VX_API_ENTRY vx_node VX_API_CALL vxExtrppNode_TensorAddTensor(vx_graph graph, vx
             (vx_reference)DEV_TYPE};
         node = createNode(graph, VX_KERNEL_RPP_TENSORADDTENSOR, params, 7);
     }
-    std::cerr << "Comes to the vxExtrppNode_TensorAddTensor";
     return node;
 }
 

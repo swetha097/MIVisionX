@@ -40,38 +40,22 @@ void NormalDistributionNode::create_node()
     _stride[2] = _stride[1] * _outputs[0]->info().dims()[1];
     vx_status status;
 
-    // create a normal distribution
     for(uint i = 0; i < _batch_size; i++) {
     update_param();
     _normal_distribution_array[i] = _dist_normal(_rngs[i]);
-    // std::cerr << "\n _normal_distribution_array :"<< _normal_distribution_array[i];
     }
     _outputs[0]->swap_handle((void *)_normal_distribution_array.data());
-    // create tensor
-    // update tensor
-    // _node = vxExtrppNode_Nop(_graph->get(), _inputs[0]->handle(), _outputs[0]->handle());
-
-
-    // vx_status status;
-    // if((status = vxGetStatus((vx_reference)_node)) != VX_SUCCESS)
-    //     THROW("Adding the (vxNormalDistributionNode) node failed: "+ TOSTR(status))
 
 }
 
 void NormalDistributionNode::update_node()
 {
-    //update the normal dsitribution
-    // update the output tensor
-        // create a normal distribution
     vx_status status;
 
-    // create a normal distribution
     for(uint i = 0; i < _batch_size; i++) {
     update_param();
     _normal_distribution_array[i] = _dist_normal(_rngs[i]);
-    // std::cerr << "\n _normal_distribution_array :"<< _normal_distribution_array[i];
     }
-    // status = vxCopyTensorPatch((vx_tensor)_outputs[0]->handle(), _num_of_dims, nullptr, nullptr, _stride, _normal_distribution_array.data(), VX_WRITE_ONLY, VX_MEMORY_TYPE_HOST);
  if(status != 0)
         THROW("ERROR: vxCopyArrayRange failed in the pad node (vxExtrppNode_Slice)  node: "+ TOSTR(status))
 }

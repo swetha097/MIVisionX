@@ -765,28 +765,6 @@ rocalPad(RocalContext p_context,
     auto input = static_cast<rocalTensor*>(p_input);
     try {
         rocalTensorInfo output_info = input->info();
-
-        // Commented as it is not used in FAMBench Pipeline trainings
-        // std::vector<int> alignment;
-        // if(align.size() == 1 && output_info.num_of_dims() == 3)
-        //     alignment = {align[0], align[1]};
-        // else
-        //     alignment = align;
-
-        // std::vector<int> max_dims;
-        // max_dims = {output_info.max_dims[0], output_info.max_dims[1]};
-        // if(align.size()) {
-        //     for(axis : axes) {
-        //         max_dims[axis] = (max_dims[axis] + align[axis]) &~ align[axis];
-        //     }
-        // }
-
-        // if(output_info.num_of_dims() == 3) {
-        //     out_dims[1] = max_dims[0];
-        //     out_dims[2] = max_dims[1];
-        // } else if (output_info.num_of_dims() == 2) {
-        //     out_dims[1] = max_dims[0];
-        // }
         RocalTensorDataType op_tensorDataType;
         get_rocal_tensor_data_type(rocal_tensor_output_type, op_tensorDataType);
         output_info.set_data_type(op_tensorDataType);
@@ -805,7 +783,7 @@ rocalPad(RocalContext p_context,
 RocalTensor ROCAL_API_CALL
 rocalToDecibels(RocalContext p_context,
                 RocalTensor p_input,
-                RocalTensorLayout rocal_tensor_layout, // not required
+                RocalTensorLayout rocal_tensor_layout,
                 RocalTensorOutputType rocal_tensor_output_type,
                 bool is_output,
                 float cut_off_DB,
@@ -858,7 +836,6 @@ rocalPreEmphasisFilter(RocalContext p_context,
     try
     {
         int layout=0;
-        // get_rocal_tensor_layout(rocal_tensor_layout, op_tensorLayout, layout);
         get_rocal_tensor_data_type(rocal_tensor_output_type, op_tensorDataType);
         rocalTensorInfo output_info = input->info();
         output_info.set_tensor_layout(RocalTensorlayout::NONE);
@@ -866,9 +843,7 @@ rocalPreEmphasisFilter(RocalContext p_context,
 
         output = context->master_graph->create_tensor(output_info, is_output);
         output->reset_tensor_roi();
-        context->master_graph->add_node<PreemphasisFilterNode>({input}, {output})->init(preemph_coeff, preemph_border_type);;
-        // std::shared_ptr<PreemphasisFilterNode> preemphasis_node =  context->master_graph->add_node<PreemphasisFilterNode>({input}, {output});
-        // preemphasis_node->init(preemph_coeff, preemph_border_type);
+        context->master_graph->add_node<PreemphasisFilterNode>({input}, {output})->init(preemph_coeff, preemph_border_type);
 
     }
     catch(const std::exception& e)
@@ -906,7 +881,6 @@ rocalSpectrogram(RocalContext p_context,
         int window_offset = 0;
         if(!center_windows)
             window_offset = window_length;
-        // std::cerr << "\n spec : max_frames :" <<max_dims[0];
         int max_frame = (((max_dims[0] - window_offset) / window_step) + 1);
         max_frame = std::max(0, max_frame);
         int bins = std::max(0, (nfft_size / 2) + 1);
@@ -989,7 +963,6 @@ rocalNonSilentRegion(RocalContext p_context,
         context->capture_error(e.what());
         ERR(e.what())
     }
-    // return &output_tensors;
     return std::make_pair(output_tensors.at(0), output_tensors.at(1));
 }
 
@@ -1041,8 +1014,7 @@ RocalTensor rocalSlice(RocalContext p_context,
                         bool normalized_anchor,
                         bool normalized_shape,
                         RocalOutOfBoundsPolicy policy) {
-                            
-    // std::cerr << "In Slice augmentation";
+
     if(!p_context || !p_input)
         THROW("Null values passed as input")
     rocalTensor* output = nullptr;
@@ -1057,48 +1029,8 @@ RocalTensor rocalSlice(RocalContext p_context,
         output_info.set_data_type(op_tensorDataType);
 
         output = context->master_graph->create_tensor(output_info, is_output);
-        output->reset_tensor_roi(); // TODO : Swetha : Check with Fiona
+        output->reset_tensor_roi();
         output->reset_audio_sample_rate();
-        // rocalTensorInfo output_info = input->info();
-        // get_rocal_tensor_data_type(rocal_tensor_output_type, op_tensorDataType);
-        // std::vector<size_t> dims = output_info.dims();
-        // // dims[1] = 200; // shobi
-        // output_info.set_dims(dims);
-
-        // output_info.set_tensor_layout(RocalTensorlayout::NONE);
-        // output_info.set_data_type(op_tensorDataType);
-
-        // output = context->master_graph->create_tensor(output_info, is_output);
-        // std::vector<float> anchors(2, 0);
-        // if (anchor.size()) {
-        //     if(anchor.size() == 0){
-        //         anchors = {0, 0}; // Case where rocALTensors are used
-        //     }
-        //     if(anchor.size() == 1) {
-        //         anchors = {anchor[0], 0};
-        //     } else if(anchor.size() == 2) {
-        //         anchors = anchor; // {width, height}
-        //     } else {
-        //         THROW("The length of max_size vector exceeds the image dimension.")
-        //     }
-        // }
-
-        // std::vector<float> shapes;
-        // if (shape.size()) {
-        //     if(shape.size() == 0) {
-        //         shapes = {0,0}; // Case where rocALTensors are used
-        //     }
-        //     if(shape.size() == 1) {
-        //         shapes = {shape[0], 0};
-        //     } else if(shape.size() == 2) {
-        //         shapes = shape; // {width, height}
-        //     } else {
-        //         THROW("The length of max_size vector exceeds the image dimension.")
-        //     }
-        // }
-        // context->master_graph->add_node<SliceNode>({input}, {output})->init(anchors, shapes, fill_values,
-        //                                                                     axes, normalized_anchor, normalized_shape, policy);
-        std::cerr << "\n Comes to the init ";
         context->master_graph->add_node<SliceNode>({input}, {output})->init(anchor_tensor, shape_tensor, fill_values,
                                                                             axes, normalized_anchor, normalized_shape, policy);
     }
@@ -1109,7 +1041,6 @@ RocalTensor rocalSlice(RocalContext p_context,
     return output;
 }
 
-// TODO : Swetha - To add a templated function later
 RocalTensor rocalTensorMulScalar(RocalContext p_context,
                                 RocalTensor p_input,
                                 bool is_output,
@@ -1124,17 +1055,12 @@ RocalTensor rocalTensorMulScalar(RocalContext p_context,
     RocalTensorlayout op_tensorLayout;
     RocalTensorDataType op_tensorDataType;
     try {
-        int layout=0; // Why using layout = 0 ?
+        int layout=0;
         std::cerr << "Here in Op overl";
         get_rocal_tensor_layout(rocal_tensor_layout, op_tensorLayout, layout);
         get_rocal_tensor_data_type(rocal_tensor_output_type, op_tensorDataType);
         rocalTensorInfo output_info = input->info();
-        // output_info.set_tensor_layout(op_tensorLayout); // TODO- Swetha - For Audio Data - Cant use the NCHW / NHWC  - commons.h & rocal_api_data_types.h
-        // output_info.set_data_type(op_tensorDataType);
         output_info.set_tensor_layout(RocalTensorlayout::NONE);
-
-        // instead of output_info -> can use input->info() - //TODO - Swetha - Check what can be used here later 
-
         output = context->master_graph->create_tensor(output_info, is_output); // Create a rocALTensor object dynamically on heap 
         context->master_graph->add_node<TensorMulScalarNode>({input}, {output})->init(scalar); // Change this line of code
     }
@@ -1145,8 +1071,8 @@ RocalTensor rocalTensorMulScalar(RocalContext p_context,
     return output;
 }
 
-RocalTensor rocalNormalDistribution(RocalContext p_context, // To handle the case of p_input similar to DALI
-                                RocalTensor p_input, // Not gonna be used - Always use decoder input
+RocalTensor rocalNormalDistribution(RocalContext p_context, 
+                                RocalTensor p_input,
                                 bool is_output,
                                 float mean,
                                 float stddev) {
@@ -1156,7 +1082,6 @@ RocalTensor rocalNormalDistribution(RocalContext p_context, // To handle the cas
     auto context = static_cast<Context*>(p_context);
     auto input = static_cast<rocalTensor*>(p_input);
     try {
-        std::cerr << "Here in Normal Dist";
         RocalTensorDataType tensor_data_type = RocalTensorDataType::FP32;
         unsigned num_of_dims = 3;
         std::vector<size_t> dims;
@@ -1167,10 +1092,10 @@ RocalTensor rocalNormalDistribution(RocalContext p_context, // To handle the cas
         auto info  = rocalTensorInfo(std::vector<size_t>(std::move(dims)),
                                 context->master_graph->mem_type(),
                                 tensor_data_type);
-        info.set_tensor_layout(RocalTensorlayout::NONE); // Change for generic data
+        info.set_tensor_layout(RocalTensorlayout::NONE);
         output = context->master_graph->create_tensor(info, is_output);
         output->create_from_handle(context->master_graph->get_vx_context());
-        output->reset_tensor_roi(); // TODO : Swetha : Check with Fiona
+        output->reset_tensor_roi();
         context->master_graph->add_node<NormalDistributionNode>({input}, {output})->init(mean, stddev); // Change this line of code - Check with Shobana
 
     }
@@ -1181,7 +1106,6 @@ RocalTensor rocalNormalDistribution(RocalContext p_context, // To handle the cas
     return output;
 }
 
-// TODO : Swetha - To add a templated function later
 RocalTensor rocalTensorAddTensor(RocalContext p_context,
                                 RocalTensor p_input1,
                                 RocalTensor p_input2,
@@ -1197,16 +1121,12 @@ RocalTensor rocalTensorAddTensor(RocalContext p_context,
     RocalTensorlayout op_tensorLayout;
     RocalTensorDataType op_tensorDataType;
     try {
-        int layout=0; // Why using layout = 0 ?
+        int layout=0;
         std::cerr << "Here in Op over for addition!";
-        // get_rocal_tensor_layout(rocal_tensor_layout, op_tensorLayout, layout);
         get_rocal_tensor_data_type(rocal_tensor_output_type, op_tensorDataType);
         rocalTensorInfo output_info = input1->info();
-        // output_info.set_tensor_layout(op_tensorLayout); // TODO- Swetha - For Audio Data - Cant use the NCHW / NHWC  - commons.h & rocal_api_data_types.h
         output_info.set_data_type(op_tensorDataType);
         output_info.set_tensor_layout(RocalTensorlayout::NONE);
-        // instead of output_info -> can use input->info() - //TODO - Swetha - Check what can be used here later 
-
         output = context->master_graph->create_tensor(output_info, is_output); // Assuming the bigger tensor is the first input
         context->master_graph->add_node<TensorAddTensorNode>({input1,input2}, {output})->init(); // Change this line of code
     }
@@ -1217,8 +1137,8 @@ RocalTensor rocalTensorAddTensor(RocalContext p_context,
     return output;
 }
 
-RocalTensor rocalUniformDistribution(RocalContext p_context, // To handle the case of p_input similar to DALI
-                                RocalTensor p_input, // Not gonna be used - Always use decoder input
+RocalTensor rocalUniformDistribution(RocalContext p_context, 
+                                RocalTensor p_input,
                                 bool is_output,
                                 std::vector<float> &range) {
     if(!p_context )

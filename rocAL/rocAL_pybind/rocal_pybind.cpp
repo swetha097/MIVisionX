@@ -102,41 +102,13 @@ namespace rocal
             .def_readwrite("process_time", &TimingInfo::process_time)
             .def_readwrite("transfer_time", &TimingInfo::transfer_time);
         py::class_<rocalTensor>(m, "rocalTensor")
-                // .def(
-                // "__getitem__",
-                // [](rocalTensorList &output_tensor, uint idx)
-                // {
-                //     return output_tensor.at(idx);
-                // },
-                // R"code(
-                // Returns a tensor at given position in the list.
-                // )code")
-                // .def(
-                .def( // TODO: Swetha - Add rmul, add, radd
+                .def(
                 "__add__",
                 [](rocalTensor *output_tensor, rocalTensor *output_tensor1)
                 {
-                    std::cerr << "HERE in __ADD__ in rocal_pybind unit dtype";
-                    // Check if the first dim alone matches - call a diff function
-                    // Multipliy all dims - check whos value is greater a- call a diffeent function
-                    // Check if all dims matches - call a diff function
-                    // If none of the dims match - throw error
-                    // For now adding an example to just add a simple function for uneven dims
                     py::object fn_module = py::module::import("amd.rocal.fn");
                     auto fn_function_call = fn_module.attr("tensor_add_tensor_float")(output_tensor, output_tensor1).cast<RocalTensor>();
-                    // auto result = fast_calc.attr("add")(1, 2).cast<int>();
                     return fn_function_call;
-                },
-                R"code(
-                Adds a node for arithmetic operation
-                )code", py::return_value_policy::reference
-            )
-                .def( // TODO: Swetha - Add rmul, add, radd
-                "__mul__",
-                [](rocalTensor *output_tensor, uint scalar)
-                {
-                    std::cerr << "HERE in __MUL__ in rocal_pybind unit dtype";
-                    return output_tensor;
                 },
                 R"code(
                 Adds a node for arithmetic operation
@@ -146,12 +118,8 @@ namespace rocal
                 "__mul__",
                 [](rocalTensor *output_tensor, float scalar)
                 {
-                    std::cerr << "HERE in __MUL__ in rocal_pybind for float -----------------";
-                    std::cerr << "\n Float scalar value : " << scalar;
-                    //add a fn call here
                     py::object fn_module = py::module::import("amd.rocal.fn");
                     auto fn_function_call = fn_module.attr("tensor_mul_scalar_float")(output_tensor, "scalar"_a=scalar).cast<RocalTensor>();
-                    // auto result = fast_calc.attr("add")(1, 2).cast<int>();
                     return fn_function_call;
                 },
                 R"code(
@@ -163,7 +131,6 @@ namespace rocal
                 "get_roi_at",
                 [](rocalTensor &output_tensor, uint idx)
                 {
-                    // return *(output_tensor.info().get_roi());
                     return std::make_pair(output_tensor.info().get_roi()[idx].x1, output_tensor.info().get_roi()[idx].y1);
                 },
                 R"code(
@@ -176,17 +143,13 @@ namespace rocal
                 "get_rois",
                 [](rocalTensor &output_tensor)
                 {
-                    // auto ptr = ctypes_void_ptr(p);
-                    // std::shared_ptr<std::vector<RocalROI>> 
-                    // ptr = (output_tensor.info().get_roi().get());
-                    // return py::memoryview::from_buffer( output_tensor.info().get_roi().get(), output_tensor.info().dims().at(0) * 2 );
                     return py::array(py::buffer_info(
                             (int *)(output_tensor.info().get_roi()),
                             sizeof(int),
                             py::format_descriptor< int>::format(),
                             1,
                             {output_tensor.info().dims().at(0) * 4},
-                            {sizeof(int) })); //Giving wrong outputs - TODO : DEBUG
+                            {sizeof(int) }));
                 },
                 R"code(
                 Returns a tensor ROI
@@ -194,7 +157,6 @@ namespace rocal
                 ex : samples , channels in case of an audio data
                 )code"
             )
-            
                 .def(
                 "num_of_dims",
                 [](rocalTensor &output_tensor)
@@ -300,8 +262,6 @@ namespace rocal
                 Returns a rocAL tensor at given position `i` in the rocalTensorlist.
                 )code",
                 py::keep_alive<0, 1>());
-
-        // .def_readwrite("swap_handle",&rocalTensor::swap_handle);
         py::class_<rocalTensorList>(m, "rocalTensorList")
             .def(
                 "__getitem__",
@@ -446,7 +406,6 @@ namespace rocal
         {
             auto buf = array.request();
             int* ptr = (int*) buf.ptr;
-            // call pure C++ function
             rocalGetImageSizes(context,ptr);
         }
         );
@@ -466,7 +425,6 @@ namespace rocal
         m.def("GetIntValue", &rocalGetIntValue);
         m.def("GetFloatValue", &rocalGetFloatValue);
         // rocal_api_data_transfer.h
-        // m.def("rocalGetOutputTensors",&rocalGetOutputTensors, return_value_policy::reference);
         m.def("rocalGetOutputTensors", [](RocalContext context)
               {
             rocalTensorList * tl = rocalGetOutputTensors(context);
@@ -479,11 +437,6 @@ namespace rocal
             "rocalGetImageLabels", [](RocalContext context)
     {
             rocalTensorList *labels = rocalGetImageLabels(context);
-            // std::cerr<<"LABELS SIZE ::"<<labels->size();
-            // for (int i = 0; i < labels->size(); i++) {
-            //     int *labels_buffer = (int *)(labels->at(i)->buffer());
-            //     // std::cerr << ">>>>> LABELS : " << labels_buffer[0] << "\t";
-            // }
             return py::array(py::buffer_info(
                             (int *)(labels->at(0)->buffer()),
                             sizeof(int),
@@ -493,22 +446,6 @@ namespace rocal
                             {sizeof(int) }));
     }
             );
-        // m.def(
-        //     "copy_data_ptr", [](RocalContext context, py::object p)
-        // {
-        // auto ptr = ctypes_void_ptr(p);
-        // RocalTensorList output_tensor_list = rocalGetOutputTensors(context);
-        // // ptr = output_tensor_list->at(0)->buffer();
-
-        // rocalTensor::copy_data((unsigned char *) ptr, 0);
-        // // for (uint i =0; i<10; i++)
-        // // {
-        // //     std::cerr<<"\n TEMP ::"<< (float) (unsigned char *) ptr[i];
-        // // }
-        // // std::exit(0);
-        // return py::reinterpret_borrow<py::object>(PyLong_FromVoidPtr(ptr));
-        // }
-        //     );
         m.def(
             "rocalGetEncodedBoxesAndLables", [](RocalContext context,uint batch_size, uint num_anchors)
             {
@@ -590,7 +527,6 @@ namespace rocal
               py::arg("alpha") = NULL,
               py::arg("beta") = NULL);
         m.def("CropMirrorNormalize",&rocalCropMirrorNormalize, py::return_value_policy::reference);
-        // m.def("Crop", &rocalCrop, py::return_value_policy::reference);
         m.def("ResizeShorter", &rocalResizeShorter, py::return_value_policy::reference);
         m.def("CenterCropFixed", &rocalCropCenterFixed, py::return_value_policy::reference);
 
