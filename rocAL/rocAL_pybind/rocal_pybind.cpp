@@ -401,7 +401,6 @@ namespace rocal
                             1,
                             {labels->at(i)->info().dims().at(0)},
                             {sizeof(int) }));
-                labels_list.append(labels_array);
             }
             return labels_list;
     }
