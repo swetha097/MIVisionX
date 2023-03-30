@@ -1,4 +1,4 @@
-z/*
+/*
 Copyright (c) 2019 - 2023 Advanced Micro Devices, Inc. All rights reserved.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -401,7 +401,6 @@ namespace rocal
                             1,
                             {labels->at(i)->info().dims().at(0)},
                             {sizeof(int) }));
-                labels_list.append(labels_array);
             }
             return labels_list;
     }
