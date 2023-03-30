@@ -75,6 +75,7 @@ Reader::Status FileListReader::initialize(ReaderConfig desc)
     _loop = desc.loop();
     _last_batch_info = desc.get_last_batch_policy();
     _stick_to_shard = desc.get_stick_to_shard();
+    _shard_size = desc.get_shard_size();
     // std::cerr<<"\n _last_batch_info :: in file_list_reader "<<_last_batch_info.first<<"\t "<<_last_batch_info.second;
     _meta_data_reader = desc.meta_data_reader();
     ret = subfolder_reading();
@@ -183,26 +184,25 @@ void FileListReader::reset()
     _shuffle_time.start();
     if (_shuffle) std::random_shuffle(_file_names.begin(), _file_names.end());
     _shuffle_time.end();
-    // _read_counter = 0;
-    if (_shard_count == 1) { // Single Shard
-        _read_counter-=_batch_count;
-        _curr_file_idx = (_curr_file_idx - _batch_count) % _file_names.size();
-        // _curr_file_idx = (_curr_file_idx + _batch_count) % _file_names.size();
-    // Rotates the file_names vector to adjust the start of the next epoch
-        // if (_last_batch_info.second == false) {
-        //     std::rotate(
-        //         _actual_file_names.begin(),
-        //         _actual_file_names.begin() + _batch_count - _in_batch_read_count,
-        //         _actual_file_names.end());
-        //     _file_names.clear();
-        //     _file_names.resize(_actual_file_names.size());
-        //     _file_names = _actual_file_names;
-        //     if (_in_batch_read_count > 0 && _in_batch_read_count < _batch_count) {
-        //         replicate_last_image_to_fill_last_shard();
-        //     }
-        // }
+    if ( _shard_count == 1 && _shard_size > 0) { // Single Shard
+        _read_counter=0;
+        _curr_file_idx =0;
+        int size = (int)_shard_size;
+        int inc = 0;
+        if (size < _batch_count)
+            inc = _batch_count;
+        else{
+            if(size % _batch_count)
+                inc = size;
+            else
+                inc = size + (size%_batch_count);
+        }
+            std::rotate(
+                _file_names.begin(),
+                _file_names.begin() + inc,
+                _file_names.end());
     }
-    else { // Multiple Shards
+    else if (_shard_count > 1) {// Multiple Shards
         if(_stick_to_shard == false) {
             increment_shard_id();
             _last_batch_padded_size = 0;
@@ -222,16 +222,10 @@ void FileListReader::reset()
         // TODO: Swetha - To add the case when last batch padded = False - rotate the next shards data with _batch_count - _in_batch_read_count
         }
     }
-    // std::cerr << "next file names size :: "<< _file_names.size();
-    if(_last_batch_info.second == true)
-    {
-        _curr_file_idx = 0;
+    else {
+                _curr_file_idx = 0;
         _read_counter = 0;
-        // _file_id = 0;
     }
-    // else
-    //     incremenet_read_ptr();
-    // std::cerr << "\n [RESET] _last_batch_padded_size" << _last_batch_padded_size;
 }
 
 // Used to advance to the next shard's data to increase the entropy of the data seen by the pipeline
@@ -296,7 +290,7 @@ void FileListReader::generate_file_names()
                     incremenet_file_id();
                 }
     }
-    _actual_file_names = _file_names;
+    // _actual_file_names = _file_names;
 }
 
 

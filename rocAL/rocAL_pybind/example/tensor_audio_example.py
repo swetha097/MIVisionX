@@ -122,9 +122,9 @@ def main():
 
         audio_pipeline.set_outputs(uniform_distribution_resample)
     audio_pipeline.build()
-    audioIteratorPipeline = ROCALClassificationIterator(audio_pipeline)
+    audioIteratorPipeline = ROCALClassificationIterator(audio_pipeline, auto_reset=True)
     cnt = 0
-    for e in range(2):
+    for e in range(3):
         print("Epoch :: ", e)
         torch.set_printoptions(threshold=5000, profile="full", edgeitems=100)
         for i , it in enumerate(audioIteratorPipeline):
@@ -138,7 +138,7 @@ def main():
                 draw_patches(img, label, "cpu")
             #     cnt = cnt + 1
         print("EPOCH DONE", e)
-        audioIteratorPipeline.reset()
+        # audioIteratorPipeline.reset()
 if __name__ == '__main__':
     main()
 
