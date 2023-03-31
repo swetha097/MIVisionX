@@ -53,4 +53,5 @@ protected:
     vx_node _node = nullptr;
     size_t _batch_size;
     MetaDataBatch* _meta_data_info;
+    vx_scalar _input_layout, _output_layout, _roi_type;
 };
