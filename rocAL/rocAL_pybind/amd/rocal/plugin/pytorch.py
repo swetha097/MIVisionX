@@ -127,7 +127,8 @@ class ROCALGenericIterator(object):
             
             self.labels_tensor = torch.empty(self.batch_size, dtype = torch.int32, device = torch_gpu_device)
 
-        self.output_tensor_list[0].copy_data(ctypes.c_void_p(self.out.data_ptr()))
+        self.loader.copyToTensor(
+            self.out, self.multiplier, self.offset, self.reverse_channels, self.tensor_format, self.tensor_dtype)
         self.labels = self.loader.rocalGetImageLabels()
         self.labels_tensor = self.labels_tensor.copy_(torch.from_numpy(self.labels)).long()
         if self.tensor_dtype == types.FLOAT:
