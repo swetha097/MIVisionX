@@ -85,7 +85,7 @@ extern "C" RocalMetaData ROCAL_API_CALL rocalCreateCaffeLMDBReaderDetection(Roca
 
 ///
 /// \param rocal_context
-/// \param source_path path to the Caffe LMDB records for Object Detection
+/// \param source_path path to the Caffe2LMDB records for Classification
 /// \return RocalMetaData object, can be used to inquire about the rocal's output (processed) tensors
 
 extern "C" RocalMetaData ROCAL_API_CALL rocalCreateCaffe2LMDBLabelReader(RocalContext rocal_context, const char* source_path, bool is_output);
