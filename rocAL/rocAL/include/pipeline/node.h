@@ -46,8 +46,8 @@ public:
 protected:
     virtual void create_node() = 0;
     virtual void update_node() = 0;
-    const std::vector<rocalTensor *> _inputs;
-    const std::vector<rocalTensor *> _outputs;
+    std::vector<rocalTensor *> _inputs;
+    std::vector<rocalTensor *> _outputs;
     std::shared_ptr<Graph> _graph = nullptr;
     vx_tensor _src_tensor_roi = nullptr, _dst_tensor_roi = nullptr;
     vx_node _node = nullptr;
