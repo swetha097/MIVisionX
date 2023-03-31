@@ -474,7 +474,91 @@ MasterGraph::get_output_tensors()
     return &_output_tensor_list;
 }
 
+#define CHECK_CL_CALL_RET(x) { cl_int ret; ret = x; if( ret != CL_SUCCESS) THROW("ocl call failed "+STR(#x)+" error "+TOSTR(ret)) }
 
+MasterGraph::Status
+MasterGraph::copy_out_tensor(void *out_ptr, RocalTensorlayout format, float multiplier0, float multiplier1,
+                             float multiplier2, float offset0, float offset1, float offset2, bool reverse_channels, RocalTensorDataType output_data_type)
+{
+    if(no_more_processed_data())
+        return MasterGraph::Status::NO_MORE_DATA;
+
+    _convert_time.start();
+    // Copies to the output context given by the user
+    auto dims = _output_tensor_list[0]->info().dims();
+    unsigned int n = dims[0];
+    const size_t c = dims[3];
+    const size_t h = dims[1];
+    const size_t w = dims[2];
+    const size_t single_output_image_size = _output_tensor_list[0]->info().data_size();
+
+#if ENABLE_HIP
+    if(_output_tensor_list[0]->info().mem_type() == RocalMemType::HIP)
+    {
+        unsigned int fp16 = (output_data_type == RocalTensorDataType::FP16);
+
+        auto output_buffers =_ring_buffer.get_read_buffers();
+        unsigned dest_buf_offset = 0;
+        // copy hip buffer to out_ptr
+        // todo:: add callback routing to exchange memory pointer to avoid extra copy
+        for( auto&& out_image: output_buffers)
+        {
+            auto img_buffer = out_image;
+            if (format == RocalTensorlayout::NHWC)
+            {
+                HipExecCopyInt8ToNHWC(_device.resources()->hip_stream, (const void *)img_buffer, out_ptr, dest_buf_offset, n, c, h, w,
+                                        multiplier0, multiplier1, multiplier2, offset0, offset1, offset2, reverse_channels, fp16);
+
+            }else
+            {
+                HipExecCopyInt8ToNCHW(_device.resources()->hip_stream, (const void *)img_buffer, out_ptr, dest_buf_offset, n, c, h, w,
+                                        multiplier0, multiplier1, multiplier2, offset0, offset1, offset2, reverse_channels, fp16);
+            }
+            dest_buf_offset += single_output_image_size;
+        }
+    }
+#endif
+    if(_output_tensor_list[0]->info().mem_type() == RocalMemType::HOST)
+    {
+        unsigned int fp16 = (output_data_type == RocalTensorDataType::FP16);
+
+        auto output_buffers =_ring_buffer.get_read_buffers();
+        unsigned dest_buf_offset = 0;
+        // copy hip buffer to out_ptr
+        // todo:: add callback routing to exchange memory pointer to avoid extra copy
+        for( auto&& out_image: output_buffers)
+        {
+            auto img_buffer = out_image;
+            void *img_buffer_hip;
+            auto return_status = hipMalloc(&img_buffer_hip, sizeof(unsigned char) * n * c * h * w);
+            if (return_status != hipSuccess) {
+                THROW("hipMalloc failed with status " + TOSTR(return_status))
+            }
+            return_status = hipMemcpy(img_buffer_hip, (const void *)img_buffer, sizeof(unsigned char) * n * c * h * w, hipMemcpyHostToDevice);
+            if (return_status != hipSuccess) {
+                THROW("hipMemcpy failed with status " + TOSTR(return_status))
+            }
+            if (format == RocalTensorlayout::NHWC)
+            {
+                HipExecCopyInt8ToNHWC(_device.resources()->hip_stream, (const void *)img_buffer_hip, out_ptr, dest_buf_offset, n, c, h, w,
+                                        multiplier0, multiplier1, multiplier2, offset0, offset1, offset2, reverse_channels, fp16);
+
+            }else
+            {
+                HipExecCopyInt8ToNCHW(_device.resources()->hip_stream, (const void *)img_buffer_hip, out_ptr, dest_buf_offset, n, c, h, w,
+                                        multiplier0, multiplier1, multiplier2, offset0, offset1, offset2, reverse_channels, fp16);
+            }
+            dest_buf_offset += single_output_image_size;
+            return_status = hipFree(img_buffer_hip);
+            if (return_status != hipSuccess) {
+                THROW("hipFree failed with status " + TOSTR(return_status))
+            }
+        }
+
+    }    
+    _convert_time.end();
+    return Status::OK;
+}
 
 void MasterGraph::output_routine()
 {

@@ -28,6 +28,7 @@ THE SOFTWARE.
 #include "graph.h"
 #include "ring_buffer.h"
 #include "timing_debug.h"
+#include "commons.h"
 #include "node.h"
 #include "node_image_loader.h"
 #include "node_image_loader_single_shard.h"
@@ -61,6 +62,8 @@ public:
     size_t remaining_count();
     std::vector<size_t> tensor_output_byte_size();
     rocalTensorList *get_output_tensors();
+    MasterGraph::Status copy_out_tensor(void *out_ptr, RocalTensorlayout format, float multiplier0, float multiplier1, float multiplier2,
+                    float offset0, float offset1, float offset2, bool reverse_channels, RocalTensorDataType output_data_type);
     void sequence_start_frame_number(std::vector<size_t> &sequence_start_framenum); // Returns the starting frame number of the sequences
     void sequence_frame_timestamps(std::vector<std::vector<float>> &sequence_frame_timestamp); // Returns the timestamps of the frames in the sequences
     Status build();
