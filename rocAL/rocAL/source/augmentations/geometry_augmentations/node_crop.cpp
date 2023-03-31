@@ -27,9 +27,7 @@ THE SOFTWARE.
 #include "exception.h"
 
 CropNode::CropNode(const std::vector<rocalTensor *> &inputs, const std::vector<rocalTensor *> &outputs) :
-        Node(inputs, outputs),
-        _dest_width(_outputs[0]->info().max_shape()[0]),
-        _dest_height(_outputs[0]->info().max_shape()[1])
+        Node(inputs, outputs)
 {
     _crop_param = std::make_shared<RocalCropParam>(_batch_size);
 }
@@ -38,9 +36,6 @@ void CropNode::create_node()
 {
     if(_node)
         return;
-
-    if(_dest_width == 0 || _dest_height == 0)
-        THROW("Uninitialized destination dimension")
 
     _crop_param->create_array(_graph);
 
