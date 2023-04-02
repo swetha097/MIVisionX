@@ -111,7 +111,13 @@ namespace rocal
         auto ptr = ctypes_void_ptr(p);
         // call pure C++ function
 
-        int status = rocalCopyToOutputTensor(context, ptr, tensor_format, tensor_output_type, multiplier0,
+        RocalTensorlayout new_tensor_format;
+        if (tensor_format == RocalTensorLayout::ROCAL_NCHW)
+            new_tensor_format = RocalTensorlayout::NCHW;
+        if (tensor_format == RocalTensorLayout::ROCAL_NHWC)
+            new_tensor_format = RocalTensorlayout::NHWC;
+
+        int status = rocalCopyToOutputTensor(context, ptr, new_tensor_format, tensor_output_type, multiplier0,
                                               multiplier1, multiplier2, offset0,
                                               offset1, offset2, reverse_channels);
         // std::cerr<<"\n Copy failed with status :: "<<status;
