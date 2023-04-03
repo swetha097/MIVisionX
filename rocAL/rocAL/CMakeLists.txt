@@ -1,6 +1,6 @@
 # MIT License
 #
-# Copyright (c) 2019 - 2022 Advanced Micro Devices, Inc.
+# Copyright (c) 2019 - 2023 Advanced Micro Devices, Inc.
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -28,21 +28,16 @@ set(BUILD_ROCAL true)
 
 list(APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/../../amd_openvx/cmake)
 
-if(GPU_SUPPORT)
-    find_package(AMDRPP QUIET)
-    find_package(TurboJpeg QUIET)
-    find_package(Protobuf QUIET)
-    find_package(FFmpeg QUIET)
-    find_package(OpenCV QUIET)
-    find_package(OpenMP QUIET)
-    set(BOOST_COMPONENTS filesystem system)
-    find_package(Boost COMPONENTS ${BOOST_COMPONENTS} QUIET)
-    set(THREADS_PREFER_PTHREAD_FLAG ON)
-    find_package(Threads QUIET)
-else()
-    SET(BUILD_ROCAL false)
-    message("-- ${Yellow}NOTE: rocAL library requires GPU_SUPPORT=ON and BACKEND=OPENCL/HIP${ColourReset}")
-endif()
+find_package(AMDRPP QUIET)
+find_package(TurboJpeg QUIET)
+find_package(Protobuf QUIET)
+find_package(FFmpeg QUIET)
+find_package(OpenCV QUIET)
+find_package(OpenMP QUIET)
+set(BOOST_COMPONENTS filesystem system)
+find_package(Boost COMPONENTS ${BOOST_COMPONENTS} QUIET)
+set(THREADS_PREFER_PTHREAD_FLAG ON)
+find_package(Threads QUIET)
 
 if( GPU_SUPPORT AND "${BACKEND}" STREQUAL "HIP")
     if(NOT DEFINED HIP_PATH)
@@ -52,7 +47,7 @@ if( GPU_SUPPORT AND "${BACKEND}" STREQUAL "HIP")
             set(HIP_PATH $ENV{HIP_PATH} CACHE PATH "Path to which HIP has been installed")
         endif()
     endif()
-    list(APPEND CMAKE_PREFIX_PATH ${ROCM_PATH}/hip ${ROCM_PATH})
+    list(APPEND CMAKE_PREFIX_PATH ${ROCM_PATH} ${ROCM_PATH}/hip)
     find_package(HIP QUIET)
     if(HIP_FOUND)
         SET(BUILD_ROCAL true)
@@ -71,65 +66,65 @@ if(GPU_SUPPORT AND "${BACKEND}" STREQUAL "OPENCL")
   endif()
 endif()
 
-if(GPU_SUPPORT)
-    if(NOT AMDRPP_FOUND)
-        set(BUILD_ROCAL false)
-        message("-- ${Yellow}NOTE: rocAL library requires AMD's rpp library, Not Found ${ColourReset}")
+if(NOT AMDRPP_FOUND)
+    set(BUILD_ROCAL false)
+    message("-- ${Yellow}NOTE: rocAL library requires AMD's rpp library, Not Found ${ColourReset}")
+else()
+    #find the RPP backend type
+    set(RPP_BACKEND_OPENCL_FOUND 0)
+    set(RPP_BACKEND_HIP_FOUND 0)
+    if(EXISTS ${AMDRPP_INCLUDE_DIRS}/rpp_backend.h)
+        file(READ ${AMDRPP_INCLUDE_DIRS}/rpp_backend.h RPP_BACKEND_FILE)
+        string(REGEX MATCH "RPP_BACKEND_OPENCL ([0-9]*)" _ ${RPP_BACKEND_FILE})
+        set(RPP_BACKEND_OPENCL_FOUND ${CMAKE_MATCH_1})
+        string(REGEX MATCH "RPP_BACKEND_HIP ([0-9]*)" _ ${RPP_BACKEND_FILE})
+        set(RPP_BACKEND_HIP_FOUND ${CMAKE_MATCH_1})
     else()
-        #find the RPP backend type
-        set(RPP_BACKEND_OPENCL_FOUND 0)
-        set(RPP_BACKEND_HIP_FOUND 0)
-        if(EXISTS ${ROCM_PATH}/include/rpp/rpp_backend.h)
-            file(READ ${ROCM_PATH}/include/rpp/rpp_backend.h RPP_BACKEND_FILE)
-            string(REGEX MATCH "RPP_BACKEND_OPENCL ([0-9]*)" _ ${RPP_BACKEND_FILE})
-            set(RPP_BACKEND_OPENCL_FOUND ${CMAKE_MATCH_1})
-            string(REGEX MATCH "RPP_BACKEND_HIP ([0-9]*)" _ ${RPP_BACKEND_FILE})
-            set(RPP_BACKEND_HIP_FOUND ${CMAKE_MATCH_1})
-        else()
-            message("-- ${Red}WARNING: ${ROCM_PATH}/include/rpp/rpp_backend.h file Not Found. please run the setup script to install latest RPP package ${ColourReset}")
-        endif()
+        message("-- ${Red}WARNING: ${AMDRPP_INCLUDE_DIRS}/rpp_backend.h file Not Found. please run the setup script to install latest RPP package ${ColourReset}")
+    endif()
 
-        if ("${BACKEND}" STREQUAL "OPENCL" AND OpenCL_FOUND)
-            if (NOT RPP_BACKEND_OPENCL_FOUND)
-                set(BUILD_ROCAL false)
-                message("-- ${Red}WARNING: RPP with OpenCL backend Not Found (HINT: run setup script with the OCL backend first!) -- rocAL module excluded.${ColourReset}")
-            endif()
-        elseif("${BACKEND}" STREQUAL "HIP" AND HIP_FOUND)
-            if (NOT RPP_BACKEND_HIP_FOUND)
-                set(BUILD_ROCAL false)
-                message("-- ${Red}WARNING: RPP with the HIP backend Not Found (HINT: run setup script with the HIP backend first!) -- rocAL_rpp module excluded.${ColourReset}")
-            endif()
-        else()
+    if ("${BACKEND}" STREQUAL "OPENCL" AND OpenCL_FOUND)
+        if (NOT RPP_BACKEND_OPENCL_FOUND)
             set(BUILD_ROCAL false)
-            message("-- ${Red}WARNING: GPU support with OpenCL or HIP Not Found -- rocAL module excluded${ColourReset}")
+            message("-- ${Red}WARNING: RPP with OpenCL backend Not Found (HINT: run setup script with the OCL backend first!) -- rocAL module excluded.${ColourReset}")
         endif()
+    elseif("${BACKEND}" STREQUAL "HIP" AND HIP_FOUND)
+        if (NOT RPP_BACKEND_HIP_FOUND)
+            set(BUILD_ROCAL false)
+            message("-- ${Red}WARNING: RPP with the HIP backend Not Found (HINT: run setup script with the HIP backend first!) -- rocAL_rpp module excluded.${ColourReset}")
+        endif()
+    else()
+        #set(BUILD_ROCAL false)
+        message("-- ${Red}WARNING: GPU support with OpenCL or HIP Not Found -- rocAL CPU only build${ColourReset}")
     endif()
-    if(NOT TurboJpeg_FOUND)
-        set(BUILD_ROCAL false)
-        message("-- ${Yellow}NOTE: rocAL library requires TurboJpeg, Not Found ${ColourReset}")
-    endif()
-    if(NOT Protobuf_FOUND)
-        set(BUILD_ROCAL false)
-        message("-- ${Yellow}NOTE: rocAL library requires Protobuf, Not Found ${ColourReset}")
-    endif()
-    if(NOT OpenMP_FOUND)
-        set(BUILD_ROCAL false)
-        message("-- ${Yellow}NOTE: rocAL library requires OpenMP, Not Found ${ColourReset}")
-    endif()
-    if(NOT Boost_FOUND)
-        set(BUILD_ROCAL false)
-        message("-- ${Yellow}NOTE: rocAL library requires Boost, Not Found ${ColourReset}")
-    endif()
-    if(NOT Threads_FOUND)
-        set(BUILD_ROCAL false)
-        message("-- ${Yellow}NOTE: rocAL library requires Threads, Not Found ${ColourReset}")
-    endif()
+endif()
+if(NOT TurboJpeg_FOUND)
+    set(BUILD_ROCAL false)
+    message("-- ${Yellow}NOTE: rocAL library requires TurboJpeg, Not Found ${ColourReset}")
+endif()
+if(NOT Protobuf_FOUND)
+    set(BUILD_ROCAL false)
+    message("-- ${Yellow}NOTE: rocAL library requires Protobuf, Not Found ${ColourReset}")
+endif()
+if(NOT OpenMP_FOUND)
+    set(BUILD_ROCAL false)
+    message("-- ${Yellow}NOTE: rocAL library requires OpenMP, Not Found ${ColourReset}")
+endif()
+if(NOT Boost_FOUND)
+    set(BUILD_ROCAL false)
+    message("-- ${Yellow}NOTE: rocAL library requires Boost, Not Found ${ColourReset}")
+endif()
+if(NOT Threads_FOUND)
+    set(BUILD_ROCAL false)
+    message("-- ${Yellow}NOTE: rocAL library requires Threads, Not Found ${ColourReset}")
 endif()
 
 if(${BUILD_ROCAL})
-    # AMD OpenVX & RPP
-    include_directories(${AMDRPP_INCLUDE_DIRS})
+    # AMD OpenVX & VX_RPP
     set(LINK_LIBRARY_LIST ${LINK_LIBRARY_LIST} openvx vx_rpp)
+    # AMD RPP
+    include_directories(${AMDRPP_INCLUDE_DIRS})
+    set(LINK_LIBRARY_LIST ${LINK_LIBRARY_LIST} ${AMDRPP_LIBRARIES})
     # OpenMP
     set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${OpenMP_C_FLAGS}")
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
@@ -191,7 +186,7 @@ if(${BUILD_ROCAL})
     protobuf_generate_cpp(TF_PROTO_SRCS TF_PROTO_HEADERS proto/example.proto proto/feature.proto)
     protobuf_generate_cpp(CAFFE2_PROTO_SRCS CAFFE2_PROTO_HEADERS proto/caffe2_protos.proto)
     protobuf_generate_cpp(CAFFE_PROTO_SRCS CAFFE_PROTO_HEADERS proto/caffe_protos.proto)
-    link_directories(${AMDRPP_LIBRARIES_DIR} ${TurboJpeg_LIBRARIES_DIR} ${PROTOBUF_LIBRARY_DIRS} /usr/local/lib/)
+    link_directories(${AMDRPP_LIBRARIES_DIRS} ${TurboJpeg_LIBRARIES_DIR} ${PROTOBUF_LIBRARY_DIRS} /usr/local/lib/)
 
     file(GLOB_RECURSE SOURCES "./source/*.cpp")
     add_library(${PROJECT_NAME} SHARED ${SOURCES} ${TF_PROTO_SRCS} ${TF_PROTO_HEADERS} ${CAFFE_PROTO_HEADERS} ${CAFFE_PROTO_SRCS} ${CAFFE2_PROTO_SRCS} ${CAFFE2_PROTO_HEADERS})
@@ -201,11 +196,17 @@ if(${BUILD_ROCAL})
         set(LINK_LIBRARY_LIST ${LINK_LIBRARY_LIST} $<TARGET_OBJECTS:rocAL_hip>)
         target_compile_definitions(${PROJECT_NAME} PRIVATE __HIP_PLATFORM_AMD__)
         target_compile_definitions(${PROJECT_NAME} PUBLIC ENABLE_HIP=1)
+        target_compile_definitions(${PROJECT_NAME} PUBLIC ENABLE_OPENCL=0)
         message("-- ${White}rocAL built with HIP Backend${ColourReset}")
-    else()
+    elseif("${BACKEND}" STREQUAL "OPENCL" AND OPENCL_FOUND)
         include_directories(${OpenCL_INCLUDE_DIRS} ${OpenCL_INCLUDE_DIRS}/Headers)
         target_compile_definitions(${PROJECT_NAME} PUBLIC ENABLE_HIP=0)
+        target_compile_definitions(${PROJECT_NAME} PUBLIC ENABLE_OPENCL=1)
         message("-- ${White}rocAL built with OpenCL Backend${ColourReset}")
+    else()
+        target_compile_definitions(${PROJECT_NAME} PUBLIC ENABLE_HIP=0)
+        target_compile_definitions(${PROJECT_NAME} PUBLIC ENABLE_OPENCL=0)
+        message("-- ${White}rocAL built with CPU only Backend${ColourReset}")
     endif()
 
     target_compile_definitions(${PROJECT_NAME} PUBLIC ENABLE_SIMD=1)
@@ -249,18 +250,20 @@ if(${BUILD_ROCAL})
 
     # install MIVisionX libs -- {ROCM_PATH)/lib
     install(TARGETS rocal DESTINATION ${CMAKE_INSTALL_LIBDIR})
-    # install MIVisionX include files -- {ROCM_PATH}/include/mivisionx/
-    install(FILES
-        include/api/rocal_api.h
-        include/api/rocal_api_info.h
-        include/api/rocal_api_augmentation.h
-        include/api/rocal_api_data_loaders.h
-        include/api/rocal_api_types.h
-        include/api/rocal_api_data_transfer.h
-        include/api/rocal_api_parameters.h
-        include/api/rocal_api_meta_data.h
-        DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/mivisionx/rocal
-    )
+    if(BUILD_DEV)
+        # install MIVisionX include files -- {ROCM_PATH}/include/mivisionx/
+        install(FILES
+                include/api/rocal_api.h
+                include/api/rocal_api_info.h
+                include/api/rocal_api_augmentation.h
+                include/api/rocal_api_data_loaders.h
+                include/api/rocal_api_types.h
+                include/api/rocal_api_data_transfer.h
+                include/api/rocal_api_parameters.h
+                include/api/rocal_api_meta_data.h
+            DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/mivisionx/rocal
+        )
+    endif(BUILD_DEV)
 else()
     message("-- ${Red}WARNING: rocAL module excluded ${ColourReset}")
 endif()

@@ -1,4 +1,4 @@
-# Copyright (c) 2017 - 2022 Advanced Micro Devices, Inc. All rights reserved.
+# Copyright (c) 2017 - 2023 Advanced Micro Devices, Inc. All rights reserved.
 # 
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -29,12 +29,7 @@ set(ROCM_PATH /opt/rocm CACHE PATH "Default ROCm installation path")
 if(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
   set(CMAKE_INSTALL_PREFIX ${ROCM_PATH} CACHE PATH "MIVisionX default installation path" FORCE)
 endif(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
-
-# Changes for RPATH Removal from Binaries:
-# Since all public interface libraries are present in same folder 
-# RPATH/RUNPATH is not required
-set(CMAKE_INSTALL_RPATH_USE_LINK_PATH FALSE)
-set(CMAKE_SKIP_INSTALL_RPATH TRUE)
+set(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
 
 # Add Default libdir
 set(CMAKE_INSTALL_LIBDIR "lib" CACHE STRING "Library install directory")
@@ -43,19 +38,14 @@ include(GNUInstallDirs)
 # Find Modules
 list(APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake)
 
-# OpenMP
-find_package(OpenMP QUIET)
-
 if(GPU_SUPPORT AND "${BACKEND}" STREQUAL "HIP" AND OpenMP_FOUND)
-  set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${OpenMP_C_FLAGS}")
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
 
   if(NOT DEFINED ENV{HIP_PATH})
     set(HIP_PATH ${ROCM_PATH} CACHE PATH "Path to which HIP has been installed")
   else()
     set(HIP_PATH $ENV{HIP_PATH} CACHE PATH "Path to which HIP has been installed")
   endif()
-  list(APPEND CMAKE_PREFIX_PATH ${ROCM_PATH}/hip ${ROCM_PATH})
+  list(APPEND CMAKE_PREFIX_PATH ${ROCM_PATH} ${ROCM_PATH}/hip)
   find_package(HIP QUIET)
   list(APPEND PACKAGE_DEPENDS PACKAGE HIP)
   include_directories(${ROCM_PATH}/include)
