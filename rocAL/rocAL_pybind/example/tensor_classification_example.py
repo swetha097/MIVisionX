@@ -19,7 +19,6 @@ def draw_patches(img, idx, device):
     else:
         image = img.cpu().numpy()
     image = image.transpose([1, 2, 0])
-    # print(img.shape)
     image = cv2.cvtColor(image, cv2.COLOR_RGB2BGR)
     cv2.imwrite("OUTPUT_IMAGES_PYTHON/NEW_API/FILE_READER/" + "brightness" + "/" + str(idx)+"_"+"train"+".png", image * 255)
 
