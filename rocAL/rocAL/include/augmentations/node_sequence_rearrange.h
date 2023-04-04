@@ -31,7 +31,7 @@ class SequenceRearrangeNode : public Node
 public:
     SequenceRearrangeNode(const std::vector<rocalTensor *> &inputs, const std::vector<rocalTensor *> &outputs);
     SequenceRearrangeNode() = delete;
-    void init(unsigned int* new_order);
+    void init(std::vector<unsigned int>& new_order);
 protected:
     void create_node() override;
     void update_node() override;

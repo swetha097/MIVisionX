@@ -50,11 +50,9 @@ void SequenceRearrangeNode::create_node()
         THROW("Adding the sequence rearrange (vxExtrppNode_SequenceRearrange) node failed: "+ TOSTR(status))
 }
 
-void SequenceRearrangeNode::init(unsigned int* new_order)
+void SequenceRearrangeNode::init(std::vector<unsigned int>& new_order)
 {
-    auto new_sequence_length = _inputs[0]->info().dims()[1];
-    _new_order.resize(new_sequence_length);
-    std::copy(new_order, new_order + new_sequence_length, _new_order.begin());
+    _new_order = new_order;
 }
 
 void SequenceRearrangeNode::update_node()

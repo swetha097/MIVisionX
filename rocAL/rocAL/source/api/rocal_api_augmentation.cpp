@@ -36,9 +36,7 @@ RocalTensor  ROCAL_API_CALL
 rocalSequenceRearrange(
             RocalContext p_context,
             RocalTensor input,
-            unsigned int* new_order,
-            unsigned int  new_sequence_length,
-            unsigned int sequence_length,
+            std::vector<unsigned int>& new_order,
             bool is_output)
 {
     rocalTensor* output = nullptr;
@@ -51,13 +49,13 @@ rocalSequenceRearrange(
     try
     {
 
-        if(sequence_length == 0)
-            THROW("sequence_length passed should be bigger than 0")
+        if(new_order.size() == 0)
+            THROW("The new order for the sequence passed should be greater than 0")
 
         rocalTensorInfo output_info = input->info();
         std::vector<size_t> new_dims;
         new_dims = output_info.dims();
-        new_dims[1] = new_sequence_length;
+        new_dims[1] = new_order.size();
         output_info.set_dims(new_dims);
 
         output = context->master_graph->create_tensor(output_info, is_output);
