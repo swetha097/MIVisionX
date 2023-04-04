@@ -59,7 +59,6 @@ namespace pybind11
 namespace rocal
 {
     using namespace pybind11::literals; // NOLINT
-    // PYBIND11_MODULE(rocal_backend_impl, m) {
     static void *ctypes_void_ptr(const py::object &object)
     {
         auto ptr_as_int = getattr(object, "value", py::none());
@@ -76,7 +75,7 @@ namespace rocal
         auto buf = array.request();
         unsigned char *ptr = (unsigned char *)buf.ptr;
         // call pure C++ function
-        int status = rocalCopyToOutput(context, ptr, buf.size);
+        // int status = rocalCopyToOutput(context, ptr, buf.size); // The C API defenitions is not present
         return py::cast<py::none>(Py_None);
     }
 
@@ -483,7 +482,6 @@ namespace rocal
               py::return_value_policy::reference);
         m.def("CropMirrorNormalize",&rocalCropMirrorNormalize, py::return_value_policy::reference);
         m.def("ResizeMirrorNormalize",&rocalResizeMirrorNormalize, py::return_value_policy::reference);
-        // m.def("Crop", &rocalCrop, py::return_value_policy::reference);
         m.def("CenterCropFixed", &rocalCropCenterFixed, py::return_value_policy::reference);
     }
 }
