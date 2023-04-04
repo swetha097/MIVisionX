@@ -62,7 +62,7 @@ rocalSequenceRearrange(
 
         output = context->master_graph->create_tensor(output_info, is_output);
         std::shared_ptr<SequenceRearrangeNode> sequence_rearrange_node =  context->master_graph->add_node<SequenceRearrangeNode>({input}, {output});
-        sequence_rearrange_node->init(new_order, new_sequence_length, sequence_length, context->user_batch_size());
+        sequence_rearrange_node->init(new_order);
     }
     catch(const std::exception& e)
     {
