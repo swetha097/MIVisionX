@@ -112,20 +112,35 @@ class ROCALGenericIterator(object):
 
         if self.out is None:
             if self.tensor_format == types.NCHW:
-                torch_gpu_device = torch.device('cuda', self.device_id)
-                if self.tensor_dtype == types.FLOAT:
-                    self.out = torch.empty((self.batch_size, self.color_format, self.h, self.w,), dtype=torch.float32, device = torch_gpu_device)
-                elif self.tensor_dtype == types.FLOAT16:
-                    self.out = torch.empty((self.batch_size, self.color_format, self.h, self.w,), dtype=torch.float16, device = torch_gpu_device)                
+                if self.device == "cpu":
+                    if self.tensor_dtype == types.FLOAT:
+                        self.out = torch.empty((self.batch_size, self.color_format, self.h, self.w,), dtype=torch.float32)
+                    elif self.tensor_dtype == types.FLOAT16:
+                        self.out = torch.empty((self.batch_size, self.color_format, self.h, self.w,), dtype=torch.float16) 
+                    self.labels_tensor = torch.empty(self.batch_size, dtype = torch.int32)               
+
+                else:
+                    torch_gpu_device = torch.device('cuda', self.device_id)
+                    if self.tensor_dtype == types.FLOAT:
+                        self.out = torch.empty((self.batch_size, self.color_format, self.h, self.w,), dtype=torch.float32, device = torch_gpu_device)
+                    elif self.tensor_dtype == types.FLOAT16:
+                        self.out = torch.empty((self.batch_size, self.color_format, self.h, self.w,), dtype=torch.float16, device = torch_gpu_device)       
+                    self.labels_tensor = torch.empty(self.batch_size, dtype = torch.int32, device = torch_gpu_device)         
 
             else: #NHWC
-                torch_gpu_device = torch.device('cuda', self.device_id)
-                if self.tensor_dtype == types.FLOAT:
-                    self.out = torch.empty((self.batch_size, self.h, self.w, self.color_format), dtype=torch.float32, device=torch_gpu_device)
-                elif self.tensor_dtype == types.FLOAT16:
-                    self.out = torch.empty((self.batch_size, self.h, self.w, self.color_format), dtype=torch.float16, device=torch_gpu_device)
-            
-            self.labels_tensor = torch.empty(self.batch_size, dtype = torch.int32, device = torch_gpu_device)
+                if self.device == "cpu":
+                    if self.tensor_dtype == types.FLOAT:
+                        self.out = torch.empty((self.batch_size, self.h, self.w, self.color_format), dtype=torch.float32)
+                    elif self.tensor_dtype == types.FLOAT16:
+                        self.out = torch.empty((self.batch_size, self.h, self.w, self.color_format), dtype=torch.float16)
+                    self.labels_tensor = torch.empty(self.batch_size, dtype = torch.int32)
+                else:
+                    torch_gpu_device = torch.device('cuda', self.device_id)
+                    if self.tensor_dtype == types.FLOAT:
+                        self.out = torch.empty((self.batch_size, self.h, self.w, self.color_format), dtype=torch.float32, device=torch_gpu_device)
+                    elif self.tensor_dtype == types.FLOAT16:
+                        self.out = torch.empty((self.batch_size, self.h, self.w, self.color_format), dtype=torch.float16, device=torch_gpu_device)
+                    self.labels_tensor = torch.empty(self.batch_size, dtype = torch.int32, device = torch_gpu_device)
 
         self.loader.copyToTensor(
             self.out, self.multiplier, self.offset, self.reverse_channels, self.tensor_format, self.tensor_dtype)
