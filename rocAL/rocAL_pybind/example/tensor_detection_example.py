@@ -118,7 +118,6 @@ def draw_patches(img, idx, bboxes, device):
     else:
         image = img.cpu().numpy()
     image = image.transpose([1, 2, 0])
-    _, htot, wtot = img.shape
 
     for (l, t, r, b) in bboxes:
         loc_ = [l, t, r, b]
@@ -157,11 +156,6 @@ def main():
     local_rank = 0
     world_size = 1
 
-    rali_device = 'gpu'
-    decoder_device = 'mixed'
-    device_memory_padding = 211025920 if decoder_device == 'mixed' else 0
-    host_memory_padding = 140544512 if decoder_device == 'mixed' else 0
-
     # Anchors - load default anchors from a text file     
     with open('Default_anchors_retinanet.txt', 'r') as f_read:
         anchors = f_read.readlines()
@@ -184,7 +178,7 @@ def main():
 
         print("*********************** SHARD ID ************************",local_rank)
         print("*********************** NUM SHARDS **********************",world_size)
-        images_decoded = fn.decoders.image(jpegs, device=decoder_device, output_type = types.RGB, file_root=image_path, annotations_file=annotation_path, random_shuffle=False,shard_id=local_rank, num_shards=world_size)
+        images_decoded = fn.decoders.image(jpegs, output_type = types.RGB, file_root=image_path, annotations_file=annotation_path, random_shuffle=False,shard_id=local_rank, num_shards=world_size)
         flip_coin = fn.random.coin_flip(probability=0.5)
         images = fn.resize_mirror_normalize(images_decoded, device="gpu",
                                             image_type=types.RGB,
