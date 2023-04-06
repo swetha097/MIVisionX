@@ -157,22 +157,58 @@ namespace rocal
                 "color_format",
                 [](rocalTensor &output_tensor)
                 {
-                    if ((output_tensor.info().color_format() == RocalColorFormat::RGB24) || (output_tensor.info().color_format() == RocalColorFormat::BGR24))
-                        return 3;
-                    else
-                        return 1;
+                    switch(output_tensor.info().color_format())
+                    {
+                        case RocalColorFormat::RGB24:
+                            return 3;
+                        case RocalColorFormat::BGR24:
+                            return 3;
+                        default:
+                            return 1;
+                    }
                 },
                 R"code(
                 Returns a tensor batch size.
                 )code"
             )
+            .def("layout", [](rocalTensor &output_tensor)
+            {
+                switch(output_tensor.info().layout()) {
+                    case RocalTensorlayout::NHWC:
+                        return "NHWC";
+                    case RocalTensorlayout::NCHW:
+                        return "NCHW";
+                    default:
+                        assert(0 && "Unhandled special enum constant for rocal tensor layout!");
+                }
+            },
+                R"code(
+                Returns layout of tensor.
+                )code"
+            )
+            .def("dtype", [](rocalTensor &output_tensor)
+            {
+                switch(output_tensor.info().data_type()) {
+                    case RocalTensorDataType::FP32:
+                        return "float32";
+                    case RocalTensorDataType::UINT8:
+                        return "uint8";
+                    default:
+                        assert(0 && "Unhandled special enum constant for rocal tensor dtype!");
+                }
+            },
+                R"code(
+                Returns dtype of tensor.
+                )code"
+            )
             .def(
             "copy_data", [](rocalTensor &output_tensor, py::object p)
             {
-            auto ptr = ctypes_void_ptr(p);
-            output_tensor.copy_data(ptr);
+                auto ptr = ctypes_void_ptr(p);
+                output_tensor.copy_data(ptr);
             }
             )
+            
             .def(
                 "at",
                 [](rocalTensor &output_tensor, uint idx)
