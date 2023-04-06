@@ -320,25 +320,16 @@ rocalSequenceReader(
 
         INFO("Internal buffer size width = "+ TOSTR(width)+ " height = "+ TOSTR(height) + " depth = "+ TOSTR(num_of_planes))
 
-        RocalTensorlayout tensor_format = RocalTensorlayout::NFHWC;
-        RocalTensorDataType tensor_data_type = RocalTensorDataType::UINT8;
-        RocalROIType roi_type = RocalROIType::XYWH;
-        unsigned num_of_dims = 5;
-        std::vector<size_t> dims;
-        dims.resize(num_of_dims);
-        dims[0] = context->user_batch_size();
-        dims[1] = sequence_length;
-        dims[2] = height;
-        dims[3] = width;
-        dims[4] = num_of_planes;
-        auto info  = rocalTensorInfo(std::vector<size_t>(std::move(dims)),
-                                context->master_graph->mem_type(),
-                                tensor_data_type);
-        info.set_roi_type(roi_type);
+        std::vector<size_t> dims = {context->user_batch_size(), sequence_length, height, 
+                                    width, static_cast<unsigned>(num_of_planes)};
+        auto info  = rocalTensorInfo(std::move(dims),
+                                     context->master_graph->mem_type(),
+                                     RocalTensorDataType::UINT8);
         info.set_color_format(color_format);
-        info.set_tensor_layout(tensor_format);
+        info.set_tensor_layout(RocalTensorlayout::NFHWC);
+        info.set_sequence_batch_size(sequence_length);
         info.set_max_shape();
-        
+
         output = context->master_graph->create_loader_output_tensor(info);
 
         context->master_graph->add_node<ImageLoaderNode>({}, {output})->init(internal_shard_count,
@@ -419,23 +410,14 @@ rocalSequenceReaderSingleShard(
 
         INFO("Internal buffer size width = "+ TOSTR(width)+ " height = "+ TOSTR(height) + " depth = "+ TOSTR(num_of_planes))
 
-        RocalTensorlayout tensor_format = RocalTensorlayout::NFHWC;
-        RocalTensorDataType tensor_data_type = RocalTensorDataType::UINT8;
-        RocalROIType roi_type = RocalROIType::XYWH;
-        unsigned num_of_dims = 5;
-        std::vector<size_t> dims;
-        dims.resize(num_of_dims);
-        dims[0] = context->user_batch_size();
-        dims[1] = sequence_length;
-        dims[2] = height;
-        dims[3] = width;
-        dims[4] = num_of_planes;
-        auto info  = rocalTensorInfo(std::vector<size_t>(std::move(dims)),
-                                context->master_graph->mem_type(),
-                                tensor_data_type);
-        info.set_roi_type(roi_type);
+        std::vector<size_t> dims = {context->user_batch_size(), sequence_length, height, 
+                                    width, static_cast<unsigned>(num_of_planes)};
+        auto info  = rocalTensorInfo(std::move(dims),
+                                     context->master_graph->mem_type(),
+                                     RocalTensorDataType::UINT8);
         info.set_color_format(color_format);
-        info.set_tensor_layout(tensor_format);
+        info.set_tensor_layout(RocalTensorlayout::NFHWC);
+        info.set_sequence_batch_size(sequence_length);
         info.set_max_shape();
         output = context->master_graph->create_loader_output_tensor(info);
 
