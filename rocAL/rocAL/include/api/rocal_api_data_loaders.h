@@ -216,8 +216,8 @@ extern "C"  RocalTensor  ROCAL_API_CALL rocalJpegCOCOFileSourcePartialSingleShar
 /// \param rocal_decoder_type Determines the decoder_type, tjpeg or hwdec
 /// \return Reference to the output image
 extern "C"  RocalTensor  ROCAL_API_CALL rocalJpegCOCOFileSourceSingleShard(RocalContext context,
-                                                                           const char* json_path,
                                                                            const char* source_path,
+                                                                           const char* json_path,
                                                                            RocalImageColor color_format,
                                                                            unsigned shard_id,
                                                                            unsigned shard_count,
