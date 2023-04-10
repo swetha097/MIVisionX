@@ -83,11 +83,11 @@ def main():
                                             rocal_tensor_layout = types.NHWC,
                                             rocal_tensor_output_type = types.UINT8,
                                             output_dtype = types.UINT8,
-                                            crop=[300, 100],
+                                            crop=[300, 300],
                                             mirror=0,
                                             image_type=types.RGB,
-                                            mean=[0.0],
-                                            std=[1.0],crop_d=3)
+                                            mean=[0,0,0],
+                                            std=[1,1,1],crop_d=3)
         # if(oneHotLabel == 1):
         #     print("check ")
         #     labels = inputs["image/class/label"]
