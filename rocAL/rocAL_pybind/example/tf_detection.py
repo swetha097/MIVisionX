@@ -122,7 +122,6 @@ def main():
         cmnp = fn.crop_mirror_normalize(resized, device="cpu",
                                             rocal_tensor_layout = types.NHWC,
                                             rocal_tensor_output_type = types.FLOAT,
-                                            output_dtype = types.FLOAT,
                                             crop=[300, 300],
                                             mirror=0,
                                             image_type=types.RGB,
@@ -159,72 +158,6 @@ def main():
 
     print("###############################################    TF DETECTION    ###############################################")
     print("###############################################    SUCCESS              ###############################################")
-    exit(0)
-
-
-    
-    exit(0)
-
-    # Need to call pipe.run() instead of iterator now (pipe.run() name is changed to pipe.run_tensor())
-    output_data_batch_1 = pipe.run()
-    print("----------------------")
-    print(len(output_data_batch_1))
-    # labels = pipe.rocalGetImageLabels()
-    # print(labels)
-    # output_data_batch_1 = pipe.run()
-    # print("----------------------")
-    # print(len(output_data_batch_1))
-
-    # print("\n OUTPUT DATA!!!!: ", output_data_batch_1) # rocALTensorList 1
-    exit(0)
-    print("\n rocALTensor:: ",output_data_batch_1[0])
-    # print("\n rocALTensor:: ",output_data_batch_1[0].at(0))
-    print("\n size of rocalTensor ",output_data_batch_1[0].at(0).shape)
-
-    print(output_data_batch_1[0].at(0).transpose(2,1,0).shape)
-    print(output_data_batch_1[0].at(0))
-
-    cv2.imwrite("output_images0_0.jpg", cv2.cvtColor(output_data_batch_1[0].at(0), cv2.COLOR_RGB2BGR))
-    cv2.imwrite("output_images0_1.jpg", cv2.cvtColor(output_data_batch_1[0].at(1), cv2.COLOR_RGB2BGR))
-    cv2.imwrite("output_images0_2.jpg", cv2.cvtColor(output_data_batch_1[0].at(2), cv2.COLOR_RGB2BGR))
-
-    cv2.imwrite("output_images1_0.jpg", cv2.cvtColor(output_data_batch_1[1].at(0), cv2.COLOR_RGB2BGR))
-    cv2.imwrite("output_images1_1.jpg", cv2.cvtColor(output_data_batch_1[1].at(1), cv2.COLOR_RGB2BGR))
-    cv2.imwrite("output_images1_2.jpg", cv2.cvtColor(output_data_batch_1[1].at(2), cv2.COLOR_RGB2BGR))
-
-    cv2.imwrite("output_images2_0.jpg", cv2.cvtColor(output_data_batch_1[2].at(0), cv2.COLOR_RGB2BGR))
-    cv2.imwrite("output_images2_1.jpg", cv2.cvtColor(output_data_batch_1[2].at(1), cv2.COLOR_RGB2BGR))
-    cv2.imwrite("output_images2_2.jpg", cv2.cvtColor(output_data_batch_1[2].at(2), cv2.COLOR_RGB2BGR))
-
-    output_data_batch_2 = pipe.run()
-    print("\n OUTPUT DATA BATCH 2!!!!: ", output_data_batch_2) # rocALTensorList 2
-
-    cv2.imwrite("output_images2_0_0.jpg", cv2.cvtColor(output_data_batch_2[0].at(0), cv2.COLOR_RGB2BGR))
-    cv2.imwrite("output_images2_0_1.jpg", cv2.cvtColor(output_data_batch_2[0].at(1), cv2.COLOR_RGB2BGR))
-    cv2.imwrite("output_images2_0_2.jpg", cv2.cvtColor(output_data_batch_2[0].at(2), cv2.COLOR_RGB2BGR))
-
-    cv2.imwrite("output_images2_1_0.jpg", cv2.cvtColor(output_data_batch_2[1].at(0), cv2.COLOR_RGB2BGR))
-    cv2.imwrite("output_images2_1_1.jpg", cv2.cvtColor(output_data_batch_2[1].at(1), cv2.COLOR_RGB2BGR))
-    cv2.imwrite("output_images2_1_2.jpg", cv2.cvtColor(output_data_batch_2[1].at(2), cv2.COLOR_RGB2BGR))
-
-    cv2.imwrite("output_images2_2_0.jpg", cv2.cvtColor(output_data_batch_2[2].at(0), cv2.COLOR_RGB2BGR))
-    cv2.imwrite("output_images2_2_1.jpg", cv2.cvtColor(output_data_batch_2[2].at(1), cv2.COLOR_RGB2BGR))
-    cv2.imwrite("output_images2_2_2.jpg", cv2.cvtColor(output_data_batch_2[2].at(2), cv2.COLOR_RGB2BGR))
-
-    output_data_batch_3 = pipe.run()
-    print("3 BATCH")
-    output_data_batch_4 = pipe.run()
-    print("4 BATCH")
-    output_data_batch_5 = pipe.run()
-    print(output_data_batch_5)
-
-    import timeit
-    start = timeit.default_timer() #Timer starts
-
-
-
-    stop = timeit.default_timer() #Timer Stops
-    print('\n Time: ', stop - start)
 
 if __name__ == '__main__':
     main()

@@ -180,7 +180,9 @@ int test(int test_case, int reader_type, int pipeline_type, const char *path, co
         {
             std::cout << ">>>>>>> Running PARTIAL DECODE" << std::endl;
             rocalCreateLabelReader(handle, path);
-            // input1 = rocalFusedJpegCrop(handle, path, color_format, num_threads, false, false);
+            std::vector<float> area = {0.08, 1};
+            std::vector<float> aspect_ratio = {3.0f/4, 4.0f/3};
+            input1 = rocalFusedJpegCrop(handle, path, color_format, num_threads, false, area, aspect_ratio, 10, false, false, ROCAL_USE_USER_GIVEN_SIZE_RESTRICTED, decode_max_width, decode_max_height);
         }
         break;
         case 2: //coco detection
@@ -193,7 +195,6 @@ int test(int test_case, int reader_type, int pipeline_type, const char *path, co
                 exit(0);
             }
             metadata_output = rocalCreateCOCOReader(handle, json_path, true, false);
-            // metadata_output = rocalCreateCOCOReader(handle, json_path, true, true);
             if (decode_max_height <= 0 || decode_max_width <= 0)
                 input1 = rocalJpegCOCOFileSource(handle, path, json_path, color_format, num_threads, false, true, false);
             else

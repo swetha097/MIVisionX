@@ -85,7 +85,7 @@ class ROCALGenericIteratorDetection(object):
             if(data_type== "uint8"):
                 self.output_tensor_list[0].copy_data_numpy(self.out)
             else: 
-                self.output_tensor_list[0].copy_data_numpy_float(self.out)
+                self.output_tensor_list[0].copy_data_numpy(self.out)
             self.labels=self.loader.rocalGetBoundingBoxLabel()
             self.bboxes =self.loader.rocalGetBoundingBoxCords()
             self.img_size = np.zeros((self.batch_size * 2),dtype = "int32")
@@ -127,10 +127,10 @@ class ROCALGenericIteratorDetection(object):
                 return self.out.astype(np.uint8), self.res, self.l,label_list
 
         elif (self.loader._name == "TFRecordReaderClassification"):
-            if(data_type== "uint8"):
-                self.output_tensor_list[0].copy_data_numpy(self.out)
-            else: 
-                self.output_tensor_list[0].copy_data_numpy_float(self.out)
+            # if(data_type== "uint8"):
+            #     self.output_tensor_list[0].copy_data_numpy(self.out)
+            # else: 
+            self.output_tensor_list[0].copy_data_numpy(self.out)
             self.labels = self.loader.rocalGetImageLabels()#numpy
             return (self.out),self.labels
     def reset(self):

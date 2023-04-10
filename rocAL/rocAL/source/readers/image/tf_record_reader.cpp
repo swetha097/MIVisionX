@@ -32,7 +32,7 @@ THE SOFTWARE.
 #include <fstream>
 #include <stdint.h>
 #include "meta_data_reader_factory.h"
-// #include "meta_data_graph_factory.h"
+#include "meta_data_graph_factory.h"
 #include "tf_meta_data_reader.h"
 #include "tf_record_reader.h"
 

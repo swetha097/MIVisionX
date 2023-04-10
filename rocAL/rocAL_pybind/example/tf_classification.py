@@ -21,6 +21,7 @@ def draw_patches(img, idx, device):
     print("DRAW PATCHES!!")
     #image is expected as a tensor, bboxes as numpy
     import cv2 
+    print(img)
     print("IN DRAW_PATCH  ",img.shape)
     image =img
     print(image.shape,type(image))
@@ -56,7 +57,6 @@ def main():
     device_id = 0
     random_seed = random.SystemRandom().randint(0, 2**32 - 1)
     crop=300
-    oneHotLabel = 1
     local_rank = 0
     world_size = 1
     rali_cpu= False
@@ -81,19 +81,12 @@ def main():
         resized = fn.resize(images, resize_width=300, resize_height=300, rocal_tensor_layout = types.NHWC, rocal_tensor_output_type = types.UINT8)
         cmnp = fn.crop_mirror_normalize(resized, device="cpu",
                                             rocal_tensor_layout = types.NHWC,
-                                            rocal_tensor_output_type = types.FLOAT,
-                                            output_dtype = types.FLOAT,
+                                            rocal_tensor_output_type = types.UINT8,
                                             crop=[300, 300],
                                             mirror=0,
                                             image_type=types.RGB,
                                             mean=[0,0,0],
                                             std=[1,1,1])
-        # if(oneHotLabel == 1):
-        #     print("check ")
-        #     labels = inputs["image/class/label"]
-        #     _ = fn.one_hot(labels, num_classes=1000)
-        #     print("labels ",_)
-        # bright = fn .brightness(resized)
         pipe.set_outputs(cmnp)
 
         # Build the pipeline

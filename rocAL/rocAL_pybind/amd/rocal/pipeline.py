@@ -180,16 +180,6 @@ class Pipeline(object):
             b.rocalCopyToOutputTensor16(self._handle, np.ascontiguousarray(out, dtype=array.dtype), types.NCHW,
                                        multiplier[0], multiplier[1], multiplier[2], offset[0], offset[1], offset[2], (1 if reverse_channels else 0))
 
-    def GetOneHotEncodedLabels(self, array, device):
-        if device=="cpu":
-            return b.getOneHotEncodedLabels(self._handle, ctypes.c_void_p(array.data_ptr()), self._numOfClasses, 0)
-        if device=="gpu":
-            return b.getOneHotEncodedLabels(self._handle, ctypes.c_void_p(array.data_ptr()), self._numOfClasses, 1)
-
-    def GetOneHotEncodedLabels_TF(self, array):
-        # Host destination only
-        return b.getOneHotEncodedLabels(self._handle, array.ctypes.data_as(ctypes.c_void_p), self._numOfClasses, 0)
-
     def set_outputs(self, *output_list):
         self._output_list_length = len(output_list)
         b.setOutputImages(self._handle, len(output_list), output_list)
