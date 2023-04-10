@@ -14,20 +14,18 @@ import os
 def draw_patches(img, idx, device):
     #image is expected as a tensor, bboxes as numpy
     import cv2
-    if device == "cpu":
-            image = img.detach().numpy()
-    else:
-        image = img.cpu().numpy()
+
+    image = img.detach().cpu().numpy()
     image = image.transpose([1, 2, 0])
     image = cv2.cvtColor(image, cv2.COLOR_RGB2BGR)
-    cv2.imwrite("OUTPUT_IMAGES_PYTHON/NEW_API/FILE_READER/" + "brightness" + "/" + str(idx)+"_"+"train"+".png", image * 255)
+    cv2.imwrite("OUTPUT_IMAGES_PYTHON/NEW_API/FILE_READER/" + str(idx)+"_"+"train"+".png", image * 255)
 
 def main():
     if  len(sys.argv) < 3:
         print ('Please pass image_folder cpu/gpu batch_size')
         exit(0)
     try:
-        path= "OUTPUT_IMAGES_PYTHON/NEW_API/FILE_READER/" + "brightness"
+        path= "OUTPUT_IMAGES_PYTHON/NEW_API/FILE_READER/"
         isExist = os.path.exists(path)
         if not isExist:
             os.makedirs(path)
@@ -59,10 +57,10 @@ def main():
         jpegs, labels = fn.readers.file(file_root=data_path)
         decode = fn.decoders.image_slice(jpegs, output_type=types.RGB,
                                         file_root=data_path, shard_id=local_rank, num_shards=world_size, random_shuffle=True)
-        res = fn.resize(decode, resize_width=224, resize_height=224, rocal_tensor_layout = types.NHWC, rocal_tensor_output_type = types.UINT8)
+        res = fn.resize(decode, resize_width=224, resize_height=224, rocal_tensor_layout = types.NCHW, rocal_tensor_output_type = types.UINT8)
         flip_coin = fn.random.coin_flip(probability=0.5)
         cmnp = fn.crop_mirror_normalize(res, device="gpu",
-                                            rocal_tensor_layout = types.NHWC,
+                                            rocal_tensor_layout = types.NCHW,
                                             rocal_tensor_output_type = types.FLOAT,
                                             crop=(224, 224),
                                             mirror=flip_coin,

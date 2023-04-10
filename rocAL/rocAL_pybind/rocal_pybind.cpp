@@ -208,7 +208,6 @@ namespace rocal
                 output_tensor.copy_data(ptr);
             }
             )
-            
             .def(
                 "at",
                 [](rocalTensor &output_tensor, uint idx)
@@ -230,20 +229,19 @@ namespace rocal
 
                     else if (output_tensor.info().layout() == RocalTensorlayout::NCHW)
                     {
-                        unsigned n = output_tensor.info().dims().at(0);
                         unsigned c = output_tensor.info().dims().at(1);
                         return py::array(py::buffer_info(
                             ((unsigned char *)(output_tensor.buffer())) + idx * c * h * w,
                             sizeof(unsigned char),
                             py::format_descriptor<unsigned char>::format(),
-                            output_tensor.info().num_of_dims(),
+                            output_tensor.info().num_of_dims() - 1,
                             {c, h, w},
-                            {sizeof(unsigned char) * c * h * w, sizeof(unsigned char) * h * w, sizeof(unsigned char) * w, sizeof(unsigned char)}));
+                            {sizeof(unsigned char) * h * w, sizeof(unsigned char) * w, sizeof(unsigned char)}));
                     }
                 },
                 "idx"_a,
                 R"code(
-                Returns a rocAL tensor at given position `i` in the rocalTensorlist.
+                Returns a rocAL tensor at given position `idx` in the rocalTensorlist.
                 )code",
                 py::keep_alive<0, 1>());
         py::class_<rocalTensorList>(m, "rocalTensorList")
