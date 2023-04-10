@@ -34,7 +34,7 @@ class ROCALGenericImageIterator(object):
         return self
 
 class ROCALGenericIteratorDetection(object):
-    def __init__(self, pipeline, tensor_layout = types.NCHW, reverse_channels = False, multiplier = [1.0,1.0,1.0], offset = [0.0, 0.0, 0.0], tensor_dtype=types.UINT8):
+    def __init__(self, pipeline, tensor_layout = types.NCHW, reverse_channels = False, multiplier = [1.0,1.0,1.0], offset = [0.0, 0.0, 0.0], tensor_dtype=types.FLOAT):
         self.loader = pipeline
         self.tensor_format =tensor_layout
         self.multiplier = multiplier
@@ -60,17 +60,16 @@ class ROCALGenericIteratorDetection(object):
             print("Process  time ::",timing_info.process_time)
             print("Transfer time ::",timing_info.transfer_time)
             raise StopIteration
-        print("IN NEXT FUNCTION !!!")
         if self.loader.rocalRun() != 0:
             raise StopIteration
         else:
             self.output_tensor_list = self.loader.rocalGetOutputTensors()
 
         self.augmentation_count = len(self.output_tensor_list)
-        self.w = self.output_tensor_list[0].batch_width() #2000
-        self.h = self.output_tensor_list[0].batch_height()  #2000
-        self.batch_size = self.output_tensor_list[0].batch_size()  # 1
-        self.color_format = self.output_tensor_list[0].color_format()  # 3
+        self.w = self.output_tensor_list[0].batch_width()
+        self.h = self.output_tensor_list[0].batch_height()
+        self.batch_size = self.output_tensor_list[0].batch_size()
+        self.color_format = self.output_tensor_list[0].color_format()
         if self.tensor_dtype == types.FLOAT:
             data_type="float32"
         elif self.tensor_dtype == types.FLOAT16:
@@ -86,7 +85,7 @@ class ROCALGenericIteratorDetection(object):
             if(data_type== "uint8"):
                 self.output_tensor_list[0].copy_data_numpy(self.out)
             else: 
-                self.output_tensor_list[0].copy_data_numpy1(self.out)
+                self.output_tensor_list[0].copy_data_numpy_float(self.out)
             self.labels=self.loader.rocalGetBoundingBoxLabel()
             self.bboxes =self.loader.rocalGetBoundingBoxCords()
             self.img_size = np.zeros((self.batch_size * 2),dtype = "int32")
@@ -128,9 +127,10 @@ class ROCALGenericIteratorDetection(object):
                 return self.out.astype(np.uint8), self.res, self.l,label_list
 
         elif (self.loader._name == "TFRecordReaderClassification"):
-            print("CLASSIFICATION ITERATOR")
-            print(self.output_tensor_list)
-            self.output_tensor_list[0].copy_data_numpy(self.out)
+            if(data_type== "uint8"):
+                self.output_tensor_list[0].copy_data_numpy(self.out)
+            else: 
+                self.output_tensor_list[0].copy_data_numpy_float(self.out)
             self.labels = self.loader.rocalGetImageLabels()#numpy
             return (self.out),self.labels
     def reset(self):

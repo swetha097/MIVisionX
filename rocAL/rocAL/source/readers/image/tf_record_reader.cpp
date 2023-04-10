@@ -280,7 +280,7 @@ Reader::Status TFRecordReader::read_image_names(std::ifstream &file_contents, ui
         {
             _file_count_all_shards++;
             incremenet_file_id();
-            // file_contents.read((char *)&data_crc, sizeof(data_crc));
+            file_contents.read((char *)&data_crc, sizeof(data_crc));
             if(!file_contents)
                 THROW("TFRecordReader: Error in reading TF records")
             continue;

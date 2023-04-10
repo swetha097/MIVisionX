@@ -81,13 +81,13 @@ def main():
         resized = fn.resize(images, resize_width=300, resize_height=300, rocal_tensor_layout = types.NHWC, rocal_tensor_output_type = types.UINT8)
         cmnp = fn.crop_mirror_normalize(resized, device="cpu",
                                             rocal_tensor_layout = types.NHWC,
-                                            rocal_tensor_output_type = types.UINT8,
-                                            output_dtype = types.UINT8,
+                                            rocal_tensor_output_type = types.FLOAT,
+                                            output_dtype = types.FLOAT,
                                             crop=[300, 300],
                                             mirror=0,
                                             image_type=types.RGB,
                                             mean=[0,0,0],
-                                            std=[1,1,1],crop_d=3)
+                                            std=[1,1,1])
         # if(oneHotLabel == 1):
         #     print("check ")
         #     labels = inputs["image/class/label"]

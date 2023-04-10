@@ -49,40 +49,18 @@ bool TFMetaDataReaderDetection::exists(const std::string& _image_name)
 
 void TFMetaDataReaderDetection::add(std::string image_name, BoundingBoxCords bb_coords, BoundingBoxLabels bb_labels, ImgSize image_size)
 {
-    static int count =0 ;
     if(exists(image_name))
     {
         auto it = _map_content.find(image_name);
         it->second->get_bb_cords().push_back(bb_coords[0]);
         it->second->get_bb_labels().push_back(bb_labels[0]);
-        // std::cerr<<"\n bb_labels[] in tf_meta_data_reader_detection.cpp "<<image_name <<"  "<<bb_labels[0];
         return;
     }
     pMetaDataBox info = std::make_shared<BoundingBox>(bb_coords, bb_labels, image_size);
     _map_content.insert(pair<std::string, std::shared_ptr<BoundingBox>>(image_name, info));
 }
-void TFMetaDataReaderDetection::print_map_contents()
-{
-    std::cerr<<"\nprint_map_contents ";
-    BoundingBoxCords bb_coords;
-    BoundingBoxLabels bb_labels;
-
-    std::cerr << "\nMap contents: \n";
-    for (auto& elem : _map_content) {
-        std::cerr << "Name :\t " << elem.first;
-        bb_coords = elem.second->get_bb_cords() ;
-        bb_labels = elem.second->get_bb_labels();
-        std::cerr << "\nsize of the element  : "<< bb_coords.size() << std::endl;
-        for(unsigned int i = 0; i < bb_coords.size(); i++){
-            std::cerr << " l : " << bb_coords[i].l << " t: :" << bb_coords[i].t << " r : " << bb_coords[i].r << " b: :" << bb_coords[i].b << std::endl;
-            std::cerr  << "Label Id : " << bb_labels[i] << std::endl;
-        }
-    }
-}
 void TFMetaDataReaderDetection::lookup(const std::vector<std::string> &image_names)
 {
-    // print_map_contents();
-
     if(image_names.empty())
     {
         WRN("No image names passed")
@@ -111,6 +89,25 @@ void TFMetaDataReaderDetection::lookup(const std::vector<std::string> &image_nam
             _output->increment_object_count(it->second->get_object_count());
             _output->get_metadata_dimensions_batch().bb_labels_dims()[i] = it->second->get_bb_label_dims();
             _output->get_metadata_dimensions_batch().bb_cords_dims()[i] = it->second->get_bb_cords_dims();
+        }
+    }
+}
+
+void TFMetaDataReaderDetection::print_map_contents()
+{
+    std::cerr<<"\nprint_map_contents ";
+    BoundingBoxCords bb_coords;
+    BoundingBoxLabels bb_labels;
+
+    std::cerr << "\nMap contents: \n";
+    for (auto& elem : _map_content) {
+        std::cerr << "Name :\t " << elem.first;
+        bb_coords = elem.second->get_bb_cords() ;
+        bb_labels = elem.second->get_bb_labels();
+        std::cerr << "\nsize of the element  : "<< bb_coords.size() << std::endl;
+        for(unsigned int i = 0; i < bb_coords.size(); i++){
+            std::cerr << " l : " << bb_coords[i].l << " t: :" << bb_coords[i].t << " r : " << bb_coords[i].r << " b: :" << bb_coords[i].b << std::endl;
+            std::cerr  << "Label Id : " << bb_labels[i] << std::endl;
         }
     }
 }

@@ -80,18 +80,6 @@ namespace rocal
         free(ptr);
         return py::bytes(s);
     }
-    py::object wrapper_one_hot_label_copy(RocalContext context, py::object p , unsigned numOfClasses, int dest)
-    {
-        auto ptr = ctypes_void_ptr(p);
-        // auto ptr = ptr_as_int.p()
-
-        // call pure C++ function
-        std::cerr<<"\n before  rocalGetOneHotImageLabels in pybind ";
-
-        rocalGetOneHotImageLabels(context, ptr, numOfClasses, dest);
-        std::cerr<<"\n after rocalGetOneHotImageLabels in pybind ";
-        return py::cast<py::none>(Py_None);
-    }
 
     PYBIND11_MODULE(rocal_pybind, m)
     {
@@ -175,11 +163,11 @@ namespace rocal
             },
             "idx"_a,
             R"code(
-            Returns a rocal tensor at given position `i` in the rocalTensorlist.
+            Returns a rocAL tensor at given position `i` in the rocalTensorlist.
             )code",
             py::keep_alive<0, 1>())
 
-            .def("copy_data_numpy1", [](rocalTensor &output_tensor, py::array_t<float> array) {
+            .def("copy_data_numpy_float", [](rocalTensor &output_tensor, py::array_t<float> array) {
                 auto buf = array.request();
                 unsigned char *ptr = (unsigned char *)buf.ptr;
                 output_tensor.copy_data((void *)ptr);
@@ -187,7 +175,7 @@ namespace rocal
             },
             "idx"_a,
             R"code(
-            Returns a rocal tensor at given position `i` in the rocalTensorlist.
+            Returns a rocAL tensor at given position `i` in the rocalTensorlist.
             )code",
             py::keep_alive<0, 1>())
             .def(
@@ -224,7 +212,7 @@ namespace rocal
                 },
                 "idx"_a,
                 R"code(
-                Returns a rocal tensor at given position `i` in the rocalTensorlist.
+                Returns a rocAL tensor at given position `i` in the rocalTensorlist.
                 )code",
                 py::keep_alive<0, 1>());
 
@@ -274,7 +262,7 @@ namespace rocal
                 },
                 "idx"_a,
                 R"code(
-                Returns a rocal tensor at given position `i` in the rocalTensorlist.
+                Returns a rocAL tensor at given position `i` in the rocalTensorlist.
                 )code",
                 py::keep_alive<0, 1>());
         py::class_<rocalTensorInfo>(m, "rocalTensorInfo");
@@ -349,12 +337,10 @@ namespace rocal
         m.def("setOutputImages", &rocalSetOutputs);
         m.def("labelReader", &rocalCreateLabelReader, py::return_value_policy::reference);
         m.def("COCOReader", &rocalCreateCOCOReader, py::return_value_policy::reference);
-        m.def("getOneHotEncodedLabels",&wrapper_one_hot_label_copy, py::return_value_policy::reference);
 
         // rocal_api_meta_data.h
         m.def("TFReader",&rocalCreateTFReader, py::return_value_policy::reference);
-        m.def("TFReaderDetection",&rocalCreateTFReaderDetection, py::return_value_policy::reference);
-        
+        m.def("TFReaderDetection",&rocalCreateTFReaderDetection, py::return_value_policy::reference); 
         m.def("RandomBBoxCrop", &rocalRandomBBoxCrop);
         m.def("BoxEncoder",&rocalBoxEncoder);
         m.def("getImageId", [](RocalContext context, py::array_t<int> array)
@@ -413,7 +399,7 @@ namespace rocal
          m.def("rocalGetBoundingBoxLabel", [](RocalContext context)
               {
             rocalTensorList * bbox_labels = rocalGetBoundingBoxLabel(context);
-            py::list list,list2;
+            py::list lablel_list;
             for(int i = 0; i < bbox_labels->size(); i++)
                 {
                     auto labels_buffer = (int *)(bbox_labels->at(i)->buffer());
@@ -426,11 +412,9 @@ namespace rocal
                             1,
                             {label_size},
                             {sizeof(int)}));
-                    list.append(labels_array);
-                    // list = list +labels_array;
-                    // list.merge(labels_array);
+                    lablel_list.append(labels_array);
                 }
-                return list;
+                return lablel_list;
             });
 
         m.def("rocalGetBoundingBoxCords", [](RocalContext context)

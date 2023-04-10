@@ -219,8 +219,7 @@ static vx_status VX_CALLBACK processResize(vx_node node, const vx_reference *par
 #endif
     }
     if (data->device_type == AGO_TARGET_AFFINITY_CPU)
-    {
-        
+    {    
         refreshResize(node, parameters, num, data);
         rpp_status = rppt_resize_host(data->pSrc, data->src_desc_ptr, data->pDst, data->dst_desc_ptr, data->dstImgsize, data->interpolation_type, data->roi_tensor_Ptr, data->roiType, data->rppHandle);
         return_status = (rpp_status == RPP_SUCCESS) ? VX_SUCCESS : VX_FAILURE;

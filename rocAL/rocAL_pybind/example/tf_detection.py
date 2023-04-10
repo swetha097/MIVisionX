@@ -127,7 +127,7 @@ def main():
                                             mirror=0,
                                             image_type=types.RGB,
                                             mean=[0,0,0],
-                                            std=[1,1,1],crop_d=3)
+                                            std=[1,1,1])
         pipe.set_outputs(cmnp)
 
         # Build the pipeline
@@ -139,8 +139,7 @@ def main():
         print("ROCAL augmentation pipeline - Processing batch %d....." % i)
         for element in list(range(batch_size)):
             cnt = cnt + 1
-            if 1:
-                print("Processing image %d....." % element)
+            # print("Processing image %d....." % element)
             features_dict = {
                 "image": images_array[element],
                 "true_image_shape": np.array([len(images_array[element]), len(images_array[element, 0]), len(images_array[element, 0, 0])])
@@ -152,8 +151,7 @@ def main():
                 "groundtruth_weights": get_weights(num_bboxes_array[element])
             }
             processed_tensors = (features_dict, labels_dict)
-            # if 1:
-                # print("\nPROCESSED_TENSORS:\n", processed_tensors)
+            print("\nPROCESSED_TENSORS:\n", processed_tensors)
             draw_patches(images_array[element],cnt,bboxes_array[element])
         print("\n\nPrinted first batch with", (batch_size), "images!")
         break

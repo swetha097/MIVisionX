@@ -134,7 +134,7 @@ int main(int argc, const char **argv)
 int test(int test_case, int reader_type, int pipeline_type, const char *path, const char *outName, int rgb, int gpu, int width, int height, int num_of_classes, int display_all)
 {
     size_t num_threads = 1;
-    unsigned int inputBatchSize = 12;
+    unsigned int inputBatchSize = 2;
     int decode_max_width = width;
     int decode_max_height = height;
     std::cout << ">>> test case " << test_case << std::endl;
@@ -169,7 +169,7 @@ int test(int test_case, int reader_type, int pipeline_type, const char *path, co
 
     RocalTensor input1;
     RocalTensorLayout tensorLayout = RocalTensorLayout::ROCAL_NHWC;
-    RocalTensorOutputType tensorOutputType = RocalTensorOutputType::ROCAL_FP32;
+    RocalTensorOutputType tensorOutputType = RocalTensorOutputType::ROCAL_UINT8;
     RocalMetaData metadata_output;
 
     // The jpeg file loader can automatically select the best size to decode all images to that size
@@ -186,7 +186,7 @@ int test(int test_case, int reader_type, int pipeline_type, const char *path, co
         case 2: //coco detection
         {
             std::cout << ">>>>>>> Running COCO READER" << std::endl;
-            char const *json_path = "/media/audio_samples/MIVisionX-data/rocal_data/coco/coco_10_img/annotations/instances_train2017.json";
+            char const *json_path = "";
             if (strcmp(json_path, "") == 0)
             {
                 std::cout << "\n json_path has to be set in rocal_unit test manually";
@@ -335,7 +335,7 @@ int test(int test_case, int reader_type, int pipeline_type, const char *path, co
     {
          std::cout << ">>>>>>> Running "
                   << "rocalResize" << std::endl;
-        image1 = rocalResize(handle, input1, tensorLayout, tensorOutputType, (unsigned)0,(unsigned) 0, true, ROCAL_SCALING_MODE_NOT_SMALLER, {}, 256);
+        image1 = rocalResize(handle, input1, tensorLayout, tensorOutputType, 0, 0, true, ROCAL_SCALING_MODE_NOT_SMALLER, {}, 256);
     }
     break;
     case 26:

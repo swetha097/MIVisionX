@@ -123,18 +123,11 @@ extern "C" unsigned ROCAL_API_CALL rocalGetImageNameLen(RocalContext rocal_conte
 /// \param buf user's buffer that will be filled with labels. Its needs to be at least of size batch_size.
 extern "C" RocalTensorList ROCAL_API_CALL rocalGetImageLabels(RocalContext rocal_context);
 
-/// \param meta_data RocalMetaData object that contains info about the images and labels
-/// \param numOfClasses the number of classes for a image dataset
-/// \param buf user's buffer that will be filled with labels. Its needs to be at least of size batch_size.
-extern "C" void ROCAL_API_CALL rocalGetOneHotImageLabels(RocalContext rocal_context,void *buf, int numOfClasses,int dest);
-
 ///
 /// \param rocal_context
 /// \param buf The user's buffer that will be filled with bounding box label info for the images in the output batch. It needs to be of size returned by a call to the rocalGetBoundingBoxCount
 extern "C" RocalTensorList ROCAL_API_CALL rocalGetBoundingBoxLabel(RocalContext rocal_context);
 extern "C" RocalTensorList ROCAL_API_CALL rocalGetBoundingBoxCords(RocalContext rocal_context);
-
-
 
 ///
 /// \param rocal_context
@@ -147,7 +140,6 @@ extern "C" void ROCAL_API_CALL rocalGetImageSizes(RocalContext rocal_context, in
 /// \param buf The user's buffer that will be filled with number of object in the images.
 /// \return The size of the buffer needs to be provided by user to get bounding box info for all images in the output batch.
 extern "C" unsigned ROCAL_API_CALL rocalGetBoundingBoxCount(RocalContext rocal_context);
-
 
 ///
 /// \param rocal_context
@@ -165,12 +157,6 @@ extern "C" RocalTensorList ROCAL_API_CALL rocalGetMaskCoordinates(RocalContext r
 /// \param source_path path to the file that contains the metadata file
 extern "C" RocalMetaData ROCAL_API_CALL rocalCreateTextCifar10LabelReader(RocalContext rocal_context, const char* source_path, const char* file_prefix);
 
-#if 0
-/// \param meta_data RocalMetaData object that contains info about the images and labels
-/// \param numOfClasses the number of classes for a image dataset
-/// \param buf user's buffer that will be filled with labels. Its needs to be at least of size batch_size.
-extern "C" void ROCAL_API_CALL rocalGetOneHotImageLabels(RocalContext rocal_context,int *buf, int numOfClasses);
-#endif
 extern "C" void ROCAL_API_CALL rocalRandomBBoxCrop(RocalContext p_context, bool all_boxes_overlap, bool no_crop, RocalFloatParam aspect_ratio = NULL, bool has_shape = false, int crop_width = 0, int crop_height = 0, int num_attempts = 1, RocalFloatParam scaling = NULL, int total_num_attempts = 0, int64_t seed = 0);
 
 /// \param anchors  Anchors to be used for encoding, as the array of floats is in the ltrb format.
