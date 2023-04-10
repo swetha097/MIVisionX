@@ -228,7 +228,6 @@ namespace rocal
                                 {h, w, c},
                                 {sizeof(unsigned char) * w * c, sizeof(unsigned char) * c, sizeof(unsigned char)}));
                         }
-
                         else if (output_tensor.info().layout() == RocalTensorlayout::NCHW)
                         {
                             unsigned c = output_tensor.info().dims().at(1);
@@ -288,31 +287,58 @@ namespace rocal
                 {
                     uint h = output_tensor_list.at(idx)->info().max_shape().at(1);
                     uint w = output_tensor_list.at(idx)->info().max_shape().at(0);
-
-                    if (output_tensor_list.at(idx)->info().layout() == RocalTensorlayout::NHWC)
+                    switch(output_tensor.info().data_type()) 
                     {
-                        unsigned n = output_tensor_list.at(idx)->info().dims().at(0);
-                        unsigned c = output_tensor_list.at(idx)->info().dims().at(3);
-                        return py::array(py::buffer_info(
-                            (unsigned char *)(output_tensor_list.at(idx)->buffer()),
-                            sizeof(unsigned char),
-                            py::format_descriptor<unsigned char>::format(),
-                            output_tensor_list.at(idx)->info().num_of_dims(),
-                            {n, h, w, c},
-                            {sizeof(unsigned char) * w * h * c, sizeof(unsigned char) * w * c, sizeof(unsigned char) * c, sizeof(unsigned char)}));
-                    }
-
-                    else if (output_tensor_list.at(idx)->info().layout() == RocalTensorlayout::NCHW)
-                    {
-                        unsigned n = output_tensor_list.at(idx)->info().dims().at(0);
-                        unsigned c = output_tensor_list.at(idx)->info().dims().at(1);
-                        return py::array(py::buffer_info(
-                            (unsigned char *)(output_tensor_list.at(idx)->buffer()),
-                            sizeof(unsigned char),
-                            py::format_descriptor<unsigned char>::format(),
-                            output_tensor_list.at(idx)->info().num_of_dims(),
-                            {n, c, h, w},
-                            {sizeof(unsigned char) * c * h * w, sizeof(unsigned char) * h * w, sizeof(unsigned char) * w, sizeof(unsigned char)}));
+                        case RocalTensorDataType::UINT8:
+                            if (output_tensor_list.at(idx)->info().layout() == RocalTensorlayout::NHWC)
+                            {
+                                unsigned n = output_tensor_list.at(idx)->info().dims().at(0);
+                                unsigned c = output_tensor_list.at(idx)->info().dims().at(3);
+                                return py::array(py::buffer_info(
+                                    (unsigned char *)(output_tensor_list.at(idx)->buffer()),
+                                    sizeof(unsigned char),
+                                    py::format_descriptor<unsigned char>::format(),
+                                    output_tensor_list.at(idx)->info().num_of_dims(),
+                                    {n, h, w, c},
+                                    {sizeof(unsigned char) * w * h * c, sizeof(unsigned char) * w * c, sizeof(unsigned char) * c, sizeof(unsigned char)}));
+                            }
+                            else if (output_tensor_list.at(idx)->info().layout() == RocalTensorlayout::NCHW)
+                            {
+                                unsigned n = output_tensor_list.at(idx)->info().dims().at(0);
+                                unsigned c = output_tensor_list.at(idx)->info().dims().at(1);
+                                return py::array(py::buffer_info(
+                                    (unsigned char *)(output_tensor_list.at(idx)->buffer()),
+                                    sizeof(unsigned char),
+                                    py::format_descriptor<unsigned char>::format(),
+                                    output_tensor_list.at(idx)->info().num_of_dims(),
+                                    {n, c, h, w},
+                                    {sizeof(unsigned char) * c * h * w, sizeof(unsigned char) * h * w, sizeof(unsigned char) * w, sizeof(unsigned char)}));
+                            }
+                        case RocalTensorDataType::FP32:
+                            if (output_tensor_list.at(idx)->info().layout() == RocalTensorlayout::NHWC)
+                            {
+                                unsigned n = output_tensor_list.at(idx)->info().dims().at(0);
+                                unsigned c = output_tensor_list.at(idx)->info().dims().at(3);
+                                return py::array(py::buffer_info(
+                                    (float *)(output_tensor_list.at(idx)->buffer()),
+                                    sizeof(float),
+                                    py::format_descriptor<float>::format(),
+                                    output_tensor_list.at(idx)->info().num_of_dims(),
+                                    {n, h, w, c},
+                                    {sizeof(float) * w * h * c, sizeof(float) * w * c, sizeof(float) * c, sizeof(float)}));
+                            }
+                            else if (output_tensor_list.at(idx)->info().layout() == RocalTensorlayout::NCHW)
+                            {
+                                unsigned n = output_tensor_list.at(idx)->info().dims().at(0);
+                                unsigned c = output_tensor_list.at(idx)->info().dims().at(1);
+                                return py::array(py::buffer_info(
+                                    (float *)(output_tensor_list.at(idx)->buffer()),
+                                    sizeof(float),
+                                    py::format_descriptor<float>::format(),
+                                    output_tensor_list.at(idx)->info().num_of_dims(),
+                                    {n, c, h, w},
+                                    {sizeof(float) * c * h * w, sizeof(float) * h * w, sizeof(float) * w, sizeof(float)}));
+                            }
                     }
                 },
                 "idx"_a,
