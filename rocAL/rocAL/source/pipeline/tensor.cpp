@@ -372,6 +372,18 @@ unsigned rocalTensor::copy_data(void *user_buffer) {
     return 0;
 }
 
+unsigned rocalTensor::copy_data_roi(void *user_buffer, uint max_x1, uint max_y1) {
+    if (_info._type != rocalTensorInfo::Type::HANDLE) return 0;
+
+    //TODO : Handle this case for HIP buffer
+    for (uint i = 0; i < _info._batch_size; i++) {
+        memcpy(user_buffer, _mem_handle, max_x1 * max_y1 * _info.data_type_size());
+        user_buffer = (unsigned char*)user_buffer + (max_x1 * max_y1 * _info.data_type_size());
+        _mem_handle = (unsigned char*)_mem_handle + (_info.max_dims().at(0) * _info.max_dims().at(1) * _info.data_type_size());
+    }
+    return 0;
+}
+
 unsigned rocalTensor::copy_data(void *user_buffer, uint last_batch_size) {
     if (_info._type != rocalTensorInfo::Type::HANDLE) return 0;
 

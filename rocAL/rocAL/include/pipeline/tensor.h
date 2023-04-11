@@ -204,6 +204,7 @@ public:
 #endif
     unsigned copy_data(void* user_buffer);
     unsigned copy_data(void *user_buffer, uint last_batch_size);
+    unsigned copy_data_roi(void* user_buffer, uint max_x1, uint max_y1);
     //! Default destructor
     /*! Releases the OpenVX Tensor object */
     ~rocalTensor();
