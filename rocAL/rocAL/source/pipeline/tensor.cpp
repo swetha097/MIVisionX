@@ -376,10 +376,16 @@ unsigned rocalTensor::copy_data(void *user_buffer, uint max_x1, uint max_y1) {
     if (_info._type != rocalTensorInfo::Type::HANDLE) return 0;
 
     //TODO : Handle this case for HIP buffer
+    auto src_stride = (_info.max_dims().at(0) * _info.max_dims().at(1) * _info.data_type_size());
+    auto dst_stride = (max_x1 * max_y1 * _info.data_type_size());
     for (uint i = 0; i < _info._batch_size; i++) {
-        memcpy(user_buffer, _mem_handle, max_x1 * max_y1 * _info.data_type_size());
-        user_buffer = static_cast<unsigned char*>(user_buffer) + (max_x1 * max_y1 * _info.data_type_size());
-        _mem_handle = static_cast<unsigned char*>(_mem_handle) + (_info.max_dims().at(0) * _info.max_dims().at(1) * _info.data_type_size());
+        auto temp_src_ptr = static_cast<unsigned char *>(_mem_handle) + i * src_stride;
+        auto temp_dst_ptr = static_cast<unsigned char *>(user_buffer) + i * dst_stride;
+        for (uint rows = 0; rows < max_x1; rows++) {
+            memcpy(temp_dst_ptr, temp_src_ptr, max_y1 * _info.data_type_size());
+            temp_src_ptr += _info.max_dims().at(0) * _info.data_type_size();
+            temp_dst_ptr += max_y1 * _info.data_type_size();
+        }
     }
     return 0;
 }

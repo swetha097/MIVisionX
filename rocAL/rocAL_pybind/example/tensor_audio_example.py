@@ -29,12 +29,12 @@ def draw_patches(img, idx, device):
     print("label: ", label)
     # print("audio_data",audio_data)
     # Saving the array in a text file
-    file = open("results/rocal_data"+str(label)+".txt", "w+")
+    file = open("results/rocal_data_new"+str(label)+".txt", "w+")
     content = str(audio_data)
     file.write(content)
     file.close()
     plt.plot(audio_data)
-    plt.savefig("results/rocal_data"+str(label)+".png")
+    plt.savefig("results/rocal_data_new"+str(label)+".png")
     plt.close()
 def main():
     if  len(sys.argv) < 3:
