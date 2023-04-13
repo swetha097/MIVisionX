@@ -45,13 +45,11 @@ public:
     void reset() override;
 
     //! Returns the name of the latest file opened
-    std::string id() override { return _last_id;};
+    std::string id() override { return _last_id; }
 
     unsigned count_items() override;
 
     ~VideoFileSourceReader() override;
-
-    unsigned long long get_shuffle_time() override { return _shuffle_time.get_timing(); };
 
     VideoFileSourceReader();
 private:
@@ -88,6 +86,5 @@ private:
     void replicate_last_sequence_to_fill_last_shard();
     void replicate_last_batch_to_pad_partial_shard();
     VideoReader::Status create_sequence_info();
-    TimingDBG _shuffle_time;
 };
 #endif

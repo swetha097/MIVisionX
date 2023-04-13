@@ -145,6 +145,9 @@ class Pipeline(object):
         self._reader = None
         self._define_graph_set = False
         self.set_seed(self._seed)
+        self._external_source_operator = False
+        self._external_source = None
+        self._external_source_mode = None
 
     def build(self):
         """Build the pipeline using rocalVerify call
@@ -300,7 +303,7 @@ class Pipeline(object):
     def GetImgSizes(self, array):
         return b.getImgSizes(self._handle, array)
 
-    def GetBoundingBox(self,array):
+    def GetBoundingBox(self, array):
         return array
 
     def GetImageNameLength(self,idx):

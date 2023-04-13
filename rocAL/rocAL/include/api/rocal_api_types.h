@@ -137,10 +137,17 @@ enum RocalDecoderType
     ROCAL_DECODER_VIDEO_FFMPEG_HW = 4
 };
 
-// rocal external memcpy flags 
+// rocal external memcpy flags
 #define    ROCAL_MEMCPY_TO_HOST      1      // force copy to user provided host memory
 #define    ROCAL_MEMCPY_TO_DEVICE    2      // force copy to user provided device memory (gpu)
 #define    ROCAL_MEMCPY_IS_PINNED    4      // for future use
+
+enum RocalExtSourceMode
+{
+    ROCAL_EXTSOURCE_FNAME = 0,              // file mode (list of filename given as input)
+    ROCAL_EXTSOURCE_RAW_COMPRESSED = 1,     // Compressed Raw buffer for set of images
+    ROCAL_EXTSOURCE_RAW_UNCOMPRESSED = 2,   // Uncompressed Raw buffer for set of images
+};
 
 enum RocalResizeScalingMode {
     ROCAL_SCALING_MODE_DEFAULT = 0,     // scales wrt specified size, if only resize width/height is provided the other dimension is scaled according to aspect ratio

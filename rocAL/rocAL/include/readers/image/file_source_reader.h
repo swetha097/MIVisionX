@@ -53,16 +53,21 @@ public:
     void reset() override;
 
     //! Returns the name of the latest file opened
-    std::string id() override { return _last_id;};
+    std::string id() override { return _last_id; }
 
     unsigned count_items() override;
 
     ~FileSourceReader() override;
 
     int close() override;
-    unsigned long long get_shuffle_time() override {return _shuffle_time.get_timing();};
 
     FileSourceReader();
+
+    //! return feed_data: not implemented
+    void feed_file_names(const std::vector<std::string>& file_names, size_t num_images, bool eos=false) override { return; }
+
+    //! return feed_data: not implemented
+    void feed_data(const std::vector<unsigned char *>& images, const std::vector<size_t>& image_size, int mode, bool eos = false, int width=0, int height=0, int channels=0) override{ return; }
 
 private:
     //! opens the folder containnig the images
@@ -97,6 +102,5 @@ private:
     void incremenet_file_id() { _file_id++; }
     void replicate_last_image_to_fill_last_shard();
     void replicate_last_batch_to_pad_partial_shard();
-    TimingDBG _shuffle_time;
 };
 

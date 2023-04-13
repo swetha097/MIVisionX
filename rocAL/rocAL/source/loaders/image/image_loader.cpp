@@ -60,6 +60,13 @@ void ImageLoader::set_prefetch_queue_depth(size_t prefetch_queue_depth)
     _prefetch_queue_depth = prefetch_queue_depth;
 }
 
+void ImageLoader::feed_external_input(std::vector<std::string> input_images_names, std::vector<int> labels, std::vector<unsigned char *>input_buffer, std::vector<unsigned> roi_width, std::vector<unsigned> roi_height, unsigned int max_width, unsigned int max_height, int channels, FileMode mode, bool eos)
+{
+    _external_source_reader = true;
+    _external_input_eos = eos;
+    _image_loader->feed_external_input(input_images_names, labels, input_buffer, roi_width, roi_height, max_width, max_height, channels, mode, eos);
+}
+
 void ImageLoader::set_gpu_device_id(int device_id)
 {
     if(device_id < 0)
@@ -70,6 +77,16 @@ void ImageLoader::set_gpu_device_id(int device_id)
 size_t
 ImageLoader::remaining_count()
 {
+    if(_external_source_reader)
+    {
+        if(_image_loader->count() != 0)
+            return _batch_size;
+        else
+        {
+            if(_external_input_eos)
+                return 0;
+        }
+    }
     return _remaining_image_count;
 }
 
@@ -177,6 +194,7 @@ void ImageLoader::start_loading()
         THROW("start_loading() should be called after initialize() function is called")
 
     _remaining_image_count = _image_loader->count();
+    INFO("Remaining Image count in ImageLoader::start_loading "+TOSTR(_remaining_image_count));
     _internal_thread_running = true;
     _load_thread = std::thread(&ImageLoader::load_routine, this);
 }
@@ -205,7 +223,6 @@ ImageLoader::load_routine()
                                               _decoded_img_info._original_width,
                                               _decoded_img_info._original_height,
                                               _output_image->info().color_format(), _decoder_keep_original);
-
 
             if (load_status == LoaderModuleStatus::OK)
             {
