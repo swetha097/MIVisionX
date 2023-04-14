@@ -69,6 +69,9 @@ class ROCALGenericIterator(object):
                 elif self.tensor_dtype == types.FLOAT16:
                     self.out = torch.empty(
                         (self.batch_size, self.color_format, self.h, self.w,), dtype=torch.float16, device=torch_gpu_device)
+                elif self.tensor_dtype == types.UINT8:
+                    self.out = torch.empty(
+                        (self.batch_size, self.color_format, self.h, self.w,), dtype=torch.uint8, device=torch_gpu_device)
 
             else:  # NHWC
                 torch_gpu_device = torch.device('cuda', self.device_id)
@@ -78,6 +81,9 @@ class ROCALGenericIterator(object):
                 elif self.tensor_dtype == types.FLOAT16:
                     self.out = torch.empty(
                         (self.batch_size, self.h, self.w, self.color_format), dtype=torch.float16, device=torch_gpu_device)
+                elif self.tensor_dtype == types.UINT8:
+                    self.out = torch.empty(
+                        (self.batch_size, self.h, self.w, self.color_format), dtype=torch.uint8, device=torch_gpu_device)
 
             self.labels_tensor = torch.empty(
                 self.batch_size, dtype=torch.int32, device=torch_gpu_device)

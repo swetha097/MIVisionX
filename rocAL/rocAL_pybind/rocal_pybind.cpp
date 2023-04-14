@@ -34,6 +34,7 @@ THE SOFTWARE.
 #include "api/rocal_api_augmentation.h"
 #include "api/rocal_api_data_transfer.h"
 #include "api/rocal_api_info.h"
+
 namespace py = pybind11;
 
 using float16 = half_float::half;
@@ -163,7 +164,9 @@ namespace rocal
                             return 3;
                         case RocalColorFormat::BGR24:
                             return 3;
-                        default:
+                        case RocalColorFormat::RGB_PLANAR:
+                            return 3;
+                        case RocalColorFormat::U8:
                             return 1;
                     }
                 },
@@ -178,8 +181,6 @@ namespace rocal
                         return "NHWC";
                     case RocalTensorlayout::NCHW:
                         return "NCHW";
-                    default:
-                        assert(0 && "Unhandled special enum constant for rocal tensor layout!");
                 }
             },
                 R"code(
@@ -193,8 +194,8 @@ namespace rocal
                         return "float32";
                     case RocalTensorDataType::UINT8:
                         return "uint8";
-                    default:
-                        assert(0 && "Unhandled special enum constant for rocal tensor dtype!");
+                    case RocalTensorDataType::FP16:
+                        return "float16";
                 }
             },
                 R"code(
@@ -287,7 +288,7 @@ namespace rocal
                 {
                     uint h = output_tensor_list.at(idx)->info().max_shape().at(1);
                     uint w = output_tensor_list.at(idx)->info().max_shape().at(0);
-                    switch(output_tensor.info().data_type()) 
+                    switch(output_tensor_list.at(idx)->info().data_type()) 
                     {
                         case RocalTensorDataType::UINT8:
                             if (output_tensor_list.at(idx)->info().layout() == RocalTensorlayout::NHWC)
