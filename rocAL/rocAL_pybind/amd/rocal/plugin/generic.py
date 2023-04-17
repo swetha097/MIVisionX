@@ -51,8 +51,7 @@ class ROCALGenericImageIterator(object):
         self.color_format = self.output_tensor_list[0].color_format() if self.color_format is None else self.color_format
         self.output_tensor_list[0].copy_data(ctypes.c_void_p(self.out.data_ptr()))
 
-        # self.loader.copyImage(self.out_image)
-        return self.out_image
+        return self.out
 
     def reset(self):
         b.rocalResetLoaders(self.loader._handle)
@@ -102,7 +101,7 @@ class ROCALGenericIterator(object):
         self.batch_size = self.output_tensor_list[0].batch_size() if self.batch_size is None else self.batch_size
         self.color_format = self.output_tensor_list[0].color_format() if self.color_format is None else self.color_format
         
-        if self.out == None:
+        if self.out is None:
             if self.tensor_layout == types.NCHW:
                 if self.device == "cpu":
                     if self.tensor_dtype == types.FLOAT:
@@ -134,7 +133,9 @@ class ROCALGenericIterator(object):
                         elif self.tensor_dtype == types.FLOAT16:
                             self.out = cp.empty((self.bs*self.n, int(self.h/self.bs), self.w, self.p), dtype=cp.float16)
                         self.labels = cp.empty(self.labels_size, dtype = cp.int32)
-    
+                        
+        self.output_tensor_list[0].copy_data(ctypes.c_void_p(self.out.data_ptr()))
+        
         if(self.loader._name == "labelReader"):
             if(self.loader._oneHotEncoding == True):
                 print("Support for OneHotLabels not given yet")
