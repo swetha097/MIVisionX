@@ -21,7 +21,17 @@ THE SOFTWARE.
 */
 
 #include "internal_publishKernels.h"
+#include <omp.h>
+
+#if _WIN32
+#include <intrin.h>
+#else
+#include <x86intrin.h>
+#include <smmintrin.h>
+#include <immintrin.h>
+#endif
 #define NUM_OF_DIMS 5
+
 struct TensorAddTensorLocalData
 {
     RPPCommonHandle handle;
@@ -155,27 +165,64 @@ static vx_status VX_CALLBACK processTensorAddTensor(vx_node node, const vx_refer
         refreshTensorAddTensor(node, parameters, num, data);
         // memcpy(data->pDst, data->pSrc, data->tensor_size);
         // Add the case for UNIT8 datatype // TODO: Swetha
-         if (data->in_tensor_type == vx_type_e::VX_TYPE_FLOAT32 && data->out_tensor_type == vx_type_e::VX_TYPE_FLOAT32)
+        if (data->in_tensor_type == vx_type_e::VX_TYPE_FLOAT32 && data->out_tensor_type == vx_type_e::VX_TYPE_FLOAT32)
         {
-        uint channels = 1; // for audio data
-        data->roi_ptr_src = (RpptROI *)data->roi_tensor_ptr_src;
-        for (uint i = 0; i < data->nbatchSize; i++)
+            uint channels = 1; // for audio data
+            data->roi_ptr_src = (RpptROI *)data->roi_tensor_ptr_src;
+            size_t nStride = data->in_tensor_dims1[1] * data->in_tensor_dims1[2] * channels;
+
+        #pragma omp parallel for num_threads(8)
+            for (uint i = 0; i < data->nbatchSize; i++)
             {
-                //start ptr of the tensor1
-                // std::cerr << "TAT Batch :: " << i;
-                size_t size_psrc1_elements = data->in_tensor_dims1[1] * data->in_tensor_dims1[2] * channels;
-                size_t size_psrc1_roi = data->roi_ptr_src[i].xywhROI.xy.x * data->roi_ptr_src[i].xywhROI.xy.y * channels;
-                for (uint j = 0; j < size_psrc1_roi ; j++) {
-                    ((float *)(data->pDst))[i * size_psrc1_elements + j] = ((float *)(data->pSrc1))[i * size_psrc1_elements + j] + ((float *)(data->pSrc2))[i] ;
-                    if (j >= 0 && j <  10) {
-                        // std::cerr << "\n i * size_psrc1_elements + j : " << i * size_psrc1_elements + j;
-                        // std::cerr << "\n size_psrc1_elements" << size_psrc1_elements;
-                    //     std::cerr << "\n TAT ((float *)(data->pSrc1))[i * size_psrc1_elements + j] " << ((float *)(data->pSrc1))[i * size_psrc1_elements + j] ;
-                    //     std::cerr << "\n TAT ((float *)(data->pSrc2))[i]  " << ((float *)(data->pSrc2))[i];
-                    //     std::cerr << "\n TAT ((float *)(data->pDst))[i * size_psrc1_elements + j] " << ((float *)(data->pDst))[i * size_psrc1_elements + j] ;
+                float *src1Temp = (float *)(data->pSrc1) + i * nStride;
+                float *src2Temp = (float *)(data->pSrc2) + i * nStride;
+                float *dstTemp = (float *)(data->pDst) + i * nStride;
+                uint height = data->roi_ptr_src[i].xywhROI.xy.y;
+                uint width = data->roi_ptr_src[i].xywhROI.xy.x * channels;
+                uint alignedWidth = (width / 8) * 8;
+                for (uint row = 0; row < height; row++)
+                {
+                    float *srcPtr1Row = src1Temp + row * data->in_tensor_dims1[1];
+                    float *srcPtr2Row = src2Temp + row * data->in_tensor_dims2[1];
+                    float *dstPtrRow = dstTemp + row * data->in_tensor_dims1[1];
+                    uint vectorLoopCount = 0;
+                    for(; vectorLoopCount < alignedWidth; vectorLoopCount += 8)
+                    {
+                        __m256 pSrc1 = _mm256_loadu_ps(srcPtr1Row);
+                        __m256 pSrc2 = _mm256_loadu_ps(srcPtr2Row);
+                        __m256 pDst = _mm256_add_ps(pSrc1, pSrc2);
+                        _mm256_storeu_ps(dstPtrRow, pDst);
+                        srcPtr1Row += 8;
+                        srcPtr2Row += 8;
+                        dstPtrRow += 8;
+                    }
+                    for(; vectorLoopCount < width; vectorLoopCount++)
+                    {
+                        *dstPtrRow = *srcPtr1Row + *srcPtr2Row;
+                        srcPtr1Row++;
+                        srcPtr2Row++;
+                        dstPtrRow++;
                     }
                 }
             }
+
+            // for (uint i = 0; i < data->nbatchSize; i++)
+            // {
+            //     //start ptr of the tensor1
+            //     // std::cerr << "TAT Batch :: " << i;
+            //     size_t size_psrc1_elements = data->in_tensor_dims1[1] * data->in_tensor_dims1[2] * channels;
+            //     size_t size_psrc1_roi = data->roi_ptr_src[i].xywhROI.xy.x * data->roi_ptr_src[i].xywhROI.xy.y * channels;
+            //     for (uint j = 0; j < size_psrc1_roi ; j++) {
+            //         ((float *)(data->pDst))[i * size_psrc1_elements + j] = ((float *)(data->pSrc1))[i * size_psrc1_elements + j] + ((float *)(data->pSrc2))[i] ;
+            //         if (j >= 0 && j <  10) {
+            //             // std::cerr << "\n i * size_psrc1_elements + j : " << i * size_psrc1_elements + j;
+            //             // std::cerr << "\n size_psrc1_elements" << size_psrc1_elements;
+            //         //     std::cerr << "\n TAT ((float *)(data->pSrc1))[i * size_psrc1_elements + j] " << ((float *)(data->pSrc1))[i * size_psrc1_elements + j] ;
+            //         //     std::cerr << "\n TAT ((float *)(data->pSrc2))[i]  " << ((float *)(data->pSrc2))[i];
+            //         //     std::cerr << "\n TAT ((float *)(data->pDst))[i * size_psrc1_elements + j] " << ((float *)(data->pDst))[i * size_psrc1_elements + j] ;
+            //         }
+            //     }
+            // }
         }
     }
     return status;

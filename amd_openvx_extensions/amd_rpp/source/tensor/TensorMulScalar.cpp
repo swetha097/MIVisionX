@@ -21,6 +21,16 @@ THE SOFTWARE.
 */
 
 #include "internal_publishKernels.h"
+#include <omp.h>
+
+#if _WIN32
+#include <intrin.h>
+#else
+#include <x86intrin.h>
+#include <smmintrin.h>
+#include <immintrin.h>
+#endif
+
 #define NUM_OF_DIMS 5
 struct TensorMulScalarLocalData
 {
@@ -117,9 +127,40 @@ static vx_status VX_CALLBACK processTensorMulScalar(vx_node node, const vx_refer
         refreshTensorMulScalar(node, parameters, num, data);
         // memcpy(data->pDst, data->pSrc, data->tensor_size);
         // Add the case for UNIT8 datatype
-         if (data->in_tensor_type == vx_type_e::VX_TYPE_FLOAT32 && data->out_tensor_type == vx_type_e::VX_TYPE_FLOAT32)
+        if (data->in_tensor_type == vx_type_e::VX_TYPE_FLOAT32 && data->out_tensor_type == vx_type_e::VX_TYPE_FLOAT32)
         {
-        for (uint i = 0; i < (data->tensor_size)/ sizeof(float); i++)
+            // data->roi_ptr_src = (RpptROI *)data->roi_tensor_ptr_src;
+            // __m256 pMul = _mm256_set1_ps(data->scalar_value);
+            // float scalarValue = data->scalar_value;
+            // size_t nStride = data->in_tensor_dims[1] * data->in_tensor_dims[2] * channels;
+
+        // #pragma omp parallel for num_threads(8)
+        //     for (uint i = 0; i < data->nbatchSize; i++)
+        //     {
+        //         float *srcTemp = (float *)(data->pSrc) + i * nStride;
+        //         float *dstTemp = (float *)(data->pDst) + i * nStride;
+        //         uint height = data->roi_ptr_src[i].xywhROI.xy.y;
+        //         uint width = data->roi_ptr_src[i].xywhROI.xy.x * channels;
+        //         uint alignedWidth = (width / 8) * 8;
+        //         for (uint row = 0; row < height; row++)
+        //         {
+                    // float *srcPtrRow = srcTemp + row * data->in_tensor_dims[1];
+                    // float *dstPtrRow = dstTemp + row * data->out_tensor_dims[1];
+                    // uint vectorLoopCount = 0;
+                    // for(; vectorLoopCount < alignedWidth; vectorLoopCount += 8)
+                    // {
+                    //     __m256 pSrc = _mm256_loadu_ps(srcPtrRow);
+                    //     __m256 pDst = _mm256_mul_ps(pSrc, pMul);
+                    //     _mm256_storeu_ps(dstPtrRow, pDst);
+                    //     srcPtrRow += 8;
+                    //     dstPtrRow += 8;
+                    // }
+                    // for(; vectorLoopCount < width; vectorLoopCount++)
+                    //     *dstPtrRow++ = *srcPtrRow++ * scalarValue;
+            //     }
+            // }
+
+            for (uint i = 0; i < (data->tensor_size)/ sizeof(float); i++)
             {
                 // std::cerr << "\n i :: " << i;
                 // std::cerr << "\n scalar :: "<< data->scalar_value;
@@ -128,8 +169,6 @@ static vx_status VX_CALLBACK processTensorMulScalar(vx_node node, const vx_refer
                 // std::cerr << "\n ((float *)(data->pDst))[i]" << ((float *)(data->pDst))[i];
             
             }
-            
-
         }
     }
     return status;
