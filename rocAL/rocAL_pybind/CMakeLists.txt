@@ -95,18 +95,21 @@ endif()
 if(${BUILD_ROCAL_PYBIND})
 
     link_directories(${ROCM_PATH}/lib)
-    include_directories(${AMDRPP_INCLUDE_DIRS})
-    include_directories(../rocAL/include/api/
+
+    include_directories(../rocAL/include/
+                        ../rocAL/include/api/
+                        ../rocAL/include/pipeline/
+                        ../rocAL/include/device/
                         third_party_lib/
                         ../../amd_openvx/openvx/include/)
 
     add_subdirectory(third_party_lib/pybind11)
 
     pybind11_add_module(rocal_pybind rocal_pybind.cpp)
-    target_link_libraries(rocal_pybind PRIVATE ${AMDRPP_LIBRARIES} vx_rpp rocal)
+    target_link_libraries(rocal_pybind PRIVATE rocal  vx_rpp amd_rpp)
     message("-- ${White}rocal_pybind -- CMAKE_CXX_FLAGS:${CMAKE_CXX_FLAGS}${ColourReset}")
     install(TARGETS rocal_pybind DESTINATION lib)
-    message("-- ${Green}ROCm Augmentation Library Python Binding - rocal_pybind module added ${ColourReset}")
+    message("-- ${Green}Radeon Augmentation Library Python Binding - rocal_pybind module added ${ColourReset}")
 else()
     message("-- ${Red}WARNING: rocAL Pybind module excluded ${ColourReset}")
 endif()
