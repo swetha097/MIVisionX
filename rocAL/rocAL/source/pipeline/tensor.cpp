@@ -33,6 +33,16 @@ THE SOFTWARE.
 #include "commons.h"
 #include "tensor.h"
 
+#include <omp.h>
+
+#if _WIN32
+#include <intrin.h>
+#else
+#include <x86intrin.h>
+#include <smmintrin.h>
+#include <immintrin.h>
+#endif
+
 vx_enum vx_mem_type(RocalMemType mem) {
     switch (mem) {
         case RocalMemType::OCL:
@@ -376,15 +386,31 @@ unsigned rocalTensor::copy_data(void *user_buffer, uint max_y1, uint max_x1) {
     if (_info._type != rocalTensorInfo::Type::HANDLE) return 0;
 
     //TODO : Handle this case for HIP buffer
-    auto src_stride = (_info.max_dims().at(0) * _info.max_dims().at(1) * _info.data_type_size());
-    auto dst_stride = (max_y1 * max_x1 * _info.data_type_size());
+    auto src_nstride = (_info.max_dims().at(0) * _info.max_dims().at(1));
+    auto dst_nstride = (max_y1 * max_x1);
+    auto src_hstride = _info.max_dims().at(0);
+    auto dst_hstride = max_x1;
+    uint buffer_length = max_x1;
+    uint aligned_length = (buffer_length / 8) * 8;
+
+#pragma omp parallel for num_threads(8)
     for (uint i = 0; i < _info._batch_size; i++) {
-        auto temp_src_ptr = static_cast<unsigned char *>(_mem_handle) + i * src_stride;
-        auto temp_dst_ptr = static_cast<unsigned char *>(user_buffer) + i * dst_stride;
+        auto temp_src_ptr = static_cast<float *>(_mem_handle) + i * src_nstride;
+        auto temp_dst_ptr = static_cast<float *>(user_buffer) + i * dst_nstride;
+        
         for (uint height = 0; height < max_y1; height++) {
-            memcpy(temp_dst_ptr, temp_src_ptr, max_x1 * _info.data_type_size());
-            temp_src_ptr += _info.max_dims().at(0) * _info.data_type_size();
-            temp_dst_ptr += max_x1 * _info.data_type_size();
+            auto temp_src_row = temp_src_ptr + height * src_hstride;
+            auto temp_dst_row = temp_dst_ptr + height * dst_hstride;
+            uint vectorLoopCount = 0;
+            for(; vectorLoopCount < aligned_length; vectorLoopCount += 8) {
+                __m256 pInput = _mm256_loadu_ps(temp_src_row);
+                _mm256_storeu_ps(temp_dst_row, pInput);
+                temp_src_row += 8;
+                temp_dst_row += 8;
+            }
+            for(; vectorLoopCount < buffer_length; vectorLoopCount++)
+                *temp_dst_row++ = *temp_src_row++;
+
         }
     }
     return 0;
