@@ -36,10 +36,6 @@ class ROCALGenericImageIterator(object):
     def __next__(self):
         if(self.loader.isEmpty()):
             raise StopIteration
-
-        if self.loader.run() != 0:
-            raise StopIteration
-
         else:
             self.output_tensor_list = self.loader.rocalGetOutputTensors()
 
@@ -48,7 +44,7 @@ class ROCALGenericImageIterator(object):
         self.h = self.output_tensor_list[0].batch_height() if self.h is None else self.h
         self.batch_size = self.output_tensor_list[0].batch_size() if self.batch_size is None else self.batch_size
         self.color_format = self.output_tensor_list[0].color_format() if self.color_format is None else self.color_format
-        self.out =  np.zeros((self.h, self.w, self.p), dtype = "uint8")
+        self.out =  np.zeros((self.batch_size, self.h, self.w, self.p), dtype = "uint8")
 
         self.output_tensor_list[0].copy_data(ctypes.c_void_p(self.out.data_ptr()))
 
@@ -91,10 +87,8 @@ class ROCALGenericIterator(object):
         
         if(b.isEmpty(self.loader._handle)):
             raise StopIteration
-        if self.loader.run() != 0:
-            raise StopIteration
         else:
-            self.output_tensor_list =
+            self.output_tensor_list = self.loader.rocalGetOutputTensors()
 
         self.augmentation_count = len(self.output_tensor_list)
         self.w = self.output_tensor_list[0].batch_width() if self.w is None else self.w
@@ -138,8 +132,8 @@ class ROCALGenericIterator(object):
         self.output_tensor_list[0].copy_data(ctypes.c_void_p(self.out.data_ptr()))
         if(self.loader._name == "labelReader"):
             if(self.loader._oneHotEncoding == True):
-                print("Support for OneHotLabels not given yet")
-                exit(0)
+                self.loader.GetOneHotEncodedLabels(self.labels, self.device)
+                self.labels_tensor = self.labels.reshape(-1, self.bs, self.loader._numOfClasses)
             else:
                 if self.display:
                     for i in range(self.bs):

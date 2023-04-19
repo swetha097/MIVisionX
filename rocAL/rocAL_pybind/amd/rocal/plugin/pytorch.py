@@ -34,23 +34,17 @@ class ROCALGenericImageIterator(object):
         return self.__next__()
 
     def __next__(self):
-
         if(self.loader.isEmpty()):
             raise StopIteration
-
-        if self.loader.run() != 0:
-            raise StopIteration
-
         else:
             self.output_tensor_list = self.loader.rocalGetOutputTensors()
 
-        self.augmentation_count = len(self.output_tensor_list)
         self.w = self.output_tensor_list[0].batch_width() if self.w is None else self.w
         self.h = self.output_tensor_list[0].batch_height() if self.h is None else self.h
         self.batch_size = self.output_tensor_list[0].batch_size() if self.batch_size is None else self.batch_size
         self.color_format = self.output_tensor_list[0].color_format() if self.color_format is None else self.color_format
         if self.out is None:
-            self.out = np.zeros((self.h, self.w, self.p), dtype = "uint8")
+            self.out = np.zeros((self.batch_size, self.h, self.w, self.p), dtype = "uint8")
         self.output_tensor_list[0].copy_data(ctypes.c_void_p(self.out.data_ptr()))
 
         return self.out
@@ -85,12 +79,9 @@ class ROCALGenericIterator(object):
     def __next__(self):
         if(b.isEmpty(self.loader._handle)):
             raise StopIteration
-        if self.loader.rocalRun() != 0:
-            raise StopIteration
         else:
             self.output_tensor_list = self.loader.rocalGetOutputTensors()
 
-        self.augmentation_count = len(self.output_tensor_list)
         self.w = self.output_tensor_list[0].batch_width() if self.w is None else self.w
         self.h = self.output_tensor_list[0].batch_height() if self.h is None else self.h
         self.batch_size = self.output_tensor_list[0].batch_size() if self.batch_size is None else self.batch_size
@@ -170,8 +161,8 @@ class ROCALGenericIterator(object):
 
         else:
             if(self.loader._oneHotEncoding == True):
-                print("Support for OneHotEncodedLabels is not added")
-                exit(0)
+                self.loader.GetOneHotEncodedLabels(self.labels, self.device)
+                self.labels_tensor = self.labels.reshape(-1, self.bs, self.loader._numOfClasses)
             else:
                 if self.display:
                     for i in range(self.bs):
@@ -197,7 +188,7 @@ class ROCALGenericIterator(object):
 
 class ROCALClassificationIterator(ROCALGenericIterator):
     """
-    RALI iterator for classification tasks for PyTorch. It returns 2 outputs
+    ROCAL iterator for classification tasks for PyTorch. It returns 2 outputs
     (data and label) in the form of PyTorch's Tensor.
 
     Calling
@@ -213,7 +204,7 @@ class ROCALClassificationIterator(ROCALGenericIterator):
        ROCALGenericIterator(pipelines, ["data", "label"], size)
 
     Please keep in mind that Tensors returned by the iterator are
-    still owned by RALI. They are valid till the next iterator call.
+    still owned by ROCAL. They are valid till the next iterator call.
     If the content needs to be preserved please copy it to another tensor.
 
     Parameters
@@ -232,12 +223,12 @@ class ROCALClassificationIterator(ROCALGenericIterator):
                  Setting this flag to False will cause the iterator to return
                  exactly 'size' entries.
     dynamic_shape: bool, optional, default = False
-                 Whether the shape of the output of the RALI pipeline can
+                 Whether the shape of the output of the ROCAL pipeline can
                  change during execution. If True, the pytorch tensor will be resized accordingly
-                 if the shape of RALI returned tensors changes during execution.
+                 if the shape of ROCAL returned tensors changes during execution.
                  If False, the iterator will fail in case of change.
     last_batch_padded : bool, optional, default = False
-                 Whether the last batch provided by RALI is padded with the last sample
+                 Whether the last batch provided by ROCAL is padded with the last sample
                  or it just wraps up. In the conjunction with `fill_last_batch` it tells
                  if the iterator returning last batch with data only partially filled with
                  data from the current epoch is dropping padding samples or samples from
@@ -265,7 +256,7 @@ class ROCALClassificationIterator(ROCALGenericIterator):
                  last_batch_padded = False):
         pipe = pipelines
         super(ROCALClassificationIterator, self).__init__(pipe, tensor_layout = pipe._tensor_layout, tensor_dtype = pipe._tensor_dtype,
-                                                          multiplier = pipe._multiplier, offset = pipe._offset, device = device, device_id = device_id)
+                                                          multiplier = pipe._multiplier, offset = pipe._offset, dsiplay = display, device = device, device_id = device_id)
 
 class ROCAL_iterator(ROCALGenericImageIterator):
     """

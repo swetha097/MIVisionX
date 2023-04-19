@@ -145,7 +145,7 @@ extern "C"  RocalImage  ROCAL_API_CALL rocalRotateFixed(RocalContext context, Ro
 extern "C" RocalTensor ROCAL_API_CALL rocalBrightness(RocalContext context, RocalTensor input, bool is_output,
                                                       RocalFloatParam alpha = NULL, RocalFloatParam beta = NULL,
                                                       RocalTensorLayout rocal_tensor_output_layout = ROCAL_NHWC,
-                                                      RocalTensorOutputType rocal_tensor_output_type = ROCAL_UINT8);
+                                                      RocalTensorOutputType rocal_tensor_output_dtype = ROCAL_UINT8);
 
 /// Accepts U8 and RGB24 inputs
 /// \param context

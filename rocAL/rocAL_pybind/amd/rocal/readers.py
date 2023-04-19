@@ -22,7 +22,7 @@ import rocal_pybind as b
 from amd.rocal.pipeline import Pipeline
 import amd.rocal.types as types
 
-def coco(*inputs,file_root, annotations_file='', bytes_per_sample_hint=0, dump_meta_files=False,
+def coco(*inputs, file_root, annotations_file='', bytes_per_sample_hint=0, dump_meta_files=False,
          dump_meta_files_path='', file_list='', initial_fill=1024,  lazy_init=False, ltrb=False, masks=False,
          meta_files_path='', num_shards=1, pad_last_batch=False, prefetch_queue_depth=1, preserve=False,
          random_shuffle=False, ratio=False, read_ahead=False, save_img_ids=False, seed=-1, shard_id=0,

@@ -7,7 +7,6 @@ from amd.rocal.plugin.pytorch import ROCALClassificationIterator
 from amd.rocal.pipeline import Pipeline
 import amd.rocal.fn as fn
 import amd.rocal.types as types
-# import rocal_pybind.tensor
 import sys
 import cv2
 import os
@@ -33,10 +32,7 @@ def main():
     except OSError as error:
         print(error)
     data_path = sys.argv[1]
-    if(sys.argv[2] == "cpu"):
-        _rali_cpu = True
-    else:
-        _rali_cpu = False
+    _rali_cpu = True if sys.argv[2] == "cpu" else False
     batch_size = int(sys.argv[3])
     num_threads = 1
     device_id = 0
@@ -49,19 +45,25 @@ def main():
     with image_classification_train_pipeline:
         jpegs, labels = fn.readers.file(file_root=data_path)
         decode = fn.decoders.image_slice(jpegs, output_type=types.RGB,
-                                        file_root=data_path, shard_id=local_rank, num_shards=world_size, random_shuffle=True)
-        res = fn.resize(decode, resize_width=224, resize_height=224, rocal_tensor_layout = types.NCHW, rocal_tensor_output_type = types.UINT8)
+                                         file_root=data_path, shard_id=local_rank, num_shards=world_size, random_shuffle=True)
+        res = fn.resize(decode, resize_width=224, resize_height=224, rocal_tensor_output_layout = types.NCHW, rocal_tensor_output_dtype = types.UINT8)
         flip_coin = fn.random.coin_flip(probability=0.5)
         cmnp = fn.crop_mirror_normalize(res, device="gpu",
-                                            rocal_tensor_layout = types.NCHW,
-                                            rocal_tensor_output_type = types.FLOAT,
-                                            crop=(224, 224),
-                                            mirror=flip_coin,
-                                            image_type=types.RGB,
-                                            mean=[0.485 * 255,0.456 * 255,0.406 * 255],
-                                            std=[0.229 * 255,0.224 * 255,0.225 * 255])
+                                        rocal_tensor_output_layout = types.NCHW,
+                                        rocal_tensor_output_dtype = types.FLOAT,
+                                        crop=(224, 224),
+                                        mirror=flip_coin,
+                                        image_type=types.RGB,
+                                        mean=[0.485 * 255,0.456 * 255,0.406 * 255],
+                                        std=[0.229 * 255,0.224 * 255,0.225 * 255])
         image_classification_train_pipeline.set_outputs(cmnp)
 
+# There are 2 ways to get the outputs from the pipeline
+# 1. Use the iterator
+# 2. use the pipe.run()
+
+# Method 1
+    # use the iterator
     image_classification_train_pipeline.build()
     imageIteratorPipeline = ROCALClassificationIterator(image_classification_train_pipeline)
     cnt = 0
@@ -74,6 +76,7 @@ def main():
     imageIteratorPipeline.reset()
     print("*********************************************************************")
 
+# Method 2
     iter = 0
     # use pipe.run() call 
     output_data_batch = image_classification_train_pipeline.run()

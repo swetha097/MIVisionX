@@ -346,9 +346,6 @@ class Pipeline(object):
     def rocalGetMatchedIndices(self):
         return b.rocalGetMatchedIndices(self._handle)
 
-    def copy_out_data_ptr(self, data_ptr):
-        return b.copy_data_ptr(self._handle, data_ptr)
-
     def rocalGetOutputTensors(self):
         return b.rocalGetOutputTensors(self._handle)
 

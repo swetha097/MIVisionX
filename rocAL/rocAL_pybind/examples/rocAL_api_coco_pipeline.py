@@ -1,9 +1,27 @@
+# Copyright (c) 2018 - 2023 Advanced Micro Devices, Inc. All rights reserved.
+#
+# Permission is hereby granted, free of charge, to any person obtaining a copy
+# of this software and associated documentation files (the "Software"), to deal
+# in the Software without restriction, including without limitation the rights
+# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+# copies of the Software, and to permit persons to whom the Software is
+# furnished to do so, subject to the following conditions:
+#
+# The above copyright notice and this permission notice shall be included in
+# all copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL THE
+# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+# THE SOFTWARE.
+
 from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
-import random
 import torch
-import numpy as np
 from amd.rocal.pipeline import Pipeline
 import amd.rocal.fn as fn
 import amd.rocal.types as types
@@ -11,6 +29,8 @@ import sys
 import os
 import math
 import ctypes
+import numpy as np
+import random
 
 class ROCALCOCOIterator(object):
     """
@@ -36,9 +56,7 @@ class ROCALCOCOIterator(object):
         self.offset = offset if offset else [0.0, 0.0, 0.0]
         self.reverse_channels = reverse_channels
         self.tensor_dtype = tensor_dtype
-        print("\nself.tensor_dtype : ", self.tensor_dtype)
         self.device = device
-        print(self.device)
         self.device_id = self.loader._device_id
         self.bs = self.loader._batch_size
         self.num_anchors = num_anchors
@@ -58,10 +76,10 @@ class ROCALCOCOIterator(object):
         else:
             self.output_tensor_list = self.loader.rocalGetOutputTensors()
 
-        self.w = self.output_tensor_list[0].batch_width()
-        self.h = self.output_tensor_list[0].batch_height()
-        self.bs = self.output_tensor_list[0].batch_size()
-        self.color_format = self.output_tensor_list[0].color_format()
+        self.w = self.output_tensor_list[0].batch_width() if self.w is None else self.w
+        self.h = self.output_tensor_list[0].batch_height() if self.h is None else self.h
+        self.bs = self.output_tensor_list[0].batch_size() if self.bs is None else self.bs
+        self.color_format = self.output_tensor_list[0].color_format() if self.color_format else self.color_format
 
         torch_gpu_device = torch.device('cuda', self.device_id)
 
@@ -110,7 +128,7 @@ class ROCALCOCOIterator(object):
 def draw_patches(img, idx, bboxes, device):
     import cv2
     if device == "cpu":
-            image = img.detach().numpy()
+        image = img.detach().numpy()
     else:
         image = img.cpu().numpy()
     image = image.transpose([1, 2, 0])
@@ -180,8 +198,8 @@ def main():
                                             image_type=types.RGB,
                                             resize_width=crop, resize_height=crop,
                                             mirror=flip_coin,
-                                            rocal_tensor_layout = types.NCHW,
-                                            rocal_tensor_output_type = types.FLOAT,
+                                            output_layout = types.NCHW,
+                                            output_dtype = types.FLOAT,
                                             mean=[0,0,0],
                                             std=[1,1,1])
         matched_idxs  = fn.box_iou_matcher(anchors=anchor_list, criteria=0.5,
