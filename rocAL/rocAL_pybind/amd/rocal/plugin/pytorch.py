@@ -106,7 +106,7 @@ class ROCALGenericIterator(object):
                 elif self.tensor_dtype == types.UINT8:
                     self.out = torch.empty((self.batch_size, self.h, self.w, self.color_format), dtype=torch.uint8, device=torch_gpu_device)
 
-            self.labels_tensor = torch.empty(self.batch_size, dtype=torch.int32, device=torch_gpu_device)
+                self.labels_tensor = torch.empty(self.batch_size, dtype=torch.int32, device=torch_gpu_device)
 
         self.output_tensor_list[0].copy_data(ctypes.c_void_p(self.out.data_ptr()))
         if((self.loader._name == "Caffe2ReaderDetection") or (self.loader._name == "CaffeReaderDetection")):
