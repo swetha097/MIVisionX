@@ -35,7 +35,7 @@ void TensorMulScalarNode::create_node()
         return;
     vx_scalar scalar_value = vxCreateScalar(vxGetContext((vx_reference)_graph->get()), VX_TYPE_FLOAT32, &_scalar);
 
-    _node = vxExtrppNode_TensorMulScalar(_graph->get(), _inputs[0]->handle(), _outputs[0]->handle(), scalar_value, _batch_size);
+    _node = vxExtrppNode_TensorMulScalar(_graph->get(), _inputs[0]->handle(), _outputs[0]->handle(), scalar_value, _src_tensor_roi, _dst_tensor_roi, _batch_size);
 
     vx_status status;
     if((status = vxGetStatus((vx_reference)_node)) != VX_SUCCESS)

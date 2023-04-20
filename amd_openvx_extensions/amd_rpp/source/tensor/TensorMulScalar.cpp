@@ -36,17 +36,35 @@ struct TensorMulScalarLocalData
 {
     RPPCommonHandle handle;
     Rpp32u device_type;
+    Rpp32u nbatchSize;
+    void* roi_tensor_ptr_src;
+    RpptROI* roi_ptr_src;
+    void* roi_tensor_ptr_dst;
+    RpptROI* roi_ptr_dst;
     RppPtr_t pSrc;
     RppPtr_t pDst;
     float scalar_value;
     size_t tensor_size;
     vx_enum in_tensor_type;
     vx_enum out_tensor_type;
+    size_t in_tensor_dims[NUM_OF_DIMS];
+    size_t out_tensor_dims[NUM_OF_DIMS];
 #if ENABLE_HIP
     void *pSrc_dev;
     void *pDst_dev;
 #endif
 };
+
+void update_destination_roi(const vx_reference *parameters, TensorMulScalarLocalData *data)
+{
+    data->roi_ptr_dst = (RpptROI *)data->roi_tensor_ptr_dst;
+    data->roi_ptr_src = (RpptROI *)data->roi_tensor_ptr_src;
+    for (uint i=0; i < data->nbatchSize; i++)
+    {
+        data->roi_ptr_dst[i].xywhROI.xy.x = data->roi_ptr_src[i].xywhROI.xy.x;
+        data->roi_ptr_dst[i].xywhROI.xy.y = data->roi_ptr_src[i].xywhROI.xy.y;
+    }
+}
 
 static vx_status VX_CALLBACK refreshTensorMulScalar(vx_node node, const vx_reference *parameters, vx_uint32 num, TensorMulScalarLocalData *data)
 {
@@ -56,6 +74,8 @@ static vx_status VX_CALLBACK refreshTensorMulScalar(vx_node node, const vx_refer
 #if ENABLE_HIP
         STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[0], VX_TENSOR_BUFFER_HIP, &data->pSrc_dev, sizeof(data->pSrc_dev)));
         STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[1], VX_TENSOR_BUFFER_HIP, &data->pDst_dev, sizeof(data->pDst_dev)));
+        STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[3], VX_TENSOR_BUFFER_HIP, &data->roi_tensor_ptr_src, sizeof(data->roi_tensor_ptr_src)));
+        STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[4], VX_TENSOR_BUFFER_HIP, &data->roi_tensor_ptr_dst, sizeof(data->roi_tensor_ptr_dst)));
 #endif
     }
     else if (data->device_type == AGO_TARGET_AFFINITY_CPU)
@@ -70,6 +90,10 @@ static vx_status VX_CALLBACK refreshTensorMulScalar(vx_node node, const vx_refer
             STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[0], VX_TENSOR_BUFFER_HOST, &data->pSrc, sizeof(vx_float32)));
             STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[1], VX_TENSOR_BUFFER_HOST, &data->pDst, sizeof(vx_float32)));
         }
+        STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[3], VX_TENSOR_BUFFER_HOST, &data->roi_tensor_ptr_src, sizeof(vx_uint32)));
+        STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[4], VX_TENSOR_BUFFER_HOST, &data->roi_tensor_ptr_dst, sizeof(vx_uint32)));
+
+        update_destination_roi(parameters, data);
     }
     return status;
 }
@@ -81,7 +105,7 @@ static vx_status VX_CALLBACK validateTensorMulScalar(vx_node node, const vx_refe
     STATUS_ERROR_CHECK(vxQueryScalar((vx_scalar)parameters[2], VX_SCALAR_TYPE, &scalar_type, sizeof(scalar_type)));
     if (scalar_type != VX_TYPE_FLOAT32)
         return ERRMSG(VX_ERROR_INVALID_TYPE, "validate: Paramter: #2 type=%d (must be size)\n", scalar_type);
-    STATUS_ERROR_CHECK(vxQueryScalar((vx_scalar)parameters[3], VX_SCALAR_TYPE, &scalar_type, sizeof(scalar_type)));
+    STATUS_ERROR_CHECK(vxQueryScalar((vx_scalar)parameters[6], VX_SCALAR_TYPE, &scalar_type, sizeof(scalar_type)));
     if (scalar_type != VX_TYPE_UINT32)
         return ERRMSG(VX_ERROR_INVALID_TYPE, "validate: Paramter: #3 type=%d (must be size)\n", scalar_type);
 
@@ -129,46 +153,47 @@ static vx_status VX_CALLBACK processTensorMulScalar(vx_node node, const vx_refer
         // Add the case for UNIT8 datatype
         if (data->in_tensor_type == vx_type_e::VX_TYPE_FLOAT32 && data->out_tensor_type == vx_type_e::VX_TYPE_FLOAT32)
         {
-            // data->roi_ptr_src = (RpptROI *)data->roi_tensor_ptr_src;
-            // __m256 pMul = _mm256_set1_ps(data->scalar_value);
-            // float scalarValue = data->scalar_value;
-            // size_t nStride = data->in_tensor_dims[1] * data->in_tensor_dims[2] * channels;
+            uint channels = 1; // for audio data
+            data->roi_ptr_src = (RpptROI *)data->roi_tensor_ptr_src;
+            __m256 pMul = _mm256_set1_ps(data->scalar_value);
+            float scalarValue = data->scalar_value;
+            size_t nStride = data->in_tensor_dims[1] * data->in_tensor_dims[2] * channels;
 
-        // #pragma omp parallel for num_threads(8)
-        //     for (uint i = 0; i < data->nbatchSize; i++)
-        //     {
-        //         float *srcTemp = (float *)(data->pSrc) + i * nStride;
-        //         float *dstTemp = (float *)(data->pDst) + i * nStride;
-        //         uint height = data->roi_ptr_src[i].xywhROI.xy.y;
-        //         uint width = data->roi_ptr_src[i].xywhROI.xy.x * channels;
-        //         uint alignedWidth = (width / 8) * 8;
-        //         for (uint row = 0; row < height; row++)
-        //         {
-                    // float *srcPtrRow = srcTemp + row * data->in_tensor_dims[1];
-                    // float *dstPtrRow = dstTemp + row * data->out_tensor_dims[1];
-                    // uint vectorLoopCount = 0;
-                    // for(; vectorLoopCount < alignedWidth; vectorLoopCount += 8)
-                    // {
-                    //     __m256 pSrc = _mm256_loadu_ps(srcPtrRow);
-                    //     __m256 pDst = _mm256_mul_ps(pSrc, pMul);
-                    //     _mm256_storeu_ps(dstPtrRow, pDst);
-                    //     srcPtrRow += 8;
-                    //     dstPtrRow += 8;
-                    // }
-                    // for(; vectorLoopCount < width; vectorLoopCount++)
-                    //     *dstPtrRow++ = *srcPtrRow++ * scalarValue;
-            //     }
-            // }
-
-            for (uint i = 0; i < (data->tensor_size)/ sizeof(float); i++)
+        #pragma omp parallel for num_threads(8)
+            for (uint i = 0; i < data->nbatchSize; i++)
             {
-                // std::cerr << "\n i :: " << i;
-                // std::cerr << "\n scalar :: "<< data->scalar_value;
-                // std::cerr << "\n (float *)(data->pSrc))[i]"<< ((float *)(data->pSrc))[i];
-                ((float *)(data->pDst))[i] = ((float *)(data->pSrc))[i] * data->scalar_value;
-                // std::cerr << "\n ((float *)(data->pDst))[i]" << ((float *)(data->pDst))[i];
-            
+                float *srcTemp = (float *)(data->pSrc) + i * nStride;
+                float *dstTemp = (float *)(data->pDst) + i * nStride;
+                uint height = data->roi_ptr_src[i].xywhROI.xy.y;
+                uint width = data->roi_ptr_src[i].xywhROI.xy.x * channels;
+                uint alignedWidth = (width / 8) * 8;
+                for (uint row = 0; row < height; row++)
+                {
+                    float *srcPtrRow = srcTemp + row * data->in_tensor_dims[1];
+                    float *dstPtrRow = dstTemp + row * data->out_tensor_dims[1];
+                    uint vectorLoopCount = 0;
+                    for(; vectorLoopCount < alignedWidth; vectorLoopCount += 8)
+                    {
+                        __m256 pSrc = _mm256_loadu_ps(srcPtrRow);
+                        __m256 pDst = _mm256_mul_ps(pSrc, pMul);
+                        _mm256_storeu_ps(dstPtrRow, pDst);
+                        srcPtrRow += 8;
+                        dstPtrRow += 8;
+                    }
+                    for(; vectorLoopCount < width; vectorLoopCount++)
+                        *dstPtrRow++ = *srcPtrRow++ * scalarValue;
+                }
             }
+
+            // for (uint i = 0; i < (data->tensor_size)/ sizeof(float); i++)
+            // {
+            //     // std::cerr << "\n i :: " << i;
+            //     // std::cerr << "\n scalar :: "<< data->scalar_value;
+            //     // std::cerr << "\n (float *)(data->pSrc))[i]"<< ((float *)(data->pSrc))[i];
+            //     ((float *)(data->pDst))[i] = ((float *)(data->pSrc))[i] * data->scalar_value;
+            //     // std::cerr << "\n ((float *)(data->pDst))[i]" << ((float *)(data->pDst))[i];
+            
+            // }
         }
     }
     return status;
@@ -183,18 +208,21 @@ static vx_status VX_CALLBACK initializeTensorMulScalar(vx_node node, const vx_re
 #elif ENABLE_HIP
     STATUS_ERROR_CHECK(vxQueryNode(node, VX_NODE_ATTRIBUTE_AMD_HIP_STREAM, &data->handle.hipstream, sizeof(data->handle.hipstream)));
 #endif
-    STATUS_ERROR_CHECK(vxCopyScalar((vx_scalar)parameters[3], &data->device_type, VX_READ_ONLY, VX_MEMORY_TYPE_HOST));
+    STATUS_ERROR_CHECK(vxCopyScalar((vx_scalar)parameters[6], &data->device_type, VX_READ_ONLY, VX_MEMORY_TYPE_HOST));
     STATUS_ERROR_CHECK(vxReadScalarValue((vx_scalar)parameters[2], &data->scalar_value));
+    STATUS_ERROR_CHECK(vxReadScalarValue((vx_scalar)parameters[5], &data->nbatchSize));
     vx_size num_of_dims;
-    size_t tensor_dims[NUM_OF_DIMS];
+    // size_t in_tensor_dims[NUM_OF_DIMS], out_tensor_dims[NUM_OF_DIMS];
     STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[0], VX_TENSOR_NUMBER_OF_DIMS, &num_of_dims, sizeof(vx_size)));
-    STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[0], VX_TENSOR_DIMS, tensor_dims, sizeof(vx_size) * num_of_dims));
+    STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[0], VX_TENSOR_DIMS, &data->in_tensor_dims, sizeof(vx_size) * num_of_dims));
     STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[0], VX_TENSOR_DATA_TYPE, &data->in_tensor_type, sizeof(data->in_tensor_type)));
+    STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[1], VX_TENSOR_NUMBER_OF_DIMS, &num_of_dims, sizeof(vx_size)));
+    STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[1], VX_TENSOR_DIMS, &data->out_tensor_dims, sizeof(vx_size) * num_of_dims));
     STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[1], VX_TENSOR_DATA_TYPE, &data->out_tensor_type, sizeof(data->out_tensor_type)));
-    
+
     data->tensor_size = 1;
     for(int i = 0; i < num_of_dims; i++)
-        data->tensor_size *= tensor_dims[i];
+        data->tensor_size *= data->in_tensor_dims[i];
 
     if (data->in_tensor_type == vx_type_e::VX_TYPE_FLOAT32 && data->out_tensor_type == vx_type_e::VX_TYPE_FLOAT32)
         data->tensor_size *= sizeof(float);
@@ -238,7 +266,7 @@ vx_status TensorMulScalar_Register(vx_context context)
     vx_kernel kernel = vxAddUserKernel(context, "org.rpp.TensorMulScalar",
                                        VX_KERNEL_RPP_TENSORMULSCALAR,
                                        processTensorMulScalar,
-                                       4,
+                                       7,
                                        validateTensorMulScalar,
                                        initializeTensorMulScalar,
                                        uninitializeTensorMulScalar);
@@ -260,7 +288,10 @@ vx_status TensorMulScalar_Register(vx_context context)
         PARAM_ERROR_CHECK(vxAddParameterToKernel(kernel, 0, VX_INPUT, VX_TYPE_TENSOR, VX_PARAMETER_STATE_REQUIRED));
         PARAM_ERROR_CHECK(vxAddParameterToKernel(kernel, 1, VX_OUTPUT, VX_TYPE_TENSOR, VX_PARAMETER_STATE_REQUIRED));
         PARAM_ERROR_CHECK(vxAddParameterToKernel(kernel, 2, VX_INPUT, VX_TYPE_SCALAR, VX_PARAMETER_STATE_REQUIRED));
-        PARAM_ERROR_CHECK(vxAddParameterToKernel(kernel, 3, VX_INPUT, VX_TYPE_SCALAR, VX_PARAMETER_STATE_REQUIRED));
+        PARAM_ERROR_CHECK(vxAddParameterToKernel(kernel, 3, VX_INPUT, VX_TYPE_TENSOR, VX_PARAMETER_STATE_REQUIRED));
+        PARAM_ERROR_CHECK(vxAddParameterToKernel(kernel, 4, VX_INPUT, VX_TYPE_TENSOR, VX_PARAMETER_STATE_REQUIRED)); 
+        PARAM_ERROR_CHECK(vxAddParameterToKernel(kernel, 5, VX_INPUT, VX_TYPE_SCALAR, VX_PARAMETER_STATE_REQUIRED)); // New Arg
+        PARAM_ERROR_CHECK(vxAddParameterToKernel(kernel, 6, VX_INPUT, VX_TYPE_SCALAR, VX_PARAMETER_STATE_REQUIRED)); // Old
         PARAM_ERROR_CHECK(vxFinalizeKernel(kernel));
     }
     if (status != VX_SUCCESS)
