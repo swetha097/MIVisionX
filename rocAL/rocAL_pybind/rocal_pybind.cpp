@@ -380,6 +380,14 @@ namespace rocal{
                 Returns dtype of tensor.
                 )code"
             )
+            .def("dims", [](rocalTensor &output_tensor)
+            {
+                return output_tensor.info().dims();
+            },
+                R"code(
+                Returns dims of tensor.
+                )code"
+            )
             .def(
             "copy_data", [](rocalTensor &output_tensor, py::object p)
             {
