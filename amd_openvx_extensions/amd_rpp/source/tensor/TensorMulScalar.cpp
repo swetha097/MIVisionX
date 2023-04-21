@@ -134,7 +134,7 @@ static vx_status VX_CALLBACK processTensorMulScalar(vx_node node, const vx_refer
             float *srcPtrTemp = (float *)(data->pSrc);
             float *dstPtrTemp = (float *)(data->pDst);
             uint bufferLength = data->tensor_size/ sizeof(float);
-            uint alignedWidth = (bufferLength / 8) * 8;
+            uint alignedLength = (bufferLength / 8) * 8;
             uint vectorLoopCount = 0;
             for(; vectorLoopCount < alignedLength; vectorLoopCount += 8)
             {
@@ -145,7 +145,7 @@ static vx_status VX_CALLBACK processTensorMulScalar(vx_node node, const vx_refer
                 dstPtrTemp += 8;
             }
             for(; vectorLoopCount < bufferLength; vectorLoopCount++)
-                *dstPtrTemp++ = *srcPtrTemp++ * scalarValue;
+                *dstPtrTemp++ = *srcPtrTemp++ * scalarValue; 
 
             // for (uint i = 0; i < (data->tensor_size)/ sizeof(float); i++)
             // {

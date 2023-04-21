@@ -175,7 +175,7 @@ static vx_status VX_CALLBACK processTensorAddTensor(vx_node node, const vx_refer
             for (uint i = 0; i < data->nbatchSize; i++)
             {
                 float *src1Temp = (float *)(data->pSrc1) + i * nStride;
-                float *src2Temp = (float *)(data->pSrc2) + i * nStride;
+                float *src2Temp = (float *)(data->pSrc2) + i;
                 float *dstTemp = (float *)(data->pDst) + i * nStride;
                 uint height = data->roi_ptr_src[i].xywhROI.xy.y;
                 uint width = data->roi_ptr_src[i].xywhROI.xy.x;
