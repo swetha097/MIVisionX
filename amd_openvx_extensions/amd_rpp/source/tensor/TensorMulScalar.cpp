@@ -129,46 +129,32 @@ static vx_status VX_CALLBACK processTensorMulScalar(vx_node node, const vx_refer
         // Add the case for UNIT8 datatype
         if (data->in_tensor_type == vx_type_e::VX_TYPE_FLOAT32 && data->out_tensor_type == vx_type_e::VX_TYPE_FLOAT32)
         {
-            // data->roi_ptr_src = (RpptROI *)data->roi_tensor_ptr_src;
-            // __m256 pMul = _mm256_set1_ps(data->scalar_value);
-            // float scalarValue = data->scalar_value;
-            // size_t nStride = data->in_tensor_dims[1] * data->in_tensor_dims[2] * channels;
-
-        // #pragma omp parallel for num_threads(8)
-        //     for (uint i = 0; i < data->nbatchSize; i++)
-        //     {
-        //         float *srcTemp = (float *)(data->pSrc) + i * nStride;
-        //         float *dstTemp = (float *)(data->pDst) + i * nStride;
-        //         uint height = data->roi_ptr_src[i].xywhROI.xy.y;
-        //         uint width = data->roi_ptr_src[i].xywhROI.xy.x * channels;
-        //         uint alignedWidth = (width / 8) * 8;
-        //         for (uint row = 0; row < height; row++)
-        //         {
-                    // float *srcPtrRow = srcTemp + row * data->in_tensor_dims[1];
-                    // float *dstPtrRow = dstTemp + row * data->out_tensor_dims[1];
-                    // uint vectorLoopCount = 0;
-                    // for(; vectorLoopCount < alignedWidth; vectorLoopCount += 8)
-                    // {
-                    //     __m256 pSrc = _mm256_loadu_ps(srcPtrRow);
-                    //     __m256 pDst = _mm256_mul_ps(pSrc, pMul);
-                    //     _mm256_storeu_ps(dstPtrRow, pDst);
-                    //     srcPtrRow += 8;
-                    //     dstPtrRow += 8;
-                    // }
-                    // for(; vectorLoopCount < width; vectorLoopCount++)
-                    //     *dstPtrRow++ = *srcPtrRow++ * scalarValue;
-            //     }
-            // }
-
-            for (uint i = 0; i < (data->tensor_size)/ sizeof(float); i++)
+            __m256 pMul = _mm256_set1_ps(data->scalar_value);
+            float scalarValue = data->scalar_value;
+            float *srcPtrTemp = (float *)(data->pSrc);
+            float *dstPtrTemp = (float *)(data->pDst);
+            uint bufferLength = data->tensor_size/ sizeof(float);
+            uint alignedWidth = (bufferLength / 8) * 8;
+            uint vectorLoopCount = 0;
+            for(; vectorLoopCount < alignedLength; vectorLoopCount += 8)
             {
-                // std::cerr << "\n i :: " << i;
-                // std::cerr << "\n scalar :: "<< data->scalar_value;
-                // std::cerr << "\n (float *)(data->pSrc))[i]"<< ((float *)(data->pSrc))[i];
-                ((float *)(data->pDst))[i] = ((float *)(data->pSrc))[i] * data->scalar_value;
-                // std::cerr << "\n ((float *)(data->pDst))[i]" << ((float *)(data->pDst))[i];
-            
+                __m256 pSrc = _mm256_loadu_ps(srcPtrTemp);
+                __m256 pDst = _mm256_mul_ps(pSrc, pMul);
+                _mm256_storeu_ps(dstPtrTemp, pDst);
+                srcPtrTemp += 8;
+                dstPtrTemp += 8;
             }
+            for(; vectorLoopCount < bufferLength; vectorLoopCount++)
+                *dstPtrTemp++ = *srcPtrTemp++ * scalarValue;
+
+            // for (uint i = 0; i < (data->tensor_size)/ sizeof(float); i++)
+            // {
+            //     // std::cerr << "\n i :: " << i;
+            //     // std::cerr << "\n scalar :: "<< data->scalar_value;
+            //     // std::cerr << "\n (float *)(data->pSrc))[i]"<< ((float *)(data->pSrc))[i];
+            //     ((float *)(data->pDst))[i] = ((float *)(data->pSrc))[i] * data->scalar_value;
+            //     // std::cerr << "\n ((float *)(data->pDst))[i]" << ((float *)(data->pDst))[i];
+            // }
         }
     }
     return status;
@@ -191,7 +177,7 @@ static vx_status VX_CALLBACK initializeTensorMulScalar(vx_node node, const vx_re
     STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[0], VX_TENSOR_DIMS, tensor_dims, sizeof(vx_size) * num_of_dims));
     STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[0], VX_TENSOR_DATA_TYPE, &data->in_tensor_type, sizeof(data->in_tensor_type)));
     STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[1], VX_TENSOR_DATA_TYPE, &data->out_tensor_type, sizeof(data->out_tensor_type)));
-    
+
     data->tensor_size = 1;
     for(int i = 0; i < num_of_dims; i++)
         data->tensor_size *= tensor_dims[i];
