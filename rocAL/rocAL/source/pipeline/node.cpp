@@ -23,11 +23,12 @@ THE SOFTWARE.
 #include "node.h"
 Node::~Node()
 {
-    vxReleaseTensor(&_src_tensor_roi);
-    vxReleaseTensor(&_dst_tensor_roi);
-    if(!_node)
-        vxReleaseNode(&_node);
+    if(!_src_tensor_roi) vxReleaseTensor(&_src_tensor_roi);
+    if(!_dst_tensor_roi) vxReleaseTensor(&_dst_tensor_roi);
+    if(!_node) vxReleaseNode(&_node);
     _node = nullptr;
+    _src_tensor_roi = nullptr;
+    _dst_tensor_roi = nullptr;
 }
 
 void
