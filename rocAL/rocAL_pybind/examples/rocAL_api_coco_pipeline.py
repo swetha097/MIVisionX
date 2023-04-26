@@ -89,7 +89,7 @@ class ROCALCOCOIterator(object):
             self.out = torch.empty((self.bs, self.h, self.w, self.color_format,), dtype=torch.float32, device=torch_gpu_device)
         self.output_tensor_list[0].copy_data(ctypes.c_void_p(self.out.data_ptr()))
 
-        labels_array = self.loader.rocalGetBoundingBoxLabel()
+        labels_array = self.loader.rocalGetBoundingBoxLabels()
         encodded_labels_tensor = []
         encoded_bboxes_tensor = []
         for label in labels_array:

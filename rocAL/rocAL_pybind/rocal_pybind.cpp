@@ -674,7 +674,7 @@ namespace rocal{
                             {labels->size()},
                             {sizeof(int) }));
         });
-        m.def("rocalGetBoundingBoxLabel", [](RocalContext context) {
+        m.def("rocalGetBoundingBoxLabels", [](RocalContext context) {
             rocalTensorList *labels = rocalGetBoundingBoxLabel(context);
             py::list labels_list;
             py::array_t<int> labels_array;

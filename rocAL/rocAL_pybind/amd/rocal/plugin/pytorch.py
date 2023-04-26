@@ -41,7 +41,6 @@ class ROCALGenericImageIterator(object):
 
         self.w = self.output_tensor_list[0].batch_width() if self.w is None else self.w
         self.h = self.output_tensor_list[0].batch_height() if self.h is None else self.h
-        self.batch_size = self.output_tensor_list[0].batch_size() if self.batch_size is None else self.batch_size
         self.color_format = self.output_tensor_list[0].color_format() if self.color_format is None else self.color_format
         if self.out is None:
             self.out = np.zeros((self.batch_size, self.h, self.w, self.p), dtype = "uint8")
@@ -57,7 +56,7 @@ class ROCALGenericImageIterator(object):
 
 
 class ROCALGenericIterator(object):
-    def __init__(self, pipeline, tensor_layout = types.NCHW, reverse_channels = False, multiplier = [1.0,1.0,1.0], offset = [0.0, 0.0, 0.0], tensor_dtype=types.FLOAT, device="cpu", device_id = 0):
+    def __init__(self, pipeline, tensor_layout = types.NCHW, reverse_channels = False, multiplier = [1.0,1.0,1.0], offset = [0.0, 0.0, 0.0], tensor_dtype = types.FLOAT, device = "cpu", device_id = 0):
         self.loader = pipeline
         self.tensor_format =tensor_layout
         self.multiplier = multiplier
@@ -69,7 +68,7 @@ class ROCALGenericIterator(object):
         self.out = None
         self.w = None
         self.h = None
-        self.batch_size = None
+        self.batch_size = pipeline._batch_size
         self.color_format = None
         self.len = b.getRemainingImages(self.loader._handle)
 
@@ -84,7 +83,6 @@ class ROCALGenericIterator(object):
 
         self.w = self.output_tensor_list[0].batch_width() if self.w is None else self.w
         self.h = self.output_tensor_list[0].batch_height() if self.h is None else self.h
-        self.batch_size = self.output_tensor_list[0].batch_size() if self.batch_size is None else self.batch_size
         self.color_format = self.output_tensor_list[0].color_format() if self.color_format is None else self.color_format
 
         if self.out is None:
@@ -117,7 +115,7 @@ class ROCALGenericIterator(object):
             self.bboxes_label_count = np.zeros(self.bs, dtype="int32")
             self.count_batch = self.loader.rocalGetBoundingBoxCount(self.bboxes_label_count)
             # 1D labels array in a batch
-            self.labels = self.loader.rocalGetBoundingBoxLabel()
+            self.labels = self.loader.rocalGetBoundingBoxLabels()
             # 1D bboxes array in a batch
             self.bboxes = self.loader.rocalGetBoundingBoxCords()
             #Image sizes of a batch
@@ -209,7 +207,7 @@ class ROCALClassificationIterator(ROCALGenericIterator):
 
     Parameters
     ----------
-    pipelines : list of amd.rocalLI.pipeline.Pipeline
+    pipelines : list of amd.rocal.pipeline.Pipeline
                 List of pipelines to use
     size : int
            Number of samples in the epoch (Usually the size of the dataset).
