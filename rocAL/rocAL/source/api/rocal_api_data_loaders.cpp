@@ -276,7 +276,7 @@ rocalJpegFileSource(
     return output;
 }
 
-RocalImage  ROCAL_API_CALL
+RocalTensor  ROCAL_API_CALL
 rocalSequenceReader(
         RocalContext p_context,
         const char* source_path,
@@ -287,16 +287,14 @@ rocalSequenceReader(
         bool shuffle,
         bool loop,
         unsigned step,
-        unsigned stride)
-{
-    Image* output = nullptr;
+        unsigned stride) {
+    rocalTensor* output = nullptr;
     if (p_context == nullptr) {
         ERR("Invalid ROCAL context or invalid input image")
         return output;
     }
     auto context = static_cast<Context*>(p_context);
-    try
-    {
+    try {
         if(sequence_length == 0)
             THROW("Sequence length passed should be bigger than 0")
         // Set sequence batch size and batch ratio in master graph as it varies according to sequence length
@@ -320,12 +318,17 @@ rocalSequenceReader(
 
         INFO("Internal buffer size width = "+ TOSTR(width)+ " height = "+ TOSTR(height) + " depth = "+ TOSTR(num_of_planes))
 
-        auto info = ImageInfo(width, height,
-                              context->internal_batch_size(),
-                              num_of_planes,
-                              context->master_graph->mem_type(),
-                              color_format );
-        output = context->master_graph->create_loader_output_image(info);
+        std::vector<size_t> dims = {context->user_batch_size(), sequence_length, height, 
+                                    width, static_cast<unsigned>(num_of_planes)};
+        auto info  = rocalTensorInfo(std::move(dims),
+                                     context->master_graph->mem_type(),
+                                     RocalTensorDataType::UINT8);
+        info.set_color_format(color_format);
+        info.set_tensor_layout(RocalTensorlayout::NFHWC);
+        info.set_sequence_batch_size(sequence_length);
+        info.set_max_shape();
+
+        output = context->master_graph->create_loader_output_tensor(info);
 
         context->master_graph->add_node<ImageLoaderNode>({}, {output})->init(internal_shard_count,
                                                                             source_path, "",
@@ -342,22 +345,19 @@ rocalSequenceReader(
                                                                             step, stride);
         context->master_graph->set_loop(loop);
 
-        if(is_output)
-        {
-            auto actual_output = context->master_graph->create_image(info, is_output);
+        if(is_output) {
+            auto actual_output = context->master_graph->create_tensor(info, is_output);
             context->master_graph->add_node<CopyNode>({output}, {actual_output});
         }
 
-    }
-    catch(const std::exception& e)
-    {
+    } catch(const std::exception& e) {
         context->capture_error(e.what());
         std::cerr << e.what() << '\n';
     }
     return output;
 }
 
-RocalImage  ROCAL_API_CALL
+RocalTensor  ROCAL_API_CALL
 rocalSequenceReaderSingleShard(
         RocalContext p_context,
         const char* source_path,
@@ -369,16 +369,14 @@ rocalSequenceReaderSingleShard(
         bool shuffle,
         bool loop,
         unsigned step,
-        unsigned stride)
-{
-    Image* output = nullptr;
+        unsigned stride) {
+    rocALTensor* output = nullptr;
     if (p_context == nullptr) {
         ERR("Invalid ROCAL context or invalid input image")
         return output;
     }
     auto context = static_cast<Context*>(p_context);
-    try
-    {
+    try {
         if(sequence_length == 0)
             THROW("Sequence length passed should be bigger than 0")
         // Set sequence batch size and batch ratio in master graph as it varies according to sequence length
@@ -405,12 +403,16 @@ rocalSequenceReaderSingleShard(
 
         INFO("Internal buffer size width = "+ TOSTR(width)+ " height = "+ TOSTR(height) + " depth = "+ TOSTR(num_of_planes))
 
-        auto info = ImageInfo(width, height,
-                              context->internal_batch_size(),
-                              num_of_planes,
-                              context->master_graph->mem_type(),
-                              color_format );
-        output = context->master_graph->create_loader_output_image(info);
+        std::vector<size_t> dims = {context->user_batch_size(), sequence_length, height, 
+                                    width, static_cast<unsigned>(num_of_planes)};
+        auto info  = rocalTensorInfo(std::move(dims),
+                                     context->master_graph->mem_type(),
+                                     RocalTensorDataType::UINT8);
+        info.set_color_format(color_format);
+        info.set_tensor_layout(RocalTensorlayout::NFHWC);
+        info.set_sequence_batch_size(sequence_length);
+        info.set_max_shape();
+        output = context->master_graph->create_loader_output_tensor(info);
 
         context->master_graph->add_node<ImageLoaderSingleShardNode>({}, {output})->init(shard_id, shard_count,
                                                                                         source_path, "",
@@ -427,15 +429,12 @@ rocalSequenceReaderSingleShard(
                                                                                         step, stride);
         context->master_graph->set_loop(loop);
 
-        if(is_output)
-        {
-            auto actual_output = context->master_graph->create_image(info, is_output);
+        if(is_output) {
+            auto actual_output = context->master_graph->create_tensor(info, is_output);
             context->master_graph->add_node<CopyNode>({output}, {actual_output});
         }
 
-    }
-    catch(const std::exception& e)
-    {
+    } catch(const std::exception& e) {
         context->capture_error(e.what());
         std::cerr << e.what() << '\n';
     }
@@ -1954,7 +1953,7 @@ rocalFusedJpegCropSingleShard(
     return output;
 }
 
-RocalImage  ROCAL_API_CALL
+RocalTensor  ROCAL_API_CALL
 rocalVideoFileSource(
         RocalContext p_context,
         const char* source_path,
@@ -1967,46 +1966,46 @@ rocalVideoFileSource(
         bool loop,
         unsigned step,
         unsigned stride,
-        bool file_list_frame_num)
-{
-    Image* output = nullptr;
+        bool file_list_frame_num) {
+    rocalTensor* output = nullptr;
     if (p_context == nullptr) {
         ERR("Invalid ROCAL context or invalid input image")
         return output;
     }
     auto context = static_cast<Context*>(p_context);
-    try
-    {
+    try {
 #ifdef ROCAL_VIDEO
         if(sequence_length == 0)
             THROW("Sequence length passed should be bigger than 0")
-        // Set video loader flag in master_graph
-        context->master_graph->set_video_loader_flag();
 
         // Set default step and stride values if 0 is passed
         step = (step == 0)? sequence_length : step;
         stride = (stride == 0)? 1 : stride;
 
         VideoProperties video_prop;
-        VideoDecoderType decoder_type;
+        DecoderType decoder_type;
         find_video_properties(video_prop, source_path, file_list_frame_num);
         if(rocal_decode_device == RocalDecodeDevice::ROCAL_HW_DECODE)
-            decoder_type = VideoDecoderType::FFMPEG_HARDWARE_DECODE;
+            decoder_type = DecoderType::FFMPEG_HARDWARE_DECODE;
         else
-            decoder_type = VideoDecoderType::FFMPEG_SOFTWARE_DECODE;
+            decoder_type = DecoderType::FFMPEG_SOFTWARE_DECODE;
         auto [color_format, num_of_planes] = convert_color_format(rocal_color_format);
         auto decoder_mode = convert_decoder_mode(rocal_decode_device);
-        auto info = ImageInfo(video_prop.width, video_prop.height,
-                              context->internal_batch_size() * sequence_length,
-                              num_of_planes,
-                              context->master_graph->mem_type(),
-                              color_format );
+        
+        std::vector<size_t> dims = {context->user_batch_size(), sequence_length, video_prop.height, 
+                                    video_prop.width, static_cast<unsigned>(num_of_planes)};
+        auto info  = rocalTensorInfo(std::move(dims),
+                                     context->master_graph->mem_type(),
+                                     RocalTensorDataType::UINT8);
+        info.set_color_format(color_format);
+        info.set_tensor_layout(RocalTensorlayout::NFHWC);
+        info.set_max_shape();
 
-        output = context->master_graph->create_loader_output_image(info);
+        output = context->master_graph->create_loader_output_tensor(info);
 
         context->master_graph->add_node<VideoLoaderNode>({}, {output})->init(internal_shard_count,
                                                                             source_path,
-                                                                            VideoStorageType::VIDEO_FILE_SYSTEM,
+                                                                            StorageType::VIDEO_FILE_SYSTEM,
                                                                             decoder_type,
                                                                             decoder_mode,
                                                                             sequence_length,
@@ -2019,25 +2018,21 @@ rocalVideoFileSource(
                                                                             context->master_graph->mem_type());
         context->master_graph->set_loop(loop);
 
-        if(is_output)
-        {
-            auto actual_output = context->master_graph->create_image(info, is_output);
+        if(is_output) {
+            auto actual_output = context->master_graph->create_tensor(info, is_output);
             context->master_graph->add_node<CopyNode>({output}, {actual_output});
         }
 #else
         THROW("Video decoder is not enabled since ffmpeg is not present")
 #endif
-    }
-    catch(const std::exception& e)
-    {
+    } catch(const std::exception& e) {
         context->capture_error(e.what());
         std::cerr << e.what() << '\n';
     }
     return output;
-
 }
 
-RocalImage  ROCAL_API_CALL
+RocalTensor  ROCAL_API_CALL
 rocalVideoFileSourceSingleShard(
         RocalContext p_context,
         const char* source_path,
@@ -2051,21 +2046,17 @@ rocalVideoFileSourceSingleShard(
         bool loop,
         unsigned step,
         unsigned stride,
-        bool file_list_frame_num)
-{
-    Image* output = nullptr;
+        bool file_list_frame_num) {
+    rocalTensor* output = nullptr;
     if (p_context == nullptr) {
-        ERR("Invalid ROCAL context or invalid input image")
+        ERR("Invalid ROCAL context")
         return output;
     }
     auto context = static_cast<Context*>(p_context);
-    try
-    {
+    try {
 #ifdef ROCAL_VIDEO
         if(sequence_length == 0)
             THROW("Sequence length passed should be bigger than 0")
-        // Set video loader flag in master_graph
-        context->master_graph->set_video_loader_flag();
 
         if(shard_count < 1 )
             THROW("Shard count should be bigger than 0")
@@ -2078,25 +2069,28 @@ rocalVideoFileSourceSingleShard(
         stride = (stride == 0)? 1 : stride;
 
         VideoProperties video_prop;
-        VideoDecoderType decoder_type;
+        DecoderType decoder_type;
         find_video_properties(video_prop, source_path, file_list_frame_num);
         if(rocal_decode_device == RocalDecodeDevice::ROCAL_HW_DECODE)
-            decoder_type = VideoDecoderType::FFMPEG_HARDWARE_DECODE;
+            decoder_type = DecoderType::FFMPEG_HARDWARE_DECODE;
         else
-            decoder_type = VideoDecoderType::FFMPEG_SOFTWARE_DECODE;
+            decoder_type = DecoderType::FFMPEG_SOFTWARE_DECODE;
         auto [color_format, num_of_planes] = convert_color_format(rocal_color_format);
         auto decoder_mode = convert_decoder_mode(rocal_decode_device);
-        auto info = ImageInfo(video_prop.width, video_prop.height,
-                              context->internal_batch_size() * sequence_length,
-                              num_of_planes,
-                              context->master_graph->mem_type(),
-                              color_format );
+        std::vector<size_t> dims = {context->user_batch_size(), sequence_length, video_prop.height, 
+                                    video_prop.width, static_cast<unsigned>(num_of_planes)};
+        auto info  = rocalTensorInfo(std::move(dims),
+                                     context->master_graph->mem_type(),
+                                     RocalTensorDataType::UINT8);
+        info.set_color_format(color_format);
+        info.set_tensor_layout(RocalTensorlayout::NFHWC);
+        info.set_max_shape();
 
-        output = context->master_graph->create_loader_output_image(info);
+        output = context->master_graph->create_loader_output_tensor(info);
 
         context->master_graph->add_node<VideoLoaderSingleShardNode>({}, {output})->init(shard_id, shard_count,
                                                                                         source_path,
-                                                                                        VideoStorageType::VIDEO_FILE_SYSTEM,
+                                                                                        StorageType::VIDEO_FILE_SYSTEM,
                                                                                         decoder_type,
                                                                                         decoder_mode,
                                                                                         sequence_length,
@@ -2109,17 +2103,14 @@ rocalVideoFileSourceSingleShard(
                                                                                         context->master_graph->mem_type());
         context->master_graph->set_loop(loop);
 
-        if(is_output)
-        {
-            auto actual_output = context->master_graph->create_image(info, is_output);
+        if(is_output) {
+            auto actual_output = context->master_graph->create_tensor(info, is_output);
             context->master_graph->add_node<CopyNode>({output}, {actual_output});
         }
 #else
         THROW("Video decoder is not enabled since ffmpeg is not present")
 #endif
-    }
-    catch(const std::exception& e)
-    {
+    } catch(const std::exception& e) {
         context->capture_error(e.what());
         std::cerr << e.what() << '\n';
     }
@@ -2127,7 +2118,7 @@ rocalVideoFileSourceSingleShard(
 
 }
 
-RocalImage  ROCAL_API_CALL
+RocalTensor  ROCAL_API_CALL
 rocalVideoFileResize(
         RocalContext p_context,
         const char* source_path,
@@ -2149,44 +2140,44 @@ rocalVideoFileResize(
         unsigned resize_longer,
         RocalResizeInterpolationType interpolation_type)
 {
-    Image* resize_output = nullptr;
+    rocalTensor* resize_output = nullptr;
     if (p_context == nullptr) {
         ERR("Invalid ROCAL context or invalid input image")
         return resize_output;
     }
 
     auto context = static_cast<Context*>(p_context);
-    try
-    {
+    try {
 #ifdef ROCAL_VIDEO
         if(sequence_length == 0)
             THROW("Sequence length passed should be bigger than 0")
-        // Set video loader flag in master_graph
-        context->master_graph->set_video_loader_flag();
 
         // Set default step and stride values if 0 is passed
         step = (step == 0)? sequence_length : step;
         stride = (stride == 0)? 1 : stride;
 
         VideoProperties video_prop;
-        VideoDecoderType decoder_type;
+        DecoderType decoder_type;
         find_video_properties(video_prop, source_path, file_list_frame_num);
         if(rocal_decode_device == RocalDecodeDevice::ROCAL_HW_DECODE)
-            decoder_type = VideoDecoderType::FFMPEG_HARDWARE_DECODE;
+            decoder_type = DecoderType::FFMPEG_HARDWARE_DECODE;
         else
-            decoder_type = VideoDecoderType::FFMPEG_SOFTWARE_DECODE;
+            decoder_type = DecoderType::FFMPEG_SOFTWARE_DECODE;
         auto [color_format, num_of_planes] = convert_color_format(rocal_color_format);
         auto decoder_mode = convert_decoder_mode(rocal_decode_device);
-        auto info = ImageInfo(video_prop.width, video_prop.height,
-                              context->internal_batch_size() * sequence_length,
-                              num_of_planes,
-                              context->master_graph->mem_type(),
-                              color_format );
+        std::vector<size_t> dims = {context->user_batch_size(), sequence_length, video_prop.height, 
+                                    video_prop.width, static_cast<unsigned>(num_of_planes)};
+        auto info  = rocalTensorInfo(std::move(dims),
+                                     context->master_graph->mem_type(),
+                                     RocalTensorDataType::UINT8);
+        info.set_color_format(color_format);
+        info.set_tensor_layout(RocalTensorlayout::NFHWC);
+        info.set_max_shape();
 
-        Image* output = context->master_graph->create_loader_output_image(info);
+        rocalTensor* output = context->master_graph->create_loader_output_tensor(info);
         context->master_graph->add_node<VideoLoaderNode>({}, {output})->init(internal_shard_count,
                                                                             source_path,
-                                                                            VideoStorageType::VIDEO_FILE_SYSTEM,
+                                                                            StorageType::VIDEO_FILE_SYSTEM,
                                                                             decoder_type,
                                                                             decoder_mode,
                                                                             sequence_length,
@@ -2199,8 +2190,7 @@ rocalVideoFileResize(
                                                                             context->master_graph->mem_type());
         context->master_graph->set_loop(loop);
 
-        if(dest_width != video_prop.width && dest_height != video_prop.height)
-        {
+        if(dest_width != video_prop.width && dest_height != video_prop.height) {
             if((dest_width | dest_height | resize_longer | resize_shorter) == 0)
                 THROW("Atleast one size 'dest_width' or 'dest_height' or 'resize_shorter' or 'resize_longer' must be specified")
             if((dest_width | dest_height) && (resize_longer | resize_shorter))
@@ -2244,8 +2234,8 @@ rocalVideoFileResize(
             } else {
                 // compute the output info width and height wrt the scaling modes and roi passed
                 if(resize_scaling_mode == ROCAL_SCALING_MODE_STRETCH) {
-                    max_out_width = out_width ? out_width : info.width();
-                    max_out_height = out_height ? out_height : info.height_single();
+                    max_out_width = out_width ? out_width : info.max_shape()[0];
+                    max_out_height = out_height ? out_height : info.max_shape()[1];
                 } else if(resize_scaling_mode == ROCAL_SCALING_MODE_NOT_SMALLER) {
                     max_out_width = (out_width ? out_width : out_height) * MAX_ASPECT_RATIO;
                     max_out_height = (out_height ? out_height : out_width) * MAX_ASPECT_RATIO;
@@ -2261,46 +2251,42 @@ rocalVideoFileResize(
 
             // set the width and height in the output info
             // For the resize node, user can create an image with a different width and height
-            ImageInfo output_info = info;
-            output_info.width(max_out_width);
-            output_info.height(max_out_height);
+            rocalTensorInfo output_info = info;
+            std::vector<size_t>  out_dims = {context->user_batch_size(), sequence_length, max_out_height, 
+                                             max_out_width, static_cast<unsigned>(num_of_planes)};
+            output_info.set_dims(out_dims);
 
-            resize_output = context->master_graph->create_image(output_info, false);
+            resize_output = context->master_graph->create_tensor(output_info, false);
 
             // For the nodes that user provides the output size the dimension of all the images after this node will be fixed and equal to that size
-            resize_output->reset_image_roi();
+            resize_output->reset_tensor_roi();
 
             std::shared_ptr<ResizeNode> resize_node =  context->master_graph->add_node<ResizeNode>({output}, {resize_output});
             resize_node->init(out_width, out_height, resize_scaling_mode, maximum_size, interpolation_type);
             if (context->master_graph->meta_data_graph())
                 context->master_graph->meta_add_node<ResizeMetaNode,ResizeNode>(resize_node);
 
-            if(is_output)
-            {
-                auto actual_output = context->master_graph->create_image(output_info, is_output);
+            if(is_output) {
+                auto actual_output = context->master_graph->create_tensor(output_info, is_output);
                 context->master_graph->add_node<CopyNode>({resize_output}, {actual_output});
             }
-        }
-        else{
-            if(is_output)
-            {
-                auto actual_output = context->master_graph->create_image(info, is_output);
+        } else {
+            if(is_output) {
+                auto actual_output = context->master_graph->create_tensor(info, is_output);
                 context->master_graph->add_node<CopyNode>({output}, {actual_output});
             }
         }
 #else
         THROW("Video decoder is not enabled since ffmpeg is not present")
 #endif
-    }
-    catch(const std::exception& e)
-    {
+    } catch(const std::exception& e) {
         context->capture_error(e.what());
         std::cerr << e.what() << '\n';
     }
     return resize_output;
 }
 
-RocalImage  ROCAL_API_CALL
+RocalTensor  ROCAL_API_CALL
 rocalVideoFileResizeSingleShard(
         RocalContext p_context,
         const char* source_path,
@@ -2323,20 +2309,17 @@ rocalVideoFileResizeSingleShard(
         unsigned resize_longer,
         RocalResizeInterpolationType interpolation_type)
 {
-    Image* resize_output = nullptr;
+    rocalTensor* resize_output = nullptr;
     if (p_context == nullptr) {
         ERR("Invalid ROCAL context or invalid input image")
         return resize_output;
     }
 
     auto context = static_cast<Context*>(p_context);
-    try
-    {
+    try {
 #ifdef ROCAL_VIDEO
         if(sequence_length == 0)
             THROW("Sequence length passed should be bigger than 0")
-        // Set video loader flag in master_graph
-        context->master_graph->set_video_loader_flag();
 
         if(shard_count < 1 )
             THROW("Shard count should be bigger than 0")
@@ -2349,24 +2332,27 @@ rocalVideoFileResizeSingleShard(
         stride = (stride == 0)? 1 : stride;
 
         VideoProperties video_prop;
-        VideoDecoderType decoder_type;
+        DecoderType decoder_type;
         find_video_properties(video_prop, source_path, file_list_frame_num);
         if(rocal_decode_device == RocalDecodeDevice::ROCAL_HW_DECODE)
-            decoder_type = VideoDecoderType::FFMPEG_HARDWARE_DECODE;
+            decoder_type = DecoderType::FFMPEG_HARDWARE_DECODE;
         else
-            decoder_type = VideoDecoderType::FFMPEG_SOFTWARE_DECODE;
+            decoder_type = DecoderType::FFMPEG_SOFTWARE_DECODE;
         auto [color_format, num_of_planes] = convert_color_format(rocal_color_format);
         auto decoder_mode = convert_decoder_mode(rocal_decode_device);
-        auto info = ImageInfo(video_prop.width, video_prop.height,
-                              context->internal_batch_size() * sequence_length,
-                              num_of_planes,
-                              context->master_graph->mem_type(),
-                              color_format );
-
-        Image* output = context->master_graph->create_loader_output_image(info);
+        
+        std::vector<size_t> dims = {context->user_batch_size(), sequence_length, video_prop.height, 
+                                    video_prop.width, static_cast<unsigned>(num_of_planes)};
+        auto info  = rocalTensorInfo(std::move(dims),
+                                     context->master_graph->mem_type(),
+                                     RocalTensorDataType::UINT8);
+        info.set_color_format(color_format);
+        info.set_tensor_layout(RocalTensorlayout::NFHWC);
+        info.set_max_shape();
+        rocalTensor*  output = context->master_graph->create_loader_output_tensor(info);
         context->master_graph->add_node<VideoLoaderSingleShardNode>({}, {output})->init(shard_id, shard_count,
                                                                                         source_path,
-                                                                                        VideoStorageType::VIDEO_FILE_SYSTEM,
+                                                                                        StorageType::VIDEO_FILE_SYSTEM,
                                                                                         decoder_type,
                                                                                         decoder_mode,
                                                                                         sequence_length,
@@ -2379,8 +2365,7 @@ rocalVideoFileResizeSingleShard(
                                                                                         context->master_graph->mem_type());
         context->master_graph->set_loop(loop);
 
-        if(dest_width != video_prop.width && dest_height != video_prop.height)
-        {
+        if(dest_width != video_prop.width && dest_height != video_prop.height) {
             if((dest_width | dest_height | resize_longer | resize_shorter) == 0)
                 THROW("Atleast one size 'dest_width' or 'dest_height' or 'resize_shorter' or 'resize_longer' must be specified")
             if((dest_width | dest_height) && (resize_longer | resize_shorter))
@@ -2424,8 +2409,8 @@ rocalVideoFileResizeSingleShard(
             } else {
                 // compute the output info width and height wrt the scaling modes and roi passed
                 if(resize_scaling_mode == ROCAL_SCALING_MODE_STRETCH) {
-                    max_out_width = out_width ? out_width : info.width();
-                    max_out_height = out_height ? out_height : info.height_single();
+                    max_out_width = out_width ? out_width : info.max_shape()[0];
+                    max_out_height = out_height ? out_height : info.max_shape()[1];
                 } else if(resize_scaling_mode == ROCAL_SCALING_MODE_NOT_SMALLER) {
                     max_out_width = (out_width ? out_width : out_height) * MAX_ASPECT_RATIO;
                     max_out_height = (out_height ? out_height : out_width) * MAX_ASPECT_RATIO;
@@ -2441,38 +2426,34 @@ rocalVideoFileResizeSingleShard(
 
             // set the width and height in the output info
             // For the resize node, user can create an image with a different width and height
-            ImageInfo output_info = info;
-            output_info.width(max_out_width);
-            output_info.height(max_out_height);
+            rocalTensorInfo output_info = info;
+            std::vector<size_t>  out_dims = {context->user_batch_size(), sequence_length, max_out_height, 
+                                             max_out_width, static_cast<unsigned>(num_of_planes)};
+            output_info.set_dims(out_dims);
 
-            resize_output = context->master_graph->create_image(output_info, false);
+            resize_output = context->master_graph->create_tensor(output_info, false);
             // For the nodes that user provides the output size the dimension of all the images after this node will be fixed and equal to that size
-            resize_output->reset_image_roi();
+            resize_output->reset_tensor_roi();
 
             std::shared_ptr<ResizeNode> resize_node =  context->master_graph->add_node<ResizeNode>({output}, {resize_output});
             resize_node->init(out_width, out_height, resize_scaling_mode, maximum_size, interpolation_type);
             if (context->master_graph->meta_data_graph())
                 context->master_graph->meta_add_node<ResizeMetaNode,ResizeNode>(resize_node);
 
-            if(is_output)
-            {
-                auto actual_output = context->master_graph->create_image(output_info, is_output);
+            if(is_output) {
+                auto actual_output = context->master_graph->create_tensor(output_info, is_output);
                 context->master_graph->add_node<CopyNode>({resize_output}, {actual_output});
             }
-        }
-        else{
-            if(is_output)
-            {
-                auto actual_output = context->master_graph->create_image(info, is_output);
+        } else {
+            if(is_output) {
+                auto actual_output = context->master_graph->create_tensor(info, is_output);
                 context->master_graph->add_node<CopyNode>({output}, {actual_output});
             }
         }
 #else
         THROW("Video decoder is not enabled since ffmpeg is not present")
 #endif
-    }
-    catch(const std::exception& e)
-    {
+    } catch(const std::exception& e) {
         context->capture_error(e.what());
         std::cerr << e.what() << '\n';
     }
