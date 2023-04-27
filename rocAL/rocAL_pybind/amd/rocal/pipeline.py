@@ -174,48 +174,6 @@ class Pipeline(object):
     def get_handle(self):
         return self._handle
 
-    def copyImage(self, array):
-        out = np.frombuffer(array, dtype=array.dtype)
-        b.rocalCopyToOutput(
-            self._handle, np.ascontiguousarray(out, dtype=array.dtype))
-
-    def copyToTensor(self, array,  multiplier, offset, reverse_channels, tensor_format, tensor_dtype):
-
-        b.rocalCopyToOutputTensor(self._handle, ctypes.c_void_p(array.data_ptr()), tensor_format, tensor_dtype,
-                                    multiplier[0], multiplier[1], multiplier[2], offset[0], offset[1], offset[2], (1 if reverse_channels else 0))
-
-    def copyToTensorNHWC(self, array,  multiplier, offset, reverse_channels, tensor_dtype):
-        if(self._rocal_cpu):
-            out = np.frombuffer(array, dtype=array.dtype)
-            if tensor_dtype == types.FLOAT:
-                b.rocalCopyToOutputTensor32(self._handle, np.ascontiguousarray(out, dtype=array.dtype), types.NHWC,
-                                        multiplier[0], multiplier[1], multiplier[2], offset[0], offset[1], offset[2], (1 if reverse_channels else 0))
-            elif tensor_dtype == types.FLOAT16:
-                b.rocalCopyToOutputTensor16(self._handle, np.ascontiguousarray(out, dtype=array.dtype), types.NHWC,
-                                       multiplier[0], multiplier[1], multiplier[2], offset[0], offset[1], offset[2], (1 if reverse_channels else 0))
-        else:
-            if tensor_dtype == types.FLOAT:
-                b.rocalCopyCupyToOutputTensor32(self._handle, array.data.ptr, types.NHWC,
-                                        multiplier[0], multiplier[1], multiplier[2], offset[0], offset[1], offset[2], (1 if reverse_channels else 0))
-            elif tensor_dtype == types.FLOAT16:
-                b.rocalCopyCupyToOutputTensor16(self._handle, ctypes.c_void_p(array.ctypes.data), types.NHWC,
-                                       multiplier[0], multiplier[1], multiplier[2], offset[0], offset[1], offset[2], (1 if reverse_channels else 0))
-    def copyToTensorNCHW(self, array,  multiplier, offset, reverse_channels, tensor_dtype):
-        if(self._rocal_cpu):
-            out = np.frombuffer(array, dtype=array.dtype)
-            if tensor_dtype == types.FLOAT:
-                b.rocalCopyToOutputTensor32(self._handle, np.ascontiguousarray(out, dtype=array.dtype), types.NCHW,
-                                        multiplier[0], multiplier[1], multiplier[2], offset[0], offset[1], offset[2], (1 if reverse_channels else 0))
-            elif tensor_dtype == types.FLOAT16:
-                b.rocalCopyToOutputTensor16(self._handle, np.ascontiguousarray(out, dtype=array.dtype), types.NCHW,
-                                        multiplier[0], multiplier[1], multiplier[2], offset[0], offset[1], offset[2], (1 if reverse_channels else 0))
-        else:
-            if tensor_dtype == types.FLOAT:
-                b.rocalCopyCupyToOutputTensor32(self._handle, array.data.ptr, types.NCHW,
-                                        multiplier[0], multiplier[1], multiplier[2], offset[0], offset[1], offset[2], (1 if reverse_channels else 0))
-            elif tensor_dtype == types.FLOAT16:
-                b.rocalCopyCupyToOutputTensor16(self._handle, ctypes.c_void_p(array.ctypes.data), types.NCHW,
-                                       multiplier[0], multiplier[1], multiplier[2], offset[0], offset[1], offset[2], (1 if reverse_channels else 0))
     def GetOneHotEncodedLabels(self, array, device):
         if device=="cpu":
             if (isinstance(array,np.ndarray)):
@@ -278,20 +236,6 @@ class Pipeline(object):
     def GetBoundingBoxCount(self, array):
         return b.getBoundingBoxCount(self._handle, array)
 
-    def GetBBLabels(self, array):
-        return b.getBBLabels(self._handle, array)
-
-    def GetBBCords(self, array):
-        return b.getBBCords(self._handle, array)
-
-    def getImageLabels(self, array):
-        if (isinstance(array,np.ndarray)):
-            b.getImageLabels(self._handle, array.ctypes.data_as(ctypes.c_void_p))
-        elif (isinstance(array,cp.ndarray)):
-            b.getCupyImageLabels(self._handle, array.data.ptr)
-        else: #pytorch tensor
-            b.getImageLabels(self._handle, ctypes.c_void_p(array.data_ptr()))
-
     def copyEncodedBoxesAndLables(self, bbox_array, label_array):
         b.rocalCopyEncodedBoxesAndLables(self._handle, bbox_array, label_array)
 
@@ -301,23 +245,8 @@ class Pipeline(object):
     def GetImgSizes(self, array):
         return b.getImgSizes(self._handle, array)
 
-    def GetBoundingBox(self,array):
-        return array
-
     def GetImageNameLength(self,idx):
         return b.getImageNameLen(self._handle,idx)
-
-    def getOutputWidth(self):
-        return b.getOutputWidth(self._handle)
-
-    def getOutputHeight(self):
-        return b.getOutputHeight(self._handle)
-
-    def getOutputImageCount(self):
-        return b.getOutputImageCount(self._handle)
-
-    def getOutputColorFormat(self):
-        return b.getOutputColorFormat(self._handle)
 
     def getRemainingImages(self):
         return b.getRemainingImages(self._handle)

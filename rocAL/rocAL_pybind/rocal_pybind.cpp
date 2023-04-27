@@ -595,14 +595,7 @@ namespace rocal{
             .value("DECODER_VIDEO_FFMPEG_HW",ROCAL_DECODER_VIDEO_FFMPEG_HW)
             .export_values();
         // rocal_api_info.h
-        m.def("getOutputWidth",&rocalGetOutputWidth);
-        m.def("getOutputHeight",&rocalGetOutputHeight);
-        m.def("getOutputColorFormat",&rocalGetOutputColorFormat);
         m.def("getRemainingImages",&rocalGetRemainingImages);
-        m.def("getOutputImageCount",&rocalGetAugmentationBranchCount);
-        m.def("getImageWidth",&rocalGetImageWidth);
-        m.def("getImageHeight",&rocalGetImageHeight);
-        m.def("getImagePlanes",&rocalGetImagePlanes);
         m.def("getImageName",&wrapper_image_name);
         m.def("getImageId", [](RocalContext context, py::array_t<int> array) {
             auto buf = array.request();
