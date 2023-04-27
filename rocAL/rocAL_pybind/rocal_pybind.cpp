@@ -284,7 +284,7 @@ namespace rocal{
     PYBIND11_MODULE(rocal_pybind, m) {
         m.doc() = "Python bindings for the C++ portions of ROCAL";
         // rocal_api.h
-        m.def("rocalCreate",&rocalCreate, "Creates context with the arguments sent and returns it",
+        m.def("rocalCreate",&rocalCreate,"Creates context with the arguments sent and returns it",
                 py::return_value_policy::reference,
                 py::arg("batch_size"),
                 py::arg("affinity"),
@@ -297,10 +297,10 @@ namespace rocal{
         m.def("rocalRelease",&rocalRelease);
         // rocal_api_types.h
         py::class_<TimingInfo>(m, "TimingInfo")
-            .def_readwrite("load_time", &TimingInfo::load_time)
-            .def_readwrite("decode_time", &TimingInfo::decode_time)
-            .def_readwrite("process_time", &TimingInfo::process_time)
-            .def_readwrite("transfer_time", &TimingInfo::transfer_time);
+            .def_readwrite("load_time",&TimingInfo::load_time)
+            .def_readwrite("decode_time",&TimingInfo::decode_time)
+            .def_readwrite("process_time",&TimingInfo::process_time)
+            .def_readwrite("transfer_time",&TimingInfo::transfer_time);
         py::class_<rocalTensor>(m, "rocalTensor")
                 .def(
                 "batch_height",
