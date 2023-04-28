@@ -130,5 +130,37 @@ extern "C" RocalTensor ROCAL_API_CALL rocalColorTwist(RocalContext context,
                                                       RocalTensorLayout rocal_tensor_output_layout = ROCAL_NHWC,
                                                       RocalTensorOutputType rocal_tensor_output_datatype = ROCAL_UINT8);
 
+extern "C" std::pair<RocalTensor,RocalTensor> ROCAL_API_CALL rocalNonSilentRegion(RocalContext p_context,
+                                                           RocalTensor p_input,
+                                                           bool is_output,
+                                                           float cut_off_db = -0.60,
+                                                           float reference_power = 0.0,
+                                                           int reset_interval = 8192,
+                                                           int window_length = 2048);
+
+extern "C" RocalTensor ROCAL_API_CALL rocalSlice(RocalContext p_context,
+                                                RocalTensor p_input,
+                                                RocalTensorOutputType rocal_tensor_output_type,
+                                                bool is_output,
+                                                RocalTensor anchor,
+                                                RocalTensor shape ,
+                                                std::vector<float> fill_values = {},
+                                                std::vector<unsigned> axes = {},
+                                                bool normalized_anchor = false,
+                                                bool normalized_shape = false,
+                                                RocalOutOfBoundsPolicy policy = RocalOutOfBoundsPolicy::ERROR);
+
+extern "C" RocalTensor ROCAL_API_CALL rocalSpectrogram(RocalContext p_context,
+                                                       RocalTensor p_input,
+                                                       RocalTensorOutputType rocal_tensor_output_type,
+                                                       bool is_output,
+                                                       std::vector<float>& window_fn,
+                                                       bool center_windows = true,
+                                                       bool reflect_padding = true,
+                                                       RocalSpectrogramLayout spec_layout = RocalSpectrogramLayout::FT,
+                                                       int power = 2, // Can be 1 or 2
+                                                       int nfft_size = 2048,
+                                                       int window_length = 512,
+                                                       int window_step = 256);
 
 #endif //MIVISIONX_ROCAL_API_AUGMENTATION_H

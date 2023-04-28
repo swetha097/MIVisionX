@@ -137,6 +137,9 @@ list(APPEND SOURCES
         source/ColorTwist.cpp
         source/ResizeMirrorNormalize.cpp
         source/SequenceRearrange.cpp
+        source/NonSilentRegion.cpp
+        source/Slice.cpp
+        source/Spectrogram.cpp
         source/kernel_rpp.cpp
         source/internal_publishKernels.cpp
     )

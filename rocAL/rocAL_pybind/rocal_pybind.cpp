@@ -168,11 +168,49 @@ namespace rocal
                 )code"
             )
             .def(
+                "get_roi_at",
+                [](rocalTensor &output_tensor, uint idx)
+                {
+                    return std::make_pair(output_tensor.info().get_roi()[idx].x1, output_tensor.info().get_roi()[idx].y1);
+                },
+                R"code(
+                Returns a tensor ROI
+                ex : width, height in case of an image data
+                ex : samples , channels in case of an audio data
+                )code"
+            )
+            .def(
+                "get_rois",
+                [](rocalTensor &output_tensor)
+                {
+                    return py::array(py::buffer_info(
+                            (int *)(output_tensor.info().get_roi()),
+                            sizeof(int),
+                            py::format_descriptor< int>::format(),
+                            1,
+                            {output_tensor.info().dims().at(0) * 4},
+                            {sizeof(int) }));
+                },
+                R"code(
+                Returns a tensor ROI
+                ex : width, height in case of an image data
+                ex : samples , channels in case of an audio data
+                )code"
+            )
+            .def(
             "copy_data", [](rocalTensor &output_tensor, py::object p)
             {
             auto ptr = ctypes_void_ptr(p);
             output_tensor.copy_data(ptr);
             }
+            )
+            .def(
+            "copy_data", [](rocalTensor &output_tensor, py::object p, uint max_x1, uint max_y1)
+            {
+            auto ptr = ctypes_void_ptr(p);
+            output_tensor.copy_data(ptr, max_x1, max_y1);
+            }
+            ,py::return_value_policy::reference
             )
             .def(
                 "at",
@@ -323,6 +361,7 @@ namespace rocal
             .export_values();
         // rocal_api_info.h
         m.def("getRemainingImages", &rocalGetRemainingImages);
+        m.def("getLastBatchPaddedSize", &rocalGetLastBatchPaddedSize, py::return_value_policy::reference);
         m.def("isEmpty", &rocalIsEmpty);
         m.def("getStatus", rocalGetStatus);
         m.def("rocalGetErrorMessage", &rocalGetErrorMessage);
@@ -331,6 +370,8 @@ namespace rocal
         m.def("setOutputImages", &rocalSetOutputs);
         m.def("labelReader", &rocalCreateLabelReader, py::return_value_policy::reference);
         m.def("COCOReader", &rocalCreateCOCOReader, py::return_value_policy::reference);
+        m.def("Audio_DecoderSliceShard",&rocalAudioFileSourceSingleShard,"Reads file from the source given and decodes it according to the policy", py::return_value_policy::reference);
+        m.def("Audio_decoder",&rocalAudioFileSource,"Reads file from the source given and decodes it according to the policy", py::return_value_policy::reference);
         // rocal_api_meta_data.h
         m.def("RandomBBoxCrop", &rocalRandomBBoxCrop);
         m.def("BoxEncoder",&rocalBoxEncoder);

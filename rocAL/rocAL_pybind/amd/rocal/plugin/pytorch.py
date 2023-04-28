@@ -78,64 +78,99 @@ class ROCALGenericIterator(object):
         self.offset = offset
         self.reverse_channels = reverse_channels
         self.tensor_dtype = tensor_dtype
-        self.device = device
-        self.device_id = device_id
-        self.out = None
-        print("self.device", self.device)
         self.len = b.getRemainingImages(self.loader._handle)
+        self.last_batch_policy = self.loader._last_batch_policy
+        self.shard_size = size
+        self.auto_reset = auto_reset
+        self.batch_count = 0
+        self.batch_size = None
+        self.audio_length = None
+        self.samples = None
+        self.channels = None
+        self.output = None
+        self.batch_size = self.loader._batch_size
 
 
     def next(self):
         return self.__next__()
 
     def __next__(self):
-        if(b.isEmpty(self.loader._handle)):
-            # timing_info = self.loader.Timing_Info()
-            # print("Load     time ::", timing_info.load_time/1000000)
-            # print("Decode   time ::", timing_info.decode_time/1000000)
-            # print("Process  time ::", timing_info.process_time/1000000)
-            # print("Output routine time ::", timing_info.output_routine_time/1000000)
-            # print("Transfer time ::", timing_info.transfer_time/1000000)
+        if(b.isEmpty(self.loader._handle)) and self.shard_size < 0:
+            if self.auto_reset:
+                self.reset()
             raise StopIteration
 
-        if self.loader.rocalRun() != 0:
+        if (self.loader.rocalRun() != 0 and self.shard_size < 0):
+            if self.auto_reset:
+                self.reset()
             raise StopIteration
+
+        elif self.shard_size > 0 and self.batch_count >= self.shard_size :
+            if self.auto_reset:
+                self.reset()
+            raise StopIteration
+
         else:
             self.output_tensor_list = self.loader.rocalGetOutputTensors()
 
+        self.last_batch_padded_size = b.getLastBatchPaddedSize(self.loader._handle)
+        self.last_batch_size = self.batch_size - self.last_batch_padded_size
+        self.batch_count+=self.batch_size
         #From init
-        self.augmentation_count = len(self.output_tensor_list)
-        self.w = self.output_tensor_list[0].batch_width()
-        self.h = self.output_tensor_list[0].batch_height()
-        self.batch_size = self.output_tensor_list[0].batch_size()
-        self.color_format = self.output_tensor_list[0].color_format()
+        self.num_of_dims = self.output_tensor_list[0].num_of_dims()
+        if self.num_of_dims == 4: # In the case of the Image data
+            self.w = self.output_tensor_list[0].batch_width()
+            self.h = self.output_tensor_list[0].batch_height()
+            self.batch_size = self.output_tensor_list[0].batch_size()
+            self.color_format = self.output_tensor_list[0].color_format()
 
-        if self.out is None:
-            if self.tensor_format == types.NCHW:
-                torch_gpu_device = torch.device('cuda', self.device_id)
-                if self.tensor_dtype == types.FLOAT:
-                    self.out = torch.empty((self.batch_size, self.color_format, self.h, self.w,), dtype=torch.float32, device = torch_gpu_device)
-                elif self.tensor_dtype == types.FLOAT16:
-                    self.out = torch.empty((self.batch_size, self.color_format, self.h, self.w,), dtype=torch.float16, device = torch_gpu_device)                
+            if self.out is None:
+                if self.tensor_format == types.NCHW:
+                    torch_gpu_device = torch.device('cuda', self.device_id)
+                    if self.tensor_dtype == types.FLOAT:
+                        self.out = torch.empty((self.batch_size, self.color_format, self.h, self.w,), dtype=torch.float32, device = torch_gpu_device)
+                    elif self.tensor_dtype == types.FLOAT16:
+                        self.out = torch.empty((self.batch_size, self.color_format, self.h, self.w,), dtype=torch.float16, device = torch_gpu_device)                
 
-            else: #NHWC
-                torch_gpu_device = torch.device('cuda', self.device_id)
-                if self.tensor_dtype == types.FLOAT:
-                    self.out = torch.empty((self.batch_size, self.h, self.w, self.color_format), dtype=torch.float32, device=torch_gpu_device)
-                elif self.tensor_dtype == types.FLOAT16:
-                    self.out = torch.empty((self.batch_size, self.h, self.w, self.color_format), dtype=torch.float16, device=torch_gpu_device)
-            
-            self.labels_tensor = torch.empty(self.batch_size, dtype = torch.int32, device = torch_gpu_device)
+                else: #NHWC
+                    torch_gpu_device = torch.device('cuda', self.device_id)
+                    if self.tensor_dtype == types.FLOAT:
+                        self.out = torch.empty((self.batch_size, self.h, self.w, self.color_format), dtype=torch.float32, device=torch_gpu_device)
+                    elif self.tensor_dtype == types.FLOAT16:
+                        self.out = torch.empty((self.batch_size, self.h, self.w, self.color_format), dtype=torch.float16, device=torch_gpu_device)
+                
+                self.labels_tensor = torch.empty(self.batch_size, dtype = torch.int32, device = torch_gpu_device)
 
-        self.output_tensor_list[0].copy_data(ctypes.c_void_p(self.out.data_ptr()))
-        self.labels = self.loader.rocalGetImageLabels()
-        self.labels_tensor = self.labels_tensor.copy_(torch.from_numpy(self.labels)).long()
-        if self.tensor_dtype == types.FLOAT:
-            return self.out, self.labels_tensor
-        elif self.tensor_dtype == types.FLOAT16:
-            return self.out.half(), self.labels_tensor
+            self.output_tensor_list[0].copy_data(ctypes.c_void_p(self.out.data_ptr()))
+            self.labels = self.loader.rocalGetImageLabels()
+            self.labels_tensor = self.labels_tensor.copy_(torch.from_numpy(self.labels)).long()
+            if self.tensor_dtype == types.FLOAT:
+                return self.out, self.labels_tensor
+            elif self.tensor_dtype == types.FLOAT16:
+                return self.out.half(), self.labels_tensor
+        elif self.num_of_dims == 3: #In case of an audio data
+            self.batch_size = self.output_tensor_list[0].batch_size() if self.batch_size is None else self.batch_size
+            self.channels = self.output_tensor_list[0].batch_width() if self.channels is None else self.channels #Max Channels
+            self.samples = self.output_tensor_list[0].batch_height() if self.samples is None else self.samples #Max Samples
+            self.audio_length = self.channels * self.samples if self.audio_length is None else self.audio_length
+            roi = self.output_tensor_list[0].get_rois().reshape(self.batch_size,4)
+            x1 = torch.tensor(roi[...,0:1])
+            y1 = torch.tensor(roi[...,1:2])
+            max_x1 = torch.max(x1)
+            max_y1 = torch.max(y1)
+            self.output = torch.empty((self.batch_size, max_y1, max_x1,), dtype=torch.float32)
+            # next
+            self.labels = self.loader.rocalGetImageLabels()
+            self.labels_tensor = torch.from_numpy(self.labels).type(torch.LongTensor)
+            if (self.last_batch_policy is (types.LAST_BATCH_PARTIAL)) and b.getRemainingImages(self.loader._handle) <= 0 :
+                self.output_tensor_list[0].copy_data(ctypes.c_void_p(self.output.data_ptr()), max_y1, max_x1)
+                return self.output[0:self.last_batch_size,:], self.labels_tensor[0:self.last_batch_size], torch.tensor(self.output_tensor_list[0].get_rois().reshape(self.batch_size,4)[...,0:2][0:self.last_batch_size,:])
+            else:
+                self.output_tensor_list[0].copy_data(ctypes.c_void_p(self.output.data_ptr()), max_y1, max_x1)
+                return self.output, self.labels_tensor, torch.tensor(self.output_tensor_list[0].get_rois().reshape(self.batch_size,4)[...,0:2])
 
     def reset(self):
+        self.batch_count = 0
         b.rocalResetLoaders(self.loader._handle)
 
     def __iter__(self):

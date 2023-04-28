@@ -41,6 +41,7 @@ public:
     void set_output (rocalTensor* output_image) override;
     void set_random_bbox_data_reader(std::shared_ptr<RandomBBoxCrop_MetaDataReader> randombboxcrop_meta_data_reader) override;
     size_t remaining_count() override; // returns number of remaining items to be loaded
+    
     void reset() override; // Resets the loader to load from the beginning of the media
     Timing timing() override;
     void start_loading() override;

@@ -131,3 +131,20 @@ size_t ROCAL_API_CALL rocalIsEmpty(RocalContext p_context)
     }
     return ret;
 }
+
+size_t  ROCAL_API_CALL
+rocalGetLastBatchPaddedSize(RocalContext p_context)
+{
+    auto context = static_cast<Context *>(p_context);
+    size_t count = 0;
+    try
+    {
+        count = context->master_graph->last_batch_size();
+    }
+    catch (const std::exception &e)
+    {
+        context->capture_error(e.what());
+        ERR(e.what());
+    }
+    return count;
+}

@@ -134,6 +134,14 @@ void rocalTensorInfo::reset_tensor_roi_buffers() {
     }
 }
 
+void rocalTensorInfo::reallocate_tensor_sample_rate_buffers() {
+    _sample_rate = std::make_shared<std::vector<float>>(_batch_size);
+    _sample_rate->resize(_batch_size);
+    if (_is_image) {
+        THROW("No sample rate available for Image data")
+    }
+}
+
 rocalTensorInfo::rocalTensorInfo()
     : _type(Type::UNKNOWN),
       _num_of_dims(0),
@@ -182,6 +190,21 @@ void rocalTensor::update_tensor_roi(const std::vector<uint32_t> &width,
             } else {
                 _info.get_roi()[i].y2 = height[i];
             }
+        }
+    }
+}
+
+void rocalTensor::update_audio_tensor_sample_rate(const std::vector<float> &sample_rate) {
+    if (_info.is_image()) {
+        THROW("No sample rate available for Image data")
+    }
+    else if(!_info.is_metadata())
+    {
+        // if (_info.get_sample_rate().size() >0) _info.get_sample_rate().clear();
+        // _info.get_sample_rate()->resize(_info.batch_size());
+        for (unsigned i = 0; i < info().batch_size(); i++)
+        {
+            _info.get_sample_rate()->at(i) = sample_rate[i];
         }
     }
 }
@@ -325,6 +348,24 @@ unsigned rocalTensor::copy_data(void *user_buffer) {
         memcpy(user_buffer, _mem_handle, _info.data_size());
 #endif
 
+    return 0;
+}
+
+unsigned rocalTensor::copy_data(void *user_buffer, uint max_y1, uint max_x1) {
+    if (_info._type != rocalTensorInfo::Type::HANDLE) return 0;
+
+    //TODO : Handle this case for HIP buffer
+    auto src_stride = (_info.max_dims().at(0) * _info.max_dims().at(1) * _info.data_type_size());
+    auto dst_stride = (max_y1 * max_x1 * _info.data_type_size());
+    for (uint i = 0; i < _info._batch_size; i++) {
+        auto temp_src_ptr = static_cast<unsigned char *>(_mem_handle) + i * src_stride;
+        auto temp_dst_ptr = static_cast<unsigned char *>(user_buffer) + i * dst_stride;
+        for (uint height = 0; height < max_y1; height++) {
+            memcpy(temp_dst_ptr, temp_src_ptr, max_x1 * _info.data_type_size());
+            temp_src_ptr += _info.max_dims().at(0) * _info.data_type_size();
+            temp_dst_ptr += max_x1 * _info.data_type_size();
+        }
+    }
     return 0;
 }
 

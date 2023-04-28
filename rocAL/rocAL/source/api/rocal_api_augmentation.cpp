@@ -685,3 +685,153 @@ rocalColorTwist(RocalContext p_context,
     }
     return output;
 }
+
+RocalTensor rocalSlice(RocalContext p_context,
+                        RocalTensor p_input,
+                        RocalTensorOutputType rocal_tensor_output_type,
+                        bool is_output,
+                        RocalTensor anchor_tensor,
+                        RocalTensor shape_tensor,
+                        std::vector<float> fill_values,
+                        std::vector<unsigned> axes,
+                        bool normalized_anchor,
+                        bool normalized_shape,
+                        RocalOutOfBoundsPolicy policy) {
+
+    if(!p_context || !p_input)
+        THROW("Null values passed as input")
+    rocalTensor* output = nullptr;
+    auto context = static_cast<Context*>(p_context);
+    auto input = static_cast<rocalTensor*>(p_input);
+
+    RocalTensorDataType op_tensorDataType;
+    try {
+
+        rocalTensorInfo output_info = input->info();
+        output_info.set_tensor_layout(RocalTensorlayout::NONE);
+        output_info.set_data_type(op_tensorDataType);
+
+        output = context->master_graph->create_tensor(output_info, is_output);
+        output->reset_tensor_roi();
+        output->reset_audio_sample_rate();
+        context->master_graph->add_node<SliceNode>({input}, {output})->init(anchor_tensor, shape_tensor, fill_values,
+                                                                            axes, normalized_anchor, normalized_shape, policy);
+    }
+    catch(const std::exception& e) {
+        context->capture_error(e.what());
+        ERR(e.what())
+    }
+    return output;
+}
+
+std::pair<RocalTensor,RocalTensor> ROCAL_API_CALL
+rocalNonSilentRegion(RocalContext p_context,
+                     RocalTensor p_input,
+                     bool is_output,
+                     float cut_off_db,
+                     float reference_power,
+                     int reset_interval,
+                     int window_length) {
+    if(!p_context || !p_input)
+        THROW("Null values passed as input")
+    rocalTensor* output1 = nullptr;
+    rocalTensor* output2 = nullptr;
+    rocalTensorList output_tensors;
+    auto context = static_cast<Context*>(p_context);
+    auto input = static_cast<rocalTensor*>(p_input);
+    try {
+        RocalTensorDataType tensor_data_type = RocalTensorDataType::INT32;
+        unsigned num_of_dims = 4;
+        std::vector<size_t> dims;
+        dims.resize(num_of_dims);
+        dims.at(0) = context->user_batch_size();
+        dims.at(1) = 1;
+        dims.at(2) = 1;
+        dims.at(3) = 1;
+        auto info  = rocalTensorInfo(std::vector<size_t>(std::move(dims)),
+                                context->master_graph->mem_type(),
+                                tensor_data_type);
+        info.set_tensor_layout(RocalTensorlayout::NONE);
+        std::vector<size_t> dims1;
+        dims1.resize(num_of_dims);
+        dims1.at(0) = context->user_batch_size();
+        dims1.at(1) = 1;
+        dims1.at(2) = 1;
+        dims1.at(3) = 1;
+        auto info1  = rocalTensorInfo(std::vector<size_t>(std::move(dims1)),
+                            context->master_graph->mem_type(),
+                            tensor_data_type);
+        info1.set_tensor_layout(RocalTensorlayout::NONE);
+        output1 = context->master_graph->create_tensor(info, is_output);
+        output2 = context->master_graph->create_tensor(info1, is_output);
+        output_tensors.push_back(output1);
+        output_tensors.push_back(output2);
+        context->master_graph->add_node<NonSilentRegionNode>({input}, {output1, output2})->init(cut_off_db, reference_power, window_length, reset_interval);
+    }
+    catch(const std::exception& e) {
+        context->capture_error(e.what());
+        ERR(e.what())
+    }
+    return std::make_pair(output_tensors.at(0), output_tensors.at(1));
+}
+
+RocalTensor ROCAL_API_CALL
+rocalSpectrogram(RocalContext p_context,
+                RocalTensor p_input,
+                RocalTensorOutputType rocal_tensor_output_type,
+                bool is_output,
+                std::vector<float> & window_fn,
+                bool center_windows,
+                bool reflect_padding,
+                RocalSpectrogramLayout spec_layout,
+                int power,
+                int nfft_size,
+                int window_length,
+                int window_step) {
+    if(!p_context || !p_input)
+        THROW("Null values passed as input")
+    rocalTensor* output = nullptr;
+    auto context = static_cast<Context*>(p_context);
+    auto input = static_cast<rocalTensor*>(p_input);
+    RocalTensorDataType op_tensorDataType;
+    try {
+        int layout=0;
+        get_rocal_tensor_data_type(rocal_tensor_output_type, op_tensorDataType);
+        rocalTensorInfo output_info = input->info();
+        std::vector<size_t> max_dims = output_info.max_dims();
+        int window_offset = 0;
+        if(!center_windows)
+            window_offset = window_length;
+        int max_frame = (((max_dims[0] - window_offset) / window_step) + 1);
+        max_frame = std::max(0, max_frame);
+        int bins = std::max(0, (nfft_size / 2) + 1);
+        std::vector<size_t> dims = output_info.dims();
+        if(spec_layout == RocalSpectrogramLayout::FT) {
+            dims[1] = max_frame;
+            dims[2] = bins;
+        } else {
+            dims[1] = bins;
+            dims[2] = max_frame;
+        }
+        output_info.set_dims(dims);
+        output_info.set_tensor_layout(RocalTensorlayout::NONE);
+        output_info.set_data_type(op_tensorDataType);
+
+        if(power != 1 || power != 2) {
+            WRN("rocalSpectrogram Power value can be 1 or 2 setting it to default 2")
+            power = 2;
+        }
+
+        output = context->master_graph->create_tensor(output_info, is_output);
+        output->reset_tensor_roi();
+        context->master_graph->add_node<SpectrogramNode>({input}, {output})->init(center_windows, reflect_padding, spec_layout,
+                                                                                  power, nfft_size, window_length,
+                                                                                  window_step, window_fn);
+
+    }
+    catch(const std::exception& e) {
+        context->capture_error(e.what());
+        ERR(e.what())
+    }
+    return output;
+}
