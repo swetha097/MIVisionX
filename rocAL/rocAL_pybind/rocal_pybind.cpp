@@ -192,6 +192,120 @@ namespace rocal{
         rocalGetImageLabels(context,ptr);
         return py::cast<py::none>(Py_None);
     }
+        m.doc() = "Python bindings for the C++ portions of ROCAL";
+        // rocal_api.h
+        m.def("rocalCreate", &rocalCreate, "Creates context with the arguments sent and returns it",
+              py::return_value_policy::reference,
+              py::arg("batch_size"),
+              py::arg("affinity"),
+              py::arg("gpu_id") = 0,
+              py::arg("cpu_thread_count") = 1,
+              py::arg("prefetch_queue_depth") = 3,
+              py::arg("output_data_type") = 0);
+        m.def("rocalVerify", &rocalVerify);
+        m.def("rocalRun", &rocalRun);
+        m.def("rocalRelease", &rocalRelease);
+        // rocal_api_types.h
+        py::class_<TimingInfo>(m, "TimingInfo")
+            .def_readwrite("load_time", &TimingInfo::load_time)
+            .def_readwrite("decode_time", &TimingInfo::decode_time)
+            .def_readwrite("process_time", &TimingInfo::process_time)
+            .def_readwrite("transfer_time", &TimingInfo::transfer_time);
+        py::class_<rocalTensor>(m, "rocalTensor")
+                .def(
+                "batch_height",
+                [](rocalTensor &output_tensor)
+                {
+                    return output_tensor.info().max_shape().at(1);
+                },
+                R"code(
+                Returns a tensor buffer's height.
+                )code"
+            )
+            .def(
+                "batch_width",
+                [](rocalTensor &output_tensor)
+                {
+                    return output_tensor.info().max_shape().at(0);
+                },
+                R"code(
+                Returns a tensor buffer's width.
+                )code"
+            )
+            .def(
+                "batch_size",
+                [](rocalTensor &output_tensor)
+                {
+                    return output_tensor.info().dims().at(0);
+                },
+                R"code(
+                Returns a tensor batch size.
+                )code"
+            )
+            .def(
+                "color_format",
+                [](rocalTensor &output_tensor)
+                {
+                    if ((output_tensor.info().color_format() == RocalColorFormat::RGB24) || (output_tensor.info().color_format() == RocalColorFormat::BGR24))
+                        return 3;
+                    else
+                        return 1;
+                },
+                R"code(
+                Returns a tensor batch size.
+                )code"
+            )
+            .def(
+                "get_roi_at",
+                [](rocalTensor &output_tensor, uint idx)
+                {
+                    return std::make_pair(output_tensor.info().get_roi()[idx].x1, output_tensor.info().get_roi()[idx].y1);
+                },
+                R"code(
+                Returns a tensor ROI
+                ex : width, height in case of an image data
+                ex : samples , channels in case of an audio data
+                )code"
+            )
+            .def(
+                "get_rois",
+                [](rocalTensor &output_tensor)
+                {
+                    return py::array(py::buffer_info(
+                            (int *)(output_tensor.info().get_roi()),
+                            sizeof(int),
+                            py::format_descriptor< int>::format(),
+                            1,
+                            {output_tensor.info().dims().at(0) * 4},
+                            {sizeof(int) }));
+                },
+                R"code(
+                Returns a tensor ROI
+                ex : width, height in case of an image data
+                ex : samples , channels in case of an audio data
+                )code"
+            )
+            .def(
+            "copy_data", [](rocalTensor &output_tensor, py::object p)
+            {
+            auto ptr = ctypes_void_ptr(p);
+            output_tensor.copy_data(ptr);
+            }
+            )
+            .def(
+            "copy_data", [](rocalTensor &output_tensor, py::object p, uint max_x1, uint max_y1)
+            {
+            auto ptr = ctypes_void_ptr(p);
+            output_tensor.copy_data(ptr, max_x1, max_y1);
+            }
+            ,py::return_value_policy::reference
+            )
+            .def(
+                "at",
+                [](rocalTensor &output_tensor, uint idx)
+                {
+                    uint h = output_tensor.info().max_shape().at(1);
+                    uint w = output_tensor.info().max_shape().at(0);
 
     py::object wrapper_image_id(RocalContext context, py::array_t<int> array)
     {
@@ -403,6 +517,20 @@ namespace rocal{
         m.def("getBoundingBoxCount",&wrapper_labels_BB_count_copy);
         m.def("getOneHotEncodedLabels",&wrapper_one_hot_label_copy);
         m.def("isEmpty",&rocalIsEmpty);
+        m.def("getRemainingImages", &rocalGetRemainingImages);
+        m.def("getLastBatchPaddedSize", &rocalGetLastBatchPaddedSize, py::return_value_policy::reference);
+        m.def("isEmpty", &rocalIsEmpty);
+        m.def("getStatus", rocalGetStatus);
+        m.def("rocalGetErrorMessage", &rocalGetErrorMessage);
+        m.def("rocalGetTimingInfo", &rocalGetTimingInfo);
+        m.def("getTimingInfo", &rocalGetTimingInfo);
+        m.def("setOutputImages", &rocalSetOutputs);
+        m.def("labelReader", &rocalCreateLabelReader, py::return_value_policy::reference);
+        m.def("COCOReader", &rocalCreateCOCOReader, py::return_value_policy::reference);
+        m.def("Audio_DecoderSliceShard",&rocalAudioFileSourceSingleShard,"Reads file from the source given and decodes it according to the policy", py::return_value_policy::reference);
+        m.def("Audio_decoder",&rocalAudioFileSource,"Reads file from the source given and decodes it according to the policy", py::return_value_policy::reference);
+        // rocal_api_meta_data.h
+        m.def("RandomBBoxCrop", &rocalRandomBBoxCrop);
         m.def("BoxEncoder",&rocalBoxEncoder);
         m.def("getTimingInfo",rocalGetTimingInfo);
         // rocal_api_parameter.h

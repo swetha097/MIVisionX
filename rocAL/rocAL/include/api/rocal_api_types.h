@@ -161,4 +161,10 @@ enum RocalResizeInterpolationType {
     ROCAL_TRIANGULAR_INTERPOLATION = 5
 };
 
+enum RocalLastBatchPolicy {
+    ROCAL_LAST_BATCH_FILL = 0,
+    ROCAL_LAST_BATCH_DROP = 1,
+    ROCAL_LAST_BATCH_PARTIAL
+};
+
 #endif //MIVISIONX_ROCAL_API_TYPES_H
