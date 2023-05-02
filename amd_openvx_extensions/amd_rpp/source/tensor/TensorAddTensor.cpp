@@ -21,7 +21,6 @@ THE SOFTWARE.
 */
 
 #include "internal_publishKernels.h"
-#include <omp.h>
 
 #if _WIN32
 #include <intrin.h>
@@ -171,7 +170,6 @@ static vx_status VX_CALLBACK processTensorAddTensor(vx_node node, const vx_refer
             data->roi_ptr_src = (RpptROI *)data->roi_tensor_ptr_src;
             size_t nStride = data->in_tensor_dims1[1] * data->in_tensor_dims1[2] * channels;
 
-        #pragma omp parallel for num_threads(8)
             for (uint i = 0; i < data->nbatchSize; i++)
             {
                 float *src1Temp = (float *)(data->pSrc1) + i * nStride;
