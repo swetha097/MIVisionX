@@ -27,18 +27,15 @@ import ctypes
 class ROCALGenericIterator(object):
     def __init__(self, pipeline, tensor_layout = types.NCHW, reverse_channels = False, multiplier = [1.0,1.0,1.0], offset = [0.0, 0.0, 0.0], tensor_dtype = types.FLOAT, device = "cpu", device_id = 0):
         self.loader = pipeline
-        self.tensor_format =tensor_layout
+        self.tensor_format = tensor_layout
         self.multiplier = multiplier
         self.offset = offset
         self.reverse_channels = reverse_channels
         self.tensor_dtype = tensor_dtype
         self.device = device
         self.device_id = device_id
-        self.out = None
-        self.w = None
-        self.h = None
-        self.batch_size = pipeline._batch_size
-        self.color_format = None
+        self.batch_size = self.loader._batch_size
+        self.out = self.w = self.h = self.color_format = None
         self.len = b.getRemainingImages(self.loader._handle)
 
     def next(self):
@@ -51,11 +48,9 @@ class ROCALGenericIterator(object):
             self.output_tensor_list = self.loader.rocalGetOutputTensors()
 
         if self.out is None:
-        
             self.w = self.output_tensor_list[0].batch_width()
             self.h = self.output_tensor_list[0].batch_height()
             self.color_format = self.output_tensor_list[0].color_format()
-
             if self.tensor_format == types.NCHW:
                 torch_gpu_device = torch.device('cuda', self.device_id)
                 if self.tensor_dtype == types.FLOAT:
@@ -64,7 +59,6 @@ class ROCALGenericIterator(object):
                     self.out = torch.empty((self.batch_size, self.color_format, self.h, self.w,), dtype = torch.float16, device = torch_gpu_device)
                 elif self.tensor_dtype == types.UINT8:
                     self.out = torch.empty((self.batch_size, self.color_format, self.h, self.w,), dtype = torch.uint8, device = torch_gpu_device)
-
             else:  # NHWC
                 torch_gpu_device = torch.device('cuda', self.device_id)
                 if self.tensor_dtype == types.FLOAT:
@@ -73,7 +67,6 @@ class ROCALGenericIterator(object):
                     self.out = torch.empty((self.batch_size, self.h, self.w, self.color_format), dtype = torch.float16, device = torch_gpu_device)
                 elif self.tensor_dtype == types.UINT8:
                     self.out = torch.empty((self.batch_size, self.h, self.w, self.color_format), dtype = torch.uint8, device = torch_gpu_device)
-
             self.labels_tensor = torch.empty(self.batch_size, dtype = torch.int32, device = torch_gpu_device)
 
         self.output_tensor_list[0].copy_data(ctypes.c_void_p(self.out.data_ptr()))
@@ -92,8 +85,8 @@ class ROCALGenericIterator(object):
             self.img_size = np.zeros((self.bs * 2),dtype = "int32")
             self.loader.GetImgSizes(self.img_size)
 
-            count =0
-            sum_count=0
+            count = 0
+            sum_count = 0
             for i in range(self.bs):
                 count = self.bboxes_label_count[i]
 
@@ -232,14 +225,14 @@ class ROCALClassificationIterator(ROCALGenericIterator):
 def draw_patches(img,idx,bboxes):
     #image is expected as a tensor
     import cv2
-    img=img.cpu()
+    img = simg.cpu()
     image = img.detach().numpy()
     image = image.transpose([1,2,0])
     image = cv2.cvtColor(image, cv2.COLOR_RGB2BGR )
     image = cv2.UMat(image).get()
     cv2.imwrite(str(idx)+"_"+"train"+".png", image)
     try:
-        path= "OUTPUT_IMAGES_PYTHON/NEW_API/PYTORCH/"
+        path = "OUTPUT_IMAGES_PYTHON/NEW_API/PYTORCH/"
         isExist = os.path.exists(path)
         if not isExist:
             os.makedirs(path)

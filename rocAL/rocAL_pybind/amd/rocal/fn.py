@@ -227,7 +227,8 @@ def rain(*inputs, rain=None, rain_width = None, rain_height = None, rain_transpa
     return (rain_image)
 
 def resize(*inputs, bytes_per_sample_hint=0, image_type=0, interp_type=1, mag_filter=1, max_size=[], min_filter=1,
-            minibatch_size=32, preserve=False, resize_longer=0, resize_shorter=0, resize_x=0, resize_y=0, scaling_mode=types.SCALING_MODE_DEFAULT, interpolation_type=types.LINEAR_INTERPOLATION,
+            minibatch_size=32, preserve=False, resize_longer=0, resize_shorter=0, resize_x=0, resize_y=0, 
+            scaling_mode=types.SCALING_MODE_DEFAULT, interpolation_type=types.LINEAR_INTERPOLATION,
             save_attrs=False, seed=1, output_layout=types.NCHW, output_dtype=types.UINT8, temp_buffer_hint=0, device=None):
     """
     bytes_per_sample_hint (int, optional, default = 0) – Output size hint (bytes), per sample. The memory will be preallocated if it uses GPU or page-locked memory
@@ -276,8 +277,10 @@ def resize(*inputs, bytes_per_sample_hint=0, image_type=0, interp_type=1, mag_fi
     """
 
     # pybind call arguments
-    kwargs_pybind = {"input_image0": inputs[0], "dest_width": resize_x , "dest_height": resize_y, "is_output": False, "scaling_mode": scaling_mode, "max_size": max_size, "resize_shorter": resize_shorter, 
-                     "resize_longer": resize_longer, "interpolation_type": interpolation_type, "output_layout" : output_layout, "output_dtype" : output_dtype}
+    kwargs_pybind = {"input_image0": inputs[0], "dest_width": resize_x, "dest_height": resize_y,
+                     "is_output": False, "scaling_mode": scaling_mode, "max_size": max_size, "resize_shorter": resize_shorter, 
+                     "resize_longer": resize_longer, "interpolation_type": interpolation_type, "output_layout": output_layout, 
+                     "output_dtype": output_dtype}
     resized_image = b.Resize(Pipeline._current_pipeline._handle ,*(kwargs_pybind.values()))
     return (resized_image)
 
@@ -294,8 +297,8 @@ def resize_mirror_normalize(*inputs, bytes_per_sample_hint=0, interp_type=1, mag
 
     # pybind call arguments
     kwargs_pybind = {"input_image0": inputs[0],  "dest_width:": resize_x , "dest_height": resize_y, "mean":mean, "std_dev":std, "is_output": False,
-                     "scaling_mode": scaling_mode, "max_size": max_size, "resize_shorter": resize_shorter, "resize_longer": resize_longer, "interpolation_type":interpolation_type, "mirror": mirror,
-                     "output_layout" : output_layout, "output_dtype" : output_dtype}
+                     "scaling_mode": scaling_mode, "max_size": max_size, "resize_shorter": resize_shorter, "resize_longer": resize_longer, 
+                     "interpolation_type": interpolation_type, "mirror": mirror, "output_layout": output_layout, "output_dtype": output_dtype}
     rmn = b.ResizeMirrorNormalize(Pipeline._current_pipeline._handle ,*(kwargs_pybind.values()))
     Pipeline._current_pipeline._tensor_layout = output_layout
     Pipeline._current_pipeline._tensor_dtype = output_dtype
@@ -421,7 +424,7 @@ def vignette(*inputs, vignette=0.5, device=None):
     return (vignette_outputcolor_temp_output)
 
 def crop_mirror_normalize(*inputs, bytes_per_sample_hint=0, crop=[0, 0], crop_d=0, crop_h=0, crop_pos_x=0.5, crop_pos_y=0.5, crop_pos_z=0.5,
-                          crop_w=0, image_type=0, mean=[0.0], mirror=1, output_layout =types.NCHW, output_dtype = types.UINT8, pad_output=False,
+                          crop_w=0, image_type=0, mean=[0.0], mirror=1, output_layout=types.NCHW, output_dtype=types.UINT8, pad_output=False,
                           preserve=False, seed=1, std=[1.0], device=None):
 
     if(len(crop) == 2):
@@ -471,14 +474,14 @@ def centre_crop(*inputs, bytes_per_sample_hint=0, crop=[100, 100], crop_d=1, cro
     #Set Seed
     b.setSeed(seed)
     # pybind call arguments
-    kwargs_pybind = {"input_image0": inputs[0], "crop_width":crop_width, "crop_height":crop_height, 
-                     "is_output": False, "output_layout": output_layout, "output_dtype" :output_dtype}
+    kwargs_pybind = {"input_image0": inputs[0], "crop_width": crop_width, "crop_height": crop_height, 
+                     "is_output": False, "output_layout": output_layout, "output_dtype": output_dtype}
     centre_cropped_image = b.CenterCropFixed(Pipeline._current_pipeline._handle ,*(kwargs_pybind.values()))
 
     return (centre_cropped_image)
 
 def crop(*inputs, bytes_per_sample_hint=0, crop=[0.0, 0.0], crop_d=1, crop_h= 0, crop_pos_x = 0.5, crop_pos_y = 0.5, crop_pos_z = 0.5,
-                 crop_w=0, image_type=0, preserve = False, seed = 1, device = None):
+                 crop_w=0, image_type=0, output_dtype=types.FLOAT, preserve = False, seed = 1, device = None):
 
     if(len(crop) == 2):
         crop_depth = crop_d
@@ -500,7 +503,7 @@ def crop(*inputs, bytes_per_sample_hint=0, crop=[0.0, 0.0], crop_d=1, crop_h= 0,
         cropped_image = b.Crop(Pipeline._current_pipeline._handle ,*(kwargs_pybind.values()))
     else:
         # pybind call arguments
-        kwargs_pybind = {"input_image0": inputs[0], "crop_width":crop_width, "crop_height":crop_height, "crop_depth":crop_depth ,"is_output": False,"crop_pos_x": crop_pos_x, "crop_pos_y": crop_pos_y, "crop_pos_z": crop_pos_z }
+        kwargs_pybind = {"input_image0": inputs[0], "crop_width": crop_width, "crop_height": crop_height, "crop_depth": crop_depth ,"is_output": False,"crop_pos_x": crop_pos_x, "crop_pos_y": crop_pos_y, "crop_pos_z": crop_pos_z }
         cropped_image = b.CropFixed(Pipeline._current_pipeline._handle ,*(kwargs_pybind.values()))
     return (cropped_image)
 
@@ -514,7 +517,7 @@ def color_twist(*inputs, brightness=1.0, bytes_per_sample_hint=0, contrast=1.0, 
     saturation = b.CreateFloatParameter(saturation) if isinstance(
         saturation, float) else saturation
     # pybind call arguments
-    kwargs_pybind = {"input_image0": inputs[0], "output_layout": output_layout, "output_dtype" :output_dtype, "is_output": False,
+    kwargs_pybind = {"input_image0": inputs[0], "output_layout": output_layout, "output_dtype": output_dtype, "is_output": False,
                      "alpha": brightness, "beta": contrast, "hue": hue, "sat": saturation}
     color_twist_image = b.ColorTwist(Pipeline._current_pipeline._handle ,*(kwargs_pybind.values()))
     return (color_twist_image)
@@ -523,9 +526,9 @@ def uniform(*inputs,rng_range=[-1, 1], device=None):
     output_param = b.CreateFloatUniformRand(rng_range[0], rng_range[1])
     return output_param
 
-def random_bbox_crop(*inputs,all_boxes_above_threshold = True, allow_no_crop =True, aspect_ratio = None, bbox_layout = "", bytes_per_sample_hint = 0,
-                crop_shape = None, input_shape = None, ltrb = True, num_attempts = 1 ,scaling =  None, preserve = False, seed = 1, shape_layout = "",
-                threshold_type ="iou", thresholds = None, total_num_attempts = 0, device = None, labels = None ):
+def random_bbox_crop(*inputs,all_boxes_above_threshold=True, allow_no_crop=True, aspect_ratio=None, bbox_layout="", bytes_per_sample_hint=0,
+                crop_shape=None, input_shape=None, ltrb=True, num_attempts=1 ,scaling=None, preserve=False, seed=1, shape_layout="",
+                threshold_type="iou", thresholds=None, total_num_attempts=0, device=None, labels=None):
     aspect_ratio = aspect_ratio if aspect_ratio else [1.0, 1.0]
     crop_shape = [] if crop_shape is None else crop_shape
     scaling = scaling if scaling else [1.0, 1.0]

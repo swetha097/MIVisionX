@@ -304,8 +304,7 @@ namespace rocal{
         py::class_<rocalTensor>(m, "rocalTensor")
                 .def(
                 "batch_height",
-                [](rocalTensor &output_tensor)
-                {
+                [](rocalTensor &output_tensor) {
                     return output_tensor.info().max_shape().at(1);
                 },
                 R"code(
@@ -314,8 +313,7 @@ namespace rocal{
             )
             .def(
                 "batch_width",
-                [](rocalTensor &output_tensor)
-                {
+                [](rocalTensor &output_tensor) {
                     return output_tensor.info().max_shape().at(0);
                 },
                 R"code(
@@ -324,8 +322,7 @@ namespace rocal{
             )
             .def(
                 "batch_size",
-                [](rocalTensor &output_tensor)
-                {
+                [](rocalTensor &output_tensor) {
                     return output_tensor.info().dims().at(0);
                 },
                 R"code(
@@ -334,8 +331,7 @@ namespace rocal{
             )
             .def(
                 "color_format",
-                [](rocalTensor &output_tensor)
-                {
+                [](rocalTensor &output_tensor) {
                     switch(output_tensor.info().color_format())
                     {
                         case RocalColorFormat::RGB24:
@@ -352,8 +348,7 @@ namespace rocal{
                 Returns a tensor batch size.
                 )code"
             )
-            .def("layout", [](rocalTensor &output_tensor)
-            {
+            .def("layout", [](rocalTensor &output_tensor) {
                 switch(output_tensor.info().layout()) {
                     case RocalTensorlayout::NHWC:
                         return "NHWC";
@@ -365,8 +360,7 @@ namespace rocal{
                 Returns layout of tensor.
                 )code"
             )
-            .def("dtype", [](rocalTensor &output_tensor)
-            {
+            .def("dtype", [](rocalTensor &output_tensor) {
                 switch(output_tensor.info().data_type()) {
                     case RocalTensorDataType::FP32:
                         return "float32";
@@ -380,8 +374,7 @@ namespace rocal{
                 Returns dtype of tensor.
                 )code"
             )
-            .def("dims", [](rocalTensor &output_tensor)
-            {
+            .def("dims", [](rocalTensor &output_tensor) {
                 return output_tensor.info().dims();
             },
                 R"code(
@@ -389,16 +382,17 @@ namespace rocal{
                 )code"
             )
             .def(
-            "copy_data", [](rocalTensor &output_tensor, py::object p)
-            {
+            "copy_data", [](rocalTensor &output_tensor, py::object p) {
                 auto ptr = ctypes_void_ptr(p);
                 output_tensor.copy_data(ptr);
-            }
+            },
+                R"code(
+                Copies the ring buffer data to python buffer pointers.
+                )code"
             )
             .def(
                 "at",
-                [](rocalTensor &output_tensor, uint idx)
-                {
+                [](rocalTensor &output_tensor, uint idx) {
                     uint h = output_tensor.info().max_shape().at(1);
                     uint w = output_tensor.info().max_shape().at(0);
                     switch(output_tensor.info().data_type()) 
@@ -460,8 +454,7 @@ namespace rocal{
         py::class_<rocalTensorList>(m, "rocalTensorList")
             .def(
                 "__getitem__",
-                [](rocalTensorList &output_tensor_list, uint idx)
-                {
+                [](rocalTensorList &output_tensor_list, uint idx) {
                     return output_tensor_list.at(idx);
                 },
                 R"code(
@@ -469,8 +462,7 @@ namespace rocal{
                 )code")
 
             .def("at",
-                [](rocalTensorList &output_tensor_list, uint idx)
-                {
+                [](rocalTensorList &output_tensor_list, uint idx) {
                     uint h = output_tensor_list.at(idx)->info().max_shape().at(1);
                     uint w = output_tensor_list.at(idx)->info().max_shape().at(0);
                     switch(output_tensor_list.at(idx)->info().data_type()) 
@@ -600,7 +592,7 @@ namespace rocal{
         m.def("getImageId", [](RocalContext context, py::array_t<int> array) {
             auto buf = array.request();
             int* ptr = (int*) buf.ptr;
-            return rocalGetImageId(context,ptr);
+            return rocalGetImageId(context, ptr);
         });
         m.def("getImageNameLen",&wrapper_image_name_length);
         m.def("getStatus",&rocalGetStatus);
@@ -628,7 +620,7 @@ namespace rocal{
         m.def("getImgSizes", [](RocalContext context, py::array_t<int> array) {
             auto buf = array.request();
             int* ptr = (int*) buf.ptr;
-            rocalGetImageSizes(context,ptr);
+            rocalGetImageSizes(context, ptr);
         });
         // rocal_api_parameter.h
         m.def("setSeed",&rocalSetSeed);
@@ -731,7 +723,7 @@ namespace rocal{
                             1,
                             {batch_size * num_anchors * 4},
                             {sizeof(float)} ));
-        return std::make_pair(labels_array, bboxes_array);
+                return std::make_pair(labels_array, bboxes_array);
         }
         );
         // rocal_api_data_loaders.h
