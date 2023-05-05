@@ -233,8 +233,8 @@ class Pipeline(object):
     def GetImageId(self, array):
         b.getImageId(self._handle, array)
 
-    def GetBoundingBoxCount(self, array):
-        return b.getBoundingBoxCount(self._handle, array)
+    def GetBoundingBoxCount(self):
+        return b.rocalGetBoundingBoxCount(self._handle)
     
     def GetBoundingBoxLabels(self):
         return b.rocalGetBoundingBoxLabels(self._handle)
@@ -269,9 +269,6 @@ class Pipeline(object):
     def Timing_Info(self):
         return b.getTimingInfo(self._handle)
 
-    def GetBoundingBoxCount(self):
-        return b.rocalGetBoundingBoxCount(self._handle)
-    
     def GetMatchedIndices(self):
         return b.rocalGetMatchedIndices(self._handle)
 
