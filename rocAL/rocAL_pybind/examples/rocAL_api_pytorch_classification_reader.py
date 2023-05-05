@@ -18,9 +18,6 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
 import random
 from amd.rocal.plugin.pytorch import ROCALClassificationIterator
 from amd.rocal.pipeline import Pipeline
@@ -30,14 +27,17 @@ import numpy as np
 import sys
 import os
 
-def draw_patches(img, idx, layout="nchw", dtype="fp32"):
+def draw_patches(img, idx, layout="nchw", dtype="fp32", device="cpu"):
     #image is expected as a tensor
     import cv2
-    image = img.detach().cpu().numpy()
+    if device == "cpu":
+        image = img.detach().numpy()
+    else:
+        image = img.cpu().numpy()
     if layout == "nchw":
         image = image.transpose([1, 2, 0])
     if dtype == "fp16":
-        image = image.astype(np.float32)
+        image = image.astype('uint8')
     image = cv2.cvtColor(image, cv2.COLOR_RGB2BGR)
     cv2.imwrite("OUTPUT_IMAGES_PYTHON/NEW_API/FILE_READER/" + str(idx)+"_"+"train"+".png", image * 255)
 
@@ -53,10 +53,7 @@ def main():
     except OSError as error:
         print(error)
     data_path = sys.argv[1]
-    if(sys.argv[2] == "cpu"):
-        _rali_cpu = True
-    else:
-        _rali_cpu = False
+    _rali_cpu = True if sys.argv[2] == "cpu" else False
     batch_size = int(sys.argv[3])
     num_threads = 1
     device_id = 0
@@ -88,12 +85,12 @@ def main():
     cnt = 0
     for epoch in range(3):
         print("+++++++++++++++++++++++++++++EPOCH+++++++++++++++++++++++++++++++++++++",epoch)
-        for i , it in enumerate(imageIteratorPipeline):
+        for i, it in enumerate(imageIteratorPipeline):
             print(it)
             print("************************************** i *************************************",i)
             for img in it[0]:
                 cnt = cnt + 1
-                draw_patches(img, cnt, layout="nhwc", dtype="fp16")
+                draw_patches(img, cnt, layout="nhwc", dtype="fp16", device=_rali_cpu) 
         imageIteratorPipeline.reset()
     print("*********************************************************************")
 

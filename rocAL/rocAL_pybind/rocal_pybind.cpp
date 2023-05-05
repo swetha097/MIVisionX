@@ -26,14 +26,14 @@ THE SOFTWARE.
 #include <iostream>
 #include <pybind11/embed.h>
 #include <pybind11/eval.h>
-#include "api/rocal_api_types.h"
+#include "rocal_api_types.h"
 #include "rocal_api.h"
 #include "tensor.h"
-#include "api/rocal_api_parameters.h"
-#include "api/rocal_api_data_loaders.h"
-#include "api/rocal_api_augmentation.h"
-#include "api/rocal_api_data_transfer.h"
-#include "api/rocal_api_info.h"
+#include "rocal_api_parameters.h"
+#include "rocal_api_data_loaders.h"
+#include "rocal_api_augmentation.h"
+#include "rocal_api_data_transfer.h"
+#include "rocal_api_info.h"
 namespace py = pybind11;
 
 using float16 = half_float::half;
@@ -69,15 +69,6 @@ namespace rocal{
         return ptr;
     }
 
-    py::object wrapper_copy_to_output(RocalContext context, py::array_t<unsigned char> array)
-    {
-        auto buf = array.request();
-        unsigned char* ptr = (unsigned char*) buf.ptr;
-        // call pure C++ function
-        int status = rocalCopyToOutput(context, ptr, buf.size);
-        return py::cast<py::none>(Py_None);
-    }
-
     py::object wrapper_image_name_length(RocalContext context, py::array_t<int> array)
     {
         auto buf = array.request();
@@ -98,6 +89,16 @@ namespace rocal{
         std::string s(ptr);
         free(ptr);
         return py::bytes(s);
+    }
+
+    '''
+    py::object wrapper_copy_to_output(RocalContext context, py::array_t<unsigned char> array)
+    {
+        auto buf = array.request();
+        unsigned char* ptr = (unsigned char*) buf.ptr;
+        // call pure C++ function
+        int status = rocalCopyToOutput(context, ptr, buf.size);
+        return py::cast<py::none>(Py_None);
     }
 
     py::object wrapper_tensor(RocalContext context, py::object p,
@@ -279,7 +280,7 @@ namespace rocal{
         rocalRandomBBoxCrop(context, all_boxes_overlap, no_crop, p_aspect_ratio, has_shape, crop_width, crop_height, num_attempts, p_scaling, total_num_attempts);
         return py::cast<py::none>(Py_None);
     }
-
+    '''
 
     PYBIND11_MODULE(rocal_pybind, m) {
         m.doc() = "Python bindings for the C++ portions of ROCAL";
@@ -302,19 +303,10 @@ namespace rocal{
             .def_readwrite("process_time",&TimingInfo::process_time)
             .def_readwrite("transfer_time",&TimingInfo::transfer_time);
         py::class_<rocalTensor>(m, "rocalTensor")
-                .def(
-                "batch_height",
-                [](rocalTensor &output_tensor) {
-                    return output_tensor.info().max_shape().at(1);
-                },
-                R"code(
-                Returns a tensor buffer's height.
-                )code"
-            )
             .def(
-                "batch_width",
+                "max_shape",
                 [](rocalTensor &output_tensor) {
-                    return output_tensor.info().max_shape().at(0);
+                    return std::make_pair(output_tensor.info().max_shape().at(0), output_tensor.info().max_shape().at(1));
                 },
                 R"code(
                 Returns a tensor buffer's width.

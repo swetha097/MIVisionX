@@ -48,8 +48,7 @@ class ROCALGenericIterator(object):
             self.output_tensor_list = self.loader.rocalGetOutputTensors()
 
         if self.out is None:
-            self.w = self.output_tensor_list[0].batch_width()
-            self.h = self.output_tensor_list[0].batch_height()
+            self.w, self.h = self.output_tensor_list[0].max_shape()
             self.color_format = self.output_tensor_list[0].color_format()
             if self.tensor_format == types.NCHW:
                 torch_gpu_device = torch.device('cuda', self.device_id)

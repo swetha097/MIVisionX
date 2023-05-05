@@ -18,9 +18,6 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
 import torch
 from amd.rocal.pipeline import Pipeline
 import amd.rocal.fn as fn
@@ -60,10 +57,8 @@ class ROCALCOCOIterator(object):
         self.device_id = self.loader._device_id
         self.bs = self.loader._batch_size
         self.num_anchors = num_anchors
-        #Number of batch size handled by each GPU
-        self.len = math.ceil(self.loader.getRemainingImages()/self.bs)
         # Image sizes of a batch
-        self.img_size = np.zeros((self.bs * 3), dtype="int32")
+        self.img_size = np.zeros((self.bs * 2), dtype="int32")
 
     def next(self):
         return self.__next__()
@@ -76,17 +71,29 @@ class ROCALCOCOIterator(object):
         else:
             self.output_tensor_list = self.loader.rocalGetOutputTensors()
 
-        self.w = self.output_tensor_list[0].batch_width() if self.w is None else self.w
-        self.h = self.output_tensor_list[0].batch_height() if self.h is None else self.h
-        self.bs = self.output_tensor_list[0].batch_size() if self.bs is None else self.bs
-        self.color_format = self.output_tensor_list[0].color_format() if self.color_format else self.color_format
+        if self.out is None:
+            self.w, self.h = self.output_tensor_list[0].max_shape()
+            self.bs = self.output_tensor_list[0].batch_size()
+            self.color_format = self.output_tensor_list[0].color_format() if self.color_format else self.color_format
+            torch_gpu_device = torch.device('cuda', self.device_id)
+            if self.tensor_format == types.NCHW:
+                torch_gpu_device = torch.device('cuda', self.device_id)
+                if self.tensor_dtype == types.FLOAT:
+                    self.out = torch.empty((self.batch_size, self.color_format, self.h, self.w,), dtype = torch.float32, device = torch_gpu_device)
+                elif self.tensor_dtype == types.FLOAT16:
+                    self.out = torch.empty((self.batch_size, self.color_format, self.h, self.w,), dtype = torch.float16, device = torch_gpu_device)
+                elif self.tensor_dtype == types.UINT8:
+                    self.out = torch.empty((self.batch_size, self.color_format, self.h, self.w,), dtype = torch.uint8, device = torch_gpu_device)
+            else:  # NHWC
+                torch_gpu_device = torch.device('cuda', self.device_id)
+                if self.tensor_dtype == types.FLOAT:
+                    self.out = torch.empty((self.batch_size, self.h, self.w, self.color_format), dtype = torch.float32, device = torch_gpu_device)
+                elif self.tensor_dtype == types.FLOAT16:
+                    self.out = torch.empty((self.batch_size, self.h, self.w, self.color_format), dtype = torch.float16, device = torch_gpu_device)
+                elif self.tensor_dtype == types.UINT8:
+                    self.out = torch.empty((self.batch_size, self.h, self.w, self.color_format), dtype = torch.uint8, device = torch_gpu_device)
+            self.labels_tensor = torch.empty(self.batch_size, dtype = torch.int32, device = torch_gpu_device)
 
-        torch_gpu_device = torch.device('cuda', self.device_id)
-
-        if self.tensor_format == types.NCHW:
-            self.out = torch.empty((self.bs, self.color_format, self.h, self.w,), dtype=torch.float32, device=torch_gpu_device)
-        else:
-            self.out = torch.empty((self.bs, self.h, self.w, self.color_format,), dtype=torch.float32, device=torch_gpu_device)
         self.output_tensor_list[0].copy_data(ctypes.c_void_p(self.out.data_ptr()))
 
         labels_array = self.loader.rocalGetBoundingBoxLabels()
@@ -125,7 +132,7 @@ class ROCALCOCOIterator(object):
     def __iter__(self):
         return self
 
-def draw_patches(img, idx, bboxes, device):
+def draw_patches(img, idx, bboxes, device="cpu"):
     import cv2
     if device == "cpu":
         image = img.detach().numpy()
@@ -157,10 +164,7 @@ def main():
     image_path = sys.argv[1]
     annotation_path = sys.argv[2]
     device = sys.argv[3]
-    if(device == "cpu"):
-        _rali_cpu = True
-    else:
-        _rali_cpu = False
+    _rali_cpu = True if device == "cpu" else False
     batch_size = int(sys.argv[4])
     num_threads = 1
     device_id = 0
@@ -216,7 +220,7 @@ def main():
             print("************************************** i *************************************",i)
             print(it)
             for i, img in enumerate(it[0]):
-                draw_patches(img, cnt, it[1]['boxes'][i], "gpu")
+                draw_patches(img, cnt, it[1]['boxes'][i], "cpu")
                 cnt =  cnt + 1
         COCOIteratorPipeline.reset()
     print("*********************************************************************")
