@@ -235,6 +235,15 @@ class Pipeline(object):
 
     def GetBoundingBoxCount(self, array):
         return b.getBoundingBoxCount(self._handle, array)
+    
+    def rocalGetBoundingBoxLabels(self):
+        return b.rocalGetBoundingBoxLabels(self._handle)
+
+        def rocalGetBoundingBoxCords(self):
+        return b.rocalGetBoundingBoxCords(self._handle)
+
+    def rocalGetImageLabels(self):
+        return b.rocalGetImageLabels(self._handle)
 
     def copyEncodedBoxesAndLables(self, bbox_array, label_array):
         b.rocalCopyEncodedBoxesAndLables(self._handle, bbox_array, label_array)
@@ -259,16 +268,7 @@ class Pipeline(object):
 
     def Timing_Info(self):
         return b.getTimingInfo(self._handle)
-        
-    def rocalGetImageLabels(self):
-        return b.rocalGetImageLabels(self._handle)
- 
-    def rocalGetBoundingBoxLabels(self):
-        return b.rocalGetBoundingBoxLabels(self._handle)
 
-    def rocalGetBoundingBoxCords(self):
-        return b.rocalGetBoundingBoxCords(self._handle)
-    
     def rocalGetBoundingBoxCount(self):
         return b.rocalGetBoundingBoxCount(self._handle)
     

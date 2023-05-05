@@ -91,7 +91,8 @@ namespace rocal{
         return py::bytes(s);
     }
 
-    '''
+    ''' 
+    # Commenting out the block as we no more use wrappers. Will remove this block in the upcoming PRs 
     py::object wrapper_copy_to_output(RocalContext context, py::array_t<unsigned char> array)
     {
         auto buf = array.request();
