@@ -69,7 +69,7 @@ class ROCALCOCOIterator(object):
         if self.loader.rocalRun() != 0:
             raise StopIteration
         else:
-            self.output_tensor_list = self.loader.GetOutputTensors()
+            self.output_tensor_list = self.loader.getOutputTensors()
 
         if self.out is None:
             self.w, self.h = self.output_tensor_list[0].max_shape()

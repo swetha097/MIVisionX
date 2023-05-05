@@ -632,9 +632,8 @@ namespace rocal{
         m.def("UpdateFloatParameter", &rocalUpdateFloatParameter);
         m.def("GetIntValue",&rocalGetIntValue);
         m.def("GetFloatValue",&rocalGetFloatValue);
-        m.def("GetBoundingBoxCount",&rocalGetBoundingBoxCount);
         // rocal_api_data_transfer.h
-        m.def("rocalGetOutputTensors", [](RocalContext context) {
+        m.def("getOutputTensors", [](RocalContext context) {
             rocalTensorList * tl = rocalGetOutputTensors(context);
             py::list list;
             unsigned int size_of_tensor_list = tl->size();
@@ -642,7 +641,8 @@ namespace rocal{
                 list.append(tl->at(i));
             return list; 
         });
-        m.def("rocalGetImageLabels", [](RocalContext context) {
+        m.def("getBoundingBoxCount",&rocalGetBoundingBoxCount);
+        m.def("getImageLabels", [](RocalContext context) {
             rocalTensorList *labels = rocalGetImageLabels(context);
             return py::array(py::buffer_info(
                             (int *)(labels->at(0)->buffer()),
@@ -652,7 +652,7 @@ namespace rocal{
                             {labels->size()},
                             {sizeof(int) }));
         });
-        m.def("rocalGetBoundingBoxLabels", [](RocalContext context) {
+        m.def("getBoundingBoxLabels", [](RocalContext context) {
             rocalTensorList *labels = rocalGetBoundingBoxLabel(context);
             py::list labels_list;
             py::array_t<int> labels_array;
@@ -669,7 +669,7 @@ namespace rocal{
             }
             return labels_list;
         });
-        m.def("rocalGetBoundingBoxCords", [](RocalContext context) {
+        m.def("getBoundingBoxCords", [](RocalContext context) {
             rocalTensorList *boxes = rocalGetBoundingBoxCords(context);
             py::list boxes_list;
             py::array_t<double> boxes_array;
@@ -686,7 +686,7 @@ namespace rocal{
             }
             return boxes_list;
         });
-        m.def("rocalGetMatchedIndices", [](RocalContext context) {
+        m.def("getMatchedIndices", [](RocalContext context) {
             rocalTensorList *matches = rocalGetMatchedIndices(context);
             return py::array(py::buffer_info(
                             (int *)(matches->at(0)->buffer()),

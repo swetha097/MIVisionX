@@ -234,16 +234,16 @@ class Pipeline(object):
         b.getImageId(self._handle, array)
 
     def GetBoundingBoxCount(self):
-        return b.rocalGetBoundingBoxCount(self._handle)
-    
+        return b.getBoundingBoxCount(self._handle)
+
     def GetBoundingBoxLabels(self):
-        return b.rocalGetBoundingBoxLabels(self._handle)
+        return b.getBoundingBoxLabels(self._handle)
 
     def GetBoundingBoxCords(self):
-        return b.rocalGetBoundingBoxCords(self._handle)
+        return b.getBoundingBoxCords(self._handle)
 
     def GetImageLabels(self):
-        return b.rocalGetImageLabels(self._handle)
+        return b.getImageLabels(self._handle)
 
     def copyEncodedBoxesAndLables(self, bbox_array, label_array):
         b.rocalCopyEncodedBoxesAndLables(self._handle, bbox_array, label_array)
@@ -270,10 +270,10 @@ class Pipeline(object):
         return b.getTimingInfo(self._handle)
 
     def GetMatchedIndices(self):
-        return b.rocalGetMatchedIndices(self._handle)
+        return b.getMatchedIndices(self._handle)
 
     def GetOutputTensors(self):
-        return b.rocalGetOutputTensors(self._handle)
+        return b.getOutputTensors(self._handle)
 
     def run(self):
         """
@@ -286,7 +286,7 @@ class Pipeline(object):
             print("getRemainingImages :", self.getRemainingImages())
             if self.getRemainingImages() > 0:
                 self.rocalRun()
-                return b.rocalGetOutputTensors(self._handle)
+                return b.getOutputTensors(self._handle)
         except:
                 print("Raise stop iter")
                 raise StopIteration
