@@ -634,7 +634,7 @@ namespace rocal{
         m.def("GetFloatValue",&rocalGetFloatValue);
         m.def("GetBoundingBoxCount",&rocalGetBoundingBoxCount);
         // rocal_api_data_transfer.h
-        m.def("GetOutputTensors", [](RocalContext context) {
+        m.def("rocalGetOutputTensors", [](RocalContext context) {
             rocalTensorList * tl = rocalGetOutputTensors(context);
             py::list list;
             unsigned int size_of_tensor_list = tl->size();
@@ -642,7 +642,7 @@ namespace rocal{
                 list.append(tl->at(i));
             return list; 
         });
-        m.def("GetImageLabels", [](RocalContext context) {
+        m.def("rocalGetImageLabels", [](RocalContext context) {
             rocalTensorList *labels = rocalGetImageLabels(context);
             return py::array(py::buffer_info(
                             (int *)(labels->at(0)->buffer()),
@@ -652,7 +652,7 @@ namespace rocal{
                             {labels->size()},
                             {sizeof(int) }));
         });
-        m.def("GetBoundingBoxLabels", [](RocalContext context) {
+        m.def("rocalGetBoundingBoxLabels", [](RocalContext context) {
             rocalTensorList *labels = rocalGetBoundingBoxLabel(context);
             py::list labels_list;
             py::array_t<int> labels_array;
@@ -669,7 +669,7 @@ namespace rocal{
             }
             return labels_list;
         });
-        m.def("GetBoundingBoxCords", [](RocalContext context) {
+        m.def("rocalGetBoundingBoxCords", [](RocalContext context) {
             rocalTensorList *boxes = rocalGetBoundingBoxCords(context);
             py::list boxes_list;
             py::array_t<double> boxes_array;
@@ -686,7 +686,7 @@ namespace rocal{
             }
             return boxes_list;
         });
-        m.def("GetMatchedIndices", [](RocalContext context) {
+        m.def("rocalGetMatchedIndices", [](RocalContext context) {
             rocalTensorList *matches = rocalGetMatchedIndices(context);
             return py::array(py::buffer_info(
                             (int *)(matches->at(0)->buffer()),
@@ -696,7 +696,7 @@ namespace rocal{
                             {matches->size() * 120087},
                             {sizeof(int) }));
         }, py::return_value_policy::reference);
-        m.def("GetEncodedBoxesAndLables", [](RocalContext context,uint batch_size, uint num_anchors) {
+        m.def("rocalGetEncodedBoxesAndLables", [](RocalContext context,uint batch_size, uint num_anchors) {
                 auto vec_pair_labels_boxes = rocalGetEncodedBoxesAndLables(context, batch_size * num_anchors);
                 auto labels_buf_ptr = (int*)(vec_pair_labels_boxes[0]->at(0)->buffer());
                 auto bboxes_buf_ptr = (float*)(vec_pair_labels_boxes[1]->at(0)->buffer());
