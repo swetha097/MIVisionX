@@ -69,7 +69,7 @@ class ROCALCOCOIterator(object):
         if self.loader.rocalRun() != 0:
             raise StopIteration
         else:
-            self.output_tensor_list = self.loader.rocalGetOutputTensors()
+            self.output_tensor_list = self.loader.GetOutputTensors()
 
         if self.out is None:
             self.w, self.h = self.output_tensor_list[0].max_shape()
@@ -96,21 +96,21 @@ class ROCALCOCOIterator(object):
 
         self.output_tensor_list[0].copy_data(ctypes.c_void_p(self.out.data_ptr()))
 
-        labels_array = self.loader.rocalGetBoundingBoxLabels()
+        labels_array = self.loader.GetBoundingBoxLabels()
         encodded_labels_tensor = []
         encoded_bboxes_tensor = []
         for label in labels_array:
             self.encoded_labels = torch.as_tensor(label, dtype=torch.int64)
             encodded_labels_tensor.append(self.encoded_labels)
 
-        boxes_array = self.loader.rocalGetBoundingBoxCords()
+        boxes_array = self.loader.GetBoundingBoxCords()
         for box in boxes_array:
             self.encoded_bboxes = torch.as_tensor(box, dtype=torch.float16)
             self.encoded_bboxes = self.encoded_bboxes * 800
             self.encoded_bboxes = self.encoded_bboxes.view(-1, 4)
             encoded_bboxes_tensor.append(self.encoded_bboxes)
 
-        matched_idxs = self.loader.rocalGetMatchedIndices()
+        matched_idxs = self.loader.GetMatchedIndices()
         self.matched_idxs = torch.as_tensor(matched_idxs, dtype=torch.int64)
         matched_idxs_tensor = self.matched_idxs.view(-1, 120087)
 
