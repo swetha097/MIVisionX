@@ -59,9 +59,8 @@ struct MetaData
         _object_count = _bb_label_ids.size();
     }
     void set_pixelwise_label(std::vector<int> pixelwise_label) {
-        std::cerr<<"\n ****************** Setting pixel wise label ***********************";
         _pixelwise_label = std::move(pixelwise_label);
-        }
+    }
     std::vector<int>& get_polygon_count() { return _polygon_count; }
     std::vector<int>& get_pixelwise_label() { return _pixelwise_label; }
     std::vector<std::vector<int>>& get_vertices_count() { return _vertices_count; }
@@ -351,7 +350,6 @@ struct BoundingBoxBatch: public MetaDataBatch
         auto bb_labels_dims = _metadata_dimensions.bb_labels_dims();
         auto bb_coords_dims = _metadata_dimensions.bb_cords_dims();
         if (is_segmentation_polygon) {
-            std::cerr<<"\n Polygon mask is set";
             float *mask_buffer = (float *)buffer[2];
             auto mask_coords_dims = _metadata_dimensions.mask_cords_dims();
             for(unsigned i = 0; i < _bb_label_ids.size(); i++)

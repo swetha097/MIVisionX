@@ -134,7 +134,7 @@ int main(int argc, const char **argv)
 int test(int test_case, int reader_type, int pipeline_type, const char *path, const char *outName, int rgb, int gpu, int width, int height, int num_of_classes, int display_all)
 {
     size_t num_threads = 1;
-    unsigned int inputBatchSize = 2;
+    unsigned int inputBatchSize = 1;
     int decode_max_width = width;
     int decode_max_height = height;
     std::cout << ">>> test case " << test_case << std::endl;
@@ -200,6 +200,7 @@ int test(int test_case, int reader_type, int pipeline_type, const char *path, co
                 input1 = rocalJpegCOCOFileSource(handle, path, json_path, color_format, num_threads, false, true, false);
             else
                 input1 = rocalJpegCOCOFileSource(handle, path, json_path, color_format, num_threads, true, true, false, ROCAL_USE_USER_GIVEN_SIZE, decode_max_width, decode_max_height);
+            rocalSetRandomPixelMaskConfig(handle,true);
         }
         break;
         case 3: //coco detection partial
@@ -432,7 +433,6 @@ int test(int test_case, int reader_type, int pipeline_type, const char *path, co
             break;
             case 3: //detection + segmentation + Pixelwise pipeline
             {
-                std::cout << "Enters again" << std::endl;
                 RocalTensorList bbox_labels = rocalGetBoundingBoxLabel(handle);
                 RocalTensorList bbox_coords = rocalGetBoundingBoxCords(handle);
                 int ImageNameLen[inputBatchSize];
@@ -441,6 +441,7 @@ int test(int test_case, int reader_type, int pipeline_type, const char *path, co
                 rocalGetImageName(handle,imageNames);
                 std::string imageNamesStr(imageNames);
                 RocalTensorList mask_data = rocalGetPixelwiseLabels(handle);
+                /*
                 std::cerr << "\n>>>>> PIXELWISE LABELS : ";
                 for(int i =0; i < bbox_labels->size(); i++) {
                     std::cout << "Imagename:" << imageNamesStr[i] << std::endl;
@@ -451,6 +452,17 @@ int test(int test_case, int reader_type, int pipeline_type, const char *path, co
                     }
                     std::cerr << std::endl;
                 }
+                */
+                // RocalTensorList output = rocalRandomMaskPixel(handle);
+                // for(int i =0; i < bbox_labels->size(); i++) {
+                //     unsigned int *mask_buffer = (unsigned int *)(output->at(i)->buffer());
+                //     int mask_size = output->at(i)->info().dims().at(0);
+                //     for (int j = 0; j < mask_size; j++) {
+                //         std::cerr << mask_buffer[j] << "\t";
+                //     }
+                //     std::cerr << std::endl;
+                // }
+                std::cout << "ok8" << std::endl;
                 for(int i = 0; i < bbox_labels->size(); i++)
                 {
                     int * labels_buffer = (int *)(bbox_labels->at(i)->buffer());

@@ -107,6 +107,8 @@ extern "C" RocalMetaData ROCAL_API_CALL rocalCreateMXNetReader(RocalContext roca
 /// \param buf user buffer provided to be filled with output image names for images in the output batch.
 extern "C" void ROCAL_API_CALL rocalGetImageName(RocalContext rocal_context,  char* buf);
 
+extern "C" void ROCAL_API_CALL rocalSetRandomPixelMaskConfig(RocalContext p_context, bool is_foreground=false, unsigned int value=0, bool is_threshold=true);
+
 
 ///
 /// \param rocal_context
@@ -156,6 +158,8 @@ extern "C" unsigned ROCAL_API_CALL rocalGetMaskCount(RocalContext rocal_context,
 /// \param rocal_context
 /// \param bufcount The user's buffer that will be filled with poylgon size for the mask info
 extern "C" RocalTensorList ROCAL_API_CALL rocalGetMaskCoordinates(RocalContext rocal_context, int* bufcount);
+
+extern "C" RocalTensorList ROCAL_API_CALL rocalRandomMaskPixel(RocalContext p_context);
 
 ///
 /// \param rocal_context

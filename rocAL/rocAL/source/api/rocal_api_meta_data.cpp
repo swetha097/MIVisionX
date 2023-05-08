@@ -193,6 +193,14 @@ ROCAL_API_CALL rocalCreateMXNetReader(RocalContext p_context, const char* source
 
 }
 
+void ROCAL_API_CALL rocalSetRandomPixelMaskConfig(RocalContext p_context, bool is_foreground, unsigned int value, bool is_threshold)
+{
+    if (!p_context)
+        THROW("Invalid rocal context passed to rocalBoxIOUMatcher")
+    auto context = static_cast<Context *>(p_context);
+    context->master_graph->set_random_mask_pixel_config(is_foreground,value,is_threshold);
+}
+
 void
 ROCAL_API_CALL rocalGetImageName(RocalContext p_context,  char* buf)
 {
@@ -379,6 +387,32 @@ ROCAL_API_CALL rocalGetMaskCoordinates(RocalContext p_context, int *bufcount)
         }
     }
     return context->master_graph->mask_meta_data();
+}
+
+RocalTensorList
+ROCAL_API_CALL rocalRandomMaskPixel(RocalContext p_context)
+{
+    if (p_context == nullptr)
+        THROW("Invalid rocal context passed to rocalGetPixelwiseLabels")
+    auto context = static_cast<Context*>(p_context);
+    auto meta_data = context->master_graph->meta_data();
+    size_t meta_data_batch_size = meta_data.second->get_mask_cords_batch().size();
+    if(context->user_batch_size() != meta_data_batch_size)
+        THROW("meta data batch size is wrong " + TOSTR(meta_data_batch_size) + " != "+ TOSTR(context->user_batch_size() ))
+    if(!meta_data.second)
+        THROW("No mask has been loaded for this output image")
+    std::cout << "ok1" << std::endl;
+    RocalTensorList val = context->master_graph->get_random_mask_pixel(context->master_graph->mask_meta_data());
+    std::cout <<"ok113" << std::endl;
+    for(int i =0; i < meta_data_batch_size; i++) {
+        unsigned int *mask_buffer = (unsigned int *)(val->at(i)->buffer());
+        int mask_size = val->at(i)->info().dims().at(0);
+        for (int j = 0; j < mask_size; j++) {
+            std::cerr << mask_buffer[j] << "\t";
+        }
+        std::cerr << std::endl;
+    }
+    return val;
 }
 
 RocalTensorList
