@@ -134,7 +134,7 @@ int main(int argc, const char **argv)
 int test(int test_case, int reader_type, int pipeline_type, const char *path, const char *outName, int rgb, int gpu, int width, int height, int num_of_classes, int display_all)
 {
     size_t num_threads = 1;
-    unsigned int inputBatchSize = 1;
+    unsigned int inputBatchSize = 2;
     int decode_max_width = width;
     int decode_max_height = height;
     std::cout << ">>> test case " << test_case << std::endl;
@@ -453,16 +453,16 @@ int test(int test_case, int reader_type, int pipeline_type, const char *path, co
                     std::cerr << std::endl;
                 }
                 */
-                // RocalTensorList output = rocalRandomMaskPixel(handle);
-                // for(int i =0; i < bbox_labels->size(); i++) {
-                //     unsigned int *mask_buffer = (unsigned int *)(output->at(i)->buffer());
-                //     int mask_size = output->at(i)->info().dims().at(0);
-                //     for (int j = 0; j < mask_size; j++) {
-                //         std::cerr << mask_buffer[j] << "\t";
-                //     }
-                //     std::cerr << std::endl;
-                // }
-                std::cout << "ok8" << std::endl;
+                std::cout << "\n>>>>> RANDOM PIXEL POSITION:" << std::endl;
+                RocalTensorList output = rocalRandomMaskPixel(handle);
+                for(int i =0; i < bbox_labels->size(); i++) {
+                    unsigned int *mask_buffer = (unsigned int *)(output->at(i)->buffer());
+                    int mask_size = output->at(i)->info().dims().at(0);
+                    for (int j = 0; j < mask_size; j++) {
+                        std::cerr << mask_buffer[j] << "\t";
+                    }
+                    std::cerr << std::endl;
+                }
                 for(int i = 0; i < bbox_labels->size(); i++)
                 {
                     int * labels_buffer = (int *)(bbox_labels->at(i)->buffer());

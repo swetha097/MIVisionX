@@ -401,18 +401,7 @@ ROCAL_API_CALL rocalRandomMaskPixel(RocalContext p_context)
         THROW("meta data batch size is wrong " + TOSTR(meta_data_batch_size) + " != "+ TOSTR(context->user_batch_size() ))
     if(!meta_data.second)
         THROW("No mask has been loaded for this output image")
-    std::cout << "ok1" << std::endl;
-    RocalTensorList val = context->master_graph->get_random_mask_pixel(context->master_graph->mask_meta_data());
-    std::cout <<"ok113" << std::endl;
-    for(int i =0; i < meta_data_batch_size; i++) {
-        unsigned int *mask_buffer = (unsigned int *)(val->at(i)->buffer());
-        int mask_size = val->at(i)->info().dims().at(0);
-        for (int j = 0; j < mask_size; j++) {
-            std::cerr << mask_buffer[j] << "\t";
-        }
-        std::cerr << std::endl;
-    }
-    return val;
+    return context->master_graph->get_random_mask_pixel(context->master_graph->mask_meta_data());
 }
 
 RocalTensorList

@@ -82,7 +82,6 @@ int64_t MasterGraph::find_pixel(std::vector<int> start, std::vector<int> foregro
 
 rocalTensorList*  MasterGraph::get_random_mask_pixel(rocalTensorList* input)
 {
-    std::cout << "ok2" << std::endl;
     SeededRNG<std::mt19937, 4> rngs(_user_batch_size);
     //std::vector<std::vector<int>> output;
     auto meta_data_buffers = (unsigned char *)_ring_buffer.get_meta_read_buffers()[2]; // Get bbox buffer from ring buffer
@@ -94,9 +93,7 @@ rocalTensorList*  MasterGraph::get_random_mask_pixel(rocalTensorList* input)
         meta_data_buffers += _mask_tensor_list[i]->info().data_size();
     }
     output_random_mask_pixel.reserve(_user_batch_size* 2);
-    std::cout << "ok3" << std::endl;
     if (_is_random_mask_pixel_foreground == false) {
-        std::cout << "ok4" << std::endl;
         #pragma omp parallel for num_threads(_user_batch_size)
         for (int i = 0; i < _user_batch_size; i++) {
             auto rng = rngs[i];
@@ -110,7 +107,6 @@ rocalTensorList*  MasterGraph::get_random_mask_pixel(rocalTensorList* input)
     else
     {
         if (_is_random_mask_pixel_threshold) {
-            std::cout << "ok5" << std::endl;
             #pragma omp parallel for num_threads(_user_batch_size)
             for (int i = 0; i < _user_batch_size; i++) {
                 std::vector<int> start;
@@ -149,7 +145,6 @@ rocalTensorList*  MasterGraph::get_random_mask_pixel(rocalTensorList* input)
                 }
             }
         } else {
-            std::cout << "ok6" << std::endl;
             #pragma omp parallel for num_threads(_user_batch_size)
             for (int i = 0; i < _user_batch_size; i++) {
                 std::vector<int> start;
@@ -190,11 +185,6 @@ rocalTensorList*  MasterGraph::get_random_mask_pixel(rocalTensorList* input)
         }
     }
 
-    for (int i = 0; i < _user_batch_size*2; i++) {
-        std::cout << output_random_mask_pixel[i] << std::endl;
-    }
-    std::cout <<"ok7" << std::endl;
-
     auto random_data_buffers = (unsigned int *)output_random_mask_pixel.data(); // Get bbox buffer from ring buffer
     auto random_tensor_dims = {(size_t)2};
     for(unsigned i = 0; i < _user_batch_size; i++)
@@ -202,19 +192,6 @@ rocalTensorList*  MasterGraph::get_random_mask_pixel(rocalTensorList* input)
         _random_mask_pixel_list[i]->set_dims(random_tensor_dims);
         _random_mask_pixel_list[i]->set_mem_handle((void *)random_data_buffers);
         random_data_buffers += 2;
-    }
-    std::cout <<"ok9" << std::endl;
-    for (int i = 0; i < _user_batch_size*2; i++) {
-        std::cout << output_random_mask_pixel[i] << std::endl;
-    }
-    std::cout <<"ok10" << std::endl;
-    for(int i =0; i < _user_batch_size; i++) {
-        unsigned int *mask_buffer = (unsigned int *)(_random_mask_pixel_list.at(i)->buffer());
-        int mask_size = _random_mask_pixel_list.at(i)->info().dims().at(0);
-        for (int j = 0; j < mask_size; j++) {
-            std::cerr << mask_buffer[j] << "\t";
-        }
-        std::cerr << std::endl;
     }
 
     return &_random_mask_pixel_list;
