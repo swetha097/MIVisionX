@@ -178,8 +178,4 @@ def data_type_function(dtype):
         ret = _known_types[dtype][0]
         return ret
     else:
-<<<<<<< HEAD
         raise RuntimeError(str(dtype) + " does not correspond to a known type.")
-=======
-        raise RuntimeError(str(dtype) + " does not correspond to a known type.")
->>>>>>> e5f46ddc835d1e3331dd08fca15512a04af91b2b
