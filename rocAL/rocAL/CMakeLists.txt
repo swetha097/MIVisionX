@@ -160,11 +160,15 @@ if(${BUILD_ROCAL})
                 ./include/augmentations/color_augmentations/
                 ./include/augmentations/effects_augmentations/
                 ./include/augmentations/geometry_augmentations/
+                ./include/augmentations/audio_augmentations/
+                ./include/augmentations/arithmetic_augmentations/
                 ./include/augmentations/
+                ./include/decoders/audio/
                 ./include/decoders/image/
                 ./include/decoders/video/
                 ./include/device/
                 ./include/loaders/
+                ./include/loaders/audio/
                 ./include/loaders/image/
                 ./include/loaders/video/
                 ./include/meta_data/
@@ -209,7 +213,7 @@ if(${BUILD_ROCAL})
 
     target_compile_definitions(${PROJECT_NAME} PUBLIC ENABLE_SIMD=1)
     target_compile_definitions(${PROJECT_NAME} PUBLIC DBG_TIMING=1)
-    target_compile_definitions(${PROJECT_NAME} PUBLIC DBGINFO=0)
+    target_compile_definitions(${PROJECT_NAME} PUBLIC DBGINFO=1)
     target_compile_definitions(${PROJECT_NAME} PUBLIC DBGLOG=0 WRNLOG=0)
     target_compile_definitions(${PROJECT_NAME} PUBLIC TFRECORD_ENABLE=0)
     message("-- ${White}rocAL built with ENABLE_SIMD")

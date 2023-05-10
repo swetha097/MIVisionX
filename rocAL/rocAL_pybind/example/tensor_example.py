@@ -7,6 +7,7 @@ from amd.rocal.plugin.pytorch import ROCALClassificationIterator
 from amd.rocal.pipeline import Pipeline
 import amd.rocal.fn as fn
 import amd.rocal.types as types
+# import rocal_pybind.tensor
 import sys
 import cv2
 import os

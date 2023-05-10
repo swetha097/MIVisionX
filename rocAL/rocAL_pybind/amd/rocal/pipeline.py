@@ -98,14 +98,16 @@ class Pipeline(object):
     def __init__(self, batch_size=-1, num_threads=-1, device_id=-1, seed=1,
                  exec_pipelined=True, prefetch_queue_depth=2,
                  exec_async=True, bytes_per_sample=0,
-                 rocal_cpu=False, max_streams=-1, default_cuda_stream_priority=0, tensor_layout = types.NCHW, reverse_channels = False, multiplier = [1.0,1.0,1.0], offset = [0.0, 0.0, 0.0], tensor_dtype=types.FLOAT):
+                 rocal_cpu=False, max_streams=-1, default_cuda_stream_priority=0,
+                 tensor_layout = types.NCHW, reverse_channels = False, multiplier = [1.0,1.0,1.0], 
+                 offset = [0.0, 0.0, 0.0], tensor_dtype=types.FLOAT, last_batch_policy=types.LAST_BATCH_FILL, last_batch_padded=False):
+        print("in Pipeline.py last_batch_policy", last_batch_policy)
         if(rocal_cpu):
             self._handle = b.rocalCreate(
-                batch_size, types.CPU, device_id, num_threads,prefetch_queue_depth,types.FLOAT)
+                batch_size, types.CPU, device_id, num_threads, prefetch_queue_depth, types.FLOAT, last_batch_policy, last_batch_padded)
         else:
             self._handle = b.rocalCreate(
-                batch_size, types.GPU, device_id, num_threads,prefetch_queue_depth,types.FLOAT)
-
+                batch_size, types.GPU, device_id, num_threads, prefetch_queue_depth, types.FLOAT, last_batch_policy, last_batch_padded)
         if(b.getStatus(self._handle) == types.OK):
             print("Pipeline has been created succesfully")
         else:
@@ -119,6 +121,7 @@ class Pipeline(object):
         self._num_threads = num_threads
         self._device_id = device_id
         self._seed = seed
+        b.setSeed(seed)
         self._exec_pipelined = exec_pipelined
         self._prefetch_queue_depth = prefetch_queue_depth
         self._exec_async = exec_async
@@ -131,6 +134,8 @@ class Pipeline(object):
         self._multiplier = multiplier
         self._reverse_channels = reverse_channels
         self._offset = offset
+        self._last_batch_policy = last_batch_policy
+        self.last_batch_padded = last_batch_padded
         self._img_h = None
         self._img_w = None
         self._shuffle = None
@@ -321,6 +326,9 @@ class Pipeline(object):
 
     def getRemainingImages(self):
         return b.getRemainingImages(self._handle)
+    
+    def getLastBatchPaddedSize(self):
+        return b.getLastBatchPaddedSize(self._handle)
 
     def rocalResetLoaders(self):
         return b.rocalResetLoaders(self._handle)

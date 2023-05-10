@@ -28,11 +28,14 @@ Node::~Node()
     if(!_node)
         vxReleaseNode(&_node);
     _node = nullptr;
+    vxReleaseTensor(&_src_tensor_roi);
+    vxReleaseTensor(&_dst_tensor_roi);
 }
 
 void
 Node::create(std::shared_ptr<Graph> graph)
 {
+    std::cerr << "In node::  create ()";
     if(_outputs.empty() || _inputs.empty())
         THROW("Uninitialized input/output images to the node")
 

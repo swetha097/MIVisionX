@@ -62,6 +62,7 @@ public:
     virtual void shut_down() = 0;
     // virtual std::vector<size_t> get_sequence_start_frame_number() = 0;
     // virtual std::vector<std::vector<float>> get_sequence_frame_timestamps() = 0;
+    virtual size_t last_batch_padded_size() = 0;
 };
 
 using pLoaderModule = std::shared_ptr<LoaderModule>;

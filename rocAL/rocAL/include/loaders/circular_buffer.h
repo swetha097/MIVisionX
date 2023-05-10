@@ -30,13 +30,18 @@ THE SOFTWARE.
 #include "device_manager.h"
 #include "device_manager_hip.h"
 #include "commons.h"
-struct decoded_image_info
+struct decoded_image_info // 
 {
     std::vector<std::string> _image_names;
     std::vector<uint32_t> _roi_width;
     std::vector<uint32_t> _roi_height;
     std::vector<uint32_t> _original_width;
     std::vector<uint32_t> _original_height;
+    std::vector<uint32_t> _roi_audio_samples;
+    std::vector<uint32_t> _roi_audio_channels;
+    std::vector<uint32_t> _original_audio_samples;
+    std::vector<uint32_t> _original_audio_channels;
+    std::vector<float> _original_audio_sample_rates;
 };
 
 struct crop_image_info

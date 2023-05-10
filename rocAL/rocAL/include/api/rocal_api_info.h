@@ -31,6 +31,11 @@ extern "C"  size_t  ROCAL_API_CALL rocalGetRemainingImages(RocalContext rocal_co
 
 ///
 /// \param rocal_context
+/// \return The number of images yet to be processed
+extern "C"  size_t  ROCAL_API_CALL rocalGetLastBatchPaddedSize(RocalContext rocal_context);
+
+///
+/// \param rocal_context
 /// \param buf
 /// \return The width of the ROCAL's output image in pixels
 extern "C" void ROCAL_API_CALL rocalGetOutputResizeWidth(RocalContext rocal_context, unsigned int* buf);
