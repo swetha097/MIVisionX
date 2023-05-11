@@ -734,9 +734,11 @@ rocalAudioFileSourceSingleShard(
                                 tensor_data_type);
         // info.reallocate
         info.set_tensor_layout(RocalTensorlayout::NONE);
+        info.set_max_shape();
         // info.reallocate_tensor_sample_rate_buffers();
         output = context->master_graph->create_loader_output_tensor(info);
         output->reset_audio_sample_rate();
+        std::cerr << "\n Exits the rocALAudioFileSourceSingleShard 3" ;
         context->master_graph->add_node<AudioLoaderSingleShardNode>({}, {output})->init(shard_id, shard_count,
                                                                                         source_path,
                                                                                         source_file_list_path,
@@ -753,7 +755,7 @@ rocalAudioFileSourceSingleShard(
                                                                                         shard_size
                                                                                         );
         context->master_graph->set_loop(loop);
-
+        std::cerr << "\n Exits the rocALAudioFileSourceSingleShard 2" ;
         if(downmix)
         {
             // For the resize node, user can create an image with a different width and height
@@ -765,6 +767,8 @@ rocalAudioFileSourceSingleShard(
             output_dims.at(2) = 1;
             output_info.set_dims(output_dims);
             output_info.set_tensor_layout(RocalTensorlayout::NONE);
+            output_info.set_max_shape();
+
 
             auto downmixed_output = context->master_graph->create_tensor(output_info, false);
             std::shared_ptr<DownmixNode> downmix_node = context->master_graph->add_node<DownmixNode>({output}, {downmixed_output});
@@ -788,6 +792,7 @@ rocalAudioFileSourceSingleShard(
                 context->master_graph->add_node<CopyNode>({output}, {actual_output}); // Have to add copy tensor node
             }
         }
+        std::cerr << "\n Exits the rocALAudioFileSourceSingleShard" ;
 
     }
     catch(const std::exception& e)

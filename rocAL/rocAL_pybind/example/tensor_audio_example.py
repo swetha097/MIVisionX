@@ -18,16 +18,12 @@ import cv2
 import matplotlib.pyplot as plt
 import os
 def draw_patches(img, idx, device):
-    # print("Draw Patches")
     #image is expected as a tensor, bboxes as numpy
     import cv2
     image = img.detach().numpy()
-    # print(img.cpu().detach().numpy().flatten())
-    # print(idx)
     audio_data = image.flatten()
     label = idx.cpu().detach().numpy()
     print("label: ", label)
-    # print("audio_data",audio_data)
     # Saving the array in a text file
     file = open("results/rocal_data"+str(label)+".txt", "w+")
     content = str(audio_data)
@@ -41,7 +37,7 @@ def main():
         print ('Please pass audio_folder file_list cpu/gpu batch_size')
         exit(0)
     try:
-        path= "OUTPUT_IMAGES_PYTHON/NEW_API/FILE_READER/" + "brightness"
+        path= "OUTPUT_IMAGES_PYTHON/NEW_API/FILE_READER/" + "audio"
         isExist = os.path.exists(path)
         if not isExist:
             os.makedirs(path)
@@ -81,7 +77,7 @@ def main():
         # dither = 0.001
         # audio_decode = fn.decoders.audio(audio, file_root=data_path, downmix=True, shard_id=0, num_shards=2,random_shuffle=True)
         audio_decode = fn.decoders.audio(audio, file_root=data_path, file_list_path=file_list, downmix=True, shard_id=0, num_shards=1, storage_type=9, stick_to_shard=False, seed=12345)
-        uniform_distribution_resample = fn.random.uniform(audio_decode, range=[0.8,1.15])
+        # uniform_distribution_resample = fn.random.uniform(audio_decode, range=[0.8,1.15])
         # resampled_rate = uniform_distribution_resample * resample
         # # # resample_output = fn.resample(audio_decode, resample_rate = resampled_rate, resample_hint=250000, )
         # resample_output = fn.resample(audio_decode, resample_rate = resampled_rate, resample_hint=0.85555 * 258160, )
@@ -120,7 +116,7 @@ def main():
         # normalize_audio = fn.normalize(to_decibels_audio, axes=[1])
         # pad_audio = fn.pad(normalize_audio, fill_value=0)
 
-        audio_pipeline.set_outputs(uniform_distribution_resample)
+        audio_pipeline.set_outputs(audio_decode)
     audio_pipeline.build()
     audioIteratorPipeline = ROCALClassificationIterator(audio_pipeline, auto_reset=True)
     cnt = 0
@@ -136,9 +132,7 @@ def main():
                 # print("roi", roi)
                 # print("img",img)
                 draw_patches(img, label, "cpu")
-            #     cnt = cnt + 1
         print("EPOCH DONE", e)
-        # audioIteratorPipeline.reset()
 if __name__ == '__main__':
     main()
 

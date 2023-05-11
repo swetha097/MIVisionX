@@ -21,7 +21,7 @@
 import rocal_pybind as b
 import amd.rocal.types as types
 import numpy as np
-import cupy as cp
+# import cupy as cp
 import ctypes
 import functools
 import inspect
@@ -228,10 +228,10 @@ class Pipeline(object):
             else: #torch tensor
                 return b.getOneHotEncodedLabels(self._handle, ctypes.c_void_p(array.data_ptr()), self._numOfClasses, 0)
         if device=="gpu":
-            if (isinstance(array,cp.ndarray)):
-                b.getOneHotEncodedLabels(self._handle, array.data.ptr, self._numOfClasses, 1)
-            else: #torch tensor
-                return b.getOneHotEncodedLabels(self._handle, ctypes.c_void_p(array.data_ptr()), self._numOfClasses, 1)
+            # if (isinstance(array,cp.ndarray)):
+            #     b.getOneHotEncodedLabels(self._handle, array.data.ptr, self._numOfClasses, 1)
+            # else: #torch tensor
+            return b.getOneHotEncodedLabels(self._handle, ctypes.c_void_p(array.data_ptr()), self._numOfClasses, 1)
 
     def set_outputs(self, *output_list):
         self._output_list_length = len(output_list)
@@ -292,8 +292,8 @@ class Pipeline(object):
     def getImageLabels(self, array):
         if (isinstance(array,np.ndarray)):
             b.getImageLabels(self._handle, array.ctypes.data_as(ctypes.c_void_p))
-        elif (isinstance(array,cp.ndarray)):
-            b.getCupyImageLabels(self._handle, array.data.ptr)
+        # elif (isinstance(array,cp.ndarray)):
+        #     b.getCupyImageLabels(self._handle, array.data.ptr)
         else: #pytorch tensor
             b.getImageLabels(self._handle, ctypes.c_void_p(array.data_ptr()))
 

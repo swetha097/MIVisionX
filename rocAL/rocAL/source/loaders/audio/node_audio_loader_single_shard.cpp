@@ -35,6 +35,7 @@ AudioLoaderSingleShardNode::init(unsigned shard_id, unsigned shard_count, const 
                                  StorageType storage_type, DecoderType decoder_type, bool shuffle, bool loop,
                                  size_t load_batch_count, RocalMemType mem_type, std::shared_ptr<MetaDataReader> meta_data_reader, RocalBatchPolicy last_batch_policy, bool last_batch_padded, bool stick_to_shard, signed shard_size)
 {
+    std::cerr << "\n Comes to init ";
     if(!_loader_module)
         THROW("ERROR: loader module is not set for AudioLoaderNode, cannot initialize")
     if(shard_count < 1)
@@ -51,10 +52,14 @@ AudioLoaderSingleShardNode::init(unsigned shard_id, unsigned shard_count, const 
     reader_cfg.set_last_batch_policy(last_batch_policy, last_batch_padded);
     reader_cfg.set_stick_to_shard(stick_to_shard);
     reader_cfg.set_shard_size(shard_size);
+    std::cerr << "\n Comes to init 0.5";
     _loader_module->initialize(reader_cfg, DecoderConfig(decoder_type),
                                mem_type,
                                _batch_size);
+    std::cerr << "\n Comes to init 1";
     _loader_module->start_loading();
+    std::cerr << "\n Comes to init 2";
+
 }
 
 std::shared_ptr<LoaderModule> AudioLoaderSingleShardNode::get_loader_module()

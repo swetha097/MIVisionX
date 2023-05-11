@@ -89,7 +89,6 @@ static vx_status VX_CALLBACK refreshTensorAddTensor(vx_node node, const vx_refer
         }
         else if (data->in_tensor_type == vx_type_e::VX_TYPE_FLOAT32 && data->out_tensor_type == vx_type_e::VX_TYPE_FLOAT32)
         {
-            // std::cerr << "FLOAT data";
             STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[0], VX_TENSOR_BUFFER_HOST, &data->pSrc1, sizeof(vx_float32)));
             STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[1], VX_TENSOR_BUFFER_HOST, &data->pSrc2, sizeof(vx_float32)));
             STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[2], VX_TENSOR_BUFFER_HOST, &data->pDst, sizeof(vx_float32)));
@@ -145,35 +144,20 @@ static vx_status VX_CALLBACK processTensorAddTensor(vx_node node, const vx_refer
     {
 #if ENABLE_HIP
         refreshTensorAddTensor(node, parameters, num, data);
-        // make the rpp call or add the implementation here
-        // hipMemcpy(data->pDst_dev, data->pSrc_dev, data->tensor_size, hipMemcpyDeviceToDevice);
-        // std::cerr << "process :  TensorAddTensor , HIP backend not supported as of date";
 #endif
     }
     else if (data->device_type == AGO_TARGET_AFFINITY_CPU)
     {
         refreshTensorAddTensor(node, parameters, num, data);
-        // memcpy(data->pDst, data->pSrc, data->tensor_size);
-        // Add the case for UNIT8 datatype // TODO: Swetha
          if (data->in_tensor_type == vx_type_e::VX_TYPE_FLOAT32 && data->out_tensor_type == vx_type_e::VX_TYPE_FLOAT32)
         {
-        uint channels = 1; // for audio data
         data->roi_ptr_src = (RpptROI *)data->roi_tensor_ptr_src;
         for (uint i = 0; i < data->nbatchSize; i++)
             {
-                //start ptr of the tensor1
-                // std::cerr << "TAT Batch :: " << i;
-                size_t size_psrc1_elements = data->in_tensor_dims1[1] * data->in_tensor_dims1[2] * channels;
-                size_t size_psrc1_roi = data->roi_ptr_src[i].xywhROI.xy.x * data->roi_ptr_src[i].xywhROI.xy.y * channels;
+                size_t size_psrc1_elements = data->in_tensor_dims1[1] * data->in_tensor_dims1[2];
+                size_t size_psrc1_roi = data->roi_ptr_src[i].xywhROI.xy.x * data->roi_ptr_src[i].xywhROI.xy.y;
                 for (uint j = 0; j < size_psrc1_roi ; j++) {
-                    ((float *)(data->pDst))[i * size_psrc1_elements + j] = ((float *)(data->pSrc1))[i * size_psrc1_elements + j] + ((float *)(data->pSrc2))[i] ;
-                    if (j >= 0 && j <  10) {
-                        // std::cerr << "\n i * size_psrc1_elements + j : " << i * size_psrc1_elements + j;
-                        // std::cerr << "\n size_psrc1_elements" << size_psrc1_elements;
-                    //     std::cerr << "\n TAT ((float *)(data->pSrc1))[i * size_psrc1_elements + j] " << ((float *)(data->pSrc1))[i * size_psrc1_elements + j] ;
-                    //     std::cerr << "\n TAT ((float *)(data->pSrc2))[i]  " << ((float *)(data->pSrc2))[i];
-                    //     std::cerr << "\n TAT ((float *)(data->pDst))[i * size_psrc1_elements + j] " << ((float *)(data->pDst))[i * size_psrc1_elements + j] ;
-                    }
+                    ((float *)(data->pDst))[i * size_psrc1_elements + j] = ((float *)(data->pSrc1))[i * size_psrc1_elements + j] + ((float *)(data->pSrc2))[i];
                 }
             }
         }
@@ -214,16 +198,12 @@ static vx_status VX_CALLBACK uninitializeTensorAddTensor(vx_node node, const vx_
 {
     TensorAddTensorLocalData *data;
     STATUS_ERROR_CHECK(vxQueryNode(node, VX_NODE_LOCAL_DATA_PTR, &data, sizeof(data)));
-    // free(data->roi_tensor_ptr1);
-    // free(data->roi_tensor_ptr2);
-    // free(data->srcDims1);
-    // free(data->srcDims2);
     delete (data);
     return VX_SUCCESS;
 }
 
 //! \brief The kernel target support callback.
-// TODO::currently the node is setting the same affinity as context. This needs to change when we have hubrid modes in the same graph
+// TODO::currently the node is setting the same affinity as context. This needs to change when we have hybrid modes in the same graph
 static vx_status VX_CALLBACK query_target_support(vx_graph graph, vx_node node,
                                                   vx_bool use_opencl_1_2,              // [input]  false: OpenCL driver is 2.0+; true: OpenCL driver is 1.2
                                                   vx_uint32 &supported_target_affinity // [output] must be set to AGO_TARGET_AFFINITY_CPU or AGO_TARGET_AFFINITY_GPU or (AGO_TARGET_AFFINITY_CPU | AGO_TARGET_AFFINITY_GPU)
@@ -270,7 +250,7 @@ vx_status TensorAddTensor_Register(vx_context context)
         PARAM_ERROR_CHECK(vxAddParameterToKernel(kernel, 1, VX_INPUT, VX_TYPE_TENSOR, VX_PARAMETER_STATE_REQUIRED));
         PARAM_ERROR_CHECK(vxAddParameterToKernel(kernel, 2, VX_OUTPUT, VX_TYPE_TENSOR, VX_PARAMETER_STATE_REQUIRED));
         PARAM_ERROR_CHECK(vxAddParameterToKernel(kernel, 3, VX_INPUT, VX_TYPE_TENSOR, VX_PARAMETER_STATE_REQUIRED));
-        PARAM_ERROR_CHECK(vxAddParameterToKernel(kernel, 4, VX_INPUT, VX_TYPE_TENSOR, VX_PARAMETER_STATE_REQUIRED)); // New Arg
+        PARAM_ERROR_CHECK(vxAddParameterToKernel(kernel, 4, VX_INPUT, VX_TYPE_TENSOR, VX_PARAMETER_STATE_REQUIRED));
         PARAM_ERROR_CHECK(vxAddParameterToKernel(kernel, 5, VX_INPUT, VX_TYPE_SCALAR, VX_PARAMETER_STATE_REQUIRED));
         PARAM_ERROR_CHECK(vxAddParameterToKernel(kernel, 6, VX_INPUT, VX_TYPE_SCALAR, VX_PARAMETER_STATE_REQUIRED));
         PARAM_ERROR_CHECK(vxFinalizeKernel(kernel));
