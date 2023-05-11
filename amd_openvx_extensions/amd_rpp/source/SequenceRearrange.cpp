@@ -23,7 +23,7 @@ THE SOFTWARE.
 #include "internal_publishKernels.h"
 
 struct SequenceRearrangeLocalData {
-    RPPCommonHandle * handle;
+    vxRppHandle *handle;
     RppPtr_t pSrc;
     RppPtr_t pDst;
     Rpp32u deviceType;
@@ -100,7 +100,7 @@ static vx_status VX_CALLBACK processSequenceRearrange(vx_node node, const vx_ref
     refreshSequenceRearrange(node, parameters, num, data);
     if (data->deviceType == AGO_TARGET_AFFINITY_GPU) {
 #if ENABLE_OPENCL
-        cl_command_queue handle = data->handle.cmdq;
+        cl_command_queue handle = data->handle->cmdq;
         for (int sequence_cnt = 0; sequence_cnt < data->srcDescPtr->n; sequence_cnt++) {
             unsigned src_sequence_start_address = sequence_cnt * data->srcDescPtr->strides.nStride * data->sequenceLength;
             unsigned dst_sequence_start_address = sequence_cnt * data->dstDescPtr->strides.nStride * data->newSequenceLength;
