@@ -248,6 +248,14 @@ namespace rocal
             }
             )
             .def(
+            "copy_data", [](rocalTensor &output_tensor, py::object p, uint max_x1, uint max_y1)
+            {
+            auto ptr = ctypes_void_ptr(p);
+            output_tensor.copy_data(ptr, max_x1, max_y1);
+            }
+            ,py::return_value_policy::reference
+            )
+            .def(
                 "at",
                 [](rocalTensor &output_tensor, uint idx)
                 {

@@ -70,8 +70,8 @@ void update_destination_roi(const vx_reference *parameters, NormalizeLocalData *
     data->roi_ptr_src = (RpptROI *)data->roi_tensor_ptr_src;
     for (uint i=0; i < data->nbatchSize; i++)
     {
-        data->roi_ptr_dst[i].xywhROI.xy.x = data->roi_ptr_src[i].xywhROI.xy.y;
-        data->roi_ptr_dst[i].xywhROI.xy.y = data->roi_ptr_src[i].xywhROI.xy.x;
+        data->roi_ptr_dst[i].xywhROI.xy.x = data->roi_ptr_src[i].xywhROI.xy.x;
+        data->roi_ptr_dst[i].xywhROI.xy.y = data->roi_ptr_src[i].xywhROI.xy.y;
         // std::cerr << "\nNormalize data->roi_ptr_src[i].xywhROI.xy.x :" << data->roi_ptr_src[i].xywhROI.xy.x;
         // std::cerr << "\nNormalize data->roi_ptr_src[i].xywhROI.xy.y :" << data->roi_ptr_src[i].xywhROI.xy.y;
         // std::cerr << "\nNormalize data->roi_ptr_dst[i].xywhROI.xy.x :" << data->roi_ptr_dst[i].xywhROI.xy.x;
