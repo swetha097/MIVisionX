@@ -82,6 +82,12 @@ class ROCALCOCOIterator(object):
 
         # 1D labels & bboxes array
         # labels_array, boxes_array = self.loader.getEncodedBoxesAndLables(self.bs, int(self.num_anchors))
+        bbox_cpu = self.loader.rocalGetBoundingBoxLabel()
+        bbox_arr = torch.as_tensor(bbox_cpu, dtype=torch.float32, device=torch_gpu_device)
+        label_cpu = self.loader.rocalGetImageLabels()
+        label_arr = torch.as_tensor(label_cpu, dtype=torch.int32, device=torch_gpu_device)
+        pixelwiselabel_cpu = self.loader.rocalGetPixelwiseLabels()
+        pixelwiselabel_arr = torch.as_tensor(pixelwiselabel_cpu, dtype=torch.int32, device=torch_gpu_device)
         # self.encoded_bboxes = torch.as_tensor(boxes_array, dtype=torch.float32, device=torch_gpu_device)
         # self.encoded_bboxes = self.encoded_bboxes.view(self.bs, self.num_anchors, 4)
         # self.encoded_labels = torch.as_tensor(labels_array, dtype=torch.int32, device=torch_gpu_device)
@@ -96,7 +102,7 @@ class ROCALCOCOIterator(object):
         image_size_tensor = torch.tensor(self.img_size, device=torch_gpu_device).view(-1, self.bs, 2)
 
 
-        return (self.out), encoded_bboxes_tensor, encodded_labels_tensor, image_id_tensor, image_size_tensor
+        return bbox_arr,label_arr,pixelwiselabel_arr
 
     def reset(self):
         self.loader.rocalResetLoaders()
@@ -152,56 +158,18 @@ def main():
 
     local_rank = 0
     world_size = 1
-   
+
     rali_device = 'gpu'
     decoder_device = 'mixed'
     device_memory_padding = 211025920 if decoder_device == 'mixed' else 0
     host_memory_padding = 140544512 if decoder_device == 'mixed' else 0
 
-    # Anchors
-    def coco_anchors():  # Should be Tensor of floats in ltrb format - input - Mx4 where M="No of anchor boxes"
-        fig_size = 300
-        feat_size = [38, 19, 10, 5, 3, 1]
-        steps = [8, 16, 32, 64, 100, 300]
-
-        # use the scales here: https://github.com/amdegroot/ssd.pytorch/blob/master/data/config.py
-        scales = [21, 45, 99, 153, 207, 261, 315]
-        aspect_ratios = [[2], [2, 3], [2, 3], [2, 3], [2], [2]]
-        default_boxes = []
-        fk = fig_size/np.array(steps)
-        # size of feature and number of feature
-        for idx, sfeat in enumerate(feat_size):
-
-            sk1 = scales[idx]/fig_size
-            sk2 = scales[idx+1]/fig_size
-            sk3 = sqrt(sk1*sk2)
-            all_sizes = [(sk1, sk1), (sk3, sk3)]
-
-            for alpha in aspect_ratios[idx]:
-                w, h = sk1*sqrt(alpha), sk1/sqrt(alpha)
-                all_sizes.append((w, h))
-                all_sizes.append((h, w))
-            for w, h in all_sizes:
-                for i, j in itertools.product(range(sfeat), repeat=2):
-                    cx, cy = (j+0.5)/fk[idx], (i+0.5)/fk[idx]
-                    default_boxes.append((cx, cy, w, h))
-        dboxes = torch.tensor(default_boxes, dtype=torch.float)
-        dboxes.clamp_(min=0, max=1)
-        # For IoU calculation
-        dboxes_ltrb = dboxes.clone()
-        dboxes_ltrb[:, 0] = dboxes[:, 0] - 0.5 * dboxes[:, 2]
-        dboxes_ltrb[:, 1] = dboxes[:, 1] - 0.5 * dboxes[:, 3]
-        dboxes_ltrb[:, 2] = dboxes[:, 0] + 0.5 * dboxes[:, 2]
-        dboxes_ltrb[:, 3] = dboxes[:, 1] + 0.5 * dboxes[:, 3]
-
-        return dboxes_ltrb
-    default_boxes = coco_anchors().numpy().flatten().tolist()
     print("*********************************************************************")
 
     coco_train_pipeline = Pipeline(batch_size=batch_size, num_threads=num_threads, device_id=device_id, seed=random_seed, rocal_cpu=_rali_cpu)
 
     with coco_train_pipeline:
-        jpegs, bboxes, labels = fn.readers.coco(file_root=image_path, annotations_file=annotation_path, random_shuffle=False,shard_id=local_rank, num_shards=world_size,seed=random_seed, is_box_encoder=True)
+        jpegs, bboxes, labels, pixelwise_mask = fn.readers.coco(file_root=image_path, annotations_file=annotation_path, pixelwise_mask = False, random_shuffle=False,shard_id=local_rank, num_shards=world_size,seed=random_seed, is_box_encoder=False)
 
         print("*********************** SHARD ID ************************",local_rank)
         print("*********************** NUM SHARDS **********************",world_size)
@@ -234,26 +202,12 @@ def main():
         print("+++++++++++++++++++++++++++++EPOCH+++++++++++++++++++++++++++++++++++++",epoch)
         for i , it in enumerate(COCOIteratorPipeline):
             print("************************************** i *************************************",i)
-            # for img in it[0]:
-            #     print(img.shape)
-            #     cnt = cnt + 1
-            #     draw_patches(img, cnt, "cpu")
+            for img in it[2]:
+                print(img.shape)
+                cnt = cnt + 1
+                #draw_patches(img, cnt, "cpu")
         COCOIteratorPipeline.reset()
     print("*********************************************************************")
-    exit(0)
-
-
-
-    exit(0)
-
-
-    import timeit
-    start = timeit.default_timer() #Timer starts
-
-
-
-    stop = timeit.default_timer() #Timer Stops
-    print('\n Time: ', stop - start)
 
 if __name__ == '__main__':
     main()
