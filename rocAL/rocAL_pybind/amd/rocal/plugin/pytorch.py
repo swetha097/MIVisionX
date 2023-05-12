@@ -61,7 +61,7 @@ class ROCALGenericIterator(object):
             else:  # NHWC
                 torch_gpu_device = torch.device('cuda', self.device_id)
                 if self.tensor_dtype == types.FLOAT:
-                    self.out = torch.empty((self.batch_size, self.h, self.w, self.color_format), dtype = torch.float32, device = torch_gpu_device)
+                    self.out = torch.empty((self.batch_size, self.h, self.w, self.color_format), dtype=torch.float32, device=torch_gpu_device)
                 elif self.tensor_dtype == types.FLOAT16:
                     self.out = torch.empty((self.batch_size, self.h, self.w, self.color_format), dtype = torch.float16, device = torch_gpu_device)
                 elif self.tensor_dtype == types.UINT8:
@@ -74,7 +74,7 @@ class ROCALGenericIterator(object):
             self.lis_lab = []  # Empty list of labels
 
             # Count of labels/ bboxes in a batch
-            self.bboxes_label_count = np.zeros(self.bs, dtype = "int32")
+            self.bboxes_label_count = np.zeros(self.bs, dtype="int32")
             self.loader.rocalGetBoundingBoxCount(self.bboxes_label_count)
             # 1D labels array in a batch
             self.labels = self.loader.rocalGetBoundingBoxLabels()
@@ -84,8 +84,8 @@ class ROCALGenericIterator(object):
             self.img_size = np.zeros((self.bs * 2),dtype = "int32")
             self.loader.GetImgSizes(self.img_size)
 
-            count = 0
-            sum_count = 0
+            count =0
+            sum_count=0
             for i in range(self.bs):
                 count = self.bboxes_label_count[i]
 
