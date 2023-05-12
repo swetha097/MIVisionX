@@ -25,7 +25,7 @@ import amd.rocal.types as types
 import ctypes
 
 class ROCALGenericIterator(object):
-    def __init__(self, pipeline, tensor_layout = types.NCHW, reverse_channels = False, multiplier = [1.0,1.0,1.0], offset = [0.0, 0.0, 0.0], tensor_dtype = types.FLOAT, display = False, device = "cpu", device_id = 0):
+    def __init__(self, pipeline, tensor_layout = types.NCHW, reverse_channels = False, multiplier = [1.0,1.0,1.0], offset = [0.0, 0.0, 0.0], tensor_dtype=types.FLOAT, display=False, device="cpu", device_id =0):
         self.loader = pipeline
         self.tensor_format = tensor_layout
         self.multiplier = multiplier
