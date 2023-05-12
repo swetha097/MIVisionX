@@ -295,6 +295,12 @@ class Pipeline(object):
     def rocalGetImageLabels(self):
         return b.rocalGetImageLabels(self._handle)
 
+    def rocalGetPixelwiseLabels(self):
+        return b.rocalGetPixelwiseLabels(self._handle)
+
+    def rocalGetBoundingBoxLabel(self):
+        return b.rocalGetBoundingBoxLabel(self._handle)
+
     def copy_out_data_ptr(self, data_ptr):
         return b.copy_data_ptr(self._handle, data_ptr)
 
