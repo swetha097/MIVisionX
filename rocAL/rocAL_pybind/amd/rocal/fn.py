@@ -229,7 +229,7 @@ def rain(*inputs, rain=None, rain_width = None, rain_height = None, rain_transpa
 def resize(*inputs, bytes_per_sample_hint=0, image_type=0, interp_type=1, mag_filter=1, max_size=[], min_filter=1,
             minibatch_size=32, preserve=False, resize_longer=0, resize_shorter=0, resize_x=0, resize_y=0, 
             scaling_mode=types.SCALING_MODE_DEFAULT, interpolation_type=types.LINEAR_INTERPOLATION,
-            save_attrs=False, seed=1, output_layout=types.NCHW, output_dtype=types.UINT8, temp_buffer_hint=0, device=None):
+            save_attrs=False, seed=1, output_layout=types.NHWC, output_dtype=types.UINT8, temp_buffer_hint=0, device=None):
     """
     bytes_per_sample_hint (int, optional, default = 0) – Output size hint (bytes), per sample. The memory will be preallocated if it uses GPU or page-locked memory
 
@@ -424,7 +424,7 @@ def vignette(*inputs, vignette=0.5, device=None):
     return (vignette_outputcolor_temp_output)
 
 def crop_mirror_normalize(*inputs, bytes_per_sample_hint=0, crop=[0, 0], crop_d=0, crop_h=0, crop_pos_x=0.5, crop_pos_y=0.5, crop_pos_z=0.5,
-                          crop_w=0, image_type=0, mean=[0.0], mirror=1, output_layout=types.NCHW, output_dtype=types.UINT8, pad_output=False,
+                          crop_w=0, image_type=0, mean=[0.0], mirror=1, output_layout=types.NHWC, output_dtype=types.UINT8, pad_output=False,
                           preserve=False, seed=1, std=[1.0], device=None):
 
     if(len(crop) == 2):
@@ -481,7 +481,7 @@ def centre_crop(*inputs, bytes_per_sample_hint=0, crop=[100, 100], crop_d=1, cro
     return (centre_cropped_image)
 
 def crop(*inputs, bytes_per_sample_hint=0, crop=[0.0, 0.0], crop_d=1, crop_h= 0, crop_pos_x = 0.5, crop_pos_y = 0.5, crop_pos_z = 0.5,
-                 crop_w=0, image_type=0, output_dtype=types.FLOAT, preserve = False, seed = 1, device = None):
+                 crop_w=0, image_type=0, preserve = False, seed = 1, device = None):
 
     if(len(crop) == 2):
         crop_depth = crop_d

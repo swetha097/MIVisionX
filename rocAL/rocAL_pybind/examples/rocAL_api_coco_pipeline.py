@@ -70,7 +70,6 @@ class ROCALCOCOIterator(object):
             raise StopIteration
         else:
             self.output_tensor_list = self.loader.getOutputTensors()
-
         if self.out is None:
             self.w, self.h = self.output_tensor_list[0].max_shape()
             self.bs = self.output_tensor_list[0].batch_size()
@@ -170,20 +169,15 @@ def main():
     device_id = 0
     random_seed = random.SystemRandom().randint(0, 2**32 - 1)
     crop=800
-
     local_rank = 0
     world_size = 1
-
     # Anchors - load default anchors from a text file     
     with open('Default_anchors_retinanet.txt', 'r') as f_read:
         anchors = f_read.readlines()
     anchor_list = [float(x.strip())/800 for x in anchors]
     f_read.close()
-
     print("*********************************************************************")
-
     coco_train_pipeline = Pipeline(batch_size = batch_size, num_threads = num_threads, device_id = device_id,seed = random_seed, rocal_cpu = _rali_cpu, tensor_layout = types.NCHW)
-
     with coco_train_pipeline:
         jpegs, bboxes, labels = fn.readers.coco(file_root=image_path,
                                                  annotations_file=annotation_path, 
@@ -209,7 +203,6 @@ def main():
         matched_idxs  = fn.box_iou_matcher(anchors=anchor_list, criteria=0.5,
                                      high_threshold=0.5, low_threshold=0.4,
                                      allow_low_quality_matches=True)
-
         coco_train_pipeline.set_outputs(images)
     coco_train_pipeline.build()
     COCOIteratorPipeline = ROCALCOCOIterator(coco_train_pipeline)

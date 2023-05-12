@@ -204,17 +204,16 @@ class ROCALClassificationIterator(ROCALGenericIterator):
     fill_last_batch = True, last_batch_padded = True   -> last batch = [7, 7], next iteration will return [1, 2]
     fill_last_batch = True, last_batch_padded = False  -> last batch = [7, 1], next iteration will return [2, 3]
     """
-
     def __init__(self,
                  pipelines,
                  size = 0,
-                 auto_reset = False,
-                 fill_last_batch = True,
-                 dynamic_shape = False,
-                 last_batch_padded = False,
-                 display = False,
-                 device = "cpu",
-                 device_id = 0,):
+                 auto_reset=False,
+                 fill_last_batch=True,
+                 dynamic_shape=False,
+                 last_batch_padded=False,
+                 display=False,
+                 device="cpu",
+                 device_id=0,):
         pipe = pipelines
         super(ROCALClassificationIterator, self).__init__(pipe, tensor_layout = pipe._tensor_layout, tensor_dtype = pipe._tensor_dtype,
                                                           multiplier = pipe._multiplier, offset = pipe._offset, dsiplay = display, device = device, device_id = device_id)
@@ -224,7 +223,7 @@ class ROCALClassificationIterator(ROCALGenericIterator):
 def draw_patches(img,idx,bboxes):
     #image is expected as a tensor
     import cv2
-    img = simg.cpu()
+    img = img.cpu()
     image = img.detach().numpy()
     image = image.transpose([1,2,0])
     image = cv2.cvtColor(image, cv2.COLOR_RGB2BGR )
@@ -237,12 +236,15 @@ def draw_patches(img,idx,bboxes):
             os.makedirs(path)
     except OSError as error:
         print(error)
-    for (l, t, r, b) in bboxes:
-        loc_ = [l, t, r, b
-        color = (255, 0, 0)
-        thickness = 2
-        image = cv2.cvtColor(image, cv2.COLOR_RGB2BGR)
-        image = cv2.UMat(image).get()
-        image = cv2.rectangle(image, (int(loc_[0]), int(loc_[1])), (int(
-            (loc_[2])), int((loc_[3]))), color, thickness)
+    if bboxes:
+        for (l, t, r, b) in bboxes:
+            loc_ = [l, t, r, b]
+            color = (255, 0, 0)
+            thickness = 2
+            image = cv2.cvtColor(image, cv2.COLOR_RGB2BGR)
+            image = cv2.UMat(image).get()
+            image = cv2.rectangle(image, (int(loc_[0]), int(loc_[1])), (int(
+                (loc_[2])), int((loc_[3]))), color, thickness)
+            cv2.imwrite("OUTPUT_IMAGES_PYTHON/NEW_API/PYTORCH/" + str(idx)+"_"+"train"+".png", image * 255)
+    else:
         cv2.imwrite("OUTPUT_IMAGES_PYTHON/NEW_API/PYTORCH/" + str(idx)+"_"+"train"+".png", image * 255)
