@@ -392,10 +392,11 @@ namespace rocal
             rocalTensorList *bbox_coords = rocalGetBoundingBoxCords(context);
             for(int i = 0; i < bbox_coords->size(); i++)
             {
-                py::list single_image = [];
+                py::list single_image;
+                py::tuple bbox_coord;
                 float *bbox_buffer = (float *)(bbox_coords->at(i)->buffer());
                 for(int j = 0, j4 = 0; j < bbox_coords->at(i)->info().dims().at(0); j++, j4 = j * 4)
-                    py::tuple bbox_coord = py::make_tuple(bbox_buffer[j4], bbox_buffer[j4+1], bbox_buffer[j4+2], bbox_buffer[j4+3]);
+                    bbox_coord = py::make_tuple(bbox_buffer[j4], bbox_buffer[j4+1], bbox_buffer[j4+2], bbox_buffer[j4+3]);
                     // std::cerr << bbox_buffer[j4] << " " << bbox_buffer[j4 + 1] << " " << bbox_buffer[j4 + 2] << " " << bbox_buffer[j4 + 3] << "\n";
                 single_image.append(bbox_coord);
             }
@@ -405,14 +406,21 @@ namespace rocal
         m.def(
             "rocalGetPixelwiseLabels", [](RocalContext context)
     {
+            rocalTensorList * bbox_labels = rocalGetBoundingBoxLabel(context);
             rocalTensorList *labels = rocalGetPixelwiseLabels(context);
-            return py::array(py::buffer_info(
-                            (int *)(labels->at(0)->buffer()),
-                            sizeof(int),
-                            py::format_descriptor<int>::format(),
-                            2,
-                            {labels->at(i)->info().dims().at(0),labels->at(i)->info().dims().at(1)},
-                            {sizeof(int)*labels->at(i)->info().dims().at(0), sizeof(int) }));
+            py::list labels_array_list;
+            for(int i =0; i < bbox_labels->size(); i++)
+            {
+                py::array_t<int> labels_array = py::array(py::buffer_info(
+                                (int *)(labels->at(0)->buffer()),
+                                sizeof(int),
+                                py::format_descriptor<int>::format(),
+                                1,
+                                {labels->at(i)->info().dims().at(0) * labels->at(i)->info().dims().at(1)},
+                                {sizeof(int) }));
+                labels_array_list.append(labels_array);
+            }
+            return labels_array_list;
     }
             );
 
