@@ -216,6 +216,7 @@ rocalTensorList *  MasterGraph::get_seleck_mask_polygon(rocalTensorList* mask_da
     sel_mask_ids.resize(_user_batch_size);
     for(unsigned i = 0; i < _user_batch_size; i++)
     {
+        output_select_mask_polygon[i].clear();
         float* mask_buffer = (float*) mask_data->at(i)->buffer();
         for (unsigned j = 0; j < mask_ids.size(); j++) {
             unsigned vc = 0;
