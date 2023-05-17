@@ -201,7 +201,7 @@ int test(int test_case, int reader_type, int pipeline_type, const char *path, co
             if (decode_max_height <= 0 || decode_max_width <= 0)
                 input1 = rocalJpegCOCOFileSource(handle, path, json_path, color_format, num_threads, false, true, false);
             else
-                input1 = rocalJpegCOCOFileSource(handle, path, json_path, color_format, num_threads, true, true, false, ROCAL_USE_MAX_SIZE, decode_max_width, decode_max_height);
+                input1 = rocalJpegCOCOFileSource(handle, path, json_path, color_format, num_threads, true, true, false, ROCAL_USE_MAX_SIZE_RESTRICTED, decode_max_width, decode_max_height);
             rocalSetRandomPixelMaskConfig(handle,true);
         }
         break;
@@ -491,23 +491,18 @@ int test(int test_case, int reader_type, int pipeline_type, const char *path, co
 
                 polygon_size.resize(mask_size);
                 RocalTensorList mask_data = rocalGetMaskCoordinates(handle, polygon_size.data());
-                for (auto s : mask_count) {
-                    std::cout << "pcs:" << s << std::endl;
-                }
-                for (auto s : polygon_size) {
-                    std::cout << "vcs:" << s << std::endl;
-                }
+
                 std::vector<std::vector<int>> sel_vertices_counts;
                 std::vector<std::vector<int>> sel_mask_ids;
                 std::vector<int> mask_ids{0,1};
-                // RocalTensorList select_mask_polygon = rocalSelectMask(handle,
-                //                                                       mask_ids,
-                //                                                       sel_vertices_counts,
-                //                                                       sel_mask_ids,
-                //                                                       false);
-                // std::cout << "LABELSSS:" << bbox_labels->size() << std::endl;
+                RocalTensorList select_mask_polygon = rocalSelectMask(handle,
+                                                                      mask_ids,
+                                                                      sel_vertices_counts,
+                                                                      sel_mask_ids,
+                                                                      false);
+                std::cout << "LABELSSS:" << bbox_labels->size() << std::endl;
                 int poly_cnt = 0;
-                int prev_poly_cnt = 0;
+                int prev_object_cnt = 0;
                 for(int i = 0; i < bbox_labels->size(); i++)
                 {
                     int * labels_buffer = (int *)(bbox_labels->at(i)->buffer());
@@ -520,15 +515,12 @@ int test(int test_case, int reader_type, int pipeline_type, const char *path, co
                     for(int j = 0, j4 = 0; j < bbox_coords->at(i)->info().dims().at(0); j++, j4 = j * 4)
                         std::cout << bbox_buffer[j4] << " " << bbox_buffer[j4 + 1] << " " << bbox_buffer[j4 + 2] << " " << bbox_buffer[j4 + 3] << "\n";
                     std::cout << "\n>>>>>>> MASK COORDS : " << bbox_labels->at(i)->info().dims().at(0) << std::endl;
-                    prev_poly_cnt = poly_cnt;
-                    for(unsigned j = prev_poly_cnt; j < bbox_labels->at(i)->info().dims().at(0)+prev_poly_cnt; j++)
+
+                    for(unsigned j = prev_object_cnt; j < bbox_labels->at(i)->info().dims().at(0) + prev_object_cnt; j++)
                     {
-                        std::cout << "Mask idx : " << j << "Polygons : " <<  polygon_size[poly_cnt] << "[" ;
-                        //std::cout << j << std::endl;
-                        //std::cout << "kk" << poly_cnt << std::endl;
+                        std::cout << "Mask idx : " << j << "Polygons : " << mask_count[j] << " Count : " << polygon_size[poly_cnt] << "[" ;
                         for(int k = 0; k < mask_count[j]; k++)
                         {
-                            //std::cout << "Mask idx : " << mask_count[j] << "Polygons : " <<  polygon_size[poly_cnt] << "[" ;
                             std::cout << "[";
                             for(int l = 0; l < polygon_size[poly_cnt]; l++)
                                 std::cout << mask_buffer[l] << ", ";
@@ -537,6 +529,7 @@ int test(int test_case, int reader_type, int pipeline_type, const char *path, co
                         }
                         std::cout << "]\n";
                     }
+                    prev_object_cnt += bbox_labels->at(i)->info().dims().at(0);
                 }
             }
             break;

@@ -373,7 +373,6 @@ ROCAL_API_CALL rocalGetMaskCoordinates(RocalContext p_context, int *bufcount)
     int size = 0;
     for(unsigned image_idx = 0; image_idx < meta_data_batch_size; image_idx++)
     {
-        std::cout << "New images" << image_idx << std::endl;
         int poly_size = 0;
         unsigned object_count = meta_data.second->get_bb_labels_batch()[image_idx].size();
         for(unsigned int i = 0; i < object_count; i++)
@@ -382,7 +381,6 @@ ROCAL_API_CALL rocalGetMaskCoordinates(RocalContext p_context, int *bufcount)
             for(unsigned int j = 0; j < polygon_count; j++)
             {
                 unsigned polygon_size = meta_data.second->get_mask_vertices_count_batch()[image_idx][i][j];
-                std::cout << "vc::" << polygon_size << std::endl;
                 bufcount[size++] = polygon_size;
                 poly_size += polygon_size;
             }

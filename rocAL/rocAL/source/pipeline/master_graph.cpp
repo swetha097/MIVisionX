@@ -718,10 +718,6 @@ void MasterGraph::output_routine()
                     {
                         _meta_data_graph->update_random_bbox_meta_data(_augmented_meta_data, decode_image_info, crop_image_info);
                     }
-                    else
-                    {
-                        _meta_data_graph->update_meta_data(_augmented_meta_data, decode_image_info, _is_segmentation_polygon, _is_segmentation_pixelwise);
-                    }
                     _meta_data_graph->process(_augmented_meta_data, (_is_segmentation_polygon || _is_segmentation_pixelwise));
                 }
                 if (full_batch_meta_data)
@@ -1373,15 +1369,12 @@ rocalTensorList * MasterGraph::mask_meta_data()
     if(_ring_buffer.level() == 0)
         THROW("No meta data has been loaded")
     auto meta_data_buffers = (unsigned char *)_ring_buffer.get_meta_read_buffers()[2]; // Get bbox buffer from ring buffer
-    float* f_meta = (float *)_ring_buffer.get_meta_read_buffers()[2];
     auto mask_tensor_dims = _ring_buffer.get_meta_data_info().mask_cords_dims();
     for(unsigned i = 0; i < _mask_tensor_list.size(); i++)
     {
         _mask_tensor_list[i]->set_dims(mask_tensor_dims[i]);
         _mask_tensor_list[i]->set_mem_handle((void *)meta_data_buffers);
-        std::cout << "mask tensor list:" << f_meta[0] << std::endl;
         meta_data_buffers += _mask_tensor_list[i]->info().data_size();
-        f_meta += int(_mask_tensor_list[i]->info().data_size()/4);
     }
 
     return &_mask_tensor_list;
