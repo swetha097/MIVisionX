@@ -373,6 +373,7 @@ ROCAL_API_CALL rocalGetMaskCoordinates(RocalContext p_context, int *bufcount)
     int size = 0;
     for(unsigned image_idx = 0; image_idx < meta_data_batch_size; image_idx++)
     {
+        std::cout << "New images" << image_idx << std::endl;
         int poly_size = 0;
         unsigned object_count = meta_data.second->get_bb_labels_batch()[image_idx].size();
         for(unsigned int i = 0; i < object_count; i++)
@@ -381,12 +382,37 @@ ROCAL_API_CALL rocalGetMaskCoordinates(RocalContext p_context, int *bufcount)
             for(unsigned int j = 0; j < polygon_count; j++)
             {
                 unsigned polygon_size = meta_data.second->get_mask_vertices_count_batch()[image_idx][i][j];
+                std::cout << "vc::" << polygon_size << std::endl;
                 bufcount[size++] = polygon_size;
                 poly_size += polygon_size;
             }
         }
     }
     return context->master_graph->mask_meta_data();
+}
+
+RocalTensorList ROCAL_API_CALL rocalSelectMask(RocalContext p_context,
+                                               std::vector<int> mask_ids,
+                                               std::vector<std::vector<int>> &sel_vertices_counts,
+                                               std::vector<std::vector<int>> &sel_mask_ids,
+                                               bool reindex_mask)
+{
+    if (p_context == nullptr)
+        THROW("Invalid rocal context passed to rocalSelectMask")
+    auto context = static_cast<Context*>(p_context);
+    auto meta_data = context->master_graph->meta_data();
+    size_t meta_data_batch_size = meta_data.second->get_mask_cords_batch().size();
+    if(context->user_batch_size() != meta_data_batch_size)
+        THROW("meta data batch size is wrong " + TOSTR(meta_data_batch_size) + " != "+ TOSTR(context->user_batch_size() ))
+    if(!meta_data.second)
+        THROW("No mask has been loaded for this output image")
+    return context->master_graph->get_seleck_mask_polygon(context->master_graph->mask_meta_data(),
+                                                          meta_data.second->get_mask_polygons_count_batch(),
+                                                          meta_data.second->get_mask_vertices_count_batch(),
+                                                          mask_ids,
+                                                          sel_vertices_counts,
+                                                          sel_mask_ids,
+                                                          reindex_mask);
 }
 
 RocalTensorList

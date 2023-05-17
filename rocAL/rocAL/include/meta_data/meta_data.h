@@ -140,8 +140,10 @@ struct BoundingBox : public MetaData
         _bb_label_ids = std::move(bb_label_ids);
         _img_size = std::move(img_size);
         _mask_cords = std::move(mask_cords);
+        std::cout << "Bounding box 1:" << _mask_cords[0] << std::endl;
         _polygon_count = std::move(polygon_count);
         _vertices_count = std::move(vertices_count);
+        _mask_coords_count = mask_cords.size();
     }
     BoundingBox(BoundingBoxCords bb_cords,BoundingBoxLabels bb_label_ids ,ImgSize img_size, MaskCords mask_cords, std::vector<int> polygon_count, std::vector<std::vector<int>> vertices_count, std::vector<int> pixelwise_label)
     {
@@ -149,9 +151,11 @@ struct BoundingBox : public MetaData
         _bb_label_ids = std::move(bb_label_ids);
         _img_size = std::move(img_size);
         _mask_cords = std::move(mask_cords);
+        std::cout << "Bounding box 1:" << _mask_cords[0] << std::endl;
         _polygon_count = std::move(polygon_count);
         _vertices_count = std::move(vertices_count);
         _pixelwise_label = std::move(pixelwise_label);
+        _mask_coords_count = mask_cords.size();
     }
     void set_bb_cords_xcycwh(BoundingBoxCords_xcycwh bb_cords_xcycwh) { _bb_cords_xcycwh =std::move(bb_cords_xcycwh); }
     void set_bb_labels(BoundingBoxLabels bb_label_ids) { _bb_label_ids = std::move(bb_label_ids); }
@@ -242,8 +246,8 @@ protected:
     std::vector<std::vector<std::vector<int>>> _vertices_counts = {};
     std::vector<size_t> _buffer_size;
     int _total_objects_count = 0;
-    int _total_mask_coords_count;
-    int _total_pixelwise_labels_count;
+    int _total_mask_coords_count = 0;
+    int _total_pixelwise_labels_count = 0;
     MetaDataDimensionsBatch _metadata_dimensions;
 };
 
@@ -357,6 +361,7 @@ struct BoundingBoxBatch: public MetaDataBatch
                 mempcpy(labels_buffer, _bb_label_ids[i].data(), bb_labels_dims[i][0] * sizeof(int));
                 memcpy(bbox_buffer, _bb_cords[i].data(), bb_coords_dims[i][0] * sizeof(BoundingBoxCord));
                 memcpy(mask_buffer, _mask_cords[i].data(), mask_coords_dims[i][0] * sizeof(float));
+                std::cout << "Copy data val:" << _mask_cords[i][0] << std::endl;
                 labels_buffer += bb_labels_dims[i][0];
                 bbox_buffer += (bb_coords_dims[i][0] * 4);
                 mask_buffer += mask_coords_dims[i][0];

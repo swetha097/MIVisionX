@@ -608,6 +608,8 @@ void COCOMetaDataReader::read_all(const std::string &path)
     _max_width = max_width;
     _max_height = max_height;
     _coco_metadata_read_time.end(); // Debug timing
+    std::cout << "Print map contents" << std::endl;
+    print_map_contents();
 }
 
 void COCOMetaDataReader::release(std::string image_name)
@@ -622,6 +624,7 @@ void COCOMetaDataReader::release(std::string image_name)
 
 void COCOMetaDataReader::release()
 {
+    print_map_contents();
     _map_content.clear();
     _map_img_sizes.clear();
 }

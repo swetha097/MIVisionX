@@ -195,11 +195,13 @@ int test(int test_case, int reader_type, int pipeline_type, const char *path, co
                 exit(0);
             }
             //metadata_output = rocalCreateCOCOReader(handle, json_path, true, false);
-            metadata_output = rocalCreateCOCOReader(handle, json_path, true, false, false, true);
+            metadata_output = rocalCreateCOCOReader(handle, json_path, true, true, false, false);
+            //decode_max_height = 0;
+            //decode_max_width = 0;
             if (decode_max_height <= 0 || decode_max_width <= 0)
                 input1 = rocalJpegCOCOFileSource(handle, path, json_path, color_format, num_threads, false, true, false);
             else
-                input1 = rocalJpegCOCOFileSource(handle, path, json_path, color_format, num_threads, true, true, false, ROCAL_USE_USER_GIVEN_SIZE, decode_max_width, decode_max_height);
+                input1 = rocalJpegCOCOFileSource(handle, path, json_path, color_format, num_threads, true, true, false, ROCAL_USE_MAX_SIZE, decode_max_width, decode_max_height);
             rocalSetRandomPixelMaskConfig(handle,true);
         }
         break;
@@ -474,6 +476,67 @@ int test(int test_case, int reader_type, int pipeline_type, const char *path, co
                     std::cerr << "\n>>>>> BBOXX : " <<bbox_coords->at(i)->info().dims().at(0) << " : \n";
                     for(int j = 0, j4 = 0; j < bbox_coords->at(i)->info().dims().at(0); j++, j4 = j * 4)
                         std::cerr << bbox_buffer[j4] << " " << bbox_buffer[j4 + 1] << " " << bbox_buffer[j4 + 2] << " " << bbox_buffer[j4 + 3] << "\n";
+                }
+            }
+            break;
+            case 4: //detection + segmentation + Polygons pipeline
+             {
+                RocalTensorList bbox_labels = rocalGetBoundingBoxLabel(handle);
+                RocalTensorList bbox_coords = rocalGetBoundingBoxCords(handle);
+                std::vector<int> mask_count;
+                std::vector<int> polygon_size;
+                unsigned total_number_of_objects_per_batch = rocalGetBoundingBoxCount(handle);
+                mask_count.resize(total_number_of_objects_per_batch);
+                int mask_size = rocalGetMaskCount(handle, mask_count.data());
+
+                polygon_size.resize(mask_size);
+                RocalTensorList mask_data = rocalGetMaskCoordinates(handle, polygon_size.data());
+                for (auto s : mask_count) {
+                    std::cout << "pcs:" << s << std::endl;
+                }
+                for (auto s : polygon_size) {
+                    std::cout << "vcs:" << s << std::endl;
+                }
+                std::vector<std::vector<int>> sel_vertices_counts;
+                std::vector<std::vector<int>> sel_mask_ids;
+                std::vector<int> mask_ids{0,1};
+                // RocalTensorList select_mask_polygon = rocalSelectMask(handle,
+                //                                                       mask_ids,
+                //                                                       sel_vertices_counts,
+                //                                                       sel_mask_ids,
+                //                                                       false);
+                // std::cout << "LABELSSS:" << bbox_labels->size() << std::endl;
+                int poly_cnt = 0;
+                int prev_poly_cnt = 0;
+                for(int i = 0; i < bbox_labels->size(); i++)
+                {
+                    int * labels_buffer = (int *)(bbox_labels->at(i)->buffer());
+                    float *bbox_buffer = (float *)(bbox_coords->at(i)->buffer());
+                    float *mask_buffer = (float *)(mask_data->at(i)->buffer());
+                    std::cout << "\n>>>>> BBOX LABELS : ";
+                    for(int j = 0; j < bbox_labels->at(i)->info().dims().at(0); j++)
+                        std::cout << labels_buffer[j] << " ";
+                    std::cout << "\n>>>>> BBOXX : " <<bbox_coords->at(i)->info().dims().at(0) << " : \n";
+                    for(int j = 0, j4 = 0; j < bbox_coords->at(i)->info().dims().at(0); j++, j4 = j * 4)
+                        std::cout << bbox_buffer[j4] << " " << bbox_buffer[j4 + 1] << " " << bbox_buffer[j4 + 2] << " " << bbox_buffer[j4 + 3] << "\n";
+                    std::cout << "\n>>>>>>> MASK COORDS : " << bbox_labels->at(i)->info().dims().at(0) << std::endl;
+                    prev_poly_cnt = poly_cnt;
+                    for(unsigned j = prev_poly_cnt; j < bbox_labels->at(i)->info().dims().at(0)+prev_poly_cnt; j++)
+                    {
+                        std::cout << "Mask idx : " << j << "Polygons : " <<  polygon_size[poly_cnt] << "[" ;
+                        //std::cout << j << std::endl;
+                        //std::cout << "kk" << poly_cnt << std::endl;
+                        for(int k = 0; k < mask_count[j]; k++)
+                        {
+                            //std::cout << "Mask idx : " << mask_count[j] << "Polygons : " <<  polygon_size[poly_cnt] << "[" ;
+                            std::cout << "[";
+                            for(int l = 0; l < polygon_size[poly_cnt]; l++)
+                                std::cout << mask_buffer[l] << ", ";
+                            std::cout << "]";
+                            mask_buffer += polygon_size[poly_cnt++];
+                        }
+                        std::cout << "]\n";
+                    }
                 }
             }
             break;
