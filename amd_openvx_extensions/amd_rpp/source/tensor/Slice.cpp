@@ -101,7 +101,7 @@ void update_destination_roi(const vx_reference *parameters, SliceLocalData *data
             // std::cerr << "\n data->roi_ptr_dst[i].xywhROI.xy.x" << data->roi_ptr_dst[i].xywhROI.xy.x;
             // std::cerr << "\n data->roi_ptr_dst[i].xywhROI.xy.y" << data->roi_ptr_dst[i].xywhROI.xy.y;
         }
-        
+
     }
 }
 
@@ -207,23 +207,23 @@ static vx_status VX_CALLBACK processSlice(vx_node node, const vx_reference *para
     refreshSlice(node, parameters, num, data);
 //TODO: Swetha : To clean up the debug code
 //  float * buffer = (float *)data->anchor;
-//             for(int n = 0; n < data->nbatchSize * 2; n++) 
+//             for(int n = 0; n < data->nbatchSize * 2; n++)
 //             {
 //                 std::cerr <<"slice begin:  "<<(float)buffer[n] << "\n";
 //             }
 //  float * buffer1 = (float *)data->shape;
-//             for(int n = 0; n < data->nbatchSize * 2; n++) 
+//             for(int n = 0; n < data->nbatchSize * 2; n++)
 //             {
 //                 std::cerr <<"slice length:  "<<(float)buffer1[n] << "\n";
 //             }
 
 // int * dimSrc = (int*) data->srcDims;
-//  for(int n = 0; n < data->nbatchSize*2; n++) 
+//  for(int n = 0; n < data->nbatchSize*2; n++)
 //             {
 //                 std::cerr <<"src length:  "<<(int)dimSrc[n] << "\n";
 //             }
 // float * psrc = (float*) data->pSrc;
-//  for(int n = 0; n < data->nbatchSize; n++) 
+//  for(int n = 0; n < data->nbatchSize; n++)
 //             {
 //                 for (int j=0; j<(int)dimSrc[n];j++)
 
@@ -232,7 +232,7 @@ static vx_status VX_CALLBACK processSlice(vx_node node, const vx_reference *para
 
         rpp_status = rppt_slice_host((float *)data->pSrc, data->src_desc_ptr, (float *)data->pDst, data->dst_desc_ptr, data->srcDims, (float*)data->anchor, (float*)data->shape, data->fill_values);
 // float * pdst = (float*) data->pDst;
-//  for(int n = 0; n < data->nbatchSize; n++) 
+//  for(int n = 0; n < data->nbatchSize; n++)
 //             {
 //                 // for (int j=0; j<(int)dimSrc[n];j++)
 
@@ -246,7 +246,6 @@ static vx_status VX_CALLBACK processSlice(vx_node node, const vx_reference *para
 static vx_status VX_CALLBACK initializeSlice(vx_node node, const vx_reference *parameters, vx_uint32 num)
 {
     //TODO: Swetha : To clean up the debug code
-    std::cerr<<"\n static vx_status VX_CALLBACK initializeSlice ";
     SliceLocalData *data = new SliceLocalData;
     // unsigned roiType;
     memset(data, 0, sizeof(*data));

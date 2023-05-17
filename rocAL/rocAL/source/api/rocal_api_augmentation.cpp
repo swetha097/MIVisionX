@@ -736,7 +736,7 @@ rocalNormalize(RocalContext p_context,
         RocalTensorDataType op_tensorDataType;
         get_rocal_tensor_data_type(rocal_tensor_output_type, op_tensorDataType);
         output_info.set_data_type(op_tensorDataType);
-        
+
 
         output = context->master_graph->create_tensor(output_info, is_output);
         output->reset_tensor_roi();
@@ -1056,12 +1056,11 @@ RocalTensor rocalTensorMulScalar(RocalContext p_context,
     RocalTensorDataType op_tensorDataType;
     try {
         int layout=0;
-        std::cerr << "Here in Op overl";
         get_rocal_tensor_layout(rocal_tensor_layout, op_tensorLayout, layout);
         get_rocal_tensor_data_type(rocal_tensor_output_type, op_tensorDataType);
         rocalTensorInfo output_info = input->info();
         output_info.set_tensor_layout(RocalTensorlayout::NONE);
-        output = context->master_graph->create_tensor(output_info, is_output); // Create a rocALTensor object dynamically on heap 
+        output = context->master_graph->create_tensor(output_info, is_output); // Create a rocALTensor object dynamically on heap
         context->master_graph->add_node<TensorMulScalarNode>({input}, {output})->init(scalar); // Change this line of code
     }
     catch(const std::exception& e) {
@@ -1071,7 +1070,7 @@ RocalTensor rocalTensorMulScalar(RocalContext p_context,
     return output;
 }
 
-RocalTensor rocalNormalDistribution(RocalContext p_context, 
+RocalTensor rocalNormalDistribution(RocalContext p_context,
                                 RocalTensor p_input,
                                 bool is_output,
                                 float mean,
@@ -1122,7 +1121,6 @@ RocalTensor rocalTensorAddTensor(RocalContext p_context,
     RocalTensorDataType op_tensorDataType;
     try {
         int layout=0;
-        std::cerr << "Here in Op over for addition!";
         get_rocal_tensor_data_type(rocal_tensor_output_type, op_tensorDataType);
         rocalTensorInfo output_info = input1->info();
         output_info.set_data_type(op_tensorDataType);
@@ -1137,7 +1135,7 @@ RocalTensor rocalTensorAddTensor(RocalContext p_context,
     return output;
 }
 
-RocalTensor rocalUniformDistribution(RocalContext p_context, 
+RocalTensor rocalUniformDistribution(RocalContext p_context,
                                 RocalTensor p_input,
                                 bool is_output,
                                 std::vector<float> &range) {
@@ -1147,7 +1145,6 @@ RocalTensor rocalUniformDistribution(RocalContext p_context,
     auto context = static_cast<Context*>(p_context);
     auto input = static_cast<rocalTensor*>(p_input);
     try {
-        std::cerr << "Here in Uniform Dist";
         RocalTensorDataType tensor_data_type = RocalTensorDataType::FP32;
         unsigned num_of_dims = 3;
         std::vector<size_t> dims;
@@ -1189,7 +1186,6 @@ rocalResample(RocalContext p_context,
 
     try
     {
-        std::cerr << "In Resample node :";
         int layout=0;
         rocalTensorInfo output_info = input->info();
         get_rocal_tensor_data_type(rocal_tensor_output_type, op_tensorDataType);

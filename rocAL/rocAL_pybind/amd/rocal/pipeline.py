@@ -78,7 +78,7 @@ class Pipeline(object):
                  exec_pipelined=True, prefetch_queue_depth=2,
                  exec_async=True, bytes_per_sample=0,
                  rocal_cpu=False, max_streams=-1, default_cuda_stream_priority=0,
-                 tensor_layout = types.NCHW, reverse_channels = False, multiplier = [1.0,1.0,1.0], 
+                 tensor_layout = types.NCHW, reverse_channels = False, multiplier = [1.0,1.0,1.0],
                  offset = [0.0, 0.0, 0.0], tensor_dtype=types.FLOAT, last_batch_policy=types.LAST_BATCH_FILL, last_batch_padded=False):
         print("in Pipeline.py last_batch_policy", last_batch_policy)
         if(rocal_cpu):
@@ -196,7 +196,6 @@ class Pipeline(object):
 
     def set_outputs(self, *output_list):
         self._output_list_length = len(output_list)
-        print('OUT LIST LEN : ', len(output_list))
         b.setOutputImages(self._handle, len(output_list), output_list)
 
     def __enter__(self):
@@ -287,7 +286,7 @@ class Pipeline(object):
 
     def getRemainingImages(self):
         return b.getRemainingImages(self._handle)
-    
+
     def getLastBatchPaddedSize(self):
         return b.getLastBatchPaddedSize(self._handle)
 

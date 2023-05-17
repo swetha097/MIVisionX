@@ -61,11 +61,9 @@ FileSourceReader::last_batch_padded_size()
 
 Reader::Status FileSourceReader::initialize(ReaderConfig desc)
 {
-    std::cerr << "FileSourceReader::initialize(ReaderConfig desc)";
     auto ret = Reader::Status::OK;
     _file_id = 0;
     _folder_path = desc.path();
-    std::cerr << "\n _folder_path :: "<< _folder_path;
     _shard_id = desc.get_shard_id();
     _shard_count = desc.get_shard_count();
     _batch_count = desc.get_batch_size();
@@ -73,7 +71,6 @@ Reader::Status FileSourceReader::initialize(ReaderConfig desc)
     _loop = desc.loop();
     _meta_data_reader = desc.meta_data_reader();
     _last_batch_info = desc.get_last_batch_policy();
-    std::cerr<<"\n _last_batch_info "<<_last_batch_info.first<<"\t "<<_last_batch_info.second;
     ret = subfolder_reading();
     // the following code is required to make every shard the same size:: required for multi-gpu training
     /*
@@ -196,7 +193,7 @@ Reader::Status FileSourceReader::subfolder_reading()
     std::vector<std::string> entry_name_list;
     // open_subdirectory(_folder_path.c_str());
     auto ret = Reader::Status::OK;
-    
+
     for (auto& entry : filesys::recursive_directory_iterator(_folder_path.c_str(), filesys::directory_options::skip_permission_denied)) {
     std::string entry_path = entry.path().string();
     auto entry_path_id = entry_path;
@@ -248,7 +245,7 @@ Reader::Status FileSourceReader::subfolder_reading()
     }
     if(!_file_names.empty())
         LOG("FileReader ShardID ["+ TOSTR(_shard_id)+ "] Total of " + TOSTR(_file_names.size()) + " images loaded from " + _full_path )
-    
+
     return ret;
 }
 void FileSourceReader::replicate_last_image_to_fill_last_shard()

@@ -708,7 +708,6 @@ rocalAudioFileSourceSingleShard(
 {
     rocalTensor* output = nullptr;
     auto context = static_cast<Context*>(p_context);
-    std::cerr << "Inside the rocALAudioFileSourceSingleShard" ;
     try
     {
         if(shard_count < 1 )
@@ -718,7 +717,6 @@ rocalAudioFileSourceSingleShard(
             THROW("Shard id should be smaller than shard count")
         auto [max_frames, max_channels] = evaluate_audio_data_set(StorageType::FILE_SYSTEM, DecoderType::SNDFILE,
                                                        source_path, "");
-        std::cerr<<"\n Completed the evaluation of audio data set max_frame:: "<<max_frames<<"\t max_channels ::"<<max_channels;
         INFO("Internal buffer size for audio frames = "+ TOSTR(max_frames))
 
         // RocalTensorlayout tensor_format = RocalTensorlayout::NONE;

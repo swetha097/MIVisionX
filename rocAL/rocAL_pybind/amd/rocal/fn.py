@@ -15,8 +15,6 @@ def tensor_add_tensor_float(*inputs, rocal_tensor_output_type=types.FLOAT, rocal
     return (tensor_add_tensor_float)
 
 def tensor_mul_scalar_float(*inputs, scalar=1.0, rocal_tensor_output_type=types.FLOAT, rocal_tensor_layout=types.NCHW):
-    print("Scalar in fn : ", scalar)
-    print(inputs[0])
     kwargs_pybind = {"input_image0": inputs[0], "is_output": False, "rocal_tensor_layout": rocal_tensor_layout, "rocal_tensor_output_type": rocal_tensor_output_type, "scalar": scalar}
     tensor_mul_scalar_float = b.TensorMulScalar(Pipeline._current_pipeline._handle ,*(kwargs_pybind.values()))
     return (tensor_mul_scalar_float)
@@ -194,7 +192,7 @@ def preemphasis_filter(*inputs, border=types.CLAMP, bytes_per_sample_hint=[0], p
     X_border = 0                    if border_type == 'zero'
     X_border = X[0]                 if border_type == 'clamp'
     X_border = X[1]                 if border_type == 'reflect'
-    
+
     '''
     preemph_coeff_float_param = b.CreateFloatParameter(preemph_coeff)
     kwargs_pybind = {"input_audio0": inputs[0], "rocal_tensor_output_type" :rocal_tensor_output_type, "is_output": False,
@@ -215,7 +213,7 @@ def spectrogram(*inputs, bytes_per_sample_hint=[0], center_windows=True, layout=
     spectrogram_output = b.Spectrogram(Pipeline._current_pipeline._handle ,*(kwargs_pybind.values()))
     return spectrogram_output
 
- 
+
 def mel_filter_bank(*inputs, bytes_per_sample_hint=[0], freq_high=0.0, freq_low=0.0, mel_formula=types.SLANEY, nfilter=128, normalize=True, preserve=False, sample_rate=44100.0, seed=1):
     '''
     Converts a spectrogram to a mel spectrogram by applying a bank of triangular filters.
@@ -268,8 +266,8 @@ def slice(*inputs, anchor=[], shape=[], axes=[1,0], axis_names="WH", bytes_per_s
                      "shape": shape[0], "fill_values": fill_values, "axes":axes, "normalized_anchor": normalized_anchor , "normalized_shape":normalized_shape, "out_of_bounds_policy": out_of_bounds_policy }
     slice_output = b.audioSlice(Pipeline._current_pipeline._handle ,*(kwargs_pybind.values()))
     return slice_output
-    
-    
+
+
 def nonsilent_region(*inputs, rocal_tensor_output_type=types.FLOAT, bytes_per_sample_hint=[0], cutoff_db=-60, preserve=False, reference_power=0.0, reset_interval=8192, seed=1, window_length=2048):
     """
     Performs leading and trailing silence detection in an audio buffer.
@@ -282,10 +280,9 @@ def nonsilent_region(*inputs, rocal_tensor_output_type=types.FLOAT, bytes_per_sa
     """
     kwargs_pybind = {"input_audio0": inputs[0], "is_output": False, "cutoff_db": cutoff_db,
                      "reference_power": reference_power, "reset_interval": reset_interval, "window_length":window_length }
-    print("kwargs_pybind", kwargs_pybind)
     non_slient_region_output = b.NonSilentRegion(Pipeline._current_pipeline._handle ,*(kwargs_pybind.values()))
     return non_slient_region_output
-    
+
 
 
 def pad(*inputs, rocal_tensor_output_type=types.FLOAT, align=[], axes=[], axis_names="", bytes_per_sample_hint=[0], fill_value=[], preserve=False, seed=1, shape=[]):
@@ -296,4 +293,3 @@ def pad(*inputs, rocal_tensor_output_type=types.FLOAT, align=[], axes=[], axis_n
                      "axes": axes, "align": align }
     pad_output = b.Pad(Pipeline._current_pipeline._handle ,*(kwargs_pybind.values()))
     return pad_output
-    
