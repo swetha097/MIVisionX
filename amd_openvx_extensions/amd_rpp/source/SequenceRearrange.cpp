@@ -24,7 +24,7 @@ THE SOFTWARE.
 
 struct SequenceRearrangeLocalData
 {
-    RPPCommonHandle * handle;
+    vxRppHandle * handle;
     RppPtr_t pSrc;
     RppPtr_t pDst;
     Rpp32u deviceType;
@@ -108,7 +108,7 @@ static vx_status VX_CALLBACK processSequenceRearrange(vx_node node, const vx_ref
     if (data->deviceType == AGO_TARGET_AFFINITY_GPU)
     {
 #if ENABLE_OPENCL
-        cl_command_queue handle = data->handle.cmdq;
+        cl_command_queue handle = data->handle->cmdq;
         refreshSequenceRearrange(node, parameters, num, data);
         for (int sequence_cnt = 0; sequence_cnt < data->srcDescPtr->n; sequence_cnt++)
         {
@@ -198,7 +198,7 @@ static vx_status VX_CALLBACK initializeSequenceRearrange(vx_node node, const vx_
     data->newSequenceLength = out_tensor_dims[1];
     data->newOrder = (vx_uint32 *)malloc(sizeof(vx_uint32) * data->newSequenceLength);
     refreshSequenceRearrange(node, parameters, num, data);
-    STATUS_ERROR_CHECK(createGraphHandle(node, &data->handle, data->srcDescPtr->n, data->deviceType));
+    STATUS_ERROR_CHECK(createRPPHandle(node, &data->handle, data->srcDescPtr->n, data->deviceType));
     STATUS_ERROR_CHECK(vxSetNodeAttribute(node, VX_NODE_LOCAL_DATA_PTR, &data, sizeof(data)));
 
     return VX_SUCCESS;
@@ -208,7 +208,7 @@ static vx_status VX_CALLBACK uninitializeSequenceRearrange(vx_node node, const v
 {
     SequenceRearrangeLocalData *data;
     STATUS_ERROR_CHECK(vxQueryNode(node, VX_NODE_LOCAL_DATA_PTR, &data, sizeof(data)));
-    STATUS_ERROR_CHECK(releaseGraphHandle(node, data->handle, data->deviceType));
+    STATUS_ERROR_CHECK(releaseRPPHandle(node, data->handle, data->deviceType));
     if(data->newOrder) free(data->newOrder);
     delete (data);
     return VX_SUCCESS;
