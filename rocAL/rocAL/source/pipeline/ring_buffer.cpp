@@ -425,8 +425,9 @@ void RingBuffer::set_meta_data(ImageNameBatch names, pMetaDataBatch meta_data, b
             auto actual_buffer_size = meta_data->get_buffer_size(is_segmentation_polygon, is_segmentation_pixelwise);
             for(unsigned i = 0; i < _meta_data_sub_buffer_count; i++)
             {
-                if(actual_buffer_size[i] > _meta_data_sub_buffer_size[_write_ptr][i])
+                if(actual_buffer_size[i] > _meta_data_sub_buffer_size[_write_ptr][i]) {
                     rellocate_meta_data_buffer(_host_meta_data_buffers[_write_ptr][i], actual_buffer_size[i], i);
+                }
             }
             meta_data->copy_data(_host_meta_data_buffers[_write_ptr], is_segmentation_polygon, is_segmentation_pixelwise);
         }

@@ -86,8 +86,15 @@ public:
     void create_randombboxcrop_reader(RandomBBoxCrop_MetaDataReaderType reader_type, RandomBBoxCrop_MetaDataType label_type, bool all_boxes_overlap, bool no_crop, FloatParam* aspect_ratio, bool has_shape, int crop_width, int crop_height, int num_attempts, FloatParam* scaling, int total_num_attempts, int64_t seed=0);
     const std::pair<ImageNameBatch,pMetaDataBatch>& meta_data();
     int64_t find_pixel(std::vector<int> start, std::vector<int> foreground_count, int64_t val, int count);
-    rocalTensorList* get_random_mask_pixel(rocalTensorList* input);
+    rocalTensorList * get_random_mask_pixel(rocalTensorList* input);
     void set_random_mask_pixel_config(bool is_foreground, unsigned int value, bool is_threshold);
+    rocalTensorList * get_seleck_mask_polygon(rocalTensorList* mask_data,
+                                              std::vector<std::vector<int>> polygon_counts,
+                                              std::vector<std::vector<std::vector<int>>> vertices_counts,
+                                              std::vector<int> mask_ids,
+                                              std::vector<std::vector<int>> &sel_vertices_counts,
+                                              std::vector<std::vector<int>> &sel_mask_ids,
+                                              bool reindex_mask);
     rocalTensorList * labels_meta_data();
     rocalTensorList * bbox_labels_meta_data();
     rocalTensorList * bbox_meta_data();
@@ -140,7 +147,9 @@ private:
     rocalTensorList _bbox_tensor_list;
     rocalTensorList _mask_tensor_list;
     rocalTensorList _random_mask_pixel_list;
+    rocalTensorList _select_mask_polygon_list;
     std::vector<unsigned> output_random_mask_pixel;
+    std::vector<std::vector<float>> output_select_mask_polygon;
     std::vector<std::vector<unsigned>> _labels_tensor_dims;
     std::vector<std::vector<unsigned>> _bbox_tensor_dims;
     std::vector<std::vector<unsigned>> _mask_tensor_dims;

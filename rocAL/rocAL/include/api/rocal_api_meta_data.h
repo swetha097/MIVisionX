@@ -161,6 +161,12 @@ extern "C" RocalTensorList ROCAL_API_CALL rocalGetMaskCoordinates(RocalContext r
 
 extern "C" RocalTensorList ROCAL_API_CALL rocalRandomMaskPixel(RocalContext p_context);
 
+extern "C" RocalTensorList ROCAL_API_CALL rocalSelectMask(RocalContext p_context,
+                                                          std::vector<int> mask_ids,
+                                                          std::vector<std::vector<int>> &sel_vertices_count,
+                                                          std::vector<std::vector<int>> &sel_mask_ids,
+                                                          bool reindex_mask=false);
+
 ///
 /// \param rocal_context
 /// \param bufcount The user's buffer that will be filled with poylgon size for the mask info

@@ -622,6 +622,7 @@ void COCOMetaDataReader::release(std::string image_name)
 
 void COCOMetaDataReader::release()
 {
+    print_map_contents();
     _map_content.clear();
     _map_img_sizes.clear();
 }
