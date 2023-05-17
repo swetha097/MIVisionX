@@ -500,7 +500,21 @@ int test(int test_case, int reader_type, int pipeline_type, const char *path, co
                                                                       sel_vertices_counts,
                                                                       sel_mask_ids,
                                                                       false);
-                std::cout << "LABELSSS:" << bbox_labels->size() << std::endl;
+                // for (int i = 0; i < bbox_labels->size(); i++) {
+                //     std::cout << "\n>>>>>>> Selected polygons and vertices : " << std::endl;
+                //     float* select_mask_polygon_buffer = (float *)(select_mask_polygon->at(i)->buffer());
+                //     auto sel_vertices_count_per_image = sel_vertices_counts[i];
+                //     auto sel_mask_ids_per_image = sel_mask_ids[i];
+                //     int cnt = 0;
+                //     for (int j = 0; j < mask_ids.size(); j++) {
+                //         std::cout << "Mask id: " << mask_ids[j] << "[";
+                //         for (int k = 0; k < sel_vertices_count_per_image[j]; k++) {
+                //             std::cout << select_mask_polygon_buffer[cnt++] << " ,";
+                //         }
+                //         std::cout << "]" << std::endl;
+                //     }
+                // }
+                std::cout << "LABELSSS:" << sel_vertices_counts.size() << ":" << sel_mask_ids.size() << std::endl;
                 int poly_cnt = 0;
                 int prev_object_cnt = 0;
                 for(int i = 0; i < bbox_labels->size(); i++)
@@ -530,6 +544,20 @@ int test(int test_case, int reader_type, int pipeline_type, const char *path, co
                         std::cout << "]\n";
                     }
                     prev_object_cnt += bbox_labels->at(i)->info().dims().at(0);
+                }
+                for (int i = 0; i < bbox_labels->size(); i++) {
+                    std::cout << "\n>>>>>>> Selected polygons and vertices : " << std::endl;
+                    float* select_mask_polygon_buffer = (float *)(select_mask_polygon->at(i)->buffer());
+                    auto sel_vertices_count_per_image = sel_vertices_counts[i];
+                    auto sel_mask_ids_per_image = sel_mask_ids[i];
+                    int cnt = 0;
+                    for (int j = 0; j < mask_ids.size(); j++) {
+                        std::cout << "Mask id: " << mask_ids[j] << " vertices count: " << sel_vertices_count_per_image[j] <<  " [";
+                        for (int k = 0; k < sel_vertices_count_per_image[j]; k++) {
+                            std::cout << select_mask_polygon_buffer[cnt++] << " ,";
+                        }
+                        std::cout << "]" << std::endl;
+                    }
                 }
             }
             break;
