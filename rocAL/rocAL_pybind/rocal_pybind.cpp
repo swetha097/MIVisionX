@@ -344,6 +344,7 @@ namespace rocal
         m.def("UpdateFloatParameter", &rocalUpdateFloatParameter);
         m.def("GetIntValue", &rocalGetIntValue);
         m.def("GetFloatValue", &rocalGetFloatValue);
+        m.def("SetRandomPixelMaskConfig",&rocalSetRandomPixelMaskConfig);
         // rocal_api_data_transfer.h
         // m.def("rocalGetOutputTensors",&rocalGetOutputTensors, return_value_policy::reference);
         m.def("rocalGetOutputTensors", [](RocalContext context)
@@ -422,26 +423,24 @@ namespace rocal
             return labels_array_list;
     }
             );
-    //     m.def(
-    //         "rocalGetPixelwiseLabels", [](RocalContext context)
-    // {
-    //         rocalTensorList * bbox_labels = rocalGetBoundingBoxLabel(context);
-    //         rocalTensorList * random_mask_pixel = rocalRandomMaskPixel(context);
-    //         py::list labels_array_list;
-    //         for(int i =0; i < bbox_labels->size(); i++)
-    //         {
-    //             py::array_t<unsigned int> labels_array = py::array(py::buffer_info(
-    //                             (unsigned int *)(random_mask_pixel->at(i)->buffer()),
-    //                             sizeof(unsigned int),
-    //                             py::format_descriptor<unsigned int>::format(),
-    //                             1,
-    //                             {random_mask_pixel->at(i)->info().dims().at(0)},
-    //                             {sizeof(unsigned int)}));
-    //             labels_array_list.append(labels_array);
-    //         }
-    //         return labels_array_list;
-    // }
-    //         );
+        m.def(
+            "rocalRandomMaskPixel", [](RocalContext context)
+    {
+            rocalTensorList * bbox_labels = rocalGetBoundingBoxLabel(context);
+            rocalTensorList * random_mask_pixel = rocalRandomMaskPixel(context);
+            py::list random_mask_pixel_array_list;
+            
+            for(int i =0; i < bbox_labels->size(); i++)
+            {
+                py::list centre_coordinate_list;
+                unsigned int* random_mask_image = (unsigned int *)(random_mask_pixel->at(i)->buffer());
+                centre_coordinate_list.append(random_mask_image[0]);
+                centre_coordinate_list.append(random_mask_image[1]);
+                random_mask_pixel_array_list.append(centre_coordinate_list);
+            }
+            return random_mask_pixel_array_list;
+    }
+            );
 
         m.def(
             "rocalGetEncodedBoxesAndLables", [](RocalContext context,uint batch_size, uint num_anchors)

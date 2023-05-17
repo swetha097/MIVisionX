@@ -297,6 +297,9 @@ class Pipeline(object):
 
     def rocalGetPixelwiseLabels(self):
         return b.rocalGetPixelwiseLabels(self._handle)
+    
+    def rocalRandomMaskPixel(self):
+        return b.rocalRandomMaskPixel(self._handle)
 
     def rocalGetBoundingBoxLabel(self):
         return b.rocalGetBoundingBoxLabel(self._handle)

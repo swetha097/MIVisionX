@@ -86,6 +86,7 @@ class ROCALCOCOIterator(object):
         label_cpu = self.loader.rocalGetImageLabels()
         label_arr = torch.as_tensor(label_cpu, dtype=torch.int32, device=torch_gpu_device)
         pixelwiselabel_cpu = self.loader.rocalGetPixelwiseLabels()
+        random_mask_pixel_cpu = self.loader.rocalRandomMaskPixel()
 
         # Image id of a batch of images
         self.loader.GetImageId(self.image_id)
@@ -95,7 +96,7 @@ class ROCALCOCOIterator(object):
         image_size_tensor = torch.tensor(self.img_size, device=torch_gpu_device).view(-1, self.bs, 2)
 
 
-        return self.out, bbox_arr, label_arr, pixelwiselabel_cpu
+        return self.out, bbox_arr, label_arr, pixelwiselabel_cpu, random_mask_pixel_cpu
 
     def reset(self):
         self.loader.rocalResetLoaders()
@@ -162,7 +163,7 @@ def main():
     coco_train_pipeline = Pipeline(batch_size=batch_size, num_threads=num_threads, device_id=device_id, seed=random_seed, rocal_cpu=_rali_cpu)
 
     with coco_train_pipeline:
-        jpegs, bboxes, labels, pixelwise_mask = fn.readers.coco(file_root=image_path, annotations_file=annotation_path, pixelwise_mask = True, random_shuffle=False, shard_id=local_rank, num_shards=world_size,seed=random_seed, is_box_encoder=False)
+        jpegs, bboxes, labels, pixelwise_mask = fn.readers.coco(file_root=image_path, annotations_file=annotation_path, pixelwise_mask = True, random_shuffle=False, shard_id=local_rank, num_shards=world_size,seed=random_seed, is_box_encoder=False, is_foreground=True)
 
         print("*********************** SHARD ID ************************",local_rank)
         print("*********************** NUM SHARDS **********************",world_size)
@@ -185,7 +186,7 @@ def main():
         print("+++++++++++++++++++++++++++++EPOCH+++++++++++++++++++++++++++++++++++++",epoch)
         for i , it in enumerate(COCOIteratorPipeline):
             print("************************************** i *************************************",i)
-            print(it)
+            print(it[4])
             # for img in it[2]:
             #     print(img.shape)
             #     cnt = cnt + 1
