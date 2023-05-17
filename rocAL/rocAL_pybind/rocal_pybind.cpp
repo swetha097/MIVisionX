@@ -397,7 +397,6 @@ namespace rocal
                 float *bbox_buffer = (float *)(bbox_coords->at(i)->buffer());
                 for(int j = 0, j4 = 0; j < bbox_coords->at(i)->info().dims().at(0); j++, j4 = j * 4)
                     bbox_coord = py::make_tuple(bbox_buffer[j4], bbox_buffer[j4+1], bbox_buffer[j4+2], bbox_buffer[j4+3]);
-                    // std::cerr << bbox_buffer[j4] << " " << bbox_buffer[j4 + 1] << " " << bbox_buffer[j4 + 2] << " " << bbox_buffer[j4 + 3] << "\n";
                 single_image.append(bbox_coord);
             }
 
@@ -412,7 +411,7 @@ namespace rocal
             for(int i =0; i < bbox_labels->size(); i++)
             {
                 py::array_t<int> labels_array = py::array(py::buffer_info(
-                                (int *)(labels->at(0)->buffer()),
+                                (int *)(labels->at(i)->buffer()),
                                 sizeof(int),
                                 py::format_descriptor<int>::format(),
                                 1,
@@ -423,6 +422,26 @@ namespace rocal
             return labels_array_list;
     }
             );
+    //     m.def(
+    //         "rocalGetPixelwiseLabels", [](RocalContext context)
+    // {
+    //         rocalTensorList * bbox_labels = rocalGetBoundingBoxLabel(context);
+    //         rocalTensorList * random_mask_pixel = rocalRandomMaskPixel(context);
+    //         py::list labels_array_list;
+    //         for(int i =0; i < bbox_labels->size(); i++)
+    //         {
+    //             py::array_t<unsigned int> labels_array = py::array(py::buffer_info(
+    //                             (unsigned int *)(random_mask_pixel->at(i)->buffer()),
+    //                             sizeof(unsigned int),
+    //                             py::format_descriptor<unsigned int>::format(),
+    //                             1,
+    //                             {random_mask_pixel->at(i)->info().dims().at(0)},
+    //                             {sizeof(unsigned int)}));
+    //             labels_array_list.append(labels_array);
+    //         }
+    //         return labels_array_list;
+    // }
+    //         );
 
         m.def(
             "rocalGetEncodedBoxesAndLables", [](RocalContext context,uint batch_size, uint num_anchors)
