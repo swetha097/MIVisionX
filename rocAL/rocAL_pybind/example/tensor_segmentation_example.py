@@ -81,18 +81,12 @@ class ROCALCOCOIterator(object):
 
 
         # 1D labels & bboxes array
-        # labels_array, boxes_array = self.loader.getEncodedBoxesAndLables(self.bs, int(self.num_anchors))
         bbox_cpu = self.loader.rocalGetBoundingBoxLabel()
         bbox_arr = torch.as_tensor(bbox_cpu, dtype=torch.float32, device=torch_gpu_device)
         label_cpu = self.loader.rocalGetImageLabels()
         label_arr = torch.as_tensor(label_cpu, dtype=torch.int32, device=torch_gpu_device)
         pixelwiselabel_cpu = self.loader.rocalGetPixelwiseLabels()
-        pixelwiselabel_arr = torch.as_tensor(pixelwiselabel_cpu, dtype=torch.int32, device=torch_gpu_device)
-        # self.encoded_bboxes = torch.as_tensor(boxes_array, dtype=torch.float32, device=torch_gpu_device)
-        # self.encoded_bboxes = self.encoded_bboxes.view(self.bs, self.num_anchors, 4)
-        # self.encoded_labels = torch.as_tensor(labels_array, dtype=torch.int32, device=torch_gpu_device)
-        # encoded_bboxes_tensor = self.encoded_bboxes.cpu()
-        # encodded_labels_tensor = self.encoded_labels.cpu()
+        random_mask_pixel_cpu = self.loader.rocalRandomMaskPixel()
 
         # Image id of a batch of images
         self.loader.GetImageId(self.image_id)
@@ -102,7 +96,7 @@ class ROCALCOCOIterator(object):
         image_size_tensor = torch.tensor(self.img_size, device=torch_gpu_device).view(-1, self.bs, 2)
 
 
-        return bbox_arr,label_arr,pixelwiselabel_arr
+        return self.out, bbox_arr, label_arr, pixelwiselabel_cpu, random_mask_pixel_cpu
 
     def reset(self):
         self.loader.rocalResetLoaders()
@@ -169,28 +163,18 @@ def main():
     coco_train_pipeline = Pipeline(batch_size=batch_size, num_threads=num_threads, device_id=device_id, seed=random_seed, rocal_cpu=_rali_cpu)
 
     with coco_train_pipeline:
-        jpegs, bboxes, labels, pixelwise_mask = fn.readers.coco(file_root=image_path, annotations_file=annotation_path, pixelwise_mask = False, random_shuffle=False,shard_id=local_rank, num_shards=world_size,seed=random_seed, is_box_encoder=False)
+        jpegs, bboxes, labels, pixelwise_mask = fn.readers.coco(file_root=image_path, annotations_file=annotation_path, pixelwise_mask = True, random_shuffle=False, shard_id=local_rank, num_shards=world_size,seed=random_seed, is_box_encoder=False, is_foreground=True)
 
         print("*********************** SHARD ID ************************",local_rank)
         print("*********************** NUM SHARDS **********************",world_size)
-        # crop_begin, crop_size, bboxes, labels = fn.random_bbox_crop(bboxes, labels, device="cpu",
-        #                             aspect_ratio=[0.5, 2.0],
-        #                             thresholds=[0, 0.1, 0.3, 0.5, 0.7, 0.9],
-        #                             scaling=[0.3, 1.0],
-        #                             ltrb=True,
-        #                             allow_no_crop=True,
-        #                             num_attempts=1)
-        # images_decoded = fn.decoders.image_slice(jpegs, crop_begin, crop_size, device=decoder_device, output_type = types.RGB, file_root=image_path, annotations_file=annotation_path, random_shuffle=False,shard_id=local_rank, num_shards=world_size)
-        images_decoded = fn.decoders.image(jpegs, file_root=data_path, output_type=types.RGB, shard_id=0, num_shards=1, random_shuffle=False)
+        images_decoded = fn.decoders.image(jpegs, file_root=image_path, output_type=types.RGB, shard_id=0, num_shards=1, random_shuffle=False, annotations_file=annotation_path)
         res_images = fn.resize(images_decoded, device=rali_device, resize_width=crop, resize_height=crop, rocal_tensor_layout = types.NHWC, rocal_tensor_output_type = types.UINT8)
         images = fn.crop_mirror_normalize(res_images, device="cpu",
                                             crop=(crop, crop),
                                             image_type=types.RGB,
-                                            mirror=flip_coin,
+                                            mirror=0,
                                             rocal_tensor_layout = types.NHWC,
                                             rocal_tensor_output_type = types.FLOAT,
-                                            #mean=[0,0,0],
-                                            #std=[1,1,1])
                                             mean=[0.485*255,0.456*255 ,0.406*255 ],
                                             std=[0.229*255 ,0.224*255 ,0.225*255 ])
 
@@ -202,9 +186,10 @@ def main():
         print("+++++++++++++++++++++++++++++EPOCH+++++++++++++++++++++++++++++++++++++",epoch)
         for i , it in enumerate(COCOIteratorPipeline):
             print("************************************** i *************************************",i)
-            for img in it[2]:
-                print(img.shape)
-                cnt = cnt + 1
+            print(it[4])
+            # for img in it[2]:
+            #     print(img.shape)
+            #     cnt = cnt + 1
                 #draw_patches(img, cnt, "cpu")
         COCOIteratorPipeline.reset()
     print("*********************************************************************")
