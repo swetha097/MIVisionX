@@ -27,7 +27,7 @@ class ROCALCOCOIterator(object):
            Epoch size.
     """
 
-    def __init__(self, pipelines, tensor_layout=types.NCHW, reverse_channels=False, multiplier=None, offset=None, tensor_dtype=types.FLOAT, device="cpu", display=False, num_anchors=8732, pixelwise_mask=False, select_mask_id=[0]):
+    def __init__(self, pipelines, tensor_layout=types.NCHW, reverse_channels=False, multiplier=None, offset=None, tensor_dtype=types.FLOAT, device="cpu", display=False, num_anchors=8732, pixelwise_mask=False, select_mask_id=[0], polygon_mask=False):
 
         try:
             assert pipelines is not None, "Number of provided pipelines has to be at least 1"
@@ -45,6 +45,7 @@ class ROCALCOCOIterator(object):
         self.num_anchors = num_anchors
         self.display = True
         self.pixelwise_mask = pixelwise_mask
+        self.polygon_mask = polygon_mask
         self.select_mask_id = select_mask_id
 
         #Image id of a batch of images
@@ -90,12 +91,11 @@ class ROCALCOCOIterator(object):
         # if pixelwiselabels = True
         if self.pixelwise_mask == True:
             random_mask_pixel_cpu = self.loader.rocalRandomMaskPixel()
-        else:
+        elif self.polygon_mask == True:
             num_objects_per_batch = self.loader.rocalGetBoundingBoxCount()
             mask_count_array = np.zeros(num_objects_per_batch, dtype="int32")
             total_mask_count_per_batch = self.loader.rocalGetMaskCount(mask_count_array)
             polygon_size_array = np.zeros(total_mask_count_per_batch, dtype="int32")
-            print("Mask_count", total_mask_count_per_batch)
             mask_coordinates_list = self.loader.rocalGetMaskCoordinates(polygon_size_array, mask_count_array)
             self.select_mask_id = [0] #Given by the user
             select_mask_array = self.loader.rocalSelectMask(self.select_mask_id)
@@ -109,8 +109,10 @@ class ROCALCOCOIterator(object):
 
         if self.pixelwise_mask == True:
             return self.out, bbox_cpu, label_cpu, pixelwiselabel_cpu, random_mask_pixel_cpu
-        else:
+        elif self.polygon_mask == True:
             return self.out, bbox_cpu, label_cpu, pixelwiselabel_cpu, select_mask_array
+        else:
+            return self.out, bbox_cpu, label_cpu, pixelwiselabel_cpu
 
     def reset(self):
         self.loader.rocalResetLoaders()
@@ -176,12 +178,15 @@ def main():
 
     coco_train_pipeline = Pipeline(batch_size=batch_size, num_threads=num_threads, device_id=device_id, seed=random_seed, rocal_cpu=_rali_cpu)
     pixelwise_mask = False # pixelwise_mask & polygon_mask are mutually exclusive
-    polygon_mask = True
+    polygon_mask = True # pixelwise_mask & polygon_mask are mutually exclusive
     with coco_train_pipeline:
         if pixelwise_mask == True:
             jpegs, bboxes, labels, pixelwisemaks = fn.readers.coco(file_root=image_path, annotations_file=annotation_path, pixelwise_mask = True, random_shuffle=False, shard_id=local_rank, num_shards=world_size,seed=random_seed, is_box_encoder=False, is_foreground=True, polygon_mask=False)
         if polygon_mask == True:
             jpegs, bboxes, labels, polygonmask = fn.readers.coco(file_root=image_path, annotations_file=annotation_path, pixelwise_mask = False, random_shuffle=False, shard_id=local_rank, num_shards=world_size,seed=random_seed, is_box_encoder=False, is_foreground=False, polygon_mask=True)
+        else:
+            jpegs, bboxes, labels = fn.readers.coco(file_root=image_path, annotations_file=annotation_path, pixelwise_mask = False, random_shuffle=False, shard_id=local_rank, num_shards=world_size,seed=random_seed, is_box_encoder=False, is_foreground=False, polygon_mask=False)
+
         print("*********************** SHARD ID ************************",local_rank)
         print("*********************** NUM SHARDS **********************",world_size)
         images_decoded = fn.decoders.image(jpegs, file_root=image_path, output_type=types.RGB, shard_id=0, num_shards=1, random_shuffle=False, annotations_file=annotation_path)
@@ -197,7 +202,7 @@ def main():
 
         coco_train_pipeline.set_outputs(images)
     coco_train_pipeline.build()
-    COCOIteratorPipeline = ROCALCOCOIterator(coco_train_pipeline, pixelwise_mask=pixelwise_mask, select_mask_id=[0])
+    COCOIteratorPipeline = ROCALCOCOIterator(coco_train_pipeline, pixelwise_mask=pixelwise_mask, select_mask_id=[0], polygon_mask=polygon_mask)
     cnt = 0
     for epoch in range(3):
         print("+++++++++++++++++++++++++++++EPOCH+++++++++++++++++++++++++++++++++++++",epoch)
