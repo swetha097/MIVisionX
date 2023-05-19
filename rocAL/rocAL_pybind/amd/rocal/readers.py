@@ -23,14 +23,23 @@ def coco(*inputs,file_root='', annotations_file='', bytes_per_sample_hint=0, dum
     labels = []
     bboxes = []
     pixelwisemask = [] if pixelwise_mask else None
-    
+    polygonmask = [] if polygon_mask else None
+    print("polyyyyyyyyyy", polygon_mask)
     if pixelwise_mask:
         kwargs_pybind = {"is_foreground": is_foreground, "value":value, "is_threshold":is_threshold}
         b.SetRandomPixelMaskConfig(Pipeline._current_pipeline._handle,*(kwargs_pybind.values()))
     kwargs_pybind = {"source_path": annotations_file, "is_output":True, "polygon_mask":polygon_mask, "is_box_encoder":is_box_encoder, "pixelwise_mask": pixelwise_mask }
     b.setSeed(seed)
     meta_data = b.COCOReader(Pipeline._current_pipeline._handle ,*(kwargs_pybind.values()))
-    return (meta_data, labels, bboxes, pixelwisemask) if pixelwise_mask else (meta_data, labels, bboxes)
+    if pixelwise_mask:
+        print("pixel")
+        return (meta_data, labels, bboxes, pixelwisemask)
+    elif polygon_mask:
+        print("POLYGON MASK")
+        return (meta_data, labels, bboxes, polygonmask)
+    else:
+        print("ELD}SE")
+        return (meta_data, labels, bboxes)
 
 
 

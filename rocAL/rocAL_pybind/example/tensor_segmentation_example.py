@@ -27,7 +27,7 @@ class ROCALCOCOIterator(object):
            Epoch size.
     """
 
-    def __init__(self, pipelines, tensor_layout=types.NCHW, reverse_channels=False, multiplier=None, offset=None, tensor_dtype=types.FLOAT, device="cpu", display=False, num_anchors=8732):
+    def __init__(self, pipelines, tensor_layout=types.NCHW, reverse_channels=False, multiplier=None, offset=None, tensor_dtype=types.FLOAT, device="cpu", display=False, num_anchors=8732, pixelwise_mask=False, select_mask_id=[0]):
 
         try:
             assert pipelines is not None, "Number of provided pipelines has to be at least 1"
@@ -44,6 +44,8 @@ class ROCALCOCOIterator(object):
         self.bs = self.loader._batch_size
         self.num_anchors = num_anchors
         self.display = True
+        self.pixelwise_mask = pixelwise_mask
+        self.select_mask_id = select_mask_id
 
         #Image id of a batch of images
         self.image_id = np.zeros(self.bs, dtype="int32")
@@ -79,14 +81,24 @@ class ROCALCOCOIterator(object):
         self.out = torch.empty((self.bs, self.h, self.w, self.color_format,), dtype=torch.float32, device=torch_gpu_device)
         self.output_tensor_list[0].copy_data(ctypes.c_void_p(self.out.data_ptr()))
 
-
         # 1D labels & bboxes array
         bbox_cpu = self.loader.rocalGetBoundingBoxLabel()
-        bbox_arr = torch.as_tensor(bbox_cpu, dtype=torch.float32, device=torch_gpu_device)
+        # bbox_arr = torch.as_tensor(bbox_cpu, dtype=torch.float32, device=torch_gpu_device)
         label_cpu = self.loader.rocalGetImageLabels()
-        label_arr = torch.as_tensor(label_cpu, dtype=torch.int32, device=torch_gpu_device)
+        # label_arr = torch.as_tensor(label_cpu, dtype=torch.int32, device=torch_gpu_device)
         pixelwiselabel_cpu = self.loader.rocalGetPixelwiseLabels()
-        random_mask_pixel_cpu = self.loader.rocalRandomMaskPixel()
+        # if pixelwiselabels = True
+        if self.pixelwise_mask == True:
+            random_mask_pixel_cpu = self.loader.rocalRandomMaskPixel()
+        else:
+            num_objects_per_batch = self.loader.rocalGetBoundingBoxCount()
+            mask_count_array = np.zeros(num_objects_per_batch, dtype="int32")
+            total_mask_count_per_batch = self.loader.rocalGetMaskCount(mask_count_array)
+            polygon_size_array = np.zeros(total_mask_count_per_batch, dtype="int32")
+            print("Mask_count", total_mask_count_per_batch)
+            mask_coordinates_list = self.loader.rocalGetMaskCoordinates(polygon_size_array, mask_count_array)
+            self.select_mask_id = [0] #Given by the user
+            select_mask_array = self.loader.rocalSelectMask(self.select_mask_id)
 
         # Image id of a batch of images
         self.loader.GetImageId(self.image_id)
@@ -95,8 +107,10 @@ class ROCALCOCOIterator(object):
         image_id_tensor = torch.tensor(self.image_id, device=torch_gpu_device)
         image_size_tensor = torch.tensor(self.img_size, device=torch_gpu_device).view(-1, self.bs, 2)
 
-
-        return self.out, bbox_arr, label_arr, pixelwiselabel_cpu, random_mask_pixel_cpu
+        if self.pixelwise_mask == True:
+            return self.out, bbox_cpu, label_cpu, pixelwiselabel_cpu, random_mask_pixel_cpu
+        else:
+            return self.out, bbox_cpu, label_cpu, pixelwiselabel_cpu, select_mask_array
 
     def reset(self):
         self.loader.rocalResetLoaders()
@@ -161,10 +175,13 @@ def main():
     print("*********************************************************************")
 
     coco_train_pipeline = Pipeline(batch_size=batch_size, num_threads=num_threads, device_id=device_id, seed=random_seed, rocal_cpu=_rali_cpu)
-
+    pixelwise_mask = False # pixelwise_mask & polygon_mask are mutually exclusive
+    polygon_mask = True
     with coco_train_pipeline:
-        jpegs, bboxes, labels, pixelwise_mask = fn.readers.coco(file_root=image_path, annotations_file=annotation_path, pixelwise_mask = True, random_shuffle=False, shard_id=local_rank, num_shards=world_size,seed=random_seed, is_box_encoder=False, is_foreground=True)
-
+        if pixelwise_mask == True:
+            jpegs, bboxes, labels, pixelwisemaks = fn.readers.coco(file_root=image_path, annotations_file=annotation_path, pixelwise_mask = True, random_shuffle=False, shard_id=local_rank, num_shards=world_size,seed=random_seed, is_box_encoder=False, is_foreground=True, polygon_mask=False)
+        if polygon_mask == True:
+            jpegs, bboxes, labels, polygonmask = fn.readers.coco(file_root=image_path, annotations_file=annotation_path, pixelwise_mask = False, random_shuffle=False, shard_id=local_rank, num_shards=world_size,seed=random_seed, is_box_encoder=False, is_foreground=False, polygon_mask=True)
         print("*********************** SHARD ID ************************",local_rank)
         print("*********************** NUM SHARDS **********************",world_size)
         images_decoded = fn.decoders.image(jpegs, file_root=image_path, output_type=types.RGB, shard_id=0, num_shards=1, random_shuffle=False, annotations_file=annotation_path)
@@ -180,13 +197,13 @@ def main():
 
         coco_train_pipeline.set_outputs(images)
     coco_train_pipeline.build()
-    COCOIteratorPipeline = ROCALCOCOIterator(coco_train_pipeline)
+    COCOIteratorPipeline = ROCALCOCOIterator(coco_train_pipeline, pixelwise_mask=pixelwise_mask, select_mask_id=[0])
     cnt = 0
     for epoch in range(3):
         print("+++++++++++++++++++++++++++++EPOCH+++++++++++++++++++++++++++++++++++++",epoch)
         for i , it in enumerate(COCOIteratorPipeline):
             print("************************************** i *************************************",i)
-            print(it[4])
+            print(it)
             # for img in it[2]:
             #     print(img.shape)
             #     cnt = cnt + 1

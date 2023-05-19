@@ -301,6 +301,21 @@ class Pipeline(object):
     def rocalRandomMaskPixel(self):
         return b.rocalRandomMaskPixel(self._handle)
 
+    def rocalSelectMask(self, mask_ids):
+        return b.rocalSelectMask(self._handle, mask_ids)
+    
+    def rocalGetBoundingBoxCount(self):
+        return b.rocalGetBoundingBoxCount(self._handle)
+    
+    def rocalGetMaskCount(self, mask_count_array):
+        return b.rocalGetMaskCount(self._handle, mask_count_array)
+    
+    def rocalGetMaskCoordinates(self, polygon_size_array, mask_count_array):
+        return b.rocalGetMaskCoordinates(self._handle, polygon_size_array, mask_count_array)
+    
+    def rocalSelectMask(self, mask_ids):
+        return b.rocalSelectMask(self._handle, mask_ids)
+
     def rocalGetBoundingBoxLabel(self):
         return b.rocalGetBoundingBoxLabel(self._handle)
 

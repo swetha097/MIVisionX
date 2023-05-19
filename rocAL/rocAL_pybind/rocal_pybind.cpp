@@ -399,8 +399,9 @@ namespace rocal
                 for(int j = 0, j4 = 0; j < bbox_coords->at(i)->info().dims().at(0); j++, j4 = j * 4)
                     bbox_coord = py::make_tuple(bbox_buffer[j4], bbox_buffer[j4+1], bbox_buffer[j4+2], bbox_buffer[j4+3]);
                 single_image.append(bbox_coord);
+                list.append(single_image);
             }
-
+            return list;
     }
             );
         m.def(
@@ -439,6 +440,107 @@ namespace rocal
                 random_mask_pixel_array_list.append(centre_coordinate_list);
             }
             return random_mask_pixel_array_list;
+    }
+            );
+        m.def(
+            "rocalGetBoundingBoxCount", [](RocalContext context)
+    {
+            unsigned total_number_of_objects_per_batch = rocalGetBoundingBoxCount(context);
+            return total_number_of_objects_per_batch;
+    }
+            );
+        m.def(
+            "rocalGetMaskCount", [](RocalContext context, py::array_t<int> array)
+    {
+        auto buf = array.mutable_data();
+        std::cerr << "Comes to the PYBIND CALL";
+        unsigned count = rocalGetMaskCount(context, buf); //total number of polygons in complete batch
+        return count;
+    }
+            );
+        m.def(
+            "rocalGetMaskCoordinates", [](RocalContext context, py::array_t<int> polygon_size, py::array_t<int> mask_count)
+    {
+            auto buf = polygon_size.request();
+            int* polygon_size_ptr = (int*) buf.ptr;
+            // call pure C++ function
+            rocalTensorList * mask_data = rocalGetMaskCoordinates(context, polygon_size_ptr);
+            rocalTensorList * bbox_labels = rocalGetBoundingBoxLabel(context);
+            py::list complete_list;
+            int poly_cnt = 0;
+            int prev_object_cnt = 0;
+            auto mask_count_buf = mask_count.request();
+            int* mask_count_ptr = (int*) mask_count_buf.ptr;
+            for(int i = 0; i < bbox_labels->size(); i++) // nbatchSize
+            {
+                float *mask_buffer = (float *)(mask_data->at(i)->buffer());
+                std::cout << "\n>>>>>>> MASK COORDS : " << bbox_labels->at(i)->info().dims().at(0) << std::endl;
+                py::list single_image;
+                unsigned int mask_idx = 0;
+                for(unsigned j = prev_object_cnt; j < bbox_labels->at(i)->info().dims().at(0) + prev_object_cnt; j++)
+                {
+                    // std::cout << "Mask idx : " << j << "Polygons : " << mask_count[j] << " Count : " << polygon_size_ptr[poly_cnt] << "[" ;
+                    py::list polygons_buffer;
+                    for(int k = 0; k < mask_count_ptr[j]; k++)
+                    {
+                        py::list single_mask;
+                        single_mask.append(mask_idx);
+                        mask_idx++;
+                        py::list mask_buffer_coordinates;
+                        std::cout << "[";
+                        for(int l = 0; l < polygon_size_ptr[poly_cnt]; l++)
+                        {
+                            std::cout << mask_buffer[l] << ", ";
+                            single_image.append(mask_buffer[l]);
+                        }
+                        std::cout << "]";
+                        mask_buffer += polygon_size_ptr[poly_cnt++];
+                    }
+                    std::cout << "]\n";
+                }
+                prev_object_cnt += bbox_labels->at(i)->info().dims().at(0);
+                complete_list.append(single_image);
+            }
+            return complete_list;
+    }
+            );
+        m.def(
+            "rocalSelectMask", [](RocalContext context, std::vector<int> mask_ids)
+    {
+            rocalTensorList * bbox_labels = rocalGetBoundingBoxLabel(context);
+            rocalTensorList * bbox_coords = rocalGetBoundingBoxCords(context);
+
+            std::vector<std::vector<int>> sel_vertices_counts;
+            std::vector<std::vector<int>> sel_mask_ids;
+            // std::vector<int> mask_ids{0, 1}; // Should this be passed by the user ?
+            rocalTensorList * select_mask_polygon = rocalSelectMask(context,
+                                                                      mask_ids,
+                                                                      sel_vertices_counts,
+                                                                      sel_mask_ids,
+                                                                      false);
+            
+            py::list per_image_select_mask;
+            for (int i = 0; i < bbox_labels->size(); i++) {
+                    std::cout << "\n>>>>>>> Selected polygons and vertices : " << std::endl;
+                    float* select_mask_polygon_buffer = (float *)(select_mask_polygon->at(i)->buffer());
+                    auto sel_vertices_count_per_image = sel_vertices_counts[i];
+                    auto sel_mask_ids_per_image = sel_mask_ids[i];
+                    int cnt = 0;
+                    py::dict mask_select_polygon_dict;
+                    for (int j = 0; j < mask_ids.size(); j++) {
+                        std::cout << "Mask id: " << mask_ids[j] << "[";
+                        py::list select_mask_polygon_list;
+                        for (int k = 0; k < sel_vertices_count_per_image[j]; k++) {
+                            std::cout << select_mask_polygon_buffer[cnt++] << " ,";
+                            select_mask_polygon_list.append(select_mask_polygon_buffer[cnt++]);
+                        }
+                        std::cout << "]" << std::endl;
+                        std::string key = std::to_string(mask_ids[j]);
+                        mask_select_polygon_dict[py::str(key)] = select_mask_polygon_list;
+                    }
+                per_image_select_mask.append(mask_select_polygon_dict);
+                }
+            return per_image_select_mask;
     }
             );
 
