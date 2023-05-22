@@ -31,7 +31,7 @@ class RALIGenericIterator(object):
 
     def __next__(self):
         torch.set_printoptions(threshold=10_000, profile="full", edgeitems=100)
-        
+
         if(b.isEmpty(self.loader._handle)) and self.shard_size < 0:
             if self.auto_reset:
                 self.reset()
@@ -175,9 +175,9 @@ class ROCALClassificationIterator(RALIGenericIterator):
         pipe = pipelines
         super(ROCALClassificationIterator, self).__init__(pipe, tensor_layout = pipe._tensor_layout, tensor_dtype = pipe._tensor_dtype,
                                                             multiplier=pipe._multiplier, offset=pipe._offset, size = size, auto_reset = auto_reset)
-                                                            
-      
-  class ROCALAudioIterator(RALIGenericIterator):
+
+
+class ROCALAudioIterator(RALIGenericIterator):
     """
     RALI iterator for classification tasks for PyTorch. It returns 2 outputs
     (data and label) in the form of PyTorch's Tensor.
