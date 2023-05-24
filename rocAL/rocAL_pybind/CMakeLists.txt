@@ -118,7 +118,7 @@ if(ROCAL_PYTHON)
         set(LINK_LIBRARY_LIST ${LINK_LIBRARY_LIST} rocal)
         include_directories(../rocAL/include/api/
                             ../rocAL/include/pipeline/
-                            ../rocAL/include/device/)
+                            ../../amd_openvx/openvx/include/)
 
         file(GLOB_RECURSE pyfiles amd/*.py)
         file(GLOB_RECURSE sources *.cpp)

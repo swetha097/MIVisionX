@@ -31,10 +31,7 @@ THE SOFTWARE.
 #include <queue>
 #include <vector>
 #if ENABLE_HIP
-#include "device_manager_hip.h"
 #include "hip/hip_runtime.h"
-#else
-#include "device_manager.h"
 #endif
 #include "commons.h"
 

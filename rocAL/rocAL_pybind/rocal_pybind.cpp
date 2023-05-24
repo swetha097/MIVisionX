@@ -26,14 +26,14 @@ THE SOFTWARE.
 #include <iostream>
 #include <pybind11/embed.h>
 #include <pybind11/eval.h>
-#include "api/rocal_api_types.h"
+#include "rocal_api_types.h"
 #include "rocal_api.h"
 #include "tensor.h"
-#include "api/rocal_api_parameters.h"
-#include "api/rocal_api_data_loaders.h"
-#include "api/rocal_api_augmentation.h"
-#include "api/rocal_api_data_transfer.h"
-#include "api/rocal_api_info.h"
+#include "rocal_api_parameters.h"
+#include "rocal_api_data_loaders.h"
+#include "rocal_api_augmentation.h"
+#include "rocal_api_data_transfer.h"
+#include "rocal_api_info.h"
 namespace py = pybind11;
 
 using float16 = half_float::half;
