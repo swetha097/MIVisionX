@@ -45,8 +45,13 @@ def file(*inputs, file_root, bytes_per_sample_hint=0, file_list='', initial_fill
     Pipeline._current_pipeline._reader = "labelReader"
     #Output
     labels = []
-    kwargs_pybind = {"source_path": file_root}
-    label_reader_meta_data = b.labelReader(Pipeline._current_pipeline._handle ,*(kwargs_pybind.values()))
+    if file_list=='':
+        kwargs_pybind = {"source_path": file_root}
+        label_reader_meta_data = b.labelReader(Pipeline._current_pipeline._handle ,*(kwargs_pybind.values()))
+    else:
+        kwargs_pybind = {"source_path": file_root, "file_list":file_list }
+        label_reader_meta_data = b.labelReaderFileList(Pipeline._current_pipeline._handle ,*(kwargs_pybind.values()))
+
     return (label_reader_meta_data, labels)
 
 def tfrecord(*inputs, path, user_feature_key_map, features, index_path="", reader_type=0,

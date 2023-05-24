@@ -111,10 +111,12 @@ MasterGraph::~MasterGraph()
     release();
 }
 
-MasterGraph::MasterGraph(size_t batch_size, RocalAffinity affinity, int gpu_id, size_t prefetch_queue_depth, RocalTensorDataType output_tensor_data_type):
+MasterGraph::MasterGraph(size_t batch_size, RocalAffinity affinity, int gpu_id, size_t prefetch_queue_depth, RocalTensorDataType output_tensor_data_type, RocalBatchPolicy last_batch_policy, bool last_batch_padded):
         _ring_buffer(prefetch_queue_depth),
         _graph(nullptr),
         _affinity(affinity),
+        _last_batch_policy(last_batch_policy),
+        _last_batch_padded(last_batch_padded),
         _gpu_id(gpu_id),
         _convert_time("Conversion Time", DBG_TIMING),
         _process_time("Process Time", DBG_TIMING),
@@ -278,9 +280,9 @@ MasterGraph::build()
         THROW("No output tensors are there, cannot create the pipeline")
 
 #if ENABLE_HIP || ENABLE_OPENCL
-    _ring_buffer.init(_mem_type, (void *)_device.resources(), _internal_tensor_list.data_size());
+    _ring_buffer.init(_mem_type, (void *)_device.resources(), _internal_tensor_list.data_size(), _user_batch_size * sizeof(RocalROI));
 #else
-    _ring_buffer.init(_mem_type, nullptr, _internal_tensor_list.data_size());
+    _ring_buffer.init(_mem_type, nullptr, _internal_tensor_list.data_size(), _user_batch_size * sizeof(RocalROI));
 #endif
     if (_is_box_encoder) _ring_buffer.initBoxEncoderMetaData(_mem_type, _user_batch_size*_num_anchors*4*sizeof(float), _user_batch_size*_num_anchors*sizeof(int));
     create_single_graph();
@@ -425,6 +427,22 @@ MasterGraph::mem_type()
     return _mem_type;
 }
 
+RocalBatchPolicy
+MasterGraph::last_batch_policy() {
+    return _last_batch_policy;
+}
+
+bool
+MasterGraph::last_batch_padded() {
+    return _last_batch_padded;
+}
+
+uint 
+MasterGraph::last_batch_size()
+{
+    return _loader_module->last_batch_padded_size();
+}
+
 Timing
 MasterGraph::timing()
 {
@@ -439,9 +457,14 @@ rocalTensorList *
 MasterGraph::get_output_tensors()
 {
     auto output_ptr = _ring_buffer.get_read_buffers();
-    for(unsigned i = 0; i < _internal_tensor_list.size(); i++)
+    auto roi_ptr = _ring_buffer.get_read_roi_buffers();
+    auto deleter=[&](unsigned* ptr){ };
+    for(unsigned i = 0; i < _internal_tensor_list.size(); i++) {
+        std::shared_ptr<unsigned> roi_ptr_sh;
+        roi_ptr_sh.reset(roi_ptr[i], deleter);
         _output_tensor_list[i]->set_mem_handle(output_ptr[i]);
-    
+        _output_tensor_list[i]->swap_tensor_roi(roi_ptr_sh);
+    }
     return &_output_tensor_list;
 }
 
@@ -454,6 +477,12 @@ void MasterGraph::output_routine()
             ImageNameBatch full_batch_image_names = {};
             pMetaDataBatch full_batch_meta_data = nullptr;
             pMetaDataBatch augmented_batch_meta_data = nullptr;
+        std::cerr << " \n loader_module->remaining_count()" <<_loader_module->remaining_count();
+            if (_loader_module->remaining_count() <= (_is_sequence_reader_output ? _sequence_batch_size : _user_batch_size))
+            {
+                _final_batch_padded_size = _loader_module->last_batch_padded_size();
+                std::cerr<<"\n _final_batch_padded_size:: "<<_final_batch_padded_size;
+            }
             if (_loader_module->remaining_count() < (_is_sequence_reader_output ? _sequence_batch_size : _user_batch_size))
             {
                 // If the internal process routine ,output_routine(), has finished processing all the images, and last
@@ -524,6 +553,9 @@ void MasterGraph::output_routine()
             }
             _process_time.start();
             _graph->process();
+            for (size_t idx = 0; idx < _internal_tensor_list.size(); idx++)
+                _internal_tensor_list[idx]->copy_roi(tensor_roi_buffer[idx]);
+            }
             _process_time.end();
             _bencode_time.start();
             if(_is_box_encoder )

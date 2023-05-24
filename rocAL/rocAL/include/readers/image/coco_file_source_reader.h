@@ -65,6 +65,7 @@ public:
     int close() override;
 
     COCOFileSourceReader();
+    size_t last_batch_padded_size() override { return 0;}; //shobi
 
 private:
     std::shared_ptr<MetaDataReader> _meta_data_reader = nullptr;

@@ -43,6 +43,11 @@ extern "C" int ROCAL_API_CALL rocalGetOutputColorFormat(RocalContext rocal_conte
 /// \return The number of images yet to be processed
 extern "C"  size_t  ROCAL_API_CALL rocalGetRemainingImages(RocalContext rocal_context);
 
+///
+/// \param rocal_context
+/// \return The number of images yet to be processed
+extern "C"  size_t  ROCAL_API_CALL rocalGetLastBatchPaddedSize(RocalContext rocal_context);
+
 /// Returned value valid only after rocalVerify is called
 /// \param image
 /// \return Width of the graph output image
@@ -84,5 +89,10 @@ extern "C" const char* ROCAL_API_CALL rocalGetErrorMessage(RocalContext rocal_co
 /// \param rocal_context
 /// \return The timing info associated with recent execution.
 extern "C" TimingInfo ROCAL_API_CALL rocalGetTimingInfo(RocalContext rocal_context);
+
+///
+/// \param rocal_context
+/// \return The number of images yet to be processed
+extern "C"  size_t  ROCAL_API_CALL rocalGetLastBatchPaddedSize(RocalContext rocal_context);
 
 #endif //MIVISIONX_ROCAL_API_INFO_H
