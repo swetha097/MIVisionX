@@ -76,7 +76,7 @@ public:
     rocalTensor *create_loader_output_tensor(const rocalTensorInfo &info);
     std::vector<rocalTensorList *> create_label_reader(const char *source_path, MetaDataReaderType reader_type);
     std::vector<rocalTensorList *> create_video_label_reader(const char *source_path, MetaDataReaderType reader_type, unsigned sequence_length, unsigned frame_step, unsigned frame_stride, bool file_list_frame_num = true);
-    std::vector<rocalTensorList *> create_coco_meta_data_reader(const char *source_path, bool is_output, MetaDataReaderType reader_type, MetaDataType label_type, bool is_box_encoder = false, bool is_box_iou_matcher = false);
+    std::vector<rocalTensorList *> create_coco_meta_data_reader(const char *source_path, bool is_output, MetaDataReaderType reader_type, MetaDataType label_type, bool is_box_encoder = false, bool is_box_iou_matcher = false); // Need to add keypoints support
     std::vector<rocalTensorList *> create_tf_record_meta_data_reader(const char *source_path, MetaDataReaderType reader_type,  MetaDataType label_type, const std::map<std::string, std::string> feature_key_map);
     std::vector<rocalTensorList *> create_caffe_lmdb_record_meta_data_reader(const char *source_path, MetaDataReaderType reader_type,  MetaDataType label_type);
     std::vector<rocalTensorList *> create_caffe2_lmdb_record_meta_data_reader(const char *source_path, MetaDataReaderType reader_type,  MetaDataType label_type);
@@ -115,11 +115,11 @@ private:
     void stop_processing();
     void output_routine();
     void decrease_image_count();
-    /// notify_user_thread() is called when the internal processing thread is done with processing all available images
+    /// notify_user_thread() is called when the internal processing thread is done with processing all available tensors
     void notify_user_thread();
-    /// no_more_processed_data() is logically linked to the notify_user_thread() and is used to tell the user they've already consumed all the processed images
+    /// no_more_processed_data() is logically linked to the notify_user_thread() and is used to tell the user they've already consumed all the processed tensors
     bool no_more_processed_data();
-    RingBuffer _ring_buffer;//!< The queue that keeps the images that have benn processed by the internal thread (_output_thread) asynchronous to the user's thread
+    RingBuffer _ring_buffer;//!< The queue that keeps the tensors that have benn processed by the internal thread (_output_thread) asynchronous to the user's thread
     MetaDataBatch* _augmented_meta_data = nullptr;//!< The output of the meta_data_graph,
     CropCordBatch* _random_bbox_crop_cords_data = nullptr;
     std::thread _output_thread;
@@ -148,7 +148,7 @@ private:
     std::shared_ptr<Graph> _graph = nullptr;
     RocalAffinity _affinity;
     const int _gpu_id;//!< Defines the device id used for processing
-    pLoaderModule _loader_module; //!< Keeps the loader module used to feed the input the images of the graph
+    pLoaderModule _loader_module; //!< Keeps the loader module used to feed the input the tensors of the graph
     TimingDBG _convert_time, _process_time, _bencode_time;
     const size_t _user_batch_size;//!< Batch size provided by the user
     vx_context _context;
@@ -197,7 +197,7 @@ std::shared_ptr<T> MasterGraph::add_node(const std::vector<rocalTensor *> &input
     for(auto& input: inputs)
     {
         if (_tensor_map.find(input) == _tensor_map.end())
-            THROW("Input image is invalid, cannot be found among output of previously created nodes")
+            THROW("Input tensor is invalid, cannot be found among output of previously created nodes")
 
         auto parent_node = _tensor_map.find(input)->second;
         parent_node->add_next(node);
