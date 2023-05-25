@@ -60,6 +60,12 @@ void ImageLoader::set_prefetch_queue_depth(size_t prefetch_queue_depth)
     _prefetch_queue_depth = prefetch_queue_depth;
 }
 
+void ImageLoader::feed_external_input(std::vector<std::string> input_images, std::vector<int> labels, std::vector<unsigned char *>input_buffer, std::vector<unsigned> roi_width, std::vector<unsigned> roi_height, unsigned int max_width, unsigned int max_height, FileMode mode, bool eos)
+{
+    _external_source_reader = true;
+    _external_input_eos = eos;
+    _image_loader->feed_external_input(input_images, labels, input_buffer, roi_width, roi_height, max_width, max_height, mode, eos);}
+
 void ImageLoader::set_gpu_device_id(int device_id)
 {
     if(device_id < 0)
@@ -70,6 +76,8 @@ void ImageLoader::set_gpu_device_id(int device_id)
 size_t
 ImageLoader::remaining_count()
 {
+    if(!_external_input_eos)
+        return _batch_size;
     return _remaining_image_count;
 }
 
@@ -179,6 +187,7 @@ void ImageLoader::start_loading()
         THROW("start_loading() should be called after initialize() function is called")
 
     _remaining_image_count = _image_loader->count();
+    INFO("Remaining Image count in ImageLoader::start_loading "+TOSTR(_remaining_image_count));
     _internal_thread_running = true;
     _load_thread = std::thread(&ImageLoader::load_routine, this);
 }
@@ -198,16 +207,18 @@ ImageLoader::load_routine()
 
         auto load_status = LoaderModuleStatus::NO_MORE_DATA_TO_READ;
         {
-            load_status = _image_loader->load((unsigned char *)data,
-                                            _decoded_img_info._image_names,
-                                            _max_decoded_width,
-                                            _max_decoded_height,
-                                            _decoded_img_info._roi_width,
-                                            _decoded_img_info._roi_height,
-                                            _decoded_img_info._original_width,
-                                            _decoded_img_info._original_height,
-                                            _output_tensor->info().color_format(), _decoder_keep_original );
+            _decoded_img_info._image_names.reserve(_batch_size*2); // TODO: This has to be changed
+            load_status = _image_loader->load(data,
+                                              _decoded_img_info._image_names,
+                                              _output_tensor->info().dims().at(2),
+                                              _output_tensor->info().dims().at(1),
+                                              _decoded_img_info._roi_width,
+                                              _decoded_img_info._roi_height,
+                                              _decoded_img_info._original_width,
+                                              _decoded_img_info._original_height,
+                                              _output_tensor->info().color_format(), _decoder_keep_original);
 
+            // std::cerr<<"\n Image loader CP1";
             if (load_status == LoaderModuleStatus::OK)
             {
                 if (_randombboxcrop_meta_data_reader)
@@ -215,7 +226,9 @@ ImageLoader::load_routine()
                     _crop_image_info._crop_image_coords = _image_loader->get_batch_random_bbox_crop_coords();
                     _circ_buff.set_crop_image_info(_crop_image_info);
                 }
+                // std::cerr<<"\n Image loader CP1a b c";
                 _circ_buff.set_image_info(_decoded_img_info);
+                // std::cerr<<"\n Image loader CP1a";
                 _circ_buff.push();
                 _image_counter += _output_tensor->info().batch_size();
             }
@@ -243,6 +256,7 @@ ImageLoader::load_routine()
             // It also slows down the reader thread since there is no more data to read,
             // till program ends or till reset is called
             _circ_buff.unblock_reader();
+            // std::cerr<<"\n Image loader CP3";
             std::this_thread::sleep_for(std::chrono::seconds(1));
         }
     }

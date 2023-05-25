@@ -27,6 +27,65 @@ THE SOFTWARE.
 #include "CL/cl.h"
 #endif
 
+// RocalStatus ROCAL_API_CALL
+// rocalCopyToOutput(
+//         RocalContext p_context,
+//         void* out_ptr,
+//         size_t out_size)
+// {
+//     auto context = static_cast<Context*>(p_context);
+//     try
+//     {
+//         context->master_graph->copy_output(out_ptr, out_size);
+//     }
+//     catch(const std::exception& e)
+//     {
+//         context->capture_error(e.what());
+//         ERR(e.what())
+//         return ROCAL_RUNTIME_ERROR;
+//     }
+//     return ROCAL_OK;
+// }
+
+// RocalStatus ROCAL_API_CALL
+// rocalCopyToOutput(
+//         RocalContext p_context,
+//         unsigned char * out_ptr,
+//         size_t out_size)
+// {
+//     auto context = static_cast<Context*>(p_context);
+//     try
+//     {
+//         context->master_graph->copy_output(out_ptr, out_size);
+//     }
+//     catch(const std::exception& e)
+//     {
+//         context->capture_error(e.what());
+//         ERR(e.what())
+//         return ROCAL_RUNTIME_ERROR;
+//     }
+//     return ROCAL_OK;
+// }
+
+// RocalStatus ROCAL_API_CALL
+// rocalCopyToTensorOutput(
+//         RocalContext p_context,
+//         std::vector<void *> &out_ptr)
+// {
+//     auto context = static_cast<Context*>(p_context);
+//     try
+//     {
+//         context->master_graph->copy_output(out_ptr);
+//     }
+//     catch(const std::exception& e)
+//     {
+//         context->capture_error(e.what());
+//         ERR(e.what())
+//         return ROCAL_RUNTIME_ERROR;
+//     }
+//     return ROCAL_OK;
+// }
+
 RocalTensorList ROCAL_API_CALL
 rocalGetOutputTensors(
                     RocalContext p_context)
@@ -56,3 +115,40 @@ ROCAL_API_CALL rocalSetOutputs(RocalContext p_context, unsigned int num_of_outpu
         context->master_graph->set_output(img);
     }
 }
+
+//TODO:: Change input to tensor
+RocalStatus ROCAL_API_CALL
+rocalExternalSourceFeedInput(
+        RocalContext p_context,
+        std::vector<std::string> input_images,
+        std::vector<int> labels,
+        std::vector<unsigned char *> input_buffer,
+        std::vector<unsigned> roi_width,
+        std::vector<unsigned> roi_height,
+        unsigned int max_width,
+        unsigned int max_height,
+        RocalExtSourceMode mode,
+        RocalTensorLayout layout,
+        bool eos)
+{
+    auto context = static_cast<Context*>(p_context);
+    try
+    {
+        //context->master_graph->feed_input(input, mode, layout);
+        // should call root_node process_input
+        FileMode file_mode = (FileMode) mode;
+        RocalTensorLayout format = (RocalTensorLayout) layout;
+        context->master_graph->feed_external_input(input_images, labels, input_buffer,
+                                                    roi_width, roi_height, max_width, max_height, file_mode, format, eos);
+    }
+    catch(const std::exception& e)
+    {
+        context->capture_error(e.what());
+        ERR(e.what())
+        return ROCAL_RUNTIME_ERROR;
+    }
+    return ROCAL_OK;
+}
+
+
+

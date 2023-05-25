@@ -420,6 +420,8 @@ MasterGraph::reset()
 size_t
 MasterGraph::remaining_count()
 {
+    if(!_external_source_eos)
+        return _user_batch_size;
     return (_remaining_count >= 0) ? _remaining_count:0;
 }
 
@@ -464,6 +466,12 @@ void MasterGraph::output_routine()
             {
                 // If the internal process routine ,output_routine(), has finished processing all the images, and last
                 // processed images stored in the _ring_buffer will be consumed by the user when it calls the run() func
+                notify_user_thread();
+                // the following call is required in case the ring buffer is waiting for more data to be loaded and there is no more data to process.
+                _ring_buffer.release_if_empty();
+                std::this_thread::sleep_for(std::chrono::milliseconds(100));
+                continue;
+            } else if(_external_source_eos) {
                 notify_user_thread();
                 // the following call is required in case the ring buffer is waiting for more data to be loaded and there is no more data to process.
                 _ring_buffer.release_if_empty();
@@ -774,7 +782,7 @@ std::vector<rocalTensorList *> MasterGraph::create_video_label_reader(const char
 {
     if( _meta_data_reader)
         THROW("A metadata reader has already been created")
-    MetaDataConfig config(MetaDataType::Label, reader_type, source_path, std::map<std::string, std::string>(), std::string(), sequence_length, frame_step, frame_stride);
+    MetaDataConfig config(MetaDataType::Label, reader_type, source_path, std::map<std::string, std::string>(), std::string(), sequence_length, frame_step, frame_stride);    
     _meta_data_reader = create_meta_data_reader(config);
     _meta_data_reader->init(config);
     if(!file_list_frame_num)
@@ -1203,4 +1211,23 @@ MasterGraph::get_bbox_encoded_buffers(size_t num_encoded_boxes)
         bbox_encoded_output.emplace_back(&_bbox_tensor_list);
     }
     return bbox_encoded_output;
+}
+
+void MasterGraph::feed_external_input(std::vector<std::string> input_images, std::vector<int> labels, unsigned char *input_buffer,
+                            std::vector<unsigned> roi_width, std::vector<unsigned> roi_height, unsigned int max_width, unsigned int max_height, FileMode mode, RocalTensorLayout layout, bool eos)
+{
+    _external_source_eos = eos;
+    _loader_module->feed_external_input(input_images, labels, input_buffer, roi_width, roi_height, max_width, max_height, mode, eos);
+    if(!labels.empty() && !_meta_data_reader)
+    {
+        MetaDataConfig config(MetaDataType::Label, MetaDataReaderType::EXTERNAL_SOURCE_LABEL_READER);
+        _meta_data_reader = create_meta_data_reader(config);
+        _meta_data_reader->add_labels(input_images, labels);
+        // _meta_data_reader->init(config);
+        // _meta_data_reader->read_all(source_path);
+        if (_augmented_meta_data)
+            THROW("Metadata can only have a single output")
+        else
+            _augmented_meta_data = _meta_data_reader->get_output();
+    }
 }

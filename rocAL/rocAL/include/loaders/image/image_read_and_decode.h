@@ -45,7 +45,7 @@ class ImageReadAndDecode
 public:
     ImageReadAndDecode();
     ~ImageReadAndDecode();
-    size_t count();
+    virtual size_t count();
     void reset();
     void create(ReaderConfig reader_config, DecoderConfig decoder_config, int batch_size, int device_id=0);
     void set_bbox_vector(std::vector<std::vector <float>> bbox_coords) { _bbox_coords = bbox_coords;};
@@ -61,7 +61,7 @@ public:
     /// \param roi_width is set by the load() function tp the width of the region that decoded image is located. It's less than max_width and is either equal to the original image width if original image width is smaller than max_width or downscaled if necessary to fit the max_width criterion.
     /// \param roi_height  is set by the load() function tp the width of the region that decoded image is located.It's less than max_height and is either equal to the original image height if original image height is smaller than max_height or downscaled if necessary to fit the max_height criterion.
     /// \param output_color_format defines what color format user expects decoder to decode images into if capable of doing so supported is
-    LoaderModuleStatus load(
+    virtual LoaderModuleStatus load(
             unsigned char* buff,
             std::vector<std::string>& names,
             const size_t  max_decoded_width,
@@ -72,13 +72,16 @@ public:
             std::vector<uint32_t> &actual_height,
             RocalColorFormat output_color_format,
             bool decoder_keep_original=false);
-
+    void feed_external_input(std::vector<std::string> input_images, std::vector<int> labels, std::vector<unsigned char *> input_buffer,
+                             std::vector<unsigned> roi_width, std::vector<unsigned> roi_height,
+                             unsigned int max_width, unsigned int max_height, FileMode mode, bool eos) ;
     //! returns timing info or other status information
     Timing timing();
 
-private:
+protected:
     std::vector<std::shared_ptr<Decoder>> _decoder;
     std::shared_ptr<Reader> _reader;
+    StorageType _reader_type;
     std::vector<std::vector<unsigned char>> _compressed_buff;
     std::vector<size_t> _actual_read_size;
     std::vector<std::string> _image_names;
