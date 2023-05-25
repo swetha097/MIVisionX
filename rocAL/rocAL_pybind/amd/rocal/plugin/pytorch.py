@@ -35,7 +35,7 @@ class ROCALGenericIterator(object):
         self.device = device
         self.device_id = device_id
         self.batch_size = self.loader._batch_size
-        self.out = self.w = self.h = self.color_format = None
+        self.out = self.dimensions = self.torch_dtype = None
         self.len = b.getRemainingImages(self.loader._handle)
 
     def next(self):
@@ -48,16 +48,10 @@ class ROCALGenericIterator(object):
             self.output_tensor_list = self.loader.getOutputTensors()
 
         if self.out is None:
-            self.w, self.h = self.output_tensor_list[0].max_shape()
-            self.color_format = self.output_tensor_list[0].color_format()
             self.dimensions = self.output_tensor_list[0].dimensions()
             torch_gpu_device = torch.device('cuda', self.device_id)
-            if self.tensor_dtype == types.FLOAT:
-                self.out = torch.empty((self.dimensions[0], self.dimensions[1], self.dimensions[2], self.dimensions[3],), dtype = torch.float32, device = torch_gpu_device)
-            elif self.tensor_dtype == types.FLOAT16:
-                self.out = torch.empty((self.dimensions[0], self.dimensions[1], self.dimensions[2], self.dimensions[3],), dtype = torch.float16, device = torch_gpu_device)
-            elif self.tensor_dtype == types.UINT8:
-                self.out = torch.empty((self.dimensions[0], self.dimensions[1], self.dimensions[2], self.dimensions[3],), dtype = torch.uint8, device = torch_gpu_device)
+            self.torch_dtype = self.output_tensor_list[0].torch_dtype()
+            self.out = torch.empty((self.dimensions[0], self.dimensions[1], self.dimensions[2], self.dimensions[3],), dtype = self.torch_dtype, device = torch_gpu_device)
             self.labels_tensor = torch.empty(self.dimensions[0], dtype = torch.int32, device = torch_gpu_device)
 
         self.output_tensor_list[0].copy_data(ctypes.c_void_p(self.out.data_ptr()))

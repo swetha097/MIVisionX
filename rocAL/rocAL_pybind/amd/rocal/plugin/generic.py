@@ -39,7 +39,7 @@ class ROCALGenericIterator(object):
         if self.loader._name is None:
             self.loader._name = self.loader._reader
         self.labels_size = ((self.bs*self.loader._numOfClasses) if (self.loader._oneHotEncoding == True) else self.bs)
-        self.out = self.w = self.h = self.color_format = None
+        self.out = self.dimensions = self.dtype = None
         self.len = b.getRemainingImages(self.loader._handle)//self.bs # iteration length
 
     def next(self):
@@ -53,36 +53,16 @@ class ROCALGenericIterator(object):
             self.output_tensor_list = self.loader.getOutputTensors()
 
         if self.out is None:
-            self.w, self.h = self.output_tensor_list[0].max_shape()
-            self.color_format = self.output_tensor_list[0].color_format()
-            if self.tensor_layout == types.NCHW:
-                if self.device == "cpu":
-                    if self.tensor_dtype == types.FLOAT:
-                        self.out = np.empty((self.batch_size, self.color_format, self.h, self.w,), dtype = np.float32)
-                    elif self.tensor_dtype == types.FLOAT16:
-                        self.out = np.empty((self.batch_size, self.color_format, self.h, self.w,), dtype = np.float16)
-                    self.labels = np.empty(self.labels_size, dtype = np.int32)
-                else:
-                    with cp.cuda.Device(device = self.device_id):
-                        if self.tensor_dtype == types.FLOAT:
-                            self.out = cp.empty((self.batch_size, self.color_format, self.h, self.w,), dtype = cp.float32)
-                        elif self.tensor_dtype == types.FLOAT16:
-                            self.out = cp.empty((self.batch_size, self.color_format, self.h, self.w,), dtype = cp.float16)
-                        self.labels = cp.empty(self.labels_size, dtype = cp.int32)
-            else: #NHWC
-                if self.device == "cpu":
-                    if self.tensor_dtype == types.FLOAT:
-                        self.out = np.empty((self.batch_size, self.h, self.w, self.color_format), dtype = np.float32)
-                    elif self.tensor_dtype == types.FLOAT16:
-                        self.out = np.empty((self.batch_size, self.h, self.w, self.color_format), dtype = np.float16)
-                    self.labels = np.empty(self.labels_size, dtype = np.int32)
-                else:
-                    with cp.cuda.Device(device = self.device_id):
-                        if self.tensor_dtype == types.FLOAT:
-                            self.out = cp.empty((self.batch_size, self.h, self.w, self.color_format), dtype = cp.float32)
-                        elif self.tensor_dtype == types.FLOAT16:
-                            self.out = cp.empty((self.batch_size, self.h, self.w, self.color_format), dtype = cp.float16)
-                        self.labels = cp.empty(self.labels_size, dtype = cp.int32)
+            self.dimensions = self.output_tensor_list[0].dimensions()
+            if self.device == "cpu":
+                self.dtype = self.output_tensor_list[0].numpy_dtype()
+                self.out = np.empty((self.dimensions[0], self.dimensions[1], self.dimensions[2], self.dimensions[3],), dtype = self.dtype)
+                self.labels = np.empty(self.labels_size, dtype = self.dtype)
+            else:
+                self.dtype = self.output_tensor_list[0].cupy_dtype()
+                with cp.cuda.Device(device = self.device_id):
+                    self.out = cp.empty((self.dimensions[0], self.dimensions[1], self.dimensions[2], self.dimensions[3],), dtype = self.dtype)
+                    self.labels = cp.empty(self.labels_size, dtype = self.dtype)
 
         self.output_tensor_list[0].copy_data(ctypes.c_void_p(self.out.data_ptr()))
         if(self.loader._name == "labelReader"):

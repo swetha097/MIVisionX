@@ -367,6 +367,48 @@ namespace rocal{
                 Returns dtype of tensor.
                 )code"
             )
+            .def("torch_dtype", [](rocalTensor &output_tensor) {
+                switch(output_tensor.info().data_type()) {
+                    case RocalTensorDataType::FP32:
+                        return "torch.float32";
+                    case RocalTensorDataType::UINT8:
+                        return "torch.float16";
+                    case RocalTensorDataType::FP16:
+                        return "torch.uint8";
+                }
+            },
+                R"code(
+                Returns dtype of torch tensor.
+                )code"
+            )
+            .def("numpy_dtype", [](rocalTensor &output_tensor) {
+                switch(output_tensor.info().data_type()) {
+                    case RocalTensorDataType::FP32:
+                        return "np.float32";
+                    case RocalTensorDataType::UINT8:
+                        return "np.float16";
+                    case RocalTensorDataType::FP16:
+                        return "np.uint8";
+                }
+            },
+                R"code(
+                Returns dtype of torch tensor.
+                )code"
+            )
+            .def("cupy_dtype", [](rocalTensor &output_tensor) {
+                switch(output_tensor.info().data_type()) {
+                    case RocalTensorDataType::FP32:
+                        return "cp.float32";
+                    case RocalTensorDataType::UINT8:
+                        return "cp.float16";
+                    case RocalTensorDataType::FP16:
+                        return "cp.uint8";
+                }
+            },
+                R"code(
+                Returns dtype of torch tensor.
+                )code"
+            )
             .def("dims", [](rocalTensor &output_tensor) {
                 return output_tensor.info().dims();
             },
@@ -379,7 +421,7 @@ namespace rocal{
             for (uint i = 0; i < output_tensor.info().dims(); i++)
                 list.append(output_tensor.info().dims().at(i));
             return list; 
-        });
+            });
             .def(
             "copy_data", [](rocalTensor &output_tensor, py::object p) {
                 auto ptr = ctypes_void_ptr(p);
