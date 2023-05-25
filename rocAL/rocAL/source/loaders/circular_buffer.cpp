@@ -74,7 +74,7 @@ void* CircularBuffer::get_read_buffer_dev()
 {
     _cb_block_if_empty_time.start();
     block_if_empty();
-    _cb_block_if_empty_time.start();
+    _cb_block_if_empty_time.end();
     return _dev_buffer[_read_ptr];
 }
 
@@ -84,7 +84,7 @@ unsigned char* CircularBuffer::get_read_buffer_host()
         THROW("Circular buffer not initialized")
     _cb_block_if_empty_time.start();
     block_if_empty();
-    _cb_block_if_empty_time.start();
+    _cb_block_if_empty_time.end();
     return _host_buffer_ptrs[_read_ptr];
 }
 
@@ -391,7 +391,7 @@ decoded_image_info &CircularBuffer::get_image_info()
 {
     _cb_block_if_empty_time.start();
     block_if_empty();
-    _cb_block_if_empty_time.start();
+    _cb_block_if_empty_time.end();
     std::unique_lock<std::mutex> lock(_names_buff_lock);
     if(_level != _circ_image_info.size())
         THROW("CircularBuffer internals error, image and image info sizes not the same "+TOSTR(_level) + " != "+TOSTR(_circ_image_info.size()))
@@ -402,7 +402,7 @@ crop_image_info &CircularBuffer::get_cropped_image_info()
 {
     _cb_block_if_empty_time.start();
     block_if_empty();
-    _cb_block_if_empty_time.start();
+    _cb_block_if_empty_time.end();
     std::unique_lock<std::mutex> lock(_names_buff_lock);
     if(_level != _circ_crop_image_info.size())
         THROW("CircularBuffer internals error, image and image info sizes not the same "+TOSTR(_level) + " != "+TOSTR(_circ_crop_image_info.size()))
