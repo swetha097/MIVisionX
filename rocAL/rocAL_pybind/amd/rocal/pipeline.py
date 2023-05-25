@@ -95,10 +95,10 @@ class Pipeline(object):
     _handle = None
     _current_pipeline = None
 
-    def __init__(self, batch_size=-1, num_threads=-1, device_id=-1, seed=1,
+    def __init__(self, batch_size=-1, num_threads=0, device_id=-1, seed=1,
                  exec_pipelined=True, prefetch_queue_depth=2,
                  exec_async=True, bytes_per_sample=0,
-                 rocal_cpu=False, max_streams=-1, default_cuda_stream_priority=0, tensor_layout = types.NCHW, reverse_channels = False, multiplier = [1.0,1.0,1.0], offset = [0.0, 0.0, 0.0], tensor_dtype=types.FLOAT):
+                 rocal_cpu=False, max_streams=-1, default_cuda_stream_priority=0, tensor_layout = types.NCHW, reverse_channels = False, mean = None, std = None, tensor_dtype=types.FLOAT, output_memory_type = types.CPU_MEMORY):
         if(rocal_cpu):
             self._handle = b.rocalCreate(
                 batch_size, types.CPU, device_id, num_threads,prefetch_queue_depth,types.FLOAT)
@@ -118,6 +118,7 @@ class Pipeline(object):
         self._batch_size = batch_size
         self._num_threads = num_threads
         self._device_id = device_id
+        self._output_memory_type = output_memory_type
         self._seed = seed
         self._exec_pipelined = exec_pipelined
         self._prefetch_queue_depth = prefetch_queue_depth
@@ -128,9 +129,9 @@ class Pipeline(object):
         self._default_cuda_stream_priority = default_cuda_stream_priority
         self._tensor_layout = tensor_layout
         self._tensor_dtype = tensor_dtype
-        self._multiplier = multiplier
+        self._multiplier = list(map(lambda x: 1/x , std)) if std else [1.0,1.0,1.0]
+        self._offset = list(map(lambda x, y: -(x/y), mean, std)) if mean and std else [0.0, 0.0, 0.0]
         self._reverse_channels = reverse_channels
-        self._offset = offset
         self._img_h = None
         self._img_w = None
         self._shuffle = None
