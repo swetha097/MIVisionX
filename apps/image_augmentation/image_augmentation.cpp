@@ -69,6 +69,7 @@ int main(int argc, const char ** argv)
     bool print_hip_values = 1;
 
     int inputBatchSize = 512;
+
     // float *image_output, *image_output1;
     // image_output = (float *)malloc(inputBatchSize * 224 * 224 * 3 * sizeof(float));
     // image_output1 = (float *)malloc(inputBatchSize * 224 * 224 * 3 * sizeof(float));
@@ -142,8 +143,8 @@ int main(int argc, const char ** argv)
     std::vector<float> std_dev = {0.229 * 255,0.224 * 255,0.225 * 255};
     // image1 = rocalCropMirrorNormalize(handle, image0, 0, 224, 224, 1, 1, 1, mean, std_dev, true, output_array);
 
-    image0 = rocalResize(handle, input1, resize_w, resize_h, true, ROCAL_SCALING_MODE_DEFAULT, max_size, 0, 0, ROCAL_TRIANGULAR_INTERPOLATION, RocalTensorLayout::ROCAL_NHWC, tensorOutputType);
-    image1 = rocalCropMirrorNormalize(handle, image0, 224, 224, 0.5, 0.5, mean, std_dev, true, mirror, RocalTensorLayout::ROCAL_NCHW, RocalTensorOutputType::ROCAL_FP32);
+    image0 = rocalResize(handle, input1, resize_w, resize_h, false, ROCAL_SCALING_MODE_DEFAULT, max_size, 0, 0, ROCAL_TRIANGULAR_INTERPOLATION, RocalTensorLayout::ROCAL_NHWC, tensorOutputType);
+    image1 = rocalCropMirrorNormalize(handle, image0, 224, 224, 0.5, 0.5, mean, std_dev, true, mirror, tensorLayout, RocalTensorOutputType::ROCAL_FP32);
 
     if(rocalGetStatus(handle) != ROCAL_OK)
     {
@@ -248,14 +249,14 @@ int main(int argc, const char ** argv)
         std::cout << "Load     time "<< (double)rocal_timing.load_time/1000000 << std::endl;
         std::cout << "Decode   time "<< (double)rocal_timing.decode_time/1000000 << std::endl;
         std::cout << "Process  time "<< (double)rocal_timing.process_time/1000000 << std::endl;
-        // std::cout << "Get ring buffer wait time "<< (double)rocal_timing.transfer_time/1000000 << std::endl;
+        std::cout << "Get ring buffer wait time "<< (double)rocal_timing.transfer_time/1000000 << std::endl;
         std::cout << "rocalGetOutputTensors time "<< (double)acc_time/1000000 << std::endl;
         std::cout << "Image buffer memcpy time "<< (double)memcpy_acc_time/1000000 << std::endl;
         std::cout << "Labels Transfer time "<< (double)metadata_acc_time/1000000 << std::endl;
-        // std::cout << "Wait if empty time "<< (double)rocal_timing.wait_if_empty_time/1000000 << std::endl;
-        // std::cout << "Wait if full time "<< (double)rocal_timing.wait_if_full_time/1000000 << std::endl;
-        // std::cout << "Circular buffer Wait if empty time "<< (double)rocal_timing.cb_wait_if_empty_time/1000000 << std::endl;
-        // std::cout << "Circular buffer Wait if full time "<< (double)rocal_timing.cb_wait_if_full_time/1000000 << std::endl;
+        std::cout << "Wait if empty time "<< (double)rocal_timing.wait_if_empty_time/1000000 << std::endl;
+        std::cout << "Wait if full time "<< (double)rocal_timing.wait_if_full_time/1000000 << std::endl;
+        std::cout << "Circular buffer Wait if empty time "<< (double)rocal_timing.circular_buffer_wait_if_empty_time/1000000 << std::endl;
+        std::cout << "Circular buffer Wait if full time "<< (double)rocal_timing.circular_buffer_wait_if_full_time/1000000 << std::endl;
         rocalResetLoaders(handle);
         // if(1) {
         //     int val_counter = 0;
