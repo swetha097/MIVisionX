@@ -374,6 +374,12 @@ namespace rocal{
                 Returns dims of tensor.
                 )code"
             )
+            m.def("dimensions", []=(rocalTensor &output_tensor) {
+            py::list list;
+            for (uint i = 0; i < output_tensor.info().dims(); i++)
+                list.append(output_tensor.info().dims().at(i));
+            return list; 
+        });
             .def(
             "copy_data", [](rocalTensor &output_tensor, py::object p) {
                 auto ptr = ctypes_void_ptr(p);
