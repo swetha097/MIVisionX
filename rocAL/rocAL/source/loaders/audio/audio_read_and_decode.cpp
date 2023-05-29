@@ -118,6 +118,9 @@ AudioReadAndDecode::last_batch_padded_size()
     return _reader->last_batch_padded_size();
 }
 
+
+
+
 LoaderModuleStatus
 AudioReadAndDecode::load(float* buff,
                          std::vector<std::string>& names,
@@ -195,12 +198,17 @@ AudioReadAndDecode::load(float* buff,
             if (_decoder[i]->decode(_decompressed_buff_ptrs[i]) != AudioDecoder::Status::OK) {
                 THROW("Decoder failed for file: " + _audio_names[i].c_str())
             }
+            // float* ptr = _decompressed_buff_ptrs[i];
+            // for(uint j=0; j<10; j++)
+            // {
+            //     std::cerr << "\n In Audio Read And Decode :: " << ptr[j];
+            // }
             _decoder[i]->release();
         }
         for (size_t i = 0; i < _batch_size; i++) {
             names[i] = _audio_names[i];
 
-            actual_samples[i] = roi_samples[i] = _original_samples[i]; // TODO - Needs to be checked
+            actual_samples[i] = roi_samples[i] = _original_samples[i];
             actual_channels[i] = roi_channels[i] = _original_channels[i];
             actual_sample_rates[i] = _original_sample_rates[i];
             // actual_samples[i] = _actual_decoded_samples[i];

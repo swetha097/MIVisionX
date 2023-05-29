@@ -59,7 +59,7 @@ def main():
 
     with image_classification_train_pipeline:
         jpegs, labels = fn.readers.file(file_root=data_path)
-        decode = fn.decoders.image_slice(jpegs, output_type=types.RGB,
+        decode = fn.decoders.image(jpegs, output_type=types.RGB,
                                         file_root=data_path, shard_id=local_rank, num_shards=world_size, random_shuffle=True)
         res = fn.resize(decode, resize_width=224, resize_height=224, rocal_tensor_layout = types.NHWC, rocal_tensor_output_type = types.UINT8)
         flip_coin = fn.random.coin_flip(probability=0.5)
@@ -89,3 +89,4 @@ def main():
 
 if __name__ == '__main__':
     main()
+

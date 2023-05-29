@@ -48,6 +48,7 @@ class RALIGenericIterator(object):
             raise StopIteration
 
         else:
+            print("OUTPUT TENSOR LIST")
             self.output_tensor_list = self.loader.rocalGetOutputTensors()
             # Move to init
         self.last_batch_padded_size = b.getLastBatchPaddedSize(self.loader._handle)
@@ -72,6 +73,7 @@ class RALIGenericIterator(object):
             elif self.tensor_dtype == types.FLOAT16:
                 return (self.out.astype(np.float16)), self.labels_tensor
         elif self.num_of_dims == 3: #In case of an audio data
+
             self.batch_size = self.output_tensor_list[0].batch_size() if self.batch_size is None else self.batch_size
             self.channels = self.output_tensor_list[0].batch_width() if self.channels is None else self.channels #Max Channels
             self.samples = self.output_tensor_list[0].batch_height() if self.samples is None else self.samples #Max Samples
@@ -85,10 +87,12 @@ class RALIGenericIterator(object):
             # next
             self.labels = self.loader.rocalGetImageLabels()
             self.labels_tensor = torch.from_numpy(self.labels).type(torch.LongTensor)
+            print("HERE")
             if (self.last_batch_policy is (types.LAST_BATCH_PARTIAL)) and b.getRemainingImages(self.loader._handle) <= 0 :
                 self.output_tensor_list[0].copy_data(ctypes.c_void_p(self.output.data_ptr()), max_y1, max_x1)
                 return self.output[0:self.last_batch_size,:], self.labels_tensor[0:self.last_batch_size], torch.tensor(self.output_tensor_list[0].get_rois().reshape(self.batch_size,4)[...,0:2][0:self.last_batch_size,:])
             else:
+                print("to copy_data")
                 self.output_tensor_list[0].copy_data(ctypes.c_void_p(self.output.data_ptr()), max_y1, max_x1)
                 return self.output, self.labels_tensor, torch.tensor(self.output_tensor_list[0].get_rois().reshape(self.batch_size,4)[...,0:2])
 

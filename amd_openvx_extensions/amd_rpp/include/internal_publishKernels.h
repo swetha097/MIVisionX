@@ -239,7 +239,6 @@ vx_status Pad_Register(vx_context);
 #define VX_KERNEL_RPP_CROP_NAME                                              "org.rpp.Crop"
 #define VX_KERNEL_RPP_COLORTWIST_NAME                                        "org.rpp.ColorTwist"
 #define VX_KERNEL_RPP_RESIZEMIRROR_NAME                                      "org.rpp.ResizeMirrorNormalize"
-#define VX_KERNEL_RPP_SEQUENCEREARRANGE_NAME                                 "org.rpp.SequenceRearrange"
 #define VX_KERNEL_RPP_DOWNMIX_NAME                                           "org.rpp.Downmix"
 #define VX_KERNEL_RPP_TODECIBELS_NAME                                        "org.rpp.ToDecibels"
 #define VX_KERNEL_RPP_PREEMPHASISFILTER_NAME                                 "org.rpp.PreemphasisFilter"

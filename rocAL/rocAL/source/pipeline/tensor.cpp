@@ -405,14 +405,20 @@ unsigned rocalTensor::copy_data(void *user_buffer) {
 }
 
 unsigned rocalTensor::copy_data(void *user_buffer, uint max_y1, uint max_x1) {
-    if (_info._type != rocalTensorInfo::Type::HANDLE) return 0;
-
+    std::cerr << "COPY DATA IN TENSOR.cpp 1";
+    // if (_mem_handle == nullptr) return 0;
+    std::cerr << "COPY DATA IN TENSOR.cpp";
+    float* data_ptr = (float*)_mem_handle;
+    for (uint i=0; i<10; i++)
+        std::cerr << "\n In copyyyyy data ::" << data_ptr[i];
     //TODO : Handle this case for HIP buffer
     auto src_stride = (_info.max_shape().at(0) * _info.max_shape().at(1) * _info.data_type_size());
     auto dst_stride = (max_y1 * max_x1 * _info.data_type_size());
     for (uint i = 0; i < _info._batch_size; i++) {
         auto temp_src_ptr = static_cast<unsigned char *>(_mem_handle) + i * src_stride;
         auto temp_dst_ptr = static_cast<unsigned char *>(user_buffer) + i * dst_stride;
+        std::cerr << "\n temp_src_ptr" << (float)temp_src_ptr[0]; 
+        // std::exit(0);
         for (uint height = 0; height < max_y1; height++) {
             memcpy(temp_dst_ptr, temp_src_ptr, max_x1 * _info.data_type_size());
             temp_src_ptr += _info.max_shape().at(0) * _info.data_type_size();
@@ -442,6 +448,9 @@ unsigned rocalTensor::copy_data(void *user_buffer, uint last_batch_size) {
 
 int rocalTensor::swap_handle(void *handle) {
     vx_status status;
+    float* data_ptr = (float*)handle;
+    for (uint i=0; i<10; i++)
+        std::cerr << "\n In swap handle" << data_ptr[i];
     if ((status = vxSwapTensorHandle(_vx_handle, handle, nullptr)) != VX_SUCCESS) {
         ERR("Swap handles failed for tensor" + TOSTR(status));
         return -1;
@@ -450,5 +459,8 @@ int rocalTensor::swap_handle(void *handle) {
     // Updating the buffer pointer as well,
     // user might want to copy directly using it
     _mem_handle = handle;
+    float* data_ptr1 = (float*)_mem_handle;
+    for (uint i=0; i<10; i++)
+        std::cerr << "\n In swap handle 222 :: " << data_ptr1[i];
     return 0;
 }

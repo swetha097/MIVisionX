@@ -31,12 +31,22 @@ AudioDecoder::Status SndFileDecoder::decode(float* buffer)
 {
     int readcount = 0;
     readcount = sf_readf_float(_sf_ptr, buffer, _sfinfo.frames);
+
+//     for (int i = 0; i < 10; i++) {
+//         std::cerr << buffer[i];/
+// }
+            // float* ptr = buffer;
+            // for(uint j=0; j<10; j++)
+            // {
+            //     std::cerr << "\n In SND FILE DEOCDER :: " << ptr[j];
+            // }
+    // std::cerr << "\n read_count " << readcount;
     if(readcount != _sfinfo.frames)
     {
         printf("Not able to decode all frames. Only decoded %d frames\n", readcount);
         sf_close(_sf_ptr);
 		AudioDecoder::Status status = Status::CONTENT_DECODE_FAILED;
-		return status;
+    return status;
     }
     AudioDecoder::Status status = Status::OK;
     return status;

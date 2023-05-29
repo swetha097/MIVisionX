@@ -148,7 +148,7 @@ void RingBuffer::init(RocalMemType mem_type, void *devres, std::vector<size_t> s
     _mem_type = mem_type;
     _dev = devres;
     _sub_buffer_size = sub_buffer_size;
-    _sub_buffer_count = sub_buffer_count;
+    _sub_buffer_count = sub_buffer_size.size();
     if(BUFF_DEPTH < 2)
         THROW ("Error internal buffer size for the ring buffer should be greater than one")
 
@@ -224,13 +224,14 @@ void RingBuffer::init(RocalMemType mem_type, void *devres, std::vector<size_t> s
             _host_sub_buffers[buffIdx].resize(_sub_buffer_count);
             _host_roi_buffers[buffIdx].resize(_sub_buffer_count);
             for(size_t sub_buff_idx = 0; sub_buff_idx < _sub_buffer_count; sub_buff_idx++) {
+                // std::cerr << "SUB BUFFER SIZE :: " << _sub_buffer_size[sub_buff_idx];
                 _host_sub_buffers[buffIdx][sub_buff_idx] = aligned_alloc(MEM_ALIGNMENT, MEM_ALIGNMENT * (_sub_buffer_size[sub_buff_idx] / MEM_ALIGNMENT + 1));
                 _host_roi_buffers[buffIdx][sub_buff_idx] = (unsigned *)malloc(roi_buffer_size);
             }
         }
 #if ENABLE_OPENCL || ENABLE_HIP
     }
-#endif    
+#endif
 }
 
 void RingBuffer::initBoxEncoderMetaData(RocalMemType mem_type, size_t encoded_bbox_size, size_t encoded_labels_size)
@@ -406,12 +407,14 @@ RingBuffer::~RingBuffer()
                 if (_host_sub_buffers[buffIdx][sub_buf_idx])
                     free(_host_sub_buffers[buffIdx][sub_buf_idx]);
             }
+        if(_host_meta_data_buffers.size() != 0) {
             for (unsigned sub_buf_idx = 0; sub_buf_idx < _host_meta_data_buffers[buffIdx].size(); sub_buf_idx++) {
                 if (_host_meta_data_buffers[buffIdx][sub_buf_idx])
                     free(_host_meta_data_buffers[buffIdx][sub_buf_idx]);
                 if (_host_roi_buffers[buffIdx][sub_buf_idx])
                     free(_host_roi_buffers[buffIdx][sub_buf_idx]);
             }
+        }
         }
         _host_sub_buffers.clear();
         _host_meta_data_buffers.clear();

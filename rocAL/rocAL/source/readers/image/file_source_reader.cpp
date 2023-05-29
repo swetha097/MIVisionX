@@ -75,17 +75,6 @@ Reader::Status FileSourceReader::initialize(ReaderConfig desc)
     _last_batch_info = desc.get_last_batch_policy();
     std::cerr<<"\n _last_batch_info "<<_last_batch_info.first<<"\t "<<_last_batch_info.second;
     ret = subfolder_reading();
-    // the following code is required to make every shard the same size:: required for multi-gpu training
-    /*
-    if (_shard_count > 1 && _batch_count > 1) {
-        int _num_batches = _file_names.size()/_batch_count;
-        int max_batches_per_shard = (_file_count_all_shards + _shard_count-1)/_shard_count;
-        max_batches_per_shard = (max_batches_per_shard + _batch_count-1)/_batch_count;
-        if (_num_batches < max_batches_per_shard) {
-            replicate_last_batch_to_pad_partial_shard();
-        }
-    }
-    */
     //shuffle dataset if set
     _shuffle_time.start();
     if( ret==Reader::Status::OK && _shuffle)
@@ -194,43 +183,41 @@ void FileSourceReader::reset()
 Reader::Status FileSourceReader::subfolder_reading()
 {
     std::vector<std::string> entry_name_list;
-    // open_subdirectory(_folder_path.c_str());
     auto ret = Reader::Status::OK;
-    
-    for (auto& entry : filesys::recursive_directory_iterator(_folder_path.c_str(), filesys::directory_options::skip_permission_denied)) {
-    std::string entry_path = entry.path().string();
-    auto entry_path_id = entry_path;
-    auto last_slash_idx = entry_path_id.find_last_of("\\/");
-    if (std::string::npos != last_slash_idx)
-    {
-        entry_path_id.erase(0, last_slash_idx + 1);
-    }
-    // std::cout << "\n Entry Path" << entry.path() << '\n';
-    // std::cout << "\n entry Path String" << entry_path << '\n';
-
-    // std::cout << filesys::is_regular_file(entry.path()) << "\n";
-    if (filesys::is_regular_file(entry.path() ))
-     {
-        if(!_meta_data_reader || _meta_data_reader->exists(entry_path_id))
-        {
-        if(get_file_shard_id() != _shard_id )
-        {
-            _file_count_all_shards++;
-            incremenet_file_id();
-            continue;
+    for (auto& entry : filesys::recursive_directory_iterator(_folder_path.c_str())) {
+        try {
+            std::string entry_path = entry.path().string();
+            auto entry_path_id = entry_path;
+            auto last_slash_idx = entry_path_id.find_last_of("\\/");
+            if (std::string::npos != last_slash_idx)
+            {
+                entry_path_id.erase(0, last_slash_idx + 1);
+            }
+            if (filesys::is_regular_file(entry.path() ))
+            {
+                if(!_meta_data_reader || _meta_data_reader->exists(entry_path_id))
+                {
+                if(get_file_shard_id() != _shard_id )
+                {
+                    _file_count_all_shards++;
+                    incremenet_file_id();
+                    continue;
+                }
+                _in_batch_read_count++;
+                _in_batch_read_count = (_in_batch_read_count%_batch_count == 0) ? 0 : _in_batch_read_count;
+                std::string file_path = entry_path;
+                _last_file_name = file_path;
+                _file_names.push_back(file_path);
+                _file_count_all_shards++;
+                incremenet_file_id();
+                }
+            }
         }
-        _in_batch_read_count++;
-        _in_batch_read_count = (_in_batch_read_count%_batch_count == 0) ? 0 : _in_batch_read_count;
-        std::string file_path = entry_path;
-        _last_file_name = file_path;
-        _file_names.push_back(file_path);
-        // std::cerr<<"\n _file_names : "<<file_path<<std::endl;
-        _file_count_all_shards++;
-        incremenet_file_id();
+        catch (const boost::filesystem::filesystem_error& ex) {
+                    if (ex.code() == boost::system::errc::permission_denied) 
+                        THROW("Permission denied for directory: " + entry.path().string());
         }
-
-     }
-} // for loop ends
+}
 
  if(_file_names.empty())
         WRN("FileReader ShardID ["+ TOSTR(_shard_id)+ "] Did not load any file from " + _folder_path)
@@ -254,23 +241,21 @@ Reader::Status FileSourceReader::subfolder_reading()
 void FileSourceReader::replicate_last_image_to_fill_last_shard()
 {
     std::cerr<<"\n replicate_last_image_to_fill_last_shard Padding "<<_in_batch_read_count<<" images. ";
-    // orig
-    // for(size_t i = _in_batch_read_count; i < _batch_count; i++)
-    //     _file_names.push_back(_last_file_name);
-    // // fill
+    // fill
     if(_last_batch_info.first == RocalBatchPolicy::BATCH_FILL)
     {
         std::cerr<<"\n RocalBatchPolicy::BATCH_FILL";
         for(size_t i = 0; i < (_batch_count - _in_batch_read_count); i++)
             _file_names.push_back(_file_names.at(i));
     }
-    // // drop
+    // drop
     else if(_last_batch_info.first == RocalBatchPolicy::DROP)
     {
         std::cerr<<"\n RocalBatchPolicy::DROP";
         for(size_t i = 0; i < _in_batch_read_count; i++)
             _file_names.pop_back();
     }
+    // partial
     else if(_last_batch_info.first == RocalBatchPolicy::PARTIAL)
     {
         _last_batch_padded_size = _batch_count - _in_batch_read_count;
@@ -278,8 +263,6 @@ void FileSourceReader::replicate_last_image_to_fill_last_shard()
         for(size_t i = 0; i < (_batch_count - _in_batch_read_count); i++)
             _file_names.push_back(_file_names.at(i));
     }
-    // _file_count_all_shards -= _in_batch_read_count;
-    // // partial
 }
 
 void FileSourceReader::replicate_last_batch_to_pad_partial_shard()
@@ -315,7 +298,6 @@ Reader::Status FileSourceReader::open_folder()
         file_path.append(_entity->d_name);
         _last_file_name = file_path;
         _file_names.push_back(file_path);
-        std::cerr<<"\n _file_names : "<<file_path;
         _file_count_all_shards++;
         incremenet_file_id();
         uint images_to_pad_shard = _file_count_all_shards % _shard_count;
@@ -345,6 +327,5 @@ size_t FileSourceReader::get_file_shard_id()
 {
     if(_batch_count == 0 || _shard_count == 0)
         THROW("Shard (Batch) size cannot be set to 0")
-    //return (_file_id / (_batch_count)) % _shard_count;
     return _file_id  % _shard_count;
 }

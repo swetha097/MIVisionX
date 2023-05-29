@@ -77,46 +77,46 @@ def main():
         # dither = 0.001
         # audio_decode = fn.decoders.audio(audio, file_root=data_path, downmix=True, shard_id=0, num_shards=2,random_shuffle=True)
         audio_decode = fn.decoders.audio(audio, file_root=data_path, file_list_path=file_list, downmix=True, shard_id=0, num_shards=2, storage_type=9, stick_to_shard=False)
-        # uniform_distribution_resample = fn.random.uniform(audio_decode, range=[0.8555555, 0.8555555])
-        # resampled_rate = uniform_distribution_resample * resample
+        uniform_distribution_resample = fn.random.uniform(audio_decode, range=[0.8555555, 0.8555555])
+        resampled_rate = uniform_distribution_resample * resample
         # # # resample_output = fn.resample(audio_decode, resample_rate = resampled_rate, resample_hint=250000, )
-        # resample_output = fn.resample(audio_decode, resample_rate = resampled_rate, resample_hint=0.85555 * 258160, )
-        # begin, length = fn.nonsilent_region(resample_output, cutoff_db=-60)
-        # trim_silence = fn.slice(
-        #     resample_output,
-        #     anchor=[begin],
-        #     shape=[length],
-        #     normalized_anchor=False,
-        #     normalized_shape=False,
-        #     axes=[0]
-        # )
-        # normal_distribution = fn.random.normal(audio_decode, mean=0.0, stddev=0.0000001)
-        # newAudio = normal_distribution * 0.00001
-        # dist_audio = trim_silence + newAudio
-        # premph_audio = fn.preemphasis_filter(dist_audio)
-        # spectrogram_audio = fn.spectrogram(
-        #     premph_audio,
-        #     nfft=nfft,
-        #     window_length=320, # Change to 320
-        #     window_step= 160, # Change to 160
-        #     rocal_tensor_output_type=types.FLOAT,
-        # )
-        # mel_filter_bank_audio = fn.mel_filter_bank(
-        #     spectrogram_audio,
-        #     sample_rate=sample_rate,
-        #     nfilter=nfilter,
-        # )
-        # to_decibels_audio = fn.to_decibels(
-        #     mel_filter_bank_audio,
-        #     multiplier=math.log(10),
-        #     reference=1.0,
-        #     cutoff_db=math.log(1e-20),
-        #     rocal_tensor_output_type=types.FLOAT,
-        # )
-        # normalize_audio = fn.normalize(to_decibels_audio, axes=[1])
+        resample_output = fn.resample(audio_decode, resample_rate = resampled_rate, resample_hint=0.85555 * 258160, )
+        begin, length = fn.nonsilent_region(resample_output, cutoff_db=-60)
+        trim_silence = fn.slice(
+            resample_output,
+            anchor=[begin],
+            shape=[length],
+            normalized_anchor=False,
+            normalized_shape=False,
+            axes=[0]
+        )
+        normal_distribution = fn.random.normal(audio_decode, mean=0.0, stddev=0.0000001)
+        newAudio = normal_distribution * 0.00001
+        dist_audio = trim_silence + newAudio
+        premph_audio = fn.preemphasis_filter(dist_audio)
+        spectrogram_audio = fn.spectrogram(
+            premph_audio,
+            nfft=nfft,
+            window_length=320, # Change to 320
+            window_step= 160, # Change to 160
+            rocal_tensor_output_type=types.FLOAT,
+        )
+        mel_filter_bank_audio = fn.mel_filter_bank(
+            spectrogram_audio,
+            sample_rate=sample_rate,
+            nfilter=nfilter,
+        )
+        to_decibels_audio = fn.to_decibels(
+            mel_filter_bank_audio,
+            multiplier=math.log(10),
+            reference=1.0,
+            cutoff_db=math.log(1e-20),
+            rocal_tensor_output_type=types.FLOAT,
+        )
+        normalize_audio = fn.normalize(to_decibels_audio, axes=[1])
         # pad_audio = fn.pad(normalize_audio, fill_value=0)
 
-        audio_pipeline.set_outputs(audio_decode)
+        audio_pipeline.set_outputs(normalize_audio)
     audio_pipeline.build()
     audioIteratorPipeline = ROCALClassificationIterator(audio_pipeline, auto_reset=True)
     cnt = 0

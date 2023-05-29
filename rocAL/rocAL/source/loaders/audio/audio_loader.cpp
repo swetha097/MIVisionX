@@ -131,7 +131,6 @@ void AudioLoader::initialize(ReaderConfig reader_cfg, DecoderConfig decoder_cfg,
 
     if (_output_mem_size == 0)
         THROW("output audio size is 0, set_output() should be called before initialize for loader modules")
-    std::cerr << "\n Loader module initialized ";
     _mem_type = mem_type;
     _batch_size = batch_size;
     _loop = reader_cfg.loop();
@@ -139,7 +138,6 @@ void AudioLoader::initialize(ReaderConfig reader_cfg, DecoderConfig decoder_cfg,
     _audio_loader = std::make_shared<AudioReadAndDecode>();
     size_t shard_count = reader_cfg.get_shard_count();
     int device_id = reader_cfg.get_shard_id();
-    std::cerr << "\n Loader module initialized 0.5";
     try
     {
         // set the device_id for decoder same as shard_id for number of shards > 1
@@ -153,22 +151,16 @@ void AudioLoader::initialize(ReaderConfig reader_cfg, DecoderConfig decoder_cfg,
         de_init();
         throw;
     }
-    std::cerr << "\n Loader module initialized 0.55 ";
     _max_decoded_samples = _output_tensor->info().max_shape().at(0);
     _max_decoded_channels = _output_tensor->info().max_shape().at(1);
-    std::cerr << "\n Loader module initialized 0.56 ";
     _decoded_img_info._image_names.resize(_batch_size);
     _decoded_img_info._roi_audio_samples.resize(_batch_size);
     _decoded_img_info._roi_audio_channels.resize(_batch_size);
     _decoded_img_info._original_audio_samples.resize(_batch_size);
     _decoded_img_info._original_audio_channels.resize(_batch_size);
     _decoded_img_info._original_audio_sample_rates.resize(_batch_size);
-    // _crop_audio_info._crop_audio_coords.resize(_batch_size);
-    std::cerr << "\n Loader module initialized 1";
     _circ_buff.init(_mem_type, _output_mem_size,_prefetch_queue_depth );
     _is_initialized = true;
-    std::cerr << "\n Loader module initialized 2";
-    // _audio_loader->set_random_bbox_data_reader(_randombboxcrop_meta_data_reader);
     LOG("Loader module initialized");
 }
 
@@ -207,6 +199,10 @@ AudioLoader::load_routine()
                                             _decoded_img_info._original_audio_samples,
                                             _decoded_img_info._original_audio_channels,
                                             _decoded_img_info._original_audio_sample_rates);
+            float* data_ptr = data;
+            for (uint i=0; i<10; i++)
+                std::cerr << "\n In circ buffer data" << data_ptr[i];
+
             if(load_status == LoaderModuleStatus::OK)
             {
                 // if (_randombboxcrop_meta_data_reader)

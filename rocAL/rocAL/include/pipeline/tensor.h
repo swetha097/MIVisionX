@@ -236,7 +236,15 @@ public:
     void* buffer() { return _mem_handle; }
     vx_tensor handle() { return _vx_handle; }
     vx_context context() { return _context; }
-    void set_mem_handle(void* buffer) { _mem_handle = buffer; }
+    void set_mem_handle(void* buffer) { 
+        float* data_ptr0 = (float*)buffer;
+        for (uint i=0; i<10; i++)
+            std::cerr << "\n In tensor.h data before::" << data_ptr0[i];
+        _mem_handle = buffer; 
+        float* data_ptr = (float*)_mem_handle;
+        for (uint i=0; i<10; i++)
+            std::cerr << "\n In tensor.h data after::" << data_ptr[i];
+        }
 #if ENABLE_OPENCL
     unsigned copy_data(cl_command_queue queue, unsigned char* user_buffer, bool sync);
     unsigned copy_data(cl_command_queue queue, cl_mem user_buffer, bool sync);
