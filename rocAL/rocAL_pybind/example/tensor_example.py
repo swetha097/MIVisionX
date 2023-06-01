@@ -61,9 +61,9 @@ def main():
         jpegs, labels = fn.readers.file(file_root=data_path)
         decode = fn.decoders.image(jpegs, output_type=types.RGB,
                                         file_root=data_path, shard_id=local_rank, num_shards=world_size, random_shuffle=True)
-        res = fn.resize(decode, resize_width=224, resize_height=224, rocal_tensor_layout = types.NHWC, rocal_tensor_output_type = types.UINT8)
+        # res = fn.resize(decode, resize_width=224, resize_height=224, rocal_tensor_layout = types.NHWC, rocal_tensor_output_type = types.UINT8)
         flip_coin = fn.random.coin_flip(probability=0.5)
-        cmnp = fn.crop_mirror_normalize(res, device="gpu",
+        cmnp = fn.crop_mirror_normalize(decode, device="gpu",
                                             rocal_tensor_layout = types.NHWC,
                                             rocal_tensor_output_type = types.FLOAT,
                                             crop=(224, 224),

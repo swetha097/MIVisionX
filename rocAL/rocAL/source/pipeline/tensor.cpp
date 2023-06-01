@@ -448,9 +448,9 @@ unsigned rocalTensor::copy_data(void *user_buffer, uint last_batch_size) {
 
 int rocalTensor::swap_handle(void *handle) {
     vx_status status;
-    float* data_ptr = (float*)handle;
+    unsigned char* data_ptr = (unsigned char*)handle;
     for (uint i=0; i<10; i++)
-        std::cerr << "\n In swap handle" << data_ptr[i];
+        std::cerr << "\n In swap handle" << (float)data_ptr[i];
     if ((status = vxSwapTensorHandle(_vx_handle, handle, nullptr)) != VX_SUCCESS) {
         ERR("Swap handles failed for tensor" + TOSTR(status));
         return -1;
@@ -459,8 +459,8 @@ int rocalTensor::swap_handle(void *handle) {
     // Updating the buffer pointer as well,
     // user might want to copy directly using it
     _mem_handle = handle;
-    float* data_ptr1 = (float*)_mem_handle;
+    unsigned char* data_ptr1 = (unsigned char*)_mem_handle;
     for (uint i=0; i<10; i++)
-        std::cerr << "\n In swap handle 222 :: " << data_ptr1[i];
+        std::cerr << "\n In swap handle 222 :: " << (float)data_ptr1[i];
     return 0;
 }

@@ -46,6 +46,7 @@ struct CropMirrorNormalizeLocalData {
 };
 
 static vx_status VX_CALLBACK refreshCropMirrorNormalize(vx_node node, const vx_reference *parameters, vx_uint32 num, CropMirrorNormalizeLocalData *data) {
+    std::cerr << " <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< in refresh >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>";
     vx_status status = VX_SUCCESS;
     STATUS_ERROR_CHECK(vxCopyArrayRange((vx_array)parameters[3], 0, data->srcDescPtr->n * data->srcDescPtr->c, sizeof(vx_float32), data->multiplier, VX_READ_ONLY, VX_MEMORY_TYPE_HOST));
     STATUS_ERROR_CHECK(vxCopyArrayRange((vx_array)parameters[4], 0, data->srcDescPtr->n * data->srcDescPtr->c, sizeof(vx_float32), data->offset, VX_READ_ONLY, VX_MEMORY_TYPE_HOST));
@@ -53,16 +54,29 @@ static vx_status VX_CALLBACK refreshCropMirrorNormalize(vx_node node, const vx_r
 
     if (data->deviceType == AGO_TARGET_AFFINITY_GPU) {
 #if ENABLE_HIP
+    std::cerr << "HIP *****&&&&&*****q";
         STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[1], VX_TENSOR_BUFFER_HIP, &data->roiTensorPtr, sizeof(data->roiTensorPtr)));
         STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[0], VX_TENSOR_BUFFER_HIP, &data->pSrc, sizeof(data->pSrc)));
         STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[2], VX_TENSOR_BUFFER_HIP, &data->pDst, sizeof(data->pDst)));
 #endif
     }
     else if (data->deviceType == AGO_TARGET_AFFINITY_CPU) {
-        STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[1], VX_TENSOR_BUFFER_HOST, &data->roiTensorPtr, sizeof(data->roiTensorPtr)));
-        STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[0], VX_TENSOR_BUFFER_HOST, &data->pSrc, sizeof(data->pSrc)));
+        std::cerr << "\n CPUUUUUUUUUUUUUUUUUUUUUUUUUUuq ------------------------";
+        // STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[1], VX_TENSOR_BUFFER_HOST, &data->roiTensorPtr, sizeof(data->roiTensorPtr)));
+        // std::cerr << "\n STAGE 1";
+        // STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[0], VX_TENSOR_BUFFER_HOST, &data->pSrc, sizeof(data->pSrc)));
+        std::cerr << "\n STAGE 2";
         STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[2], VX_TENSOR_BUFFER_HOST, &data->pDst, sizeof(data->pDst)));
+        std::cerr << "\n STAGE 3";
+        std::cerr << "\n HEREEE HEREEE HEREEE ------------------------";
+    unsigned char* dataPtr = (unsigned char *)data->pSrc;
+        for(uint i=0;i<10;i++)
+            std::cerr << "\n  In CMN ******************* &&&&&&&&&&&&&&&&&&&&&&  innnnnnn ::" << dataPtr[i];
     }
+    std::cerr << "\n HEREEE HEREEE HEREEE ------------------------";
+    unsigned char* dataPtr = (unsigned char *)data->pSrc;
+        for(uint i=0;i<10;i++)
+            std::cerr << "\n  In CMN ******************* &&&&&&&&&&&&&&&&&&&&&&  innnnnnn ::" << dataPtr[i];
     data->roiPtr = (RpptROI *)data->roiTensorPtr;
     if(data->inputLayout == 2 || data->inputLayout == 3) { // For NFCHW and NFHWC formats
         unsigned num_of_frames = data->inputTensorDims[1]; // Num of frames 'F'
@@ -151,8 +165,22 @@ static vx_status VX_CALLBACK processCropMirrorNormalize(vx_node node, const vx_r
 #endif
     } else if(data->deviceType == AGO_TARGET_AFFINITY_CPU) {
         refreshCropMirrorNormalize(node, parameters, num, data);
+        std::cerr << "\n  In CMN ******************* &&&&&&&&&&&&&&&&&&&&&&";
+        std::cerr << "\n ";
+        for (uint i=0; i < data->srcDescPtr->n * data->srcDescPtr->c; i++)
+        {
+            std::cerr << "\n data->multiplier :: " << data->multiplier[i];
+            std::cerr << "\n data->offset :: " << data->offset[i];
+            std::cerr << "\n data->mirror :: " << data->mirror[i];
+        }
+        unsigned char* dataPtr = (unsigned char *)data->pSrc;
+        for(uint i=0;i<10;i++)
+            std::cerr << "\n  In CMN ******************* &&&&&&&&&&&&&&&&&&&&&& ::" << dataPtr[i];
         rpp_status = rppt_crop_mirror_normalize_host(data->pSrc, data->srcDescPtr, data->pDst, data->dstDescPtr, data->multiplier, data->offset,
                                                      data->mirror, data->roiPtr, data->roiType, data->handle->rppHandle);
+        // float* dataPtr = (float *)data->pDst;
+        // for(uint i=0;i<10;i++)
+        //     std::cerr << "\n  In CMN ******************* &&&&&&&&&&&&&&&&&&&&&& ::" << (float)dataPtr[i];
         return_status = (rpp_status == RPP_SUCCESS) ? VX_SUCCESS : VX_FAILURE;
     }
     return return_status;

@@ -52,15 +52,6 @@ vx_enum vx_mem_type(RocalMemType mem);
  */
 vx_uint64 tensor_data_size(RocalTensorDataType data_type);
 
-/*! \brief Allocated memory for given size
- *
- * @param void * The ptr for which memory is allocated
- * @param size_t size of the buffer
- * @param RocalMemType For HIP memType pinned memory is allocated
- *        else HOST memory is allocated
- */
-void allocate_host_or_pinned_mem(void **ptr, size_t size, RocalMemType mem_type);
-
 /*! \brief Holds the information about a rocalTensor */
 
 /*! \brief Allocated memory for given size
@@ -237,13 +228,20 @@ public:
     vx_tensor handle() { return _vx_handle; }
     vx_context context() { return _context; }
     void set_mem_handle(void* buffer) { 
-        float* data_ptr0 = (float*)buffer;
-        for (uint i=0; i<10; i++)
-            std::cerr << "\n In tensor.h data before::" << data_ptr0[i];
+        std::cerr << "Set meme handle:: ";
+        // float* data_ptr0 = (float*)buffer;
+        // for (uint i=0; i<10; i++)
+        //     std::cerr << "\n In tensor.h data before::" << data_ptr0[i];
+        float* dataPtr = (float *)buffer;
+            for(uint i=0;i<10;i++)
+                std::cerr << "\n  In tensor.h data before::" << (float)dataPtr[i];
         _mem_handle = buffer; 
-        float* data_ptr = (float*)_mem_handle;
-        for (uint i=0; i<10; i++)
-            std::cerr << "\n In tensor.h data after::" << data_ptr[i];
+        // float* data_ptr = (float*)_mem_handle;
+        // for (uint i=0; i<10; i++)
+        //     std::cerr << "\n In tensor.h data after::" << data_ptr[i];
+        float* dataPtr2 = (float *)_mem_handle;
+            for(uint i=0;i<10;i++)
+                std::cerr << "\n In tensor.h data after::" << (float)dataPtr[i];
         }
 #if ENABLE_OPENCL
     unsigned copy_data(cl_command_queue queue, unsigned char* user_buffer, bool sync);
