@@ -7,13 +7,14 @@ import ctypes
 torch.set_printoptions(threshold=10_000, profile="full")
 
 class RALIGenericIterator(object):
-    def __init__(self, pipeline, tensor_layout = types.NCHW, reverse_channels = False, multiplier = [1.0,1.0,1.0], offset = [0.0, 0.0, 0.0], tensor_dtype=types.FLOAT, size = -1, auto_reset=False):
+    def __init__(self, pipeline, tensor_layout = types.NCHW, reverse_channels = False, multiplier = [1.0,1.0,1.0], offset = [0.0, 0.0, 0.0], tensor_dtype=types.FLOAT, size = -1, auto_reset=False, device="cpu", device_id=0):
         self.loader = pipeline
         self.tensor_format =tensor_layout
         self.multiplier = multiplier
         self.offset = offset
         self.reverse_channels = reverse_channels
         self.tensor_dtype = tensor_dtype
+        self.device_id = device_id
         self.len = b.getRemainingImages(self.loader._handle)
         self.last_batch_policy = self.loader._last_batch_policy
         self.shard_size = size
@@ -61,17 +62,36 @@ class RALIGenericIterator(object):
             self.h = self.output_tensor_list[0].batch_height()
             self.batch_size = self.output_tensor_list[0].batch_size()
             self.color_format = self.output_tensor_list[0].color_format()
-            self.output = torch.empty((self.batch_size, self.h, self.w, self.color_format,), dtype=torch.uint8)
-            self.out = torch.permute(self.output, (0,3,1,2))
 
-            self.output_tensor_list[0].copy_data(ctypes.c_void_p(self.out.data_ptr()))
+            if self.output is None:
+                if self.tensor_format == types.NCHW:
+                    torch_gpu_device = torch.device('cuda', self.device_id)
+                    if self.tensor_dtype == types.FLOAT:
+                        self.output = torch.empty((self.batch_size, self.color_format, self.h, self.w,), dtype=torch.float32, device = torch_gpu_device)
+                    elif self.tensor_dtype == types.FLOAT16:
+                        self.output = torch.empty((self.batch_size, self.color_format, self.h, self.w,), dtype=torch.float16, device = torch_gpu_device)
+                    elif self.tensor_dtype == types.UINT8:
+                        self.output = torch.empty((self.batch_size, self.color_format, self.h, self.w,), dtype=torch.uint8, device = torch_gpu_device)
+
+
+                else: #NHWC
+                    torch_gpu_device = torch.device('cuda', self.device_id)
+                    if self.tensor_dtype == types.FLOAT:
+                        self.output = torch.empty((self.batch_size, self.h, self.w, self.color_format), dtype=torch.float32, device=torch_gpu_device)
+                    elif self.tensor_dtype == types.FLOAT16:
+                        self.output = torch.empty((self.batch_size, self.h, self.w, self.color_format), dtype=torch.float16, device=torch_gpu_device)
+                    elif self.tensor_dtype == types.UINT8:
+                        self.output = torch.empty((self.batch_size, self.h, self.w, self.color_format), dtype=torch.uint8, device=torch_gpu_device)
+
+                self.labels_tensor = torch.empty(self.batch_size, dtype = torch.int32, device = torch_gpu_device)
+
+            self.output_tensor_list[0].copy_data(ctypes.c_void_p(self.output.data_ptr()))
             self.labels = self.loader.rocalGetImageLabels()
-            self.labels_tensor = torch.from_numpy(self.labels).type(torch.LongTensor)
-
+            self.labels_tensor = self.labels_tensor.copy_(torch.from_numpy(self.labels)).long()
             if self.tensor_dtype == types.FLOAT:
-                return self.out.to(torch.float), self.labels_tensor
+                return self.output, self.labels_tensor
             elif self.tensor_dtype == types.FLOAT16:
-                return (self.out.astype(np.float16)), self.labels_tensor
+                return self.output.half(), self.labels_tensor
         elif self.num_of_dims == 3: #In case of an audio data
 
             self.batch_size = self.output_tensor_list[0].batch_size() if self.batch_size is None else self.batch_size
@@ -171,6 +191,8 @@ class ROCALClassificationIterator(RALIGenericIterator):
     """
     def __init__(self,
                  pipelines,
+                 device="cpu",
+                 device_id=0,
                  size = -1,
                  auto_reset=False,
                  fill_last_batch=True,

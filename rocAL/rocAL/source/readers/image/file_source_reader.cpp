@@ -55,7 +55,7 @@ unsigned FileSourceReader::count_items()
 size_t
 FileSourceReader::last_batch_padded_size()
 {
-    std::cerr << "\n The last batch padded size is :: " << _last_batch_padded_size;
+    // std::cerr << "\n The last batch padded size is :: " << _last_batch_padded_size;
     return _last_batch_padded_size;
 }
 
