@@ -24,7 +24,6 @@ THE SOFTWARE.
 #define NUM_OF_DIMS 5
 struct TensorAddTensorLocalData
 {
-    RPPCommonHandle handle;
     Rpp32u device_type;
     Rpp32u nbatchSize;
     RppPtr_t pSrc1;
@@ -169,11 +168,6 @@ static vx_status VX_CALLBACK initializeTensorAddTensor(vx_node node, const vx_re
 {
     TensorAddTensorLocalData *data = new TensorAddTensorLocalData;
     memset(data, 0, sizeof(*data));
-#if ENABLE_OPENCL
-    THROW("initialize : TensorAddTensor, OpenCL backend is not supported")
-#elif ENABLE_HIP
-    STATUS_ERROR_CHECK(vxQueryNode(node, VX_NODE_ATTRIBUTE_AMD_HIP_STREAM, &data->handle.hipstream, sizeof(data->handle.hipstream)));
-#endif
     STATUS_ERROR_CHECK(vxCopyScalar((vx_scalar)parameters[6], &data->device_type, VX_READ_ONLY, VX_MEMORY_TYPE_HOST));
     STATUS_ERROR_CHECK(vxReadScalarValue((vx_scalar)parameters[5], &data->nbatchSize));
 
