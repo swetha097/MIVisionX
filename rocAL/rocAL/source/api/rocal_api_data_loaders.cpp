@@ -732,13 +732,10 @@ rocalAudioFileSourceSingleShard(
         auto info  = rocalTensorInfo(std::vector<size_t>(std::move(dims)),
                                 context->master_graph->mem_type(),
                                 tensor_data_type);
-        // info.reallocate
         info.set_tensor_layout(RocalTensorlayout::NONE);
         info.set_max_shape();
-        // info.reallocate_tensor_sample_rate_buffers();
         output = context->master_graph->create_loader_output_tensor(info);
         output->reset_audio_sample_rate();
-        std::cerr << "\n Exits the rocALAudioFileSourceSingleShard 3" ;
         context->master_graph->add_node<AudioLoaderSingleShardNode>({}, {output})->init(shard_id, shard_count,
                                                                                         source_path,
                                                                                         source_file_list_path,
@@ -755,7 +752,6 @@ rocalAudioFileSourceSingleShard(
                                                                                         shard_size
                                                                                         );
         context->master_graph->set_loop(loop);
-        std::cerr << "\n Exits the rocALAudioFileSourceSingleShard 2" ;
         if(downmix)
         {
             // For the resize node, user can create an image with a different width and height
@@ -773,10 +769,6 @@ rocalAudioFileSourceSingleShard(
             auto downmixed_output = context->master_graph->create_tensor(output_info, false);
             std::shared_ptr<DownmixNode> downmix_node = context->master_graph->add_node<DownmixNode>({output}, {downmixed_output});
 
-            // std::cerr<<"\n Downmix is called ";
-            // exit(0);
-            // For the nodes that user provides the output size the dimension of all the images after this node will be fixed and equal to that size
-            // downmixed_output->reset_tensor_roi(); // TODO: Swetha : Check with Fiona
             if(is_output)
             {
                 auto actual_output = context->master_graph->create_tensor(output_info, is_output);
@@ -792,7 +784,6 @@ rocalAudioFileSourceSingleShard(
                 context->master_graph->add_node<CopyNode>({output}, {actual_output}); // Have to add copy tensor node
             }
         }
-        std::cerr << "\n Exits the rocALAudioFileSourceSingleShard" ;
 
     }
     catch(const std::exception& e)

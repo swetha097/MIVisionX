@@ -199,9 +199,6 @@ AudioLoader::load_routine()
                                             _decoded_img_info._original_audio_samples,
                                             _decoded_img_info._original_audio_channels,
                                             _decoded_img_info._original_audio_sample_rates);
-            float* data_ptr = data;
-            for (uint i=0; i<10; i++)
-                std::cerr << "\n In circ buffer data" << data_ptr[i];
 
             if(load_status == LoaderModuleStatus::OK)
             {
