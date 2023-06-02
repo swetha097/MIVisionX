@@ -26,8 +26,7 @@ THE SOFTWARE.
 
 struct PreemphasisFilterLocalData
 {
-    RPPCommonHandle handle;
-    rppHandle_t rppHandle;
+    RPPCommonHandle *handle;
     Rpp32u deviceType;
     Rpp32u nbatchSize;
     RppPtr_t pSrc;
@@ -148,7 +147,7 @@ static vx_status VX_CALLBACK processPreemphasisFilter(vx_node node, const vx_ref
     {
 #if ENABLE_HIP
         refreshPreemphasisFilter(node, parameters, num, data);
-        // rpp_status = rppt_PreemphasisFilter_gpu((void *)data->hip_pSrc, data->srcDescPtr, (void *)data->hip_pDst, data->srcDescPtr,  data->alpha, data->beta, data->hip_roi_tensor_Ptr, data->roiType, data->rppHandle);
+        // rpp_status = rppt_PreemphasisFilter_gpu((void *)data->hip_pSrc, data->srcDescPtr, (void *)data->hip_pDst, data->srcDescPtr,  data->alpha, data->beta, data->hip_roi_tensor_Ptr, data->roiType, data->handle->rppHandle);
         return_status = (rpp_status == RPP_SUCCESS) ? VX_SUCCESS : VX_FAILURE;
 #endif
     }
@@ -165,11 +164,6 @@ static vx_status VX_CALLBACK initializePreemphasisFilter(vx_node node, const vx_
 {
     PreemphasisFilterLocalData *data = new PreemphasisFilterLocalData;
     memset(data, 0, sizeof(*data));
-#if ENABLE_OPENCL
-    STATUS_ERROR_CHECK(vxQueryNode(node, VX_NODE_ATTRIBUTE_AMD_OPENCL_COMMAND_QUEUE, &data->handle.cmdq, sizeof(data->handle.cmdq)));
-#elif ENABLE_HIP
-    STATUS_ERROR_CHECK(vxQueryNode(node, VX_NODE_ATTRIBUTE_AMD_HIP_STREAM, &data->handle.hipstream, sizeof(data->handle.hipstream)));
-#endif
     STATUS_ERROR_CHECK(vxCopyScalar((vx_scalar)parameters[7], &data->deviceType, VX_READ_ONLY, VX_MEMORY_TYPE_HOST));
     STATUS_ERROR_CHECK(vxReadScalarValue((vx_scalar)parameters[5], &data->borderType));
     STATUS_ERROR_CHECK(vxReadScalarValue((vx_scalar)parameters[6], &data->nbatchSize));
@@ -218,16 +212,7 @@ static vx_status VX_CALLBACK initializePreemphasisFilter(vx_node node, const vx_
     data->preemphCoeff = (float *)calloc(data->srcDescPtr->n, sizeof(float));
 
     refreshPreemphasisFilter(node, parameters, num, data);
-#if ENABLE_OPENCL
-    if (data->deviceType == AGO_TARGET_AFFINITY_GPU)
-        rppCreateWithStreamAndBatchSize(&data->rppHandle, data->handle.cmdq, data->nbatchSize);
-#elif ENABLE_HIP
-    if (data->deviceType == AGO_TARGET_AFFINITY_GPU)
-        rppCreateWithStreamAndBatchSize(&data->rppHandle, data->handle.hipstream, data->nbatchSize);
-#endif
-    if (data->deviceType == AGO_TARGET_AFFINITY_CPU)
-        rppCreateWithBatchSize(&data->rppHandle, data->nbatchSize);
-
+    STATUS_ERROR_CHECK(createGraphHandle(node, &data->handle, data->srcDescPtr->n, data->deviceType));
     STATUS_ERROR_CHECK(vxSetNodeAttribute(node, VX_NODE_LOCAL_DATA_PTR, &data, sizeof(data)));
     return VX_SUCCESS;
 }
@@ -236,12 +221,7 @@ static vx_status VX_CALLBACK uninitializePreemphasisFilter(vx_node node, const v
 {
     PreemphasisFilterLocalData *data;
     STATUS_ERROR_CHECK(vxQueryNode(node, VX_NODE_LOCAL_DATA_PTR, &data, sizeof(data)));
-#if ENABLE_OPENCL || ENABLE_HIP
-    if (data->deviceType == AGO_TARGET_AFFINITY_GPU)
-        rppDestroyGPU(data->rppHandle);
-#endif
-    if (data->deviceType == AGO_TARGET_AFFINITY_CPU)
-        rppDestroyHost(data->rppHandle);
+    STATUS_ERROR_CHECK(releaseGraphHandle(node, data->handle, data->deviceType));
     free(data->sampleSize);
     free(data->preemphCoeff);
     delete (data);

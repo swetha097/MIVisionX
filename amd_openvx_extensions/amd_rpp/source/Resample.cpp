@@ -26,8 +26,7 @@ THE SOFTWARE.
 
 struct ResampleLocalData
 {
-    RPPCommonHandle handle;
-    rppHandle_t rppHandle;
+    RPPCommonHandle *handle;
     Rpp32u deviceType;
     Rpp32u nbatchSize;
     RppPtr_t pSrc;
@@ -167,35 +166,10 @@ static vx_status VX_CALLBACK processResample(vx_node node, const vx_reference *p
     if (data->deviceType == AGO_TARGET_AFFINITY_CPU)
     {
         refreshResample(node, parameters, num, data);
-        // float *buffer_in_rate = (float *)data->inRateTensor;
-        // for (int n = 0; n < data->nbatchSize ; n++) {
-        //     std::cerr << "\n data->inRateTensor:  " << (float)buffer_in_rate[n] << "\n";
-        // }
-        // float *buffer = (float *)data->outRateTensor;
-        // for (int n = 0; n < data->nbatchSize ; n++) {
-        //     std::cerr << "data->outRateTensor:  " << (float)buffer[n] << "\n";
-        // }
 
-        // uint *sampleArray = (uint *)data->sampleArray;
-        // for (int n = 0; n < data->nbatchSize ; n++) {
-        //     std::cerr << "\n data->sampleArray:  " << (uint)sampleArray[n] << "\n";
-        // }
-        // uint *sampleChannels = (uint *)data->sampleChannels;
-        // for (int n = 0; n < data->nbatchSize ; n++) {
-        //     std::cerr << "data->sampleChannels:  " << (uint)sampleChannels[n] << "\n";
-        // }
-        // buffer = (float*)data->pSrc;
-        // for (int n = 0; n < data->nbatchSize; n++) {
-        //     std::cerr << "\n ***** Resample Batch : "<< n;
-        //     // for (int j = 0; j < data->sampleArray[n] * data->sampleChannels[n]; j++)
-        //     //     std::cerr << "\n data :: " << (float)buffer[j] << "\t";
-        //     std::cerr << "\n";
-        // }
         rpp_status = rppt_resample_host((float *)data->pSrc, data->src_desc_ptr, (float *)data->pDst, data->dst_desc_ptr,
                                        (float *)data->inRateTensor,(float *)data->outRateTensor, data->sampleArray, data->sampleChannels,
                                         data->quality);
-        // std::cerr << "Out of RPP call";
-
         return_status = (rpp_status == RPP_SUCCESS) ? VX_SUCCESS : VX_FAILURE;
     }
     return return_status;
@@ -206,11 +180,6 @@ static vx_status VX_CALLBACK initializeResample(vx_node node, const vx_reference
     ResampleLocalData *data = new ResampleLocalData;
     // unsigned roiType;
     memset(data, 0, sizeof(*data));
-#if ENABLE_OPENCL
-    STATUS_ERROR_CHECK(vxQueryNode(node, VX_NODE_ATTRIBUTE_AMD_OPENCL_COMMAND_QUEUE, &data->handle.cmdq, sizeof(data->handle.cmdq)));
-#elif ENABLE_HIP
-    STATUS_ERROR_CHECK(vxQueryNode(node, VX_NODE_ATTRIBUTE_AMD_HIP_STREAM, &data->handle.hipstream, sizeof(data->handle.hipstream)));
-#endif
     STATUS_ERROR_CHECK(vxReadScalarValue((vx_scalar)parameters[8], &data->quality));
     std::cerr << "Quality :" <<data->quality;
     STATUS_ERROR_CHECK(vxReadScalarValue((vx_scalar)parameters[9], &data->maxDstWidth));
@@ -264,15 +233,9 @@ static vx_status VX_CALLBACK initializeResample(vx_node node, const vx_reference
 
 
     refreshResample(node, parameters, num, data);
-#if ENABLE_OPENCL
-    if (data->deviceType == AGO_TARGET_AFFINITY_GPU)
-        rppCreateWithStreamAndBatchSize(&data->rppHandle, data->handle.cmdq, data->nbatchSize);
-#elif ENABLE_HIP
-    if (data->deviceType == AGO_TARGET_AFFINITY_GPU)
-        rppCreateWithStreamAndBatchSize(&data->rppHandle, data->handle.hipstream, data->nbatchSize);
-#endif
+    STATUS_ERROR_CHECK(createGraphHandle(node, &data->handle, data->src_desc_ptr->n, data->deviceType));
     if (data->deviceType == AGO_TARGET_AFFINITY_CPU)
-        rppCreateWithBatchSize(&data->rppHandle, data->nbatchSize);
+        rppCreateWithBatchSize(&data->handle->rppHandle, data->nbatchSize);
 
     STATUS_ERROR_CHECK(vxSetNodeAttribute(node, VX_NODE_LOCAL_DATA_PTR, &data, sizeof(data)));
     return VX_SUCCESS;
@@ -282,12 +245,7 @@ static vx_status VX_CALLBACK uninitializeResample(vx_node node, const vx_referen
 {
     ResampleLocalData *data;
     STATUS_ERROR_CHECK(vxQueryNode(node, VX_NODE_LOCAL_DATA_PTR, &data, sizeof(data)));
-#if ENABLE_OPENCL || ENABLE_HIP
-    if (data->deviceType == AGO_TARGET_AFFINITY_GPU)
-        rppDestroyGPU(data->rppHandle);
-#endif
-    if (data->deviceType == AGO_TARGET_AFFINITY_CPU)
-        rppDestroyHost(data->rppHandle);
+    STATUS_ERROR_CHECK(releaseGraphHandle(node, data->handle, data->deviceType));
     free(data->sampleArray);
     free(data->sampleChannels);
     free(data->inRateTensor);
