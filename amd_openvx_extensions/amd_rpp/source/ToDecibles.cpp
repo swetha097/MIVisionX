@@ -26,8 +26,7 @@ THE SOFTWARE.
 
 struct ToDecibelsLocalData
 {
-    RPPCommonHandle handle;
-    rppHandle_t rppHandle;
+    RPPCommonHandle *handle;
     Rpp32u deviceType;
     Rpp32u nbatchSize;
     RppPtr_t pSrc;
@@ -154,7 +153,7 @@ static vx_status VX_CALLBACK processToDecibels(vx_node node, const vx_reference 
     {
 #if ENABLE_HIP
         refreshToDecibels(node, parameters, num, data);
-        // rpp_status = rppt_ToDecibels_gpu((void *)data->hip_pSrc, data->src_desc_ptr, (void *)data->hip_pDst, data->src_desc_ptr,  data->alpha, data->beta, data->hip_roi_tensor_Ptr, data->roiType, data->rppHandle);
+        // rpp_status = rppt_ToDecibels_gpu((void *)data->hip_pSrc, data->src_desc_ptr, (void *)data->hip_pDst, data->src_desc_ptr,  data->alpha, data->beta, data->hip_roi_tensor_Ptr, data->roiType, data->handle->rppHandle);
         return_status = (rpp_status == RPP_SUCCESS) ? VX_SUCCESS : VX_FAILURE;
 #endif
     }
@@ -172,11 +171,6 @@ static vx_status VX_CALLBACK initializeToDecibels(vx_node node, const vx_referen
     ToDecibelsLocalData *data = new ToDecibelsLocalData;
     // unsigned roiType;
     memset(data, 0, sizeof(*data));
-#if ENABLE_OPENCL
-    STATUS_ERROR_CHECK(vxQueryNode(node, VX_NODE_ATTRIBUTE_AMD_OPENCL_COMMAND_QUEUE, &data->handle.cmdq, sizeof(data->handle.cmdq)));
-#elif ENABLE_HIP
-    STATUS_ERROR_CHECK(vxQueryNode(node, VX_NODE_ATTRIBUTE_AMD_HIP_STREAM, &data->handle.hipstream, sizeof(data->handle.hipstream)));
-#endif
     STATUS_ERROR_CHECK(vxCopyScalar((vx_scalar)parameters[8], &data->deviceType, VX_READ_ONLY, VX_MEMORY_TYPE_HOST));
     STATUS_ERROR_CHECK(vxReadScalarValue((vx_scalar)parameters[4], &data->cutOffDB));
     STATUS_ERROR_CHECK(vxReadScalarValue((vx_scalar)parameters[5], &data->multiplier));
@@ -224,23 +218,8 @@ static vx_status VX_CALLBACK initializeToDecibels(vx_node node, const vx_referen
     data->dst_desc_ptr->numDims = 4;
     data->srcDims = (RpptImagePatch *)calloc(data->src_desc_ptr->n, sizeof(RpptImagePatch));
 
-
-// #if ENABLE_HIP
-//     if (data->deviceType == AGO_TARGET_AFFINITY_GPU)
-//         hipMalloc(&data->hip_roi_tensor_Ptr, data->src_desc_ptr->n * sizeof(RpptROI));
-// #endif
-//     data->roi_tensor_Ptr = (RpptROI *)calloc(data->src_desc_ptr->n, sizeof(RpptROI));
     refreshToDecibels(node, parameters, num, data);
-#if ENABLE_OPENCL
-    if (data->deviceType == AGO_TARGET_AFFINITY_GPU)
-        rppCreateWithStreamAndBatchSize(&data->rppHandle, data->handle.cmdq, data->nbatchSize);
-#elif ENABLE_HIP
-    if (data->deviceType == AGO_TARGET_AFFINITY_GPU)
-        rppCreateWithStreamAndBatchSize(&data->rppHandle, data->handle.hipstream, data->nbatchSize);
-#endif
-    if (data->deviceType == AGO_TARGET_AFFINITY_CPU)
-        rppCreateWithBatchSize(&data->rppHandle, data->nbatchSize);
-
+    STATUS_ERROR_CHECK(createGraphHandle(node, &data->handle, data->src_desc_ptr->n, data->deviceType));
     STATUS_ERROR_CHECK(vxSetNodeAttribute(node, VX_NODE_LOCAL_DATA_PTR, &data, sizeof(data)));
     return VX_SUCCESS;
 }
@@ -249,18 +228,9 @@ static vx_status VX_CALLBACK uninitializeToDecibels(vx_node node, const vx_refer
 {
     ToDecibelsLocalData *data;
     STATUS_ERROR_CHECK(vxQueryNode(node, VX_NODE_LOCAL_DATA_PTR, &data, sizeof(data)));
-#if ENABLE_OPENCL || ENABLE_HIP
-    if (data->deviceType == AGO_TARGET_AFFINITY_GPU)
-        rppDestroyGPU(data->rppHandle);
-#endif
-    if (data->deviceType == AGO_TARGET_AFFINITY_CPU)
-        rppDestroyHost(data->rppHandle);
+    STATUS_ERROR_CHECK(releaseGraphHandle(node, data->handle, data->deviceType));
     free(data->srcDims);
-    // free(data->roi_tensor_Ptr);
-// #if ENABLE_HIP
-//     if (data->deviceType == AGO_TARGET_AFFINITY_GPU)
-//         hipFree(data->hip_roi_tensor_Ptr);
-// #endif
+
     delete (data);
     return VX_SUCCESS;
 }
