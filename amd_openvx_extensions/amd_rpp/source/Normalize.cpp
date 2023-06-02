@@ -72,19 +72,12 @@ void update_destination_roi(const vx_reference *parameters, NormalizeLocalData *
     {
         data->roi_ptr_dst[i].xywhROI.xy.x = data->roi_ptr_src[i].xywhROI.xy.x;
         data->roi_ptr_dst[i].xywhROI.xy.y = data->roi_ptr_src[i].xywhROI.xy.y;
-        // std::cerr << "\nNormalize data->roi_ptr_src[i].xywhROI.xy.x :" << data->roi_ptr_src[i].xywhROI.xy.x;
-        // std::cerr << "\nNormalize data->roi_ptr_src[i].xywhROI.xy.y :" << data->roi_ptr_src[i].xywhROI.xy.y;
-        // std::cerr << "\nNormalize data->roi_ptr_dst[i].xywhROI.xy.x :" << data->roi_ptr_dst[i].xywhROI.xy.x;
-        // std::cerr << "\nNormalize data->roi_ptr_dst[i].xywhROI.xy.y :" << data->roi_ptr_dst[i].xywhROI.xy.y;
     }
 }
 
 static vx_status VX_CALLBACK refreshNormalize(vx_node node, const vx_reference *parameters, vx_uint32 num, NormalizeLocalData *data)
 {
-    // std::cerr << "\n refreshNormalize";
     vx_status status = VX_SUCCESS;
-    // STATUS_ERROR_CHECK(vxCopyArrayRange((vx_array)parameters[2], 0, data->nbatchSize, sizeof(unsigned), data->sampleArray, VX_READ_ONLY, VX_MEMORY_TYPE_HOST));
-    // STATUS_ERROR_CHECK(vxCopyArrayRange((vx_array)parameters[3], 0, data->nbatchSize, sizeof(float), data->sampleChannels, VX_READ_ONLY, VX_MEMORY_TYPE_HOST));
     if (data->deviceType == AGO_TARGET_AFFINITY_GPU)
     {
 #if ENABLE_OPENCL
@@ -99,22 +92,17 @@ static vx_status VX_CALLBACK refreshNormalize(vx_node node, const vx_reference *
     }
     if (data->deviceType == AGO_TARGET_AFFINITY_CPU)
     {
-        if (data->in_tensor_type == vx_type_e::VX_TYPE_FLOAT32 && data->out_tensor_type == vx_type_e::VX_TYPE_FLOAT32)
-        {
-            STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[0], VX_TENSOR_BUFFER_HOST, &data->pSrc, sizeof(vx_float32)));
-            STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[1], VX_TENSOR_BUFFER_HOST, &data->pDst, sizeof(vx_float32)));
-            STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[2], VX_TENSOR_BUFFER_HOST, &data->roi_tensor_ptr_src, sizeof(vx_uint32)));
-            STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[3], VX_TENSOR_BUFFER_HOST, &data->roi_tensor_ptr_dst, sizeof(vx_uint32)));
-        }
+
+        STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[0], VX_TENSOR_BUFFER_HOST, &data->pSrc, sizeof(data->pSrc)));
+        STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[1], VX_TENSOR_BUFFER_HOST, &data->pDst, sizeof(data->pDst)));
+        STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[2], VX_TENSOR_BUFFER_HOST, &data->roi_tensor_ptr_src, sizeof(data->roi_tensor_ptr_src)));
+        STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[3], VX_TENSOR_BUFFER_HOST, &data->roi_tensor_ptr_dst, sizeof(data->roi_tensor_ptr_dst)));
+
     }
     data->roi_ptr_src = (RpptROI *)data->roi_tensor_ptr_src;
     for (uint i = 0; i < data->nbatchSize; i++) {
         data->sampleArray[i] = data->roi_ptr_src[i].xywhROI.xy.y;
         data->sampleChannels[i] = data->roi_ptr_src[i].xywhROI.xy.x;
-        // std::cerr << "\nNormalize data->roi_ptr_src[i].xywhROI.xy.x :" << data->roi_ptr_src[i].xywhROI.xy.x;
-        // std::cerr << "\nNormalize data->roi_ptr_src[i].xywhROI.xy.y :" << data->roi_ptr_src[i].xywhROI.xy.y;
-
-
     }
     update_destination_roi(parameters, data);
     return status;
@@ -185,10 +173,8 @@ static vx_status VX_CALLBACK processNormalize(vx_node node, const vx_reference *
     if (data->deviceType == AGO_TARGET_AFFINITY_CPU)
     {
         refreshNormalize(node, parameters, num, data);
-        // rppt_normalize_audio_host(inputf32, srcDescPtr, outputf32, dstDescPtr, srcLengthTensor, channelsTensor, axis_mask,
-                                        // mean, std_dev, scale, shift, epsilon, ddof, num_of_dims);
         rpp_status = rppt_normalize_audio_host((float *)data->pSrc, data->src_desc_ptr, (float *)data->pDst, data->dst_desc_ptr,(int *) data->sampleArray,(int *) data->sampleChannels, data->axisMask, data->mean,
-                                        data->stdDev, data->scale, data->shift, data->epsilon, data->ddof, data->numOfDims);
+                                                data->stdDev, data->scale, data->shift, data->epsilon, data->ddof, data->numOfDims);
         return_status = (rpp_status == RPP_SUCCESS) ? VX_SUCCESS : VX_FAILURE;
     }
     return return_status;
@@ -196,9 +182,7 @@ static vx_status VX_CALLBACK processNormalize(vx_node node, const vx_reference *
 
 static vx_status VX_CALLBACK initializeNormalize(vx_node node, const vx_reference *parameters, vx_uint32 num)
 {
-    // std::cerr<< "\n initializeNormalize";
     NormalizeLocalData *data = new NormalizeLocalData;
-    // unsigned roiType;
     memset(data, 0, sizeof(*data));
 #if ENABLE_OPENCL
     STATUS_ERROR_CHECK(vxQueryNode(node, VX_NODE_ATTRIBUTE_AMD_OPENCL_COMMAND_QUEUE, &data->handle.cmdq, sizeof(data->handle.cmdq)));
@@ -259,12 +243,6 @@ static vx_status VX_CALLBACK initializeNormalize(vx_node node, const vx_referenc
     data->sampleArray = (unsigned int *)calloc(data->src_desc_ptr->n, sizeof(unsigned int));
     data->sampleChannels = (unsigned int *)calloc(data->src_desc_ptr->n, sizeof(unsigned int));
 
-
-// #if ENABLE_HIP
-//     if (data->deviceType == AGO_TARGET_AFFINITY_GPU)
-//         hipMalloc(&data->hip_roi_tensor_Ptr, data->src_desc_ptr->n * sizeof(RpptROI));
-// #endif
-//     data->roi_tensor_Ptr = (RpptROI *)calloc(data->src_desc_ptr->n, sizeof(RpptROI));
     refreshNormalize(node, parameters, num, data);
 #if ENABLE_OPENCL
     if (data->deviceType == AGO_TARGET_AFFINITY_GPU)
@@ -292,11 +270,6 @@ static vx_status VX_CALLBACK uninitializeNormalize(vx_node node, const vx_refere
         rppDestroyHost(data->rppHandle);
     free(data->sampleArray);
     free(data->sampleChannels);
-    // free(data->roi_tensor_Ptr);
-// #if ENABLE_HIP
-//     if (data->deviceType == AGO_TARGET_AFFINITY_GPU)
-//         hipFree(data->hip_roi_tensor_Ptr);
-// #endif
     delete (data);
     return VX_SUCCESS;
 }

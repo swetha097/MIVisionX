@@ -45,10 +45,6 @@ struct PreemphasisFilterLocalData
     RpptROI* roi_ptr_src;
     void* roi_tensor_ptr_dst;
     RpptROI* roi_ptr_dst;
-
-    // RpptROI *roi_tensor_Ptr;
-    // RpptRoiType roiType;
-    // Rpp32u layout;
     size_t inTensorDims[NUM_OF_DIMS];
     size_t outTensorDims[NUM_OF_DIMS];
     vx_enum inTensorType;
@@ -77,9 +73,7 @@ void update_destination_roi(const vx_reference *parameters, PreemphasisFilterLoc
 
 static vx_status VX_CALLBACK refreshPreemphasisFilter(vx_node node, const vx_reference *parameters, vx_uint32 num, PreemphasisFilterLocalData *data)
 {
-    // std::cerr << "\n Refresh PreEmphasis Filter :";
     vx_status status = VX_SUCCESS;
-    // STATUS_ERROR_CHECK(vxCopyArrayRange((vx_array)parameters[2], 0, data->nbatchSize, sizeof(unsigned), data->sampleSize, VX_READ_ONLY, VX_MEMORY_TYPE_HOST));
     STATUS_ERROR_CHECK(vxCopyArrayRange((vx_array)parameters[4], 0, data->nbatchSize, sizeof(float), data->preemphCoeff, VX_READ_ONLY, VX_MEMORY_TYPE_HOST));
     if (data->deviceType == AGO_TARGET_AFFINITY_GPU)
     {
@@ -97,16 +91,15 @@ static vx_status VX_CALLBACK refreshPreemphasisFilter(vx_node node, const vx_ref
     {
         if (data->inTensorType == vx_type_e::VX_TYPE_FLOAT32 && data->outTensorType == vx_type_e::VX_TYPE_FLOAT32)
         {
-            STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[0], VX_TENSOR_BUFFER_HOST, &data->pSrc, sizeof(vx_float32)));
-            STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[1], VX_TENSOR_BUFFER_HOST, &data->pDst, sizeof(vx_float32)));
-            STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[2], VX_TENSOR_BUFFER_HOST, &data->roi_tensor_ptr_src, sizeof(vx_uint32)));
-            STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[3], VX_TENSOR_BUFFER_HOST, &data->roi_tensor_ptr_dst, sizeof(vx_uint32)));
+            STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[0], VX_TENSOR_BUFFER_HOST, &data->pSrc, sizeof(data->pSrc)));
+            STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[1], VX_TENSOR_BUFFER_HOST, &data->pDst, sizeof(data->pDst)));
+            STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[2], VX_TENSOR_BUFFER_HOST, &data->roi_tensor_ptr_src, sizeof(data->roi_tensor_ptr_src)));
+            STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[3], VX_TENSOR_BUFFER_HOST, &data->roi_tensor_ptr_dst, sizeof(data->roi_tensor_ptr_dst)));
         }
     }
         data->roi_ptr_src = (RpptROI *)data->roi_tensor_ptr_src;
-        for(int n = data->nbatchSize - 1; n >= 0; n--) {
-                data->sampleSize[n] = data->roi_ptr_src[n].xywhROI.xy.x * data->roi_ptr_src[n].xywhROI.xy.y;
-            }
+        for(int n = data->nbatchSize - 1; n >= 0; n--)
+            data->sampleSize[n] = data->roi_ptr_src[n].xywhROI.xy.x * data->roi_ptr_src[n].xywhROI.xy.y;
         update_destination_roi(parameters, data);
     return status;
 }
@@ -162,11 +155,6 @@ static vx_status VX_CALLBACK processPreemphasisFilter(vx_node node, const vx_ref
     if (data->deviceType == AGO_TARGET_AFFINITY_CPU)
     {
         refreshPreemphasisFilter(node, parameters, num, data);
-        // float * psrc = (float*) data->pSrc;
-        // for(int n = 0; n < data->nbatchSize; n++) {
-        //         for (int j=0; j<(int)data->sampleSize[n];j++)
-        //             std::cerr <<"src psrc:  "<<(float)psrc[(int)data->sampleSize[n] * n + j] << "\n";
-        //     }
         rpp_status = rppt_pre_emphasis_filter_host((float *)data->pSrc, data->srcDescPtr, (float *)data->pDst, data->dstDescPtr, (Rpp32s*) data->sampleSize, data->preemphCoeff , RpptAudioBorderType(data->borderType));
         return_status = (rpp_status == RPP_SUCCESS) ? VX_SUCCESS : VX_FAILURE;
     }
@@ -176,7 +164,6 @@ static vx_status VX_CALLBACK processPreemphasisFilter(vx_node node, const vx_ref
 static vx_status VX_CALLBACK initializePreemphasisFilter(vx_node node, const vx_reference *parameters, vx_uint32 num)
 {
     PreemphasisFilterLocalData *data = new PreemphasisFilterLocalData;
-    // unsigned roiType;
     memset(data, 0, sizeof(*data));
 #if ENABLE_OPENCL
     STATUS_ERROR_CHECK(vxQueryNode(node, VX_NODE_ATTRIBUTE_AMD_OPENCL_COMMAND_QUEUE, &data->handle.cmdq, sizeof(data->handle.cmdq)));
@@ -230,11 +217,6 @@ static vx_status VX_CALLBACK initializePreemphasisFilter(vx_node node, const vx_
     data->sampleSize = (unsigned int *)calloc(data->srcDescPtr->n, sizeof(unsigned int));
     data->preemphCoeff = (float *)calloc(data->srcDescPtr->n, sizeof(float));
 
-// #if ENABLE_HIP
-//     if (data->deviceType == AGO_TARGET_AFFINITY_GPU)
-//         hipMalloc(&data->hip_roi_tensor_Ptr, data->srcDescPtr->n * sizeof(RpptROI));
-// #endif
-//     data->roi_tensor_Ptr = (RpptROI *)calloc(data->srcDescPtr->n, sizeof(RpptROI));
     refreshPreemphasisFilter(node, parameters, num, data);
 #if ENABLE_OPENCL
     if (data->deviceType == AGO_TARGET_AFFINITY_GPU)
@@ -262,11 +244,6 @@ static vx_status VX_CALLBACK uninitializePreemphasisFilter(vx_node node, const v
         rppDestroyHost(data->rppHandle);
     free(data->sampleSize);
     free(data->preemphCoeff);
-    // free(data->roi_tensor_Ptr);
-// #if ENABLE_HIP
-//     if (data->deviceType == AGO_TARGET_AFFINITY_GPU)
-//         hipFree(data->hip_roi_tensor_Ptr);
-// #endif
     delete (data);
     return VX_SUCCESS;
 }

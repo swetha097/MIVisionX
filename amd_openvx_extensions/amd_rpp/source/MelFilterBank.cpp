@@ -42,14 +42,11 @@ struct MelFilterBankLocalData
     RpptDesc srcDesc;
     RpptDesc dstDesc;
     RpptDescPtr dst_desc_ptr;
-    // RpptROI *roi_tensor_ptr;
     void* roi_tensor_ptr_src;
     RpptROI* roi_ptr_src;
     void* roi_tensor_ptr_dst;
     RpptROI* roi_ptr_dst;
     RpptImagePatch *srcDims;
-    // RpptRoiType roiType;
-    // Rpp32u layout;
     size_t in_tensor_dims[NUM_OF_DIMS];
     size_t out_tensor_dims[NUM_OF_DIMS];
     vx_enum in_tensor_type;
@@ -60,7 +57,6 @@ struct MelFilterBankLocalData
 #elif ENABLE_HIP
     void *hip_pSrc;
     void *hip_pDst;
-    // RpptROI *hip_roi_tensor_ptr;
 #endif
 };
 
@@ -77,8 +73,6 @@ void update_destination_roi(const vx_reference *parameters, MelFilterBankLocalDa
 static vx_status VX_CALLBACK refreshMelFilterBank(vx_node node, const vx_reference *parameters, vx_uint32 num, MelFilterBankLocalData *data)
 {
     vx_status status = VX_SUCCESS;
-    // STATUS_ERROR_CHECK(vxCopyArrayRange((vx_array)parameters[2], 0, data->nbatchSize * 4, sizeof(unsigned), data->roi_tensor_ptr, VX_READ_ONLY, VX_MEMORY_TYPE_HOST));
-
     if (data->deviceType == AGO_TARGET_AFFINITY_GPU)
     {
 #if ENABLE_OPENCL
@@ -95,18 +89,16 @@ static vx_status VX_CALLBACK refreshMelFilterBank(vx_node node, const vx_referen
     {
         if (data->in_tensor_type == vx_type_e::VX_TYPE_FLOAT32 && data->out_tensor_type == vx_type_e::VX_TYPE_FLOAT32)
         {
-            STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[0], VX_TENSOR_BUFFER_HOST, &data->pSrc, sizeof(vx_float32)));
-            STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[1], VX_TENSOR_BUFFER_HOST, &data->pDst, sizeof(vx_float32)));
-            STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[2], VX_TENSOR_BUFFER_HOST, &data->roi_tensor_ptr_src, sizeof(vx_uint32)));
-            STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[3], VX_TENSOR_BUFFER_HOST, &data->roi_tensor_ptr_dst, sizeof(vx_uint32)));
+            STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[0], VX_TENSOR_BUFFER_HOST, &data->pSrc, sizeof(data->pSrc)));
+            STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[1], VX_TENSOR_BUFFER_HOST, &data->pDst, sizeof(data->pDst)));
+            STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[2], VX_TENSOR_BUFFER_HOST, &data->roi_tensor_ptr_src, sizeof(data->roi_tensor_ptr_src)));
+            STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[3], VX_TENSOR_BUFFER_HOST, &data->roi_tensor_ptr_dst, sizeof(data->roi_tensor_ptr_dst)));
         }
     }
-     data->roi_ptr_src = (RpptROI *)data->roi_tensor_ptr_src;
+    data->roi_ptr_src = (RpptROI *)data->roi_tensor_ptr_src;
     for(uint i = 0; i < data->nbatchSize; i++) {
         data->srcDims[i].width = data->roi_ptr_src[i].xywhROI.xy.x;
         data->srcDims[i].height = data->roi_ptr_src[i].xywhROI.xy.y;
-        // std::cerr<<"data->srcDims[i].width " << data->srcDims[i].width;
-        // std::cerr<< "data->srcDims[i].height " << data->srcDims[i].height;
     }
     update_destination_roi(parameters, data);
     return status;
@@ -240,15 +232,8 @@ static vx_status VX_CALLBACK initializeMelFilterBank(vx_node node, const vx_refe
     data->dst_desc_ptr->strides.cStride = 1;
     data->dst_desc_ptr->numDims = 4;
 
-    // data->roi_tensor_ptr = (RpptROI *)calloc(data->src_desc_ptr->n, sizeof(RpptROI));
     data->srcDims = (RpptImagePatch *) calloc(data->src_desc_ptr->n, sizeof(RpptImagePatch));
 
-
-// #if ENABLE_HIP
-//     if (data->deviceType == AGO_TARGET_AFFINITY_GPU)
-//         hipMalloc(&data->hip_roi_tensor_ptr, data->src_desc_ptr->n * sizeof(RpptROI));
-// #endif
-//     data->roi_tensor_ptr = (RpptROI *)calloc(data->src_desc_ptr->n, sizeof(RpptROI));
     refreshMelFilterBank(node, parameters, num, data);
 #if ENABLE_OPENCL
     if (data->deviceType == AGO_TARGET_AFFINITY_GPU)
@@ -274,13 +259,7 @@ static vx_status VX_CALLBACK uninitializeMelFilterBank(vx_node node, const vx_re
 #endif
     if (data->deviceType == AGO_TARGET_AFFINITY_CPU)
         rppDestroyHost(data->rppHandle);
-    // free(data->roi_tensor_ptr);
     free(data->srcDims);
-    // free(data->roi_tensor_ptr);
-// #if ENABLE_HIP
-//     if (data->deviceType == AGO_TARGET_AFFINITY_GPU)
-//         hipFree(data->hip_roi_tensor_ptr);
-// #endif
     delete (data);
     return VX_SUCCESS;
 }
@@ -334,7 +313,6 @@ vx_status MelFilterBank_Register(vx_context context)
         PARAM_ERROR_CHECK(vxAddParameterToKernel(kernel, 1, VX_OUTPUT, VX_TYPE_TENSOR, VX_PARAMETER_STATE_REQUIRED));
         PARAM_ERROR_CHECK(vxAddParameterToKernel(kernel, 2, VX_INPUT, VX_TYPE_TENSOR, VX_PARAMETER_STATE_REQUIRED));
         PARAM_ERROR_CHECK(vxAddParameterToKernel(kernel, 3, VX_INPUT, VX_TYPE_TENSOR, VX_PARAMETER_STATE_REQUIRED));
-
         PARAM_ERROR_CHECK(vxAddParameterToKernel(kernel, 4, VX_INPUT, VX_TYPE_SCALAR, VX_PARAMETER_STATE_REQUIRED));
         PARAM_ERROR_CHECK(vxAddParameterToKernel(kernel, 5, VX_INPUT, VX_TYPE_SCALAR, VX_PARAMETER_STATE_REQUIRED));
         PARAM_ERROR_CHECK(vxAddParameterToKernel(kernel, 6, VX_INPUT, VX_TYPE_SCALAR, VX_PARAMETER_STATE_REQUIRED));

@@ -32,15 +32,12 @@ struct DownmixLocalData
     Rpp32u nbatchSize;
     RppPtr_t pSrc;
     RppPtr_t pDst;
-    vx_int32 *samples; // frames
+    vx_int32 *samples;
     vx_int32 *channels;
     RpptDescPtr src_desc_ptr;
     RpptDesc srcDesc;
     RpptDesc dstDesc;
     RpptDescPtr dst_desc_ptr;
-    // RpptROI *roi_tensor_Ptr;
-    // RpptRoiType roiType;
-    // Rpp32u layout;
     size_t in_tensor_dims[NUM_OF_DIMS];
     size_t out_tensor_dims[NUM_OF_DIMS];
     vx_enum in_tensor_type;
@@ -51,15 +48,14 @@ struct DownmixLocalData
 #elif ENABLE_HIP
     void *hip_pSrc;
     void *hip_pDst;
-    // RpptROI *hip_roi_tensor_Ptr;
 #endif
 };
 
 static vx_status VX_CALLBACK refreshDownmix(vx_node node, const vx_reference *parameters, vx_uint32 num, DownmixLocalData *data)
 {
     vx_status status = VX_SUCCESS;
-    STATUS_ERROR_CHECK(vxCopyArrayRange((vx_array)parameters[2], 0, data->nbatchSize, sizeof(vx_int32), data->samples, VX_READ_ONLY, VX_MEMORY_TYPE_HOST));
-    STATUS_ERROR_CHECK(vxCopyArrayRange((vx_array)parameters[3], 0, data->nbatchSize, sizeof(vx_int32), data->channels, VX_READ_ONLY, VX_MEMORY_TYPE_HOST));
+    STATUS_ERROR_CHECK(vxCopyArrayRange((vx_array)parameters[2], 0, data->nbatchSize, sizeof(data->samples), data->samples, VX_READ_ONLY, VX_MEMORY_TYPE_HOST));
+    STATUS_ERROR_CHECK(vxCopyArrayRange((vx_array)parameters[3], 0, data->nbatchSize, sizeof(data->channels), data->channels, VX_READ_ONLY, VX_MEMORY_TYPE_HOST));
     if (data->device_type == AGO_TARGET_AFFINITY_GPU)
     {
 #if ENABLE_OPENCL
@@ -74,8 +70,8 @@ static vx_status VX_CALLBACK refreshDownmix(vx_node node, const vx_reference *pa
     {
         if (data->in_tensor_type == vx_type_e::VX_TYPE_FLOAT32 && data->out_tensor_type == vx_type_e::VX_TYPE_FLOAT32)
         {
-            STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[0], VX_TENSOR_BUFFER_HOST, &data->pSrc, sizeof(vx_float32)));
-            STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[1], VX_TENSOR_BUFFER_HOST, &data->pDst, sizeof(vx_float32)));
+            STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[0], VX_TENSOR_BUFFER_HOST, &data->pSrc, sizeof(data->pSrc)));
+            STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[1], VX_TENSOR_BUFFER_HOST, &data->pDst, sizeof(data->pDst)));
         }
     }
     return status;
@@ -193,12 +189,6 @@ static vx_status VX_CALLBACK initializeDownmix(vx_node node, const vx_reference 
     data->dst_desc_ptr->strides.wStride = data->dst_desc_ptr->c;
     data->dst_desc_ptr->strides.cStride = 1;
     data->dst_desc_ptr->numDims = 4;
-
-// #if ENABLE_HIP
-//     if (data->device_type == AGO_TARGET_AFFINITY_GPU)
-//         hipMalloc(&data->hip_roi_tensor_Ptr, data->src_desc_ptr->n * sizeof(RpptROI));
-// #endif
-//     data->roi_tensor_Ptr = (RpptROI *)calloc(data->src_desc_ptr->n, sizeof(RpptROI));
     data->samples = (vx_int32 *)malloc(sizeof(vx_int32) * data->src_desc_ptr->n);
     data->channels = (vx_int32 *)malloc(sizeof(vx_int32) * data->src_desc_ptr->n);
     refreshDownmix(node, parameters, num, data);
@@ -226,13 +216,8 @@ static vx_status VX_CALLBACK uninitializeDownmix(vx_node node, const vx_referenc
 #endif
     if (data->device_type == AGO_TARGET_AFFINITY_CPU)
         rppDestroyHost(data->rppHandle);
-    // free(data->roi_tensor_Ptr);
     free(data->samples);
     free(data->channels);
-// #if ENABLE_HIP
-//     if (data->device_type == AGO_TARGET_AFFINITY_GPU)
-//         hipFree(data->hip_roi_tensor_Ptr);
-// #endif
     delete (data);
     return VX_SUCCESS;
 }

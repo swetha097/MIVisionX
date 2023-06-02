@@ -48,7 +48,7 @@ struct SliceLocalData
     int *srcDims;
     void *roi_tensor_ptr_dst;
     RpptROI *roi_ptr_dst;
-    int *dstDims; // TODO: Check if you need this later
+    int *dstDims;
     size_t in_tensor_dims[NUM_OF_DIMS];
     size_t out_tensor_dims[NUM_OF_DIMS];
     vx_enum in_tensor_type;
@@ -60,7 +60,6 @@ struct SliceLocalData
 #elif ENABLE_HIP
     void *hip_pSrc;
     void *hip_pDst;
-    // RpptROI *hip_roi_tensor_ptr;
 #endif
 };
 
@@ -71,10 +70,7 @@ void update_destination_roi(const vx_reference *parameters, SliceLocalData *data
     data->roi_ptr_dst = (RpptROI *)data->roi_tensor_ptr_dst;
     data->roi_ptr_src = (RpptROI *)data->roi_tensor_ptr_src;
     for(unsigned numDims=0; numDims < data->dst_desc_ptr->numDims ; numDims++)
-        {
-            dimsTotal*=data->out_tensor_dims[numDims];
-        }
-    // std::cerr << "\n dimsTotal" << dimsTotal;
+        dimsTotal*=data->out_tensor_dims[numDims];
     if (dimsTotal == data->nbatchSize)
         num_of_dims_shapes_anchors = 1;
     else if ((dimsTotal == (data->nbatchSize*2)))
@@ -83,23 +79,15 @@ void update_destination_roi(const vx_reference *parameters, SliceLocalData *data
         num_of_dims_shapes_anchors = 3;
         for(unsigned i = 0; i < data->nbatchSize; i++) {
         int idx = i * num_of_dims_shapes_anchors;
-            // std::cerr << "\n data->roi_ptr_src[i].xywhROI.xy.x - upper loop" << data->roi_ptr_src[i].xywhROI.xy.x;
-            // std::cerr << "\n data->roi_ptr_src[i].xywhROI.xy.y - upper loop" << data->roi_ptr_src[i].xywhROI.xy.y;
         for(unsigned d = 0; d < num_of_dims_shapes_anchors; d++) {
-        // std::cerr << "\n Anchor : " << data->anchor[idx + d] << "|\t Shape Array : " << (data->shape[idx + d] - data->anchor[idx + d]);
-        //TODO: Swetha : To handle 3d data by checking NCHW / NHWC format for images
-
-            if(num_of_dims_shapes_anchors == 2  ) { // 2d anchors & shapes
+            if(num_of_dims_shapes_anchors == 2  ) {
                 if (d==0) data->roi_ptr_dst[i].xywhROI.xy.x = (data->shape[idx + d]);
                 if (d==1) data->roi_ptr_dst[i].xywhROI.xy.y = (data->shape[idx + d]);
             }
-            else if (num_of_dims_shapes_anchors == 1) { // 1d anchors & shapes
-            // std::cerr << "\n 1d Array";
+            else if (num_of_dims_shapes_anchors == 1) {
                 data->roi_ptr_dst[i].xywhROI.xy.x = (data->shape[i]);
                 data->roi_ptr_dst[i].xywhROI.xy.y = data->roi_ptr_src[i].xywhROI.xy.y;
             }
-            // std::cerr << "\n data->roi_ptr_dst[i].xywhROI.xy.x" << data->roi_ptr_dst[i].xywhROI.xy.x;
-            // std::cerr << "\n data->roi_ptr_dst[i].xywhROI.xy.y" << data->roi_ptr_dst[i].xywhROI.xy.y;
         }
         
     }
@@ -108,8 +96,8 @@ void update_destination_roi(const vx_reference *parameters, SliceLocalData *data
 static vx_status VX_CALLBACK refreshSlice(vx_node node, const vx_reference *parameters, vx_uint32 num, SliceLocalData *data)
 {
     vx_status status = VX_SUCCESS;
-    STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[4], VX_TENSOR_BUFFER_HOST, &data->anchor, sizeof(vx_float32)));
-    STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[5], VX_TENSOR_BUFFER_HOST, &data->shape, sizeof(vx_float32)));
+    STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[4], VX_TENSOR_BUFFER_HOST, &data->anchor, sizeof(data->anchor)));
+    STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[5], VX_TENSOR_BUFFER_HOST, &data->shape, sizeof(data->shape)));
     STATUS_ERROR_CHECK(vxCopyArrayRange((vx_array)parameters[6], 0, data->nbatchSize * data->numDims, sizeof(float), data->fill_values, VX_READ_ONLY, VX_MEMORY_TYPE_HOST));
     if (data->deviceType == AGO_TARGET_AFFINITY_GPU)
     {
@@ -127,10 +115,10 @@ static vx_status VX_CALLBACK refreshSlice(vx_node node, const vx_reference *para
     {
         if (data->in_tensor_type == vx_type_e::VX_TYPE_FLOAT32 && data->out_tensor_type == vx_type_e::VX_TYPE_FLOAT32)
         {
-            STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[0], VX_TENSOR_BUFFER_HOST, &data->pSrc, sizeof(vx_float32)));
-            STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[1], VX_TENSOR_BUFFER_HOST, &data->pDst, sizeof(vx_float32)));
-            STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[2], VX_TENSOR_BUFFER_HOST, &data->roi_tensor_ptr_src, sizeof(vx_uint32)));
-            STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[3], VX_TENSOR_BUFFER_HOST, &data->roi_tensor_ptr_dst, sizeof(vx_uint32)));
+            STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[0], VX_TENSOR_BUFFER_HOST, &data->pSrc, sizeof(data->pSrc)));
+            STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[1], VX_TENSOR_BUFFER_HOST, &data->pDst, sizeof(data->pDst)));
+            STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[2], VX_TENSOR_BUFFER_HOST, &data->roi_tensor_ptr_src, sizeof(data->roi_tensor_ptr_src)));
+            STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[3], VX_TENSOR_BUFFER_HOST, &data->roi_tensor_ptr_dst, sizeof(data->roi_tensor_ptr_dst)));
         }
     }
     data->roi_ptr_src = (RpptROI *)data->roi_tensor_ptr_src;
@@ -205,39 +193,7 @@ static vx_status VX_CALLBACK processSlice(vx_node node, const vx_reference *para
     if (data->deviceType == AGO_TARGET_AFFINITY_CPU)
     {
     refreshSlice(node, parameters, num, data);
-//TODO: Swetha : To clean up the debug code
-//  float * buffer = (float *)data->anchor;
-//             for(int n = 0; n < data->nbatchSize * 2; n++) 
-//             {
-//                 std::cerr <<"slice begin:  "<<(float)buffer[n] << "\n";
-//             }
-//  float * buffer1 = (float *)data->shape;
-//             for(int n = 0; n < data->nbatchSize * 2; n++) 
-//             {
-//                 std::cerr <<"slice length:  "<<(float)buffer1[n] << "\n";
-//             }
-
-// int * dimSrc = (int*) data->srcDims;
-//  for(int n = 0; n < data->nbatchSize*2; n++) 
-//             {
-//                 std::cerr <<"src length:  "<<(int)dimSrc[n] << "\n";
-//             }
-// float * psrc = (float*) data->pSrc;
-//  for(int n = 0; n < data->nbatchSize; n++) 
-//             {
-//                 for (int j=0; j<(int)dimSrc[n];j++)
-
-//                     std::cerr <<"src psrc:  "<<(float)psrc[(int)dimSrc[n] * n + j] << "\n";
-//             }
-
-        rpp_status = rppt_slice_host((float *)data->pSrc, data->src_desc_ptr, (float *)data->pDst, data->dst_desc_ptr, data->srcDims, (float*)data->anchor, (float*)data->shape, data->fill_values);
-// float * pdst = (float*) data->pDst;
-//  for(int n = 0; n < data->nbatchSize; n++) 
-//             {
-//                 // for (int j=0; j<(int)dimSrc[n];j++)
-
-//                     std::cerr <<"Slice src pdst:  "<<(float)pdst[(int)dimSrc[n] * n + 0] << "\n";
-//             }
+    rpp_status = rppt_slice_host((float *)data->pSrc, data->src_desc_ptr, (float *)data->pDst, data->dst_desc_ptr, data->srcDims, (float*)data->anchor, (float*)data->shape, data->fill_values);
         return_status = (rpp_status == RPP_SUCCESS) ? VX_SUCCESS : VX_FAILURE;
     }
     return return_status;
@@ -245,10 +201,8 @@ static vx_status VX_CALLBACK processSlice(vx_node node, const vx_reference *para
 
 static vx_status VX_CALLBACK initializeSlice(vx_node node, const vx_reference *parameters, vx_uint32 num)
 {
-    //TODO: Swetha : To clean up the debug code
     std::cerr<<"\n static vx_status VX_CALLBACK initializeSlice ";
     SliceLocalData *data = new SliceLocalData;
-    // unsigned roiType;
     memset(data, 0, sizeof(*data));
 #if ENABLE_OPENCL
     STATUS_ERROR_CHECK(vxQueryNode(node, VX_NODE_ATTRIBUTE_AMD_OPENCL_COMMAND_QUEUE, &data->handle.cmdq, sizeof(data->handle.cmdq)));
@@ -259,7 +213,7 @@ static vx_status VX_CALLBACK initializeSlice(vx_node node, const vx_reference *p
     STATUS_ERROR_CHECK(vxReadScalarValue((vx_scalar)parameters[7], &data->axes));
     STATUS_ERROR_CHECK(vxReadScalarValue((vx_scalar)parameters[8], &data->normalized_anchor));
     STATUS_ERROR_CHECK(vxReadScalarValue((vx_scalar)parameters[9], &data->normalized_shape));
-    data->normalized_shape = data->normalized_anchor; // shobi
+    data->normalized_shape = data->normalized_anchor;
     STATUS_ERROR_CHECK(vxReadScalarValue((vx_scalar)parameters[10], &data->policy));
     STATUS_ERROR_CHECK(vxReadScalarValue((vx_scalar)parameters[11], &data->nbatchSize));
 

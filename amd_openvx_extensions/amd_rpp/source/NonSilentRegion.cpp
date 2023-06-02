@@ -57,14 +57,12 @@ struct NonSilentRegionLocalData
     void *hip_pSrc;
     void *hip_pDst1;
     void *hip_pDst2;
-    // RpptROI *hip_roi_tensor_Ptr;
 #endif
 };
 
 static vx_status VX_CALLBACK refreshNonSilentRegion(vx_node node, const vx_reference *parameters, vx_uint32 num, NonSilentRegionLocalData *data)
 {
     vx_status status = VX_SUCCESS;
-    // STATUS_ERROR_CHECK(vxCopyArrayRange((vx_array)parameters[3], 0, data->nbatchSize, sizeof(unsigned), data->sample_size, VX_READ_ONLY, VX_MEMORY_TYPE_HOST));
     if (data->deviceType == AGO_TARGET_AFFINITY_GPU)
     {
 #if ENABLE_OPENCL
@@ -80,18 +78,14 @@ static vx_status VX_CALLBACK refreshNonSilentRegion(vx_node node, const vx_refer
     }
     if (data->deviceType == AGO_TARGET_AFFINITY_CPU)
     {
-        // if (data->in_tensor_type == vx_type_e::VX_TYPE_FLOAT32 && data->out_tensor_type == vx_type_e::VX_TYPE_FLOAT32)
-        // {
-            STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[0], VX_TENSOR_BUFFER_HOST, &data->pSrc, sizeof(vx_float32)));
-            STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[1], VX_TENSOR_BUFFER_HOST, &data->pDst1, sizeof(vx_float32)));
-            STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[2], VX_TENSOR_BUFFER_HOST, &data->pDst2, sizeof(vx_float32)));
-            STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[3], VX_TENSOR_BUFFER_HOST, &data->roi_tensor_ptr_src, sizeof(vx_uint32)));
-        // }
+            STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[0], VX_TENSOR_BUFFER_HOST, &data->pSrc, sizeof(data->pSrc)));
+            STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[1], VX_TENSOR_BUFFER_HOST, &data->pDst1, sizeof(data->pDst1)));
+            STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[2], VX_TENSOR_BUFFER_HOST, &data->pDst2, sizeof(data->pDst2)));
+            STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[3], VX_TENSOR_BUFFER_HOST, &data->roi_tensor_ptr_src, sizeof(data->roi_tensor_ptr_src)));
     }
     data->roi_ptr_src = (RpptROI *)data->roi_tensor_ptr_src;
     for (uint i = 0; i < data->nbatchSize; i++) {
         data->sample_size[i] = data->roi_ptr_src[i].xywhROI.xy.x * data->roi_ptr_src[i].xywhROI.xy.y;
-        // std::cerr << "\n NSR data->sample_size[i] : " << data->sample_size[i];
     }
     return status;
 }
@@ -167,18 +161,7 @@ static vx_status VX_CALLBACK processNonSilentRegion(vx_node node, const vx_refer
     if (data->deviceType == AGO_TARGET_AFFINITY_CPU)
     {
         refreshNonSilentRegion(node, parameters, num, data);
-        
         rpp_status = rppt_non_silent_region_detection_host((float *)data->pSrc, data->src_desc_ptr,(int *) data->sample_size, (float *)data->pDst1, (float *)data->pDst2, data->cutOffDB, data->windowLength, data->referencePower, data->resetInterval);
-        // float * buffer = (float *)data->pDst1;
-        //     for(int n = 0; n < data->nbatchSize; n++) 
-        //     {
-        //         std::cerr <<"Non silent region begin:  "<<(float)buffer[n] << "\n";
-        //     }
-        // float * buffer1 = (float *)data->pDst2;
-        //  for(int n = 0; n < data->nbatchSize; n++) 
-        //     {
-        //         std::cerr <<"Non silent region length :  "<<(float)buffer1[n] << "\n";
-        //     }
         return_status = (rpp_status == RPP_SUCCESS) ? VX_SUCCESS : VX_FAILURE;
     }
     return return_status;
@@ -229,12 +212,6 @@ static vx_status VX_CALLBACK initializeNonSilentRegion(vx_node node, const vx_re
 
     data->sample_size = (unsigned int *)calloc(data->src_desc_ptr->n, sizeof(unsigned int));
 
-
-// #if ENABLE_HIP
-//     if (data->deviceType == AGO_TARGET_AFFINITY_GPU)
-//         hipMalloc(&data->hip_roi_tensor_Ptr, data->src_desc_ptr->n * sizeof(RpptROI));
-// #endif
-//     data->roi_tensor_Ptr = (RpptROI *)calloc(data->src_desc_ptr->n, sizeof(RpptROI));
     refreshNonSilentRegion(node, parameters, num, data);
 #if ENABLE_OPENCL
     if (data->deviceType == AGO_TARGET_AFFINITY_GPU)
@@ -261,11 +238,6 @@ static vx_status VX_CALLBACK uninitializeNonSilentRegion(vx_node node, const vx_
     if (data->deviceType == AGO_TARGET_AFFINITY_CPU)
         rppDestroyHost(data->rppHandle);
     free(data->sample_size);
-    // free(data->roi_tensor_Ptr);
-// #if ENABLE_HIP
-//     if (data->deviceType == AGO_TARGET_AFFINITY_GPU)
-//         hipFree(data->hip_roi_tensor_Ptr);
-// #endif
     delete (data);
     return VX_SUCCESS;
 }

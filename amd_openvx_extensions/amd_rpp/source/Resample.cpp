@@ -56,7 +56,6 @@ struct ResampleLocalData
 #elif ENABLE_HIP
     void *hip_pSrc;
     void *hip_pDst;
-    // RpptROI *hip_roi_tensor_Ptr;
 #endif
 };
 
@@ -65,28 +64,21 @@ void update_destination_roi(const vx_reference *parameters, ResampleLocalData *d
     data->roi_ptr_dst = (RpptROI *)data->roi_tensor_ptr_dst;
     data->roi_ptr_src = (RpptROI *)data->roi_tensor_ptr_src;
     float _scale_ratio;
-    // std::vector<float> _resample_rate_vec;
     for(unsigned i = 0; i < data->nbatchSize; i++) {
         if (data->inRateTensor[i]!=0)
             _scale_ratio = data->outRateTensor[i] / (float)data->inRateTensor[i];
         else 
             _scale_ratio = 0;
-        //_resample_rate_vec[i] = data->outRateTensor[i]; // TODO : Swetha -Update the dst Resample Rate Later
         data->roi_ptr_dst[i].xywhROI.xy.x = (int)std::ceil(_scale_ratio * data->roi_ptr_src[i].xywhROI.xy.x); 
         data->roi_ptr_dst[i].xywhROI.xy.y = data->roi_ptr_src[i].xywhROI.xy.y;
-        // _max_dst_width = std::max(_max_dst_width, data->roi_ptr_dst[i].xywhROI.xy.x);
-        // std::cerr << "_max_dst_width : " << _max_dst_width;
-        
     }
 }
 
 static vx_status VX_CALLBACK refreshResample(vx_node node, const vx_reference *parameters, vx_uint32 num, ResampleLocalData *data)
 {
     vx_status status = VX_SUCCESS;
-    // STATUS_ERROR_CHECK(vxCopyArrayRange((vx_array)parameters[6], 0, data->nbatchSize, sizeof(signed), data->sampleArray, VX_READ_ONLY, VX_MEMORY_TYPE_HOST));
-    // STATUS_ERROR_CHECK(vxCopyArrayRange((vx_array)parameters[7], 0, data->nbatchSize, sizeof(signed), data->sampleChannels, VX_READ_ONLY, VX_MEMORY_TYPE_HOST));
     STATUS_ERROR_CHECK(vxCopyArrayRange((vx_array)parameters[5], 0, data->nbatchSize, sizeof(float), data->inRateTensor, VX_READ_ONLY, VX_MEMORY_TYPE_HOST));
-    STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[4], VX_TENSOR_BUFFER_HOST, &data->outRateTensor, sizeof(vx_float32))); // This has to be int ?
+    STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[4], VX_TENSOR_BUFFER_HOST, &data->outRateTensor, sizeof(data->outRateTensor)));
 
     if (data->deviceType == AGO_TARGET_AFFINITY_GPU)
     {
@@ -104,10 +96,10 @@ static vx_status VX_CALLBACK refreshResample(vx_node node, const vx_reference *p
     {
         if (data->in_tensor_type == vx_type_e::VX_TYPE_FLOAT32 && data->out_tensor_type == vx_type_e::VX_TYPE_FLOAT32)
         {
-            STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[0], VX_TENSOR_BUFFER_HOST, &data->pSrc, sizeof(vx_float32)));
-            STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[1], VX_TENSOR_BUFFER_HOST, &data->pDst, sizeof(vx_float32)));
-            STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[2], VX_TENSOR_BUFFER_HOST, &data->roi_tensor_ptr_src, sizeof(vx_uint32)));
-            STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[3], VX_TENSOR_BUFFER_HOST, &data->roi_tensor_ptr_dst, sizeof(vx_uint32)));
+            STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[0], VX_TENSOR_BUFFER_HOST, &data->pSrc, sizeof(data->pSrc)));
+            STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[1], VX_TENSOR_BUFFER_HOST, &data->pDst, sizeof(data->pDst)));
+            STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[2], VX_TENSOR_BUFFER_HOST, &data->roi_tensor_ptr_src, sizeof(data->roi_tensor_ptr_src)));
+            STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[3], VX_TENSOR_BUFFER_HOST, &data->roi_tensor_ptr_dst, sizeof(data->roi_tensor_ptr_dst)));
         }
     }
     data->roi_ptr_src = (RpptROI *)data->roi_tensor_ptr_src;

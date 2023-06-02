@@ -61,7 +61,6 @@ struct SpectrogramLocalData
 #elif ENABLE_HIP
     void *hip_pSrc;
     void *hip_pDst;
-    // RpptROI *hip_roi_tensor_Ptr;
 #endif
 };
 
@@ -71,13 +70,10 @@ void update_destination_roi(const vx_reference *parameters, SpectrogramLocalData
     data->roi_ptr_src = (RpptROI *)data->roi_tensor_ptr_src;
     if(!data->centerWindow)
         data->windowOffset = data->windowLength;
-    //TODO: Check with Sampath on else condition
     for (uint i=0; i < data->nbatchSize; i++)
     {
         data->roi_ptr_dst[i].xywhROI.xy.x = (( data->sampleLength[i] - data->windowOffset ) / data->windowStep) + 1;
         data->roi_ptr_dst[i].xywhROI.xy.y =  (data->nfftSize / 2 )+ 1;
-        // std::cerr << "\n data->roi_ptr_dst[i].xywhROI.xy.x" << data->roi_ptr_dst[i].xywhROI.xy.x;
-        // std::cerr << "\n data->roi_ptr_dst[i].xywhROI.xy.y" << data->roi_ptr_dst[i].xywhROI.xy.y;
     }
 }
 
@@ -108,18 +104,15 @@ static vx_status VX_CALLBACK refreshSpectrogram(vx_node node, const vx_reference
     {
         if (data->in_tensor_type == vx_type_e::VX_TYPE_FLOAT32 && data->out_tensor_type == vx_type_e::VX_TYPE_FLOAT32)
         {
-            STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[0], VX_TENSOR_BUFFER_HOST, &data->pSrc, sizeof(vx_float32)));
-            STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[1], VX_TENSOR_BUFFER_HOST, &data->pDst, sizeof(vx_float32)));
-            STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[2], VX_TENSOR_BUFFER_HOST, &data->roi_tensor_ptr_src, sizeof(vx_uint32)));
-            STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[3], VX_TENSOR_BUFFER_HOST, &data->roi_tensor_ptr_dst, sizeof(vx_uint32)));
+            STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[0], VX_TENSOR_BUFFER_HOST, &data->pSrc, sizeof(data->pSrc)));
+            STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[1], VX_TENSOR_BUFFER_HOST, &data->pDst, sizeof(data->pDst)));
+            STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[2], VX_TENSOR_BUFFER_HOST, &data->roi_tensor_ptr_src, sizeof(data->roi_tensor_ptr_src)));
+            STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[3], VX_TENSOR_BUFFER_HOST, &data->roi_tensor_ptr_dst, sizeof(data->roi_tensor_ptr_dst)));
         }
     }
     data->roi_ptr_src = (RpptROI *)data->roi_tensor_ptr_src;
-        for (uint i=0; i < data->nbatchSize; i++)
-    {
+    for (uint i=0; i < data->nbatchSize; i++)
         data->sampleLength[i] = data->roi_ptr_src[i].xywhROI.xy.x;
-        // std::cerr << "\n data->sampleLength[i]" << data->sampleLength[i];
-    }
     update_destination_roi(parameters, data);
     return status;
 }
@@ -192,7 +185,6 @@ static vx_status VX_CALLBACK processSpectrogram(vx_node node, const vx_reference
     if (data->deviceType == AGO_TARGET_AFFINITY_CPU)
     {
         refreshSpectrogram(node, parameters, num, data);
-        // rppt_spectrogram_host(inputf32, srcDescPtr, spectrogramf32, dstDescPtr, srcLengthTensor, centerWindows, reflectPadding, windowFn, nfft, power, windowLength, windowStep, layout);
         rpp_status = rppt_spectrogram_host((float *)data->pSrc, data->src_desc_ptr, (float *)data->pDst, data->dst_desc_ptr,(int*) data->sampleLength, data->centerWindow, data->reflectPadding,
                                             data->windowFn, data->nfftSize, data->power, data->windowLength, data->windowStep, RpptSpectrogramLayout(data->specLayout));
         return_status = (rpp_status == RPP_SUCCESS) ? VX_SUCCESS : VX_FAILURE;
@@ -264,12 +256,6 @@ static vx_status VX_CALLBACK initializeSpectrogram(vx_node node, const vx_refere
     data->sampleLength = (unsigned int *)calloc(data->src_desc_ptr->n, sizeof(unsigned int));
     data->windowFn = (float *)calloc(data->windowLength, sizeof(float));
 
-
-// #if ENABLE_HIP
-//     if (data->deviceType == AGO_TARGET_AFFINITY_GPU)
-//         hipMalloc(&data->hip_roi_tensor_Ptr, data->src_desc_ptr->n * sizeof(RpptROI));
-// #endif
-//     data->roi_tensor_Ptr = (RpptROI *)calloc(data->src_desc_ptr->n, sizeof(RpptROI));
     refreshSpectrogram(node, parameters, num, data);
 #if ENABLE_OPENCL
     if (data->deviceType == AGO_TARGET_AFFINITY_GPU)
