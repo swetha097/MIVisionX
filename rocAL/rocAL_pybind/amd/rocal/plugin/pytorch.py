@@ -62,7 +62,11 @@ class RALIGenericIterator(object):
             self.h = self.output_tensor_list[0].batch_height()
             self.batch_size = self.output_tensor_list[0].batch_size()
             self.color_format = self.output_tensor_list[0].color_format()
-
+            print("self.self.tensor_format", self.tensor_format)
+            print("self.w", self.w)
+            print("self.h", self.h)
+            print("self.color_format", self.color_format)
+            # exit(0)
             if self.output is None:
                 if self.tensor_format == types.NCHW:
                     torch_gpu_device = torch.device('cuda', self.device_id)

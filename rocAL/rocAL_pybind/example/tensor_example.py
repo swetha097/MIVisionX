@@ -7,7 +7,6 @@ from amd.rocal.plugin.pytorch import ROCALClassificationIterator
 from amd.rocal.pipeline import Pipeline
 import amd.rocal.fn as fn
 import amd.rocal.types as types
-# import rocal_pybind.tensor
 import sys
 import cv2
 import os
@@ -15,7 +14,6 @@ import os
 def draw_patches(img, idx, device, layout="NCHW", dtype="fp32"):
     #image is expected as a tensor, bboxes as numpy
     import cv2
-
     image = img.cpu().numpy()
     if layout!= "NHWC":
         image = image.transpose([1, 2, 0])
@@ -46,24 +44,21 @@ def main():
     random_seed = random.SystemRandom().randint(0, 2**32 - 1)
     crop=300
 
-    pipe = Pipeline(batch_size=batch_size, num_threads=num_threads,device_id=device_id, seed=random_seed, rocal_cpu=_rali_cpu)
     local_rank = 0
     world_size = 1
     rali_cpu= True
     rali_device = 'cpu' if rali_cpu else 'gpu'
     decoder_device = 'cpu' if rali_cpu else 'mixed'
-    device_memory_padding = 211025920 if decoder_device == 'mixed' else 0
-    host_memory_padding = 140544512 if decoder_device == 'mixed' else 0
 
-    image_classification_train_pipeline = Pipeline(batch_size = batch_size, num_threads = num_threads, device_id = device_id, seed = random_seed, rocal_cpu = _rali_cpu, tensor_layout = types.NCHW)
+    image_classification_train_pipeline = Pipeline(batch_size = batch_size, num_threads = num_threads, device_id = device_id, seed = random_seed, rocal_cpu = _rali_cpu, tensor_layout = types.NHWC)
     with image_classification_train_pipeline:
         jpegs, labels = fn.readers.file(file_root = data_path)
         decode = fn.decoders.image(jpegs, output_type = types.RGB,
                                         file_root = data_path, shard_id = local_rank, num_shards = world_size, random_shuffle = True)
-        res = fn.resize(decode, resize_width = 224, resize_height = 224, rocal_tensor_layout = types.NCHW, rocal_tensor_output_type = types.UINT8)
+        res = fn.resize(decode, resize_width = 224, resize_height = 224, rocal_tensor_layout = types.NHWC, rocal_tensor_output_type = types.UINT8)
         flip_coin = fn.random.coin_flip(probability=0.5)
         cmnp = fn.crop_mirror_normalize(decode, device="gpu",
-                                            rocal_tensor_layout = types.NCHW,
+                                            rocal_tensor_layout = types.NHWC,
                                             rocal_tensor_output_type = types.FLOAT,
                                             crop=(224, 224),
                                             mirror=0,
@@ -73,7 +68,7 @@ def main():
         image_classification_train_pipeline.set_outputs(cmnp)
 
     image_classification_train_pipeline.build()
-    imageIteratorPipeline = ROCALClassificationIterator(image_classification_train_pipeline, device=sys.argv[2], device_id=local_rank )
+    imageIteratorPipeline = ROCALClassificationIterator(image_classification_train_pipeline, device=sys.argv[2], device_id=local_rank,  )
     cnt = 0
     for epoch in range(3):
         print("+++++++++++++++++++++++++++++EPOCH+++++++++++++++++++++++++++++++++++++",epoch)
@@ -84,7 +79,7 @@ def main():
                 print("Image shape :: ", img.shape)
                 # print("Image :: ", img)
                 cnt = cnt + 1
-                draw_patches(img, cnt, "cpu")
+                draw_patches(img, cnt, "cpu",  layout="NHWC")
         imageIteratorPipeline.reset()
     print("*********************************************************************")
 
