@@ -24,7 +24,6 @@ THE SOFTWARE.
 #define NUM_OF_DIMS 5
 struct TensorMulScalarLocalData
 {
-    RPPCommonHandle handle;
     Rpp32u device_type;
     RppPtr_t pSrc;
     RppPtr_t pDst;
@@ -139,11 +138,6 @@ static vx_status VX_CALLBACK initializeTensorMulScalar(vx_node node, const vx_re
 {
     TensorMulScalarLocalData *data = new TensorMulScalarLocalData;
     memset(data, 0, sizeof(*data));
-#if ENABLE_OPENCL
-    THROW("initialize : TensorMulScalar, OpenCL backend is not supported")
-#elif ENABLE_HIP
-    STATUS_ERROR_CHECK(vxQueryNode(node, VX_NODE_ATTRIBUTE_AMD_HIP_STREAM, &data->handle.hipstream, sizeof(data->handle.hipstream)));
-#endif
     STATUS_ERROR_CHECK(vxCopyScalar((vx_scalar)parameters[3], &data->device_type, VX_READ_ONLY, VX_MEMORY_TYPE_HOST));
     STATUS_ERROR_CHECK(vxReadScalarValue((vx_scalar)parameters[2], &data->scalar_value));
     vx_size num_of_dims;
