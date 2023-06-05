@@ -122,6 +122,7 @@ vx_status Brightness_Register(vx_context);
 vx_status Copy_Register(vx_context);
 vx_status CropMirrorNormalize_Register(vx_context);
 vx_status Nop_Register(vx_context);
+vx_status Downmix_Register(vx_context);
 
 // kernel names
 #define VX_KERNEL_RPP_NOPBATCHPD_NAME                   "org.rpp.NopbatchPD"
@@ -210,5 +211,6 @@ vx_status Nop_Register(vx_context);
 #define VX_KERNEL_RPP_COPY_NAME                                 "org.rpp.Copy"
 #define VX_KERNEL_RPP_CROP_MIRROR_NORMALIZE_NAME                "org.rpp.CropMirrorNormalize"
 #define VX_KERNEL_RPP_NOP_NAME                                  "org.rpp.Nop"
+#define VX_KERNEL_RPP_DOWNMIX_NAME "org.rpp.Downmix"
 
 #endif //_AMDVX_EXT__PUBLISH_KERNELS_H_

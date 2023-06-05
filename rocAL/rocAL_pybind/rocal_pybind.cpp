@@ -28,6 +28,7 @@ THE SOFTWARE.
 #include <pybind11/eval.h>
 #include "rocal_api_types.h"
 #include "rocal_api.h"
+#include "tensor.h"
 #include "rocal_api_parameters.h"
 #include "rocal_api_data_loaders.h"
 #include "rocal_api_augmentation.h"
@@ -68,15 +69,6 @@ namespace rocal{
         return ptr;
     }
 
-    py::object wrapper_copy_to_output(RocalContext context, py::array_t<unsigned char> array)
-    {
-        auto buf = array.request();
-        unsigned char* ptr = (unsigned char*) buf.ptr;
-        // call pure C++ function
-        int status = rocalCopyToOutput(context, ptr, buf.size);
-        return py::cast<py::none>(Py_None);
-    }
-
     py::object wrapper_image_name_length(RocalContext context, py::array_t<int> array)
     {
         auto buf = array.request();
@@ -97,6 +89,17 @@ namespace rocal{
         std::string s(ptr);
         free(ptr);
         return py::bytes(s);
+    }
+
+    ''' 
+    # Commenting out the block as we no more use wrappers. Will remove this block in the upcoming PRs 
+    py::object wrapper_copy_to_output(RocalContext context, py::array_t<unsigned char> array)
+    {
+        auto buf = array.request();
+        unsigned char* ptr = (unsigned char*) buf.ptr;
+        // call pure C++ function
+        int status = rocalCopyToOutput(context, ptr, buf.size);
+        return py::cast<py::none>(Py_None);
     }
 
     py::object wrapper_tensor(RocalContext context, py::object p,
@@ -201,15 +204,7 @@ namespace rocal{
         rocalGetImageId(context,ptr);
         return py::cast<py::none>(Py_None);
     }
-    py::object wrapper_labels_BB_count_copy(RocalContext context, py::array_t<int> array)
 
-    {
-        auto buf = array.request();
-        int* ptr = (int*) buf.ptr;
-        // call pure C++ function
-        int count =rocalGetBoundingBoxCount(context,ptr);
-        return py::cast(count);
-    }
 
 
     py::object wrapper_BB_label_copy(RocalContext context, py::array_t<int> array)
@@ -294,7 +289,7 @@ namespace rocal{
         rocalRandomBBoxCrop(context, all_boxes_overlap, no_crop, p_aspect_ratio, has_shape, crop_width, crop_height, num_attempts, p_scaling, total_num_attempts);
         return py::cast<py::none>(Py_None);
     }
-
+    '''
 
     PYBIND11_MODULE(rocal_pybind, m) {
         m.doc() = "Python bindings for the C++ portions of ROCAL";
@@ -316,6 +311,326 @@ namespace rocal{
             .def_readwrite("decode_time",&TimingInfo::decode_time)
             .def_readwrite("process_time",&TimingInfo::process_time)
             .def_readwrite("transfer_time",&TimingInfo::transfer_time);
+        py::class_<rocalTensor>(m, "rocalTensor")
+            .def(
+                "get_roi_at",
+                [](rocalTensor &output_tensor, uint idx)
+                {
+                    return std::make_pair(output_tensor.info().get_roi()[idx].x1, output_tensor.info().get_roi()[idx].y1);
+                },
+                R"code(
+                Returns a tensor ROI
+                ex : width, height in case of an image data
+                ex : samples , channels in case of an audio data
+                )code"
+                )
+            .def(
+                "get_rois",
+                [](rocalTensor &output_tensor)
+                {
+                    return py::array(py::buffer_info(
+                            (int *)(output_tensor.info().get_roi()),
+                            sizeof(int),
+                            py::format_descriptor< int>::format(),
+                            1,
+                            {output_tensor.info().dims().at(0) * 4},
+                            {sizeof(int) }));
+                },
+                R"code(
+                Returns a tensor ROI
+                ex : width, height in case of an image data
+                ex : samples , channels in case of an audio data
+                )code"
+            )
+            .def(
+                "num_of_dims",
+                [](rocalTensor &output_tensor)
+                {
+                    return output_tensor.info().num_of_dims();
+                },
+                R"code(
+                Returns a tensor data's total number of dimensions.
+                ex: 3 in case of audio, 4 in case of an image, 5 in case of video 
+                )code"
+            )
+            .def(
+                "max_shape",
+                [](rocalTensor &output_tensor) {
+                    return std::make_pair(output_tensor.info().max_shape().at(0), output_tensor.info().max_shape().at(1));
+                },
+                R"code(
+                Returns a tensor buffer's width.
+                )code"
+            )
+            .def(
+                "batch_size",
+                [](rocalTensor &output_tensor) {
+                    return output_tensor.info().dims().at(0);
+                },
+                R"code(
+                Returns a tensor batch size.
+                )code"
+            )
+            .def(
+                "color_format",
+                [](rocalTensor &output_tensor) {
+                    switch(output_tensor.info().color_format())
+                    {
+                        case RocalColorFormat::RGB24:
+                            return 3;
+                        case RocalColorFormat::BGR24:
+                            return 3;
+                        case RocalColorFormat::RGB_PLANAR:
+                            return 3;
+                        case RocalColorFormat::U8:
+                            return 1;
+                    }
+                },
+                R"code(
+                Returns a tensor batch size.
+                )code"
+            )
+            .def("layout", [](rocalTensor &output_tensor) {
+                switch(output_tensor.info().layout()) {
+                    case RocalTensorlayout::NHWC:
+                        return "NHWC";
+                    case RocalTensorlayout::NCHW:
+                        return "NCHW";
+                }
+            },
+                R"code(
+                Returns layout of tensor.
+                )code"
+            )
+            .def("dtype", [](rocalTensor &output_tensor) {
+                switch(output_tensor.info().data_type()) {
+                    case RocalTensorDataType::FP32:
+                        return "float32";
+                    case RocalTensorDataType::UINT8:
+                        return "uint8";
+                    case RocalTensorDataType::FP16:
+                        return "float16";
+                }
+            },
+                R"code(
+                Returns dtype of tensor.
+                )code"
+            )
+            .def("torch_dtype", [](rocalTensor &output_tensor) {
+                switch(output_tensor.info().data_type()) {
+                    case RocalTensorDataType::FP32:
+                        return "torch.float32";
+                    case RocalTensorDataType::UINT8:
+                        return "torch.float16";
+                    case RocalTensorDataType::FP16:
+                        return "torch.uint8";
+                }
+            },
+                R"code(
+                Returns dtype of torch tensor.
+                )code"
+            )
+            .def("numpy_dtype", [](rocalTensor &output_tensor) {
+                switch(output_tensor.info().data_type()) {
+                    case RocalTensorDataType::FP32:
+                        return "np.float32";
+                    case RocalTensorDataType::UINT8:
+                        return "np.float16";
+                    case RocalTensorDataType::FP16:
+                        return "np.uint8";
+                }
+            },
+                R"code(
+                Returns dtype of torch tensor.
+                )code"
+            )
+            .def("cupy_dtype", [](rocalTensor &output_tensor) {
+                switch(output_tensor.info().data_type()) {
+                    case RocalTensorDataType::FP32:
+                        return "cp.float32";
+                    case RocalTensorDataType::UINT8:
+                        return "cp.float16";
+                    case RocalTensorDataType::FP16:
+                        return "cp.uint8";
+                }
+            },
+                R"code(
+                Returns dtype of torch tensor.
+                )code"
+            )
+            .def("dims", [](rocalTensor &output_tensor) {
+                return output_tensor.info().dims();
+            },
+                R"code(
+                Returns dims of tensor.
+                )code"
+            )
+            m.def("dimensions", []=(rocalTensor &output_tensor) {
+            py::list list;
+            for (uint i = 0; i < output_tensor.info().dims(); i++)
+                list.append(output_tensor.info().dims().at(i));
+            return list; 
+            });
+            .def(
+            "copy_data", [](rocalTensor &output_tensor, py::object p) {
+                auto ptr = ctypes_void_ptr(p);
+                output_tensor.copy_data(ptr);
+            },
+                R"code(
+                Copies the ring buffer data to python buffer pointers.
+                )code"
+            )
+            .def(
+            "copy_data", [](rocalTensor &output_tensor, py::object p, uint last_batch_size)
+            {
+            auto ptr = ctypes_void_ptr(p);
+            output_tensor.copy_data(ptr, last_batch_size);
+            }
+            )
+            .def(
+            "copy_data", [](rocalTensor &output_tensor, py::object p, uint max_x1, uint max_y1)
+            {
+            auto ptr = ctypes_void_ptr(p);
+            output_tensor.copy_data(ptr, max_x1, max_y1);
+            }
+            ,py::return_value_policy::reference
+            )
+            .def(
+                "at",
+                [](rocalTensor &output_tensor, uint idx) {
+                    uint h = output_tensor.info().max_shape().at(1);
+                    uint w = output_tensor.info().max_shape().at(0);
+                    switch(output_tensor.info().data_type()) 
+                    {
+                        case RocalTensorDataType::UINT8:
+                            if (output_tensor.info().layout() == RocalTensorlayout::NHWC)
+                            {
+                                unsigned c = output_tensor.info().dims().at(3);
+                                return py::array(py::buffer_info(
+                                    ((unsigned char *)(output_tensor.buffer())) + idx * c * h * w,
+                                    sizeof(unsigned char),
+                                    py::format_descriptor<unsigned char>::format(),
+                                    output_tensor.info().num_of_dims() - 1,
+                                    {h, w, c},
+                                    {sizeof(unsigned char) * w * c, sizeof(unsigned char) * c, sizeof(unsigned char)}));
+                            }
+                            else if (output_tensor.info().layout() == RocalTensorlayout::NCHW)
+                            {
+                                unsigned c = output_tensor.info().dims().at(1);
+                                return py::array(py::buffer_info(
+                                    ((unsigned char *)(output_tensor.buffer())) + idx * c * h * w,
+                                    sizeof(unsigned char),
+                                    py::format_descriptor<unsigned char>::format(),
+                                    output_tensor.info().num_of_dims() - 1,
+                                    {c, h, w},
+                                    {sizeof(unsigned char) * h * w, sizeof(unsigned char) * w, sizeof(unsigned char)}));
+                            }
+                        case RocalTensorDataType::FP32:
+                            if (output_tensor.info().layout() == RocalTensorlayout::NHWC)
+                            {
+                                unsigned c = output_tensor.info().dims().at(3);
+                                return py::array(py::buffer_info(
+                                    ((float *)(output_tensor.buffer())) + idx * c * h * w,
+                                    sizeof(float),
+                                    py::format_descriptor<float>::format(),
+                                    output_tensor.info().num_of_dims() - 1,
+                                    {h, w, c},
+                                    {sizeof(float) * w * c, sizeof(float) * c, sizeof(float)}));
+                            }
+
+                            else if (output_tensor.info().layout() == RocalTensorlayout::NCHW)
+                            {
+                                unsigned c = output_tensor.info().dims().at(1);
+                                return py::array(py::buffer_info(
+                                    ((float *)(output_tensor.buffer())) + idx * c * h * w,
+                                    sizeof(float),
+                                    py::format_descriptor<float>::format(),
+                                    output_tensor.info().num_of_dims() - 1,
+                                    {c, h, w},
+                                    {sizeof(float) * h * w, sizeof(float) * w, sizeof(float)}));
+                            }
+                    }
+                },
+                "idx"_a,
+                R"code(
+                Returns a rocAL tensor at given position `idx` in the rocalTensorlist.
+                )code",
+                py::keep_alive<0, 1>());
+        py::class_<rocalTensorList>(m, "rocalTensorList")
+            .def(
+                "__getitem__",
+                [](rocalTensorList &output_tensor_list, uint idx) {
+                    return output_tensor_list.at(idx);
+                },
+                R"code(
+                Returns a tensor at given position in the list.
+                )code")
+
+            .def("at",
+                [](rocalTensorList &output_tensor_list, uint idx) {
+                    uint h = output_tensor_list.at(idx)->info().max_shape().at(1);
+                    uint w = output_tensor_list.at(idx)->info().max_shape().at(0);
+                    switch(output_tensor_list.at(idx)->info().data_type()) 
+                    {
+                        case RocalTensorDataType::UINT8:
+                            if (output_tensor_list.at(idx)->info().layout() == RocalTensorlayout::NHWC)
+                            {
+                                unsigned n = output_tensor_list.at(idx)->info().dims().at(0);
+                                unsigned c = output_tensor_list.at(idx)->info().dims().at(3);
+                                return py::array(py::buffer_info(
+                                    (unsigned char *)(output_tensor_list.at(idx)->buffer()),
+                                    sizeof(unsigned char),
+                                    py::format_descriptor<unsigned char>::format(),
+                                    output_tensor_list.at(idx)->info().num_of_dims(),
+                                    {n, h, w, c},
+                                    {sizeof(unsigned char) * w * h * c, sizeof(unsigned char) * w * c, sizeof(unsigned char) * c, sizeof(unsigned char)}));
+                            }
+                            else if (output_tensor_list.at(idx)->info().layout() == RocalTensorlayout::NCHW)
+                            {
+                                unsigned n = output_tensor_list.at(idx)->info().dims().at(0);
+                                unsigned c = output_tensor_list.at(idx)->info().dims().at(1);
+                                return py::array(py::buffer_info(
+                                    (unsigned char *)(output_tensor_list.at(idx)->buffer()),
+                                    sizeof(unsigned char),
+                                    py::format_descriptor<unsigned char>::format(),
+                                    output_tensor_list.at(idx)->info().num_of_dims(),
+                                    {n, c, h, w},
+                                    {sizeof(unsigned char) * c * h * w, sizeof(unsigned char) * h * w, sizeof(unsigned char) * w, sizeof(unsigned char)}));
+                            }
+                        case RocalTensorDataType::FP32:
+                            if (output_tensor_list.at(idx)->info().layout() == RocalTensorlayout::NHWC)
+                            {
+                                unsigned n = output_tensor_list.at(idx)->info().dims().at(0);
+                                unsigned c = output_tensor_list.at(idx)->info().dims().at(3);
+                                return py::array(py::buffer_info(
+                                    (float *)(output_tensor_list.at(idx)->buffer()),
+                                    sizeof(float),
+                                    py::format_descriptor<float>::format(),
+                                    output_tensor_list.at(idx)->info().num_of_dims(),
+                                    {n, h, w, c},
+                                    {sizeof(float) * w * h * c, sizeof(float) * w * c, sizeof(float) * c, sizeof(float)}));
+                            }
+                            else if (output_tensor_list.at(idx)->info().layout() == RocalTensorlayout::NCHW)
+                            {
+                                unsigned n = output_tensor_list.at(idx)->info().dims().at(0);
+                                unsigned c = output_tensor_list.at(idx)->info().dims().at(1);
+                                return py::array(py::buffer_info(
+                                    (float *)(output_tensor_list.at(idx)->buffer()),
+                                    sizeof(float),
+                                    py::format_descriptor<float>::format(),
+                                    output_tensor_list.at(idx)->info().num_of_dims(),
+                                    {n, c, h, w},
+                                    {sizeof(float) * c * h * w, sizeof(float) * h * w, sizeof(float) * w, sizeof(float)}));
+                            }
+                    }
+                },
+                "idx"_a,
+                R"code(
+                Returns a rocAL tensor at given position `i` in the rocalTensorlist.
+                )code",
+                py::keep_alive<0, 1>());
+        py::class_<rocalTensorInfo>(m, "rocalTensorInfo");
+
         py::module types_m = m.def_submodule("types");
         types_m.doc() = "Datatypes and options used by ROCAL";
         py::enum_<RocalStatus>(types_m, "RocalStatus", "Status info")
@@ -332,7 +647,12 @@ namespace rocal{
         py::enum_<RocalTensorOutputType>(types_m,"RocalTensorOutputType","Tensor types")
             .value("FLOAT",ROCAL_FP32)
             .value("FLOAT16",ROCAL_FP16)
-            .value("UINT8",ROCAL_U8)
+            .value("UINT8",ROCAL_UINT8)
+            .export_values();
+        py::enum_<RocalOutputMemType>(types_m, "RocalOutputMemType", "Output memory types")
+            .value("CPU_MEMORY", ROCAL_MEMCPY_HOST)
+            .value("GPU_MEMORY", ROCAL_MEMCPY_GPU)
+            .value("PINNED_MEMORY", ROCAL_MEMCPY_PINNED)
             .export_values();
         py::enum_<RocalOutputMemType>(types_m, "RocalOutputMemType", "Output memory types")
             .value("CPU_MEMORY", ROCAL_MEMCPY_HOST)
@@ -382,16 +702,12 @@ namespace rocal{
             .value("DECODER_VIDEO_FFMPEG_HW",ROCAL_DECODER_VIDEO_FFMPEG_HW)
             .export_values();
         // rocal_api_info.h
-        m.def("getOutputWidth",&rocalGetOutputWidth);
-        m.def("getOutputHeight",&rocalGetOutputHeight);
-        m.def("getOutputColorFormat",&rocalGetOutputColorFormat);
-        m.def("getRemainingImages",&rocalGetRemainingImages);
-        m.def("getOutputImageCount",&rocalGetAugmentationBranchCount);
-        m.def("getImageWidth",&rocalGetImageWidth);
-        m.def("getImageHeight",&rocalGetImageHeight);
-        m.def("getImagePlanes",&rocalGetImagePlanes);
         m.def("getImageName",&wrapper_image_name);
-        m.def("getImageId", &wrapper_image_id);
+        m.def("getImageId", [](RocalContext context, py::array_t<int> array) {
+            auto buf = array.request();
+            int* ptr = (int*) buf.ptr;
+            return rocalGetImageId(context, ptr);
+        });
         m.def("getImageNameLen",&wrapper_image_name_length);
         m.def("getStatus",&rocalGetStatus);
         m.def("setOutputImages",&rocalSetOutputs);
@@ -418,7 +734,12 @@ namespace rocal{
         m.def("getCupyOneHotEncodedLabels",&wrapper_cupy_one_hot_label_copy);
         m.def("isEmpty",&rocalIsEmpty);
         m.def("BoxEncoder",&rocalBoxEncoder);
-        m.def("getTimingInfo",rocalGetTimingInfo);
+        m.def("BoxIOUMatcher", &rocalBoxIOUMatcher);
+        m.def("getImgSizes", [](RocalContext context, py::array_t<int> array) {
+            auto buf = array.request();
+            int* ptr = (int*) buf.ptr;
+            rocalGetImageSizes(context, ptr);
+        });
         // rocal_api_parameter.h
         m.def("setSeed",&rocalSetSeed);
         m.def("getSeed",&rocalGetSeed);
@@ -481,254 +802,78 @@ namespace rocal{
         m.def("VideoDecoderResize",&rocalVideoFileResize,"Reads videos from the source given and decodes it according to the policy only for Videos as inputs. Resizes the decoded frames to the dest width and height.",
             py::return_value_policy::reference);
         m.def("SequenceReader",&rocalSequenceReader,"Creates JPEG image reader and decoder. Reads [Frames] sequences from a directory representing a collection of streams.",
-            py::return_value_policy::reference,
-            py::arg("context"),
-            py::arg("source_path"),
-            py::arg("color_format"),
-            py::arg("shard_count"),
-            py::arg("sequence_length"),
-            py::arg("is_output"),
-            py::arg("shuffle") = false,
-            py::arg("loop") = false,
-            py::arg("frame_step"),
-            py::arg("frame_stride"));
+            py::return_value_policy::reference);
+        m.def("Audio_DecoderSliceShard",&rocalAudioFileSourceSingleShard,"Reads file from the source given and decodes it according to the policy",
+            py::return_value_policy::reference);
+        m.def("Audio_decoder",&rocalAudioFileSource,"Reads file from the source given and decodes it according to the policy",
+            py::return_value_policy::reference);
         m.def("rocalResetLoaders",&rocalResetLoaders);
         // rocal_api_augmentation.h
         m.def("SSDRandomCrop",&rocalSSDRandomCrop,
-            py::return_value_policy::reference,
-            py::arg("context"),
-            py::arg("input"),
-            py::arg("is_output"),
-	        py::arg("p_threshold"),
-            py::arg("crop_area_factor") = NULL,
-            py::arg("crop_aspect_ratio") = NULL,
-            py::arg("crop_pos_x") = NULL,
-            py::arg("crop_pos_y") = NULL,
-            py::arg("num_of_attempts") = 20);
-        m.def("Resize",&rocalResize, py::return_value_policy::reference);
+            py::return_value_policy::reference);
+        m.def("Resize",&rocalResize, 
+            py::return_value_policy::reference);
         m.def("ResizeMirrorNormalize", &rocalResizeMirrorNormalize,
-            py::return_value_policy::reference,
-            py::arg("context"),
-            py::arg("input"),
-            py::arg("resize_min"),
-            py::arg("resize_max"),
-            py::arg("mean"),
-            py::arg("std_dev"),
-            py::arg("is_output"),
-            py::arg("mirror") = NULL);
+            py::return_value_policy::reference);
         m.def("CropResize",&rocalCropResize,
-            py::return_value_policy::reference,
-            py::arg("context"),
-            py::arg("input"),
-            py::arg("dest_width"),
-            py::arg("dest_height"),
-            py::arg("is_output"),
-            py::arg("area") = NULL,
-            py::arg("aspect_ratio") = NULL,
-            py::arg("x_center_drift") = NULL,
-            py::arg("y_center_drift") = NULL);
+            py::return_value_policy::reference);
         m.def("rocalCopy",&rocalCopy,
-            py::return_value_policy::reference,
-            py::arg("context"),
-            py::arg("input"),
-            py::arg("is_output"));
+            py::return_value_policy::reference);
         m.def("rocalNop",&rocalNop,
-            py::return_value_policy::reference,
-            py::arg("context"),
-            py::arg("input"),
-            py::arg("is_output"));
+            py::return_value_policy::reference);
         m.def("ColorTwist",&rocalColorTwist,
-            py::return_value_policy::reference,
-            py::arg("context"),
-            py::arg("input"),
-            py::arg("is_output"),
-            py::arg("alpha") = NULL,
-            py::arg("beta") = NULL,
-            py::arg("hue") = NULL,
-            py::arg("sat") = NULL);
-        m.def("ColorTwistFixed",&rocalColorTwistFixed);
+            py::return_value_policy::reference);
+        m.def("ColorTwistFixed",&rocalColorTwistFixed,
+             py::return_value_policy::reference);
         m.def("CropMirrorNormalize",&rocalCropMirrorNormalize,
-            py::return_value_policy::reference,
-            py::arg("context"),
-            py::arg("input"),
-            py::arg("crop_depth"),
-            py::arg("crop_height"),
-            py::arg("crop_width"),
-            py::arg("start_x"),
-            py::arg("start_y"),
-            py::arg("start_z"),
-            py::arg("mean"),
-            py::arg("std_dev"),
-            py::arg("is_output"),
-            py::arg("mirror") = NULL);
+            py::return_value_policy::reference);
         m.def("Crop",&rocalCrop,
-            py::return_value_policy::reference,
-            py::arg("context"),
-            py::arg("input"),
-            py::arg("is_output"),
-            py::arg("crop_width") = NULL,
-            py::arg("crop_height") = NULL,
-            py::arg("crop_depth") = NULL,
-            py::arg("crop_pox_x") = NULL,
-            py::arg("crop_pos_y") = NULL,
-            py::arg("crop_pos_z") = NULL);
+            py::return_value_policy::reference);
         m.def("CropFixed",&rocalCropFixed,
-            py::return_value_policy::reference,
-            py::arg("context"),
-            py::arg("input"),
-            py::arg("crop_width"),
-            py::arg("crop_height"),
-            py::arg("crop_depth"),
-            py::arg("is_output"),
-            py::arg("crop_pox_x"),
-            py::arg("crop_pos_y"),
-            py::arg("crop_pos_z"));
+            py::return_value_policy::reference);
         m.def("CenterCropFixed",&rocalCropCenterFixed,
-            py::return_value_policy::reference,
-            py::arg("context"),
-            py::arg("input"),
-            py::arg("crop_width"),
-            py::arg("crop_height"),
-            py::arg("crop_depth"),
-            py::arg("is_output"));
+            py::return_value_policy::reference);
         m.def("Brightness",&rocalBrightness,
-            py::return_value_policy::reference,
-            py::arg("context"),
-            py::arg("input"),
-            py::arg("is_output"),
-            py::arg("alpha") = NULL,
-            py::arg("beta") = NULL);
-        m.def("Brightness",&rocalBrightness);
+            py::return_value_policy::reference);
         m.def("GammaCorrection",&rocalGamma,
-            py::return_value_policy::reference,
-            py::arg("context"),
-            py::arg("input"),
-            py::arg("is_output"),
-            py::arg("alpha") = NULL);
+            py::return_value_policy::reference);
         m.def("Rain",&rocalRain,
-            py::return_value_policy::reference,
-            py::arg("context"),
-            py::arg("input"),
-            py::arg("is_output"),
-            py::arg("rain_value") = NULL,
-            py::arg("rain_width") = NULL,
-            py::arg("rain_height") = NULL,
-            py::arg("rain_transparency") = NULL);
+            py::return_value_policy::reference);
         m.def("Snow",&rocalSnow,
-            py::return_value_policy::reference,
-            py::arg("context"),
-            py::arg("input"),
-            py::arg("is_output"),
-            py::arg("shift") = NULL);
+            py::return_value_policy::reference);
         m.def("Blur",&rocalBlur,
-            py::return_value_policy::reference,
-            py::arg("context"),
-            py::arg("input"),
-            py::arg("is_output"),
-            py::arg("sdev") = NULL);
+            py::return_value_policy::reference);
         m.def("Contrast",&rocalContrast,
-            py::return_value_policy::reference,
-            py::arg("context"),
-            py::arg("input"),
-            py::arg("is_output"),
-            py::arg("min") = NULL,
-            py::arg("max") = NULL);
-        m.def("Flip",&rocalFlip);
-        m.def("Jitter",&rocalJitter,
-            py::return_value_policy::reference,
-            py::arg("context"),
-            py::arg("input"),
-            py::arg("is_output"),
-            py::arg("kernel_size") = NULL);
-        m.def("Rotate",&rocalRotate,
-            py::return_value_policy::reference,
-            py::arg("context"),
-            py::arg("input"),
-            py::arg("is_output"),
-            py::arg("angle") = NULL,
-            py::arg("dest_width") = 0,
-            py::arg("dest_height") = 0);
-        m.def("Hue",&rocalHue,
-            py::return_value_policy::reference,
-            py::arg("context"),
-            py::arg("input"),
-            py::arg("is_output"),
-            py::arg("hue") = NULL);
-        m.def("Saturation",&rocalSaturation,
-            py::return_value_policy::reference,
-            py::arg("context"),
-            py::arg("input"),
-            py::arg("is_output"),
-            py::arg("sat") = NULL);
-        m.def("WarpAffine",&rocalWarpAffine,
-            py::return_value_policy::reference,
-            py::arg("context"),
-            py::arg("input"),
-            py::arg("is_output"),
-            py::arg("dest_width") = 0,
-            py::arg("dest_height") = 0,
-            py::arg("x0") = NULL,
-            py::arg("x1") = NULL,
-            py::arg("y0") = NULL,
-            py::arg("y1") = NULL,
-            py::arg("o0") = NULL,
-            py::arg("o1") = NULL);
-        m.def("Fog",&rocalFog,
-            py::return_value_policy::reference,
-            py::arg("context"),
-            py::arg("input"),
-            py::arg("is_output"),
-            py::arg("fog_value") = NULL);
-        m.def("FishEye",&rocalFishEye,
-            py::return_value_policy::reference,
-            py::arg("context"),
-            py::arg("input"),
-            py::arg("is_output"));
-        m.def("Vignette",&rocalVignette,
-            py::return_value_policy::reference,
-            py::arg("context"),
-            py::arg("input"),
-            py::arg("is_output"),
-            py::arg("sdev") = NULL);
-        m.def("SnPNoise",&rocalSnPNoise,
-            py::return_value_policy::reference,
-            py::arg("context"),
-            py::arg("input"),
-            py::arg("is_output"),
-            py::arg("sdev") = NULL);
-        m.def("Exposure",&rocalExposure,
-            py::return_value_policy::reference,
-            py::arg("context"),
-            py::arg("input"),
-            py::arg("is_output"),
-            py::arg("shift") = NULL);
-        m.def("Pixelate",&rocalPixelate,
-            py::return_value_policy::reference,
-            py::arg("context"),
-            py::arg("input"),
-            py::arg("is_output"));
-        m.def("Blend",&rocalBlend);
+            py::return_value_policy::reference);
         m.def("Flip",&rocalFlip,
-            py::return_value_policy::reference,
-            py::arg("context"),
-            py::arg("input"),
-            py::arg("is_output"),
-            py::arg("flip_axis") = NULL);
+            py::return_value_policy::reference);
+        m.def("Jitter",&rocalJitter,
+            py::return_value_policy::reference);
+        m.def("Rotate",&rocalRotate,
+            py::return_value_policy::reference);
+        m.def("Hue",&rocalHue,
+            py::return_value_policy::reference);
+        m.def("Saturation",&rocalSaturation,
+            py::return_value_policy::reference);
+        m.def("WarpAffine",&rocalWarpAffine,
+            py::return_value_policy::reference);
+        m.def("Fog",&rocalFog,
+            py::return_value_policy::reference);
+        m.def("FishEye",&rocalFishEye,
+            py::return_value_policy::reference);
+        m.def("Vignette",&rocalVignette,
+            py::return_value_policy::reference);
+        m.def("SnPNoise",&rocalSnPNoise,
+            py::return_value_policy::reference);
+        m.def("Exposure",&rocalExposure,
+            py::return_value_policy::reference);
+        m.def("Pixelate",&rocalPixelate,
+            py::return_value_policy::reference);
+        m.def("Blend",&rocalBlend,
+            py::return_value_policy::reference);
         m.def("RandomCrop",&rocalRandomCrop,
-            py::return_value_policy::reference,
-            py::arg("context"),
-            py::arg("input"),
-            py::arg("is_output"),
-            py::arg("crop_area_factor") = NULL,
-            py::arg("crop_aspect_ratio") = NULL,
-            py::arg("crop_pos_x") = NULL,
-            py::arg("crop_pos_y") = NULL,
-            py::arg("num_of_attempts") = 20);
+            py::return_value_policy::reference);
         m.def("ColorTemp",&rocalColorTemp,
-            py::return_value_policy::reference,
-            py::arg("context"),
-            py::arg("input"),
-            py::arg("is_output"),
-            py::arg("adj_value_param") = NULL);
+            py::return_value_policy::reference);
     }
 }

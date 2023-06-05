@@ -138,6 +138,7 @@ class Pipeline(object):
         self._name = None
         self._anchors = None
         self._BoxEncoder = None
+        self._BoxIOUMatcher = None
         self._encode_tensor = None
         self._numOfClasses = None
         self._oneHotEncoding = False
@@ -156,7 +157,7 @@ class Pipeline(object):
             exit(0)
         return self
 
-    def run(self):
+    def rocalRun(self):
         """ Run the pipeline using rocalRun call
         """
         status = b.rocalRun(self._handle)
@@ -275,14 +276,14 @@ class Pipeline(object):
     def GetImageId(self, array):
         b.getImageId(self._handle, array)
 
-    def GetBoundingBoxCount(self, array):
-        return b.getBoundingBoxCount(self._handle, array)
+    def GetBoundingBoxCount(self):
+        return b.getBoundingBoxCount(self._handle)
 
-    def GetBBLabels(self, array):
-        return b.getBBLabels(self._handle, array)
+    def GetBoundingBoxLabels(self):
+        return b.getBoundingBoxLabels(self._handle)
 
-    def GetBBCords(self, array):
-        return b.getBBCords(self._handle, array)
+    def GetBoundingBoxCords(self):
+        return b.getBoundingBoxCords(self._handle)
 
     def getImageLabels(self, array):
         if (isinstance(array,np.ndarray)):
@@ -302,23 +303,8 @@ class Pipeline(object):
     def GetImgSizes(self, array):
         return b.getImgSizes(self._handle, array)
 
-    def GetBoundingBox(self,array):
-        return array
-
     def GetImageNameLength(self,idx):
         return b.getImageNameLen(self._handle,idx)
-
-    def getOutputWidth(self):
-        return b.getOutputWidth(self._handle)
-
-    def getOutputHeight(self):
-        return b.getOutputHeight(self._handle)
-
-    def getOutputImageCount(self):
-        return b.getOutputImageCount(self._handle)
-
-    def getOutputColorFormat(self):
-        return b.getOutputColorFormat(self._handle)
 
     def getRemainingImages(self):
         return b.getRemainingImages(self._handle)
@@ -331,6 +317,29 @@ class Pipeline(object):
 
     def Timing_Info(self):
         return b.getTimingInfo(self._handle)
+
+    def GetMatchedIndices(self):
+        return b.getMatchedIndices(self._handle)
+
+    def GetOutputTensors(self):
+        return b.getOutputTensors(self._handle)
+
+    def run(self):
+        """
+        It rises StopIteration if data set reached its end.
+        return:
+        :return:
+        A list of `rocalTensorList` objects for respective pipeline outputs.
+        """
+        try:
+            print("getRemainingImages :", self.getRemainingImages())
+            if self.getRemainingImages() > 0:
+                self.rocalRun()
+                return b.getOutputTensors(self._handle)
+        except:
+                print("Raise stop iter")
+                raise StopIteration
+
 
 def _discriminate_args(func, **func_kwargs):
     """Split args on those applicable to Pipeline constructor and the decorated function."""
