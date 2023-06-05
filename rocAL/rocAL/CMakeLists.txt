@@ -38,6 +38,11 @@ set(BOOST_COMPONENTS filesystem system)
 find_package(Boost COMPONENTS ${BOOST_COMPONENTS} QUIET)
 set(THREADS_PREFER_PTHREAD_FLAG ON)
 find_package(Threads QUIET)
+# find_package(SndFile)
+find_library(libsnd_LIBS
+    NAMES sndfile libsndfile
+    PATHS ${CMAKE_SYSTEM_PREFIX_PATH} ${LIBSND_ROOT_DIR} "/usr/local"
+    PATH_SUFFIXES lib lib64)
 
 if( GPU_SUPPORT AND "${BACKEND}" STREQUAL "HIP")
     if(NOT DEFINED HIP_PATH)
@@ -118,13 +123,15 @@ if(NOT Threads_FOUND)
     set(BUILD_ROCAL false)
     message("-- ${Yellow}NOTE: rocAL library requires Threads, Not Found ${ColourReset}")
 endif()
+if(${libsnd_LIBS} STREQUAL libsnd_LIBS-NOTFOUND)
+    message("-- ${Yellow}NOTE: rocAL library requires libsnd(sndfile), Not found. Try to specify it's location with `-DLIBSND_ROOT_DIR`.${ColourReset}")
+endif()
+message(STATUS "Found libsnd: ${libsnd_LIBS}")
 
 if(${BUILD_ROCAL})
-    # AMD OpenVX & VX_RPP
-    set(LINK_LIBRARY_LIST ${LINK_LIBRARY_LIST} openvx vx_rpp)
-    # AMD RPP
+    # AMD OpenVX & RPP
     include_directories(${AMDRPP_INCLUDE_DIRS})
-    set(LINK_LIBRARY_LIST ${LINK_LIBRARY_LIST} ${AMDRPP_LIBRARIES})
+    set(LINK_LIBRARY_LIST ${LINK_LIBRARY_LIST} openvx vx_rpp)
     # OpenMP
     set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${OpenMP_C_FLAGS}")
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
@@ -142,7 +149,9 @@ if(${BUILD_ROCAL})
     set(LINK_LIBRARY_LIST ${LINK_LIBRARY_LIST} ${PROTOBUF_LIBRARIES})
     # LMDB -- TBD: FIND PACKAGE Required
     set(LINK_LIBRARY_LIST ${LINK_LIBRARY_LIST} lmdb)
-
+    # SndFile
+    include_directories(${SndFile_INCLUDE_DIRS})
+    set(LINK_LIBRARY_LIST ${LINK_LIBRARY_LIST} sndfile)
     # rocAL uses C++ 17 features
     set(CMAKE_CXX_STANDARD 17)
     message("-- ${Green}ROCm Augmentation Library -- rocAL module added${ColourReset}")
@@ -162,11 +171,15 @@ if(${BUILD_ROCAL})
                 ./include/augmentations/color_augmentations/
                 ./include/augmentations/effects_augmentations/
                 ./include/augmentations/geometry_augmentations/
+                ./include/augmentations/audio_augmentations/
+                ./include/augmentations/arithmetic_augmentations/
                 ./include/augmentations/
+                ./include/decoders/audio/
                 ./include/decoders/image/
                 ./include/decoders/video/
                 ./include/device/
                 ./include/loaders/
+                ./include/loaders/audio/
                 ./include/loaders/image/
                 ./include/loaders/video/
                 ./include/meta_data/
@@ -261,6 +274,13 @@ if(${BUILD_ROCAL})
                 include/api/rocal_api_data_transfer.h
                 include/api/rocal_api_parameters.h
                 include/api/rocal_api_meta_data.h
+                include/pipeline/tensor.h
+                include/device/device_manager.h
+                include/device/device_data_transfer_code.h
+                include/device/device_code.h
+                include/pipeline/commons.h
+                include/pipeline/exception.h
+                include/pipeline/log.h
             DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/mivisionx/rocal
         )
     endif(BUILD_DEV)

@@ -35,6 +35,8 @@ THE SOFTWARE.
 #include "node_fused_jpeg_crop_single_shard.h"
 #include "node_video_loader.h"
 #include "node_video_loader_single_shard.h"
+#include "node_audio_loader.h"
+#include "node_audio_loader_single_shard.h"
 #include "node_cifar10_loader.h"
 #include "meta_data_reader.h"
 #include "meta_data_graph.h"
@@ -65,7 +67,10 @@ public:
     template <typename T, typename M> std::shared_ptr<T> meta_add_node(std::shared_ptr<M> node);
     rocalTensor *create_tensor(const rocalTensorInfo &info, bool is_output);
     rocalTensor *create_loader_output_tensor(const rocalTensorInfo &info);
+    rocalTensor *create_output_tensor(const rocalTensorInfo &info);
+    rocalTensorList * get_output_tensors();
     MetaDataBatch *create_label_reader(const char *source_path, MetaDataReaderType reader_type);
+    std::vector<rocalTensorList *> create_file_list_label_reader(const char *source_path, const char *file_list_path, MetaDataReaderType reader_type);
     MetaDataBatch *create_video_label_reader(const char *source_path, MetaDataReaderType reader_type, unsigned sequence_length, unsigned frame_step, unsigned frame_stride, bool file_list_frame_num = true);
     MetaDataBatch *create_coco_meta_data_reader(const char *source_path, bool is_output, MetaDataReaderType reader_type , MetaDataType label_type, float sigma = 0.0, unsigned pose_output_width = 0, unsigned pose_output_height = 0);
     MetaDataBatch *create_tf_record_meta_data_reader(const char *source_path, MetaDataReaderType reader_type,  MetaDataType label_type, const std::map<std::string, std::string> feature_key_map);
@@ -283,6 +288,37 @@ template<> inline std::shared_ptr<Cifar10LoaderNode> MasterGraph::add_node(const
     _root_nodes.push_back(node);
     for(auto& output: outputs)
         _tensor_map.insert(std::make_pair(output, node));
+
+    return node;
+}
+
+/*
+ * Explicit specialization for AudioLoaderNode
+ */
+template<> inline std::shared_ptr<AudioLoaderNode> MasterGraph::add_node(const std::vector<rocalTensor*>& inputs, const std::vector<rocalTensor*>& outputs)
+{
+    if(_loader_module)
+        THROW("A loader already exists, cannot have more than one loader")
+    auto node = std::make_shared<AudioLoaderNode>(outputs[0], _device.resources());
+    _loader_module = node->get_loader_module();
+    _loader_module->set_prefetch_queue_depth(_prefetch_queue_depth);
+    _root_nodes.push_back(node);
+    for(auto& output: outputs)
+        _tensor_map.insert(make_pair(output, node));
+
+    return node;
+}
+
+template<> inline std::shared_ptr<AudioLoaderSingleShardNode> MasterGraph::add_node(const std::vector<rocalTensor*>& inputs, const std::vector<rocalTensor*>& outputs)
+{
+    if(_loader_module)
+        THROW("A loader already exists, cannot have more than one loader")
+    auto node = std::make_shared<AudioLoaderSingleShardNode>(outputs[0], _device.resources());
+    _loader_module = node->get_loader_module();
+    _loader_module->set_prefetch_queue_depth(_prefetch_queue_depth);
+    _root_nodes.push_back(node);
+    for(auto& output: outputs)
+        _tensor_map.insert(make_pair(output, node));
 
     return node;
 }
