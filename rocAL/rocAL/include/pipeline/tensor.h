@@ -240,7 +240,7 @@ public:
     int create_from_handle(vx_context context);
     int create_virtual(vx_context context, vx_graph graph);
     bool is_handle_set() { return (_vx_handle != 0); }
-    void set_dims(std::vector<size_t>& dims) { _info.set_dims(dims); }
+    void set_dims(std::vector<size_t> dims) { _info.set_dims(dims); }
 
 private:
     vx_tensor _vx_handle = nullptr;  //!< The OpenVX tensor
@@ -259,7 +259,7 @@ public:
         _tensor_list.emplace_back(tensor);
         _tensor_data_size.emplace_back(tensor->info().data_size());
     }
-    std::vector<uint64_t> data_size() { return _tensor_data_size; }
+    std::vector<uint64_t> &data_size() { return _tensor_data_size; }
     void release() {
         for (auto& tensor : _tensor_list) delete tensor;
     }
