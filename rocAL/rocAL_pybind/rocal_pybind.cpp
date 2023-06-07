@@ -97,7 +97,7 @@ namespace rocal
                                 RocalTensorLayout tensor_format, RocalTensorOutputType tensor_output_type, float multiplier0,
                                 float multiplier1, float multiplier2, float offset0,
                                 float offset1, float offset2,
-                                bool reverse_channels)
+                                bool reverse_channels, RocalOutputMemType output_mem_type)
     {
         auto ptr = ctypes_void_ptr(p);
         // call pure C++ function
@@ -108,9 +108,9 @@ namespace rocal
         if (tensor_format == RocalTensorLayout::ROCAL_NHWC)
             new_tensor_format = RocalTensorlayout::NHWC;
 
-        int status = rocalCopyToOutputTensor(context, ptr, new_tensor_format, tensor_output_type, multiplier0,
+        int status = rocalToTensor(context, ptr, new_tensor_format, tensor_output_type, multiplier0,
                                               multiplier1, multiplier2, offset0,
-                                              offset1, offset2, reverse_channels);
+                                              offset1, offset2, reverse_channels, output_mem_type);
         // std::cerr<<"\n Copy failed with status :: "<<status;
         return py::cast<py::none>(Py_None);
     }
@@ -387,7 +387,7 @@ namespace rocal
         m.def("GetFloatValue", &rocalGetFloatValue);
         m.def("rocalGetBoundingBoxCount", &rocalGetBoundingBoxCount);
         // rocal_api_data_transfer.h
-        m.def("rocalCopyToOutputTensor",&wrapper_tensor);
+        m.def("rocalToTensor",&wrapper_tensor);
         m.def("rocalGetOutputTensors", [](RocalContext context)
               {
             rocalTensorList * tl = rocalGetOutputTensors(context);
