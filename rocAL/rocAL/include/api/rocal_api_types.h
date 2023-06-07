@@ -39,9 +39,9 @@ using half_float::half;
 typedef void * RocalFloatParam;
 typedef void * RocalIntParam;
 typedef void * RocalContext;
-typedef std::vector<rocalTensorList *> RocalMetaData;
-typedef rocalTensor * RocalTensor;
-typedef rocalTensorList * RocalTensorList;
+typedef std::vector<TensorList *> RocalMetaData;
+typedef Tensor * RocalTensor;
+typedef TensorList * RocalTensorList;
 
 typedef std::vector<int> ImageIDBatch,AnnotationIDBatch;
 typedef std::vector<std::string> ImagePathBatch;

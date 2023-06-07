@@ -98,7 +98,7 @@ void allocate_host_or_pinned_mem(void **ptr, size_t size, RocalMemType mem_type)
     }
 }
 
-bool operator==(const rocalTensorInfo &rhs, const rocalTensorInfo &lhs) {
+bool operator==(const TensorInfo &rhs, const TensorInfo &lhs) {
     return (rhs.dims() == lhs.dims() &&
             rhs.mem_type() == lhs.mem_type() &&
             rhs.data_type() == lhs.data_type() &&
@@ -107,7 +107,7 @@ bool operator==(const rocalTensorInfo &rhs, const rocalTensorInfo &lhs) {
 }
 
 
-void rocalTensorInfo::reset_tensor_roi_buffers() {
+void TensorInfo::reset_tensor_roi_buffers() {
     if(!_roi_buf) {
         size_t roi_size = (_layout == RocalTensorlayout::NFCHW || _layout == RocalTensorlayout::NFHWC) ? _dims[0] * _dims[1] : _batch_size; // For Sequences pre allocating the ROI to N * F to replicate in OpenVX extensions
         allocate_host_or_pinned_mem((void **)&_roi_buf, roi_size * 4 * sizeof(unsigned), _mem_type);
@@ -123,14 +123,14 @@ void rocalTensorInfo::reset_tensor_roi_buffers() {
     }
 }
 
-rocalTensorInfo::rocalTensorInfo()
+TensorInfo::TensorInfo()
     : _type(Type::UNKNOWN),
       _num_of_dims(0),
       _dims({}),
       _mem_type(RocalMemType::HOST),
       _data_type(RocalTensorDataType::FP32) {}
 
-rocalTensorInfo::rocalTensorInfo(std::vector<size_t> dims,
+TensorInfo::TensorInfo(std::vector<size_t> dims,
                                  RocalMemType mem_type,
                                  RocalTensorDataType data_type)
     : _type(Type::UNKNOWN),
@@ -145,7 +145,7 @@ rocalTensorInfo::rocalTensorInfo(std::vector<size_t> dims,
     if (_num_of_dims <= 3) _is_image = false;
 }
 
-rocalTensorInfo::rocalTensorInfo(const rocalTensorInfo &other) {
+TensorInfo::TensorInfo(const TensorInfo &other) {
     _type = other._type;
     _num_of_dims = other._num_of_dims;
     _dims = other._dims;
@@ -167,7 +167,7 @@ rocalTensorInfo::rocalTensorInfo(const rocalTensorInfo &other) {
     }
 }
 
-rocalTensorInfo::~rocalTensorInfo() {
+TensorInfo::~TensorInfo() {
     if(!_is_metadata) {
         if(_mem_type == RocalMemType::HIP) {
 #if ENABLE_HIP
@@ -184,7 +184,7 @@ rocalTensorInfo::~rocalTensorInfo() {
     } 
 }
 
-void rocalTensor::update_tensor_roi(const std::vector<uint32_t> &width,
+void Tensor::update_tensor_roi(const std::vector<uint32_t> &width,
                                     const std::vector<uint32_t> &height) {
     if (_info.is_image()) {
         auto max_shape = _info.max_shape();
@@ -214,18 +214,18 @@ void rocalTensor::update_tensor_roi(const std::vector<uint32_t> &width,
     }
 }
 
-rocalTensor::~rocalTensor() {
+Tensor::~Tensor() {
     _mem_handle = nullptr;
     if (_vx_handle) vxReleaseTensor(&_vx_handle);
 }
 
-rocalTensor::rocalTensor(const rocalTensorInfo &tensor_info)
+Tensor::Tensor(const TensorInfo &tensor_info)
     : _info(tensor_info) {
-    _info._type = rocalTensorInfo::Type::UNKNOWN;
+    _info._type = TensorInfo::Type::UNKNOWN;
     _mem_handle = nullptr;
 }
 
-int rocalTensor::create_virtual(vx_context context, vx_graph graph) {
+int Tensor::create_virtual(vx_context context, vx_graph graph) {
     if (_vx_handle) {
         WRN("Tensor object create method is already called ")
         return -1;
@@ -237,11 +237,11 @@ int rocalTensor::create_virtual(vx_context context, vx_graph graph) {
     if ((status = vxGetStatus((vx_reference)_vx_handle)) != VX_SUCCESS)
         THROW("Error: vxCreateVirtualTensor(input:[" + TOSTR(_info.max_shape().at(0)) + "W" + TOSTR(_info.max_shape().at(1)) + "H" + "]): failed " + TOSTR(status))
 
-    _info._type = rocalTensorInfo::Type::VIRTUAL;
+    _info._type = TensorInfo::Type::VIRTUAL;
     return 0;
 }
 
-int rocalTensor::create_from_handle(vx_context context) {
+int Tensor::create_from_handle(vx_context context) {
     if (_vx_handle) {
         WRN("Tensor object create method is already called ")
         return -1;
@@ -261,11 +261,11 @@ int rocalTensor::create_from_handle(vx_context context) {
     vx_status status;
     if ((status = vxGetStatus((vx_reference)_vx_handle)) != VX_SUCCESS)
         THROW("Error: vxCreateTensorFromHandle(input: failed " + TOSTR(status))
-    _info._type = rocalTensorInfo::Type::HANDLE;
+    _info._type = TensorInfo::Type::HANDLE;
     return 0;
 }
 
-int rocalTensor::create(vx_context context) {
+int Tensor::create(vx_context context) {
     if (_vx_handle) {
         WRN("Tensor object create method is already called ")
         return -1;
@@ -277,13 +277,13 @@ int rocalTensor::create(vx_context context) {
     _vx_handle = vxCreateTensor(context, _info.num_of_dims(), _info.dims().data(), tensor_data_type, 0);
     if ((status = vxGetStatus((vx_reference)_vx_handle)) != VX_SUCCESS)
         THROW("Error: vxCreateTensor(input: failed " + TOSTR(status))
-    _info._type = rocalTensorInfo::Type::REGULAR;
+    _info._type = TensorInfo::Type::REGULAR;
     return 0;
 }
 
 #if ENABLE_OPENCL
-unsigned rocalTensor::copy_data(cl_command_queue queue, unsigned char *user_buffer, bool sync) {
-    if (_info._type != rocalTensorInfo::Type::HANDLE) return 0;
+unsigned Tensor::copy_data(cl_command_queue queue, unsigned char *user_buffer, bool sync) {
+    if (_info._type != TensorInfo::Type::HANDLE) return 0;
 
     if (_info._mem_type == RocalMemType::OCL) {
         cl_int status;
@@ -298,8 +298,8 @@ unsigned rocalTensor::copy_data(cl_command_queue queue, unsigned char *user_buff
     return 0;
 }
 #elif ENABLE_HIP
-unsigned rocalTensor::copy_data(hipStream_t stream, void *host_memory, bool sync) {
-    if (_info._type != rocalTensorInfo::Type::HANDLE) return 0;
+unsigned Tensor::copy_data(hipStream_t stream, void *host_memory, bool sync) {
+    if (_info._type != TensorInfo::Type::HANDLE) return 0;
 
     if (_info._mem_type == RocalMemType::HIP) {
         // copy from device to host
@@ -317,7 +317,7 @@ unsigned rocalTensor::copy_data(hipStream_t stream, void *host_memory, bool sync
 }
 #endif
 
-unsigned rocalTensor::copy_data(void *user_buffer) {
+unsigned Tensor::copy_data(void *user_buffer) {
     if (_mem_handle == nullptr) return 0;
 
 #if ENABLE_HIP
@@ -335,7 +335,7 @@ unsigned rocalTensor::copy_data(void *user_buffer) {
     return 0;
 }
 
-int rocalTensor::swap_handle(void *handle) {
+int Tensor::swap_handle(void *handle) {
     vx_status status;
     if ((status = vxSwapTensorHandle(_vx_handle, handle, nullptr)) != VX_SUCCESS) {
         ERR("Swap handles failed for tensor" + TOSTR(status));
