@@ -37,6 +37,7 @@ THE SOFTWARE.
 #include "device_manager.h"
 #endif
 #include "commons.h"
+#include "rocal_api_tensor.h"
 
 /*! \brief Converts Rocal Memory type to OpenVX memory type
  *
@@ -209,7 +210,7 @@ bool operator==(const TensorInfo& rhs, const TensorInfo& lhs);
 * Keeps the information about the tensor that can be queried using OVX API as
 * well, but for simplicity and ease of use, they are kept in separate fields
 */
-class Tensor {
+class Tensor : public rocalTensor {
 public:
     int swap_handle(void* handle);
     const TensorInfo& info() { return _info; }
@@ -225,7 +226,7 @@ public:
 #elif ENABLE_HIP
     unsigned copy_data(hipStream_t stream, void* host_memory, bool sync);
 #endif
-    unsigned copy_data(void* user_buffer);
+    unsigned copy_data(void* user_buffer) override;
     //! Default destructor
     /*! Releases the OpenVX Tensor object */
     ~Tensor();
@@ -240,8 +241,18 @@ public:
     int create_from_handle(vx_context context);
     int create_virtual(vx_context context, vx_graph graph);
     bool is_handle_set() { return (_vx_handle != 0); }
-    void set_dims(std::vector<size_t> dims) { _info.set_dims(dims); }
-
+    void set_dims(std::vector<size_t>& dims) { _info.set_dims(dims); }
+    unsigned num_of_dims() override { return _info.num_of_dims(); }
+    unsigned batch_size() override { return _info.batch_size(); }
+    std::vector<size_t> dims() override { return _info.dims(); }
+    RocalTensorLayout layout() override { return (RocalTensorLayout)_info.layout(); }
+    RocalTensorOutputType data_type() override { return (RocalTensorOutputType)_info.data_type(); }
+    size_t data_size() override { return _info.data_size(); }
+    RocalROICordsType roi_type() override { return (RocalROICordsType)_info.roi_type(); }
+    RocalROICords *get_roi() override { return (RocalROICords *)_info.get_roi(); }
+    std::vector<size_t> shape() override { return _info.max_shape(); }
+    RocalImageColor color_format() const { return (RocalImageColor)_info.color_format(); }
+    
 private:
     vx_tensor _vx_handle = nullptr;  //!< The OpenVX tensor
     void* _mem_handle = nullptr;  //!< Pointer to the tensor's internal buffer (opencl or host)
@@ -250,9 +261,9 @@ private:
 };
 
 /*! \brief Contains a list of rocalTensors */
-class TensorList {
+class TensorList : public rocalTensorList {
 public:
-    uint64_t size() { return _tensor_list.size(); }
+    uint64_t size() override { return _tensor_list.size(); }
     bool empty() { return _tensor_list.empty(); }
     Tensor* front() { return _tensor_list.front(); }
     void push_back(Tensor* tensor) {
@@ -260,11 +271,11 @@ public:
         _tensor_data_size.emplace_back(tensor->info().data_size());
     }
     std::vector<uint64_t> &data_size() { return _tensor_data_size; }
-    void release() {
+    void release() override {
         for (auto& tensor : _tensor_list) delete tensor;
     }
     Tensor* operator[](size_t index) { return _tensor_list[index]; }
-    Tensor* at(size_t index) { return _tensor_list[index]; }
+    Tensor* at(size_t index) override { return _tensor_list[index]; }
     void operator=(TensorList& other) {
         for (unsigned idx = 0; idx < other.size(); idx++) {
             auto* new_tensor = new Tensor(other[idx]->info());
