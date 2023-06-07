@@ -133,7 +133,7 @@ extern  "C" SHARED_PUBLIC vx_node VX_API_CALL vxExtrppNode_Copy(vx_graph graph, 
 extern  "C" SHARED_PUBLIC vx_node VX_API_CALL vxExtrppNode_CropMirrorNormalize(vx_graph graph, vx_tensor pSrc, vx_tensor srcROI, vx_tensor pDst, vx_array multiplier, vx_array offset, vx_array mirror, vx_scalar inputLayout, vx_scalar outputLayout, vx_scalar roiType);
 extern  "C" SHARED_PUBLIC vx_node VX_API_CALL vxExtrppNode_Nop(vx_graph graph, vx_tensor pSrc, vx_tensor pDst);
 extern  "C" SHARED_PUBLIC vx_node VX_API_CALL vxExtrppNode_SequenceRearrange(vx_graph graph, vx_tensor pSrc, vx_tensor pDst, vx_array newOrder, vx_scalar layout);
-extern "C" SHARED_PUBLIC vx_node VX_API_CALL vxExtrppNode_Downmix(vx_graph graph, vx_tensor pSrc, vx_tensor pDst, vx_array srcSamples, vx_array srcChannels, vx_uint32 nbatchSize);
+extern  "C" SHARED_PUBLIC vx_node VX_API_CALL vxExtrppNode_Downmix(vx_graph graph, vx_tensor pSrc, vx_tensor pDst, vx_array srcSamples, vx_array srcChannels, vx_uint32 nbatchSize);
 #ifdef __cplusplus
 }
 #endif
