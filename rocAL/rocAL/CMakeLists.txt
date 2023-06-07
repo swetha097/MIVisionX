@@ -48,6 +48,8 @@ if( GPU_SUPPORT AND "${BACKEND}" STREQUAL "HIP")
         endif()
     endif()
     list(APPEND CMAKE_PREFIX_PATH ${ROCM_PATH} ${ROCM_PATH}/hip)
+    set(DEFAULT_AMDGPU_TARGETS "gfx803;gfx900;gfx906;gfx908;gfx90a;gfx940;gfx1030;gfx1031;gfx1032;gfx1033;gfx1034;gfx1035;gfx1036")
+    set(AMDGPU_TARGETS "${DEFAULT_AMDGPU_TARGETS}" CACHE STRING "List of specific machine types for library to target")
     find_package(HIP QUIET)
     if(HIP_FOUND)
         SET(BUILD_ROCAL true)
@@ -120,9 +122,11 @@ if(NOT Threads_FOUND)
 endif()
 
 if(${BUILD_ROCAL})
-    # AMD OpenVX & RPP
-    include_directories(${AMDRPP_INCLUDE_DIRS})
+    # AMD OpenVX & VX_RPP
     set(LINK_LIBRARY_LIST ${LINK_LIBRARY_LIST} openvx vx_rpp)
+    # AMD RPP
+    include_directories(${AMDRPP_INCLUDE_DIRS})
+    set(LINK_LIBRARY_LIST ${LINK_LIBRARY_LIST} ${AMDRPP_LIBRARIES})
     # OpenMP
     set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${OpenMP_C_FLAGS}")
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
@@ -259,10 +263,7 @@ if(${BUILD_ROCAL})
                 include/api/rocal_api_data_transfer.h
                 include/api/rocal_api_parameters.h
                 include/api/rocal_api_meta_data.h
-                include/pipeline/tensor.h
-                include/device/device_manager.h
-                include/device/device_data_transfer_code.h
-                include/device/device_code.h
+                include/pipeline/tensor.h                
                 include/pipeline/commons.h
                 include/pipeline/exception.h
                 include/pipeline/log.h

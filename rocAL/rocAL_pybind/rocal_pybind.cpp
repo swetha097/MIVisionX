@@ -26,14 +26,14 @@ THE SOFTWARE.
 #include <iostream>
 #include <pybind11/embed.h>
 #include <pybind11/eval.h>
-#include "api/rocal_api_types.h"
+#include "rocal_api_types.h"
 #include "rocal_api.h"
 #include "tensor.h"
-#include "api/rocal_api_parameters.h"
-#include "api/rocal_api_data_loaders.h"
-#include "api/rocal_api_augmentation.h"
-#include "api/rocal_api_data_transfer.h"
-#include "api/rocal_api_info.h"
+#include "rocal_api_parameters.h"
+#include "rocal_api_data_loaders.h"
+#include "rocal_api_augmentation.h"
+#include "rocal_api_data_transfer.h"
+#include "rocal_api_info.h"
 namespace py = pybind11;
 
 using float16 = half_float::half;
@@ -324,6 +324,11 @@ namespace rocal
             .value("DECODER_VIDEO_FFMPEG_SW",ROCAL_DECODER_VIDEO_FFMPEG_SW)
             .value("DECODER_VIDEO_FFMPEG_HW",ROCAL_DECODER_VIDEO_FFMPEG_HW)
             .export_values();
+        py::enum_<RocalOutputMemType>(types_m, "RocalOutputMemType", "Output memory types")
+            .value("CPU_MEMORY", ROCAL_MEMCPY_HOST)
+            .value("GPU_MEMORY", ROCAL_MEMCPY_GPU)
+            .value("PINNED_MEMORY", ROCAL_MEMCPY_PINNED)
+            .export_values();
         py::enum_<RocalResizeScalingMode>(types_m,"RocalResizeScalingMode","Decode size policies")
             .value("SCALING_MODE_DEFAULT",ROCAL_SCALING_MODE_DEFAULT)
             .value("SCALING_MODE_STRETCH",ROCAL_SCALING_MODE_STRETCH)
@@ -419,6 +424,7 @@ namespace rocal
                             1,
                             {labels->at(i)->info().dims().at(0)},
                             {sizeof(int) }));
+                labels_list.append(labels_array);
             }
             return labels_list;
     }

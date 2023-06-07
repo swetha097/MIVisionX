@@ -44,49 +44,12 @@ interpret_color_format(RocalColorFormat color_format )
     }
 }
 
-size_t compute_optimum_internal_batch_size(size_t user_batch_size)
-{
-    const unsigned MINIMUM_CPU_THREAD_COUNT = 2;
-    const unsigned DEFAULT_SMT_COUNT = 2;
-
-    unsigned THREAD_COUNT = std::thread::hardware_concurrency();
-    if(THREAD_COUNT >= MINIMUM_CPU_THREAD_COUNT)
-        INFO("Can run " + TOSTR(THREAD_COUNT) + " threads simultaneously on this machine")
-    else
-    {
-        THREAD_COUNT = MINIMUM_CPU_THREAD_COUNT;
-        WRN("hardware_concurrency() call failed assuming can run " + TOSTR(THREAD_COUNT) + " threads")
-    }
-    size_t ret = user_batch_size;
-    size_t CORE_COUNT = THREAD_COUNT / DEFAULT_SMT_COUNT;
-
-    if(CORE_COUNT <= 0)
-        THROW("Wrong core count detected less than 0")
-
-    for( size_t i = CORE_COUNT; i <= THREAD_COUNT; i++)
-        if(user_batch_size % i == 0)
-        {
-            ret = i;
-            break;
-        }
-
-    for(size_t i = CORE_COUNT; i > 1; i--)
-        if(user_batch_size % i == 0)
-        {
-            ret = i;
-            break;
-        }
-    INFO("User batch size "+ TOSTR(user_batch_size)+" Internal batch size set to "+ TOSTR(ret))
-    return ret;
-}
-
 Timing
 ImageReadAndDecode::timing()
 {
     Timing t;
     t.image_decode_time = _decode_time.get_timing();
     t.image_read_time = _file_load_time.get_timing();
-    t.shuffle_time = _reader->get_shuffle_time();
     return t;
 }
 
@@ -107,7 +70,6 @@ ImageReadAndDecode::create(ReaderConfig reader_config, DecoderConfig decoder_con
 {
     // Can initialize it to any decoder types if needed
     _batch_size = batch_size;
-    _internal_batch_size = compute_optimum_internal_batch_size(_batch_size);
     _compressed_buff.resize(batch_size);
     _decoder.resize(batch_size);
     _actual_read_size.resize(batch_size);
@@ -134,6 +96,7 @@ ImageReadAndDecode::create(ReaderConfig reader_config, DecoderConfig decoder_con
             _decoder[i]->initialize(device_id);
         }
     }
+    _num_threads = reader_config.get_cpu_num_threads();
     _reader = create_reader(reader_config);
 }
 
@@ -253,7 +216,7 @@ ImageReadAndDecode::load(unsigned char* buff,
         for (size_t i = 0; i < _batch_size; i++)
             _decompressed_buff_ptrs[i] = buff + image_size * i;
 
-#pragma omp parallel for num_threads(8)  // default(none) TBD: option disabled in Ubuntu 20.04
+#pragma omp parallel for num_threads(_num_threads)  // default(none) TBD: option disabled in Ubuntu 20.04
         for (size_t i = 0; i < _batch_size; i++)
         {
             // initialize the actual decoded height and width with the maximum
