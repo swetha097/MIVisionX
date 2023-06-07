@@ -22,7 +22,7 @@ THE SOFTWARE.
 
 #include "internal_publishKernels.h"
 #include "vx_ext_amd.h"
-#define NUM_OF_DIMS 5
+#define NUM_OF_DIMS 3
 
 struct DownmixLocalData
 {
