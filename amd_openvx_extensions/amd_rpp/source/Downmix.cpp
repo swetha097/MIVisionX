@@ -28,7 +28,6 @@ struct DownmixLocalData
 {
     RPPCommonHandle *handle;
     Rpp32u device_type;
-    Rpp32u nbatchSize;
     RppPtr_t pSrc;
     RppPtr_t pDst;
     vx_int32 *samples;
@@ -45,8 +44,8 @@ struct DownmixLocalData
 
 static vx_status VX_CALLBACK refreshDownmix(vx_node node, const vx_reference *parameters, vx_uint32 num, DownmixLocalData *data) {
     vx_status status = VX_SUCCESS;
-    STATUS_ERROR_CHECK(vxCopyArrayRange((vx_array)parameters[2], 0, data->nbatchSize, sizeof(data->samples), data->samples, VX_READ_ONLY, VX_MEMORY_TYPE_HOST));
-    STATUS_ERROR_CHECK(vxCopyArrayRange((vx_array)parameters[3], 0, data->nbatchSize, sizeof(data->channels), data->channels, VX_READ_ONLY, VX_MEMORY_TYPE_HOST));
+    STATUS_ERROR_CHECK(vxCopyArrayRange((vx_array)parameters[2], 0, data->srcDescPtr->n, sizeof(data->samples), data->samples, VX_READ_ONLY, VX_MEMORY_TYPE_HOST));
+    STATUS_ERROR_CHECK(vxCopyArrayRange((vx_array)parameters[3], 0, data->srcDescPtr->n, sizeof(data->channels), data->channels, VX_READ_ONLY, VX_MEMORY_TYPE_HOST));
     if (data->device_type == AGO_TARGET_AFFINITY_GPU)
     {
 #if ENABLE_HIP
@@ -68,10 +67,9 @@ static vx_status VX_CALLBACK refreshDownmix(vx_node node, const vx_reference *pa
 static vx_status VX_CALLBACK validateDownmix(vx_node node, const vx_reference parameters[], vx_uint32 num, vx_meta_format metas[]) {
     vx_status status = VX_SUCCESS;
     vx_enum scalar_type;
-    STATUS_ERROR_CHECK(vxQueryScalar((vx_scalar)parameters[4], VX_SCALAR_TYPE, &scalar_type, sizeof(scalar_type)));
     if (scalar_type != VX_TYPE_UINT32)
         return ERRMSG(VX_ERROR_INVALID_TYPE, "validate: Paramter: #4 type=%d (must be size)\n", scalar_type);
-    STATUS_ERROR_CHECK(vxQueryScalar((vx_scalar)parameters[5], VX_SCALAR_TYPE, &scalar_type, sizeof(scalar_type)));
+    STATUS_ERROR_CHECK(vxQueryScalar((vx_scalar)parameters[4], VX_SCALAR_TYPE, &scalar_type, sizeof(scalar_type)));
     if (scalar_type != VX_TYPE_UINT32)
         return ERRMSG(VX_ERROR_INVALID_TYPE, "validate: Paramter: #5 type=%d (must be size)\n", scalar_type);
 
@@ -122,8 +120,7 @@ static vx_status VX_CALLBACK processDownmix(vx_node node, const vx_reference *pa
 static vx_status VX_CALLBACK initializeDownmix(vx_node node, const vx_reference *parameters, vx_uint32 num) {
     DownmixLocalData *data = new DownmixLocalData;
     memset(data, 0, sizeof(*data));
-    STATUS_ERROR_CHECK(vxCopyScalar((vx_scalar)parameters[5], &data->device_type, VX_READ_ONLY, VX_MEMORY_TYPE_HOST));
-    STATUS_ERROR_CHECK(vxReadScalarValue((vx_scalar)parameters[4], &data->nbatchSize));
+    STATUS_ERROR_CHECK(vxCopyScalar((vx_scalar)parameters[4], &data->device_type, VX_READ_ONLY, VX_MEMORY_TYPE_HOST));
 
     // Querying for input tensor
     data->srcDescPtr = &data->srcDesc;
@@ -208,7 +205,7 @@ vx_status Downmix_Register(vx_context context) {
     vx_kernel kernel = vxAddUserKernel(context, "org.rpp.Downmix",
                                        VX_KERNEL_RPP_DOWNMIX,
                                        processDownmix,
-                                       6,
+                                       5,
                                        validateDownmix,
                                        initializeDownmix,
                                        uninitializeDownmix);
@@ -232,8 +229,8 @@ vx_status Downmix_Register(vx_context context) {
         PARAM_ERROR_CHECK(vxAddParameterToKernel(kernel, 1, VX_OUTPUT, VX_TYPE_TENSOR, VX_PARAMETER_STATE_REQUIRED));
         PARAM_ERROR_CHECK(vxAddParameterToKernel(kernel, 2, VX_INPUT, VX_TYPE_ARRAY, VX_PARAMETER_STATE_REQUIRED));
         PARAM_ERROR_CHECK(vxAddParameterToKernel(kernel, 3, VX_INPUT, VX_TYPE_ARRAY, VX_PARAMETER_STATE_REQUIRED));
+        // PARAM_ERROR_CHECK(vxAddParameterToKernel(kernel, 4, VX_INPUT, VX_TYPE_SCALAR, VX_PARAMETER_STATE_REQUIRED));
         PARAM_ERROR_CHECK(vxAddParameterToKernel(kernel, 4, VX_INPUT, VX_TYPE_SCALAR, VX_PARAMETER_STATE_REQUIRED));
-        PARAM_ERROR_CHECK(vxAddParameterToKernel(kernel, 5, VX_INPUT, VX_TYPE_SCALAR, VX_PARAMETER_STATE_REQUIRED));
         PARAM_ERROR_CHECK(vxFinalizeKernel(kernel));
     }
     if (status != VX_SUCCESS)
