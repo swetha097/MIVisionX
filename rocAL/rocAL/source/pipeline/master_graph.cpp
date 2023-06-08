@@ -532,6 +532,7 @@ void MasterGraph::output_routine()
             }
             _process_time.start();
             _graph->process();
+            _process_time.end();
             for (size_t idx = 0; idx < _internal_tensor_list.size(); idx++)
                 _internal_tensor_list[idx]->copy_roi(tensor_roi_buffer[idx]);
             _bencode_time.start();

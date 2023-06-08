@@ -760,15 +760,15 @@ extern "C"  RocalImage  ROCAL_API_CALL rocalJpegCaffe2LMDBRecordSourcePartialSin
 /// \param max_channels The maximum channels of the decoded audio.
 /// \return Reference to the output image
 extern "C"  RocalTensor  ROCAL_API_CALL rocalAudioFileSource(RocalContext context,
-                                                        const char* source_path,
-                                                        unsigned internal_shard_count,
-                                                        bool is_output,
-                                                        bool shuffle = false,
-                                                        bool loop = false,
-                                                        float sample_rate = 0.0,
-                                                        bool downmix = false,
-                                                        unsigned max_frames = 1,
-                                                        unsigned max_channels = 1);
+                                                            const char* source_path,
+                                                            unsigned internal_shard_count,
+                                                            bool is_output,
+                                                            bool shuffle = false,
+                                                            bool loop = false,
+                                                            float sample_rate = 0.0,
+                                                            bool downmix = false,
+                                                            unsigned max_frames = 1,
+                                                            unsigned max_channels = 1);
 
 /// Creates Audio file reader and decoder. It allocates the resources and objects required to read and decode audio files stored on the file systems. It has internal sharding capability to load/decode in parallel is user wants.
 /// If the files are not in standard audio compression formats they will be ignored.
@@ -788,20 +788,20 @@ extern "C"  RocalTensor  ROCAL_API_CALL rocalAudioFileSource(RocalContext contex
 /// \param shard_size Provides the size of the shard for an iterator 
 /// \return Reference to the output image
 extern "C"  RocalTensor  ROCAL_API_CALL rocalAudioFileSourceSingleShard(RocalContext p_context,
-                                                        const char* source_path,
-                                                        const char* source_file_list_path,
-                                                        unsigned shard_id,
-                                                        unsigned shard_count,
-                                                        bool is_output,
-                                                        bool shuffle,
-                                                        bool loop,
-                                                        float sample_rate,
-                                                        bool downmix,
-                                                        unsigned max_frames,
-                                                        unsigned max_channels,
-                                                        unsigned storage_type,
-                                                        bool stick_to_shard,
-                                                        signed shard_size);
+                                                                        const char* source_path,
+                                                                        const char* source_file_list_path,
+                                                                        unsigned shard_id,
+                                                                        unsigned shard_count,
+                                                                        bool is_output,
+                                                                        bool shuffle = false,
+                                                                        bool loop = false,
+                                                                        float sample_rate = 0.0,
+                                                                        bool downmix = false,
+                                                                        unsigned max_frames = 1,
+                                                                        unsigned max_channels = 1,
+                                                                        unsigned storage_type = 9,
+                                                                        bool stick_to_shard = false,
+                                                                        int shard_size = -1);
 
 #endif //MIVISIONX_ROCAL_API_DATA_LOADERS_H
 
