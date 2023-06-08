@@ -2603,6 +2603,7 @@ rocalAudioFileSourceSingleShard(
                                                                                         shard_size
                                                                                         );
         context->master_graph->set_loop(loop);
+        /*  Commenting out this peice of code in this PR - Next PR will contain augmentations & this code will be uncommented
         if(downmix)
         {
             rocalTensorInfo output_info = info;
@@ -2626,14 +2627,15 @@ rocalAudioFileSourceSingleShard(
                 output = downmixed_output;
             }
         }
-        else
-        {
+        
+        else 
+        { */
             if(is_output)
             {
                 auto actual_output = context->master_graph->create_tensor(info, is_output);
                 context->master_graph->add_node<CopyNode>({output}, {actual_output});
             }
-        }
+        } //
 
     }
     catch(const std::exception& e)
@@ -2691,6 +2693,7 @@ rocalAudioFileSource(
                                                                             context->master_graph->meta_data_reader()
                                                                             );
         context->master_graph->set_loop(loop);
+        /*  Commenting out this peice of code in this PR - Next PR will contain augmentations & this code will be uncommented
         if(downmix)
         {
             // For the resize node, user can create an image with a different width and height
@@ -2714,13 +2717,13 @@ rocalAudioFileSource(
             }
         }
         else
-        {
+        { */
             if(is_output)
             {
                 auto actual_output = context->master_graph->create_tensor(info, is_output);
                 context->master_graph->add_node<CopyNode>({output}, {actual_output});
             }
-        }
+        } //
     }
     catch(const std::exception& e)
     {
