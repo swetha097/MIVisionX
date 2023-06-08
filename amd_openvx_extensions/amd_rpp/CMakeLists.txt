@@ -132,7 +132,6 @@ list(APPEND SOURCES
         source/Copy.cpp
         source/CropMirrorNormalize.cpp
         source/Nop.cpp
-        source/Downmix.cpp
         source/kernel_rpp.cpp
         source/internal_publishKernels.cpp
     )

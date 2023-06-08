@@ -126,7 +126,6 @@ vx_status get_kernels_to_publish()
     STATUS_ERROR_CHECK(ADD_KERNEL(ResizeMirrorNormalizeTensor_Register));
     STATUS_ERROR_CHECK(ADD_KERNEL(SequenceRearrange_Register));
     STATUS_ERROR_CHECK(ADD_KERNEL(Resizetensor_Register));
-    STATUS_ERROR_CHECK(ADD_KERNEL(Downmix_Register));
     return status;
 }
 
