@@ -34,7 +34,7 @@ def draw_patches(img, idx, device):
     plt.close()
 def main():
     if  len(sys.argv) < 3:
-        print ('Please pass audio_folder file_list cpu/gpu batch_size')
+        print ('Please pass audio_folder file_list cpu/gpu batch_size - Pass file_list as empty string in this PR')
         exit(0)
     try:
         path= "OUTPUT_IMAGES_PYTHON/NEW_API/FILE_READER/" + "audio"
