@@ -39,7 +39,6 @@ public:
     LoaderModuleStatus load_next() override;
     void initialize(ReaderConfig reader_cfg, DecoderConfig decoder_cfg, RocalMemType mem_type, unsigned batch_size, bool keep_orig_size=false) override;
     void set_output (rocalTensor* output_audio) override;
-    // void set_output_tensor(rocalTensor* output_audio) override;
     void set_random_bbox_data_reader(std::shared_ptr<RandomBBoxCrop_MetaDataReader> randombboxcrop_meta_data_reader) override {};
     size_t remaining_count() override; // returns number of remaining items to be loaded
     size_t last_batch_padded_size() override;
@@ -72,8 +71,7 @@ private:
     RocalMemType _mem_type;
     decoded_image_info _decoded_img_info;
     crop_image_info _crop_image_info;
-    decoded_image_info _output_decoded_img_info;
-    crop_image_info _output_cropped_img_info;
+    decoded_image_info _output_decoded_audio_info;
     CircularBuffer _circ_buff;
     TimingDBG _swap_handle_time;
     bool _is_initialized;

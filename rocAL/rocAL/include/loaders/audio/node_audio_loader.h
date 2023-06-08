@@ -50,5 +50,3 @@ protected:
 private:
     std::shared_ptr<AudioLoaderSharded> _loader_module = nullptr;
 };
-
-

@@ -54,10 +54,9 @@ evaluate_audio_data_set(StorageType storage_type,
         THROW("Initializing file source input evaluator failed ")
     auto max_samples = source_evaluator.max_samples();
     auto max_channels = source_evaluator.max_channels();
-    if(max_samples == 0 ||max_channels  == 0)
+    if(max_samples == 0 || max_channels  == 0)
         THROW("Cannot find size of the audio files or files cannot be accessed")
     LOG("Maximum input image dimension [ "+ TOSTR(max_samples) + " x " + TOSTR(max_channels)+" ] for images in "+source_path)
-    // std::exit(0);
     return std::make_tuple(max_samples, max_channels);
 };
 
@@ -2577,11 +2576,10 @@ rocalAudioFileSourceSingleShard(
         unsigned max_channels,
         unsigned storage_type,
         bool stick_to_shard,
-        signed shard_size)
+        int shard_size)
 {
     rocalTensor* output = nullptr;
     auto context = static_cast<Context*>(p_context);
-    std::cerr << "Inside the rocALAudioFileSourceSingleShard" ;
     try
     {
         if(shard_count < 1 )
@@ -2637,11 +2635,8 @@ rocalAudioFileSourceSingleShard(
             output_info.set_dims(output_dims);
             output_info.set_tensor_layout(RocalTensorlayout::NONE);
             output_info.set_max_shape();
-
-
             auto downmixed_output = context->master_graph->create_tensor(output_info, false);
             std::shared_ptr<DownmixNode> downmix_node = context->master_graph->add_node<DownmixNode>({output}, {downmixed_output});
-
             if(is_output)
             {
                 auto actual_output = context->master_graph->create_tensor(output_info, is_output);
@@ -2657,7 +2652,7 @@ rocalAudioFileSourceSingleShard(
                 auto actual_output = context->master_graph->create_tensor(info, is_output);
                 context->master_graph->add_node<CopyNode>({output}, {actual_output});
             }
-        } //
+        // } 
 
     }
     catch(const std::exception& e)
@@ -2727,10 +2722,8 @@ rocalAudioFileSource(
             output_dims.at(2) = 1;
             output_info.set_dims(output_dims);
             output_info.set_tensor_layout(RocalTensorlayout::NONE);
-
             auto downmixed_output = context->master_graph->create_tensor(output_info, false);
             std::shared_ptr<DownmixNode> downmix_node = context->master_graph->add_node<DownmixNode>({output}, {downmixed_output});
-
             if(is_output)
             {
                 auto actual_output = context->master_graph->create_tensor(output_info, is_output);
@@ -2745,7 +2738,7 @@ rocalAudioFileSource(
                 auto actual_output = context->master_graph->create_tensor(info, is_output);
                 context->master_graph->add_node<CopyNode>({output}, {actual_output});
             }
-        } //
+        // } 
     }
     catch(const std::exception& e)
     {
