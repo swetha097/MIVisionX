@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2019 - 2022 Advanced Micro Devices, Inc. All rights reserved.
+Copyright (c) 2019 - 2023 Advanced Micro Devices, Inc. All rights reserved.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -32,15 +32,6 @@ AudioDecoder::Status SndFileDecoder::decode(float* buffer)
     int readcount = 0;
     readcount = sf_readf_float(_sf_ptr, buffer, _sfinfo.frames);
 
-//     for (int i = 0; i < 10; i++) {
-//         std::cerr << buffer[i];/
-// }
-            // float* ptr = buffer;
-            // for(uint j=0; j<10; j++)
-            // {
-            //     std::cerr << "\n In SND FILE DEOCDER :: " << ptr[j];
-            // }
-    // std::cerr << "\n read_count " << readcount;
     if(readcount != _sfinfo.frames)
     {
         printf("Not able to decode all frames. Only decoded %d frames\n", readcount);
@@ -89,7 +80,6 @@ AudioDecoder::Status SndFileDecoder::initialize(const char *src_filename)
         AudioDecoder::Status status = Status::HEADER_DECODE_FAILED;
 		return status;
 	};
-    //std::cout << "SRC FILENAME:" << src_filename << std::endl;
     AudioDecoder::Status status = Status::OK;
     return status;
 }

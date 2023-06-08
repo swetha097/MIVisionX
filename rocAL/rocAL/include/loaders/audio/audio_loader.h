@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2019 - 2022 Advanced Micro Devices, Inc. All rights reserved.
+Copyright (c) 2019 - 2023 Advanced Micro Devices, Inc. All rights reserved.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -85,7 +85,6 @@ private:
     bool _decoder_keep_original = false;
     int _device_id;
     size_t _max_decoded_samples, _max_decoded_channels;
-    // std::shared_ptr<RandomBBoxCrop_MetaDataReader> _randombboxcrop_meta_data_reader = nullptr;
     RocalBatchPolicy _last_batch_policy;
     bool last_batch_padded;
 };
