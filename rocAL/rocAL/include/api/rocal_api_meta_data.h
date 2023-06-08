@@ -192,11 +192,4 @@ extern "C" void ROCAL_API_CALL rocalGetImageId(RocalContext p_context,  int* buf
 /// \param joints_data The user's RocalJointsData pointer that will be pointed to JointsDataBatch pointer
 extern "C" void ROCAL_API_CALL rocalGetJointsDataPtr(RocalContext p_context, RocalJointsData **joints_data);
 
-///
-/// \param rocal_context
-/// \param source_path path to the folder that contains the dataset or metadata file
-/// \param file_list path to the metadata file containing labels
-/// \return RocalMetaData object, can be used to inquire about the rocal's output (processed) tensors
-extern "C" RocalMetaData ROCAL_API_CALL rocalCreateFileListLabelReader(RocalContext rocal_context, const char* source_path, const char* file_list);
-
 #endif //MIVISIONX_ROCAL_API_META_DATA_H
