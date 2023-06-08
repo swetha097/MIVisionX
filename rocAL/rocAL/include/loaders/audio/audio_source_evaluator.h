@@ -21,37 +21,45 @@ THE SOFTWARE.
 */
 
 #pragma once
+#include <memory>
+#include <map>
+#include "sndfile_decoder.h"
+#include "reader_factory.h"
+#include "timing_debug.h"
+#include "loader_module.h"
+enum class AudioSourceEvaluatorStatus
+{
+    OK = 0,
+    UNSUPPORTED_DECODER_TYPE,
+    UNSUPPORTED_STORAGE_TYPE,
+};
 
-#include "node_warp_affine.h"
-#include "node_exposure.h"
-#include "node_vignette.h"
-#include "node_jitter.h"
-#include "node_snp_noise.h"
-#include "node_snow.h"
-#include "node_rain.h"
-#include "node_color_temperature.h"
-#include "node_fog.h"
-#include "node_pixelate.h"
-#include "node_lens_correction.h"
-#include "node_gamma.h"
-#include "node_flip.h"
-#include "node_crop_resize.h"
-#include "node_brightness.h"
-#include "node_contrast.h"
-#include "node_blur.h"
-#include "node_fisheye.h"
-#include "node_blend.h"
-#include "node_resize.h"
-#include "node_rotate.h"
-#include "node_color_twist.h"
-#include "node_hue.h"
-#include "node_saturation.h"
-#include "node_crop_mirror_normalize.h"
-#include "node_resize_mirror_normalize.h"
-#include "node_resize_crop_mirror.h"
-#include "node_ssd_random_crop.h"
-#include "node_crop.h"
-#include "node_random_crop.h"
-#include "node_copy.h"
-#include "node_nop.h"
-#include "node_sequence_rearrange.h"
+class AudioSourceEvaluator
+{
+public:
+    AudioSourceEvaluatorStatus create(ReaderConfig reader_cfg, DecoderConfig decoder_cfg);
+    void find_max_dimension();
+    size_t max_samples();
+    size_t max_channels();
+
+private:
+    class FindMaxSize
+    {
+    public:
+        void process_sample(unsigned val);
+        unsigned get_max() { return _max; };
+    private:
+        unsigned _max = 0;
+        unsigned _max_count = 0;
+    };
+    FindMaxSize _samples_max;
+    FindMaxSize _channels_max;
+    DecoderConfig _decoder_cfg_cv;
+    std::shared_ptr<AudioDecoder> _decoder;
+    std::shared_ptr<Reader> _reader;
+    std::shared_ptr<MetaDataReader> _meta_data_reader;
+    std::vector<unsigned char> _header_buff;
+    std::string _input_path;
+};
+
+

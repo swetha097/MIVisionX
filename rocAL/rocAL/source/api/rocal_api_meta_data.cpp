@@ -504,4 +504,3 @@ ROCAL_API_CALL rocalGetJointsDataPtr(RocalContext p_context, RocalJointsData **j
 
     *joints_data = (RocalJointsData *)(&(meta_data.second->get_joints_data_batch()));
 }
-
