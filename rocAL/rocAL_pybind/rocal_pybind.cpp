@@ -307,7 +307,7 @@ namespace rocal{
             .def(
                 "max_shape",
                 [](rocalTensor &output_tensor) {
-                    return std::make_pair(output_tensor.info().max_shape().at(0), output_tensor.info().max_shape().at(1));
+                    return output_tensor.info().max_shape();
                 },
                 R"code(
                 Returns a tensor buffer's width.
