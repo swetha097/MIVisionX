@@ -322,25 +322,6 @@ namespace rocal{
                 Returns a tensor batch size.
                 )code"
             )
-            .def(
-                "color_format",
-                [](rocalTensor &output_tensor) {
-                    switch(output_tensor.info().color_format())
-                    {
-                        case RocalColorFormat::RGB24:
-                            return 3;
-                        case RocalColorFormat::BGR24:
-                            return 3;
-                        case RocalColorFormat::RGB_PLANAR:
-                            return 3;
-                        case RocalColorFormat::U8:
-                            return 1;
-                    }
-                },
-                R"code(
-                Returns a tensor batch size.
-                )code"
-            )
             .def("layout", [](rocalTensor &output_tensor) {
                 switch(output_tensor.info().layout()) {
                     case RocalTensorlayout::NHWC:
