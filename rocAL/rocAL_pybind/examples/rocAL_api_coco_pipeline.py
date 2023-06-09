@@ -147,14 +147,14 @@ def draw_patches(img, idx, bboxes, device="cpu"):
         image = cv2.UMat(image).get()
         image = cv2.rectangle(image, (int(loc_[0]), int(loc_[1])), (int(
             (loc_[2])), int((loc_[3]))), color, thickness)
-        cv2.imwrite("OUTPUT_IMAGES_PYTHON/NEW_API/COCO_READER/" + str(idx)+"_"+"train"+".png", image * 255)
+        cv2.imwrite("OUTPUT_IMAGES_PYTHON/COCO_READER/" + str(idx)+"_"+"train"+".png", image * 255)
 
 def main():
     if  len(sys.argv) < 3:
         print ('Please pass image_path annotation_path cpu/gpu batch_size')
         exit(0)
     try:
-        path= "OUTPUT_IMAGES_PYTHON/NEW_API/COCO_READER/"
+        path= "OUTPUT_IMAGES_PYTHON/COCO_READER/"
         isExist = os.path.exists(path)
         if not isExist:
             os.makedirs(path)

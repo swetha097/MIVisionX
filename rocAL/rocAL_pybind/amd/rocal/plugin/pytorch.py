@@ -216,7 +216,7 @@ def draw_patches(img,idx,bboxes):
     image = cv2.UMat(image).get()
     cv2.imwrite(str(idx)+"_"+"train"+".png", image)
     try:
-        path = "OUTPUT_IMAGES_PYTHON/NEW_API/PYTORCH/"
+        path = "OUTPUT_IMAGES_PYTHON/PYTORCH/"
         isExist = os.path.exists(path)
         if not isExist:
             os.makedirs(path)
@@ -231,6 +231,6 @@ def draw_patches(img,idx,bboxes):
             image = cv2.UMat(image).get()
             image = cv2.rectangle(image, (int(loc_[0]), int(loc_[1])), (int(
                 (loc_[2])), int((loc_[3]))), color, thickness)
-            cv2.imwrite("OUTPUT_IMAGES_PYTHON/NEW_API/PYTORCH/" + str(idx)+"_"+"train"+".png", image * 255)
+            cv2.imwrite("OUTPUT_IMAGES_PYTHON/PYTORCH/" + str(idx)+"_"+"train"+".png", image * 255)
     else:
-        cv2.imwrite("OUTPUT_IMAGES_PYTHON/NEW_API/PYTORCH/" + str(idx)+"_"+"train"+".png", image * 255)
+        cv2.imwrite("OUTPUT_IMAGES_PYTHON/PYTORCH/" + str(idx)+"_"+"train"+".png", image * 255)
