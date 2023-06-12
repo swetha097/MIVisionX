@@ -39,14 +39,12 @@ public:
     virtual RocalROICordsType roi_type() = 0;
     virtual RocalROICords *get_roi() = 0;
     virtual std::vector<size_t> shape() = 0;
-    // mem type
 };
 
 class rocalTensorList {
 public:
     virtual uint64_t size() = 0;
     virtual rocalTensor* at(size_t index) = 0;
-    virtual void release() = 0;
     // isDenseTensor
 };
 
