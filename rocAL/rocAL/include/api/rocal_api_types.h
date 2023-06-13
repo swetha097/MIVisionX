@@ -119,7 +119,7 @@ enum RocalTensorLayout
     ROCAL_NCHW = 1,
     ROCAL_NFHWC = 2,
     ROCAL_NFCHW = 3,
-    ROCAL_NONE = 4
+    ROCAL_NONE = 4 // Layout for generic tensors (Non-Image or Non-Video)
 };
 
 enum RocalTensorOutputType

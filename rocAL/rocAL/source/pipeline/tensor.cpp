@@ -326,7 +326,7 @@ unsigned Tensor::copy_data(void *user_buffer, RocalOutputMemType external_mem_ty
             // copy from device to device
             hipError_t status;
             if ((status = hipMemcpyDtoD((void *)user_buffer, _mem_handle, _info.data_size())))
-                THROW("copy_data::hipMemcpyDtoH failed: " + TOSTR(status))
+                THROW("copy_data::hipMemcpyDtoD failed: " + TOSTR(status))
         } else if (_info._mem_type == RocalMemType::HOST) {
             // copy from host to device
             hipError_t status;
