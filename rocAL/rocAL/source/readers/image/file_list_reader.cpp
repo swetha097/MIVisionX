@@ -170,7 +170,7 @@ void FileListReader::reset()
     if ( _shard_count == 1 && _shard_size > 0) { // Single Shard
         _read_counter=0;
         _curr_file_idx =0;
-        int size = (int)_shard_size;
+        int size = _shard_size;
         int inc = 0;
         if (size < _batch_count)
             inc = _batch_count;
@@ -185,7 +185,7 @@ void FileListReader::reset()
                 _file_names.begin() + inc,
                 _file_names.end());
     }
-    else if (_shard_count > 1) {// Multiple Shards
+    else if (_shard_count > 1) { // Multiple Shards
         if(_stick_to_shard == false) {
             increment_shard_id();
             _last_batch_padded_size = 0;
@@ -228,10 +228,6 @@ void FileListReader::generate_file_names()
             std::getline(ss, file_path, ' ');
             file_path = _folder_path + "/"+ file_path;
 
-
-            // std::cout << "\n entry Path String" << entry_path << '\n';
-
-            // std::cout << filesys::is_regular_file(entry.path()) << "\n";
             if (filesys::is_regular_file(file_path ))
             {
                 if(get_file_shard_id() != _shard_id )
