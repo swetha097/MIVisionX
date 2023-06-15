@@ -54,7 +54,7 @@ void NormalizeNode::create_node() {
                                    scale, shift, epsilon, ddof, _num_of_dims, _batch_size);
 
     if((status = vxGetStatus((vx_reference)_node)) != VX_SUCCESS)
-        THROW("Adding the copy (vxExtrppNode_Downmix) node failed: "+ TOSTR(status))
+        THROW("Adding the copy (vxExtrppNode_Normalize) node failed: "+ TOSTR(status))
 
 }
 
