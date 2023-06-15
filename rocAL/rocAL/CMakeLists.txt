@@ -1,6 +1,6 @@
 # MIT License
 #
-# Copyright (c) 2019 - 2022 Advanced Micro Devices, Inc.
+# Copyright (c) 2019 - 2023 Advanced Micro Devices, Inc.
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -38,7 +38,6 @@ set(BOOST_COMPONENTS filesystem system)
 find_package(Boost COMPONENTS ${BOOST_COMPONENTS} QUIET)
 set(THREADS_PREFER_PTHREAD_FLAG ON)
 find_package(Threads QUIET)
-    # find_package(SndFile)
 find_library(libsnd_LIBS
     NAMES sndfile libsndfile
     PATHS ${CMAKE_SYSTEM_PREFIX_PATH} ${LIBSND_ROOT_DIR} "/usr/local"

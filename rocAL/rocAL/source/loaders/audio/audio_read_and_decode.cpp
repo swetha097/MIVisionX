@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2019 - 2022 Advanced Micro Devices, Inc. All rights reserved.
+Copyright (c) 2019 - 2023 Advanced Micro Devices, Inc. All rights reserved.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -26,25 +26,6 @@ THE SOFTWARE.
 #include "decoder_factory.h"
 #include "audio_decoder_factory.h"
 #include "audio_read_and_decode.h"
-
-// std::tuple<Decoder::ColorFormat, unsigned >
-// interpret_color_format(RocalColorFormat color_format )
-// {
-//     switch (color_format) {
-//         case RocalColorFormat::RGB24:
-//             return  std::make_tuple(Decoder::ColorFormat::RGB, 3);
-
-//         case RocalColorFormat::BGR24:
-//             return  std::make_tuple(Decoder::ColorFormat::BGR, 3);
-
-//         case RocalColorFormat::U8:
-//             return  std::make_tuple(Decoder::ColorFormat::GRAY, 1);
-
-//         default:
-//             throw std::invalid_argument("Invalid color format\n");
-//     }
-// }
-
 
 Timing
 AudioReadAndDecode::timing()
@@ -140,14 +121,7 @@ AudioReadAndDecode::load(float* buff,
         return LoaderModuleStatus::NO_MORE_DATA_TO_READ;
     // load audios/frames from the disk and push them as a large audio onto the buff
     unsigned file_counter = 0;
-    // const auto ret = interpret_color_format(output_color_format);
-    // const Decoder::ColorFormat decoder_color_format = std::get<0>(ret);
     const size_t audio_size = max_decoded_samples * max_decoded_channels;
-    // std::cerr<<"\n max_decoded_samples * max_decoded_channels * sizeof(float) :: "<<max_decoded_samples<<"\t "<<max_decoded_channels<<"\t "<<sizeof(float);
-    // std::cerr<<"\n audio size :: "<<audio_size;
-    // exit(0);
-    // Decode with the channels and size equal to a single audio
-    // File read is done serially since I/O parallelization does not work very well.
     _file_load_time.start();// Debug timing
     while ((file_counter != _batch_size) && _reader->count_items() > 0) {
 
@@ -156,13 +130,7 @@ AudioReadAndDecode::load(float* buff,
             WRN("Opened file " + _reader->id() + " of size 0");
             continue;
         }
-
-        // _compressed_buff[file_counter].reserve(fsize);
-        // _actual_read_size[file_counter] = _reader->read(_compressed_buff[file_counter].data(), fsize);
         _audio_names[file_counter] = _reader->id();
-        // std::cerr<<" \n In audio Read and decode - _input_path"<<_input_path;
-        // std::cerr<<" \n In audio Read and decode - _reader->id()"<<_reader->id();
-
         _audio_file_path[file_counter] = _reader->file_path();
         _reader->close();
         // _compressed_audio_size[file_counter] = fsize;
@@ -182,7 +150,6 @@ AudioReadAndDecode::load(float* buff,
             // initialize the actual decoded channels and samples with the maximum
             _actual_decoded_samples[i] = max_decoded_samples;
             _actual_decoded_channels[i] = max_decoded_channels;
-
             int original_samples, original_channels;
             float original_sample_rates;
             if (_decoder[i]->initialize(_audio_file_path[i].c_str()) != AudioDecoder::Status::OK) {
@@ -194,25 +161,16 @@ AudioReadAndDecode::load(float* buff,
             _original_channels[i] = original_channels;
             _original_samples[i] = original_samples;
             _original_sample_rates[i] = original_sample_rates;
-
             if (_decoder[i]->decode(_decompressed_buff_ptrs[i]) != AudioDecoder::Status::OK) {
                 THROW("Decoder failed for file: " + _audio_names[i].c_str())
             }
-            // float* ptr = _decompressed_buff_ptrs[i];
-            // for(uint j=0; j<10; j++)
-            // {
-            //     std::cerr << "\n In Audio Read And Decode :: " << ptr[j];
-            // }
             _decoder[i]->release();
         }
         for (size_t i = 0; i < _batch_size; i++) {
             names[i] = _audio_names[i];
-
             actual_samples[i] = roi_samples[i] = _original_samples[i];
             actual_channels[i] = roi_channels[i] = _original_channels[i];
             actual_sample_rates[i] = _original_sample_rates[i];
-            // actual_samples[i] = _actual_decoded_samples[i];
-            // actual_channels[i] = _actual_decoded_channels[i];
         }
     }
     _decode_time.end();// Debug timing

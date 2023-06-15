@@ -754,7 +754,6 @@ rocalAudioFileSourceSingleShard(
         context->master_graph->set_loop(loop);
         if(downmix)
         {
-            // For the resize node, user can create an image with a different width and height
             rocalTensorInfo output_info = info;
             std::vector<size_t> output_dims;
             output_dims.resize(3);
@@ -772,7 +771,7 @@ rocalAudioFileSourceSingleShard(
             if(is_output)
             {
                 auto actual_output = context->master_graph->create_tensor(output_info, is_output);
-                context->master_graph->add_node<CopyNode>({downmixed_output}, {actual_output}); // Have to add copy tensor node
+                context->master_graph->add_node<CopyNode>({downmixed_output}, {actual_output});
                 output = downmixed_output;
             }
         }
@@ -781,7 +780,7 @@ rocalAudioFileSourceSingleShard(
             if(is_output)
             {
                 auto actual_output = context->master_graph->create_tensor(info, is_output);
-                context->master_graph->add_node<CopyNode>({output}, {actual_output}); // Have to add copy tensor node
+                context->master_graph->add_node<CopyNode>({output}, {actual_output});
             }
         }
 
@@ -811,26 +810,10 @@ rocalAudioFileSource(
     auto context = static_cast<Context*>(p_context);
     try
     {
-        // Audio tensor length is dependent on the longest audio sample present in a batch so following variables are not needed (to be removed)
-        // bool use_input_dimension = (decode_size_policy == ROCAL_USE_USER_GIVEN_SIZE) || (decode_size_policy == ROCAL_USE_USER_GIVEN_SIZE_RESTRICTED);
-        // bool decoder_keep_original = (decode_size_policy == ROCAL_USE_USER_GIVEN_SIZE_RESTRICTED) || (decode_size_policy == ROCAL_USE_MAX_SIZE_RESTRICTED);
-
-        // if(use_input_dimension && (max_width == 0 || max_height == 0))
-        // {
-        //     THROW("Invalid input max width and height");
-        // }
-        // else
-        // {
-        //     LOG("User input size " + TOSTR(max_width) + " x " + TOSTR(max_height))
-        // }
-        // TODO - Add support with max_frames and channels passed by user
         auto [max_frames, max_channels] = evaluate_audio_data_set(StorageType::FILE_SYSTEM, DecoderType::SNDFILE,
                                                        source_path, "");
         INFO("Internal buffer size for audio frames = "+ TOSTR(max_frames))
-
-        // RocalTensorlayout tensor_format = RocalTensorlayout::NONE;
         RocalTensorDataType tensor_data_type = RocalTensorDataType::FP32;
-        // RocalROIType roi_type = RocalROIType::XYWH;  // Letting the roi_type be default value since it isn't required for audio decoder
         unsigned num_of_dims = 3;
         std::vector<size_t> dims;
         dims.resize(num_of_dims);
@@ -844,8 +827,6 @@ rocalAudioFileSource(
                                 tensor_data_type);
         info.set_tensor_layout(RocalTensorlayout::NONE);
         output = context->master_graph->create_loader_output_tensor(info);
-
-        // TODO: Add a loader module for loading audio files from filesystem
         context->master_graph->add_node<AudioLoaderNode>({}, {output})->init(internal_shard_count,
                                                                             source_path,
                                                                             StorageType::FILE_SYSTEM,
@@ -859,7 +840,6 @@ rocalAudioFileSource(
         context->master_graph->set_loop(loop);
         if(downmix)
         {
-            // For the resize node, user can create an image with a different width and height
             rocalTensorInfo output_info = info;
             std::vector<size_t> output_dims;
             output_dims.resize(3);
@@ -868,18 +848,12 @@ rocalAudioFileSource(
             output_dims.at(2) = 1;
             output_info.set_dims(output_dims);
             output_info.set_tensor_layout(RocalTensorlayout::NONE);
-
             auto downmixed_output = context->master_graph->create_tensor(output_info, false);
             std::shared_ptr<DownmixNode> downmix_node = context->master_graph->add_node<DownmixNode>({output}, {downmixed_output});
-
-            // std::cerr<<"\n Downmix is called ";
-            // exit(0);
-            // For the nodes that user provides the output size the dimension of all the images after this node will be fixed and equal to that size
-            // downmixed_output->reset_tensor_roi();
             if(is_output)
             {
                 auto actual_output = context->master_graph->create_tensor(output_info, is_output);
-                context->master_graph->add_node<CopyNode>({downmixed_output}, {actual_output}); // Have to add copy tensor node
+                context->master_graph->add_node<CopyNode>({downmixed_output}, {actual_output}); 
                 output = downmixed_output;
             }
         }
@@ -888,7 +862,7 @@ rocalAudioFileSource(
             if(is_output)
             {
                 auto actual_output = context->master_graph->create_tensor(info, is_output);
-                context->master_graph->add_node<CopyNode>({output}, {actual_output}); // Have to add copy tensor node
+                context->master_graph->add_node<CopyNode>({output}, {actual_output}); 
             }
         }
     }

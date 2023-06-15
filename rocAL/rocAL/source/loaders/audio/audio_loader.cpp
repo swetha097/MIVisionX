@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2019 - 2022 Advanced Micro Devices, Inc. All rights reserved.
+Copyright (c) 2019 - 2023 Advanced Micro Devices, Inc. All rights reserved.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -181,7 +181,6 @@ AudioLoader::load_routine()
     LOG("Started the internal loader thread");
     LoaderModuleStatus last_load_status = LoaderModuleStatus::OK;
     // Initially record number of all the audios that are going to be loaded, this is used to know how many still there
-
     while (_internal_thread_running)
     {
         auto data = (float*)_circ_buff.get_write_buffer();
@@ -202,11 +201,6 @@ AudioLoader::load_routine()
 
             if(load_status == LoaderModuleStatus::OK)
             {
-                // if (_randombboxcrop_meta_data_reader)
-                // {
-                //     _crop_audio_info._crop_audio_coords = _audio_loader->get_batch_random_bbox_crop_coords();
-                //     _circ_buff.set_crop_audio_info(_crop_audio_info);
-                // }
                 _circ_buff.set_image_info(_decoded_img_info);
                 _circ_buff.push();
                 _audio_counter += _output_tensor->info().batch_size();
@@ -243,7 +237,6 @@ AudioLoader::load_routine()
 
 bool AudioLoader::is_out_of_data()
 {
-    // return (remaining_count() < _batch_size);
     return (remaining_count() < 0);
 }
 
@@ -262,8 +255,6 @@ AudioLoader::update_output_audio()
     if (_stopped)
         return LoaderModuleStatus::OK;
 
-    // std::cerr << "\nBefore swap op\n";
-    // _circ_buff.get_read_buffer_x() is blocking and puts the caller on sleep until new audios are written to the _circ_buff
     if((_mem_type== RocalMemType::OCL) || (_mem_type== RocalMemType::HIP))
     {
         auto data_buffer = _circ_buff.get_read_buffer_dev();
@@ -284,9 +275,6 @@ AudioLoader::update_output_audio()
         return LoaderModuleStatus::OK;
 
     _output_decoded_img_info = _circ_buff.get_image_info();
-    // if (_randombboxcrop_meta_data_reader) {
-    //   _output_cropped_img_info = _circ_buff.get_cropped_audio_info();
-    // }
     _output_names = _output_decoded_img_info._image_names;
     _output_tensor->update_tensor_roi(_output_decoded_img_info._roi_audio_samples, _output_decoded_img_info._roi_audio_channels);
     _output_tensor->update_audio_tensor_sample_rate(_output_decoded_img_info._original_audio_sample_rates);
