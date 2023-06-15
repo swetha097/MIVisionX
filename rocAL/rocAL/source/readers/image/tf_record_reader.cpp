@@ -278,16 +278,16 @@ Reader::Status TFRecordReader::read_image_names(std::ifstream &file_contents, ui
         if(!_meta_data_reader || _meta_data_reader->exists(fname)) {
         if (get_file_shard_id() != _shard_id)
         {
-            _file_count_all_shards++;
             incremenet_file_id();
+            _file_count_all_shards++;
             file_contents.read((char *)&data_crc, sizeof(data_crc));
             if(!file_contents)
                 THROW("TFRecordReader: Error in reading TF records")
             continue;
         }
         _file_names.push_back(file_path);
-        _file_count_all_shards++;
         incremenet_file_id();
+        _file_count_all_shards++;
     }
         _single_feature = feature.at(_encoded_key);
         _last_file_size = _single_feature.bytes_list().value()[0].size();

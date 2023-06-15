@@ -48,6 +48,12 @@ namespace rocal
         void *ptr = PyLong_AsVoidPtr(ptr_as_int.ptr());
         return ptr;
     }
+    template<typename T>
+    void copyDataWrapper(rocalTensor& output_tensor, T array) {
+        auto buf = array.request();
+        unsigned char *ptr = (unsigned char *)buf.ptr;
+        output_tensor.copy_data((void *)ptr);
+    }
 
     py::object wrapper(RocalContext context, py::array_t<unsigned char> array)
     {
@@ -154,31 +160,22 @@ namespace rocal
             output_tensor.copy_data(ptr);
             }
             )
-
-            .def("copy_data_numpy", [](rocalTensor &output_tensor, py::array_t<unsigned char> array) {
-                auto buf = array.request();
-                unsigned char *ptr = (unsigned char *)buf.ptr;
-                output_tensor.copy_data((void *)ptr);
-
+            .def("copy_data_numpy", [](rocalTensor& output_tensor, py::array_t<unsigned char> array) {
+                copyDataWrapper(output_tensor, array);
             },
             "idx"_a,
             R"code(
-            Returns a rocAL tensor at given position `i` in the rocalTensorlist.
+            Returns a rocAL tensor at the given position `i` in the rocalTensorlist.
             )code",
             py::return_value_policy::reference)
-
-            .def("copy_data_numpy", [](rocalTensor &output_tensor, py::array_t<float> array) {
-                auto buf = array.request();
-                unsigned char *ptr = (unsigned char *)buf.ptr;
-                output_tensor.copy_data((void *)ptr);
-
+            .def("copy_data_numpy", [](rocalTensor& output_tensor, py::array_t<float> array) {
+                copyDataWrapper(output_tensor, array);
             },
             "idx"_a,
             R"code(
-            Returns a rocAL tensor at given position `i` in the rocalTensorlist.
+            Returns a rocAL tensor at the given position `i` in the rocalTensorlist.
             )code",
-           py::return_value_policy::reference)
-
+            py::return_value_policy::reference)
             .def(
                 "at",
                 [](rocalTensor &output_tensor, uint idx)

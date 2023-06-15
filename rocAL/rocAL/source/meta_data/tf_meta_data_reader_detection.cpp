@@ -95,7 +95,6 @@ void TFMetaDataReaderDetection::lookup(const std::vector<std::string> &image_nam
 
 void TFMetaDataReaderDetection::print_map_contents()
 {
-    std::cerr<<"\nprint_map_contents ";
     BoundingBoxCords bb_coords;
     BoundingBoxLabels bb_labels;
 
