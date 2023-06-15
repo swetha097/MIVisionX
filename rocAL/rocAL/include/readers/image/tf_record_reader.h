@@ -70,6 +70,7 @@ public:
     TFRecordReader();
 private:
     //! opens the folder containnig the images
+    std::shared_ptr<MetaDataReader> _meta_data_reader = nullptr;
     Reader::Status tf_record_reader();
     Reader::Status folder_reading();
     std::string _folder_path;

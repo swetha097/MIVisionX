@@ -180,7 +180,9 @@ int test(int test_case, int reader_type, int pipeline_type, const char *path, co
         {
             std::cout << ">>>>>>> Running PARTIAL DECODE" << std::endl;
             rocalCreateLabelReader(handle, path);
-            input1 = rocalFusedJpegCrop(handle, path, color_format, num_threads, false, false);
+            std::vector<float> area = {0.08, 1};
+            std::vector<float> aspect_ratio = {3.0f/4, 4.0f/3};
+            input1 = rocalFusedJpegCrop(handle, path, color_format, num_threads, false, area, aspect_ratio, 10, false, false, ROCAL_USE_USER_GIVEN_SIZE_RESTRICTED, decode_max_width, decode_max_height);
         }
         break;
         case 2: //coco detection
@@ -193,7 +195,6 @@ int test(int test_case, int reader_type, int pipeline_type, const char *path, co
                 exit(0);
             }
             metadata_output = rocalCreateCOCOReader(handle, json_path, true, false);
-            // metadata_output = rocalCreateCOCOReader(handle, json_path, true, true);
             if (decode_max_height <= 0 || decode_max_width <= 0)
                 input1 = rocalJpegCOCOFileSource(handle, path, json_path, color_format, num_threads, false, true, false);
             else
@@ -213,7 +214,7 @@ int test(int test_case, int reader_type, int pipeline_type, const char *path, co
 #if defined RANDOMBBOXCROP
             rocalRandomBBoxCrop(handle, all_boxes_overlap, no_crop);
 #endif
-            input1 = rocalJpegCOCOFileSourcePartial(handle, path, json_path, color_format, num_threads, false, true, false);
+            // input1 = rocalJpegCOCOFileSourcePartial(handle, path, json_path, color_format, num_threads, false, true, false);
         }
         break;
         case 4: //tf classification
@@ -395,6 +396,95 @@ int test(int test_case, int reader_type, int pipeline_type, const char *path, co
         int label_id[inputBatchSize];
         int numOfClasses = 0;
         int image_name_length[inputBatchSize];
+        
+        auto last_colot_temp = rocalGetIntValue(color_temp_adj);
+        rocalUpdateIntParameter(last_colot_temp + 1, color_temp_adj);
+
+        output_tensor_list = rocalGetOutputTensors(handle);
+        std::vector<int> compression_params;
+        compression_params.push_back(IMWRITE_PNG_COMPRESSION);
+        compression_params.push_back(9);
+
+        cv::Mat mat_input;
+        cv::Mat mat_output;
+        for(int idx = 0; idx < output_tensor_list->size(); idx++)
+        {
+            int h = output_tensor_list->at(idx)->info().max_dims().at(1) * output_tensor_list->at(idx)->info().dims().at(0);
+            int w = output_tensor_list->at(idx)->info().max_dims().at(0);
+            mat_input = cv::Mat(h, w, cv_color_format);
+            mat_output = cv::Mat(h, w, cv_color_format);
+            unsigned char *out_buffer;
+            if(output_tensor_list->at(idx)->info().data_type() == RocalTensorDataType::FP32)
+            {
+                float * out_f_buffer;
+                if(output_tensor_list->at(idx)->info().mem_type() == RocalMemType::HIP)
+                {
+                    out_f_buffer = (float *)malloc(output_tensor_list->at(idx)->info().data_size());
+                    output_tensor_list->at(idx)->copy_data(out_f_buffer);
+                }
+                else if(output_tensor_list->at(idx)->info().mem_type() == RocalMemType::HOST)
+                    out_f_buffer = (float *)output_tensor_list->at(idx)->buffer();
+
+                out_buffer = (unsigned char *)malloc(output_tensor_list->at(idx)->info().data_size() / 4);
+                convert_float_to_uchar_buffer(out_f_buffer, out_buffer, output_tensor_list->at(idx)->info().data_size() / 4);
+                // if(out_f_buffer != nullptr) free(out_f_buffer);
+            }
+            if(output_tensor_list->at(idx)->info().data_type() == RocalTensorDataType::FP16)
+            {
+                half * out_f16_buffer;
+                if(output_tensor_list->at(idx)->info().mem_type() == RocalMemType::HIP)
+                {
+                    out_f16_buffer = (half *)malloc(output_tensor_list->at(idx)->info().data_size());
+                    output_tensor_list->at(idx)->copy_data(out_f16_buffer);
+                }
+                else if(output_tensor_list->at(idx)->info().mem_type() == RocalMemType::HOST)
+                    out_f16_buffer = (half *)output_tensor_list->at(idx)->buffer();
+
+                out_buffer = (unsigned char *)malloc(output_tensor_list->at(idx)->info().data_size() / 2);
+                convert_float_to_uchar_buffer(out_f16_buffer, out_buffer, output_tensor_list->at(idx)->info().data_size() / 2);
+                // if(out_f16_buffer != nullptr) free(out_f16_buffer);
+            }
+            else
+            {
+                if(output_tensor_list->at(idx)->info().mem_type() == RocalMemType::HIP)
+                {
+                    out_buffer = (unsigned char *)malloc(output_tensor_list->at(idx)->info().data_size());
+                    output_tensor_list->at(idx)->copy_data(out_buffer);
+                }
+                else if(output_tensor_list->at(idx)->info().mem_type() == RocalMemType::HOST)
+                    out_buffer = (unsigned char *)(output_tensor_list->at(idx)->buffer());
+            }
+
+            if(output_tensor_list->at(idx)->info().layout() == RocalTensorlayout::NCHW)
+            {
+                // cv::Mat mat_input_nchw = cv::Mat(cv_color_format, h, w);
+                // mat_input_nchw = (unsigned char *)out_buffer;
+                // cv::transposeND(mat_input_nchw, {0, 3, 1, 2}, mat_input); // Can be enabled only with OpenCV 4.6.0
+                convert_nchw_to_nhwc(out_buffer, mat_input.data, output_tensor_list->at(idx)->info().dims().at(0), output_tensor_list->at(idx)->info().dims().at(2),
+                                     output_tensor_list->at(idx)->info().dims().at(3), output_tensor_list->at(idx)->info().dims().at(1));            
+            }
+            else
+                mat_input.data = (unsigned char *)out_buffer;
+
+            mat_input.copyTo(mat_output(cv::Rect(0, 0, w, h)));
+
+            std::string out_filename = std::string(outName) + ".png";   // in case the user specifies non png filename
+            if (display_all)
+                out_filename = std::string(outName) + std::to_string(index) + std::to_string(idx) + ".png";   // in case the user specifies non png filename
+
+            if (color_format == RocalImageColor::ROCAL_COLOR_RGB24)
+            {
+                cv::cvtColor(mat_output, mat_color, CV_RGB2BGR);
+                cv::imwrite(out_filename, mat_color, compression_params);
+            }
+            else
+            {
+                cv::imwrite(out_filename, mat_output, compression_params);
+            }
+            // if(out_buffer != nullptr) free(out_buffer);
+        }
+        mat_input.release();
+        mat_output.release();
         switch(pipeline_type)
         {
             case 1: //classification pipeline
@@ -497,94 +587,6 @@ int test(int test_case, int reader_type, int pipeline_type, const char *path, co
                 return -1;
             }
         }
-        auto last_colot_temp = rocalGetIntValue(color_temp_adj);
-        rocalUpdateIntParameter(last_colot_temp + 1, color_temp_adj);
-
-        output_tensor_list = rocalGetOutputTensors(handle);
-        std::vector<int> compression_params;
-        compression_params.push_back(IMWRITE_PNG_COMPRESSION);
-        compression_params.push_back(9);
-
-        cv::Mat mat_input;
-        cv::Mat mat_output;
-        for(int idx = 0; idx < output_tensor_list->size(); idx++)
-        {
-            int h = output_tensor_list->at(idx)->info().max_dims().at(1) * output_tensor_list->at(idx)->info().dims().at(0);
-            int w = output_tensor_list->at(idx)->info().max_dims().at(0);
-            mat_input = cv::Mat(h, w, cv_color_format);
-            mat_output = cv::Mat(h, w, cv_color_format);
-            unsigned char *out_buffer;
-            if(output_tensor_list->at(idx)->info().data_type() == RocalTensorDataType::FP32)
-            {
-                float * out_f_buffer;
-                if(output_tensor_list->at(idx)->info().mem_type() == RocalMemType::HIP)
-                {
-                    out_f_buffer = (float *)malloc(output_tensor_list->at(idx)->info().data_size());
-                    output_tensor_list->at(idx)->copy_data(out_f_buffer);
-                }
-                else if(output_tensor_list->at(idx)->info().mem_type() == RocalMemType::HOST)
-                    out_f_buffer = (float *)output_tensor_list->at(idx)->buffer();
-
-                out_buffer = (unsigned char *)malloc(output_tensor_list->at(idx)->info().data_size() / 4);
-                convert_float_to_uchar_buffer(out_f_buffer, out_buffer, output_tensor_list->at(idx)->info().data_size() / 4);
-                // if(out_f_buffer != nullptr) free(out_f_buffer);
-            }
-            if(output_tensor_list->at(idx)->info().data_type() == RocalTensorDataType::FP16)
-            {
-                half * out_f16_buffer;
-                if(output_tensor_list->at(idx)->info().mem_type() == RocalMemType::HIP)
-                {
-                    out_f16_buffer = (half *)malloc(output_tensor_list->at(idx)->info().data_size());
-                    output_tensor_list->at(idx)->copy_data(out_f16_buffer);
-                }
-                else if(output_tensor_list->at(idx)->info().mem_type() == RocalMemType::HOST)
-                    out_f16_buffer = (half *)output_tensor_list->at(idx)->buffer();
-
-                out_buffer = (unsigned char *)malloc(output_tensor_list->at(idx)->info().data_size() / 2);
-                convert_float_to_uchar_buffer(out_f16_buffer, out_buffer, output_tensor_list->at(idx)->info().data_size() / 2);
-                // if(out_f16_buffer != nullptr) free(out_f16_buffer);
-            }
-            else
-            {
-                if(output_tensor_list->at(idx)->info().mem_type() == RocalMemType::HIP)
-                {
-                    out_buffer = (unsigned char *)malloc(output_tensor_list->at(idx)->info().data_size());
-                    output_tensor_list->at(idx)->copy_data(out_buffer);
-                }
-                else if(output_tensor_list->at(idx)->info().mem_type() == RocalMemType::HOST)
-                    out_buffer = (unsigned char *)(output_tensor_list->at(idx)->buffer());
-            }
-
-            if(output_tensor_list->at(idx)->info().layout() == RocalTensorlayout::NCHW)
-            {
-                // cv::Mat mat_input_nchw = cv::Mat(cv_color_format, h, w);
-                // mat_input_nchw = (unsigned char *)out_buffer;
-                // cv::transposeND(mat_input_nchw, {0, 3, 1, 2}, mat_input); // Can be enabled only with OpenCV 4.6.0
-                convert_nchw_to_nhwc(out_buffer, mat_input.data, output_tensor_list->at(idx)->info().dims().at(0), output_tensor_list->at(idx)->info().dims().at(2),
-                                     output_tensor_list->at(idx)->info().dims().at(3), output_tensor_list->at(idx)->info().dims().at(1));            
-            }
-            else
-                mat_input.data = (unsigned char *)out_buffer;
-
-            mat_input.copyTo(mat_output(cv::Rect(0, 0, w, h)));
-
-            std::string out_filename = std::string(outName) + ".png";   // in case the user specifies non png filename
-            if (display_all)
-                out_filename = std::string(outName) + std::to_string(index) + std::to_string(idx) + ".png";   // in case the user specifies non png filename
-
-            if (color_format == RocalImageColor::ROCAL_COLOR_RGB24)
-            {
-                cv::cvtColor(mat_output, mat_color, CV_RGB2BGR);
-                cv::imwrite(out_filename, mat_color, compression_params);
-            }
-            else
-            {
-                cv::imwrite(out_filename, mat_output, compression_params);
-            }
-            // if(out_buffer != nullptr) free(out_buffer);
-        }
-        mat_input.release();
-        mat_output.release();
     }
 
     high_resolution_clock::time_point t2 = high_resolution_clock::now();

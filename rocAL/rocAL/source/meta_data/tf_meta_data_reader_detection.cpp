@@ -59,7 +59,6 @@ void TFMetaDataReaderDetection::add(std::string image_name, BoundingBoxCords bb_
     pMetaDataBox info = std::make_shared<BoundingBox>(bb_coords, bb_labels, image_size);
     _map_content.insert(pair<std::string, std::shared_ptr<BoundingBox>>(image_name, info));
 }
-
 void TFMetaDataReaderDetection::lookup(const std::vector<std::string> &image_names)
 {
     if(image_names.empty())

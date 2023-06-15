@@ -31,6 +31,11 @@ THE SOFTWARE.
 #include <sstream>
 #include <fstream>
 #include <stdint.h>
+#include "meta_data_reader_factory.h"
+#include "meta_data_graph_factory.h"
+#include "tf_meta_data_reader.h"
+#include "tf_record_reader.h"
+
 
 namespace filesys = boost::filesystem;
 
@@ -72,6 +77,7 @@ Reader::Status TFRecordReader::initialize(ReaderConfig desc)
     _loop = desc.loop();
     _shuffle = desc.shuffle();
     _record_name_prefix = desc.file_prefix();
+    _meta_data_reader = desc.meta_data_reader();
     _encoded_key = _feature_key_map.at("image/encoded");
     _filename_key = _feature_key_map.at("image/filename");
     ret = folder_reading();
@@ -157,7 +163,7 @@ Reader::Status TFRecordReader::folder_reading()
         if (strcmp(_entity->d_name, ".") == 0 || strcmp(_entity->d_name, "..") == 0)
             continue;
         entry_name_list.push_back(entry_name);
-        // std::cerr<<"\n entry_name::"<<entry_name;
+
     }
     std::sort(entry_name_list.begin(), entry_name_list.end());
     for (unsigned dir_count = 0; dir_count < entry_name_list.size(); ++dir_count)
@@ -179,7 +185,6 @@ Reader::Status TFRecordReader::folder_reading()
 }
 void TFRecordReader::replicate_last_image_to_fill_last_shard()
 {
-    // std::cerr<<"\n Replicate last image";
     for (size_t i = _in_batch_read_count; i < _batch_count; i++)
     {
         _file_names.push_back(_last_file_name);
@@ -207,7 +212,6 @@ Reader::Status TFRecordReader::tf_record_reader()
             THROW("TFRecordReader: Failed to open file " + fname);
         file_contents.seekg(0, std::ifstream::end);
         file_size = file_contents.tellg();
-        // std::cerr<<"\n length of the file:: "<<length<<std::endl;
         file_contents.seekg(0, std::ifstream::beg);
         auto ret = read_image_names(file_contents, file_size);
         if (ret != Reader::Status::OK)
@@ -271,6 +275,7 @@ Reader::Status TFRecordReader::read_image_names(std::ifstream &file_contents, ui
         _in_batch_read_count++;
         _in_batch_read_count = (_in_batch_read_count % _batch_count == 0) ? 0 : _in_batch_read_count;
         _last_file_name = file_path;
+        if(!_meta_data_reader || _meta_data_reader->exists(fname)) {
         if (get_file_shard_id() != _shard_id)
         {
             incremenet_file_id();
@@ -283,6 +288,7 @@ Reader::Status TFRecordReader::read_image_names(std::ifstream &file_contents, ui
         _file_names.push_back(file_path);
         incremenet_file_id();
         _file_count_all_shards++;
+    }
         _single_feature = feature.at(_encoded_key);
         _last_file_size = _single_feature.bytes_list().value()[0].size();
         _file_size.insert(std::pair<std::string, unsigned int>(_last_file_name, _last_file_size));
@@ -310,7 +316,6 @@ Reader::Status TFRecordReader::read_image(unsigned char *buff, std::string file_
     {
         THROW("ERROR: Given name not present in the map" + file_name)
     }
-    // std::cerr<<"\n image present at loc:: "<<it->second;
     file_contents.seekg(it->second, std::ifstream::beg);
     uint64_t data_length;
     uint32_t length_crc, data_crc;

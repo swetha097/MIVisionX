@@ -61,14 +61,12 @@ void CropMirrorNormalizeMetaNode::update_parameters(MetaDataBatch* input_meta_da
         BoundingBoxCord temp_box = {0, 0, 1, 1};
         BoundingBoxLabels bb_labels;
         BoundingBoxCord crop_box;
-        crop_box.l = (_x1_val[i]) / input_roi[i].x2;
-        crop_box.t = (_y1_val[i]) / input_roi[i].y2;
-        crop_box.r = (_x1_val[i] + _width_val[i]) / input_roi[i].x2;
-        crop_box.b = (_y1_val[i] + _height_val[i]) / input_roi[i].y2;
-        // std::cout<<"CROP Co-ordinates in CMN: lxtxrxb::\t"<<crop_box.l<<"x"<<crop_box.t<<"x"<<crop_box.r<<"x"<<crop_box.b<<"x";
+        crop_box.l = static_cast<float>(_x1_val[i]) / static_cast<float>(input_roi[i].x2);
+        crop_box.t = static_cast<float> (_y1_val[i]) / static_cast<float> (input_roi[i].y2);
+        crop_box.r = crop_box.l + (static_cast<float> (_width_val[i]) / static_cast<float> (input_roi[i].x2));
+        crop_box.b = crop_box.t + (static_cast<float> (_height_val[i]) / static_cast<float>  (input_roi[i].y2));
         for(uint j = 0; j < bb_count; j++)
         {
-            // std::cout<<"\nIn BEFORE CMN: Box Co-ordinates lxtxrxb::\t"<<coords_buf[j].l<<"x\t"<<coords_buf[j].t<<"x\t"<<coords_buf[j].r<<"x\t"<<coords_buf[j].b<<"x\t"<<std::endl;
             if (BBoxIntersectionOverUnion(coords_buf[j], crop_box) >= _iou_threshold)
             {
                 float xA = std::max(crop_box.l, coords_buf[j].l);
