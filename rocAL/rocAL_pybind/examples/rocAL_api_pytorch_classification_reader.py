@@ -18,35 +18,48 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
-import random
+from __future__ import absolute_import
+from __future__ import division
+from __future__ import print_function
 from amd.rocal.plugin.pytorch import ROCALClassificationIterator
 from amd.rocal.pipeline import Pipeline
 import amd.rocal.fn as fn
 import amd.rocal.types as types
-import numpy as np
-import sys
+from parse_config import parse_args
 import os
 
-def draw_patches(img, idx, layout="nchw", dtype="fp32", device="cpu"):
-    #image is expected as a tensor
+def draw_patches(img, idx, device):
+    #image is expected as a tensor, bboxes as numpy
     import cv2
+    args = parse_args()
     if device == "cpu":
-        image = img.detach().numpy()
+            image = img.detach().numpy()
     else:
         image = img.cpu().numpy()
-    if layout == "nchw":
+    if not args.NHWC:
         image = image.transpose([1, 2, 0])
-    if dtype == "fp16":
-        image = image.astype('uint8')
+    if args.fp16:
+        image = (image).astype('uint8')
     image = cv2.cvtColor(image, cv2.COLOR_RGB2BGR)
-    cv2.imwrite("OUTPUT_IMAGES_PYTHON/NEW_API/FILE_READER/" + str(idx)+"_"+"train"+".png", image * 255)
+    cv2.imwrite("OUTPUT_IMAGES_PYTHON/NEW_API/FILE_READER/" + args.augmentation_name + "/" + str(idx)+"_"+"train"+".png", image)
+
 
 def main():
-    if  len(sys.argv) < 3:
-        print ('Please pass image_folder cpu/gpu batch_size')
-        exit(0)
+    args = parse_args()
+    # Args
+    data_path = args.image_dataset_path
+    augmentation_name = args.augmentation_name
+    print("\n AUGMENTATION NAME: ", augmentation_name)
+    rocal_cpu = False if args.rocal_gpu else True
+    device = "cpu" if rocal_cpu else "cuda"
+    batch_size = args.batch_size
+    num_threads = args.num_threads
+    random_seed = args.seed
+    local_rank =  args.local_rank
+    world_size =  args.world_size
+    display = True if args.display else False
     try:
-        path= "OUTPUT_IMAGES_PYTHON/NEW_API/FILE_READER/"
+        path= "OUTPUT_IMAGES_PYTHON/NEW_API/FILE_READER/" + args.augmentation_name
         isExist = os.path.exists(path)
         if not isExist:
             os.makedirs(path)
@@ -155,16 +168,39 @@ def main():
     # Dataloader
     data_loader = ROCALClassificationIterator(pipe,device=device)
     cnt = 0
-    for epoch in range(3):
-        print("+++++++++++++++++++++++++++++EPOCH+++++++++++++++++++++++++++++++++++++",epoch)
-        for i, it in enumerate(imageIteratorPipeline):
-            print(it)
-            print("************************************** i *************************************",i)
+
+    import timeit
+    start = timeit.default_timer()
+
+    # Enumerate over the Dataloader
+    for epoch in range(int(args.num_epochs)):
+        print("EPOCH:::::", epoch)
+        for i, it in enumerate(data_loader, 0):
+            if args.print_tensor:
+                print("**************", i, "*******************")
+                print("**************starts*******************")
+                print("\nImages:\n", it[0])
+                print("\nLABELS:\n", it[1])
+                print("**************ends*******************")
+                print("**************", i, "*******************")
             for img in it[0]:
-                cnt = cnt + 1
-                draw_patches(img, cnt, layout="nhwc", dtype="fp16", device=_rali_cpu) 
-        imageIteratorPipeline.reset()
-    print("*********************************************************************")
+                cnt = cnt+1
+                if display:
+                    draw_patches(img, cnt, device)
+
+            break
+        data_loader.reset()
+
+    #Your statements here
+    stop = timeit.default_timer()
+
+    print('\n Time: ', stop - start)
+    print('Number of times loop iterates is:', cnt)
+
+    print(f'###############################################                             {augmentation_name.upper()}                         ############################################')
+    print("###############################################                             SUCCESS                             ###############################################")
+
+
 
 if __name__ == '__main__':
     main()
