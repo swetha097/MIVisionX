@@ -281,7 +281,28 @@ namespace rocal{
         rocalRandomBBoxCrop(context, all_boxes_overlap, no_crop, p_aspect_ratio, has_shape, crop_width, crop_height, num_attempts, p_scaling, total_num_attempts);
         return py::cast<py::none>(Py_None);
     }
+
     '''
+        std::unordered_map<int, std::string> rocALToPybindLayout = {
+        {0, "NHWC"},
+        {1, "NCHW"},
+        {2, "NFHWC"},
+        {3, "NFCHW"},
+    };
+
+    std::unordered_map<int, int> rocALToPybindImageColor = {
+        {0, 3},
+        {1, 3},
+        {2, 1},
+        {3, 3},
+    };
+
+    std::unordered_map<int, std::string> rocALToPybindOutputDtype = {
+        {0, "float32"},
+        {1, "float16"},
+        {2, "uint8"},
+        {3, "int8"},
+    };
 
     PYBIND11_MODULE(rocal_pybind, m) {
         m.doc() = "Python bindings for the C++ portions of ROCAL";
@@ -323,71 +344,38 @@ namespace rocal{
                 )code"
             )
             .def("layout", [](rocalTensor &output_tensor) {
-                switch(output_tensor.info().layout()) {
-                    case RocalTensorlayout::NHWC:
-                        return "NHWC";
-                    case RocalTensorlayout::NCHW:
-                        return "NCHW";
-                }
+                return rocALToPybindLayout[(int)output_tensor.info().layout()];
             },
                 R"code(
                 Returns layout of tensor.
                 )code"
             )
             .def("dtype", [](rocalTensor &output_tensor) {
-                switch(output_tensor.info().data_type()) {
-                    case RocalTensorDataType::FP32:
-                        return "float32";
-                    case RocalTensorDataType::UINT8:
-                        return "uint8";
-                    case RocalTensorDataType::FP16:
-                        return "float16";
-                }
+                return rocALToPybindOutputDtype[(int)output_tensor.info().data_type()];
             },
                 R"code(
                 Returns dtype of tensor.
                 )code"
             )
             .def("torch_dtype", [](rocalTensor &output_tensor) {
-                switch(output_tensor.info().data_type()) {
-                    case RocalTensorDataType::FP32:
-                        return "torch.float32";
-                    case RocalTensorDataType::UINT8:
-                        return "torch.float16";
-                    case RocalTensorDataType::FP16:
-                        return "torch.uint8";
-                }
+                return "torch." + rocALToPybindOutputDtype[(int)output_tensor.info().data_type()];
             },
                 R"code(
                 Returns dtype of torch tensor.
                 )code"
             )
             .def("numpy_dtype", [](rocalTensor &output_tensor) {
-                switch(output_tensor.info().data_type()) {
-                    case RocalTensorDataType::FP32:
-                        return "np.float32";
-                    case RocalTensorDataType::UINT8:
-                        return "np.float16";
-                    case RocalTensorDataType::FP16:
-                        return "np.uint8";
-                }
+                return "np." + rocALToPybindOutputDtype[(int)output_tensor.info().data_type()];
             },
                 R"code(
-                Returns dtype of torch tensor.
+                Returns dtype of numpy array.
                 )code"
             )
             .def("cupy_dtype", [](rocalTensor &output_tensor) {
-                switch(output_tensor.info().data_type()) {
-                    case RocalTensorDataType::FP32:
-                        return "cp.float32";
-                    case RocalTensorDataType::UINT8:
-                        return "cp.float16";
-                    case RocalTensorDataType::FP16:
-                        return "cp.uint8";
-                }
+                return "cp." + rocALToPybindOutputDtype[(int)output_tensor.info().data_type()];
             },
                 R"code(
-                Returns dtype of torch tensor.
+                Returns dtype of cupy array.
                 )code"
             )
             .def("dims", [](rocalTensor &output_tensor) {
