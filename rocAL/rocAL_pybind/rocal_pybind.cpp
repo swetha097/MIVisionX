@@ -102,9 +102,31 @@ namespace rocal
         return py::bytes(s);
     }
 
+    std::unordered_map<int, std::string> rocALToPybindLayout = {
+        {0, "NHWC"},
+        {1, "NCHW"},
+        {2, "NFHWC"},
+        {3, "NFCHW"},
+    };
+
+    std::unordered_map<int, int> rocALToPybindImageColor = {
+        {0, 3},
+        {1, 3},
+        {2, 1},
+        {3, 3},
+    };
+
+    std::unordered_map<int, std::string> rocALToPybindOutputDtype = {
+        {0, "float32"},
+        {1, "float16"},
+        {2, "uint8"},
+        {3, "int8"},
+    };
+
     PYBIND11_MODULE(rocal_pybind, m)
     {
         m.doc() = "Python bindings for the C++ portions of ROCAL";
+
         // rocal_api.h
         m.def("rocalCreate", &rocalCreate, "Creates context with the arguments sent and returns it",
               py::return_value_policy::reference,
@@ -158,17 +180,7 @@ namespace rocal
                 "color_format",
                 [](rocalTensor &output_tensor)
                 {
-                    switch(output_tensor.info().color_format())
-                    {
-                        case RocalColorFormat::RGB24:
-                            return 3;
-                        case RocalColorFormat::BGR24:
-                            return 3;
-                        case RocalColorFormat::RGB_PLANAR:
-                            return 3;
-                        case RocalColorFormat::U8:
-                            return 1;
-                    }
+                    return rocALToPybindImageColor[(int)output_tensor.info().color_format()];
                 },
                 R"code(
                 Returns a tensor batch size.
@@ -176,12 +188,7 @@ namespace rocal
             )
             .def("layout", [](rocalTensor &output_tensor)
             {
-                switch(output_tensor.info().layout()) {
-                    case RocalTensorlayout::NHWC:
-                        return "NHWC";
-                    case RocalTensorlayout::NCHW:
-                        return "NCHW";
-                }
+                return rocALToPybindLayout[(int)output_tensor.info().layout()];
             },
                 R"code(
                 Returns layout of tensor.
@@ -189,14 +196,7 @@ namespace rocal
             )
             .def("dtype", [](rocalTensor &output_tensor)
             {
-                switch(output_tensor.info().data_type()) {
-                    case RocalTensorDataType::FP32:
-                        return "float32";
-                    case RocalTensorDataType::UINT8:
-                        return "uint8";
-                    case RocalTensorDataType::FP16:
-                        return "float16";
-                }
+                return rocALToPybindOutputDtype[(int)output_tensor.info().data_type()];
             },
                 R"code(
                 Returns dtype of tensor.
