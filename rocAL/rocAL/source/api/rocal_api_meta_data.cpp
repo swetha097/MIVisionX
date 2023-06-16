@@ -77,12 +77,14 @@ ROCAL_API_CALL rocalCreateVideoLabelReader(RocalContext p_context, const char* s
 }
 
 RocalMetaData
-ROCAL_API_CALL rocalCreateCOCOReader(RocalContext p_context, const char* source_path, bool is_output){
+ROCAL_API_CALL rocalCreateCOCOReader(RocalContext p_context, const char* source_path, bool is_output, bool mask, bool ltrb, bool is_box_encoder) {
     if (!p_context)
         THROW("Invalid rocal context passed to rocalCreateCOCOReader")
     auto context = static_cast<Context*>(p_context);
-
-    return context->master_graph->create_coco_meta_data_reader(source_path, is_output, MetaDataReaderType::COCO_META_DATA_READER,  MetaDataType::BoundingBox);
+    if(mask) {
+        return context->master_graph->create_coco_meta_data_reader(source_path, is_output, MetaDataReaderType::COCO_META_DATA_READER, MetaDataType::PolygonMask, ltrb, is_box_encoder);
+    }
+    return context->master_graph->create_coco_meta_data_reader(source_path, is_output, MetaDataReaderType::COCO_META_DATA_READER, MetaDataType::BoundingBox, ltrb, is_box_encoder);
 }
 
 RocalMetaData
@@ -215,62 +217,18 @@ ROCAL_API_CALL rocalGetImageId(RocalContext p_context,  int* buf)
     }
 }
 
-void
-ROCAL_API_CALL rocalGetImageLabels(RocalContext p_context, void* buf, RocalOutputMemType output_mem_type)
+RocalTensorList
+ROCAL_API_CALL rocalGetImageLabels(RocalContext p_context)
 {
 
     if (!p_context)
         THROW("Invalid rocal context passed to rocalGetImageLabels")
     auto context = static_cast<Context*>(p_context);
-    auto meta_data = context->master_graph->meta_data();
-    if(!meta_data.second) {
-        WRN("No label has been loaded for this output image")
-        return;
-    }
-    size_t meta_data_batch_size = meta_data.second->get_label_batch().size();
-    if(context->user_batch_size() != meta_data_batch_size)
-        THROW("meta data batch size is wrong " + TOSTR(meta_data_batch_size) + " != "+ TOSTR(context->user_batch_size() ))
-
-    if (context->affinity == RocalAffinity::CPU) {
-        if(output_mem_type == RocalOutputMemType::ROCAL_MEMCPY_HOST) {
-            memcpy(buf, meta_data.second->get_label_batch().data(), sizeof(int) * meta_data_batch_size);
-        }
-        else {
-#if ENABLE_HIP
-            hipError_t err = hipMemcpy(buf, meta_data.second->get_label_batch().data(), sizeof(int) * meta_data_batch_size, hipMemcpyHostToDevice);
-            if (err != hipSuccess)
-                THROW("Invalid Data Pointer: Error copying to device memory")
-#elif ENABLE_OPENCL
-            if(clEnqueueWriteBuffer(context->master_graph->get_ocl_cmd_q(), (cl_mem)buf, CL_TRUE, 0, sizeof(int) * meta_data_batch_size, meta_data.second->get_label_batch().data(), 0, NULL, NULL) != CL_SUCCESS)
-              THROW("Invalid Data Pointer: Error copying to device memory")
-#endif
-        }
-    }
-    else
-    {
-#if ENABLE_HIP
-        if(output_mem_type == RocalOutputMemType::ROCAL_MEMCPY_GPU) {
-            hipError_t err = hipMemcpy(buf, meta_data.second->get_label_batch().data(), sizeof(int) * meta_data_batch_size, hipMemcpyHostToDevice);
-            if (err != hipSuccess)
-                THROW("Invalid Data Pointer: Error copying to device memory")
-        }
-        else if(output_mem_type == RocalOutputMemType::ROCAL_MEMCPY_HOST) {
-            memcpy(buf, meta_data.second->get_label_batch().data(), sizeof(int) * meta_data_batch_size);
-        }
-#elif ENABLE_OPENCL
-        if(output_mem_type == RocalOutputMemType::ROCAL_MEMCPY_GPU) {
-          if(clEnqueueWriteBuffer(context->master_graph->get_ocl_cmd_q(), (cl_mem)buf, CL_TRUE, 0, sizeof(int) * meta_data_batch_size, meta_data.second->get_label_batch().data(), 0, NULL, NULL) != CL_SUCCESS)
-              THROW("Invalid Data Pointer: Error copying to device memory")
-        }
-        else if(output_mem_type == RocalOutputMemType::ROCAL_MEMCPY_HOST) {
-            memcpy(buf, meta_data.second->get_label_batch().data(), sizeof(int) * meta_data_batch_size);
-        }
-#endif
-    }
+    return context->master_graph->labels_meta_data();
 }
 
 unsigned
-ROCAL_API_CALL rocalGetBoundingBoxCount(RocalContext p_context, int* buf)
+ROCAL_API_CALL rocalGetBoundingBoxCount(RocalContext p_context)
 {
     if (!p_context)
         THROW("Invalid rocal context passed to rocalGetBoundingBoxCount")
@@ -278,33 +236,19 @@ ROCAL_API_CALL rocalGetBoundingBoxCount(RocalContext p_context, int* buf)
     auto meta_data = context->master_graph->meta_data();
     if(!meta_data.second)
         THROW("No label has been loaded for this output image")
-    size_t meta_data_batch_size = meta_data.second->get_bb_labels_batch().size();
+    size_t meta_data_batch_size = meta_data.second->get_labels_batch().size();
     if(context->user_batch_size() != meta_data_batch_size)
         THROW("meta data batch size is wrong " + TOSTR(meta_data_batch_size) + " != "+ TOSTR(context->user_batch_size() ))
-    return context->master_graph->bounding_box_batch_count(buf, meta_data.second);
+    return context->master_graph->bounding_box_batch_count(meta_data.second);
 }
 
-void
-ROCAL_API_CALL rocalGetBoundingBoxLabel(RocalContext p_context, int* buf)
+RocalTensorList
+ROCAL_API_CALL rocalGetBoundingBoxLabel(RocalContext p_context)
 {
     if (!p_context)
         THROW("Invalid rocal context passed to rocalGetBoundingBoxLabel")
     auto context = static_cast<Context*>(p_context);
-    auto meta_data = context->master_graph->meta_data();
-    size_t meta_data_batch_size = meta_data.second->get_bb_labels_batch().size();
-    if(context->user_batch_size() != meta_data_batch_size)
-        THROW("meta data batch size is wrong " + TOSTR(meta_data_batch_size) + " != "+ TOSTR(context->user_batch_size() ))
-    if(!meta_data.second)
-    {
-        WRN("No label has been loaded for this output image")
-        return;
-    }
-    for(unsigned i = 0; i < meta_data_batch_size; i++)
-    {
-        unsigned bb_count = meta_data.second->get_bb_labels_batch()[i].size();
-        memcpy(buf, meta_data.second->get_bb_labels_batch()[i].data(),  sizeof(int) * bb_count);
-        buf += bb_count;
-    }
+    return context->master_graph->labels_meta_data();
 }
 
 void
@@ -318,14 +262,14 @@ ROCAL_API_CALL rocalGetOneHotImageLabels(RocalContext p_context, void* buf, int 
         WRN("No label has been loaded for this output image")
         return;
     }
-    size_t meta_data_batch_size = meta_data.second->get_label_batch().size();
+    size_t meta_data_batch_size = meta_data.second->get_labels_batch().size();
     if(context->user_batch_size() != meta_data_batch_size)
         THROW("meta data batch size is wrong " + TOSTR(meta_data_batch_size) + " != "+ TOSTR(context->user_batch_size() ))
 
     int labels_buf[meta_data_batch_size];
     int one_hot_encoded[meta_data_batch_size*numOfClasses];
     memset(one_hot_encoded, 0, sizeof(int) * meta_data_batch_size * numOfClasses);
-    memcpy(labels_buf, meta_data.second->get_label_batch().data(),  sizeof(int)*meta_data_batch_size);
+    memcpy(labels_buf, meta_data.second->get_labels_batch().data(),  sizeof(int)*meta_data_batch_size);
 
     for(uint i = 0; i < meta_data_batch_size; i++)
     {
@@ -358,27 +302,67 @@ ROCAL_API_CALL rocalGetOneHotImageLabels(RocalContext p_context, void* buf, int 
 }
 
 
-void
-ROCAL_API_CALL rocalGetBoundingBoxCords(RocalContext p_context, float* buf)
+RocalTensorList
+ROCAL_API_CALL rocalGetBoundingBoxCords(RocalContext p_context)
 {
     if (!p_context)
         THROW("Invalid rocal context passed to rocalGetBoundingBoxCords")
     auto context = static_cast<Context*>(p_context);
+    return context->master_graph->bbox_meta_data();
+}
+
+unsigned
+ROCAL_API_CALL rocalGetMaskCount(RocalContext p_context, int* buf)
+{
+    if (p_context == nullptr)
+        THROW("Invalid rocal context passed to rocalGetMaskCount")
+    unsigned size = 0, count = 0;
+    auto context = static_cast<Context*>(p_context);
     auto meta_data = context->master_graph->meta_data();
-    size_t meta_data_batch_size = meta_data.second->get_bb_cords_batch().size();
+    size_t meta_data_batch_size = meta_data.second->get_mask_cords_batch().size();
     if(context->user_batch_size() != meta_data_batch_size)
         THROW("meta data batch size is wrong " + TOSTR(meta_data_batch_size) + " != "+ TOSTR(context->user_batch_size() ))
     if(!meta_data.second)
-    {
-        WRN("No label has been loaded for this output image")
-        return;
-    }
+        THROW("No mask has been loaded for this output image")
     for(unsigned i = 0; i < meta_data_batch_size; i++)
     {
-        unsigned bb_count = meta_data.second->get_bb_cords_batch()[i].size();
-        memcpy(buf, meta_data.second->get_bb_cords_batch()[i].data(), bb_count * sizeof(BoundingBoxCord));
-        buf += (bb_count * 4);
+        unsigned object_count = meta_data.second->get_labels_batch()[i].size();
+        for(unsigned int j = 0; j < object_count; j++) {
+            unsigned polygon_count = meta_data.second->get_mask_polygons_count_batch()[i][j];
+            buf[count++] = polygon_count;
+            size += polygon_count;
+        }
     }
+    return size;
+}
+
+RocalTensorList
+ROCAL_API_CALL rocalGetMaskCoordinates(RocalContext p_context, int *bufcount)
+{
+    if (p_context == nullptr)
+        THROW("Invalid rocal context passed to rocalGetMaskCoordinates")
+    auto context = static_cast<Context*>(p_context);
+    auto meta_data = context->master_graph->meta_data();
+    size_t meta_data_batch_size = meta_data.second->get_mask_cords_batch().size();
+    if(context->user_batch_size() != meta_data_batch_size)
+        THROW("meta data batch size is wrong " + TOSTR(meta_data_batch_size) + " != "+ TOSTR(context->user_batch_size() ))
+    if(!meta_data.second)
+        THROW("No mask has been loaded for this output image")
+    int size = 0;
+    for(unsigned image_idx = 0; image_idx < meta_data_batch_size; image_idx++)
+    {
+        unsigned object_count = meta_data.second->get_labels_batch()[image_idx].size();
+        for(unsigned int i = 0; i < object_count; i++)
+        {
+            unsigned polygon_count = meta_data.second->get_mask_polygons_count_batch()[image_idx][i];
+            for(unsigned int j = 0; j < polygon_count; j++)
+            {
+                unsigned polygon_size = meta_data.second->get_mask_vertices_count_batch()[image_idx][i][j];
+                bufcount[size++] = polygon_size;
+            }
+        }
+    }
+    return context->master_graph->mask_meta_data();
 }
 
 void
@@ -393,7 +377,7 @@ ROCAL_API_CALL rocalGetImageSizes(RocalContext p_context, int* buf)
 
     if(!meta_data.second)
     {
-        WRN("No label has been loaded for this output image")
+        WRN("No sizes has been loaded for this output image")
         return;
     }
     for(unsigned i = 0; i < meta_data_batch_size; i++)
@@ -457,7 +441,7 @@ ROCAL_API_CALL rocalCopyEncodedBoxesAndLables(RocalContext p_context, float* box
         THROW("Invalid rocal context passed to rocalCopyEncodedBoxesAndLables")
     auto context = static_cast<Context *>(p_context);
     auto meta_data = context->master_graph->meta_data();
-    size_t meta_data_batch_size = meta_data.second->get_bb_labels_batch().size();
+    size_t meta_data_batch_size = meta_data.second->get_labels_batch().size();
     if (context->user_batch_size() != meta_data_batch_size)
         THROW("meta data batch size is wrong " + TOSTR(meta_data_batch_size) + " != " + TOSTR(context->user_batch_size()))
     if (!meta_data.second)
@@ -470,32 +454,28 @@ ROCAL_API_CALL rocalCopyEncodedBoxesAndLables(RocalContext p_context, float* box
     for (unsigned i = 0; i < meta_data_batch_size; i++)
     {
         bb_offset[i] = sum;
-        sum += meta_data.second->get_bb_labels_batch()[i].size();
+        sum += meta_data.second->get_labels_batch()[i].size();
     }
     // copy labels buffer & bboxes buffer parallely
     #pragma omp parallel for
     for (unsigned i = 0; i < meta_data_batch_size; i++)
     {
-        unsigned bb_count = meta_data.second->get_bb_labels_batch()[i].size();
+        unsigned bb_count = meta_data.second->get_labels_batch()[i].size();
         int *temp_labels_buf = labels_buf + bb_offset[i];
         float *temp_bbox_buf = boxes_buf + (bb_offset[i] * 4);
-        memcpy(temp_labels_buf, meta_data.second->get_bb_labels_batch()[i].data(), sizeof(int) * bb_count);
+        memcpy(temp_labels_buf, meta_data.second->get_labels_batch()[i].data(), sizeof(int) * bb_count);
         memcpy(temp_bbox_buf, meta_data.second->get_bb_cords_batch()[i].data(), sizeof(BoundingBoxCord) * bb_count);
     }
 }
 
-void
-ROCAL_API_CALL rocalGetEncodedBoxesAndLables(RocalContext p_context, float **boxes_buf_ptr, int **labels_buf_ptr, int num_encoded_boxes)
+RocalMetaData
+ROCAL_API_CALL rocalGetEncodedBoxesAndLables(RocalContext p_context, int num_encoded_boxes)
 {
     if (!p_context) {
         WRN("rocalGetEncodedBoxesAndLables::Invalid context")
     }
     auto context = static_cast<Context *>(p_context);
-    context->master_graph->get_bbox_encoded_buffers(boxes_buf_ptr, labels_buf_ptr, num_encoded_boxes);
-    if (!*boxes_buf_ptr || !*labels_buf_ptr)
-    {
-        WRN("rocalGetEncodedBoxesAndLables::Empty tensors returned from rocAL")
-    }
+    return context->master_graph->get_bbox_encoded_buffers(num_encoded_boxes);
 }
 
 void
