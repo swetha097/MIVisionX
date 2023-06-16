@@ -11,12 +11,15 @@ import sys
 import cv2
 import os
 
-def draw_patches(img, idx, device):
+def draw_patches(img, idx, device = True, layout = "NCHW"):
     #image is expected as a tensor, bboxes as numpy
     import cv2
-    image = img.cpu().numpy()
-    image = image.transpose([1, 2, 0])
-    print(img.shape)
+    if device is False:
+        image = img.cpu().numpy()
+    else:
+        image = img.numpy()
+    if layout == "NCHW":
+        image = image.transpose([1, 2, 0])
     image = cv2.cvtColor(image, cv2.COLOR_RGB2BGR)
     cv2.imwrite("OUTPUT_IMAGES_PYTHON/FILE_READER/" + str(idx)+"_"+"train"+".png", image * 255)
 
@@ -72,7 +75,7 @@ def main():
         print("************************************** i *************************************",i)
         for img in it[0]:
             cnt = cnt + 1
-            draw_patches(img, cnt, "cpu")
+            draw_patches(img, cnt, device=_rali_cpu, layout="NCHW")
     imageIteratorPipeline.reset()
     print("*********************************************************************")
 
