@@ -90,7 +90,7 @@ def main():
         for image_counter in range(output_data_batch[i].batch_size()):
             image = output_data_batch[i].at(image_counter)
             image = image.transpose([1, 2, 0])
-            cv2.imwrite("output_images_iter"+ str(i) + str(image_counter) + ".jpg", cv2.cvtColor(image, cv2.COLOR_RGB2BGR))
+            cv2.imwrite("output_images_iter"+ str(i) + str(image_counter) + ".jpg", cv2.cvtColor(image * 255, cv2.COLOR_RGB2BGR))
 
 if __name__ == '__main__':
     main()
