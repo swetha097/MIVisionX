@@ -68,7 +68,7 @@ std::pair<void*, void*> RingBuffer::get_box_encode_read_buffers()
     block_if_empty();
     if((_mem_type == RocalMemType::OCL) || (_mem_type == RocalMemType::HIP))
         return std::make_pair(_dev_bbox_buffer[_read_ptr], _dev_labels_buffer[_read_ptr]);
-    return std::make_pair(nullptr, nullptr);   // todo:: implement the same scheme for host as well
+    return std::make_pair(_host_meta_data_buffers[_read_ptr][1], _host_meta_data_buffers[_read_ptr][0]);
 }
 
 std::vector<void*> RingBuffer::get_write_buffers()
@@ -85,8 +85,21 @@ std::pair<void*, void*> RingBuffer::get_box_encode_write_buffers()
     block_if_full();
     if((_mem_type == RocalMemType::OCL) || (_mem_type == RocalMemType::HIP))
         return std::make_pair(_dev_bbox_buffer[_write_ptr], _dev_labels_buffer[_write_ptr]);
-    return std::make_pair(nullptr, nullptr); 
+    return std::make_pair(_host_meta_data_buffers[_write_ptr][1], _host_meta_data_buffers[_write_ptr][0]);
 }
+
+std::vector<void*> RingBuffer::get_meta_read_buffers()
+{
+    block_if_empty();
+    return _host_meta_data_buffers[_read_ptr];
+}
+
+std::vector<void*> RingBuffer::get_meta_write_buffers()
+{
+    block_if_full();
+    return _host_meta_data_buffers[_write_ptr];
+}
+
 void RingBuffer::unblock_reader()
 {
     // Wake up the reader thread in case it's waiting for a load
@@ -200,6 +213,7 @@ void RingBuffer::initBoxEncoderMetaData(RocalMemType mem_type, size_t encoded_bb
     DeviceResourcesHip *dev_hip = static_cast<DeviceResourcesHip *>(_dev);
     if(_mem_type == RocalMemType::HIP)
     {
+        _box_encoder_gpu = true;
         if(dev_hip->hip_stream == nullptr || dev_hip->device_id == -1 )
             THROW("initBoxEncoderMetaData::Error Hip Device is not initialzed");
         hipError_t err;
@@ -223,6 +237,7 @@ void RingBuffer::initBoxEncoderMetaData(RocalMemType mem_type, size_t encoded_bb
     DeviceResources *dev_ocl = static_cast<DeviceResources *>(_dev);
     if(mem_type== RocalMemType::OCL)
     {
+        _box_encoder_gpu = true;
         if(dev_ocl->cmd_queue == nullptr || dev_ocl->device_id == nullptr || dev_ocl->context == nullptr)
             THROW("Error ocl structure needed since memory type is OCL");
 
@@ -245,9 +260,45 @@ void RingBuffer::initBoxEncoderMetaData(RocalMemType mem_type, size_t encoded_bb
     }
 #else    
     {
-        //todo:: for host
+        if(_meta_data_sub_buffer_count < 2)
+            THROW("Insufficient HOST metadata buffers for Box Encoder");
+        // Check if sufficient data has been allocated for the labels and bbox host buffers if not reallocate
+        for(size_t buffIdx = 0; buffIdx < BUFF_DEPTH; buffIdx++)
+        {
+            if(_meta_data_sub_buffer_size[BUFF_DEPTH][0] < encoded_labels_size)
+                rellocate_meta_data_buffer(_host_meta_data_buffers[BUFF_DEPTH][0], _meta_data_sub_buffer_size[BUFF_DEPTH][0], 0);
+            if(_meta_data_sub_buffer_size[BUFF_DEPTH][1] < encoded_bbox_size)
+                rellocate_meta_data_buffer(_host_meta_data_buffers[BUFF_DEPTH][1], _meta_data_sub_buffer_size[BUFF_DEPTH][1], 1);
+        }
     }
 #endif
+}
+
+void RingBuffer::init_metadata(RocalMemType mem_type, std::vector<size_t> &sub_buffer_size)
+{
+    if(BUFF_DEPTH < 2)
+        THROW ("Error internal buffer size for the ring buffer should be greater than one")
+
+    // Allocating buffers
+    _meta_data_sub_buffer_count = sub_buffer_size.size();
+    if(mem_type== RocalMemType::OCL || mem_type== RocalMemType::HIP)
+    {
+        THROW("Metadata is not supported with GPU backends")
+    }
+    else
+    {
+        _host_meta_data_buffers.resize(BUFF_DEPTH);
+        _meta_data_sub_buffer_size.resize(BUFF_DEPTH);
+        for(size_t buffIdx = 0; buffIdx < BUFF_DEPTH; buffIdx++)
+        {
+            _host_meta_data_buffers[buffIdx].resize(_meta_data_sub_buffer_count);
+            for(size_t sub_buff_idx = 0; sub_buff_idx < _meta_data_sub_buffer_count; sub_buff_idx++)
+            {
+                _meta_data_sub_buffer_size[buffIdx].emplace_back(sub_buffer_size[sub_buff_idx]);
+                _host_meta_data_buffers[buffIdx][sub_buff_idx] = malloc(sub_buffer_size[sub_buff_idx]);
+            }
+        }
+    }
 }
 
 void RingBuffer::push()
@@ -282,25 +333,41 @@ void RingBuffer::release_gpu_res()
 {
 #if ENABLE_HIP
     if (_mem_type == RocalMemType::HIP) {
-        for (size_t buffIdx = 0; buffIdx < _dev_sub_buffer.size(); buffIdx++){
-            for (unsigned sub_buf_idx = 0; sub_buf_idx < _dev_sub_buffer[buffIdx].size(); sub_buf_idx++){
+        for (size_t buffIdx = 0; buffIdx < _dev_sub_buffer.size(); buffIdx++) {
+            for (unsigned sub_buf_idx = 0; sub_buf_idx < _dev_sub_buffer[buffIdx].size(); sub_buf_idx++) {
                 if (_dev_sub_buffer[buffIdx][sub_buf_idx])
                     if ( hipFree((void *)_dev_sub_buffer[buffIdx][sub_buf_idx]) != hipSuccess ) {
                         //printf("Error Freeing device buffer <%d, %d, %p>\n", buffIdx, sub_buf_idx, _dev_sub_buffer[buffIdx][sub_buf_idx]);
                         ERR("Could not release hip memory in the ring buffer")
                     }
             }
+            if(_host_meta_data_buffers.size() != 0) {
+                for (unsigned sub_buf_idx = 0; sub_buf_idx < _host_meta_data_buffers[buffIdx].size(); sub_buf_idx++) {
+                    if (_host_meta_data_buffers[buffIdx][sub_buf_idx])
+                        free(_host_meta_data_buffers[buffIdx][sub_buf_idx]);
+                }
+            }
         }
         _dev_sub_buffer.clear();
+        _host_meta_data_buffers.clear();
     }
 #elif ENABLE_OPENCL
     if (_mem_type == RocalMemType::OCL) {
-        for (size_t buffIdx = 0; buffIdx < _dev_sub_buffer.size(); buffIdx++)
-            for (unsigned sub_buf_idx = 0; sub_buf_idx < _dev_sub_buffer[buffIdx].size(); sub_buf_idx++)
+        for (size_t buffIdx = 0; buffIdx < _dev_sub_buffer.size(); buffIdx++) {
+            for (unsigned sub_buf_idx = 0; sub_buf_idx < _dev_sub_buffer[buffIdx].size(); sub_buf_idx++) {
                 if (_dev_sub_buffer[buffIdx][sub_buf_idx])
                     if (clReleaseMemObject((cl_mem) _dev_sub_buffer[buffIdx][sub_buf_idx]) != CL_SUCCESS)
                         ERR("Could not release ocl memory in the ring buffer")
+            }
+            if(_host_meta_data_buffers.size() != 0) {
+                for (unsigned sub_buf_idx = 0; sub_buf_idx < _host_meta_data_buffers[buffIdx].size(); sub_buf_idx++) {
+                    if (_host_meta_data_buffers[buffIdx][sub_buf_idx])
+                        free(_host_meta_data_buffers[buffIdx][sub_buf_idx]);
+                }
+            }
+        }
         _dev_sub_buffer.clear();
+        _host_meta_data_buffers.clear();
     }
 #endif
 }
@@ -308,11 +375,20 @@ void RingBuffer::release_gpu_res()
 RingBuffer::~RingBuffer()
 {
     if (_mem_type == RocalMemType::HOST) {
-        for (unsigned buffIdx = 0; buffIdx < _host_sub_buffers.size(); buffIdx++)
-            for (unsigned sub_buf_idx = 0; sub_buf_idx < _host_sub_buffers[buffIdx].size(); sub_buf_idx++)
+        for (unsigned buffIdx = 0; buffIdx < _host_sub_buffers.size(); buffIdx++) {
+            for (unsigned sub_buf_idx = 0; sub_buf_idx < _host_sub_buffers[buffIdx].size(); sub_buf_idx++) {
                 if (_host_sub_buffers[buffIdx][sub_buf_idx])
                     free(_host_sub_buffers[buffIdx][sub_buf_idx]);
+            }
+            if(_host_meta_data_buffers.size() != 0) {
+                for (unsigned sub_buf_idx = 0; sub_buf_idx < _host_meta_data_buffers[buffIdx].size(); sub_buf_idx++) {
+                    if (_host_meta_data_buffers[buffIdx][sub_buf_idx])
+                        free(_host_meta_data_buffers[buffIdx][sub_buf_idx]);
+                }   
+            }
+        }
         _host_sub_buffers.clear();
+        _host_meta_data_buffers.clear();
     }
 }
 
@@ -351,9 +427,33 @@ void RingBuffer::increment_write_ptr()
     _wait_for_load.notify_all();
 }
 
-void RingBuffer::set_meta_data( ImageNameBatch names, pMetaDataBatch meta_data)
+void RingBuffer::set_meta_data(ImageNameBatch names, pMetaDataBatch meta_data)
 {
-    _last_image_meta_data = std::move(std::make_pair(std::move(names), meta_data));
+    if(meta_data == nullptr)
+        _last_image_meta_data = std::move(std::make_pair(std::move(names), pMetaDataBatch()));
+    else
+    {
+        _last_image_meta_data = std::move(std::make_pair(std::move(names), meta_data));
+        if(!_box_encoder_gpu) 
+        {
+            auto actual_buffer_size = meta_data->get_buffer_size();
+            for(unsigned i = 0; i < actual_buffer_size.size(); i++)
+            {
+                if(actual_buffer_size[i] > _meta_data_sub_buffer_size[_write_ptr][i])
+                    rellocate_meta_data_buffer(_host_meta_data_buffers[_write_ptr][i], actual_buffer_size[i], i);
+            }
+            meta_data->copy_data(_host_meta_data_buffers[_write_ptr]);
+        }
+    }
+}
+
+void RingBuffer::rellocate_meta_data_buffer(void * buffer, size_t buffer_size, unsigned buff_idx)
+{
+    void *new_ptr = realloc(buffer, buffer_size);
+    if(buffer == nullptr)
+        THROW("Metadata ring buffer reallocation failed")
+    _host_meta_data_buffers[_write_ptr][buff_idx] = new_ptr;
+    _meta_data_sub_buffer_size[_write_ptr][buff_idx] = buffer_size;
 }
 
 MetaDataNamePair& RingBuffer::get_meta_data()

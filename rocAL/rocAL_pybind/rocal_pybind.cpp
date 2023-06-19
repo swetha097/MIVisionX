@@ -275,6 +275,14 @@ namespace rocal{
         return py::cast<py::none>(Py_None);
     }
 
+    py::object wrapper_cupy_one_hot_label_copy(RocalContext context, size_t array_ptr, unsigned numOfClasses, int dest)
+    {
+        void * ptr = (void*) array_ptr;
+        // call pure C++ function
+        rocalGetOneHotImageLabels(context, ptr, numOfClasses, dest);
+        return py::cast<py::none>(Py_None);
+    }
+
     py::object wrapper_random_bbox_crop(RocalContext context, bool all_boxes_overlap, bool no_crop, RocalFloatParam p_aspect_ratio, bool has_shape, int crop_width, int crop_height, int num_attempts, RocalFloatParam p_scaling, int total_num_attempts )
     {
         // call pure C++ function
@@ -591,7 +599,6 @@ namespace rocal{
         m.def("Caffe2Reader",&rocalCreateCaffe2LMDBLabelReader);
         m.def("CaffeReaderDetection",&rocalCreateCaffeLMDBReaderDetection);
         m.def("Caffe2ReaderDetection",&rocalCreateCaffe2LMDBReaderDetection);
-        m.def("getRemainingImages", &rocalGetRemainingImages);
         m.def("isEmpty", &rocalIsEmpty);
         m.def("getStatus", rocalGetStatus);
         m.def("rocalGetErrorMessage", &rocalGetErrorMessage);
