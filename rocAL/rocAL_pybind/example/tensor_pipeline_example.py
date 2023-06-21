@@ -65,14 +65,14 @@ def main():
     image_classification_train_pipeline.build()
     imageIteratorPipeline = ROCALClassificationIterator(image_classification_train_pipeline)
     cnt = 0
-    for i , it in enumerate(imageIteratorPipeline):
-        print(it)
-        print("************************************** i *************************************",i)
-        for img in it[0]:
-            cnt = cnt + 1
-            draw_patches(img, cnt, "cpu")
-    imageIteratorPipeline.reset()
-    print("*********************************************************************")
+    # for i , it in enumerate(imageIteratorPipeline):
+    #     print(it)
+    #     print("************************************** i *************************************",i)
+    #     for img in it[0]:
+    #         cnt = cnt + 1
+    #         draw_patches(img, cnt, "cpu")
+    # imageIteratorPipeline.reset()
+    # print("*********************************************************************")
 
     iter = 0
     # use pipe.run() call 

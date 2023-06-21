@@ -219,24 +219,14 @@ namespace rocal
                 "at",
                 [](rocalTensor &output_tensor, uint idx)
                 {
-                    uint h = output_tensor.info().max_shape().at(1);
-                    uint w = output_tensor.info().max_shape().at(0);
                     const auto& info = output_tensor.info();
-                    uint num_of_dims = info.num_of_dims();
-                    auto tensor_data_type = rocalDtypeSize[(int)info.data_type()];
-                    uint dims[num_of_dims];
-                    std::vector<long int> shape(num_of_dims-1);
-                    std::vector<int> stride(num_of_dims-1);
                     uint idx_stride = 1;
-                    for (uint i = 0; i < num_of_dims-1 ; i++) {
-                        dims[i] = output_tensor.info().dims().at(i+1);
-                        shape[i] = dims[i];
-                        idx_stride*=dims[i];
-                    }
-                    stride[0] = tensor_data_type;
-                    for (uint i = 1, j = num_of_dims - 2; i < num_of_dims-1, j > 0; i++,j--)
-                        stride[i] = stride[i - 1] * dims[j];
-                    std::reverse(stride.begin(), stride.end());
+                    for (uint i = 0; i < info.num_of_dims() - 1 ; i++) idx_stride*=output_tensor.info().dims().at(i+1);
+
+                std::vector<size_t> stride(info.strides());
+                stride.erase(stride.begin());
+                std::vector<size_t> dims(info.dims());
+                dims.erase(dims.begin());
                 switch(info.data_type()) 
                 {
                     case RocalTensorDataType::UINT8:
@@ -246,7 +236,7 @@ namespace rocal
                             sizeof(unsigned char),
                             py::format_descriptor<unsigned char>::format(),
                             info.num_of_dims() - 1,
-                            shape,
+                            dims,
                             stride
                             ));
                     case RocalTensorDataType::FP32:
@@ -255,7 +245,7 @@ namespace rocal
                             sizeof(float),
                             py::format_descriptor<float>::format(),
                             info.num_of_dims() - 1,
-                            shape,
+                            dims,
                             stride
                             ));
 
