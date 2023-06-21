@@ -476,7 +476,6 @@ void MasterGraph::output_routine()
     try {
         while (_processing)
         {
-            pMetaDataBatch full_batch_meta_data = nullptr;
             if (_loader_module->remaining_count() < (_is_sequence_reader_output ? _sequence_batch_size : _user_batch_size))
             {
                 // If the internal process routine ,output_routine(), has finished processing all the images, and last
@@ -528,17 +527,19 @@ void MasterGraph::output_routine()
             }
 
             update_node_parameters();
+            pMetaDataBatch output_meta_data = nullptr;
             if(_augmented_meta_data)
             {
+                output_meta_data = _augmented_meta_data->clone(!_augmentation_metanode); // copy the data if metadata is not processed by the nodes, else create an empty instance
                 if (_meta_data_graph)
                 {
+                    if(_augmentation_metanode) output_meta_data->resize(_user_batch_size);
                     if(_is_random_bbox_crop)
                     {
-                        _meta_data_graph->update_random_bbox_meta_data(_augmented_meta_data, decode_image_info, crop_image_info);
+                        _meta_data_graph->update_random_bbox_meta_data(_augmented_meta_data, output_meta_data, decode_image_info, crop_image_info);
                     }
-                    _meta_data_graph->process(_augmented_meta_data);
+                    _meta_data_graph->process(_augmented_meta_data, output_meta_data);
                 }
-                full_batch_meta_data = _augmented_meta_data->clone();
             }
             _process_time.start();
             _graph->process();
@@ -546,21 +547,21 @@ void MasterGraph::output_routine()
             _bencode_time.start();
             if(_is_box_encoder )
             {
+                auto bbox_encode_write_buffers = _ring_buffer.get_box_encode_write_buffers();
 #if ENABLE_HIP
                 if(_mem_type == RocalMemType::HIP) {
                     // get bbox encoder read buffers
-                    auto bbox_encode_write_buffers = _ring_buffer.get_box_encode_write_buffers();
-                    if (_box_encoder_gpu) _box_encoder_gpu->Run(full_batch_meta_data, (float *)bbox_encode_write_buffers.first, (int *)bbox_encode_write_buffers.second);
+                    if (_box_encoder_gpu) _box_encoder_gpu->Run(output_meta_data, (float *)bbox_encode_write_buffers.first, (int *)bbox_encode_write_buffers.second);
                 } else
 #endif
-                    _meta_data_graph->update_box_encoder_meta_data(&_anchors, full_batch_meta_data, _criteria, _offset, _scale, _means, _stds);
+                    _meta_data_graph->update_box_encoder_meta_data(&_anchors, output_meta_data, _criteria, _offset, _scale, _means, _stds, (float *)bbox_encode_write_buffers.first, (int *)bbox_encode_write_buffers.second);
             }
             _bencode_time.end();
 #ifdef ROCAL_VIDEO
             _sequence_start_framenum_vec.insert(_sequence_start_framenum_vec.begin(), _loader_module->get_sequence_start_frame_number());
             _sequence_frame_timestamps_vec.insert(_sequence_frame_timestamps_vec.begin(), _loader_module->get_sequence_frame_timestamps());
 #endif
-            _ring_buffer.set_meta_data(full_batch_image_names, full_batch_meta_data);
+            _ring_buffer.set_meta_data(full_batch_image_names, output_meta_data);
             _ring_buffer.push(); // Image data and metadata is now stored in output the ring_buffer, increases it's level by 1
         }
     }

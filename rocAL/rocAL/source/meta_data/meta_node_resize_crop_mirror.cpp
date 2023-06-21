@@ -30,7 +30,7 @@ void ResizeCropMirrorMetaNode::initialize()
     _mirror_val.resize(_batch_size);
 }
 
-void ResizeCropMirrorMetaNode::update_parameters(MetaDataBatch* input_meta_data)
+void ResizeCropMirrorMetaNode::update_parameters(pMetaDataBatch input_meta_data, pMetaDataBatch output_meta_data)
 {
     initialize();
     if(_batch_size != input_meta_data->size())
@@ -52,15 +52,12 @@ void ResizeCropMirrorMetaNode::update_parameters(MetaDataBatch* input_meta_data)
     vxCopyArrayRange((vx_array)_mirror, 0, _batch_size, sizeof(uint),_mirror_val.data(), VX_READ_ONLY, VX_MEMORY_TYPE_HOST);
     for(int i = 0; i < _batch_size; i++)
     {
-        auto bb_count = input_meta_data->get_bb_labels_batch()[i].size();
-        int labels_buf[bb_count];
-        BoundingBoxCords box_coords_buf;
-        box_coords_buf.resize(bb_count);
-        memcpy(labels_buf, input_meta_data->get_bb_labels_batch()[i].data(),  sizeof(int)*bb_count);
-        memcpy((void *)box_coords_buf.data(), input_meta_data->get_bb_cords_batch()[i].data(), input_meta_data->get_bb_cords_batch()[i].size() * sizeof(BoundingBoxCord));
+        auto bb_count = input_meta_data->get_labels_batch()[i].size();
+        Labels labels_buf = input_meta_data->get_labels_batch()[i];
+        BoundingBoxCords box_coords_buf = input_meta_data->get_bb_cords_batch()[i];
         BoundingBoxCords bb_coords;
         BoundingBoxCord temp_box;
-        BoundingBoxLabels bb_labels;
+        Labels bb_labels;
         BoundingBoxCord crop_box;
         _crop_w = _x2_val[i] - _x1_val[i];
         _crop_h = _y2_val[i] - _y1_val[i];
@@ -98,7 +95,7 @@ void ResizeCropMirrorMetaNode::update_parameters(MetaDataBatch* input_meta_data)
             bb_coords.push_back(temp_box);
             bb_labels.push_back(0);
         }
-        input_meta_data->get_bb_cords_batch()[i] = bb_coords;
-        input_meta_data->get_bb_labels_batch()[i] = bb_labels;
+        output_meta_data->get_bb_cords_batch()[i] = bb_coords;
+        output_meta_data->get_labels_batch()[i] = bb_labels;
     }
 }

@@ -27,7 +27,7 @@ void FlipMetaNode::initialize()
     _src_width_val.resize(_batch_size);
     _flip_axis_val.resize(_batch_size);
 }
-void FlipMetaNode::update_parameters(pMetaDataBatch input_meta_data)
+void FlipMetaNode::update_parameters(pMetaDataBatch input_meta_data, pMetaDataBatch output_meta_data)
 {
     initialize();
     if(_batch_size != input_meta_data->size())
@@ -43,12 +43,8 @@ void FlipMetaNode::update_parameters(pMetaDataBatch input_meta_data)
     for(int i = 0; i < _batch_size; i++)
     {
         auto bb_count = input_meta_data->get_labels_batch()[i].size();
-        BoundingBoxCords coords_buf;
-        Labels labels_buf;
-        coords_buf.resize(bb_count);
-        labels_buf.resize(bb_count);
-        memcpy(labels_buf.data(), input_meta_data->get_labels_batch()[i].data(),  sizeof(int)*bb_count);
-        memcpy((void *)coords_buf.data(), input_meta_data->get_bb_cords_batch()[i].data(), input_meta_data->get_bb_cords_batch()[i].size() * sizeof(BoundingBoxCord));
+        BoundingBoxCords coords_buf = input_meta_data->get_bb_cords_batch()[i];
+        Labels labels_buf = input_meta_data->get_labels_batch()[i];
         BoundingBoxCords bb_coords;
         for (uint j = 0; j < bb_count; j++)
         {
@@ -67,7 +63,7 @@ void FlipMetaNode::update_parameters(pMetaDataBatch input_meta_data)
             
             bb_coords.push_back(coords_buf[j]);
         }
-        input_meta_data->get_bb_cords_batch()[i] = bb_coords;
-        input_meta_data->get_labels_batch()[i] = labels_buf;
+        output_meta_data->get_bb_cords_batch()[i] = bb_coords;
+        output_meta_data->get_labels_batch()[i] = bb_labels;
     }
 }
