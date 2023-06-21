@@ -28,6 +28,7 @@ import math
 import ctypes
 import numpy as np
 import random
+import struct
 
 class ROCALCOCOIterator(object):
     """
@@ -171,11 +172,15 @@ def main():
     crop=800
     local_rank = 0
     world_size = 1
-    # Anchors - load default anchors from a text file     
-    with open('Default_anchors_retinanet.txt', 'r') as f_read:
-        anchors = f_read.readlines()
-    anchor_list = [float(x.strip())/800 for x in anchors]
-    f_read.close()
+    # Anchors - load default anchors from a binary file  
+    with open('Default_anchors_retinanet.bin', 'rb') as f_read:
+        anchor_bytes = f_read.read()
+    num_anchors = len(anchor_bytes) // 4
+    anchor_list = []
+    for i in range(num_anchors):
+        anchor_bytes_single = anchor_bytes[i * 4: (i + 1) * 4]
+        anchor_float = struct.unpack('!f', anchor_bytes_single)[0]
+        anchor_list.append(anchor_float)
     print("*********************************************************************")
     coco_train_pipeline = Pipeline(batch_size = batch_size, num_threads = num_threads, device_id = device_id,seed = random_seed, rocal_cpu = _rali_cpu, tensor_layout = types.NCHW)
     with coco_train_pipeline:
