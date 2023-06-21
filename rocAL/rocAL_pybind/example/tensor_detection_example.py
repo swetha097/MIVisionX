@@ -9,7 +9,7 @@ import numpy as np
 from amd.rocal.pipeline import Pipeline
 import amd.rocal.fn as fn
 import amd.rocal.types as types
-# import rali_pybind.tensor
+import struct
 import sys
 import cv2
 import os
@@ -155,12 +155,17 @@ def main():
 
     local_rank = 0
     world_size = 1
+    # Anchors - load default anchors from a binary file  
+    with open('Default_anchors_retinanet.bin', 'rb') as f_read:
+        anchor_bytes = f_read.read()
 
-    # Anchors - load default anchors from a text file     
-    with open('Default_anchors_retinanet.txt', 'r') as f_read:
-        anchors = f_read.readlines()
-    anchor_list = [float(x.strip())/800 for x in anchors]
-    f_read.close()
+    num_anchors = len(anchor_bytes) // 4
+    anchor_list = []
+
+    for i in range(num_anchors):
+        anchor_bytes_single = anchor_bytes[i * 4: (i + 1) * 4]
+        anchor_float = struct.unpack('!f', anchor_bytes_single)[0]
+        anchor_list.append(anchor_float)
 
     print("*********************************************************************")
 
