@@ -276,7 +276,7 @@ CIFAR10DataLoader::update_output_image()
     if(_stopped)
         return LoaderModuleStatus::OK;
 
-    _output_decoded_img_info = _circ_buff.get_image_info();
+    _output_decoded_img_info = _circ_buff.get_sample_info();
     _output_names = _output_decoded_img_info._image_names;
     _output_image->update_tensor_roi(_output_decoded_img_info._roi_width, _output_decoded_img_info._roi_height);
 
@@ -300,9 +300,9 @@ std::vector<std::string> CIFAR10DataLoader::get_id()
     return _output_names;
 }
 
-decoded_image_info CIFAR10DataLoader::get_decode_image_info()
+decoded_samnple_info CIFAR10DataLoader::get_decode_sample_info()
 {
-    return _output_decoded_img_info;
+    return _output_decoded_sample_info;
 }
 
 

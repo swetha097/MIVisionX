@@ -153,12 +153,12 @@ void AudioLoader::initialize(ReaderConfig reader_cfg, DecoderConfig decoder_cfg,
     }
     _max_decoded_samples = _output_tensor->info().max_shape().at(0);
     _max_decoded_channels = _output_tensor->info().max_shape().at(1);
-    _decoded_img_info._image_names.resize(_batch_size);
-    _decoded_img_info._roi_audio_samples.resize(_batch_size);
-    _decoded_img_info._roi_audio_channels.resize(_batch_size);
-    _decoded_img_info._original_audio_samples.resize(_batch_size);
-    _decoded_img_info._original_audio_channels.resize(_batch_size);
-    _decoded_img_info._original_audio_sample_rates.resize(_batch_size);
+    _decoded_sample_info.audio_info._audio_names.resize(_batch_size);
+    _decoded_sample_info.audio_info._roi_audio_samples.resize(_batch_size);
+    _decoded_sample_info.audio_info._roi_audio_channels.resize(_batch_size);
+    _decoded_sample_info.audio_info._original_audio_samples.resize(_batch_size);
+    _decoded_sample_info.audio_info._original_audio_channels.resize(_batch_size);
+    _decoded_sample_info.audio_info._original_audio_sample_rates.resize(_batch_size);
     _circ_buff.init(_mem_type, _output_mem_size,_prefetch_queue_depth );
     _is_initialized = true;
     LOG("Loader module initialized");
@@ -190,18 +190,18 @@ AudioLoader::load_routine()
         auto load_status = LoaderModuleStatus::NO_MORE_DATA_TO_READ;
         {
             load_status = _audio_loader->load(data,
-                                            _decoded_img_info._image_names,
+                                            _decoded_sample_info.audio_info._audio_names,
                                             _max_decoded_samples,
                                             _max_decoded_channels,
-                                            _decoded_img_info._roi_audio_samples,
-                                            _decoded_img_info._roi_audio_channels,
-                                            _decoded_img_info._original_audio_samples,
-                                            _decoded_img_info._original_audio_channels,
-                                            _decoded_img_info._original_audio_sample_rates);
+                                            _decoded_sample_info.audio_info._roi_audio_samples,
+                                            _decoded_sample_info.audio_info._roi_audio_channels,
+                                            _decoded_sample_info.audio_info._original_audio_samples,
+                                            _decoded_sample_info.audio_info._original_audio_channels,
+                                            _decoded_sample_info.audio_info._original_audio_sample_rates);
 
             if(load_status == LoaderModuleStatus::OK)
             {
-                _circ_buff.set_image_info(_decoded_img_info);
+                _circ_buff.set_sample_info(_decoded_sample_info);
                 _circ_buff.push();
                 _audio_counter += _output_tensor->info().batch_size();
             }
@@ -274,10 +274,10 @@ AudioLoader::update_output_audio()
     if (_stopped)
         return LoaderModuleStatus::OK;
 
-    _output_decoded_img_info = _circ_buff.get_image_info();
-    _output_names = _output_decoded_img_info._image_names;
-    _output_tensor->update_tensor_roi(_output_decoded_img_info._roi_audio_samples, _output_decoded_img_info._roi_audio_channels);
-    _output_tensor->update_audio_tensor_sample_rate(_output_decoded_img_info._original_audio_sample_rates);
+    _output_decoded_sample_info = _circ_buff.get_sample_info();
+    _output_names = _output_decoded_sample_info.audio_info._audio_names;
+    _output_tensor->update_tensor_roi(_output_decoded_sample_info.audio_info._roi_audio_samples, _output_decoded_sample_info.audio_info._roi_audio_channels);
+    _output_tensor->update_audio_tensor_sample_rate(_output_decoded_sample_info.audio_info._original_audio_sample_rates);
     _circ_buff.pop();
     if (!_loop)
         _remaining_audio_count -= _batch_size;
@@ -324,9 +324,9 @@ std::vector<std::string> AudioLoader::get_id()
     return _output_names;
 }
 
-decoded_image_info AudioLoader::get_decode_image_info()
+decoded_sample_info AudioLoader::get_decode_sample_info()
 {
-    return _output_decoded_img_info;
+    return _output_decoded_sample_info;
 }
 
 crop_image_info AudioLoader::get_crop_image_info()

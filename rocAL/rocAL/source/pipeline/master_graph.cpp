@@ -514,7 +514,7 @@ void MasterGraph::output_routine()
             if (!_processing)
                 break;
             auto this_cycle_names =  _loader_module->get_id();
-            auto decode_image_info = _loader_module->get_decode_image_info();
+            auto decode_image_info = _loader_module->get_decode_sample_info();
             auto crop_image_info = _loader_module->get_crop_image_info();
 
             if(this_cycle_names.size() != _user_batch_size)
