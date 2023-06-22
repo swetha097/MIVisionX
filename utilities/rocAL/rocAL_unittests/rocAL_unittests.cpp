@@ -363,8 +363,8 @@ int test(int test_case, int reader_type, const char *path, const char *outName, 
     case 26:
     {
          std::cout << ">>>>>>> Running "
-                  << "rocalcrop" << std::endl;
-        // image1 = rocalCrop(handle, input1, true, tensorLayout, tensorOutputType, resize_w, resize_h, 0, 0, 0);
+                  << "rocalcrop center fixed" << std::endl;
+        image1 = rocalCropCenterFixed(handle, input1, 100, 100, true, tensorLayout, tensorOutputType);
 
     }
     break;
@@ -449,6 +449,7 @@ int test(int test_case, int reader_type, const char *path, const char *outName, 
                 }
             }
             break;
+#if 0
             case 3: //detection + segmentation pipeline
             {
                 RocalTensorList bbox_labels = rocalGetBoundingBoxLabel(handle);
@@ -490,7 +491,6 @@ int test(int test_case, int reader_type, const char *path, const char *outName, 
                 }
             }
             break;
-#if 0
             case 4: // keypoints pipeline
             {
                 int size = inputBatchSize;

@@ -106,6 +106,10 @@ public:
         }   
         for(unsigned i = 0; i < _num_of_dims; i++)
             new_dims[i] = _dims.at(dims_mapping[i]);
+        _strides[_num_of_dims - 1] = _data_type_size;
+        for (int i = _num_of_dims - 2; i >= 0; i--) {
+            _strides[i] = _strides[i + 1] * new_dims[i + 1];
+        }
     }
     void set_max_shape() {
         if (_layout != RocalTensorlayout::NONE) {
@@ -145,12 +149,13 @@ public:
         _layout = layout;
     }
     void set_dims(std::vector<size_t>& new_dims) {
-        _data_size = _data_type_size;
         if (_num_of_dims == new_dims.size()) {
-            for (unsigned i = 0; i < _num_of_dims; i++) {
-                _dims.at(i) = new_dims[i];
-                _data_size *= new_dims[i];
+            _dims = new_dims;
+            _strides[_num_of_dims - 1] = _data_type_size;
+            for (int i = _num_of_dims - 2; i >= 0; i--) {
+                _strides[i] = _strides[i + 1] * _dims[i + 1];
             }
+            _data_size = _strides[0] * _dims[0];
             set_max_shape();
         } else {
             THROW("The size of number of dimensions does not match with the dimensions of existing tensor" + TOSTR(_num_of_dims) + TOSTR(new_dims.size()))
@@ -158,6 +163,10 @@ public:
     }
     void set_color_format(RocalColorFormat color_format) {
         _color_format = color_format;
+    }
+    // Introduce for SequenceReader, as batch size is different in case of sequence reader
+    void set_sequence_batch_size(unsigned sequence_length) {
+        _batch_size *= sequence_length;
     }
     size_t get_channels() const { return _channels; }
     void copy_roi(void *roi_buffer) {
@@ -169,6 +178,7 @@ public:
     uint64_t data_size() const { return _data_size; }
     std::vector<size_t> max_shape() const { return _max_shape; }
     std::vector<size_t> dims() const { return _dims; }
+    std::vector<size_t> strides() const { return _strides; }
     RocalMemType mem_type() const { return _mem_type; }
     RocalROIType roi_type() const { return _roi_type; }
     RocalTensorDataType data_type() const { return _data_type; }
@@ -192,6 +202,7 @@ private:
     Type _type = Type::UNKNOWN;  //!< tensor type, whether is virtual tensor, created from handle or is a regular tensor
     unsigned _num_of_dims;  //!< denotes the number of dimensions in the tensor
     std::vector<size_t> _dims;  //!< denotes the dimensions of the tensor
+    std::vector<size_t> _strides;  //!< stores the stride for each dimension in the tensor
     unsigned _batch_size;       //!< the batch size
     RocalMemType _mem_type;     //!< memory type, currently either OpenCL or Host
     RocalROIType _roi_type = RocalROIType::XYWH;     //!< ROI type, currently either XYWH or LTRB
@@ -290,7 +301,7 @@ public:
         _tensor_list.emplace_back(tensor);
         _tensor_data_size.emplace_back(tensor->info().data_size());
     }
-    std::vector<uint64_t> data_size() { return _tensor_data_size; }
+    std::vector<uint64_t> &data_size() { return _tensor_data_size; }
     void release() {
         for (auto& tensor : _tensor_list)
         {

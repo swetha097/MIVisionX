@@ -143,7 +143,7 @@ void RingBuffer::unblock_writer()
     _wait_for_unload.notify_all();
 }
 
-void RingBuffer::init(RocalMemType mem_type, void *devres, std::vector<size_t> sub_buffer_size, unsigned sub_buffer_count, size_t roi_buffer_size)
+void RingBuffer::init(RocalMemType mem_type, void *devres, std::vector<size_t> sub_buffer_size, size_t roi_buffer_size)
 {
     _mem_type = mem_type;
     _dev = devres;
@@ -210,7 +210,7 @@ void RingBuffer::init(RocalMemType mem_type, void *devres, std::vector<size_t> s
                           " failed " + TOSTR(err));
                 }
                 err = hipHostMalloc((void **)&_dev_roi_buffers[buffIdx][sub_idx], roi_buffer_size, hipHostMallocDefault);
-                if(err != hipSuccess || !*_dev_roi_buffers[buffIdx][sub_idx])
+                if(err != hipSuccess || !_dev_roi_buffers[buffIdx][sub_idx])
                     THROW("hipHostMalloc of size " + TOSTR(roi_buffer_size) + " failed " + TOSTR(err))
             }
         }
@@ -224,7 +224,6 @@ void RingBuffer::init(RocalMemType mem_type, void *devres, std::vector<size_t> s
             _host_sub_buffers[buffIdx].resize(_sub_buffer_count);
             _host_roi_buffers[buffIdx].resize(_sub_buffer_count);
             for(size_t sub_buff_idx = 0; sub_buff_idx < _sub_buffer_count; sub_buff_idx++) {
-                // std::cerr << "SUB BUFFER SIZE :: " << _sub_buffer_size[sub_buff_idx];
                 _host_sub_buffers[buffIdx][sub_buff_idx] = aligned_alloc(MEM_ALIGNMENT, MEM_ALIGNMENT * (_sub_buffer_size[sub_buff_idx] / MEM_ALIGNMENT + 1));
                 _host_roi_buffers[buffIdx][sub_buff_idx] = (unsigned *)malloc(roi_buffer_size);
             }
@@ -371,9 +370,11 @@ void RingBuffer::release_gpu_res()
                         ERR("Could not release hip memory in the ring buffer")
                     }
             }
-            for (unsigned sub_buf_idx = 0; sub_buf_idx < _host_meta_data_buffers[buffIdx].size(); sub_buf_idx++) {
-                if (_host_meta_data_buffers[buffIdx][sub_buf_idx])
-                    free(_host_meta_data_buffers[buffIdx][sub_buf_idx]);
+            if(_host_meta_data_buffers.size() != 0) {
+                for (unsigned sub_buf_idx = 0; sub_buf_idx < _host_meta_data_buffers[buffIdx].size(); sub_buf_idx++) {
+                    if (_host_meta_data_buffers[buffIdx][sub_buf_idx])
+                        free(_host_meta_data_buffers[buffIdx][sub_buf_idx]);
+                }
             }
         }
         _dev_sub_buffer.clear();
@@ -388,9 +389,11 @@ void RingBuffer::release_gpu_res()
                     if (clReleaseMemObject((cl_mem) _dev_sub_buffer[buffIdx][sub_buf_idx]) != CL_SUCCESS)
                         ERR("Could not release ocl memory in the ring buffer")
             }
-            for (unsigned sub_buf_idx = 0; sub_buf_idx < _host_meta_data_buffers[buffIdx].size(); sub_buf_idx++) {
-                if (_host_meta_data_buffers[buffIdx][sub_buf_idx])
-                    free(_host_meta_data_buffers[buffIdx][sub_buf_idx]);
+            if(_host_meta_data_buffers.size() != 0) {
+                for (unsigned sub_buf_idx = 0; sub_buf_idx < _host_meta_data_buffers[buffIdx].size(); sub_buf_idx++) {
+                    if (_host_meta_data_buffers[buffIdx][sub_buf_idx])
+                        free(_host_meta_data_buffers[buffIdx][sub_buf_idx]);
+                }
             }
         }
         _dev_sub_buffer.clear();
