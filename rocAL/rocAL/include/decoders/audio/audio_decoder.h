@@ -21,20 +21,17 @@ THE SOFTWARE.
 */
 
 #pragma once
-
 #include <cstddef>
 #include <iostream>
 #include <vector>
 #include "parameter_factory.h"
 #include "sndfile.h"
 
-enum class AudioDecoderType
-{
+enum class AudioDecoderType {
     SOFTWARE_DECODE = 0
 };
 
-class AudioDecoderConfig
-{
+class AudioDecoderConfig {
 public:
     AudioDecoderConfig() {}
     explicit AudioDecoderConfig(AudioDecoderType type) : _type(type) {}
@@ -42,8 +39,7 @@ public:
     AudioDecoderType _type = AudioDecoderType::SOFTWARE_DECODE;
 };
 
-class AudioDecoder
-{
+class AudioDecoder {
 public:
     enum class Status
     {

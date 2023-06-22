@@ -40,12 +40,13 @@ public:
     void reset() override;
     void start_loading() override;
     std::vector<std::string> get_id() override;
-    decoded_image_info get_decode_image_info() override;
-    crop_image_info get_crop_image_info() override;
+    decoded_audio_info get_decode_audio_info() override;
+    crop_i_info get_crop_audio_info() override;
     Timing timing() override;
     void set_prefetch_queue_depth(size_t prefetch_queue_depth) override;
     void shut_down() override;
     size_t last_batch_padded_size() override;
+    void set_audio_flag(bool audio_flag);
 
 private:
     void increment_loader_idx();

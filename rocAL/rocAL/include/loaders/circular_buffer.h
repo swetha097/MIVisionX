@@ -37,6 +37,11 @@ struct decoded_image_info
     std::vector<uint32_t> _roi_height;
     std::vector<uint32_t> _original_width;
     std::vector<uint32_t> _original_height;
+};
+
+struct decoded_audio_info
+{
+    std::vector<std::string> _audio_names;
     std::vector<uint32_t> _roi_audio_samples;
     std::vector<uint32_t> _roi_audio_channels;
     std::vector<uint32_t> _original_audio_samples;
@@ -62,8 +67,10 @@ public:
     void push();// The latest write goes through, effectively adds one element to the buffer
     void pop();// The oldest write will be erased and overwritten in upcoming writes
     void set_image_info(const decoded_image_info& info) { _last_image_info = info; }
+    void set_audio_info(const decoded_audio_info& info) { _last_audio_info = info; }
     void set_crop_image_info(const crop_image_info& info) { _last_crop_image_info = info; }
     decoded_image_info& get_image_info();
+    decoded_audio_info& get_audio_info();
     crop_image_info& get_cropped_image_info();
     bool random_bbox_crop_flag = false;
     void* get_read_buffer_dev();
@@ -81,7 +88,9 @@ private:
     bool empty();
     size_t _buff_depth;
     decoded_image_info _last_image_info;
+    decoded_audio_info _last_audio_info;
     std::queue<decoded_image_info> _circ_image_info;//!< Stores the loaded images names, decoded_width and decoded_height(data is stored in the _circ_buff)
+    std::queue<decoded_audio_info> _circ_audio_info;
     crop_image_info _last_crop_image_info; // for Random BBox crop coordinates
     std::queue<crop_image_info> _circ_crop_image_info;//!< Stores the crop coordinates of the images for random bbox crop (data is stored in the _circ_buff)
     std::mutex _names_buff_lock;

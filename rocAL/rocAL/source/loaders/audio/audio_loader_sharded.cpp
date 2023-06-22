@@ -35,6 +35,11 @@ void AudioLoaderSharded::set_prefetch_queue_depth(size_t prefetch_queue_depth)
     _prefetch_queue_depth = prefetch_queue_depth;
 }
 
+voi AudioLoaderSharded::set_audio_flag(bool audio_flag)
+{
+    _audio_flag = audio_flag;
+}
+
 std::vector<std::string> AudioLoaderSharded::get_id()
 {
     if(!_initialized)

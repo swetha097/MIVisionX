@@ -388,6 +388,15 @@ decoded_image_info &CircularBuffer::get_image_info()
     return  _circ_image_info.front();
 }
 
+decoded_audio_info &CircularBuffer::get_audio_info()
+{
+    block_if_empty();
+    std::unique_lock<std::mutex> lock(_names_buff_lock);
+    if(_level != _circ_audio_info.size())
+        THROW("CircularBuffer internals error, image and image info sizes not the same "+TOSTR(_level) + " != "+TOSTR(_circ_audio_info.size()))
+    return  _circ_audio_info.front();
+}
+
 crop_image_info &CircularBuffer::get_cropped_image_info()
 {
     block_if_empty();
