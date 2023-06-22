@@ -519,21 +519,21 @@ void MasterGraph::output_routine()
 
             if(this_cycle_names.size() != _user_batch_size)
                 WRN("Internal problem: names count "+ TOSTR(this_cycle_names.size()))
-            std::cerr << "HHHHHHHHEEEEEERRREEE *************************************** 2";
+            // std::cerr << "HHHHHHHHEEEEEERRREEE *************************************** 2";
             // meta_data lookup is done before _meta_data_graph->process() is called to have the new meta_data ready for processing
             if (_meta_data_reader)
                 _meta_data_reader->lookup(this_cycle_names);
 
             full_batch_image_names += this_cycle_names;
-            std::cerr << "HHHHHHHHEEEEEERRREEE *************************************** 1";
+            // std::cerr << "HHHHHHHHEEEEEERRREEE *************************************** 1";
             if (!_processing)
                 break;
-            std::cerr << "HHHHHHHHEEEEEERRREEE ***************************************";
+            // std::cerr << "HHHHHHHHEEEEEERRREEE ***************************************";
             // std::exit(0);
             // Swap handles on the output tensor, so that new processed tensor will be written to the a new buffer
             for (size_t idx = 0; idx < _internal_tensor_list.size(); idx++)
             {
-                std::cerr << "CALLLLLLS SWAP HANDLE ";
+                // std::cerr << "CALLLLLLS SWAP HANDLE ";
                 _internal_tensor_list[idx]->swap_handle(write_buffers[idx]);
             }
 
