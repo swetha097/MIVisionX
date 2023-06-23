@@ -253,6 +253,7 @@ public:
     unsigned num_of_dims() override { return _info.num_of_dims(); }
     unsigned batch_size() override { return _info.batch_size(); }
     std::vector<size_t> dims() override { return _info.dims(); }
+    std::vector<size_t> strides() override { return _info.strides(); }
     RocalTensorLayout layout() override { return (RocalTensorLayout)_info.layout(); }
     RocalTensorOutputType data_type() override { return (RocalTensorOutputType)_info.data_type(); }
     size_t data_size() override { return _info.data_size(); }
