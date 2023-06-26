@@ -102,7 +102,7 @@ namespace rocal
         return py::bytes(s);
     }
 
-    std::unordered_map<int, std::string> rocALToPybindLayout = {
+    std::unordered_map<int, std::string> rocalToPybindLayout = {
         {0, "NHWC"},
         {1, "NCHW"},
         {2, "NFHWC"},
@@ -116,7 +116,7 @@ namespace rocal
         {3, 3},
     };
 
-    std::unordered_map<int, std::string> rocALToPybindOutputDtype = {
+    std::unordered_map<int, std::string> rocalToPybindOutputDtype = {
         {0, "float32"},
         {1, "float16"},
         {2, "uint8"},
@@ -189,6 +189,13 @@ namespace rocal
                 Returns dims of tensor.
                 )code"
             )
+            .def("torch_dtype", [](rocalTensor &output_tensor) {
+                return rocalToPybindOutputDtype[(int)output_tensor.info().data_type()];
+            },
+                R"code(
+                Returns dtype of torch tensor.
+                )code"
+            )
             .def(
                 "color_format",
                 [](rocalTensor &output_tensor)
@@ -201,7 +208,7 @@ namespace rocal
             )
             .def("layout", [](rocalTensor &output_tensor)
             {
-                return rocALToPybindLayout[(int)output_tensor.info().layout()];
+                return rocalToPybindLayout[(int)output_tensor.info().layout()];
             },
                 R"code(
                 Returns layout of tensor.
@@ -209,7 +216,7 @@ namespace rocal
             )
             .def("dtype", [](rocalTensor &output_tensor)
             {
-                return rocALToPybindOutputDtype[(int)output_tensor.info().data_type()];
+                return rocalToPybindOutputDtype[(int)output_tensor.info().data_type()];
             },
                 R"code(
                 Returns dtype of tensor.
