@@ -378,8 +378,6 @@ namespace rocal{
                 "at",
                 [](rocalTensor &output_tensor, uint idx) {
                     const auto& info = output_tensor.info();
-                    uint idx_stride = 1;
-                    for (uint i = 0; i < info.num_of_dims() - 1 ; i++) idx_stride*=output_tensor.info().dims().at(i+1);
                     std::vector<size_t> stride_per_sample(info.strides());
                     stride_per_sample.erase(stride_per_sample.begin());
                     std::vector<size_t> dims(info.dims());
@@ -390,7 +388,7 @@ namespace rocal{
                     case RocalTensorDataType::UINT8:
 
                         return py::array(py::buffer_info(
-                            ((unsigned char *)(output_tensor.buffer())) + idx * idx_stride,
+                            ((unsigned char *)(output_tensor.buffer())) + idx * (info.strides()[0]/sizeof(float)),
                             sizeof(unsigned char),
                             py::format_descriptor<unsigned char>::format(),
                             info.num_of_dims() - 1,
@@ -398,7 +396,7 @@ namespace rocal{
                             stride_per_sample));
                     case RocalTensorDataType::FP32:
                         return py::array(py::buffer_info(
-                            ((float *)(output_tensor.buffer())) + idx * idx_stride,
+                            ((float *)(output_tensor.buffer())) + idx * (info.strides()[0]/sizeof(float)),
                             sizeof(float),
                             py::format_descriptor<float>::format(),
                             info.num_of_dims() - 1,
