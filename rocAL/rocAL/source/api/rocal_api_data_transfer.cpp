@@ -37,8 +37,8 @@ rocalToTensor32(RocalContext p_context, float *out_ptr, RocalTensorLayout tensor
     {
         auto tensor_layout = (tensor_format == ROCAL_NHWC) ?  RocalTensorlayout::NHWC : RocalTensorlayout::NCHW;
         //auto tensor_output_data_type = (tensor_data_type == ROCAL_FP32) ? RocalTensorDataType::FP32 : RocalTensorDataType::FP16;
-        context->master_graph->to_tensor(out_ptr, tensor_layout, multiplier0, multiplier1, multiplier2,
-                offset0, offset1, offset2, reverse_channels, RocalTensorDataType::FP32, output_mem_type);
+        // context->master_graph->to_tensor(out_ptr, tensor_layout, multiplier0, multiplier1, multiplier2,
+        //         offset0, offset1, offset2, reverse_channels, RocalTensorDataType::FP32, output_mem_type);
     }
     catch(const std::exception& e)
     {
@@ -59,8 +59,8 @@ rocalToTensor16(RocalContext p_context, half *out_ptr, RocalTensorLayout tensor_
     {
         auto tensor_layout = (tensor_format == ROCAL_NHWC) ?  RocalTensorlayout::NHWC : RocalTensorlayout::NCHW;
         //auto tensor_output_data_type = (tensor_data_type == ROCAL_FP32) ? RocalTensorDataType::FP32 : RocalTensorDataType::FP16;
-        context->master_graph->to_tensor(out_ptr, tensor_layout, multiplier0, multiplier1, multiplier2,
-                offset0, offset1, offset2, reverse_channels, RocalTensorDataType::FP16, output_mem_type);
+        // context->master_graph->to_tensor(out_ptr, tensor_layout, multiplier0, multiplier1, multiplier2,
+        //         offset0, offset1, offset2, reverse_channels, RocalTensorDataType::FP16, output_mem_type);
     }
     catch(const std::exception& e)
     {
@@ -81,8 +81,8 @@ rocalToTensor(RocalContext p_context, void *out_ptr, RocalTensorLayout tensor_fo
     {
         auto tensor_layout = (tensor_format == ROCAL_NHWC) ?  RocalTensorlayout::NHWC : RocalTensorlayout::NCHW;
         auto tensor_output_data_type = (tensor_output_type == ROCAL_FP32) ? RocalTensorDataType::FP32 : RocalTensorDataType::FP16;
-        context->master_graph->to_tensor(out_ptr, tensor_layout, multiplier0, multiplier1, multiplier2,
-                offset0, offset1, offset2, reverse_channels, tensor_output_data_type, output_mem_type);
+        // context->master_graph->to_tensor(out_ptr, tensor_layout, multiplier0, multiplier1, multiplier2,
+        //         offset0, offset1, offset2, reverse_channels, tensor_output_data_type, output_mem_type);
     }
     catch(const std::exception& e)
     {
@@ -103,7 +103,7 @@ rocalCopyToOutput(
     auto context = static_cast<Context*>(p_context);
     try
     {
-        context->master_graph->copy_output(out_ptr, out_size);
+        // context->master_graph->copy_output(out_ptr, out_size);
     }
     catch(const std::exception& e)
     {
