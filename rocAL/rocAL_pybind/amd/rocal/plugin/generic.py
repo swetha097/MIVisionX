@@ -55,11 +55,11 @@ class ROCALGenericIterator(object):
         if self.out is None:
             self.dimensions = self.output_tensor_list[0].dimensions()
             if self.device == "cpu":
-                self.dtype = self.output_tensor_list[0].numpy_dtype()
+                self.dtype = self.output_tensor_list[0].dtype()
                 self.out = np.empty((self.dimensions[0], self.dimensions[1], self.dimensions[2], self.dimensions[3],), dtype = self.dtype)
                 self.labels = np.empty(self.labels_size, dtype = self.dtype)
             else:
-                self.dtype = self.output_tensor_list[0].cupy_dtype()
+                self.dtype = self.output_tensor_list[0].dtype()
                 with cp.cuda.Device(device = self.device_id):
                     self.out = cp.empty((self.dimensions[0], self.dimensions[1], self.dimensions[2], self.dimensions[3],), dtype = self.dtype)
                     self.labels = cp.empty(self.labels_size, dtype = self.dtype)

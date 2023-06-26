@@ -358,27 +358,6 @@ namespace rocal{
                 Returns dtype of tensor.
                 )code"
             )
-            .def("torch_dtype", [](rocalTensor &output_tensor) {
-                return "torch." + rocalToPybindOutputDtype[(int)output_tensor.info().data_type()];
-            },
-                R"code(
-                Returns dtype of torch tensor.
-                )code"
-            )
-            .def("numpy_dtype", [](rocalTensor &output_tensor) {
-                return "np." + rocalToPybindOutputDtype[(int)output_tensor.info().data_type()];
-            },
-                R"code(
-                Returns dtype of numpy array.
-                )code"
-            )
-            .def("cupy_dtype", [](rocalTensor &output_tensor) {
-                return "cp." + rocalToPybindOutputDtype[(int)output_tensor.info().data_type()];
-            },
-                R"code(
-                Returns dtype of cupy array.
-                )code"
-            )
             .def("dimensions", [](rocalTensor &output_tensor) {
                 return output_tensor.info().dims();
             },
