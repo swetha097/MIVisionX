@@ -379,19 +379,13 @@ namespace rocal{
                 Returns dtype of cupy array.
                 )code"
             )
-            .def("dims", [](rocalTensor &output_tensor) {
+            .def("dimensions", [](rocalTensor &output_tensor) {
                 return output_tensor.info().dims();
             },
                 R"code(
                 Returns dims of tensor.
                 )code"
             )
-            .def("dimensions", [](rocalTensor &output_tensor) {
-                py::list list;
-                for (uint i = 0; i < output_tensor.info().dims(); i++)
-                    list.append(output_tensor.info().dims().at(i));
-                return list; 
-            })
             .def(
             "copy_data", [](rocalTensor &output_tensor, py::object p) {
                 auto ptr = ctypes_void_ptr(p);
