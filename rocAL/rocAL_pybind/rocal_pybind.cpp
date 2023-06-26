@@ -182,6 +182,13 @@ namespace rocal
                 Returns a tensor batch size.
                 )code"
             )
+            .def("dims", [](rocalTensor &output_tensor) {
+                return output_tensor.info().dims();
+            },
+                R"code(
+                Returns dims of tensor.
+                )code"
+            )
             .def(
                 "color_format",
                 [](rocalTensor &output_tensor)
