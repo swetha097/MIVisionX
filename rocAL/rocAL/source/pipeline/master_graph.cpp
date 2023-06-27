@@ -111,11 +111,12 @@ MasterGraph::~MasterGraph()
     release();
 }
 
-MasterGraph::MasterGraph(size_t batch_size, RocalAffinity affinity, size_t cpu_thread_count, int gpu_id, size_t prefetch_queue_depth, RocalTensorDataType output_tensor_data_type):
+MasterGraph::MasterGraph(size_t batch_size, RocalAffinity affinity, int gpu_id, size_t prefetch_queue_depth, RocalTensorDataType output_tensor_data_type, RocalBatchPolicy last_batch_policy, bool last_batch_padded):
         _ring_buffer(prefetch_queue_depth),
         _graph(nullptr),
         _affinity(affinity),
-        _cpu_num_threads(cpu_thread_count),
+        _last_batch_policy(last_batch_policy),
+        _last_batch_padded(last_batch_padded),
         _gpu_id(gpu_id),
         _convert_time("Conversion Time", DBG_TIMING),
         _process_time("Process Time", DBG_TIMING),
@@ -449,6 +450,22 @@ MasterGraph::mem_type()
     return _mem_type;
 }
 
+RocalBatchPolicy
+MasterGraph::last_batch_policy() {
+    return _last_batch_policy;
+}
+
+bool
+MasterGraph::last_batch_padded() {
+    return _last_batch_padded;
+}
+
+uint 
+MasterGraph::last_batch_size()
+{
+    return _loader_module->last_batch_padded_size();
+}
+
 Timing
 MasterGraph::timing()
 {
@@ -769,6 +786,7 @@ MasterGraph::to_tensor(void *out_ptr, RocalTensorlayout format, float multiplier
 
 void MasterGraph::output_routine()
 {
+    std::cerr << "\n OUTPUT ROUTINE ROUTINE";
     INFO("Output routine started with "+TOSTR(_remaining_count) + " to load");
     try {
         while (_processing)
@@ -776,6 +794,11 @@ void MasterGraph::output_routine()
             ImageNameBatch full_batch_image_names = {};
             pMetaDataBatch full_batch_meta_data = nullptr;
             pMetaDataBatch augmented_batch_meta_data = nullptr;
+            if (_loader_module->remaining_count() <= (_is_sequence_reader_output ? _sequence_batch_size : _user_batch_size))
+            {
+                _final_batch_padded_size = _loader_module->last_batch_padded_size();
+                // std::cerr<<"\n _final_batch_padded_size:: "<<_final_batch_padded_size;
+            }
             if (_loader_module->remaining_count() < (_is_sequence_reader_output ? _sequence_batch_size : _user_batch_size))
             {
                 // If the internal process routine ,output_routine(), has finished processing all the images, and last
@@ -804,19 +827,21 @@ void MasterGraph::output_routine()
 
             if(this_cycle_names.size() != _user_batch_size)
                 WRN("Internal problem: names count "+ TOSTR(this_cycle_names.size()))
-
+            // std::cerr << "HHHHHHHHEEEEEERRREEE *************************************** 2";
             // meta_data lookup is done before _meta_data_graph->process() is called to have the new meta_data ready for processing
             if (_meta_data_reader)
                 _meta_data_reader->lookup(this_cycle_names);
 
             full_batch_image_names += this_cycle_names;
-
             if (!_processing)
                 break;
-
+            // std::exit(0);
             // Swap handles on the output tensor, so that new processed tensor will be written to the a new buffer
             for (size_t idx = 0; idx < _internal_tensor_list.size(); idx++)
+            {
+                std::cerr << "CALLLLLLS SWAP HANDLE ";
                 _internal_tensor_list[idx]->swap_handle(write_buffers[idx]);
+            }
 
             if (!_processing)
                 break;
@@ -851,6 +876,7 @@ void MasterGraph::output_routine()
             _process_time.end();
             for (size_t idx = 0; idx < _internal_tensor_list.size(); idx++)
                 _internal_tensor_list[idx]->copy_roi(tensor_roi_buffer[idx]);
+
             _bencode_time.start();
             if(_is_box_encoder )
             {
@@ -1374,6 +1400,41 @@ std::vector<rocalTensorList *> MasterGraph::create_cifar10_label_reader(const ch
     return _metadata_output_tensor_list;
 }
 
+std::vector<rocalTensorList *> MasterGraph::create_file_list_label_reader(const char *source_path, const char *file_list_path, MetaDataReaderType reader_type)
+{
+    if(_meta_data_reader)
+        THROW("A metadata reader has already been created")
+    MetaDataConfig config(MetaDataType::Label, reader_type, file_list_path);
+    _meta_data_reader = create_meta_data_reader(config);
+    _meta_data_reader->init(config);
+    _meta_data_reader->read_all(source_path);
+
+    unsigned num_of_dims = 1;
+    std::vector<size_t> dims;
+    dims.resize(num_of_dims);
+    dims.at(0) = 1; // Number of labels per file
+    auto default_labels_info  = rocalTensorInfo(std::vector<size_t>(std::move(dims)),
+                                 _mem_type,
+                                 RocalTensorDataType::INT32);
+    default_labels_info.set_metadata();
+    default_labels_info.set_tensor_layout(RocalTensorlayout::NONE);
+    _meta_data_buffer_size.emplace_back(_user_batch_size * sizeof(vx_int32));
+
+    for(unsigned i = 0; i < _user_batch_size; i++)
+    {
+        auto info = default_labels_info;
+        auto tensor = new rocalTensor(info);
+        _labels_tensor_list.push_back(tensor);
+    }
+    _ring_buffer.init_metadata(RocalMemType::HOST, _meta_data_buffer_size, _meta_data_buffer_size.size());
+    if (_augmented_meta_data)
+        THROW("Metadata can only have a single output")
+    else
+        _augmented_meta_data = _meta_data_reader->get_output();
+    _metadata_output_tensor_list.emplace_back(&_labels_tensor_list);
+
+    return _metadata_output_tensor_list;
+}
 
 const std::pair<ImageNameBatch,pMetaDataBatch>& MasterGraph::meta_data()
 {
@@ -1476,6 +1537,11 @@ ImgSizes& MasterGraph::get_image_sizes()
     if(_ring_buffer.level() == 0)
         THROW("No meta data has been loaded")
     return _ring_buffer.get_meta_data().second->get_img_sizes_batch();
+}
+
+std::vector<size_t> MasterGraph::tensor_output_byte_size()
+{
+    return _internal_tensor_list.data_size();
 }
 
 void MasterGraph::notify_user_thread()

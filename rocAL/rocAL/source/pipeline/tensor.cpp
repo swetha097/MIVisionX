@@ -114,7 +114,6 @@ bool operator==(const rocalTensorInfo &rhs, const rocalTensorInfo &lhs) {
             rhs.layout() == lhs.layout());
 }
 
-
 void rocalTensorInfo::reset_tensor_roi_buffers() {
     size_t roi_size = (_layout == RocalTensorlayout::NFCHW || _layout == RocalTensorlayout::NFHWC) ? _dims[0] * _dims[1] : _batch_size; // For Sequences pre allocating the ROI to N * F to replicate in OpenVX extensions
     allocate_host_or_pinned_mem((void **)&_roi_buf, roi_size * 4 * sizeof(unsigned), _mem_type);
@@ -138,8 +137,13 @@ void rocalTensorInfo::reset_tensor_roi_buffers() {
     }
 }
 
+
+
+
 void rocalTensorInfo::reallocate_tensor_sample_rate_buffers() {
     _sample_rate = std::make_shared<std::vector<float>>(_batch_size);
+
+    // if (_sample_rate.size()) _sample_rate.clear();
     _sample_rate->resize(_batch_size);
     if (_is_image) {
         THROW("No sample rate available for Image data")
