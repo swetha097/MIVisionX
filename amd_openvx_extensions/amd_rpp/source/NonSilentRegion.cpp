@@ -26,7 +26,7 @@ THE SOFTWARE.
 
 struct NonSilentRegionLocalData
 {
-    RPPCommonHandle *handle;
+    vxRppHandle *handle;
     Rpp32u deviceType;
     Rpp32u nbatchSize;
     RppPtr_t pSrc;
@@ -206,7 +206,7 @@ static vx_status VX_CALLBACK initializeNonSilentRegion(vx_node node, const vx_re
     data->sample_size = (unsigned int *)calloc(data->src_desc_ptr->n, sizeof(unsigned int));
 
     refreshNonSilentRegion(node, parameters, num, data);
-    STATUS_ERROR_CHECK(createGraphHandle(node, &data->handle, data->src_desc_ptr->n, data->deviceType));
+    STATUS_ERROR_CHECK(createRPPHandle(node, &data->handle, data->src_desc_ptr->n, data->deviceType));
     STATUS_ERROR_CHECK(vxSetNodeAttribute(node, VX_NODE_LOCAL_DATA_PTR, &data, sizeof(data)));
     return VX_SUCCESS;
 }
@@ -215,7 +215,7 @@ static vx_status VX_CALLBACK uninitializeNonSilentRegion(vx_node node, const vx_
 {
     NonSilentRegionLocalData *data;
     STATUS_ERROR_CHECK(vxQueryNode(node, VX_NODE_LOCAL_DATA_PTR, &data, sizeof(data)));
-    STATUS_ERROR_CHECK(releaseGraphHandle(node, data->handle, data->deviceType));
+    STATUS_ERROR_CHECK(releaseRPPHandle(node, data->handle, data->deviceType));
     free(data->sample_size);
     delete (data);
     return VX_SUCCESS;

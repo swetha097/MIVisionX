@@ -33,7 +33,6 @@ AudioReadAndDecode::timing()
     Timing t;
     t.audio_decode_time = _decode_time.get_timing();
     t.audio_read_time = _file_load_time.get_timing();
-    t.shuffle_time = _reader->get_shuffle_time();
     return t;
 }
 

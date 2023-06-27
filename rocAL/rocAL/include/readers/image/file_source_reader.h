@@ -64,7 +64,6 @@ public:
 
     int close() override;
 
-    unsigned long long get_shuffle_time() override {return _shuffle_time.get_timing();};
     FileSourceReader();
     size_t last_batch_padded_size() override;
 

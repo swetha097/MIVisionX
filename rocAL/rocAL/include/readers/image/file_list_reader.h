@@ -65,7 +65,6 @@ public:
     ~FileListReader() override;
 
     int close() override;
-    unsigned long long get_shuffle_time() override {return _shuffle_time.get_timing();};
 
     FileListReader();
 

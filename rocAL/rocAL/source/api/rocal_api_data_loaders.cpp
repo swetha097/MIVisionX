@@ -187,7 +187,7 @@ rocalJpegFileSourceSingleShard(
         auto cpu_num_threads = context->master_graph->calculate_cpu_num_threads(shard_count);
 
         std::cerr<<"\n Last batch policy :: "<<context->master_graph->last_batch_policy()<<"\t last batch padded:: "<<context->master_graph->last_batch_padded();
-        context->master_graph->add_node<ImageLoaderSingleShardNode>({}, {output})->init(shard_id, shard_count,
+        context->master_graph->add_node<ImageLoaderSingleShardNode>({}, {output})->init(shard_id, shard_count, cpu_num_threads,
                                                                                         source_path, "",
                                                                                         StorageType::FILE_SYSTEM,
                                                                                         decType,
@@ -275,7 +275,7 @@ rocalJpegFileSource(
 
 
         std::cerr<<"\n Last batch policy :: "<<context->master_graph->last_batch_policy()<<"\t last batch padded:: "<<context->master_graph->last_batch_padded();
-        context->master_graph->add_node<ImageLoaderNode>({}, {output})->init(internal_shard_count,
+        context->master_graph->add_node<ImageLoaderNode>({}, {output})->init(internal_shard_count, cpu_num_threads,
                                                                           source_path, "",
                                                                           std::map<std::string, std::string>(),
                                                                           StorageType::FILE_SYSTEM,

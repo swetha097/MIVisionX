@@ -94,14 +94,6 @@ from rocal_pybind.types import REFLECT
 from rocal_pybind.types import FT
 from rocal_pybind.types import TF
 
-    GPU: ("GPU", GPU),
-    CPU: ("CPU", CPU),
-    UINT8: ("UINT8", UINT8),
-    FLOAT: ("FLOAT", FLOAT),
-    FLOAT16: ("FLOAT16", FLOAT16),
-    CPU_MEMORY: ("CPU_MEMORY", CPU_MEMORY),
-    GPU_MEMORY: ("GPU_MEMORY", GPU_MEMORY),
-    PINNED_MEMORY: ("PINNED_MEMORY", PINNED_MEMORY),
 #     RocalMelScaleFormula
 from rocal_pybind.types import SLANEY
 from rocal_pybind.types import HTK
@@ -132,6 +124,10 @@ _known_types={
 	FLOAT : ("FLOAT", FLOAT),
     FLOAT16 : ("FLOAT16", FLOAT16),
     UINT8 : ("UINT8", UINT8),
+    
+    CPU_MEMORY: ("CPU_MEMORY", CPU_MEMORY),
+    GPU_MEMORY: ("GPU_MEMORY", GPU_MEMORY),
+    PINNED_MEMORY: ("PINNED_MEMORY", PINNED_MEMORY),
 
 	MAX_SIZE : ("MAX_SIZE", MAX_SIZE),
     USER_GIVEN_SIZE : ("USER_GIVEN_SIZE", USER_GIVEN_SIZE),

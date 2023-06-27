@@ -100,7 +100,9 @@ class Pipeline(object):
                  exec_async=True, bytes_per_sample=0,
                  rocal_cpu=False, max_streams=-1, default_cuda_stream_priority=0,
                  tensor_layout = types.NCHW, reverse_channels = False, multiplier = [1.0,1.0,1.0], 
-                 offset = [0.0, 0.0, 0.0], tensor_dtype=types.FLOAT, last_batch_policy=types.LAST_BATCH_FILL, last_batch_padded=False):
+                 offset = [0.0, 0.0, 0.0], tensor_dtype=types.FLOAT, last_batch_policy=types.LAST_BATCH_FILL, last_batch_padded=False,
+                mean = None, std = None, output_memory_type = types.CPU_MEMORY):
+
         print("in Pipeline.py last_batch_policy", last_batch_policy)
         if(rocal_cpu):
             self._handle = b.rocalCreate(

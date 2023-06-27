@@ -180,9 +180,6 @@ public:
 
     virtual size_t last_batch_padded_size() = 0;
 
-    //! return shuffle_time if applicable
-    virtual unsigned long long get_shuffle_time() = 0;
-
     virtual std::string file_path() = 0;
 
     virtual ~Reader() = default;
