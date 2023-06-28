@@ -404,6 +404,9 @@ namespace rocal{
                             dims,
                             stride_per_sample));
                             break;
+                    default:
+                        THROW("Unkown Rocal data type")
+                        break;
                     }
                     return numpy_array;
                 },
@@ -448,6 +451,9 @@ namespace rocal{
                             output_tensor_list.at(idx)->info().num_of_dims(),
                             info.dims(),
                             info.strides()));
+                        break;
+                    default:
+                        THROW("Unkown Rocal data type")
                         break;
                     }
                     return numpy_array;
