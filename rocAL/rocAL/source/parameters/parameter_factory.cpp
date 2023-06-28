@@ -139,7 +139,6 @@ void
 ParameterFactory::set_seed(unsigned seed)
 {
     _seed = seed;
-
     _seed_vector.resize(MAX_SEEDS);
     std::seed_seq ss{seed};
     ss.generate(_seed_vector.begin(), _seed_vector.end());

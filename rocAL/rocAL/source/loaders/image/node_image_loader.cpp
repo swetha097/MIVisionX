@@ -44,7 +44,6 @@ void ImageLoaderNode::init(unsigned internal_shard_count, const std::string &sou
     reader_cfg.set_batch_count(load_batch_count);
     reader_cfg.set_file_prefix(file_prefix);
     reader_cfg.set_meta_data_reader(meta_data_reader);
-    reader_cfg.set_last_batch_policy(last_batch_policy, last_batch_padded);
     //  sequence_length, step and stride parameters used only for SequenceReader
     reader_cfg.set_sequence_length(sequence_length);
     reader_cfg.set_frame_step(step);

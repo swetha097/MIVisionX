@@ -50,15 +50,6 @@ std::shared_ptr<MetaDataReader> create_meta_data_reader(const MetaDataConfig& co
             return ret;
         }
             break;
-        case MetaDataReaderType::TEXT_FILE_META_DATA_READER:
-        {
-            if(config.type() != MetaDataType::Label)
-                THROW("TEXT_FILE_META_DATA_READER can only be used to load labels")
-            auto ret = std::make_shared<LabelReaderFileList>();
-            ret->init(config);
-            return ret;
-        }
-            break;
 #ifdef ROCAL_VIDEO
         case MetaDataReaderType::VIDEO_LABEL_READER:
         {
@@ -70,6 +61,15 @@ std::shared_ptr<MetaDataReader> create_meta_data_reader(const MetaDataConfig& co
         }
             break;
 #endif
+        case MetaDataReaderType::TEXT_FILE_META_DATA_READER:
+        {
+            if(config.type() != MetaDataType::Label)
+                THROW("TEXT_FILE_META_DATA_READER can only be used to load labels")
+            auto ret = std::make_shared<LabelReaderFileList>();
+            ret->init(config);
+            return ret;
+        }
+            break;
         case MetaDataReaderType::TF_META_DATA_READER:
         {
             if(config.type() != MetaDataType::Label)

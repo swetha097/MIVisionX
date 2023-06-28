@@ -478,7 +478,6 @@ MasterGraph::get_output_tensors()
 
 void MasterGraph::output_routine()
 {
-    std::cerr << "\n OUTPUT ROUTINE ROUTINE";
     INFO("Output routine started with "+TOSTR(_remaining_count) + " to load");
     try {
         while (_processing)
@@ -487,10 +486,7 @@ void MasterGraph::output_routine()
             pMetaDataBatch full_batch_meta_data = nullptr;
             pMetaDataBatch augmented_batch_meta_data = nullptr;
             if (_loader_module->remaining_count() <= (_is_sequence_reader_output ? _sequence_batch_size : _user_batch_size))
-            {
                 _final_batch_padded_size = _loader_module->last_batch_padded_size();
-                // std::cerr<<"\n _final_batch_padded_size:: "<<_final_batch_padded_size;
-            }
             if (_loader_module->remaining_count() < (_is_sequence_reader_output ? _sequence_batch_size : _user_batch_size))
             {
                 // If the internal process routine ,output_routine(), has finished processing all the images, and last
@@ -519,23 +515,16 @@ void MasterGraph::output_routine()
 
             if(this_cycle_names.size() != _user_batch_size)
                 WRN("Internal problem: names count "+ TOSTR(this_cycle_names.size()))
-            // std::cerr << "HHHHHHHHEEEEEERRREEE *************************************** 2";
             // meta_data lookup is done before _meta_data_graph->process() is called to have the new meta_data ready for processing
             if (_meta_data_reader)
                 _meta_data_reader->lookup(this_cycle_names);
 
             full_batch_image_names += this_cycle_names;
-            // std::cerr << "HHHHHHHHEEEEEERRREEE *************************************** 1";
             if (!_processing)
                 break;
-            // std::cerr << "HHHHHHHHEEEEEERRREEE ***************************************";
-            // std::exit(0);
             // Swap handles on the output tensor, so that new processed tensor will be written to the a new buffer
             for (size_t idx = 0; idx < _internal_tensor_list.size(); idx++)
-            {
-                // std::cerr << "CALLLLLLS SWAP HANDLE ";
                 _internal_tensor_list[idx]->swap_handle(write_buffers[idx]);
-            }
 
             if (!_processing)
                 break;
@@ -570,7 +559,6 @@ void MasterGraph::output_routine()
             _process_time.end();
             for (size_t idx = 0; idx < _internal_tensor_list.size(); idx++)
                 _internal_tensor_list[idx]->copy_roi(tensor_roi_buffer[idx]);
-
             _bencode_time.start();
             if(_is_box_encoder )
             {

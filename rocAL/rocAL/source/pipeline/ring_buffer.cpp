@@ -183,8 +183,6 @@ void RingBuffer::init(RocalMemType mem_type, void *devres, std::vector<size_t> s
 
         }
     }
-    else
-    {
 #elif ENABLE_HIP
     DeviceResourcesHip *dev_hip = static_cast<DeviceResourcesHip *>(_dev);
     // Allocating buffers

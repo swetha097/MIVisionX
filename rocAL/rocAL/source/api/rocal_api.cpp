@@ -83,6 +83,8 @@ rocalCreate(
                     return RocalBatchPolicy::DROP;
                 case ROCAL_LAST_BATCH_PARTIAL:
                     return RocalBatchPolicy::PARTIAL;
+                default:
+                    THROW("Unkown Last Batch Policy type")
 
             }
         };
@@ -129,7 +131,6 @@ rocalVerify(RocalContext p_context)
         ERR(e.what())
         return ROCAL_RUNTIME_ERROR;
     }
-    std::cerr<<"\n rocAL graph verified";
     return ROCAL_OK;
 }
 

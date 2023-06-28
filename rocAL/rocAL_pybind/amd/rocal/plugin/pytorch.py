@@ -1,12 +1,31 @@
+# Copyright (c) 2018 - 2023 Advanced Micro Devices, Inc. All rights reserved.
+#
+# Permission is hereby granted, free of charge, to any person obtaining a copy
+# of this software and associated documentation files (the "Software"), to deal
+# in the Software without restriction, including without limitation the rights
+# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+# copies of the Software, and to permit persons to whom the Software is
+# furnished to do so, subject to the following conditions:
+#
+# The above copyright notice and this permission notice shall be included in
+# all copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL THE
+# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+# THE SOFTWARE.
+
 import torch
 import numpy as np
 import rocal_pybind as b
 import amd.rocal.types as types
 import ctypes
 
-torch.set_printoptions(threshold=10_000, profile="full")
 
-class RALIGenericIterator(object):
+class ROCALGenericIterator(object):
     def __init__(self, pipeline, tensor_layout = types.NCHW, reverse_channels = False, multiplier = [1.0,1.0,1.0], offset = [0.0, 0.0, 0.0], tensor_dtype=types.FLOAT, size = -1, auto_reset=False, device="cpu", device_id=0):
         self.loader = pipeline
         self.tensor_format =tensor_layout
@@ -14,6 +33,7 @@ class RALIGenericIterator(object):
         self.offset = offset
         self.reverse_channels = reverse_channels
         self.tensor_dtype = tensor_dtype
+        self.device = device
         self.device_id = device_id
         self.len = b.getRemainingImages(self.loader._handle)
         self.last_batch_policy = self.loader._last_batch_policy
@@ -31,8 +51,6 @@ class RALIGenericIterator(object):
         return self.__next__()
 
     def __next__(self):
-        torch.set_printoptions(threshold=10_000, profile="full", edgeitems=100)
-        
         if(b.isEmpty(self.loader._handle)) and self.shard_size < 0:
             if self.auto_reset:
                 self.reset()
@@ -49,34 +67,27 @@ class RALIGenericIterator(object):
             raise StopIteration
 
         else:
-            # print("OUTPUT TENSOR LIST")
             self.output_tensor_list = self.loader.rocalGetOutputTensors()
-            # Move to init
         self.last_batch_padded_size = b.getLastBatchPaddedSize(self.loader._handle)
         self.last_batch_size = self.batch_size - self.last_batch_padded_size
         self.batch_count+=self.batch_size
         #From init
         self.num_of_dims = self.output_tensor_list[0].num_of_dims()
         if self.num_of_dims == 4: # In the case of the Image data
+        #From init
+            self.augmentation_count = len(self.output_tensor_list)
             self.w = self.output_tensor_list[0].batch_width()
             self.h = self.output_tensor_list[0].batch_height()
             self.batch_size = self.output_tensor_list[0].batch_size()
             self.color_format = self.output_tensor_list[0].color_format()
-            # print("self.self.tensor_format", self.tensor_format)
-            # print("self.w", self.w)
-            # print("self.h", self.h)
-            # print("self.color_format", self.color_format)
-            # exit(0)
+
             if self.output is None:
                 if self.tensor_format == types.NCHW:
                     torch_gpu_device = torch.device('cuda', self.device_id)
                     if self.tensor_dtype == types.FLOAT:
                         self.output = torch.empty((self.batch_size, self.color_format, self.h, self.w,), dtype=torch.float32, device = torch_gpu_device)
                     elif self.tensor_dtype == types.FLOAT16:
-                        self.output = torch.empty((self.batch_size, self.color_format, self.h, self.w,), dtype=torch.float16, device = torch_gpu_device)
-                    elif self.tensor_dtype == types.UINT8:
-                        self.output = torch.empty((self.batch_size, self.color_format, self.h, self.w,), dtype=torch.uint8, device = torch_gpu_device)
-
+                        self.output = torch.empty((self.batch_size, self.color_format, self.h, self.w,), dtype=torch.float16, device = torch_gpu_device)                
 
                 else: #NHWC
                     torch_gpu_device = torch.device('cuda', self.device_id)
@@ -84,9 +95,7 @@ class RALIGenericIterator(object):
                         self.output = torch.empty((self.batch_size, self.h, self.w, self.color_format), dtype=torch.float32, device=torch_gpu_device)
                     elif self.tensor_dtype == types.FLOAT16:
                         self.output = torch.empty((self.batch_size, self.h, self.w, self.color_format), dtype=torch.float16, device=torch_gpu_device)
-                    elif self.tensor_dtype == types.UINT8:
-                        self.output = torch.empty((self.batch_size, self.h, self.w, self.color_format), dtype=torch.uint8, device=torch_gpu_device)
-
+            
                 self.labels_tensor = torch.empty(self.batch_size, dtype = torch.int32, device = torch_gpu_device)
 
             self.output_tensor_list[0].copy_data(ctypes.c_void_p(self.output.data_ptr()))
@@ -97,7 +106,6 @@ class RALIGenericIterator(object):
             elif self.tensor_dtype == types.FLOAT16:
                 return self.output.half(), self.labels_tensor
         elif self.num_of_dims == 3: #In case of an audio data
-
             self.batch_size = self.output_tensor_list[0].batch_size() if self.batch_size is None else self.batch_size
             self.channels = self.output_tensor_list[0].batch_width() if self.channels is None else self.channels #Max Channels
             self.samples = self.output_tensor_list[0].batch_height() if self.samples is None else self.samples #Max Samples
@@ -135,7 +143,7 @@ class RALIGenericIterator(object):
         b.rocalRelease(self.loader._handle)
 
 
-class ROCALClassificationIterator(RALIGenericIterator):
+class ROCALClassificationIterator(ROCALGenericIterator):
     """
     RALI iterator for classification tasks for PyTorch. It returns 2 outputs
     (data and label) in the form of PyTorch's Tensor.
@@ -150,7 +158,7 @@ class ROCALClassificationIterator(RALIGenericIterator):
 
     .. code-block:: python
 
-       RALIGenericIterator(pipelines, ["data", "label"], size)
+       ROCALGenericIterator(pipelines, ["data", "label"], size)
 
     Please keep in mind that Tensors returned by the iterator are
     still owned by RALI. They are valid till the next iterator call.

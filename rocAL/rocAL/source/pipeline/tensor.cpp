@@ -141,17 +141,9 @@ void rocalTensorInfo::reset_tensor_roi_buffers() {
 
 void rocalTensorInfo::reallocate_tensor_sample_rate_buffers() {
     _sample_rate = std::make_shared<std::vector<float>>(_batch_size);
-
-    // if (_sample_rate.size()) _sample_rate.clear();
     _sample_rate->resize(_batch_size);
     if (_is_image) {
         THROW("No sample rate available for Image data")
-    } else if(!_is_metadata)
-    {
-        // for (unsigned i = 0; i < _batch_size; i++)
-        // {
-        //     _sample_rate.at(i) = 0;
-        // }
     }
 }
 
@@ -238,8 +230,6 @@ void rocalTensor::update_tensor_roi(const std::vector<uint32_t> &width,
 
         for (unsigned i = 0; i < info().batch_size(); i++)
         {
-            // std::cerr<< "\n Printing _info.get_roi()[i].x1 "<< samples[i];
-            // std::cerr<< "\n Printing _info.get_roi()[i].y1 "<< channels[i];
 
             if (samples[i] > max_samples)
             {

@@ -32,6 +32,7 @@ THE SOFTWARE.
 #include "context.h"
 #include "node_image_loader.h"
 #include "node_image_loader_single_shard.h"
+#include "node_cifar10_loader.h"
 #include "node_audio_loader.h"
 #include "node_audio_loader_single_shard.h"
 #include "image_source_evaluator.h"
@@ -857,7 +858,6 @@ rocalAudioFileSource(
     }
     return output;
 }
-
 
 RocalTensor  ROCAL_API_CALL
 rocalJpegCaffeLMDBRecordSource(

@@ -541,7 +541,7 @@ namespace rocal
                 auto vec_pair_labels_boxes = rocalGetEncodedBoxesAndLables(context, batch_size * num_anchors);
                 auto labels_buf_ptr = (int*)(vec_pair_labels_boxes[0]->at(0)->buffer());
                 auto bboxes_buf_ptr = (float*)(vec_pair_labels_boxes[1]->at(0)->buffer());
-
+                THROW("UNKNOWN DTYE")
                 py::array_t<int> labels_array = py::array_t<int>(py::buffer_info(
                             labels_buf_ptr,
                             sizeof(int),
