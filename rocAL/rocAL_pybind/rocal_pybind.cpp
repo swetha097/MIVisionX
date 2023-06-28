@@ -439,6 +439,7 @@ namespace rocal{
                             output_tensor_list.at(idx)->info().num_of_dims(),
                             info.dims(),
                             info.strides()));
+                        break;
                     case RocalTensorDataType::FP32:
                         numpy_array = py::array(py::buffer_info(
                             (float *)(output_tensor_list.at(idx)->buffer()),
@@ -447,6 +448,7 @@ namespace rocal{
                             output_tensor_list.at(idx)->info().num_of_dims(),
                             info.dims(),
                             info.strides()));
+                        break;
                     }
                     return numpy_array;
                 },
