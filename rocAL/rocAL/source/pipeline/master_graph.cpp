@@ -533,7 +533,7 @@ void MasterGraph::output_routine()
             // Swap handles on the output tensor, so that new processed tensor will be written to the a new buffer
             for (size_t idx = 0; idx < _internal_tensor_list.size(); idx++)
             {
-                std::cerr << "CALLLLLLS SWAP HANDLE ";
+                // std::cerr << "CALLLLLLS SWAP HANDLE ";
                 _internal_tensor_list[idx]->swap_handle(write_buffers[idx]);
             }
 
