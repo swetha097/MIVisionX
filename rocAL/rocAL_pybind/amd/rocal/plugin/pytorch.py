@@ -119,12 +119,10 @@ class ROCALGenericIterator(object):
             # next
             self.labels = self.loader.rocalGetImageLabels()
             self.labels_tensor = torch.from_numpy(self.labels).type(torch.LongTensor)
-            print("HERE")
             if (self.last_batch_policy is (types.LAST_BATCH_PARTIAL)) and b.getRemainingImages(self.loader._handle) <= 0 :
                 self.output_tensor_list[0].copy_data(ctypes.c_void_p(self.output.data_ptr()), max_y1, max_x1)
                 return self.output[0:self.last_batch_size,:], self.labels_tensor[0:self.last_batch_size], torch.tensor(self.output_tensor_list[0].get_rois().reshape(self.batch_size,4)[...,0:2][0:self.last_batch_size,:])
             else:
-                print("to copy_data")
                 self.output_tensor_list[0].copy_data(ctypes.c_void_p(self.output.data_ptr()), max_y1, max_x1)
                 return self.output, self.labels_tensor, torch.tensor(self.output_tensor_list[0].get_rois().reshape(self.batch_size,4)[...,0:2])
 
@@ -215,3 +213,73 @@ class ROCALClassificationIterator(ROCALGenericIterator):
                                                             multiplier=pipe._multiplier, offset=pipe._offset, device=device, device_id=device_id, size = size, auto_reset = auto_reset)
 
 
+class ROCALAudioIterator(ROCALGenericIterator):
+    """
+    RALI iterator for classification tasks for PyTorch. It returns 2 outputs
+    (data and label) in the form of PyTorch's Tensor.
+
+    Calling
+
+    .. code-block:: python
+
+       ROCALAudioIterator(pipelines, size)
+
+    is equivalent to calling
+
+    .. code-block:: python
+
+       ROCALGenericIterator(pipelines, ["data", "label"], size)
+
+    Please keep in mind that Tensors returned by the iterator are
+    still owned by RALI. They are valid till the next iterator call.
+    If the content needs to be preserved please copy it to another tensor.
+
+    Parameters
+    ----------
+    pipelines : list of amd.rocalLI.pipeline.Pipeline
+                List of pipelines to use
+    size : int
+           Number of samples in the epoch (Usually the size of the dataset).
+    auto_reset : bool, optional, default = False
+                 Whether the iterator resets itself for the next epoch
+                 or it requires reset() to be called separately.
+    fill_last_batch : bool, optional, default = True
+                 Whether to fill the last batch with data up to 'self.batch_size'.
+                 The iterator would return the first integer multiple
+                 of self._num_gpus * self.batch_size entries which exceeds 'size'.
+                 Setting this flag to False will cause the iterator to return
+                 exactly 'size' entries.
+    dynamic_shape: bool, optional, default = False
+                 Whether the shape of the output of the RALI pipeline can
+                 change during execution. If True, the pytorch tensor will be resized accordingly
+                 if the shape of RALI returned tensors changes during execution.
+                 If False, the iterator will fail in case of change.
+    last_batch_padded : bool, optional, default = False
+                 Whether the last batch provided by RALI is padded with the last sample
+                 or it just wraps up. In the conjunction with `fill_last_batch` it tells
+                 if the iterator returning last batch with data only partially filled with
+                 data from the current epoch is dropping padding samples or samples from
+                 the next epoch. If set to False next epoch will end sooner as data from
+                 it was consumed but dropped. If set to True next epoch would be the
+                 same length as the first one.
+
+    Example
+    -------
+    With the data set [1,2,3,4,5,6,7] and the batch size 2:
+    fill_last_batch = False, last_batch_padded = True  -> last batch = [7], next iteration will return [1, 2]
+    fill_last_batch = False, last_batch_padded = False -> last batch = [7], next iteration will return [2, 3]
+    fill_last_batch = True, last_batch_padded = True   -> last batch = [7, 7], next iteration will return [1, 2]
+    fill_last_batch = True, last_batch_padded = False  -> last batch = [7, 1], next iteration will return [2, 3]
+    """
+    def __init__(self,
+                 pipelines,
+                 device="cpu",
+                 device_id=0,
+                 size = -1,
+                 auto_reset=False,
+                 fill_last_batch=True,
+                 dynamic_shape=False,
+                 last_batch_padded=False):
+        pipe = pipelines
+        super(ROCALAudioIterator, self).__init__(pipe, tensor_layout = pipe._tensor_layout, tensor_dtype = pipe._tensor_dtype,
+                                                            multiplier=pipe._multiplier, offset=pipe._offset, device=device, device_id=device_id, size = size, auto_reset = auto_reset)

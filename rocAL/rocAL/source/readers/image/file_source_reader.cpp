@@ -55,14 +55,17 @@ unsigned FileSourceReader::count_items()
 size_t
 FileSourceReader::last_batch_padded_size()
 {
+    // std::cerr << "\n The last batch padded size is :: " << _last_batch_padded_size;
     return _last_batch_padded_size;
 }
 
 Reader::Status FileSourceReader::initialize(ReaderConfig desc)
 {
+    std::cerr << "FileSourceReader::initialize(ReaderConfig desc)";
     auto ret = Reader::Status::OK;
     _file_id = 0;
     _folder_path = desc.path();
+    std::cerr << "\n _folder_path :: "<< _folder_path;
     _shard_id = desc.get_shard_id();
     _shard_count = desc.get_shard_count();
     _batch_count = desc.get_batch_size();
@@ -70,8 +73,9 @@ Reader::Status FileSourceReader::initialize(ReaderConfig desc)
     _loop = desc.loop();
     _meta_data_reader = desc.meta_data_reader();
     _last_batch_info = desc.get_last_batch_policy();
+    std::cerr<<"\n _last_batch_info "<<_last_batch_info.first<<"\t "<<_last_batch_info.second;
     ret = subfolder_reading();
-    // the following code is required to make every shard the same size:: required for multi-gpu training
+        // the following code is required to make every shard the same size:: required for multi-gpu training
     if (_shard_count > 1 && _batch_count > 1) {
         int _num_batches = _file_names.size()/_batch_count;
         int max_batches_per_shard = (_file_count_all_shards + _shard_count-1)/_shard_count;
@@ -169,44 +173,47 @@ void FileSourceReader::reset()
 
 Reader::Status FileSourceReader::subfolder_reading()
 {
-    if ((_sub_dir = opendir (_folder_path.c_str())) == nullptr)
-        THROW("FileReader ShardID ["+ TOSTR(_shard_id)+ "] ERROR: Failed opening the directory at " + _folder_path);
-
     std::vector<std::string> entry_name_list;
-    std::string _full_path = _folder_path;
-
-    while((_entity = readdir (_sub_dir)) != nullptr)
-    {
-        std::string entry_name(_entity->d_name);
-        if (strcmp(_entity->d_name, ".") == 0 || strcmp(_entity->d_name, "..") == 0) continue;
-        entry_name_list.push_back(entry_name);
-    }
-    closedir(_sub_dir);
-    std::sort(entry_name_list.begin(), entry_name_list.end());
-
     auto ret = Reader::Status::OK;
-    for (unsigned dir_count = 0; dir_count < entry_name_list.size(); ++dir_count) {
-        std::string subfolder_path = _full_path + "/" + entry_name_list[dir_count];
-        filesys::path pathObj(subfolder_path);
-        if(filesys::exists(pathObj) && filesys::is_regular_file(pathObj))
-        {
-            // ignore files with extensions .tar, .zip, .7z
-            auto file_extension_idx = subfolder_path.find_last_of(".");
-            if (file_extension_idx  != std::string::npos) {
-                std::string file_extension = subfolder_path.substr(file_extension_idx+1);
-                if ((file_extension == "tar") || (file_extension == "zip") || (file_extension == "7z") || (file_extension == "rar"))
-                    continue;
+    for (auto& entry : filesys::recursive_directory_iterator(_folder_path.c_str())) {
+        try {
+            std::string entry_path = entry.path().string();
+            auto entry_path_id = entry_path;
+            auto last_slash_idx = entry_path_id.find_last_of("\\/");
+            if (std::string::npos != last_slash_idx)
+            {
+                entry_path_id.erase(0, last_slash_idx + 1);
             }
-            ret = open_folder();
-            break;  // assume directory has only files.
+            if (filesys::is_regular_file(entry.path() ))
+            {
+                if(!_meta_data_reader || _meta_data_reader->exists(entry_path_id))
+                {
+                if(get_file_shard_id() != _shard_id )
+                {
+                    _file_count_all_shards++;
+                    incremenet_file_id();
+                    continue;
+                }
+                _in_batch_read_count++;
+                _in_batch_read_count = (_in_batch_read_count%_batch_count == 0) ? 0 : _in_batch_read_count;
+                std::string file_path = entry_path;
+                _last_file_name = file_path;
+                _file_names.push_back(file_path);
+                _file_count_all_shards++;
+                incremenet_file_id();
+                }
+            }
         }
-        else if(filesys::exists(pathObj) && filesys::is_directory(pathObj))
-        {
-            _folder_path = subfolder_path;
-            if(open_folder() != Reader::Status::OK)
-                WRN("FileReader ShardID ["+ TOSTR(_shard_id)+ "] File reader cannot access the storage at " + _folder_path);
+        catch (const boost::filesystem::filesystem_error& ex) {
+                    if (ex.code() == boost::system::errc::permission_denied) 
+                        THROW("Permission denied for directory: " + entry.path().string());
         }
-    }
+}
+
+ if(_file_names.empty())
+        WRN("FileReader ShardID ["+ TOSTR(_shard_id)+ "] Did not load any file from " + _folder_path)
+
+
     if(_in_batch_read_count > 0 && _in_batch_read_count < _batch_count)
     {
         replicate_last_image_to_fill_last_shard();
