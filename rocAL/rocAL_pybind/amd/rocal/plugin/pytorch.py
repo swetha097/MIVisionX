@@ -35,15 +35,15 @@ class ROCALGenericIterator(object):
         self.tensor_dtype = tensor_dtype
         self.device = device
         self.device_id = device_id
+        self.output = None
+        print("self.device", self.device)
         self.len = b.getRemainingImages(self.loader._handle)
         self.shard_size = size
         self.auto_reset = auto_reset
         self.batch_count = 0
-        self.batch_size = None
         self.audio_length = None
         self.samples = None
         self.channels = None
-        self.output = None
         self.batch_size = self.loader._batch_size
 
     def next(self):
@@ -211,5 +211,6 @@ class ROCALClassificationIterator(ROCALGenericIterator):
                  last_batch_padded=False):
         pipe = pipelines
         super(ROCALClassificationIterator, self).__init__(pipe, tensor_layout = pipe._tensor_layout, tensor_dtype = pipe._tensor_dtype,
-                                                            multiplier=pipe._multiplier, offset=pipe._offset, size = size, auto_reset = auto_reset)
+                                                            multiplier=pipe._multiplier, offset=pipe._offset, device=device, device_id=device_id, size = size, auto_reset = auto_reset)
+
 
