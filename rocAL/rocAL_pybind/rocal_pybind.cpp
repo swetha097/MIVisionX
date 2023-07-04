@@ -26,14 +26,14 @@ THE SOFTWARE.
 #include <iostream>
 #include <pybind11/embed.h>
 #include <pybind11/eval.h>
-#include "api/rocal_api_types.h"
+#include "rocal_api_types.h"
 #include "rocal_api.h"
 #include "tensor.h"
-#include "api/rocal_api_parameters.h"
-#include "api/rocal_api_data_loaders.h"
-#include "api/rocal_api_augmentation.h"
-#include "api/rocal_api_data_transfer.h"
-#include "api/rocal_api_info.h"
+#include "rocal_api_parameters.h"
+#include "rocal_api_data_loaders.h"
+#include "rocal_api_augmentation.h"
+#include "rocal_api_data_transfer.h"
+#include "rocal_api_info.h"
 namespace py = pybind11;
 
 using float16 = half_float::half;
@@ -93,6 +93,28 @@ namespace rocal
         return py::bytes(s);
     }
 
+    py::object wrapper_tensor(RocalContext context, py::object p,
+                                RocalTensorLayout tensor_format, RocalTensorOutputType tensor_output_type, float multiplier0,
+                                float multiplier1, float multiplier2, float offset0,
+                                float offset1, float offset2,
+                                bool reverse_channels, RocalOutputMemType output_mem_type)
+    {
+        auto ptr = ctypes_void_ptr(p);
+        // call pure C++ function
+
+        RocalTensorlayout new_tensor_format;
+        if (tensor_format == RocalTensorLayout::ROCAL_NCHW)
+            new_tensor_format = RocalTensorlayout::NCHW;
+        if (tensor_format == RocalTensorLayout::ROCAL_NHWC)
+            new_tensor_format = RocalTensorlayout::NHWC;
+
+        int status = rocalToTensor(context, ptr, new_tensor_format, tensor_output_type, multiplier0,
+                                              multiplier1, multiplier2, offset0,
+                                              offset1, offset2, reverse_channels, output_mem_type);
+        // std::cerr<<"\n Copy failed with status :: "<<status;
+        return py::cast<py::none>(Py_None);
+    }
+
     PYBIND11_MODULE(rocal_pybind, m)
     {
         m.doc() = "Python bindings for the C++ portions of ROCAL";
@@ -113,7 +135,11 @@ namespace rocal
             .def_readwrite("load_time", &TimingInfo::load_time)
             .def_readwrite("decode_time", &TimingInfo::decode_time)
             .def_readwrite("process_time", &TimingInfo::process_time)
-            .def_readwrite("transfer_time", &TimingInfo::transfer_time);
+            .def_readwrite("transfer_time", &TimingInfo::transfer_time)
+            .def_readwrite("wait_if_empty_time", &TimingInfo::wait_if_empty_time)
+            .def_readwrite("wait_if_full_time", &TimingInfo::wait_if_full_time)
+            .def_readwrite("circular_buffer_wait_if_empty_time", &TimingInfo::circular_buffer_wait_if_empty_time)
+            .def_readwrite("circular_buffer_wait_if_full_time", &TimingInfo::circular_buffer_wait_if_full_time);
         py::class_<rocalTensor>(m, "rocalTensor")
                 .def(
                 "__add__",
@@ -379,6 +405,11 @@ namespace rocal
             .value("DECODER_VIDEO_FFMPEG_SW",ROCAL_DECODER_VIDEO_FFMPEG_SW)
             .value("DECODER_VIDEO_FFMPEG_HW",ROCAL_DECODER_VIDEO_FFMPEG_HW)
             .export_values();
+        py::enum_<RocalOutputMemType>(types_m, "RocalOutputMemType", "Output memory types")
+            .value("CPU_MEMORY", ROCAL_MEMCPY_HOST)
+            .value("GPU_MEMORY", ROCAL_MEMCPY_GPU)
+            .value("PINNED_MEMORY", ROCAL_MEMCPY_PINNED)
+            .export_values();
         py::enum_<RocalResizeScalingMode>(types_m,"RocalResizeScalingMode","Decode size policies")
             .value("SCALING_MODE_DEFAULT",ROCAL_SCALING_MODE_DEFAULT)
             .value("SCALING_MODE_STRETCH",ROCAL_SCALING_MODE_STRETCH)
@@ -463,6 +494,7 @@ namespace rocal
         m.def("GetFloatValue", &rocalGetFloatValue);
         m.def("rocalGetBoundingBoxCount", &rocalGetBoundingBoxCount);
         // rocal_api_data_transfer.h
+        m.def("rocalToTensor",&wrapper_tensor);
         m.def("rocalGetOutputTensors", [](RocalContext context)
               {
             rocalTensorList * tl = rocalGetOutputTensors(context);
@@ -499,6 +531,7 @@ namespace rocal
                             1,
                             {labels->at(i)->info().dims().at(0)},
                             {sizeof(int) }));
+                labels_list.append(labels_array);
             }
             return labels_list;
     }

@@ -56,6 +56,10 @@ struct TimingInfo
     long long unsigned decode_time;
     long long unsigned process_time;
     long long unsigned transfer_time;
+    long long unsigned wait_if_empty_time;
+    long long unsigned wait_if_full_time;
+    long long unsigned circular_buffer_wait_if_empty_time;
+    long long unsigned circular_buffer_wait_if_full_time;
 };
 
 //HRNet training expects meta data (joints_data) in below format, so added here as a type for exposing to user
@@ -143,7 +147,14 @@ enum RocalDecoderType
     ROCAL_DECODER_AUDIO_SNDFILE = 5
 };
 
-// rocal external memcpy flags
+enum RocalOutputMemType
+{
+    ROCAL_MEMCPY_HOST = 0,
+    ROCAL_MEMCPY_GPU = 1,
+    ROCAL_MEMCPY_PINNED = 2
+};
+
+// rocal external memcpy flags 
 #define    ROCAL_MEMCPY_TO_HOST      1      // force copy to user provided host memory
 #define    ROCAL_MEMCPY_TO_DEVICE    2      // force copy to user provided device memory (gpu)
 #define    ROCAL_MEMCPY_IS_PINNED    4      // for future use

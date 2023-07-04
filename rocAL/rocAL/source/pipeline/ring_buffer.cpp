@@ -30,7 +30,9 @@ RingBuffer::RingBuffer(unsigned buffer_depth):
         _dev_bbox_buffer(buffer_depth),
         _dev_roi_buffers(buffer_depth),
         _host_roi_buffers(buffer_depth),
-        _dev_labels_buffer(buffer_depth)
+        _dev_labels_buffer(buffer_depth),
+        _rb_block_if_empty_time("Ring Buffer Block IF Empty Time"),
+        _rb_block_if_full_time("Ring Buffer Block IF Full Time")
 {
     reset();
 }
@@ -59,7 +61,9 @@ void RingBuffer:: block_if_full()
 }
 std::vector<void*> RingBuffer::get_read_buffers()
 {
+    _rb_block_if_empty_time.start();
     block_if_empty();
+    _rb_block_if_empty_time.end();
     if((_mem_type == RocalMemType::OCL) || (_mem_type == RocalMemType::HIP))
         return _dev_sub_buffer[_read_ptr];
     return _host_sub_buffers[_read_ptr];
@@ -75,7 +79,9 @@ std::vector<unsigned*> RingBuffer::get_read_roi_buffers()
 
 std::pair<void*, void*> RingBuffer::get_box_encode_read_buffers()
 {
+    _rb_block_if_empty_time.start();
     block_if_empty();
+    _rb_block_if_empty_time.end();
     if((_mem_type == RocalMemType::OCL) || (_mem_type == RocalMemType::HIP))
         return std::make_pair(_dev_bbox_buffer[_read_ptr], _dev_labels_buffer[_read_ptr]);
     return std::make_pair(_host_meta_data_buffers[_read_ptr][1], _host_meta_data_buffers[_read_ptr][0]);
@@ -83,7 +89,9 @@ std::pair<void*, void*> RingBuffer::get_box_encode_read_buffers()
 
 std::vector<void*> RingBuffer::get_write_buffers()
 {
+    _rb_block_if_full_time.start();
     block_if_full();
+    _rb_block_if_full_time.end();
     if((_mem_type == RocalMemType::OCL) || (_mem_type == RocalMemType::HIP))
         return _dev_sub_buffer[_write_ptr];
 
@@ -101,7 +109,9 @@ std::vector<unsigned*> RingBuffer::get_write_roi_buffers()
 
 std::pair<void*, void*> RingBuffer::get_box_encode_write_buffers()
 {
+    _rb_block_if_full_time.start();
     block_if_full();
+    _rb_block_if_full_time.end();
     if((_mem_type == RocalMemType::OCL) || (_mem_type == RocalMemType::HIP))
         return std::make_pair(_dev_bbox_buffer[_write_ptr], _dev_labels_buffer[_write_ptr]);
     return std::make_pair(_host_meta_data_buffers[_write_ptr][1], _host_meta_data_buffers[_write_ptr][0]);
@@ -109,7 +119,9 @@ std::pair<void*, void*> RingBuffer::get_box_encode_write_buffers()
 
 std::vector<void*> RingBuffer::get_meta_read_buffers()
 {
+    _rb_block_if_empty_time.start();
     block_if_empty();
+    _rb_block_if_empty_time.end();
     return _host_meta_data_buffers[_read_ptr];
 }
 
@@ -489,7 +501,9 @@ void RingBuffer::rellocate_meta_data_buffer(void * buffer, size_t buffer_size, u
 
 MetaDataNamePair& RingBuffer::get_meta_data()
 {
+    _rb_block_if_empty_time.start();
     block_if_empty();
+    _rb_block_if_empty_time.end();
     std::unique_lock<std::mutex> lock(_names_buff_lock);
     if(_level != _meta_ring_buffer.size())
         THROW("ring buffer internals error, image and metadata sizes not the same "+TOSTR(_level) + " != "+TOSTR(_meta_ring_buffer.size()))
@@ -498,7 +512,9 @@ MetaDataNamePair& RingBuffer::get_meta_data()
 
 MetaDataDimensionsBatch& RingBuffer::get_meta_data_info()
 {
+    _rb_block_if_empty_time.start();
     block_if_empty();
+    _rb_block_if_empty_time.end();
     std::unique_lock<std::mutex> lock(_names_buff_lock);
     if(_level != _meta_ring_buffer.size())
         THROW("ring buffer internals error, image and metadata sizes not the same "+TOSTR(_level) + " != "+TOSTR(_meta_ring_buffer.size()))
