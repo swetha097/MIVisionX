@@ -30,6 +30,11 @@ THE SOFTWARE.
 #include "device_manager.h"
 #include "device_manager_hip.h"
 #include "commons.h"
+
+enum DecodedSampleType {
+    IMAGE,
+    AUDIO
+};
 struct image_decoded_info // changed from decoded_image_info
 {
     std::vector<std::string> _image_names;
@@ -37,11 +42,6 @@ struct image_decoded_info // changed from decoded_image_info
     std::vector<uint32_t> _roi_height;
     std::vector<uint32_t> _original_width;
     std::vector<uint32_t> _original_height;
-    std::vector<uint32_t> _roi_audio_samples;
-    std::vector<uint32_t> _roi_audio_channels;
-    std::vector<uint32_t> _original_audio_samples;
-    std::vector<uint32_t> _original_audio_channels;
-    std::vector<float> _original_audio_sample_rates;
 };
 
 struct audio_decoded_info // newly introduced
@@ -56,8 +56,21 @@ struct audio_decoded_info // newly introduced
 
 union decoded_sample_info // new
 {
-    struct image_decoded_info image_info;
-    struct audio_decoded_info audio_info;
+    decoded_sample_info& operator=(const decoded_sample_info& other) {
+    if (this == &other) {
+        return *this; // Self-assignment, no need to do anything
+    }
+    type = other.type; // Assign the type member
+    if (type == IMAGE) {
+        image_info = other.image_info; // Assign the image_info member
+    } else if (type == AUDIO) {
+        audio_info = other.audio_info; // Assign the audio_info member
+    }
+    return *this;
+}
+    DecodedSampleType type;
+    image_decoded_info image_info;
+    audio_decoded_info audio_info;
 } ;
 
 struct crop_image_info

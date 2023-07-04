@@ -57,7 +57,7 @@ private:
     std::shared_ptr<Reader> _reader;
     void *_dev_resources;
     decoded_sample_info _raw_img_info;       // image info to store the names. In this case the ID of image is stored in _roi_width field
-    decoded_sample_info _output_decoded_img_info;
+    decoded_sample_info _output_decoded_sample_info;
     bool _initialized = false;
     RocalMemType _mem_type;
     size_t _output_mem_size;
