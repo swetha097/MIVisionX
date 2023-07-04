@@ -45,7 +45,7 @@ def main():
     crop=300
 
     local_rank = 0
-    world_size = 1
+    world_size = 3
     rali_cpu= True
     rali_device = 'cpu' if rali_cpu else 'gpu'
     decoder_device = 'cpu' if rali_cpu else 'mixed'
@@ -53,12 +53,16 @@ def main():
     image_classification_train_pipeline = Pipeline(batch_size = batch_size, num_threads = num_threads, device_id = device_id, seed = random_seed, rocal_cpu = _rali_cpu, tensor_layout = types.NHWC)
     with image_classification_train_pipeline:
         jpegs, labels = fn.readers.file(file_root = data_path)
-        decode = fn.decoders.image(jpegs, output_type = types.RGB,
-                                        file_root = data_path, shard_id = local_rank, num_shards = world_size, random_shuffle = True)
-        res = fn.resize(decode, resize_width = 224, resize_height = 224, rocal_tensor_layout = types.NHWC, rocal_tensor_output_type = types.UINT8)
-        flip_coin = fn.random.coin_flip(probability=0.5)
-        cmnp = fn.crop_mirror_normalize(decode, device="gpu",
-                                            rocal_tensor_layout = types.NHWC,
+        # decode = fn.decoders.image(jpegs, output_type = types.RGB,
+        #                                 file_root = data_path, shard_id = local_rank, num_shards = world_size, random_shuffle = True)
+        decode = fn.decoders.image_slice(jpegs, output_type=types.RGB,max_decoded_width=1000, max_decoded_height=1000,
+                                                    file_root=data_path, shard_id=local_rank, num_shards=world_size, random_shuffle=True)
+        # res = fn.resize(decode, resize_width = 224, resize_height = 224, rocal_tensor_layout = types.NHWC, rocal_tensor_output_type = types.UINT8)
+        res = fn.resize(decode, scaling_mode=types.SCALING_MODE_NOT_SMALLER, interpolation_type=types.TRIANGULAR_INTERPOLATION, resize_shorter=256, rocal_tensor_output_type = types.UINT8)
+
+        # flip_coin = fn.random.coin_flip(probability=0.5)
+        cmnp = fn.crop_mirror_normalize(res, device="gpu",
+                                            rocal_tensor_layout = types.NCHW,
                                             rocal_tensor_output_type = types.FLOAT,
                                             crop=(224, 224),
                                             mirror=0,
@@ -79,7 +83,7 @@ def main():
                 print("Image shape :: ", img.shape)
                 # print("Image :: ", img)
                 cnt = cnt + 1
-                draw_patches(img, cnt, "cpu",  layout="NHWC")
+                draw_patches(img, cnt, "cpu",  layout="NCHW")
         imageIteratorPipeline.reset()
     print("*********************************************************************")
 

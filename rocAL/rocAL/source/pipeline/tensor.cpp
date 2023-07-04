@@ -115,7 +115,8 @@ bool operator==(const rocalTensorInfo &rhs, const rocalTensorInfo &lhs) {
 }
 
 void rocalTensorInfo::reset_tensor_roi_buffers() {
-    allocate_host_or_pinned_mem((void **)&_roi_buf, _batch_size * 4 * sizeof(unsigned), _mem_type);
+    size_t roi_size = (_layout == RocalTensorlayout::NFCHW || _layout == RocalTensorlayout::NFHWC) ? _dims[0] * _dims[1] : _batch_size; // For Sequences pre allocating the ROI to N * F to replicate in OpenVX extensions
+    allocate_host_or_pinned_mem((void **)&_roi_buf, roi_size * 4 * sizeof(unsigned), _mem_type);
     if (_mem_type == RocalMemType::HIP) {
 #if ENABLE_HIP
         _roi.reset(_roi_buf, hipHostFree);
@@ -140,17 +141,9 @@ void rocalTensorInfo::reset_tensor_roi_buffers() {
 
 void rocalTensorInfo::reallocate_tensor_sample_rate_buffers() {
     _sample_rate = std::make_shared<std::vector<float>>(_batch_size);
-
-    // if (_sample_rate.size()) _sample_rate.clear();
     _sample_rate->resize(_batch_size);
     if (_is_image) {
         THROW("No sample rate available for Image data")
-    } else if(!_is_metadata)
-    {
-        // for (unsigned i = 0; i < _batch_size; i++)
-        // {
-        //     _sample_rate.at(i) = 0;
-        // }
     }
 }
 
@@ -170,11 +163,13 @@ rocalTensorInfo::rocalTensorInfo(std::vector<size_t> dims,
       _data_type(data_type) {
     _batch_size = dims.at(0);
     _num_of_dims = dims.size();
-    _data_size = tensor_data_size(data_type);
-    for (unsigned i = 0; i < _num_of_dims; i++) _data_size *= dims.at(i);
-    // std::cerr << "rocalTensorInfo" ;
+    _strides.resize(_num_of_dims);
+    _strides[_num_of_dims - 1] = tensor_data_size(data_type);
+    for (int i = _num_of_dims - 2; i >= 0; i--) {
+        _strides[i] = _strides[i + 1] * dims[i + 1];
+    }
+    _data_size = _strides[0] * dims[0];
     if (_num_of_dims <= 3) _is_image = false;
-    // std::cerr << "\n rocalTensorInfo 1";
 }
 
 void rocalTensor::update_audio_tensor_sample_rate(const std::vector<float> &sample_rate) {
@@ -183,8 +178,6 @@ void rocalTensor::update_audio_tensor_sample_rate(const std::vector<float> &samp
     }
     else if(!_info.is_metadata())
     {
-        // if (_info.get_sample_rate().size() >0) _info.get_sample_rate().clear();
-        // _info.get_sample_rate()->resize(_info.batch_size());
         for (unsigned i = 0; i < info().batch_size(); i++)
         {
             _info.get_sample_rate()->at(i) = sample_rate[i];
@@ -237,8 +230,6 @@ void rocalTensor::update_tensor_roi(const std::vector<uint32_t> &width,
 
         for (unsigned i = 0; i < info().batch_size(); i++)
         {
-            // std::cerr<< "\n Printing _info.get_roi()[i].x1 "<< samples[i];
-            // std::cerr<< "\n Printing _info.get_roi()[i].y1 "<< channels[i];
 
             if (samples[i] > max_samples)
             {
