@@ -26,7 +26,7 @@ THE SOFTWARE.
 
 struct DownmixLocalData
 {
-    RPPCommonHandle *handle;
+    vxRppHandle *handle;
     Rpp32u device_type;
     RppPtr_t pSrc;
     RppPtr_t pDst;
@@ -164,7 +164,7 @@ static vx_status VX_CALLBACK initializeDownmix(vx_node node, const vx_reference 
     data->samples = (vx_int32 *)malloc(sizeof(vx_int32) * data->srcDescPtr->n);
     data->channels = (vx_int32 *)malloc(sizeof(vx_int32) * data->srcDescPtr->n);
     refreshDownmix(node, parameters, num, data);
-    STATUS_ERROR_CHECK(createGraphHandle(node, &data->handle, data->srcDescPtr->n, data->device_type));
+    STATUS_ERROR_CHECK(createRPPHandle(node, &data->handle, data->srcDescPtr->n, data->device_type));
 
     STATUS_ERROR_CHECK(vxSetNodeAttribute(node, VX_NODE_LOCAL_DATA_PTR, &data, sizeof(data)));
     return VX_SUCCESS;
@@ -173,7 +173,7 @@ static vx_status VX_CALLBACK initializeDownmix(vx_node node, const vx_reference 
 static vx_status VX_CALLBACK uninitializeDownmix(vx_node node, const vx_reference *parameters, vx_uint32 num) {
     DownmixLocalData *data;
     STATUS_ERROR_CHECK(vxQueryNode(node, VX_NODE_LOCAL_DATA_PTR, &data, sizeof(data)));
-    STATUS_ERROR_CHECK(releaseGraphHandle(node, data->handle, data->device_type));
+    STATUS_ERROR_CHECK(releaseRPPHandle(node, data->handle, data->device_type));
     free(data->samples);
     free(data->channels);
     delete (data);

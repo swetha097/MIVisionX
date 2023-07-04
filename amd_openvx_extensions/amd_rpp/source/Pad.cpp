@@ -26,7 +26,7 @@ THE SOFTWARE.
 
 struct PadLocalData
 {
-    RPPCommonHandle handle;
+    vxRppHandle handle;
     rppHandle_t rppHandle;
     Rpp32u deviceType;
     Rpp32u nbatchSize;
