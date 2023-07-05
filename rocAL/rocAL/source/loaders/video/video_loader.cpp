@@ -189,7 +189,7 @@ VideoLoader::load_routine()
 
             if (load_status == LoaderModuleStatus::OK)
             {
-                _circ_buff.set_image_info(_decoded_img_info);
+                _circ_buff.set_sample_info(_decoded_img_info);
                 _circ_buff.push();
                 _image_counter += _output_image->info().batch_size();
             }
@@ -305,7 +305,7 @@ std::vector<std::string> VideoLoader::get_id()
     return _output_names;
 }
 
-decoded_image_info VideoLoader::get_decode_image_info()
+decoded_sample_info VideoLoader::get_decode_image_info()
 {
     return _output_decoded_img_info;
 }

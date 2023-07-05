@@ -178,7 +178,7 @@ AudioLoader::load_routine() {
                                             _decoded_audio_info._original_audio_sample_rates);
 
             if(load_status == LoaderModuleStatus::OK) {
-                _circ_buff.set_image_info(_decoded_audio_info);
+                _circ_buff.set_sample_info(_decoded_audio_info);
                 _circ_buff.push();
                 _audio_counter += _output_tensor->info().batch_size();
             }
@@ -286,6 +286,6 @@ std::vector<std::string> AudioLoader::get_id() {
     return _output_names;
 }
 
-decoded_image_info AudioLoader::get_decode_image_info() {
+decoded_sample_info AudioLoader::get_decode_image_info() {
     return _output_decoded_audio_info;
 }

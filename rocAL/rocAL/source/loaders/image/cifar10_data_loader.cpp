@@ -207,7 +207,7 @@ CIFAR10DataLoader::load_routine()
                 file_counter++;
             }
             _file_load_time.end();// Debug timing
-            _circ_buff.set_image_info(_raw_img_info);
+            _circ_buff.set_sample_info(_raw_img_info);
             _circ_buff.push();
             _image_counter += _output_image->info().batch_size();
             load_status = LoaderModuleStatus::OK;
@@ -300,7 +300,7 @@ std::vector<std::string> CIFAR10DataLoader::get_id()
     return _output_names;
 }
 
-decoded_image_info CIFAR10DataLoader::get_decode_image_info()
+decoded_sample_info CIFAR10DataLoader::get_decode_image_info()
 {
     return _output_decoded_img_info;
 }

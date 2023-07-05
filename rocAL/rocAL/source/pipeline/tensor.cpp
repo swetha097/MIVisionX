@@ -93,7 +93,7 @@ vx_enum interpret_tensor_data_type(RocalTensorDataType data_type) {
 void allocate_host_or_pinned_mem(void **ptr, size_t size, RocalMemType mem_type) {
     if (mem_type == RocalMemType::HIP) {
 #if ENABLE_HIP
-    hipError_t err = hipHostMalloc((void **)ptr, size, hipHostMallocDefault);
+        hipError_t err = hipHostMalloc((void **)ptr, size, hipHostMallocDefault);
     if(err != hipSuccess || !*ptr)
         THROW("hipHostMalloc of size " + TOSTR(size) + " failed " + TOSTR(err))
     err = hipMemset((void *)*ptr, 0, size);
@@ -142,8 +142,6 @@ void rocalTensorInfo::reallocate_tensor_sample_rate_buffers() {
     _sample_rate->resize(_batch_size);
     if (_is_image) {
         THROW("No sample rate available for Image data")
-    } else if(!_is_metadata)
-    {
     }
 }
 
@@ -236,8 +234,7 @@ void rocalTensor::update_tensor_roi(const std::vector<uint32_t> &width,
             }
         }
     }
-    else if(!_info.is_metadata())
-    {
+    else if(!_info.is_metadata()) {
         auto max_dims = _info.max_shape();
         unsigned max_samples = max_dims.at(0);
         unsigned max_channels = max_dims.at(1);
@@ -254,22 +251,18 @@ void rocalTensor::update_tensor_roi(const std::vector<uint32_t> &width,
         for (unsigned i = 0; i < info().batch_size(); i++)
         {
 
-            if (samples[i] > max_samples)
-            {
+            if (samples[i] > max_samples) {
                 ERR("Given ROI width is larger than buffer width for tensor[" + TOSTR(i) + "] " + TOSTR(samples[i]) + " > " + TOSTR(max_samples))
                 _info.get_roi()[i].x1 = max_samples;
             }
-            else
-            {
+            else {
                 _info.get_roi()[i].x1 = samples[i];
             }
-            if (channels[i] > max_channels)
-            {
+            if (channels[i] > max_channels) {
                 ERR("Given ROI height is larger than buffer with for tensor[" + TOSTR(i) + "] " + TOSTR(channels[i]) + " > " + TOSTR(max_channels))
                 _info.get_roi()[i].y1 = max_channels;
             }
-            else
-            {
+            else {
                 _info.get_roi()[i].y1 = channels[i];
             }
         }
@@ -280,10 +273,8 @@ void rocalTensor::update_audio_tensor_sample_rate(const std::vector<float> &samp
     if (_info.is_image()) {
         THROW("No sample rate available for Image data")
     }
-    else if(!_info.is_metadata())
-    {
-        for (unsigned i = 0; i < info().batch_size(); i++)
-        {
+    else if(!_info.is_metadata()) {
+        for (unsigned i = 0; i < info().batch_size(); i++) {
             _info.get_sample_rate()->at(i) = sample_rate[i];
         }
     }

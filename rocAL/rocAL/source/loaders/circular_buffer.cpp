@@ -149,7 +149,7 @@ void CircularBuffer::push()
     sync();
     // Pushing to the _circ_buff and _circ_buff_names must happen all at the same time
     std::unique_lock<std::mutex> lock(_names_buff_lock);
-    _circ_image_info.push(_last_image_info);
+    _circ_image_info.push(_last_sample_info);
     if (random_bbox_crop_flag == true)
       _circ_crop_image_info.push(_last_crop_image_info);
     increment_write_ptr();
@@ -379,7 +379,7 @@ CircularBuffer::~CircularBuffer()
     _initialized = false;
 }
 
-decoded_image_info &CircularBuffer::get_image_info()
+decoded_sample_info &CircularBuffer::get_image_info()
 {
     block_if_empty();
     std::unique_lock<std::mutex> lock(_names_buff_lock);
