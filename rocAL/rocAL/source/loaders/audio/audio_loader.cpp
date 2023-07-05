@@ -153,6 +153,7 @@ void AudioLoader::initialize(ReaderConfig reader_cfg, DecoderConfig decoder_cfg,
     }
     _max_decoded_samples = _output_tensor->info().max_shape().at(0);
     _max_decoded_channels = _output_tensor->info().max_shape().at(1);
+    _decoded_sample_info.type = AUDIO;
     _decoded_sample_info.audio_info._audio_names.resize(_batch_size);
     _decoded_sample_info.audio_info._roi_audio_samples.resize(_batch_size);
     _decoded_sample_info.audio_info._roi_audio_channels.resize(_batch_size);

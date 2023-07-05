@@ -161,6 +161,7 @@ void ImageLoader::initialize(ReaderConfig reader_cfg, DecoderConfig decoder_cfg,
     }
     _max_decoded_width = _output_tensor->info().max_shape().at(0);
     _max_decoded_height = _output_tensor->info().max_shape().at(1);
+    _decoded_sample_info.type = IMAGE;
     _decoded_sample_info.image_info._image_names.resize(_batch_size);
     _decoded_sample_info.image_info._roi_height.resize(_batch_size);
     _decoded_sample_info.image_info._roi_width.resize(_batch_size);
@@ -218,7 +219,7 @@ ImageLoader::load_routine()
                     _crop_image_info._crop_image_coords = _image_loader->get_batch_random_bbox_crop_coords();
                     _circ_buff.set_crop_image_info(_crop_image_info);
                 }
-                _circ_buff.set_image_info(_decoded_sample_info);
+                _circ_buff.set_sample_info(_decoded_sample_info);
                 _circ_buff.push();
                 _image_counter += _output_tensor->info().batch_size();
             }

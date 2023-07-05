@@ -142,6 +142,7 @@ void VideoLoader::initialize(ReaderConfig reader_cfg, DecoderConfig decoder_cfg,
     }
     _max_decoded_width = _output_tensor->info().max_shape().at(0);
     _max_decoded_height = _output_tensor->info().max_shape().at(1);
+    _decoded_sample_info.type = IMAGE;
     _decoded_sample_info.image_info._image_names.resize(_batch_size);
     // TODO -the below 4 lines need change?
     _decoded_sample_info.image_info._roi_height.resize(_batch_size);
@@ -191,7 +192,7 @@ VideoLoader::load_routine()
 
             if (load_status == LoaderModuleStatus::OK)
             {
-                _circ_buff.set_image_info(_decoded_sample_info);
+                _circ_buff.set_sample_info(_decoded_sample_info);
                 _circ_buff.push();
                 _image_counter += _output_tensor->info().batch_size();
             }

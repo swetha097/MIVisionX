@@ -56,18 +56,18 @@ struct audio_decoded_info // newly introduced
 
 union decoded_sample_info // new
 {
-    decoded_sample_info& operator=(const decoded_sample_info& other) {
-    if (this == &other) {
-        return *this; // Self-assignment, no need to do anything
-    }
-    type = other.type; // Assign the type member
-    if (type == IMAGE) {
-        image_info = other.image_info; // Assign the image_info member
-    } else if (type == AUDIO) {
-        audio_info = other.audio_info; // Assign the audio_info member
-    }
-    return *this;
-}
+//     decoded_sample_info& operator=(const decoded_sample_info& other) {
+//     if (this == &other) {
+//         return *this; // Self-assignment, no need to do anything
+//     }
+//     type = other.type; // Assign the type member
+//     if (type == IMAGE) {
+//         image_info = other.image_info; // Assign the image_info member
+//     } else if (type == AUDIO) {
+//         audio_info = other.audio_info; // Assign the audio_info member
+//     }
+//     return *this;
+// }
     DecodedSampleType type;
     image_decoded_info image_info;
     audio_decoded_info audio_info;
@@ -78,6 +78,7 @@ struct crop_image_info
     //Batch of Image Crop Coordinates in "xywh" format
     std::vector<std::vector<float>> _crop_image_coords;
 };
+
 class CircularBuffer
 {
 public:
@@ -90,7 +91,12 @@ public:
     void unblock_writer();// Unblocks the thread currently waiting on get_write_buffer
     void push();// The latest write goes through, effectively adds one element to the buffer
     void pop();// The oldest write will be erased and overwritten in upcoming writes
-    void set_sample_info(const decoded_sample_info& info) { _last_sample_info = info; }
+    void set_sample_info(const decoded_sample_info& info) { 
+        if (info.type == IMAGE)
+            _last_sample_info.image_info = info.image_info;
+        else if(info.type == AUDIO)
+            _last_sample_info.audio_info = info.audio_info;
+    }
     void set_crop_image_info(const crop_image_info& info) { _last_crop_image_info = info; }
     decoded_sample_info& get_sample_info();
     crop_image_info& get_cropped_image_info();
