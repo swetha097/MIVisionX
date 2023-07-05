@@ -74,7 +74,7 @@ ImageReadAndDecode::create(ReaderConfig reader_config, DecoderConfig decoder_con
     _compressed_buff.resize(batch_size);
     _decoder.resize(batch_size);
     _actual_read_size.resize(batch_size);
-    _image_names.resize(batch_size);
+    _sample_names.resize(batch_size);
     _compressed_image_size.resize(batch_size);
     _decompressed_buff_ptrs.resize(_batch_size);
     _actual_decoded_width.resize(_batch_size);
@@ -175,10 +175,10 @@ ImageReadAndDecode::load(unsigned char* buff,
             if(_actual_read_size[file_counter] < fsize)
                 LOG("Reader read less than requested bytes of size: " + _actual_read_size[file_counter]);
 
-            _image_names[file_counter] = _reader->id();
+            _sample_names[file_counter] = _reader->id();
             _reader->close();
            // _compressed_image_size[file_counter] = fsize;
-            names[file_counter] = _image_names[file_counter];
+            names[file_counter] = _sample_names[file_counter];
             roi_width[file_counter] = max_decoded_width;
             roi_height[file_counter] = max_decoded_height;
             actual_width[file_counter] = max_decoded_width;
@@ -196,14 +196,14 @@ ImageReadAndDecode::load(unsigned char* buff,
             }
             _compressed_buff[file_counter].reserve(fsize);
             _actual_read_size[file_counter] = _reader->read_data(_compressed_buff[file_counter].data(), fsize);
-            _image_names[file_counter] = _reader->id();
+            _sample_names[file_counter] = _reader->id();
             _reader->close();
             _compressed_image_size[file_counter] = fsize;
             file_counter++;
         }
         if (_randombboxcrop_meta_data_reader) {
             //Fetch the crop co-ordinates for a batch of images
-            _bbox_coords = _randombboxcrop_meta_data_reader->get_batch_crop_coords(_image_names);
+            _bbox_coords = _randombboxcrop_meta_data_reader->get_batch_crop_coords(_sample_names);
             set_batch_random_bbox_crop_coords(_bbox_coords);
         } else if (_random_crop_dec_param) {
             _random_crop_dec_param->generate_random_seeds();
@@ -233,7 +233,7 @@ ImageReadAndDecode::load(unsigned char* buff,
                         if (_decoder[i]->decode_info(_compressed_buff[j].data(), _actual_read_size[j], &original_width, &original_height,
                             &jpeg_sub_samp) == Decoder::Status::OK) 
                         {
-                                _image_names[i] =  _image_names[j];
+                                _sample_names[i] =  _sample_names[j];
                                 _compressed_buff[i] =  _compressed_buff[j];
                                 _actual_read_size[i] =  _actual_read_size[j];
                                 _compressed_image_size[i] =  _compressed_image_size[j];
@@ -271,7 +271,7 @@ ImageReadAndDecode::load(unsigned char* buff,
             _actual_decoded_height[i] = scaledh;
         }
         for (size_t i = 0; i < _batch_size; i++) {
-            names[i] = _image_names[i];
+            names[i] = _sample_names[i];
             roi_width[i] = _actual_decoded_width[i];
             roi_height[i] = _actual_decoded_height[i];
             actual_width[i] = _original_width[i];

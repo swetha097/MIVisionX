@@ -138,7 +138,7 @@ CIFAR10DataLoader::initialize(ReaderConfig reader_cfg, DecoderConfig decoder_cfg
         throw;
     }
     _actual_read_size.resize(batch_size);
-    _raw_img_info._image_names.resize(_batch_size);
+    _raw_img_info._sample_names.resize(_batch_size);
     _raw_img_info._roi_width.resize(_batch_size);           // used to store the individual image in a big raw file
     _raw_img_info._roi_height.resize(batch_size);
     _raw_img_info._original_height.resize(_batch_size);
@@ -200,7 +200,7 @@ CIFAR10DataLoader::load_routine()
                     continue;
                 }
                 _actual_read_size[file_counter] = _reader->read_data(read_ptr, readSize);
-                _raw_img_info._image_names[file_counter] = _reader->id();
+                _raw_img_info._sample_names[file_counter] = _reader->id();
                 _raw_img_info._roi_width[file_counter] = _output_image->info().width();
                 _raw_img_info._roi_height[file_counter] = _output_image->info().height_single();
                 _reader->close();
@@ -277,7 +277,7 @@ CIFAR10DataLoader::update_output_image()
         return LoaderModuleStatus::OK;
 
     _output_decoded_img_info = _circ_buff.get_image_info();
-    _output_names = _output_decoded_img_info._image_names;
+    _output_names = _output_decoded_img_info._sample_names;
     _output_image->update_image_roi(_output_decoded_img_info._roi_width, _output_decoded_img_info._roi_height);
 
     _circ_buff.pop();

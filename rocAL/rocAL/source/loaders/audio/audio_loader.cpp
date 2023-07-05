@@ -133,7 +133,7 @@ void AudioLoader::initialize(ReaderConfig reader_cfg, DecoderConfig decoder_cfg,
     }
     _max_decoded_samples = _output_tensor->info().max_shape().at(0);
     _max_decoded_channels = _output_tensor->info().max_shape().at(1);
-    _decoded_audio_info._image_names.resize(_batch_size);
+    _decoded_audio_info._sample_names.resize(_batch_size);
     _decoded_audio_info._roi_audio_samples.resize(_batch_size);
     _decoded_audio_info._roi_audio_channels.resize(_batch_size);
     _decoded_audio_info._original_audio_samples.resize(_batch_size);
@@ -168,7 +168,7 @@ AudioLoader::load_routine() {
         auto load_status = LoaderModuleStatus::NO_MORE_DATA_TO_READ;
         {
             load_status = _audio_loader->load(data,
-                                            _decoded_audio_info._image_names,
+                                            _decoded_audio_info._sample_names,
                                             _max_decoded_samples,
                                             _max_decoded_channels,
                                             _decoded_audio_info._roi_audio_samples,
@@ -242,7 +242,7 @@ AudioLoader::update_output_audio() {
     if (_stopped)
         return LoaderModuleStatus::OK;
     _output_decoded_audio_info = _circ_buff.get_image_info();
-    _output_names = _output_decoded_audio_info._image_names;
+    _output_names = _output_decoded_audio_info._sample_names;
     _output_tensor->update_tensor_roi(_output_decoded_audio_info._roi_audio_samples, _output_decoded_audio_info._roi_audio_channels);
     _output_tensor->update_audio_tensor_sample_rate(_output_decoded_audio_info._original_audio_sample_rates);
     _circ_buff.pop();

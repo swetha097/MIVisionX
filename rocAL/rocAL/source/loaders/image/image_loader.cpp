@@ -159,7 +159,7 @@ void ImageLoader::initialize(ReaderConfig reader_cfg, DecoderConfig decoder_cfg,
         de_init();
         throw;
     }
-    _decoded_img_info._image_names.resize(_batch_size);
+    _decoded_img_info._sample_names.resize(_batch_size);
     _decoded_img_info._roi_height.resize(_batch_size);
     _decoded_img_info._roi_width.resize(_batch_size);
     _decoded_img_info._original_height.resize(_batch_size);
@@ -197,7 +197,7 @@ ImageLoader::load_routine()
         auto load_status = LoaderModuleStatus::NO_MORE_DATA_TO_READ;
         {
             load_status = _image_loader->load(data,
-                                              _decoded_img_info._image_names,
+                                              _decoded_img_info._sample_names,
                                               _output_image->info().width(),
                                               _output_image->info().height_single(),
                                               _decoded_img_info._roi_width,
@@ -286,7 +286,7 @@ ImageLoader::update_output_image()
     if (_randombboxcrop_meta_data_reader) {
       _output_cropped_img_info = _circ_buff.get_cropped_image_info();
     }
-    _output_names = _output_decoded_img_info._image_names;
+    _output_names = _output_decoded_img_info._sample_names;
     _output_image->update_image_roi(_output_decoded_img_info._roi_width, _output_decoded_img_info._roi_height);
     _output_image->update_image_original_dims(_output_decoded_img_info._original_width, _output_decoded_img_info._original_height);
     _circ_buff.pop();
