@@ -28,25 +28,10 @@ THE SOFTWARE.
 #include "parameter_factory.h"
 #include "sndfile.h"
 
-enum class AudioDecoderType
-{
-    SOFTWARE_DECODE = 0
-};
 
-class AudioDecoderConfig
-{
+class AudioDecoder {
 public:
-    AudioDecoderConfig() {}
-    explicit AudioDecoderConfig(AudioDecoderType type) : _type(type) {}
-    virtual AudioDecoderType type() { return _type; };
-    AudioDecoderType _type = AudioDecoderType::SOFTWARE_DECODE;
-};
-
-class AudioDecoder
-{
-public:
-    enum class Status
-    {
+    enum class Status {
         OK = 0,
         HEADER_DECODE_FAILED,
         CONTENT_DECODE_FAILED,
@@ -54,7 +39,7 @@ public:
         FAILED,
         NO_MEMORY
     };
-    virtual AudioDecoder::Status initialize(const char *src_filename) = 0;
+    virtual AudioDecoder::Status initialize(const char *src_filename) = 0; // This function is responsible for initializing the audio decoder. It takes the source filename as input and returns the status of the initialization process.
     virtual AudioDecoder::Status decode(float* buffer) = 0; //to pass buffer & number of frames/samples to decode
     virtual AudioDecoder::Status decode_info(int* samples, int* channels, float* sample_rates) = 0; //to decode info about the audio samples
     virtual void release() = 0;

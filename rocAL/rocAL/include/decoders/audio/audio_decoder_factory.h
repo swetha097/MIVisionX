@@ -24,4 +24,5 @@ THE SOFTWARE.
 #include <memory>
 #include "decoder.h"
 #include "audio_decoder.h"
+
 std::shared_ptr<AudioDecoder> create_audio_decoder(DecoderConfig config);

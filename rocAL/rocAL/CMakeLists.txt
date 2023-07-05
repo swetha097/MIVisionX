@@ -124,10 +124,11 @@ if(NOT Threads_FOUND)
     set(BUILD_ROCAL false)
     message("-- ${Yellow}NOTE: rocAL library requires Threads, Not Found ${ColourReset}")
 endif()
-if(${libsnd_LIBS} STREQUAL libsnd_LIBS-NOTFOUND)
-    message("-- ${Yellow}NOTE: rocAL library requires libsnd(sndfile), Not found. Try to specify it's location with `-DLIBSND_ROOT_DIR`.${ColourReset}")
+if (${libsnd_LIBS} STREQUAL "libsnd_LIBS-NOTFOUND")
+    message("-- ${Yellow}NOTE: rocAL library requires libsnd (sndfile), but it was not found. Try specifying its location with `-DLIBSND_ROOT_DIR`.${ColourReset}")
+else()
+    message(STATUS "Found libsnd: ${libsnd_LIBS}")
 endif()
-message(STATUS "Found libsnd: ${libsnd_LIBS}")
 
 if(${BUILD_ROCAL})
     # AMD OpenVX & VX_RPP
@@ -175,7 +176,6 @@ if(${BUILD_ROCAL})
                 ./include/augmentations/effects_augmentations/
                 ./include/augmentations/geometry_augmentations/
                 ./include/augmentations/audio_augmentations/
-                ./include/augmentations/arithmetic_augmentations/
                 ./include/augmentations/
                 ./include/decoders/audio/
                 ./include/decoders/image/

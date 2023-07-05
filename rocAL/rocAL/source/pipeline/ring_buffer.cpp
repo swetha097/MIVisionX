@@ -86,7 +86,6 @@ std::vector<void*> RingBuffer::get_write_buffers()
     block_if_full();
     if((_mem_type == RocalMemType::OCL) || (_mem_type == RocalMemType::HIP))
         return _dev_sub_buffer[_write_ptr];
-
     return _host_sub_buffers[_write_ptr];
 }
 
@@ -95,7 +94,6 @@ std::vector<unsigned*> RingBuffer::get_write_roi_buffers()
     block_if_full();
     if((_mem_type == RocalMemType::OCL) || (_mem_type == RocalMemType::HIP))
         return _dev_roi_buffers[_write_ptr];
-
     return _host_roi_buffers[_write_ptr];
 }
 

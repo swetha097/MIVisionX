@@ -23,42 +23,35 @@ THE SOFTWARE.
 #include "audio_loader_sharded.h"
 
 AudioLoaderSharded::AudioLoaderSharded(void* dev_resources):
-        _dev_resources(dev_resources)
-{
+        _dev_resources(dev_resources) {
     _loader_idx = 0;
 }
 
-void AudioLoaderSharded::set_prefetch_queue_depth(size_t prefetch_queue_depth)
-{
+void AudioLoaderSharded::set_prefetch_queue_depth(size_t prefetch_queue_depth) {
     if(prefetch_queue_depth <= 0)
-        THROW("Prefetch quque depth value cannot be zero or negative");
+        THROW("Prefetch queue depth value cannot be zero or negative");
     _prefetch_queue_depth = prefetch_queue_depth;
 }
 
-std::vector<std::string> AudioLoaderSharded::get_id()
-{
+std::vector<std::string> AudioLoaderSharded::get_id() {
     if(!_initialized)
         THROW("get_id() should be called after initialize() function");
     return _loaders[_loader_idx]->get_id();
 }
 
-decoded_image_info AudioLoaderSharded::get_decode_image_info()
-{
+decoded_image_info AudioLoaderSharded::get_decode_image_info() {
     return _loaders[_loader_idx]->get_decode_image_info();
 }
 
-crop_image_info AudioLoaderSharded::get_crop_image_info()
-{
+crop_image_info AudioLoaderSharded::get_crop_image_info() {
     return _loaders[_loader_idx]->get_crop_image_info();
 }
 
-AudioLoaderSharded::~AudioLoaderSharded()
-{
+AudioLoaderSharded::~AudioLoaderSharded() {
     _loaders.clear();
 }
 
-size_t AudioLoaderSharded::last_batch_padded_size()
-{
+size_t AudioLoaderSharded::last_batch_padded_size() {
     size_t sum = 0;
     for(auto& loader: _loaders)
         sum += loader->last_batch_padded_size();
@@ -66,46 +59,38 @@ size_t AudioLoaderSharded::last_batch_padded_size()
 }
 
 void
-AudioLoaderSharded::fast_forward_through_empty_loaders()
-{
+AudioLoaderSharded::fast_forward_through_empty_loaders() {
     int loaders_count = _loaders.size();
     // reject empty loaders and get to a loader that still has audios to play
     while (_loaders[_loader_idx]->remaining_count() == 0 && loaders_count-- > 0)
         increment_loader_idx();
 }
 
-LoaderModuleStatus AudioLoaderSharded::load_next()
-{
+LoaderModuleStatus AudioLoaderSharded::load_next() {
     if(!_initialized)
         return LoaderModuleStatus::NOT_INITIALIZED;
-
     increment_loader_idx();
-
     // Since loaders may have different number of audios loaded, some run out earlier than other.
     // Fast forward through loaders that are empty to get to a loader that is not empty.
     fast_forward_through_empty_loaders();
-
-    auto ret= _loaders[_loader_idx]->load_next();
-
+    auto ret = _loaders[_loader_idx]->load_next();
     return ret;
 }
+
 void
 AudioLoaderSharded::initialize(ReaderConfig reader_cfg, DecoderConfig decoder_cfg, RocalMemType mem_type,
-                               unsigned batch_size, bool keep_orig_size)
-{
+                               unsigned batch_size, bool keep_orig_size) {
     if(_initialized)
         return;
     _shard_count = reader_cfg.get_shard_count();
     // Create loader modules
-    for(size_t i = 0; i < _shard_count; i++)
-    {
+    for(size_t i = 0; i < _shard_count; i++) {
         std::shared_ptr loader = std::make_shared<AudioLoader>(_dev_resources);
         loader->set_prefetch_queue_depth(_prefetch_queue_depth);
         _loaders.push_back(loader);
     }
     // Initialize loader modules
-    for(size_t idx = 0; idx < _shard_count; idx++)
-    {
+    for(size_t idx = 0; idx < _shard_count; idx++) {
         _loaders[idx]->set_output(_output_tensor);
         _loaders[idx]->set_gpu_device_id(idx);
         reader_cfg.set_shard_count(_shard_count);
@@ -114,10 +99,9 @@ AudioLoaderSharded::initialize(ReaderConfig reader_cfg, DecoderConfig decoder_cf
     }
     _initialized = true;
 }
-void AudioLoaderSharded::start_loading()
-{
-    for(unsigned i = 0; i < _loaders.size(); i++)
-    {
+
+void AudioLoaderSharded::start_loading() {
+    for(unsigned i = 0; i < _loaders.size(); i++) {
         _loaders[i]->start_loading();
     //  Changing thread scheduling policy and it's priority does not help on latest Ubuntu builds
     //  and needs tweaking the Linux security settings , can be turned on for experimentation
@@ -136,50 +120,42 @@ void AudioLoaderSharded::start_loading()
         _loaders[i]->set_cpu_affinity(cpuset);
 #endif
     }
-
 }
 
-void AudioLoaderSharded::shut_down()
-{
+void AudioLoaderSharded::shut_down() {
     for(unsigned i = 0; i < _loaders.size(); i++)
         _loaders[i]->shut_down();
 }
 
-void AudioLoaderSharded::set_output (rocalTensor* output_tensor)
-{
+void AudioLoaderSharded::set_output (rocalTensor* output_tensor) {
     _output_tensor = output_tensor;
 }
 
-size_t AudioLoaderSharded::remaining_count()
-{
+size_t AudioLoaderSharded::remaining_count() {
     int sum = 0;
     for(auto& loader: _loaders)
         sum += loader->remaining_count();
     return sum;
 }
-void AudioLoaderSharded::reset()
-{
+
+void AudioLoaderSharded::reset() {
     for(auto& loader: _loaders) {
         loader->reset();
         loader->last_batch_padded_size();
     }
 }
-void AudioLoaderSharded::increment_loader_idx()
-{
+void AudioLoaderSharded::increment_loader_idx() {
     _loader_idx = (_loader_idx + 1)%_shard_count;
 }
 
-Timing AudioLoaderSharded::timing()
-{
+Timing AudioLoaderSharded::timing() {
     Timing t;
     long long unsigned  max_decode_time = 0;
     long long unsigned  max_read_time = 0;
     long long unsigned  swap_handle_time = 0;
-
     // audio read and decode runs in parallel using multiple loaders, and the observable latency that the AudioLoaderSharded user
     // is experiences on the load_next() call due to read and decode time is the maximum of all
-    for(auto& loader: _loaders)
-    {
+    for(auto& loader: _loaders) {
         auto info = loader->timing();
         max_read_time = (info.audio_read_time > max_read_time) ?  info.audio_read_time : max_read_time;
         max_decode_time = (info.audio_decode_time > max_decode_time) ? info.audio_decode_time : max_decode_time;
@@ -190,4 +166,3 @@ Timing AudioLoaderSharded::timing()
     t.audio_process_time = swap_handle_time;
     return t;
 }
-

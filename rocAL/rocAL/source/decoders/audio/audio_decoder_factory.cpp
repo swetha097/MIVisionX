@@ -25,10 +25,8 @@ THE SOFTWARE.
 #include <sndfile_decoder.h>
 #include "commons.h"
 
-std::shared_ptr<AudioDecoder> create_audio_decoder(DecoderConfig config)
-{
-    switch (config.type())
-    {
+std::shared_ptr<AudioDecoder> create_audio_decoder(DecoderConfig config) {
+    switch (config.type()) {
         case DecoderType::SNDFILE:
             return std::make_shared<SndFileDecoder>();
         default:

@@ -28,8 +28,7 @@ THE SOFTWARE.
 
 AudioLoader::AudioLoader(void* dev_resources):
 _circ_buff(dev_resources),
-_swap_handle_time("Swap_handle_time", DBG_TIMING)
-{
+_swap_handle_time("Swap_handle_time", DBG_TIMING) {
     _output_tensor = nullptr;
     _mem_type = RocalMemType::HOST;
     _internal_thread_running = false;
@@ -40,60 +39,49 @@ _swap_handle_time("Swap_handle_time", DBG_TIMING)
     _device_id = 0;
 }
 
-AudioLoader::~AudioLoader()
-{
+AudioLoader::~AudioLoader() {
     de_init();
 }
 
-void AudioLoader::shut_down()
-{
+void AudioLoader::shut_down() {
     if(_internal_thread_running)
         stop_internal_thread();
     _circ_buff.release();
 }
 
-void AudioLoader::set_prefetch_queue_depth(size_t prefetch_queue_depth)
-{
+void AudioLoader::set_prefetch_queue_depth(size_t prefetch_queue_depth) {
     if(prefetch_queue_depth <= 0)
         THROW("Prefetch quque depth value cannot be zero or negative");
     _prefetch_queue_depth = prefetch_queue_depth;
 }
 
-void AudioLoader::set_gpu_device_id(int device_id)
-{
+void AudioLoader::set_gpu_device_id(int device_id) {
     if(device_id < 0)
         THROW("invalid device_id passed to loader");
     _device_id = device_id;
 }
 
 size_t
-AudioLoader::remaining_count()
-{
+AudioLoader::remaining_count() {
     return _remaining_audio_count;
 }
 
-void AudioLoader::reset()
-{
+void AudioLoader::reset() {
     // stop the writer thread and empty the internal circular buffer
     _internal_thread_running = false;
     _circ_buff.unblock_writer();
-
     if (_load_thread.joinable())
         _load_thread.join();
-
     // Emptying the internal circular buffer
     _circ_buff.reset();
-
     // resetting the reader thread to the start of the media
     _audio_counter = 0;
     _audio_loader->reset();
-
     // Start loading (writer thread) again
     start_loading();
 }
 
-void AudioLoader::de_init()
-{
+void AudioLoader::de_init() {
     // Set running to 0 and wait for the internal thread to join
     stop_internal_thread();
     _output_mem_size = 0;
@@ -102,19 +90,16 @@ void AudioLoader::de_init()
 }
 
 LoaderModuleStatus
-AudioLoader::load_next()
-{
+AudioLoader::load_next() {
     return update_output_audio();
 }
 
-void AudioLoader::set_output (rocalTensor* output_tensor)
-{
+void AudioLoader::set_output (rocalTensor* output_tensor) {
     _output_tensor = output_tensor;
     _output_mem_size = _output_tensor->info().data_size();
 }
 
-void AudioLoader::stop_internal_thread()
-{
+void AudioLoader::stop_internal_thread() {
     _internal_thread_running = false;
     _stopped = true;
     _circ_buff.unblock_reader();
@@ -124,30 +109,25 @@ void AudioLoader::stop_internal_thread()
         _load_thread.join();
 }
 
-void AudioLoader::initialize(ReaderConfig reader_cfg, DecoderConfig decoder_cfg, RocalMemType mem_type, unsigned batch_size, bool decoder_keep_original)
-{
+void AudioLoader::initialize(ReaderConfig reader_cfg, DecoderConfig decoder_cfg, RocalMemType mem_type, unsigned batch_size, bool decoder_keep_original) {
     if (_is_initialized)
         WRN("initialize() function is already called and loader module is initialized")
-
     if (_output_mem_size == 0)
         THROW("output audio size is 0, set_output() should be called before initialize for loader modules")
     _mem_type = mem_type;
     _batch_size = batch_size;
     _loop = reader_cfg.loop();
-    _decoder_keep_original = decoder_keep_original;
     _audio_loader = std::make_shared<AudioReadAndDecode>();
     size_t shard_count = reader_cfg.get_shard_count();
     int device_id = reader_cfg.get_shard_id();
-    try
-    {
+    try {
         // set the device_id for decoder same as shard_id for number of shards > 1
         if (shard_count > 1)
           _audio_loader->create(reader_cfg, decoder_cfg, _batch_size, device_id);
         else
           _audio_loader->create(reader_cfg, decoder_cfg, _batch_size);
     }
-    catch (const std::exception &e)
-    {
+    catch (const std::exception &e) {
         de_init();
         throw;
     }
@@ -164,20 +144,17 @@ void AudioLoader::initialize(ReaderConfig reader_cfg, DecoderConfig decoder_cfg,
     LOG("Loader module initialized");
 }
 
-void AudioLoader::start_loading()
-{
+void AudioLoader::start_loading() {
     if (!_is_initialized)
         THROW("start_loading() should be called after initialize() function is called")
 
     _remaining_audio_count = _audio_loader->count();
-    std::cerr<<"\n Remaining audio count ::"<<_remaining_audio_count;
     _internal_thread_running = true;
     _load_thread = std::thread(&AudioLoader::load_routine, this);
 }
 
 LoaderModuleStatus
-AudioLoader::load_routine()
-{
+AudioLoader::load_routine() {
     LOG("Started the internal loader thread");
     LoaderModuleStatus last_load_status = LoaderModuleStatus::OK;
     // Initially record number of all the audios that are going to be loaded, this is used to know how many still there
@@ -200,24 +177,19 @@ AudioLoader::load_routine()
                                             _decoded_audio_info._original_audio_channels,
                                             _decoded_audio_info._original_audio_sample_rates);
 
-            if(load_status == LoaderModuleStatus::OK)
-            {
+            if(load_status == LoaderModuleStatus::OK) {
                 _circ_buff.set_image_info(_decoded_audio_info);
                 _circ_buff.push();
                 _audio_counter += _output_tensor->info().batch_size();
             }
         }
-        if (load_status != LoaderModuleStatus::OK)
-        {
-            if (last_load_status != load_status)
-            {
+        if (load_status != LoaderModuleStatus::OK) {
+            if (last_load_status != load_status) {
                 if (load_status == LoaderModuleStatus::NO_MORE_DATA_TO_READ ||
-                    load_status == LoaderModuleStatus::NO_FILES_TO_READ)
-                {
+                    load_status == LoaderModuleStatus::NO_FILES_TO_READ) {
                     LOG("Cycled through all audios, count " + TOSTR(_audio_counter));
                 }
-                else
-                {
+                else {
                     ERR("ERROR: Detected error in reading the audios");
                 }
                 last_load_status = load_status;
@@ -236,39 +208,31 @@ AudioLoader::load_routine()
     return LoaderModuleStatus::OK;
 }
 
-bool AudioLoader::is_out_of_data()
-{
-    // return (remaining_count() < _batch_size);
+bool AudioLoader::is_out_of_data() {
     return (remaining_count() < 0);
 }
 
-size_t AudioLoader::last_batch_padded_size()
-{
+size_t AudioLoader::last_batch_padded_size() {
     return _audio_loader->last_batch_padded_size();
 }
 
 LoaderModuleStatus
-AudioLoader::update_output_audio()
-{
+AudioLoader::update_output_audio() {
     LoaderModuleStatus status = LoaderModuleStatus::OK;
 
     if (is_out_of_data())
         return LoaderModuleStatus::NO_MORE_DATA_TO_READ;
     if (_stopped)
         return LoaderModuleStatus::OK;
-
-    // std::cerr << "\nBefore swap op\n";
     // _circ_buff.get_read_buffer_x() is blocking and puts the caller on sleep until new audios are written to the _circ_buff
-    if((_mem_type== RocalMemType::OCL) || (_mem_type== RocalMemType::HIP))
-    {
+    if((_mem_type== RocalMemType::OCL) || (_mem_type== RocalMemType::HIP)) {
         auto data_buffer = _circ_buff.get_read_buffer_dev();
         _swap_handle_time.start();
         if(_output_tensor->swap_handle(data_buffer) != 0)
             return LoaderModuleStatus ::DEVICE_BUFFER_SWAP_FAILED;
         _swap_handle_time.end();
     }
-    else
-    {
+    else {
         auto data_buffer = _circ_buff.get_read_buffer_host();
         _swap_handle_time.start();
         if(_output_tensor->swap_handle(data_buffer) != 0)
@@ -277,7 +241,6 @@ AudioLoader::update_output_audio()
     }
     if (_stopped)
         return LoaderModuleStatus::OK;
-
     _output_decoded_audio_info = _circ_buff.get_image_info();
     _output_names = _output_decoded_audio_info._image_names;
     _output_tensor->update_tensor_roi(_output_decoded_audio_info._roi_audio_samples, _output_decoded_audio_info._roi_audio_channels);
@@ -285,19 +248,16 @@ AudioLoader::update_output_audio()
     _circ_buff.pop();
     if (!_loop)
         _remaining_audio_count -= _batch_size;
-
     return status;
 }
 
-Timing AudioLoader::timing()
-{
+Timing AudioLoader::timing() {
     auto t = _audio_loader->timing();
     t.audio_process_time = _swap_handle_time.get_timing();
     return t;
 }
 
-LoaderModuleStatus AudioLoader::set_cpu_affinity(cpu_set_t cpu_mask)
-{
+LoaderModuleStatus AudioLoader::set_cpu_affinity(cpu_set_t cpu_mask) {
     if (!_internal_thread_running)
         THROW("set_cpu_affinity() should be called after start_loading function is called")
 #if defined(WIN32) || defined(_WIN32) || defined(__WIN32) && !defined(__CYGWIN__)
@@ -310,8 +270,7 @@ LoaderModuleStatus AudioLoader::set_cpu_affinity(cpu_set_t cpu_mask)
     return LoaderModuleStatus::OK;
 }
 
-LoaderModuleStatus AudioLoader::set_cpu_sched_policy(struct sched_param sched_policy)
-{
+LoaderModuleStatus AudioLoader::set_cpu_sched_policy(struct sched_param sched_policy) {
     if (!_internal_thread_running)
         THROW("set_cpu_sched_policy() should be called after start_loading function is called")
 #if defined(WIN32) || defined(_WIN32) || defined(__WIN32) && !defined(__CYGWIN__)
@@ -323,14 +282,10 @@ LoaderModuleStatus AudioLoader::set_cpu_sched_policy(struct sched_param sched_po
     return LoaderModuleStatus::OK;
 }
 
-std::vector<std::string> AudioLoader::get_id()
-{
+std::vector<std::string> AudioLoader::get_id() {
     return _output_names;
 }
 
-decoded_image_info AudioLoader::get_decode_image_info()
-{
+decoded_image_info AudioLoader::get_decode_image_info() {
     return _output_decoded_audio_info;
 }
-
-

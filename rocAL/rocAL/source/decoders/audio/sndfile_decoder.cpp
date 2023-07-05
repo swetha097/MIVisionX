@@ -27,37 +27,32 @@ THE SOFTWARE.
 
 SndFileDecoder::SndFileDecoder(){};
 
-AudioDecoder::Status SndFileDecoder::decode(float* buffer)
-{
+AudioDecoder::Status SndFileDecoder::decode(float* buffer) {
     int readcount = 0;
     readcount = sf_readf_float(_sf_ptr, buffer, _sfinfo.frames);
-
-    if(readcount != _sfinfo.frames)
-    {
+    if(readcount != _sfinfo.frames) {
         printf("Not able to decode all frames. Only decoded %d frames\n", readcount);
         sf_close(_sf_ptr);
 		AudioDecoder::Status status = Status::CONTENT_DECODE_FAILED;
-    return status;
+        return status;
     }
     AudioDecoder::Status status = Status::OK;
     return status;
 }
 
-AudioDecoder::Status SndFileDecoder::decode_info(int* samples, int* channels, float* sample_rate)
-{
+AudioDecoder::Status SndFileDecoder::decode_info(int* samples, int* channels, float* sample_rate) {
     // Set the samples and channels using the struct variables _sfinfo.samples and _sfinfo.channels
     *samples = _sfinfo.frames;
     *channels = _sfinfo.channels;
     *sample_rate = _sfinfo.samplerate;
-
-    if (_sfinfo.channels < 1)
-	{	printf("Not able to process less than %d channels\n", *channels);
+    if (_sfinfo.channels < 1) {
+    	printf("Not able to process less than %d channels\n", *channels);
         sf_close(_sf_ptr);
 		AudioDecoder::Status status = Status::HEADER_DECODE_FAILED;
 		return status;
 	};
-    if (_sfinfo.frames < 1)
-	{	printf("Not able to process less than %d frames\n", *samples);
+    if (_sfinfo.frames < 1) {
+        printf("Not able to process less than %d frames\n", *samples);
         sf_close(_sf_ptr);
 		AudioDecoder::Status status = Status::HEADER_DECODE_FAILED;
 		return status;
@@ -67,30 +62,27 @@ AudioDecoder::Status SndFileDecoder::decode_info(int* samples, int* channels, fl
 }
 
 // Initialize will open a new decoder and initialize the context
-AudioDecoder::Status SndFileDecoder::initialize(const char *src_filename)
-{
+AudioDecoder::Status SndFileDecoder::initialize(const char *src_filename) {
     _src_filename = src_filename;
     memset(&_sfinfo, 0, sizeof(_sfinfo)) ;
-    if (!(_sf_ptr = sf_open(src_filename, SFM_READ, &_sfinfo)))
-	{	/* Open failed so print an error message. */
-		printf("Not able to open input file %s.\n", src_filename);
-		/* Print the error message from libsndfile. */
-		puts(sf_strerror(NULL));
+    if (!(_sf_ptr = sf_open(src_filename, SFM_READ, &_sfinfo))) {
+        /* Open failed so print an error message. */
+        printf("Not able to open input file %s.\n", src_filename);
+        /* Print the error message from libsndfile. */
+        puts(sf_strerror(NULL));
         sf_close(_sf_ptr);
         AudioDecoder::Status status = Status::HEADER_DECODE_FAILED;
-		return status;
-	};
+        return status;
+    };
     AudioDecoder::Status status = Status::OK;
     return status;
 }
 
-void SndFileDecoder::release()
-{
+void SndFileDecoder::release() {
     if(_sf_ptr != NULL) {
-      sf_close(_sf_ptr);
+        sf_close(_sf_ptr);
     }
 }
 
-SndFileDecoder::~SndFileDecoder()
-{
+SndFileDecoder::~SndFileDecoder() {
 }

@@ -27,21 +27,19 @@ THE SOFTWARE.
 #include "reader_factory.h"
 #include "timing_debug.h"
 #include "loader_module.h"
-enum class AudioSourceEvaluatorStatus
-{
+
+enum class AudioSourceEvaluatorStatus {
     OK = 0,
     UNSUPPORTED_DECODER_TYPE,
     UNSUPPORTED_STORAGE_TYPE,
 };
 
-class AudioSourceEvaluator
-{
+class AudioSourceEvaluator {
 public:
     AudioSourceEvaluatorStatus create(ReaderConfig reader_cfg, DecoderConfig decoder_cfg);
     void find_max_dimension();
     size_t max_samples();
     size_t max_channels();
-
 private:
     class FindMaxSize
     {
@@ -54,7 +52,6 @@ private:
     };
     FindMaxSize _samples_max;
     FindMaxSize _channels_max;
-    DecoderConfig _decoder_cfg_cv;
     std::shared_ptr<AudioDecoder> _decoder;
     std::shared_ptr<Reader> _reader;
     std::shared_ptr<MetaDataReader> _meta_data_reader;

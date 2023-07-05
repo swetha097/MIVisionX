@@ -25,16 +25,15 @@ THE SOFTWARE.
 
 
 AudioLoaderSingleShardNode::AudioLoaderSingleShardNode(rocalTensor *output, void* device_resources):
-        Node({}, {output})
-{
+        Node({}, {output}) {
     _loader_module = std::make_shared<AudioLoader>(device_resources);
 }
 
 void
 AudioLoaderSingleShardNode::init(unsigned shard_id, unsigned shard_count, const std::string &source_path, const std::string &source_list_path,
-                                 StorageType storage_type, DecoderType decoder_type, bool shuffle, bool loop,
-                                 size_t load_batch_count, RocalMemType mem_type, std::shared_ptr<MetaDataReader> meta_data_reader, RocalBatchPolicy last_batch_policy, bool last_batch_padded, bool stick_to_shard, int shard_size)
-{
+                                 StorageType storage_type, DecoderType decoder_type, bool shuffle, bool loop, size_t load_batch_count, 
+                                 RocalMemType mem_type, std::shared_ptr<MetaDataReader> meta_data_reader, RocalBatchPolicy last_batch_policy, 
+                                 bool last_batch_padded, bool stick_to_shard, int shard_size) {
     if(!_loader_module)
         THROW("ERROR: loader module is not set for AudioLoaderNode, cannot initialize")
     if(shard_count < 1)
@@ -51,21 +50,16 @@ AudioLoaderSingleShardNode::init(unsigned shard_id, unsigned shard_count, const 
     reader_cfg.set_last_batch_policy(last_batch_policy, last_batch_padded);
     reader_cfg.set_stick_to_shard(stick_to_shard);
     reader_cfg.set_shard_size(shard_size);
-    _loader_module->initialize(reader_cfg, DecoderConfig(decoder_type),
-                               mem_type,
-                               _batch_size);
+    _loader_module->initialize(reader_cfg, DecoderConfig(decoder_type), mem_type, _batch_size);
     _loader_module->start_loading();
 }
 
-std::shared_ptr<LoaderModule> AudioLoaderSingleShardNode::get_loader_module()
-{
+std::shared_ptr<LoaderModule> AudioLoaderSingleShardNode::get_loader_module() {
     if(!_loader_module)
         WRN("AudioLoaderSingleShardNode's loader module is null, not initialized")
     return _loader_module;
 }
 
-AudioLoaderSingleShardNode::~AudioLoaderSingleShardNode()
-{
+AudioLoaderSingleShardNode::~AudioLoaderSingleShardNode() {
     _loader_module = nullptr;
 }
-

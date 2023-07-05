@@ -241,7 +241,6 @@ public:
     unsigned copy_data(hipStream_t stream, void* host_memory, bool sync);
 #endif
     unsigned copy_data(void* user_buffer);
-    unsigned copy_data(void *user_buffer, uint last_batch_size);
     unsigned copy_data(void* user_buffer, uint max_x1, uint max_y1);
     //! Default destructor
     /*! Releases the OpenVX Tensor object */
@@ -251,7 +250,6 @@ public:
     explicit rocalTensor(const rocalTensorInfo& tensor_info);
     int create(vx_context context);
     void update_tensor_roi(const std::vector<uint32_t>& width, const std::vector<uint32_t>& height);
-    void update_tensor_orig_roi(const std::vector<uint32_t> &width, const std::vector<uint32_t> &height);
     void update_audio_tensor_sample_rate(const std::vector<float>& sample_rate);
     void reset_tensor_roi() { _info.reset_tensor_roi_buffers(); }
     void swap_tensor_roi(std::shared_ptr<unsigned> &roi_ptr) { _info.swap_roi_ptr(roi_ptr); }

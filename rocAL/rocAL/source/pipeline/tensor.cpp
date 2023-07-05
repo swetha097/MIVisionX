@@ -276,22 +276,6 @@ void rocalTensor::update_tensor_roi(const std::vector<uint32_t> &width,
     }
 }
 
-void rocalTensor::update_tensor_orig_roi(const std::vector<uint32_t> &width, const std::vector<uint32_t> &height)
-{
-    if(width.size() != height.size())
-        THROW("Batch size of image height and width info does not match")
-
-    if(width.size() != info().batch_size())
-        THROW("The batch size of actual image height and width different from image batch size "+ TOSTR(width.size())+ " != " +  TOSTR(info().batch_size()))
-    if(! _info._orig_roi_width || !_info._orig_roi_height)
-        THROW("ROI width or ROI height vector not created")
-    for(unsigned i = 0; i < info().batch_size(); i++)
-    {
-        _info._orig_roi_width->at(i) = width[i];
-        _info._orig_roi_height->at(i)= height[i];
-    }
-}
-
 void rocalTensor::update_audio_tensor_sample_rate(const std::vector<float> &sample_rate) {
     if (_info.is_image()) {
         THROW("No sample rate available for Image data")
@@ -428,23 +412,6 @@ unsigned rocalTensor::copy_data(void *user_buffer) {
             memcpy(user_buffer, _mem_handle, _info.data_size());
     #endif
 
-    return 0;
-}
-
-unsigned rocalTensor::copy_data(void *user_buffer, uint last_batch_size) {
-    if (_info._type != rocalTensorInfo::Type::HANDLE) return 0;
-#if ENABLE_HIP
-    if (_info._mem_type == RocalMemType::HIP) {
-        // copy from device to host
-        hipError_t status;
-        if ((status = hipMemcpyDtoH((void *)user_buffer, _mem_handle, _info.data_size()/_info._batch_size*last_batch_size)))
-            THROW("copy_data::hipMemcpyDtoH failed: " + TOSTR(status))
-    } else
-#endif
-    {
-        // copy from host to host
-        memcpy(user_buffer, _mem_handle, _info.data_size()/_info._batch_size*last_batch_size);
-    }
     return 0;
 }
 

@@ -2576,8 +2576,7 @@ rocalAudioFileSourceSingleShard(
         unsigned max_channels,
         unsigned storage_type,
         bool stick_to_shard,
-        int shard_size)
-{
+        int shard_size) {
     rocalTensor* output = nullptr;
     auto context = static_cast<Context*>(p_context);
     try
@@ -2592,14 +2591,7 @@ rocalAudioFileSourceSingleShard(
         INFO("Internal buffer size for audio frames = "+ TOSTR(max_frames))
 
         RocalTensorDataType tensor_data_type = RocalTensorDataType::FP32;
-        unsigned num_of_dims = 3;
-        std::vector<size_t> dims;
-        dims.resize(num_of_dims);
-        dims.at(0) = context->user_batch_size();
-        dims.at(1) = max_frames;
-        dims.at(2) = max_channels;
-        // [bs][sam][c] - 3D
-        // [bs][h][w][c] - [bs][bins][frames]
+        std::vector<size_t> dims = {context->user_batch_size(), max_frames, max_channels};
         auto info  = rocalTensorInfo(std::vector<size_t>(std::move(dims)),
                                 context->master_graph->mem_type(),
                                 tensor_data_type);
@@ -2674,8 +2666,7 @@ rocalAudioFileSource(
         float sample_rate,
         bool downmix,
         unsigned max_frames,
-        unsigned max_channels)
-{
+        unsigned max_channels) {
     rocalTensor* output = nullptr;
     auto context = static_cast<Context*>(p_context);
     try
@@ -2685,29 +2676,23 @@ rocalAudioFileSource(
         INFO("Internal buffer size for audio frames = "+ TOSTR(max_frames))
 
         RocalTensorDataType tensor_data_type = RocalTensorDataType::FP32;
-        unsigned num_of_dims = 3;
-        std::vector<size_t> dims;
-        dims.resize(num_of_dims);
-        dims.at(0) = context->user_batch_size();
-        dims.at(1) = max_frames;
-        dims.at(2) = max_channels;
-        // [bs][sam][c] - 3D
-        // [bs][h][w][c] - [bs][bins][frames]
+        std::vector<size_t> dims = {context->user_batch_size(), max_frames, max_channels};
         auto info  = rocalTensorInfo(std::vector<size_t>(std::move(dims)),
                                 context->master_graph->mem_type(),
                                 tensor_data_type);
         info.set_tensor_layout(RocalTensorlayout::NONE);
+        info.set_max_shape();
         output = context->master_graph->create_loader_output_tensor(info);
 
         context->master_graph->add_node<AudioLoaderNode>({}, {output})->init(internal_shard_count,
-                                                                            source_path,
-                                                                            StorageType::FILE_SYSTEM,
-                                                                            DecoderType::SNDFILE,
-                                                                            shuffle,
-                                                                            loop,
-                                                                            context->user_batch_size(),
-                                                                            context->master_graph->mem_type(),
-                                                                            context->master_graph->meta_data_reader()
+                                                                             source_path,
+                                                                             StorageType::FILE_SYSTEM,
+                                                                             DecoderType::SNDFILE,
+                                                                             shuffle,
+                                                                             loop,
+                                                                             context->user_batch_size(),
+                                                                             context->master_graph->mem_type(),
+                                                                             context->master_graph->meta_data_reader()
                                                                             );
         context->master_graph->set_loop(loop);
         /*  Commenting out this peice of code in this PR - Next PR will contain augmentations & this code will be uncommented

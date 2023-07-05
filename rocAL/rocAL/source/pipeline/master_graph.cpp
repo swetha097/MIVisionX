@@ -465,7 +465,6 @@ MasterGraph::get_output_tensors()
 {
     auto output_ptr = _ring_buffer.get_read_buffers();
     std::vector<unsigned* > roi_ptr = _ring_buffer.get_read_roi_buffers();
-    // TODO - check here if size of internal tensor and ring buffer is same?
     auto deleter=[&](unsigned* ptr){ };
     for(unsigned i = 0; i < _internal_tensor_list.size(); i++)
     {

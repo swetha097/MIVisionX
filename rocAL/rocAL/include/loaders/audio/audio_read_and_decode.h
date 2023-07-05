@@ -22,7 +22,6 @@ THE SOFTWARE.
 
 #pragma once
 #include <dirent.h>
-#include <vector>
 #include <memory>
 #include "commons.h"
 #include "sndfile_decoder.h"
@@ -42,7 +41,7 @@ public:
 
     //! Loads a decompressed batch of audios into the buffer indicated by buff
     /// \param buff User's buffer provided to be filled with decoded audio samples
-    /// \param names User's buffer provided to be filled with name of the audios decoded
+    /// \param names User's buffer provided to be filled with name of the audio files
     /// \param max_decoded_samples User's buffer maximum samples per decoded audio. User expects the decoder to downscale the audio if audio's original samples is bigger than max_samples
     /// \param max_decoded_channels user's buffer maximum channels per decoded audio. User expects the decoder to downscale the audio if audio's original channels is bigger than max_channels
     /// \param roi_samples is set by the load() function tp the samples of the region that decoded audio is located. It's less than max_samples and is either equal to the original audio samples if original audio samples is smaller than max_samples or downscaled if necessary to fit the max_samples criterion.
@@ -61,15 +60,11 @@ public:
     size_t last_batch_padded_size();
     //! returns timing info or other status information
     Timing timing();
-
 private:
     std::vector<std::shared_ptr<AudioDecoder>> _decoder;
     std::shared_ptr<Reader> _reader;
-    std::vector<std::vector<float>> _compressed_buff;
-    std::vector<size_t> _actual_read_size;
     std::vector<std::string> _audio_names;
     std::vector<std::string> _audio_file_path;
-    std::vector<size_t> _compressed_audio_size;
     std::vector<float*> _decompressed_buff_ptrs;
     std::vector<size_t> _actual_decoded_samples;
     std::vector<size_t> _actual_decoded_channels;
@@ -82,5 +77,3 @@ private:
     DecoderConfig _decoder_config;
     std::string _input_path;
 };
-
-
