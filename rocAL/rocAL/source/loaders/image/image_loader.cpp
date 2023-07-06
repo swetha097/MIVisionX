@@ -335,7 +335,7 @@ std::vector<std::string> ImageLoader::get_id()
     return _output_names;
 }
 
-decoded_sample_info ImageLoader::get_decode_image_info()
+decoded_image_info ImageLoader::get_decode_image_info()
 {
     return _output_decoded_img_info;
 }
