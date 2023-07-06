@@ -345,21 +345,21 @@ namespace rocal{
                 )code"
             )
             .def("layout", [](rocalTensor &output_tensor) {
-                return rocALToPybindLayout[(int)output_tensor.layout()];
+                return rocalToPybindLayout[(int)output_tensor.layout()];
             },
                 R"code(
                 Returns layout of tensor.
                 )code"
             )
             .def("dtype", [](rocalTensor &output_tensor) {
-                return rocALToPybindOutputDtype[(int)output_tensor.data_type()];
+                return rocalToPybindOutputDtype[(int)output_tensor.data_type()];
             },
                 R"code(
                 Returns dtype of tensor.
                 )code"
             )
             .def("dimensions", [](rocalTensor &output_tensor) {
-                return output_tensor.info().dims();
+                return output_tensor.dims();
             },
                 R"code(
                 Returns dims of tensor.
@@ -430,25 +430,25 @@ namespace rocal{
                 {
                     auto output_tensor = output_tensor_list.at(idx);
                     py::array numpy_array;
-                    switch (output_tensor.data_type())
+                    switch (output_tensor->data_type())
                     {
                     case RocalTensorOutputType::ROCAL_UINT8:
                         numpy_array = py::array(py::buffer_info(
-                            (unsigned char *)(output_tensor.buffer()),
+                            (unsigned char *)(output_tensor->buffer()),
                             sizeof(unsigned char),
                             py::format_descriptor<unsigned char>::format(),
-                            output_tensor.num_of_dims(),
-                            output_tensor.dims(),
-                            output_tensor.strides()));
+                            output_tensor->num_of_dims(),
+                            output_tensor->dims(),
+                            output_tensor->strides()));
                         break;
                     case RocalTensorOutputType::ROCAL_FP32:
                         numpy_array = py::array(py::buffer_info(
-                            (float *)(output_tensor.buffer()),
+                            (float *)(output_tensor->buffer()),
                             sizeof(float),
                             py::format_descriptor<float>::format(),
-                            output_tensor.num_of_dims(),
-                            output_tensor.dims(),
-                            output_tensor.strides()));
+                            output_tensor->num_of_dims(),
+                            output_tensor->dims(),
+                            output_tensor->strides()));
                         break;
                     default:
                         THROW("Unkown Rocal data type")
