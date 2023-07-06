@@ -32,7 +32,7 @@ THE SOFTWARE.
 #include "commons.h"
 struct decoded_sample_info
 {
-    std::vector<std::string> _sample_names;
+    std::vector<std::string> _image_names;
     std::vector<uint32_t> _roi_width;
     std::vector<uint32_t> _roi_height;
     std::vector<uint32_t> _original_width;
