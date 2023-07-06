@@ -2595,7 +2595,6 @@ rocalAudioFileSourceSingleShard(
         auto info  = rocalTensorInfo(std::vector<size_t>(std::move(dims)),
                                 context->master_graph->mem_type(),
                                 tensor_data_type);
-        info.set_tensor_layout(RocalTensorlayout::NONE);
         info.set_max_shape();
         output = context->master_graph->create_loader_output_tensor(info);
         output->reset_audio_sample_rate();
@@ -2680,7 +2679,6 @@ rocalAudioFileSource(
         auto info  = rocalTensorInfo(std::vector<size_t>(std::move(dims)),
                                 context->master_graph->mem_type(),
                                 tensor_data_type);
-        info.set_tensor_layout(RocalTensorlayout::NONE);
         info.set_max_shape();
         output = context->master_graph->create_loader_output_tensor(info);
 

@@ -238,19 +238,13 @@ void rocalTensor::update_tensor_roi(const std::vector<uint32_t> &width,
         auto max_dims = _info.max_shape();
         unsigned max_samples = max_dims.at(0);
         unsigned max_channels = max_dims.at(1);
-
         auto samples = width;
         auto channels = height;
-
         if (samples.size() != channels.size())
             THROW("Batch size of Tensor height and width info does not match")
-
         if (samples.size() != info().batch_size())
             THROW("The batch size of actual Tensor height and width different from Tensor batch size " + TOSTR(samples.size()) + " != " + TOSTR(info().batch_size()))
-
-        for (unsigned i = 0; i < info().batch_size(); i++)
-        {
-
+        for (unsigned i = 0; i < info().batch_size(); i++) {
             if (samples[i] > max_samples) {
                 ERR("Given ROI width is larger than buffer width for tensor[" + TOSTR(i) + "] " + TOSTR(samples[i]) + " > " + TOSTR(max_samples))
                 _info.get_roi()[i].x1 = max_samples;

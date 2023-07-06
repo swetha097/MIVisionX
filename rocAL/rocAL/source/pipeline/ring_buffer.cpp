@@ -165,18 +165,25 @@ void RingBuffer::init(RocalMemType mem_type, void *devres, std::vector<size_t> s
             cl_mem_flags flags = CL_MEM_READ_ONLY;
 
             _dev_sub_buffer[buffIdx].resize(sub_buffer_count);
+            _dev_roi_buffers[buffIdx].resize(sub_buffer_count);
             for(unsigned sub_idx = 0; sub_idx < sub_buffer_count; sub_idx++)
             {
                 _dev_sub_buffer[buffIdx][sub_idx] =  clCreateBuffer(dev_ocl->context, flags, _sub_buffer_size[sub_idx], NULL, &err);
-
                 if(err)
                 {
                     _dev_sub_buffer.clear();
                     THROW("clCreateBuffer of size " + TOSTR(_sub_buffer_size[sub_idx]) + " index " + TOSTR(sub_idx) +
                           " failed " + TOSTR(err));
                 }
-
+                _dev_roi_buffers[buffIdx][sub_idx] = clCreateBuffer(dev_ocl->context, flags, roi_buffer_size, NULL, &err);
+                if(err)
+                {
+                    _dev_roi_buffers.clear();
+                    THROW("clCreateBuffer of size " + TOSTR(_dev_roi_buffers) + " index " + TOSTR(sub_idx) +
+                          " failed " + TOSTR(err));
+                }
                 clRetainMemObject((cl_mem)_dev_sub_buffer[buffIdx][sub_idx]);
+                clRetainMemObject((cl_mem)_dev_roi_buffer[buffIdx][sub_idx]);
             }
 
         }
@@ -370,10 +377,6 @@ void RingBuffer::release_gpu_res()
                         ERR("Could not release hip memory in the ring buffer")
                     }
             }
-            for (unsigned sub_buf_idx = 0; sub_buf_idx < _host_meta_data_buffers[buffIdx].size(); sub_buf_idx++) {
-                if (_host_meta_data_buffers[buffIdx][sub_buf_idx])
-                    free(_host_meta_data_buffers[buffIdx][sub_buf_idx]);
-            }
             if(_host_meta_data_buffers.size() != 0) {
                 for (unsigned sub_buf_idx = 0; sub_buf_idx < _host_meta_data_buffers[buffIdx].size(); sub_buf_idx++) {
                     if (_host_meta_data_buffers[buffIdx][sub_buf_idx])
@@ -404,22 +407,25 @@ void RingBuffer::release_gpu_res()
 #endif
 }
 
-RingBuffer::~RingBuffer()
-{
+RingBuffer::~RingBuffer() {
     if (_mem_type == RocalMemType::HOST) {
         for (unsigned buffIdx = 0; buffIdx < _host_sub_buffers.size(); buffIdx++) {
-            for (unsigned sub_buf_idx = 0; sub_buf_idx < _host_sub_buffers[buffIdx].size(); sub_buf_idx++) {
-                if (_host_sub_buffers[buffIdx][sub_buf_idx])
-                    free(_host_sub_buffers[buffIdx][sub_buf_idx]);
+            if (_host_sub_buffers.size ! = 0) {
+                for (unsigned sub_buf_idx = 0; sub_buf_idx < _host_sub_buffers[buffIdx].size(); sub_buf_idx++) {
+                    if (_host_sub_buffers[buffIdx][sub_buf_idx])
+                        free(_host_sub_buffers[buffIdx][sub_buf_idx]);
+                    if (_host_roi_buffers[buffIdx][sub_buf_idx])
+                        free(_host_roi_buffers[buffIdx][sub_buf_idx]);
+                }
             }
-        if(_host_meta_data_buffers.size() != 0) {
-            for (unsigned sub_buf_idx = 0; sub_buf_idx < _host_meta_data_buffers[buffIdx].size(); sub_buf_idx++) {
-                if (_host_meta_data_buffers[buffIdx][sub_buf_idx])
-                    free(_host_meta_data_buffers[buffIdx][sub_buf_idx]);
-                if (_host_roi_buffers[buffIdx][sub_buf_idx])
-                    free(_host_roi_buffers[buffIdx][sub_buf_idx]);
+            if (_host_meta_data_buffers.size() != 0) {
+                for (unsigned sub_buf_idx = 0; sub_buf_idx < _host_meta_data_buffers[buffIdx].size(); sub_buf_idx++) {
+                    if (_host_meta_data_buffers[buffIdx][sub_buf_idx])
+                        free(_host_meta_data_buffers[buffIdx][sub_buf_idx]);
+                    if (_host_roi_buffers[buffIdx][sub_buf_idx])
+                        free(_host_roi_buffers[buffIdx][sub_buf_idx]);
+                }
             }
-        }
         }
         _host_sub_buffers.clear();
         _host_meta_data_buffers.clear();
