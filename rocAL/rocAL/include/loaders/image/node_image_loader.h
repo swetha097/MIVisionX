@@ -29,6 +29,7 @@ class ImageLoaderNode : public Node
 {
 public:
     /// \param device_resources shard count from user
+
     /// internal_shard_count number of loader/decoders are created and each shard is loaded and decoded using separate and independent resources increasing the parallelism and performance.
     ImageLoaderNode(rocalTensor *output, void *device_resources);
     ~ImageLoaderNode() override;
