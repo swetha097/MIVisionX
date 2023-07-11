@@ -80,8 +80,8 @@ def crop_mirror_normalize(*inputs, bytes_per_sample_hint=0, crop=[0, 0], crop_d=
                      "is_output": False, "mirror": mirror, "rocal_tensor_layout" : rocal_tensor_layout, "rocal_tensor_output_type" : rocal_tensor_output_type}
     b.setSeed(seed)
     cmn = b.CropMirrorNormalize(Pipeline._current_pipeline._handle ,*(kwargs_pybind.values()))
-    Pipeline._current_pipeline._tensor_layout = rocal_tensor_layout
-    Pipeline._current_pipeline._tensor_dtype = rocal_tensor_output_type
+    # Pipeline._current_pipeline._tensor_layout = rocal_tensor_layout
+    # Pipeline._current_pipeline._tensor_dtype = rocal_tensor_output_type
     Pipeline._current_pipeline._multiplier = list(map(lambda x: 1/x ,std))
     Pipeline._current_pipeline._offset = list(map(lambda x,y: -(x/y), mean, std))
     return (cmn)
