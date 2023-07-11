@@ -94,7 +94,7 @@ AudioLoader::load_next() {
     return update_output_audio();
 }
 
-void AudioLoader::set_output (rocalTensor* output_tensor) {
+void AudioLoader::set_output(rocalTensor* output_tensor) {
     _output_tensor = output_tensor;
     _output_mem_size = _output_tensor->info().data_size();
 }
@@ -134,8 +134,6 @@ void AudioLoader::initialize(ReaderConfig reader_cfg, DecoderConfig decoder_cfg,
     _max_decoded_samples = _output_tensor->info().max_shape().at(0);
     _max_decoded_channels = _output_tensor->info().max_shape().at(1);
     _decoded_audio_info._image_names.resize(_batch_size);
-    _decoded_audio_info._roi_audio_samples.resize(_batch_size);
-    _decoded_audio_info._roi_audio_channels.resize(_batch_size);
     _decoded_audio_info._original_audio_samples.resize(_batch_size);
     _decoded_audio_info._original_audio_channels.resize(_batch_size);
     _decoded_audio_info._original_audio_sample_rates.resize(_batch_size);

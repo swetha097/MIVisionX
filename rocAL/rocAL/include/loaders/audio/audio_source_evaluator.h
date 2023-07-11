@@ -41,8 +41,7 @@ public:
     size_t max_samples();
     size_t max_channels();
 private:
-    class FindMaxSize
-    {
+    class FindMaxSize {
     public:
         void process_sample(unsigned val);
         unsigned get_max() { return _max; };
@@ -58,5 +57,3 @@ private:
     std::vector<unsigned char> _header_buff;
     std::string _input_path;
 };
-
-

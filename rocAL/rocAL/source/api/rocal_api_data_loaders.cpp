@@ -56,7 +56,7 @@ evaluate_audio_data_set(StorageType storage_type,
     auto max_channels = source_evaluator.max_channels();
     if(max_samples == 0 || max_channels  == 0)
         THROW("Cannot find size of the audio files or files cannot be accessed")
-    LOG("Maximum input image dimension [ "+ TOSTR(max_samples) + " x " + TOSTR(max_channels)+" ] for images in "+source_path)
+    LOG("Maximum input audio dimension [ "+ TOSTR(max_samples) + " x " + TOSTR(max_channels)+" ] for audio's in "+source_path)
     return std::make_tuple(max_samples, max_channels);
 };
 
@@ -2570,7 +2570,6 @@ rocalAudioFileSourceSingleShard(
         bool is_output,
         bool shuffle,
         bool loop,
-        float sample_rate,
         bool downmix,
         unsigned max_frames,
         unsigned max_channels,
@@ -2579,8 +2578,7 @@ rocalAudioFileSourceSingleShard(
         int shard_size) {
     rocalTensor* output = nullptr;
     auto context = static_cast<Context*>(p_context);
-    try
-    {
+    try {
         if(shard_count < 1 )
             THROW("Shard count should be bigger than 0")
 
@@ -2646,8 +2644,7 @@ rocalAudioFileSourceSingleShard(
         // } 
 
     }
-    catch(const std::exception& e)
-    {
+    catch(const std::exception& e) {
         context->capture_error(e.what());
         std::cerr << e.what() << '\n';
     }
@@ -2662,7 +2659,6 @@ rocalAudioFileSource(
         bool is_output,
         bool shuffle,
         bool loop,
-        float sample_rate,
         bool downmix,
         unsigned max_frames,
         unsigned max_channels) {

@@ -31,7 +31,7 @@ THE SOFTWARE.
 #include "meta_data_reader.h"
 //
 // AudioLoader runs an internal thread for loading an decoding of audios asynchronously
-// it uses a circular buffer to store decoded frames and audios for the user
+// It uses a circular buffer to store decoded audios for the user
 class AudioLoader : public LoaderModule {
 public:
     explicit AudioLoader(void* dev_resources);

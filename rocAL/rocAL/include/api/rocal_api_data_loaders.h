@@ -752,20 +752,19 @@ extern "C"  RocalImage  ROCAL_API_CALL rocalJpegCaffe2LMDBRecordSourcePartialSin
 /// \param context Rocal context
 /// \param source_path A NULL terminated char string pointing to the location on the disk
 /// \param shard_count Defines the parallelism level by internally sharding the input dataset and load/decode using multiple decoder/loader instances. Using shard counts bigger than 1 improves the load/decode performance if compute resources (CPU cores) are available.
-/// \param is_output Determines if the user wants the loaded images to be part of the output or not.
+/// \param is_output Determines if the user wants the loaded audio to be part of the output or not.
 /// \param shuffle Determines if the user wants to shuffle the dataset or not.
-/// \param loop Determines if the user wants to indefinitely loops through images or not.
-/// \param downmix Determines weather the decoded audio is downmixed or not.
+/// \param loop Determines if the user wants to indefinitely loops through audio or not.
+/// \param downmix If set to True, downmix all input channels to mono. If downmixing is turned on, the decoder output is 1D. If downmixing is turned off, it produces 2D output with interleaved channels.
 /// \param max_frames The maximum frames of the decoded audio.
 /// \param max_channels The maximum channels of the decoded audio.
-/// \return Reference to the output image
+/// \return Reference to the output audio
 extern "C"  RocalTensor  ROCAL_API_CALL rocalAudioFileSource(RocalContext context,
                                                             const char* source_path,
-                                                            unsigned internal_shard_count,
+                                                            unsigned shard_count,
                                                             bool is_output,
                                                             bool shuffle = false,
                                                             bool loop = false,
-                                                            float sample_rate = 0.0,
                                                             bool downmix = false,
                                                             unsigned max_frames = 1,
                                                             unsigned max_channels = 1);
@@ -777,16 +776,16 @@ extern "C"  RocalTensor  ROCAL_API_CALL rocalAudioFileSource(RocalContext contex
 /// \param source_file_list_path A NULL terminated char string pointing to the file list location on the disk
 /// \param shard_id Shard id for this loader
 /// \param shard_count Defines the parallelism level by internally sharding the input dataset and load/decode using multiple decoder/loader instances. Using shard counts bigger than 1 improves the load/decode performance if compute resources (CPU cores) are available.
-/// \param is_output Determines if the user wants the loaded images to be part of the output or not.
+/// \param is_output Determines if the user wants the loaded audio to be part of the output or not.
 /// \param shuffle Determines if the user wants to shuffle the dataset or not.
-/// \param loop Determines if the user wants to indefinitely loops through images or not.
-/// \param downmix Determines weather the decoded audio is downmixed or not.
+/// \param loop Determines if the user wants to indefinitely loops through audio or not.
+/// \param downmix If set to True, downmix all input channels to mono. If downmixing is turned on, the decoder output is 1D. If downmixing is turned off, it produces 2D output with interleaved channels.
 /// \param max_frames The maximum frames of the decoded audio.
 /// \param max_channels The maximum channels of the decoded audio.
 /// \param storage_type Determines the storage type
 /// \param stick_to_shard Determines weather or not the dataset when sharded should stick to a single shards dataset or considered in a round robin fashion.
 /// \param shard_size Provides the size of the shard for an iterator 
-/// \return Reference to the output image
+/// \return Reference to the output audio
 extern "C"  RocalTensor  ROCAL_API_CALL rocalAudioFileSourceSingleShard(RocalContext p_context,
                                                                         const char* source_path,
                                                                         const char* source_file_list_path,
@@ -795,7 +794,6 @@ extern "C"  RocalTensor  ROCAL_API_CALL rocalAudioFileSourceSingleShard(RocalCon
                                                                         bool is_output,
                                                                         bool shuffle = false,
                                                                         bool loop = false,
-                                                                        float sample_rate = 0.0,
                                                                         bool downmix = false,
                                                                         unsigned max_frames = 1,
                                                                         unsigned max_channels = 1,
