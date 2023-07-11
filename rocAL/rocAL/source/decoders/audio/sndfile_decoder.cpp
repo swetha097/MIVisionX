@@ -46,13 +46,13 @@ AudioDecoder::Status SndFileDecoder::decode_info(int* samples, int* channels, fl
     *channels = _sfinfo.channels;
     *sample_rate = _sfinfo.samplerate;
     if (_sfinfo.channels < 1) {
-    	printf("Not able to process less than %d channels\n", *channels);
+        THROW("Not able to process less than" + TOSTR(_sfinfo.channels) + "channels");
         sf_close(_sf_ptr);
 		AudioDecoder::Status status = Status::HEADER_DECODE_FAILED;
 		return status;
 	};
     if (_sfinfo.frames < 1) {
-        printf("Not able to process less than %d frames\n", *samples);
+        THROW("Not able to process less than" + TOSTR(_sfinfo.frames) + "frames");
         sf_close(_sf_ptr);
 		AudioDecoder::Status status = Status::HEADER_DECODE_FAILED;
 		return status;
@@ -79,10 +79,8 @@ AudioDecoder::Status SndFileDecoder::initialize(const char *src_filename) {
 }
 
 void SndFileDecoder::release() {
-    if(_sf_ptr != NULL) {
+    if(_sf_ptr != NULL)
         sf_close(_sf_ptr);
-    }
 }
 
-SndFileDecoder::~SndFileDecoder() {
-}
+SndFileDecoder::~SndFileDecoder() {}

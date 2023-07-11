@@ -34,12 +34,11 @@ public:
     AudioLoaderNode() = delete;
     /// \param internal_shard_count Defines the amount of parallelism user wants for the load and decode process to be handled internally.
     /// \param source_path Defines the path that includes the Audio dataset
-    /// \param load_batch_count Defines the quantum count of the Audios to be loaded. It's usually equal to the user's batch size.
     /// \param storage_type Determines the storage type
     /// \param decoder_type Determines the decoder_type
     /// \param shuffle Determines if the user wants to shuffle the dataset or not.
     /// \param loop Determines if the user wants to indefinitely loops through audio or not.
-    /// \param load_batch_count The batch size.
+    /// \param load_batch_count Defines the quantum count of the Audios to be loaded. It's usually equal to the user's batch size.
     /// \param mem_type Memory type, host or device
     /// \param meta_data_reader Determines the meta-data information
     /// The loader will repeat Audios if necessary to be able to have Audios in multiples of the load_batch_count,

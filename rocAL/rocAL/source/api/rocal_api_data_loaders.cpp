@@ -2609,8 +2609,7 @@ rocalAudioFileSourceSingleShard(
                                                                                         context->master_graph->last_batch_policy(),
                                                                                         context->master_graph->last_batch_padded(),
                                                                                         stick_to_shard,
-                                                                                        shard_size
-                                                                                        );
+                                                                                        shard_size);
         context->master_graph->set_loop(loop);
         /*  Commenting out this peice of code in this PR - Next PR will contain augmentations & this code will be uncommented
         if(downmix)
@@ -2664,8 +2663,7 @@ rocalAudioFileSource(
         unsigned max_channels) {
     rocalTensor* output = nullptr;
     auto context = static_cast<Context*>(p_context);
-    try
-    {
+    try {
         auto [max_frames, max_channels] = evaluate_audio_data_set(StorageType::FILE_SYSTEM, DecoderType::SNDFILE,
                                                        source_path, "");
         INFO("Internal buffer size for audio frames = "+ TOSTR(max_frames))
@@ -2686,8 +2684,7 @@ rocalAudioFileSource(
                                                                              loop,
                                                                              context->user_batch_size(),
                                                                              context->master_graph->mem_type(),
-                                                                             context->master_graph->meta_data_reader()
-                                                                            );
+                                                                             context->master_graph->meta_data_reader());
         context->master_graph->set_loop(loop);
         /*  Commenting out this peice of code in this PR - Next PR will contain augmentations & this code will be uncommented
         if(downmix)
@@ -2719,8 +2716,7 @@ rocalAudioFileSource(
             }
         // } 
     }
-    catch(const std::exception& e)
-    {
+    catch(const std::exception& e) {
         context->capture_error(e.what());
         std::cerr << e.what() << '\n';
     }

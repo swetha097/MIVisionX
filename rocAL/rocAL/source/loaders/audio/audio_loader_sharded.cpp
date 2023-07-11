@@ -43,10 +43,6 @@ decoded_image_info AudioLoaderSharded::get_decode_image_info() {
     return _loaders[_loader_idx]->get_decode_image_info();
 }
 
-crop_image_info AudioLoaderSharded::get_crop_image_info() {
-    return _loaders[_loader_idx]->get_crop_image_info();
-}
-
 AudioLoaderSharded::~AudioLoaderSharded() {
     _loaders.clear();
 }
@@ -127,7 +123,7 @@ void AudioLoaderSharded::shut_down() {
         _loaders[i]->shut_down();
 }
 
-void AudioLoaderSharded::set_output (rocalTensor* output_tensor) {
+void AudioLoaderSharded::set_output(rocalTensor* output_tensor) {
     _output_tensor = output_tensor;
 }
 

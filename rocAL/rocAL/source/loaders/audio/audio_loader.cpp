@@ -51,7 +51,7 @@ void AudioLoader::shut_down() {
 
 void AudioLoader::set_prefetch_queue_depth(size_t prefetch_queue_depth) {
     if(prefetch_queue_depth <= 0)
-        THROW("Prefetch quque depth value cannot be zero or negative");
+        THROW("Prefetch queue depth value cannot be zero or negative");
     _prefetch_queue_depth = prefetch_queue_depth;
 }
 
