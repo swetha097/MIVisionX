@@ -317,6 +317,7 @@ public:
     }
     std::vector<size_t>& get_buffer_size() override
     {
+        _buffer_size.clear();
         size_t size = 0;
         for (auto label : _label_ids)
             size += label.size();
@@ -400,6 +401,7 @@ public:
     }
     std::vector<size_t>& get_buffer_size() override
     {
+        _buffer_size.clear();
         size_t size = 0;
         for (auto label : _label_ids)
             size += label.size();
@@ -481,6 +483,7 @@ public:
     }
     std::vector<size_t>& get_buffer_size() override
     {
+        _buffer_size.clear();
         size_t size = 0;
         for (auto label : _label_ids)
             size += label.size();
