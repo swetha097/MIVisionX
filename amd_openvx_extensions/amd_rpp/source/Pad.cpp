@@ -26,7 +26,7 @@ THE SOFTWARE.
 
 struct PadLocalData
 {
-    RPPCommonHandle handle;
+    vxRppHandle handle;
     rppHandle_t rppHandle;
     Rpp32u deviceType;
     Rpp32u nbatchSize;
@@ -220,7 +220,7 @@ static vx_status VX_CALLBACK processPad(vx_node node, const vx_reference *parame
 //                     std::cerr <<"src psrc:  "<<(float)psrc[(int)dimSrc[n] * n + j] << "\n";
 //             }
 
-        rpp_status = rppt_slice_host((float *)data->pSrc, data->src_desc_ptr, (float *)data->pDst, data->dst_desc_ptr, data->srcDims, (float*)data->anchor, (float*)data->shape, data->fill_values);
+        // rpp_status = rppt_slice_host((float *)data->pSrc, data->src_desc_ptr, (float *)data->pDst, data->dst_desc_ptr, data->srcDims, (float*)data->anchor, (float*)data->shape, data->fill_values, data->handle->rppHandle);
 // float * pdst = (float*) data->pDst;
 //  for(int n = 0; n < data->nbatchSize; n++) 
 //             {

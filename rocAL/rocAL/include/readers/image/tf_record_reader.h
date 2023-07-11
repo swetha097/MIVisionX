@@ -65,7 +65,6 @@ public:
     std::string file_path() override {return _last_file_name; };
 
     unsigned count_items() override;
-    unsigned long long get_shuffle_time() override {return _shuffle_time.get_timing();};
 
     ~TFRecordReader() override;
 
@@ -119,5 +118,4 @@ private:
     Reader::Status read_image(unsigned char* buff, std::string record_file_name, uint file_size);
     Reader::Status read_image_names(std::ifstream &file_contents, uint file_size);
     std::map <std::string, uint> _image_record_starting;
-    TimingDBG _shuffle_time;
 };

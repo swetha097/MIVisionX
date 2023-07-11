@@ -30,9 +30,9 @@ FusedJpegCropSingleShardNode::FusedJpegCropSingleShardNode(rocalTensor *output, 
     _loader_module = std::make_shared<ImageLoader>(device_resources);
 }
 
-void FusedJpegCropSingleShardNode::init(unsigned shard_id, unsigned shard_count, const std::string &source_path, const std::string &json_path, StorageType storage_type,
-                           DecoderType decoder_type, bool shuffle, bool loop, size_t load_batch_count, RocalMemType mem_type, std::shared_ptr<MetaDataReader> meta_data_reader,
-                            unsigned num_attempts, std::vector<float> &random_area, std::vector<float> &random_aspect_ratio, RocalBatchPolicy _last_batch_policy, bool last_batch_padded)
+void FusedJpegCropSingleShardNode::init(unsigned shard_id, unsigned shard_count, unsigned cpu_num_threads, const std::string &source_path, const std::string &json_path, StorageType storage_type,
+                                        DecoderType decoder_type, bool shuffle, bool loop, size_t load_batch_count, RocalMemType mem_type, std::shared_ptr<MetaDataReader> meta_data_reader,
+                                        unsigned num_attempts, std::vector<float> &area_factor, std::vector<float> &aspect_ratio, RocalBatchPolicy _last_batch_policy, bool last_batch_padded)
 {
     if(!_loader_module)
         THROW("ERROR: loader module is not set for FusedJpegCropSingleShardNode, cannot initialize")
@@ -45,13 +45,14 @@ void FusedJpegCropSingleShardNode::init(unsigned shard_id, unsigned shard_count,
     auto reader_cfg = ReaderConfig(storage_type, source_path, json_path, std::map<std::string, std::string>(), shuffle, loop);
     reader_cfg.set_shard_count(shard_count);
     reader_cfg.set_shard_id(shard_id);
+    reader_cfg.set_cpu_num_threads(cpu_num_threads);
     reader_cfg.set_batch_count(load_batch_count);
     reader_cfg.set_meta_data_reader(meta_data_reader);
 
     auto decoder_cfg = DecoderConfig(decoder_type);
 
-    decoder_cfg.set_random_area(random_area);
-    decoder_cfg.set_random_aspect_ratio(random_aspect_ratio);
+    decoder_cfg.set_random_area(area_factor);
+    decoder_cfg.set_random_aspect_ratio(aspect_ratio);
     decoder_cfg.set_num_attempts(num_attempts);
     decoder_cfg.set_seed(ParameterFactory::instance()->get_seed());
    _loader_module->initialize(reader_cfg, decoder_cfg,

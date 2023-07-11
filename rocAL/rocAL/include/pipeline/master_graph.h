@@ -46,6 +46,7 @@ THE SOFTWARE.
 #include "box_encoder_hip.h"
 #endif
 #include "randombboxcrop_meta_data_reader.h"
+#include "rocal_api_types.h"
 #define MAX_STRING_LENGTH 100
 #define MAX_OBJECTS 50 // Max number of objects/image in COCO dataset is 93 
 #define BBOX_COUNT 4
@@ -56,14 +57,14 @@ class MasterGraph
 {
 public:
     enum class Status { OK = 0,  NOT_RUNNING = 1, NO_MORE_DATA = 2, NOT_IMPLEMENTED = 3, INVALID_ARGUMENTS };
-    MasterGraph(size_t batch_size, RocalAffinity affinity, int gpu_id, size_t prefetch_queue_depth, RocalTensorDataType output_tensor_data_type, RocalBatchPolicy last_batch_policy, bool last_batch_padded);
+    MasterGraph(size_t batch_size, RocalAffinity affinity, size_t cpu_thread_count, int gpu_id, size_t prefetch_queue_depth, RocalTensorDataType output_tensor_data_type, RocalBatchPolicy last_batch_policy, bool last_batch_padded);
     ~MasterGraph();
     Status reset();
     size_t remaining_count();
     std::vector<size_t> tensor_output_byte_size();
     rocalTensorList *get_output_tensors();
-    MasterGraph::Status copy_out_tensor(void *out_ptr, RocalTensorlayout format, float multiplier0, float multiplier1, float multiplier2,
-                    float offset0, float offset1, float offset2, bool reverse_channels, RocalTensorDataType output_data_type);
+    MasterGraph::Status to_tensor(void *out_ptr, RocalTensorlayout format, float multiplier0, float multiplier1, float multiplier2,
+                    float offset0, float offset1, float offset2, bool reverse_channels, RocalTensorDataType output_data_type, RocalOutputMemType output_mem_type);
     void sequence_start_frame_number(std::vector<size_t> &sequence_start_framenum); // Returns the starting frame number of the sequences
     void sequence_frame_timestamps(std::vector<std::vector<float>> &sequence_frame_timestamp); // Returns the timestamps of the frames in the sequences
     Status build();
@@ -103,6 +104,7 @@ public:
 
     void set_loop(bool val) { _loop = val; }
     void set_output(rocalTensor* output_tensor);
+    size_t calculate_cpu_num_threads(size_t shard_count);
     bool empty() { return (remaining_count() < (_is_sequence_reader_output ? _sequence_batch_size : _user_batch_size)); }
     size_t sequence_batch_size() { return _sequence_batch_size; }
     std::shared_ptr<MetaDataGraph> meta_data_graph() { return _meta_data_graph; }
@@ -155,6 +157,7 @@ private:
 #endif
     std::shared_ptr<Graph> _graph = nullptr;
     RocalAffinity _affinity;
+    size_t _cpu_num_threads;//!< Defines the number of CPU threads used for processing
     const int _gpu_id;//!< Defines the device id used for processing
     pLoaderModule _loader_module; //!< Keeps the loader module used to feed the input the tensors of the graph
     TimingDBG _convert_time, _process_time, _bencode_time;

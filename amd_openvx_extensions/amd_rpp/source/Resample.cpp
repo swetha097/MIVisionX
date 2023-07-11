@@ -26,7 +26,7 @@ THE SOFTWARE.
 
 struct ResampleLocalData
 {
-    RPPCommonHandle *handle;
+    vxRppHandle *handle;
     Rpp32u deviceType;
     Rpp32u nbatchSize;
     RppPtr_t pSrc;
@@ -169,7 +169,7 @@ static vx_status VX_CALLBACK processResample(vx_node node, const vx_reference *p
 
         rpp_status = rppt_resample_host((float *)data->pSrc, data->src_desc_ptr, (float *)data->pDst, data->dst_desc_ptr,
                                        (float *)data->inRateTensor,(float *)data->outRateTensor, data->sampleArray, data->sampleChannels,
-                                        data->quality);
+                                        data->quality, data->handle->rppHandle);
         return_status = (rpp_status == RPP_SUCCESS) ? VX_SUCCESS : VX_FAILURE;
     }
     return return_status;
@@ -233,7 +233,7 @@ static vx_status VX_CALLBACK initializeResample(vx_node node, const vx_reference
 
 
     refreshResample(node, parameters, num, data);
-    STATUS_ERROR_CHECK(createGraphHandle(node, &data->handle, data->src_desc_ptr->n, data->deviceType));
+    STATUS_ERROR_CHECK(createRPPHandle(node, &data->handle, data->src_desc_ptr->n, data->deviceType));
     if (data->deviceType == AGO_TARGET_AFFINITY_CPU)
         rppCreateWithBatchSize(&data->handle->rppHandle, data->nbatchSize);
 
@@ -245,7 +245,7 @@ static vx_status VX_CALLBACK uninitializeResample(vx_node node, const vx_referen
 {
     ResampleLocalData *data;
     STATUS_ERROR_CHECK(vxQueryNode(node, VX_NODE_LOCAL_DATA_PTR, &data, sizeof(data)));
-    STATUS_ERROR_CHECK(releaseGraphHandle(node, data->handle, data->deviceType));
+    STATUS_ERROR_CHECK(releaseRPPHandle(node, data->handle, data->deviceType));
     free(data->sampleArray);
     free(data->sampleChannels);
     free(data->inRateTensor);

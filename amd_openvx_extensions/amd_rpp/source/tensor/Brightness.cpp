@@ -25,7 +25,7 @@ THE SOFTWARE.
 
 struct BrightnessLocalData
 {
-    RPPCommonHandle handle;
+    vxRppHandle handle;
     rppHandle_t rppHandle;
     Rpp32u device_type;
     Rpp32u nbatchSize;

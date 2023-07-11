@@ -26,7 +26,7 @@ THE SOFTWARE.
 
 struct PreemphasisFilterLocalData
 {
-    RPPCommonHandle *handle;
+    vxRppHandle *handle;
     Rpp32u deviceType;
     Rpp32u nbatchSize;
     RppPtr_t pSrc;
@@ -154,7 +154,7 @@ static vx_status VX_CALLBACK processPreemphasisFilter(vx_node node, const vx_ref
     if (data->deviceType == AGO_TARGET_AFFINITY_CPU)
     {
         refreshPreemphasisFilter(node, parameters, num, data);
-        rpp_status = rppt_pre_emphasis_filter_host((float *)data->pSrc, data->srcDescPtr, (float *)data->pDst, data->dstDescPtr, (Rpp32s*) data->sampleSize, data->preemphCoeff , RpptAudioBorderType(data->borderType));
+        rpp_status = rppt_pre_emphasis_filter_host((float *)data->pSrc, data->srcDescPtr, (float *)data->pDst, data->dstDescPtr, (Rpp32s*) data->sampleSize, data->preemphCoeff , RpptAudioBorderType(data->borderType), data->handle->rppHandle);
         return_status = (rpp_status == RPP_SUCCESS) ? VX_SUCCESS : VX_FAILURE;
     }
     return return_status;
@@ -212,7 +212,7 @@ static vx_status VX_CALLBACK initializePreemphasisFilter(vx_node node, const vx_
     data->preemphCoeff = (float *)calloc(data->srcDescPtr->n, sizeof(float));
 
     refreshPreemphasisFilter(node, parameters, num, data);
-    STATUS_ERROR_CHECK(createGraphHandle(node, &data->handle, data->srcDescPtr->n, data->deviceType));
+    STATUS_ERROR_CHECK(createRPPHandle(node, &data->handle, data->srcDescPtr->n, data->deviceType));
     STATUS_ERROR_CHECK(vxSetNodeAttribute(node, VX_NODE_LOCAL_DATA_PTR, &data, sizeof(data)));
     return VX_SUCCESS;
 }
@@ -221,7 +221,7 @@ static vx_status VX_CALLBACK uninitializePreemphasisFilter(vx_node node, const v
 {
     PreemphasisFilterLocalData *data;
     STATUS_ERROR_CHECK(vxQueryNode(node, VX_NODE_LOCAL_DATA_PTR, &data, sizeof(data)));
-    STATUS_ERROR_CHECK(releaseGraphHandle(node, data->handle, data->deviceType));
+    STATUS_ERROR_CHECK(releaseRPPHandle(node, data->handle, data->deviceType));
     free(data->sampleSize);
     free(data->preemphCoeff);
     delete (data);

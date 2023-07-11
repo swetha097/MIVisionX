@@ -38,10 +38,9 @@ public:
     /// \param load_batch_count Defines the quantum count of the images to be loaded. It's usually equal to the user's batch size.
     /// The loader will repeat images if necessary to be able to have images in multiples of the load_batch_count,
     /// for example if there are 10 images in the dataset and load_batch_count is 3, the loader repeats 2 images as if there are 12 images available.
-    void init(unsigned shard_id, unsigned shard_count, const std::string &source_path, const std::string &json_path, StorageType storage_type,
-    DecoderType decoder_type, bool shuffle, bool loop, size_t load_batch_count, RocalMemType mem_type, std::shared_ptr<MetaDataReader> meta_data_reader,
-    unsigned num_attempts, std::vector<float> &random_area, std::vector<float> &random_aspect_ratio, RocalBatchPolicy last_batch_policy = RocalBatchPolicy::BATCH_FILL, bool last_batch_padded = false);
-
+    void init(unsigned shard_id, unsigned shard_count, unsigned cpu_num_threads, const std::string &source_path, const std::string &json_path, StorageType storage_type,
+              DecoderType decoder_type, bool shuffle, bool loop, size_t load_batch_count, RocalMemType mem_type, std::shared_ptr<MetaDataReader> meta_data_reader,
+              unsigned num_attempts, std::vector<float> &random_area, std::vector<float> &random_aspect_ratio, RocalBatchPolicy _last_batch_policy = RocalBatchPolicy::BATCH_FILL, bool last_batch_padded = false);
 
     std::shared_ptr<LoaderModule> get_loader_module();
 protected:

@@ -80,10 +80,6 @@ def crop_mirror_normalize(*inputs, bytes_per_sample_hint=0, crop=[0, 0], crop_d=
                      "is_output": False, "mirror": mirror, "rocal_tensor_layout" : rocal_tensor_layout, "rocal_tensor_output_type" : rocal_tensor_output_type}
     b.setSeed(seed)
     cmn = b.CropMirrorNormalize(Pipeline._current_pipeline._handle ,*(kwargs_pybind.values()))
-    # Pipeline._current_pipeline._tensor_layout = rocal_tensor_layout
-    # Pipeline._current_pipeline._tensor_dtype = rocal_tensor_output_type
-    Pipeline._current_pipeline._multiplier = list(map(lambda x: 1/x ,std))
-    Pipeline._current_pipeline._offset = list(map(lambda x,y: -(x/y), mean, std))
     return (cmn)
 
 def resize_mirror_normalize(*inputs, bytes_per_sample_hint=0, interp_type=1, mag_filter= 1, max_size = [], min_filter = 1, minibatch_size=32,
@@ -104,10 +100,6 @@ def resize_mirror_normalize(*inputs, bytes_per_sample_hint=0, interp_type=1, mag
                      "rocal_tensor_layout" : rocal_tensor_layout, "rocal_tensor_output_type" : rocal_tensor_output_type}
     b.setSeed(seed)
     rmn = b.ResizeMirrorNormalize(Pipeline._current_pipeline._handle ,*(kwargs_pybind.values()))
-    Pipeline._current_pipeline._tensor_layout = rocal_tensor_layout
-    Pipeline._current_pipeline._tensor_dtype = rocal_tensor_output_type
-    Pipeline._current_pipeline._multiplier = list(map(lambda x: 1/x ,std))
-    Pipeline._current_pipeline._offset = list(map(lambda x,y: -(x/y), mean, std))
     return (rmn)
 
 def resize_shorter(*inputs, resize_size=0, rocal_tensor_layout=types.NHWC, rocal_tensor_output_type=types.UINT8):
