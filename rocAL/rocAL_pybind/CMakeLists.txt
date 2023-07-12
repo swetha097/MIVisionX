@@ -86,6 +86,10 @@ if(ROCAL_PYTHON)
     set(Python3_FIND_VIRTUALENV FIRST)
     if(ROCAL_PYTHON_AUDIO)
         find_package(Python3 3.7 EXACT QUIET COMPONENTS Interpreter Development)
+        # Find the Python 3.7 interpreter
+        find_package(PythonInterp 3.7 REQUIRED)
+        # Set the PYTHON_EXECUTABLE variable to the Python 3.7 interpreter path
+        set(PYTHON_EXECUTABLE ${PYTHON_EXECUTABLE} CACHE PATH "Python 3.7 interpreter" FORCE)
         include_directories(${Python3_INCLUDE_DIRS})
         message("-- ${Green}NOTE: rocAL pybind requires Python3, Found --  ${Python3_EXECUTABLE} ${ColourReset}")
     else()
