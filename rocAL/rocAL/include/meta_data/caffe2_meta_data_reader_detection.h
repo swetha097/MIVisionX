@@ -42,6 +42,8 @@ public :
     void print_map_contents();
     std::map<std::string, std::shared_ptr<MetaData>> &get_map_content() override{ return _map_content;}
     bool set_timestamp_mode() override { return false; }
+    MetaDataBatch * get_output() override { return _output; }
+    void add_labels(std::vector<std::string> image_name, std::vector<int> label) override { };
     Caffe2MetaDataReaderDetection();
 private:
     void read_files(const std::string& _path);
