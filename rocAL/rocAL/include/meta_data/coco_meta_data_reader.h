@@ -32,6 +32,7 @@ class COCOMetaDataReader: public MetaDataReader
 public:
     void init(const MetaDataConfig& cfg) override;
     void lookup(const std::vector<std::string>& image_names) override;
+    void add_labels(std::vector<std::string> image_name, std::vector<int> label) override { };
     void read_all(const std::string& path) override;
     void release(std::string image_name);
     void release() override;
@@ -39,6 +40,7 @@ public:
     bool set_timestamp_mode() override { return false; }
     MetaDataBatch * get_output() override { return _output; }
     const std::map<std::string, std::shared_ptr<MetaData>> & get_map_content() override { return _map_content;}
+    void add_labels(std::vector<std::string> image_name, std::vector<int> label) override { };
     COCOMetaDataReader();
     ~COCOMetaDataReader() override { delete _output; }
 private:
