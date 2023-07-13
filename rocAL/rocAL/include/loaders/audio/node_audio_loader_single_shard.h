@@ -36,7 +36,7 @@ public:
     /// \param storage_type Determines the storage type
     /// \param decoder_type Determines the decoder_type
     /// \param shuffle Determines if the user wants to shuffle the dataset or not.
-    /// \param loop Determines if the user wants to indefinitely loops through images or not.
+    /// \param loop Determines if the user wants to indefinitely loops through audios or not.
     /// \param load_batch_count Defines the quantum count of the Audios to be loaded. It's usually equal to the user's batch size.
     /// \param mem_type Memory type, host or device
     /// \param meta_data_reader Determines the meta-data information

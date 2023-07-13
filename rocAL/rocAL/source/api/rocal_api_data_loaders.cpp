@@ -2591,8 +2591,8 @@ rocalAudioFileSourceSingleShard(
         RocalTensorDataType tensor_data_type = RocalTensorDataType::FP32;
         std::vector<size_t> dims = {context->user_batch_size(), max_frames, max_channels};
         auto info  = rocalTensorInfo(std::vector<size_t>(std::move(dims)),
-                                context->master_graph->mem_type(),
-                                tensor_data_type);
+                                     context->master_graph->mem_type(),
+                                     tensor_data_type);
         info.set_max_shape();
         output = context->master_graph->create_loader_output_tensor(info);
         output->reset_audio_sample_rate();
@@ -2654,6 +2654,7 @@ RocalTensor  ROCAL_API_CALL
 rocalAudioFileSource(
         RocalContext p_context,
         const char* source_path,
+        const char* source_file_list_path,
         unsigned internal_shard_count,
         bool is_output,
         bool shuffle,
@@ -2678,6 +2679,7 @@ rocalAudioFileSource(
 
         context->master_graph->add_node<AudioLoaderNode>({}, {output})->init(internal_shard_count,
                                                                              source_path,
+                                                                             source_file_list_path
                                                                              StorageType::FILE_SYSTEM,
                                                                              DecoderType::SNDFILE,
                                                                              shuffle,
