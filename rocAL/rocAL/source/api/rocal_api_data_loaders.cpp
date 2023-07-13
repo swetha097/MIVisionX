@@ -237,13 +237,22 @@ rocalJpegFileSource(
 
 
         INFO("Internal buffer size width = "+ TOSTR(width)+ " height = "+ TOSTR(height) + " depth = "+ TOSTR(num_of_planes))
-
-        std::vector<size_t> dims = {context->user_batch_size(), height, width, num_of_planes};
+        RocalTensorlayout tensor_format = RocalTensorlayout::NHWC;
+        RocalTensorDataType tensor_data_type = RocalTensorDataType::UINT8;
+        unsigned num_of_dims = 4;
+        std::vector<size_t> dims;
+        if(rocal_color_format == ROCAL_COLOR_U8) {
+            tensor_format = RocalTensorlayout::NCHW;
+            dims = {context->user_batch_size(),num_of_planes, height, width};
+        }
+        else {
+            dims = {context->user_batch_size(), height, width, num_of_planes};
+        }
         auto info  = TensorInfo(std::move(dims),
                                      context->master_graph->mem_type(),
                                      RocalTensorDataType::UINT8);
         info.set_color_format(color_format);
-        info.set_tensor_layout(RocalTensorlayout::NHWC);
+        info.set_tensor_layout(tensor_format);
         info.set_max_shape();
         output = context->master_graph->create_loader_output_tensor(info);
         auto cpu_num_threads = context->master_graph->calculate_cpu_num_threads(1);
