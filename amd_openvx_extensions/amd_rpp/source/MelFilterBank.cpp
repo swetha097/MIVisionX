@@ -229,8 +229,6 @@ static vx_status VX_CALLBACK initializeMelFilterBank(vx_node node, const vx_refe
 
     refreshMelFilterBank(node, parameters, num, data);
     STATUS_ERROR_CHECK(createRPPHandle(node, &data->handle, data->src_desc_ptr->n, data->deviceType));
-    if (data->deviceType == AGO_TARGET_AFFINITY_CPU)
-        rppCreateWithBatchSize(&data->handle->rppHandle, data->nbatchSize);
 
     STATUS_ERROR_CHECK(vxSetNodeAttribute(node, VX_NODE_LOCAL_DATA_PTR, &data, sizeof(data)));
     return VX_SUCCESS;
