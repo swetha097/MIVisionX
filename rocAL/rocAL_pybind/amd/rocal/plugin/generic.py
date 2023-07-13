@@ -38,9 +38,9 @@ class ROCALGenericIterator(object):
         self.batch_size = pipeline._batch_size
         if self.loader._name is None:
             self.loader._name = self.loader._reader
-        self.labels_size = ((self.bs*self.loader._numOfClasses) if (self.loader._oneHotEncoding == True) else self.bs)
+        self.labels_size = ((self.batch_size*self.loader._numOfClasses) if (self.loader._oneHotEncoding == True) else self.batch_size)
         self.out = self.dimensions = self.dtype = None
-        self.len = b.getRemainingImages(self.loader._handle)//self.bs # iteration length
+        self.len = b.getRemainingImages(self.loader._handle)//self.batch_size # iteration length
 
     def next(self):
         return self.__next__()
@@ -50,7 +50,7 @@ class ROCALGenericIterator(object):
         if(b.isEmpty(self.loader._handle)):
             raise StopIteration
         else:
-            self.output_tensor_list = self.loader.getOutputTensors()
+            self.output_tensor_list = self.loader.GetOutputTensors()
 
         if self.out is None:
             self.dimensions = self.output_tensor_list[0].dimensions()
@@ -64,17 +64,20 @@ class ROCALGenericIterator(object):
                     self.out = cp.empty((self.dimensions[0], self.dimensions[1], self.dimensions[2], self.dimensions[3],), dtype = self.dtype)
                     self.labels = cp.empty(self.labels_size, dtype = self.dtype)
 
-        self.output_tensor_list[0].copy_data(ctypes.c_void_p(self.out.data_ptr()))
+        if self.device == "cpu":
+            self.output_tensor_list[0].copy_data_numpy(self.out)
+        else:
+            self.output_tensor_list[0].copy_data_cupy(self.out.data.ptr)
         if(self.loader._name == "labelReader"):
             if(self.loader._oneHotEncoding == True):
                 self.loader.GetOneHotEncodedLabels(self.labels, self.device)
-                self.labels_tensor = self.labels.reshape(-1, self.bs, self.loader._numOfClasses)
+                self.labels_tensor = self.labels.reshape(-1, self.batch_size, self.loader._numOfClasses)
             else:
                 if self.display:
-                    for i in range(self.bs):
+                    for i in range(self.batch_size):
                         img = (self.out)
                         draw_patches(img[i], i, 0)
-                self.labels = self.loader.rocalGetImageLabels()
+                self.labels = self.loader.GetImageLabels()
                 if self.device == "cpu":
                     self.labels_tensor = self.labels.astype(dtype = np.int_)
                 else:

@@ -63,7 +63,7 @@ def fog(*inputs, fog=0.5, device=None):
     return (fog_image)
 
 def brightness(*inputs, brightness=1.0, bytes_per_sample_hint=0, image_type=0,
-               preserve=False, seed=-1, device=None):
+               preserve=False, seed=-1, device=None, rocal_tensor_layout=types.NHWC, rocal_tensor_output_type=types.UINT8):
     """
     brightness (float, optional, default = 1.0) –
 
@@ -84,7 +84,7 @@ def brightness(*inputs, brightness=1.0, bytes_per_sample_hint=0, image_type=0,
     seed (int, optional, default = -1) – Random seed (If not provided it will be populated based on the global seed of the pipeline)
     """
 
-    kwargs_pybind = {"input_image0": inputs[0], "is_output": False, "alpha": None, "beta": None}
+    kwargs_pybind = {"input_image0": inputs[0], "is_output": False, "alpha": None, "beta": None, "rocal_tensor_layout" : rocal_tensor_layout, "rocal_tensor_output_type" : rocal_tensor_output_type}
     brightness_image = b.Brightness(Pipeline._current_pipeline._handle ,*(kwargs_pybind.values()))
     return (brightness_image)
 
@@ -424,7 +424,7 @@ def vignette(*inputs, vignette=0.5, device=None):
     return (vignette_outputcolor_temp_output)
 
 def crop_mirror_normalize(*inputs, bytes_per_sample_hint=0, crop=[0, 0], crop_d=0, crop_h=0, crop_pos_x=0.5, crop_pos_y=0.5, crop_pos_z=0.5,
-                          crop_w=0, image_type=0, mean=[0.0], mirror=1, output_layout=types.NHWC, output_dtype=types.UINT8, pad_output=False,
+                          crop_w=0, image_type=0, mean=[0.0], mirror=1, rocal_tensor_layout=types.NCHW, rocal_tensor_output_type=types.FLOAT, pad_output=False,
                           preserve=False, seed=1, std=[1.0], device=None):
 
     if(len(crop) == 2):
@@ -447,8 +447,8 @@ def crop_mirror_normalize(*inputs, bytes_per_sample_hint=0, crop=[0, 0], crop_d=
             mirror = b.CreateIntParameter(1)
 
     # pybind call arguments
-    kwargs_pybind = {"input_image0": inputs[0], "crop_height": crop_height, "crop_width": crop_width, "start_x": crop_pos_x, "start_y": crop_pos_y, "mean": mean, "std_dev": std,
-                     "is_output": False, "mirror": mirror, "output_layout" : output_layout, "output_dtype" : output_dtype}
+    kwargs_pybind = {"input_image0": inputs[0], "crop_height":crop_height, "crop_width":crop_width, "start_x":crop_pos_x, "start_y":crop_pos_y, "mean":mean, "std_dev":std,
+                     "is_output": False, "mirror": mirror, "rocal_tensor_layout" : rocal_tensor_layout, "rocal_tensor_output_type" : rocal_tensor_output_type}
     cmn = b.CropMirrorNormalize(Pipeline._current_pipeline._handle ,*(kwargs_pybind.values()))
     return (cmn)
 

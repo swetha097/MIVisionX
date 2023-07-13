@@ -25,7 +25,7 @@ import amd.rocal.types as types
 import ctypes
 
 class ROCALGenericIterator(object):
-    def __init__(self, pipeline, tensor_layout = types.NCHW, reverse_channels = False, multiplier = [1.0,1.0,1.0], offset = [0.0, 0.0, 0.0], tensor_dtype = types.FLOAT, device = "cpu", device_id = 0):
+    def __init__(self, pipeline, tensor_layout = types.NCHW, reverse_channels = False, multiplier = [1.0,1.0,1.0], offset = [0.0, 0.0, 0.0], tensor_dtype = types.FLOAT, device = "cpu", device_id = 0, display = False):
         self.loader = pipeline
         self.tensor_format = tensor_layout
         self.multiplier = multiplier
@@ -37,6 +37,7 @@ class ROCALGenericIterator(object):
         self.batch_size = self.loader._batch_size
         self.out = self.dimensions = self.torch_dtype = None
         self.len = b.getRemainingImages(self.loader._handle)
+        self.display = display
 
     def next(self):
         return self.__next__()
@@ -45,7 +46,7 @@ class ROCALGenericIterator(object):
         if(b.isEmpty(self.loader._handle)):
             raise StopIteration
         else:
-            self.output_tensor_list = self.loader.getOutputTensors()
+            self.output_tensor_list = self.loader.GetOutputTensors()
 
         if self.out is None:
             self.dimensions = self.output_tensor_list[0].dimensions()
@@ -114,7 +115,7 @@ class ROCALGenericIterator(object):
                     for i in range(self.bs):
                         img = (self.out)
                         draw_patches(img[i], i, 0)
-                self.labels = self.loader.rocalGetImageLabels()
+                self.labels = self.loader.GetImageLabels()
                 self.labels_tensor = self.labels_tensor.copy_(torch.from_numpy(self.labels)).long()
 
             return self.out, self.labels_tensor
@@ -202,7 +203,7 @@ class ROCALClassificationIterator(ROCALGenericIterator):
                  device_id=0,):
         pipe = pipelines
         super(ROCALClassificationIterator, self).__init__(pipe, tensor_layout = pipe._tensor_layout, tensor_dtype = pipe._tensor_dtype,
-                                                          multiplier = pipe._multiplier, offset = pipe._offset, dsiplay = display, device = device, device_id = device_id)
+                                                          multiplier = pipe._multiplier, offset = pipe._offset, display = display, device = device, device_id = device_id)
 
 
 

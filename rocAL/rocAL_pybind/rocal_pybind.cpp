@@ -69,6 +69,28 @@ namespace rocal{
         return ptr;
     }
 
+    template<typename T>
+    void copyDataNumpyWrapper(rocalTensor& output_tensor, T array) {
+        auto buf = array.request();
+        T *ptr = (T *)buf.ptr;
+        output_tensor.copy_data((void *)ptr, RocalOutputMemType::ROCAL_MEMCPY_HOST);
+    }
+
+    void copyDataCupyWrapperU8(rocalTensor& output_tensor, long array) {
+        unsigned char *ptr = (unsigned char *)array;
+        output_tensor.copy_data((void *)ptr, RocalOutputMemType::ROCAL_MEMCPY_GPU);
+    }
+
+    void copyDataCupyWrapperF32(rocalTensor& output_tensor, long array) {
+        float *ptr = (float *)array;
+        output_tensor.copy_data((void *)ptr, RocalOutputMemType::ROCAL_MEMCPY_GPU);
+    }
+
+    void copyDataCupyWrapperF16(rocalTensor& output_tensor, long array) {
+        float16 *ptr = (float16 *)array;
+        output_tensor.copy_data((void *)ptr, RocalOutputMemType::ROCAL_MEMCPY_GPU);
+    }
+    
     py::object wrapper_image_name_length(RocalContext context, py::array_t<int> array)
     {
         auto buf = array.request();
@@ -291,7 +313,7 @@ namespace rocal{
     }
 
     */
-        std::unordered_map<int, std::string> rocalToPybindLayout = {
+    std::unordered_map<int, std::string> rocalToPybindLayout = {
         {0, "NHWC"},
         {1, "NCHW"},
         {2, "NFHWC"},
@@ -317,7 +339,7 @@ namespace rocal{
                 py::arg("prefetch_queue_depth") = 3,
                 py::arg("output_data_type") = 0);
         m.def("rocalVerify",&rocalVerify);
-        m.def("rocalRun",&rocalRun);
+        m.def("rocalRun",&rocalRun, py::return_value_policy::reference);
         m.def("rocalRelease",&rocalRelease);
         // rocal_api_types.h
         py::class_<TimingInfo>(m, "TimingInfo")
@@ -366,14 +388,38 @@ namespace rocal{
                 )code"
             )
             .def(
-            "copy_data", [](rocalTensor &output_tensor, py::object p) {
+            "copy_data", [](rocalTensor &output_tensor, py::object p, bool copy_to_gpu=false) {
                 auto ptr = ctypes_void_ptr(p);
-                output_tensor.copy_data(ptr);
+                if(copy_to_gpu)
+                    output_tensor.copy_data(ptr, RocalOutputMemType::ROCAL_MEMCPY_GPU);
+                else {
+                    if(output_tensor.backend() == RocalTensorBackend::ROCAL_CPU)
+                        output_tensor.copy_data(ptr, RocalOutputMemType::ROCAL_MEMCPY_HOST);
+                    else
+                        output_tensor.copy_data(ptr, RocalOutputMemType::ROCAL_MEMCPY_GPU);
+                }
             },
                 R"code(
                 Copies the ring buffer data to python buffer pointers.
                 )code"
             )
+            .def("copy_data_numpy", [](rocalTensor& output_tensor, py::array_t<unsigned char> array) {
+                copyDataNumpyWrapper(output_tensor, array);
+            }, py::return_value_policy::reference)
+            .def("copy_data_numpy", [](rocalTensor& output_tensor, py::array_t<float> array) {
+                copyDataNumpyWrapper(output_tensor, array);
+            }, py::return_value_policy::reference)
+            .def("copy_data_numpy", [](rocalTensor& output_tensor, py::array_t<float16> array) {
+                copyDataNumpyWrapper(output_tensor, array);
+            }, py::return_value_policy::reference)
+            .def("copy_data_cupy", [](rocalTensor& output_tensor, long array) {
+                if(output_tensor.data_type() == RocalTensorOutputType::ROCAL_FP32)
+                    copyDataCupyWrapperF32(output_tensor, array);
+                if(output_tensor.data_type() == RocalTensorOutputType::ROCAL_FP16)
+                    copyDataCupyWrapperF16(output_tensor, array);
+                if(output_tensor.data_type() == RocalTensorOutputType::ROCAL_UINT8)
+                    copyDataCupyWrapperU8(output_tensor, array);                
+            }, py::return_value_policy::reference)
             .def(
                 "at",
                 [](rocalTensor &output_tensor, uint idx) {
@@ -666,38 +712,38 @@ namespace rocal{
         }
         );
         // rocal_api_data_loaders.h
-        m.def("COCO_ImageDecoderSlice",&rocalJpegCOCOFileSourcePartial,"Reads file from the source given and decodes it according to the policy",
-            py::return_value_policy::reference);
-         m.def("COCO_ImageDecoderSliceShard",&rocalJpegCOCOFileSourcePartialSingleShard,"Reads file from the source given and decodes it according to the policy",
-            py::return_value_policy::reference);
+        // m.def("COCO_ImageDecoderSlice",&rocalJpegCOCOFileSourcePartial,"Reads file from the source given and decodes it according to the policy",
+        //     py::return_value_policy::reference);
+        //  m.def("COCO_ImageDecoderSliceShard",&rocalJpegCOCOFileSourcePartialSingleShard,"Reads file from the source given and decodes it according to the policy",
+        //     py::return_value_policy::reference);
         m.def("ImageDecoder",&rocalJpegFileSource,"Reads file from the source given and decodes it according to the policy",
             py::return_value_policy::reference);
         m.def("ImageDecoderShard",&rocalJpegFileSourceSingleShard,"Reads file from the source given and decodes it according to the shard id and number of shards",
             py::return_value_policy::reference);
-        m.def("COCO_ImageDecoder",&rocalJpegCOCOFileSource,"Reads file from the source given and decodes it according to the policy",
-            py::return_value_policy::reference);
-        m.def("COCO_ImageDecoderShard",&rocalJpegCOCOFileSourceSingleShard,"Reads file from the source given and decodes it according to the shard id and number of shards",
-            py::return_value_policy::reference);
-        m.def("TF_ImageDecoder",&rocalJpegTFRecordSource,"Reads file from the source given and decodes it according to the policy only for TFRecords",
-            py::return_value_policy::reference);
-        m.def("Caffe_ImageDecoder",&rocalJpegCaffeLMDBRecordSource,"Reads file from the source given and decodes it according to the policy only for TFRecords",
-            py::return_value_policy::reference);
-        m.def("Caffe_ImageDecoderShard",&rocalJpegCaffeLMDBRecordSourceSingleShard, "Reads file from the source given and decodes it according to the shard id and number of shards",
-            py::return_value_policy::reference);
-        m.def("Caffe_ImageDecoderPartialShard",&rocalJpegCaffeLMDBRecordSourcePartialSingleShard);
-        m.def("Caffe2_ImageDecoder",&rocalJpegCaffe2LMDBRecordSource,"Reads file from the source given and decodes it according to the policy only for TFRecords",
-            py::return_value_policy::reference);
-        m.def("Caffe2_ImageDecoderShard",&rocalJpegCaffe2LMDBRecordSourceSingleShard,"Reads file from the source given and decodes it according to the shard id and number of shards",
-            py::return_value_policy::reference);
-        m.def("Caffe2_ImageDecoderPartialShard",&rocalJpegCaffe2LMDBRecordSourcePartialSingleShard);
-        m.def("FusedDecoderCrop",&rocalFusedJpegCrop,"Reads file from the source and decodes them partially to output random crops",
-            py::return_value_policy::reference);
-        m.def("FusedDecoderCropShard",&rocalFusedJpegCropSingleShard,"Reads file from the source and decodes them partially to output random crops",
-            py::return_value_policy::reference);
-        m.def("TF_ImageDecoderRaw",&rocalRawTFRecordSource,"Reads file from the source given and decodes it according to the policy only for TFRecords",
-              py::return_value_policy::reference);
-        m.def("Cifar10Decoder",&rocalRawCIFAR10Source,"Reads file from the source given and decodes it according to the policy only for TFRecords",
-              py::return_value_policy::reference);
+        // m.def("COCO_ImageDecoder",&rocalJpegCOCOFileSource,"Reads file from the source given and decodes it according to the policy",
+        //     py::return_value_policy::reference);
+        // m.def("COCO_ImageDecoderShard",&rocalJpegCOCOFileSourceSingleShard,"Reads file from the source given and decodes it according to the shard id and number of shards",
+        //     py::return_value_policy::reference);
+        // m.def("TF_ImageDecoder",&rocalJpegTFRecordSource,"Reads file from the source given and decodes it according to the policy only for TFRecords",
+        //     py::return_value_policy::reference);
+        // m.def("Caffe_ImageDecoder",&rocalJpegCaffeLMDBRecordSource,"Reads file from the source given and decodes it according to the policy only for TFRecords",
+        //     py::return_value_policy::reference);
+        // m.def("Caffe_ImageDecoderShard",&rocalJpegCaffeLMDBRecordSourceSingleShard, "Reads file from the source given and decodes it according to the shard id and number of shards",
+        //     py::return_value_policy::reference);
+        // m.def("Caffe_ImageDecoderPartialShard",&rocalJpegCaffeLMDBRecordSourcePartialSingleShard);
+        // m.def("Caffe2_ImageDecoder",&rocalJpegCaffe2LMDBRecordSource,"Reads file from the source given and decodes it according to the policy only for TFRecords",
+        //     py::return_value_policy::reference);
+        // m.def("Caffe2_ImageDecoderShard",&rocalJpegCaffe2LMDBRecordSourceSingleShard,"Reads file from the source given and decodes it according to the shard id and number of shards",
+        //     py::return_value_policy::reference);
+        // m.def("Caffe2_ImageDecoderPartialShard",&rocalJpegCaffe2LMDBRecordSourcePartialSingleShard);
+        // m.def("FusedDecoderCrop",&rocalFusedJpegCrop,"Reads file from the source and decodes them partially to output random crops",
+        //     py::return_value_policy::reference);
+        // m.def("FusedDecoderCropShard",&rocalFusedJpegCropSingleShard,"Reads file from the source and decodes them partially to output random crops",
+        //     py::return_value_policy::reference);
+        // m.def("TF_ImageDecoderRaw",&rocalRawTFRecordSource,"Reads file from the source given and decodes it according to the policy only for TFRecords",
+        //       py::return_value_policy::reference);
+        // m.def("Cifar10Decoder",&rocalRawCIFAR10Source,"Reads file from the source given and decodes it according to the policy only for TFRecords",
+        //       py::return_value_policy::reference);
         m.def("VideoDecoder",&rocalVideoFileSource,"Reads videos from the source given and decodes it according to the policy only for Videos as inputs",
             py::return_value_policy::reference);
         m.def("VideoDecoderResize",&rocalVideoFileResize,"Reads videos from the source given and decodes it according to the policy only for Videos as inputs. Resizes the decoded frames to the dest width and height.",
@@ -706,71 +752,71 @@ namespace rocal{
             py::return_value_policy::reference);
         m.def("rocalResetLoaders",&rocalResetLoaders);
         // rocal_api_augmentation.h
-        m.def("SSDRandomCrop",&rocalSSDRandomCrop,
-            py::return_value_policy::reference);
-        m.def("Resize",&rocalResize, 
-            py::return_value_policy::reference);
-        m.def("ResizeMirrorNormalize", &rocalResizeMirrorNormalize,
-            py::return_value_policy::reference);
-        m.def("CropResize",&rocalCropResize,
-            py::return_value_policy::reference);
-        m.def("rocalCopy",&rocalCopy,
-            py::return_value_policy::reference);
-        m.def("rocalNop",&rocalNop,
-            py::return_value_policy::reference);
-        m.def("ColorTwist",&rocalColorTwist,
-            py::return_value_policy::reference);
-        m.def("ColorTwistFixed",&rocalColorTwistFixed,
-             py::return_value_policy::reference);
+        // m.def("SSDRandomCrop",&rocalSSDRandomCrop,
+        //     py::return_value_policy::reference);
+        // m.def("Resize",&rocalResize, 
+        //     py::return_value_policy::reference);
+        // m.def("ResizeMirrorNormalize", &rocalResizeMirrorNormalize,
+        //     py::return_value_policy::reference);
+        // m.def("CropResize",&rocalCropResize,
+        //     py::return_value_policy::reference);
+        // m.def("rocalCopy",&rocalCopy,
+        //     py::return_value_policy::reference);
+        // m.def("rocalNop",&rocalNop,
+        //     py::return_value_policy::reference);
+        // m.def("ColorTwist",&rocalColorTwist,
+        //     py::return_value_policy::reference);
+        // m.def("ColorTwistFixed",&rocalColorTwistFixed,
+        //      py::return_value_policy::reference);
         m.def("CropMirrorNormalize",&rocalCropMirrorNormalize,
             py::return_value_policy::reference);
-        m.def("Crop",&rocalCrop,
-            py::return_value_policy::reference);
-        m.def("CropFixed",&rocalCropFixed,
-            py::return_value_policy::reference);
-        m.def("CenterCropFixed",&rocalCropCenterFixed,
-            py::return_value_policy::reference);
+        // m.def("Crop",&rocalCrop,
+        //     py::return_value_policy::reference);
+        // m.def("CropFixed",&rocalCropFixed,
+        //     py::return_value_policy::reference);
+        // m.def("CenterCropFixed",&rocalCropCenterFixed,
+        //     py::return_value_policy::reference);
         m.def("Brightness",&rocalBrightness,
             py::return_value_policy::reference);
-        m.def("GammaCorrection",&rocalGamma,
-            py::return_value_policy::reference);
-        m.def("Rain",&rocalRain,
-            py::return_value_policy::reference);
-        m.def("Snow",&rocalSnow,
-            py::return_value_policy::reference);
-        m.def("Blur",&rocalBlur,
-            py::return_value_policy::reference);
-        m.def("Contrast",&rocalContrast,
-            py::return_value_policy::reference);
-        m.def("Flip",&rocalFlip,
-            py::return_value_policy::reference);
-        m.def("Jitter",&rocalJitter,
-            py::return_value_policy::reference);
-        m.def("Rotate",&rocalRotate,
-            py::return_value_policy::reference);
-        m.def("Hue",&rocalHue,
-            py::return_value_policy::reference);
-        m.def("Saturation",&rocalSaturation,
-            py::return_value_policy::reference);
-        m.def("WarpAffine",&rocalWarpAffine,
-            py::return_value_policy::reference);
-        m.def("Fog",&rocalFog,
-            py::return_value_policy::reference);
-        m.def("FishEye",&rocalFishEye,
-            py::return_value_policy::reference);
-        m.def("Vignette",&rocalVignette,
-            py::return_value_policy::reference);
-        m.def("SnPNoise",&rocalSnPNoise,
-            py::return_value_policy::reference);
-        m.def("Exposure",&rocalExposure,
-            py::return_value_policy::reference);
-        m.def("Pixelate",&rocalPixelate,
-            py::return_value_policy::reference);
-        m.def("Blend",&rocalBlend,
-            py::return_value_policy::reference);
-        m.def("RandomCrop",&rocalRandomCrop,
-            py::return_value_policy::reference);
-        m.def("ColorTemp",&rocalColorTemp,
-            py::return_value_policy::reference);
+        // m.def("GammaCorrection",&rocalGamma,
+        //     py::return_value_policy::reference);
+        // m.def("Rain",&rocalRain,
+        //     py::return_value_policy::reference);
+        // m.def("Snow",&rocalSnow,
+        //     py::return_value_policy::reference);
+        // m.def("Blur",&rocalBlur,
+        //     py::return_value_policy::reference);
+        // m.def("Contrast",&rocalContrast,
+        //     py::return_value_policy::reference);
+        // m.def("Flip",&rocalFlip,
+        //     py::return_value_policy::reference);
+        // m.def("Jitter",&rocalJitter,
+        //     py::return_value_policy::reference);
+        // m.def("Rotate",&rocalRotate,
+        //     py::return_value_policy::reference);
+        // m.def("Hue",&rocalHue,
+        //     py::return_value_policy::reference);
+        // m.def("Saturation",&rocalSaturation,
+        //     py::return_value_policy::reference);
+        // m.def("WarpAffine",&rocalWarpAffine,
+        //     py::return_value_policy::reference);
+        // m.def("Fog",&rocalFog,
+        //     py::return_value_policy::reference);
+        // m.def("FishEye",&rocalFishEye,
+        //     py::return_value_policy::reference);
+        // m.def("Vignette",&rocalVignette,
+        //     py::return_value_policy::reference);
+        // m.def("SnPNoise",&rocalSnPNoise,
+        //     py::return_value_policy::reference);
+        // m.def("Exposure",&rocalExposure,
+        //     py::return_value_policy::reference);
+        // m.def("Pixelate",&rocalPixelate,
+        //     py::return_value_policy::reference);
+        // m.def("Blend",&rocalBlend,
+        //     py::return_value_policy::reference);
+        // m.def("RandomCrop",&rocalRandomCrop,
+        //     py::return_value_policy::reference);
+        // m.def("ColorTemp",&rocalColorTemp,
+        //     py::return_value_policy::reference);
     }
 }
