@@ -258,7 +258,8 @@ rocalJpegFileSource(
                                                                           context->user_batch_size(),
                                                                           context->master_graph->mem_type(),
                                                                           context->master_graph->meta_data_reader(),
-                                                                          decoder_keep_original);
+                                                                          decoder_keep_original,
+                                                                          ExternalFileMode::FILENAME);
         context->master_graph->set_loop(loop);
 
         if(is_output)
@@ -335,7 +336,7 @@ rocalSequenceReader(
         auto cpu_num_threads = context->master_graph->calculate_cpu_num_threads(1);
 
         context->master_graph->add_node<ImageLoaderNode>({}, {output})->init(internal_shard_count, cpu_num_threads,
-                                                                            source_path, "",
+                                                                            source_path, ExternalFileMode::FILENAME, "",
                                                                             std::map<std::string, std::string>(),
                                                                             StorageType::SEQUENCE_FILE_SYSTEM,
                                                                             DecoderType::TURBO_JPEG,
@@ -528,7 +529,8 @@ rocalJpegCaffe2LMDBRecordSource(
                                                                              context->user_batch_size(),
                                                                              context->master_graph->mem_type(),
                                                                              context->master_graph->meta_data_reader(),
-                                                                             decoder_keep_original);
+                                                                             decoder_keep_original,
+                                                                             ExternalFileMode::FILENAME);
         context->master_graph->set_loop(loop);
 
         if(is_output)
@@ -623,7 +625,8 @@ rocalJpegCaffe2LMDBRecordSourceSingleShard(
                                                                                         context->user_batch_size(),
                                                                                         context->master_graph->mem_type(),
                                                                                         context->master_graph->meta_data_reader(),
-                                                                                        decoder_keep_original);
+                                                                                        decoder_keep_original,
+                                                                                        ExternalFileMode::FILENAME);
         context->master_graph->set_loop(loop);
 
         if(is_output)
@@ -715,7 +718,8 @@ rocalJpegCaffeLMDBRecordSource(
                                                                              context->user_batch_size(),
                                                                              context->master_graph->mem_type(),
                                                                              context->master_graph->meta_data_reader(),
-                                                                             decoder_keep_original);
+                                                                             decoder_keep_original,
+                                                                             ExternalFileMode::FILENAME);
 
         context->master_graph->set_loop(loop);
 
@@ -811,7 +815,8 @@ rocalJpegCaffeLMDBRecordSourceSingleShard(
                                                                                         context->user_batch_size(),
                                                                                         context->master_graph->mem_type(),
                                                                                         context->master_graph->meta_data_reader(),
-                                                                                        decoder_keep_original);
+                                                                                        decoder_keep_original,
+                                                                                        ExternalFileMode::FILENAME);
         context->master_graph->set_loop(loop);
 
         if(is_output)
@@ -908,7 +913,8 @@ rocalMXNetRecordSource(
                                                                              context->user_batch_size(),
                                                                              context->master_graph->mem_type(),
                                                                              context->master_graph->meta_data_reader(),
-                                                                             decoder_keep_original);
+                                                                             decoder_keep_original,
+                                                                             ExternalFileMode::FILENAME);
 
         context->master_graph->set_loop(loop);
 
@@ -1004,7 +1010,8 @@ rocalJpegCOCOFileSource(
                                                                             context->user_batch_size(),
                                                                             context->master_graph->mem_type(),
                                                                             context->master_graph->meta_data_reader(),
-                                                                            decoder_keep_original);
+                                                                            decoder_keep_original,
+                                                                            ExternalFileMode::FILENAME);
 
         context->master_graph->set_loop(loop);
 
@@ -1103,7 +1110,8 @@ rocalJpegCOCOFileSourceSingleShard(
                                                                                         context->user_batch_size(),
                                                                                         context->master_graph->mem_type(),
                                                                                         context->master_graph->meta_data_reader(),
-                                                                                        decoder_keep_original);
+                                                                                        decoder_keep_original,
+                                                                                        ExternalFileMode::FILENAME);
         context->master_graph->set_loop(loop);
 
         if(is_output)

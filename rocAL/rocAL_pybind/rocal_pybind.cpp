@@ -343,6 +343,11 @@ namespace rocal
             .value("GAUSSIAN_INTERPOLATION",ROCAL_GAUSSIAN_INTERPOLATION)
             .value("TRIANGULAR_INTERPOLATION",ROCAL_TRIANGULAR_INTERPOLATION)
             .export_values();
+        py::enum_<RocalExtSourceMode>(types_m,"RocalExtSourceMode", "Rocal Extrernal Source Mode")
+            .value("EXTSOURCE_FNAME",ROCAL_EXTSOURCE_FNAME)
+            .value("EXTSOURCE_RAW_COMPRESSED",ROCAL_EXTSOURCE_RAW_COMPRESSED)
+            .value("EXTSOURCE_RAW_UNCOMPRESSED",ROCAL_EXTSOURCE_RAW_UNCOMPRESSED)
+            .export_values();
         // rocal_api_info.h
         m.def("getRemainingImages", &rocalGetRemainingImages);
         m.def("isEmpty", &rocalIsEmpty);
@@ -497,6 +502,10 @@ namespace rocal
         m.def("COCO_ImageDecoderShard",&rocalJpegCOCOFileSourceSingleShard,"Reads file from the source given and decodes it according to the shard id and number of shards",
             py::return_value_policy::reference);
         m.def("COCO_ImageDecoderSliceShard",&rocalJpegCOCOFileSourcePartialSingleShard,"Reads file from the source given and decodes it according to the policy",
+            py::return_value_policy::reference);
+        m.def("ExternalFileSource",&rocalJpegExternalFileSource,
+            py::return_value_policy::reference);
+        m.def("ExternalSourceFeedInput",&rocalExternalSourceFeedInput,
             py::return_value_policy::reference);
         m.def("Resize",&rocalResize, "Resizes the image ",py::return_value_policy::reference);
         m.def("ColorTwist",&rocalColorTwist, py::return_value_policy::reference);
