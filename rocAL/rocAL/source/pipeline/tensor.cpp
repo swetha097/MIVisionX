@@ -63,6 +63,8 @@ vx_size tensor_data_size(RocalTensorDataType data_type) {
             return sizeof(vx_uint32);
         case RocalTensorDataType::INT32:
             return sizeof(vx_int32);
+        case RocalTensorDataType::FP64:
+            return sizeof(vx_float64);
         default:
             throw std::runtime_error("tensor data_type not valid");
     }
@@ -77,6 +79,12 @@ vx_enum interpret_tensor_data_type(RocalTensorDataType data_type) {
             return VX_TYPE_FLOAT16;
         case RocalTensorDataType::UINT8:
             return VX_TYPE_UINT8;
+        case RocalTensorDataType::FP64:
+            return VX_TYPE_FLOAT64;
+        case RocalTensorDataType::INT32:
+            return VX_TYPE_INT32;
+        case RocalTensorDataType::UINT32:
+            return VX_TYPE_UINT32;
         default:
             THROW("Unsupported Tensor type " + TOSTR(data_type))
     }
@@ -86,11 +94,11 @@ void allocate_host_or_pinned_mem(void **ptr, size_t size, RocalMemType mem_type)
     if (mem_type == RocalMemType::HIP) {
 #if ENABLE_HIP
         hipError_t err = hipHostMalloc((void **)ptr, size, hipHostMallocDefault);
-        if(err != hipSuccess || !*ptr)
-            THROW("hipHostMalloc of size " + TOSTR(size) + " failed " + TOSTR(err))
-        err = hipMemset((void *)*ptr, 0, size);
-        if(err != hipSuccess)
-            THROW("hipMemset of size " + TOSTR(size) + " failed " + TOSTR(err))
+    if(err != hipSuccess || !*ptr)
+        THROW("hipHostMalloc of size " + TOSTR(size) + " failed " + TOSTR(err))
+    err = hipMemset((void *)*ptr, 0, size);
+    if(err != hipSuccess)
+        THROW("hipMemset of size " + TOSTR(size) + " failed " + TOSTR(err))
 #endif
     } else {
         *ptr = (void *)malloc(size);
@@ -108,10 +116,16 @@ bool operator==(const rocalTensorInfo &rhs, const rocalTensorInfo &lhs) {
 
 
 void rocalTensorInfo::reset_tensor_roi_buffers() {
-    if(!_roi_buf) {
-        size_t roi_size = (_layout == RocalTensorlayout::NFCHW || _layout == RocalTensorlayout::NFHWC) ? _dims[0] * _dims[1] : _batch_size; // For Sequences pre allocating the ROI to N * F to replicate in OpenVX extensions
-        allocate_host_or_pinned_mem((void **)&_roi_buf, roi_size * 4 * sizeof(unsigned), _mem_type);
+    allocate_host_or_pinned_mem((void **)&_roi_buf, _batch_size * 4 * sizeof(unsigned), _mem_type);
+    if (_mem_type == RocalMemType::HIP) {
+#if ENABLE_HIP
+        _roi.reset(_roi_buf, hipHostFree);
+#endif
+    } else {
+        _roi.reset(_roi_buf, free);
     }
+    _orig_roi_height = std::make_shared<std::vector<uint32_t>>(_batch_size);    // TODO - Check if this needs to be reallocated every time
+    _orig_roi_width = std::make_shared<std::vector<uint32_t>>(_batch_size);
     if (_is_image) {
         auto roi = get_roi();
         for (unsigned i = 0; i < _batch_size; i++) {
@@ -120,6 +134,14 @@ void rocalTensorInfo::reset_tensor_roi_buffers() {
         }
     } else {
         // TODO - For other tensor types
+    }
+}
+
+void rocalTensorInfo::reallocate_tensor_sample_rate_buffers() {
+    _sample_rate = std::make_shared<std::vector<float>>(_batch_size);
+    _sample_rate->resize(_batch_size);
+    if (_is_image) {
+        THROW("No sample rate available for Image data")
     }
 }
 
@@ -210,6 +232,44 @@ void rocalTensor::update_tensor_roi(const std::vector<uint32_t> &width,
             } else {
                 _info.get_roi()[i].y2 = height[i];
             }
+        }
+    }
+    else if(!_info.is_metadata()) {
+        auto max_dims = _info.max_shape();
+        unsigned max_samples = max_dims.at(0);
+        unsigned max_channels = max_dims.at(1);
+        auto samples = width;
+        auto channels = height;
+        if (samples.size() != channels.size())
+            THROW("Batch size of Tensor height and width info does not match")
+        if (samples.size() != info().batch_size())
+            THROW("The batch size of actual Tensor height and width different from Tensor batch size " + TOSTR(samples.size()) + " != " + TOSTR(info().batch_size()))
+        for (unsigned i = 0; i < info().batch_size(); i++) {
+            if (samples[i] > max_samples) {
+                ERR("Given ROI width is larger than buffer width for tensor[" + TOSTR(i) + "] " + TOSTR(samples[i]) + " > " + TOSTR(max_samples))
+                _info.get_roi()[i].x1 = max_samples;
+            }
+            else {
+                _info.get_roi()[i].x1 = samples[i];
+            }
+            if (channels[i] > max_channels) {
+                ERR("Given ROI height is larger than buffer with for tensor[" + TOSTR(i) + "] " + TOSTR(channels[i]) + " > " + TOSTR(max_channels))
+                _info.get_roi()[i].y1 = max_channels;
+            }
+            else {
+                _info.get_roi()[i].y1 = channels[i];
+            }
+        }
+    }
+}
+
+void rocalTensor::update_audio_tensor_sample_rate(const std::vector<float> &sample_rate) {
+    if (_info.is_image()) {
+        THROW("No sample rate available for Image data")
+    }
+    else if(!_info.is_metadata()) {
+        for (unsigned i = 0; i < info().batch_size(); i++) {
+            _info.get_sample_rate()->at(i) = sample_rate[i];
         }
     }
 }
@@ -320,17 +380,39 @@ unsigned rocalTensor::copy_data(hipStream_t stream, void *host_memory, bool sync
 unsigned rocalTensor::copy_data(void *user_buffer) {
     if (_mem_handle == nullptr) return 0;
 
-#if ENABLE_HIP
-    if (_info._mem_type == RocalMemType::HIP) {
-        // copy from device to host
-        hipError_t status;
-        if ((status = hipMemcpyDtoH((void *)user_buffer, _mem_handle, _info.data_size())))
-            THROW("copy_data::hipMemcpyDtoH failed: " + TOSTR(status))
-    } else
-#endif
-    {
-        // copy from host to host
-        memcpy(user_buffer, _mem_handle, _info.data_size());
+    #if ENABLE_HIP
+        if (_info._mem_type == RocalMemType::HIP) {
+            // copy from device to device
+            hipError_t status;
+            if ((status = hipMemcpyDtoD((void *)user_buffer, _mem_handle, _info.data_size())))
+                THROW("copy_data::hipMemcpyDtoH failed: " + TOSTR(status))
+        } else if (_info._mem_type == RocalMemType::HOST) {
+            // copy from host to device
+            hipError_t status;
+            if ((status = hipMemcpyHtoD((void *)user_buffer, _mem_handle, _info.data_size())))
+                THROW("copy_data::hipMemcpyHtoD failed: " + TOSTR(status))
+        }
+    #else
+        if (_info._mem_type == RocalMemType::HOST)
+            memcpy(user_buffer, _mem_handle, _info.data_size());
+    #endif
+
+    return 0;
+}
+
+unsigned rocalTensor::copy_data(void *user_buffer, uint max_y1, uint max_x1) {
+    // if (_mem_handle == nullptr) return 0;
+    //TODO : Handle this case for HIP buffer
+    auto src_stride = (_info.max_shape().at(0) * _info.max_shape().at(1) * _info.data_type_size());
+    auto dst_stride = (max_y1 * max_x1 * _info.data_type_size());
+    for (uint i = 0; i < _info._batch_size; i++) {
+        auto temp_src_ptr = static_cast<unsigned char *>(_mem_handle) + i * src_stride;
+        auto temp_dst_ptr = static_cast<unsigned char *>(user_buffer) + i * dst_stride;
+        for (uint height = 0; height < max_y1; height++) {
+            memcpy(temp_dst_ptr, temp_src_ptr, max_x1 * _info.data_type_size());
+            temp_src_ptr += _info.max_shape().at(0) * _info.data_type_size();
+            temp_dst_ptr += max_x1 * _info.data_type_size();
+        }
     }
     return 0;
 }
