@@ -37,6 +37,7 @@ THE SOFTWARE.
 #include "tf_meta_data_reader_detection.h"
 #include "video_label_reader.h"
 #include "mxnet_meta_data_reader.h"
+#include "external_source_label_reader.h"
 
 std::shared_ptr<MetaDataReader> create_meta_data_reader(const MetaDataConfig& config, pMetaDataBatch& meta_data_batch) {
     switch(config.reader_type()) {
@@ -173,6 +174,15 @@ std::shared_ptr<MetaDataReader> create_meta_data_reader(const MetaDataConfig& co
             meta_data_batch = std::make_shared<LabelBatch>();
             meta_data_reader->init(config, meta_data_batch);
             return meta_data_reader;
+        }
+        break;
+        case MetaDataReaderType::EXTERNAL_SOURCE_LABEL_READER:
+        {
+            if(config.type() != MetaDataType::Label)
+                THROW("ExternalSourceLabelReader can only be used to load labels")
+            auto ret = std::make_shared<ExternalSourceLabelReader>();
+            ret->init(config);
+            return ret;
         }
         break;
         default:

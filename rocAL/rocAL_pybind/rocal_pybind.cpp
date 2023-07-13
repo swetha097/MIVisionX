@@ -344,6 +344,11 @@ namespace rocal{
             .value("DECODER_VIDEO_FFMPEG_SW", ROCAL_DECODER_VIDEO_FFMPEG_SW)
             .value("DECODER_VIDEO_FFMPEG_HW", ROCAL_DECODER_VIDEO_FFMPEG_HW)
             .export_values();
+        py::enum_<RocalExtSourceMode>(types_m,"RocalExtSourceMode", "Rocal Extrernal Source Mode")
+            .value("EXTSOURCE_FNAME",ROCAL_EXTSOURCE_FNAME)
+            .value("EXTSOURCE_RAW_COMPRESSED",ROCAL_EXTSOURCE_RAW_COMPRESSED)
+            .value("EXTSOURCE_RAW_UNCOMPRESSED",ROCAL_EXTSOURCE_RAW_UNCOMPRESSED)
+            .export_values();
         // rocal_api_info.h
         m.def("getRemainingImages", &rocalGetRemainingImages);
         m.def("getImageName", &wrapper_image_name);
@@ -525,6 +530,12 @@ namespace rocal{
             py::return_value_policy::reference);
         m.def("mxnetDecoder", &rocalMXNetRecordSourceSingleShard, "Reads file from the source given and decodes it according to the policy only for mxnet records",
             py::return_value_policy::reference);
+        m.def("ExternalFileSource",&rocalJpegExternalFileSource,
+            py::return_value_policy::reference);
+        m.def("ExternalSourceFeedInput",&rocalExternalSourceFeedInput,
+            py::return_value_policy::reference);
+        m.def("Resize",&rocalResize, "Resizes the image ",py::return_value_policy::reference);
+        m.def("ColorTwist",&rocalColorTwist, py::return_value_policy::reference);
         m.def("rocalResetLoaders", &rocalResetLoaders);
         m.def("videoMetaDataReader", &rocalCreateVideoLabelReader, py::return_value_policy::reference);
         // rocal_api_augmentation.h

@@ -34,14 +34,12 @@ class ROCALGenericIterator(object):
         self.tensor_dtype = tensor_dtype
         self.device = device
         self.device_id = device_id
-        self.batch_size = self.loader._batch_size
-        self.labels_size = ((self.batch_size * self.loader._num_classes) if self.loader._one_hot_encoding else self.batch_size)
-        self.output_list = None
-        self.output_memory_type = self.loader._output_memory_type
-        self.iterator_length = b.getRemainingImages(self.loader._handle)
-        self.display = display
-        if self.loader._name is None:
-            self.loader._name = self.loader._reader
+        self.out = None
+        print("self.device", self.device)
+        self.len = b.getRemainingImages(self.loader._handle)
+        self.index = 0
+        self.eos = False
+        self.num_batches = self.loader._external_source.n // self.bs if self.loader._external_source.n % self.bs == 0 else (self.loader._external_source.n // self.bs + 1)
 
     def next(self):
         return self.__next__()
@@ -49,6 +47,32 @@ class ROCALGenericIterator(object):
     def __next__(self):
         if self.loader.rocal_run() != 0:
             raise StopIteration
+
+        if (self.loader._external_source_operator):
+            if (self.index + 1) == self.num_batches:
+                self.eos = True
+            if (self.index + 1) <= self.num_batches:
+                if self.loader._external_source_mode == types.EXTSOURCE_FNAME:
+                    kwargs_pybind = {
+                        "handle":self.loader._handle,
+                        "source_input_images":next(self.loader._external_source)[0],
+                        "labels":next(self.loader._external_source)[1],
+                        "input_batch_buffer":[],
+                        "roi_width":[],
+                        "roi_height":[],
+                        "decoded_width":self.loader._external_source_user_given_width,
+                        "decoded_height":self.loader._external_source_user_given_height,
+                        "channels":self.p,
+                        "external_source_mode":self.loader._external_source_mode,
+                        "rocal_tensor_layout":types.NCHW,
+                        "eos":self.eos }
+                    b.ExternalSourceFeedInput(*(kwargs_pybind.values()))
+                if self.loader._external_source_mode == types.EXTSOURCE_RAW_COMPRESSED:
+                    print("Support for EXTSOURCE_RAW_COMPRESSED / Mode 1 does not exist ")
+                    exit(0)
+                if self.loader._external_source_mode == types.EXTSOURCE_RAW_UNCOMPRESSED:
+                    print("Support for EXTSOURCE_RAW_UNCOMPRESSED / Mode 2 does not exist ")
+                    exit(0)
         else:
             self.output_tensor_list = self.loader.get_output_tensors()
 
@@ -66,65 +90,29 @@ class ROCALGenericIterator(object):
                     output = torch.empty(dimensions, dtype=getattr(torch, torch_dtype), device=torch_gpu_device)
                     self.labels_tensor = torch.empty(self.labels_size, dtype=getattr(torch, torch_dtype), device=torch_gpu_device)
 
-                self.output_tensor_list[i].copy_data(ctypes.c_void_p(output.data_ptr()), self.output_memory_type)
-                self.output_list.append(output)
-        else:
-            for i in range(len(self.output_tensor_list)):
-                self.output_tensor_list[i].copy_data(ctypes.c_void_p(self.output_list[i].data_ptr()), self.output_memory_type)
-        
-        if ((self.loader._name == "Caffe2ReaderDetection") or (self.loader._name == "CaffeReaderDetection")):
-            self.bbox_list = []  # Empty list for bboxes
-            self.labels_list = []  # Empty list of labels
-
-            # 1D labels array in a batch
-            self.labels = self.loader.get_bounding_box_labels()
-            # 1D bboxes array in a batch
-            self.bboxes = self.loader.get_bounding_box_cords()
-            # Image sizes of a batch
-            self.img_size = np.zeros((self.batch_size * 2), dtype="int32")
-            self.loader.get_img_sizes(self.img_size)
-
-            for i in range(self.batch_size):
-
-                self.label_2d_numpy = np.reshape(self.labels[i], (-1, 1)).tolist()
-                self.bb_2d_numpy = np.reshape(self.bboxes[i], (-1, 4)).tolist()
-
-                self.labels_list.append(self.label_2d_numpy)
-                self.bbox_list.append(self.bb_2d_numpy)
-
-                if self.display:
-                    for output in self.output_list:
-                        img = output
-                        draw_patches(img[i], i, self.bb_2d_numpy)
-
-
-            max_cols = max([len(row) for batch in self.bbox_list for row in batch])
-            max_rows = max([len(batch) for batch in self.bbox_list])
-            self.bb_padded = [batch + [[0] * (max_cols)] * (max_rows - len(batch)) for batch in self.bbox_list]
-            self.bb_padded = torch.FloatTensor([row + [0] * (max_cols - len(row)) for batch in self.bb_padded for row in batch])
-            self.bb_padded = self.bb_padded.view(-1, max_rows, max_cols)
-
-            max_cols1 = max([len(row) for batch in self.labels_list for row in batch])
-            max_rows1 = max([len(batch) for batch in self.labels_list])
-            self.labels_padded = [batch + [[0] * (max_cols1)] * (max_rows1 - len(batch)) for batch in self.labels_list]
-            self.labels_padded = torch.LongTensor([row + [0] * (max_cols1 - len(row)) for batch in self.labels_padded for row in batch])
-            self.labels_padded = self.labels_padded.view(-1, max_rows1, max_cols1)
-
-            return self.output_list, self.bb_padded, self.labels_padded
-
-        else:
-            if self.loader._one_hot_encoding:
-                self.loader.get_one_hot_encoded_labels(self.labels_tensor, self.device)
-                self.labels_tensor = self.labels_tensor.reshape(-1, self.batch_size, self.loader._num_classes)
-            else:
-                if self.display:
-                    for i in range(self.batch_size):
-                        img = (self.output_list[0])
-                        draw_patches(img[i], i, [])
-                self.labels = self.loader.get_image_labels()
-                self.labels_tensor = self.labels_tensor.copy_(torch.from_numpy(self.labels)).long()
-
-            return self.output_list, self.labels_tensor
+            else: #NHWC
+                if self.device == "cpu":
+                    if self.tensor_dtype == types.FLOAT:
+                        self.out = torch.empty((self.batch_size, self.h, self.w, self.color_format), dtype=torch.float32)
+                    elif self.tensor_dtype == types.FLOAT16:
+                        self.out = torch.empty((self.batch_size, self.h, self.w, self.color_format), dtype=torch.float16)
+                    self.labels_tensor = torch.empty(self.batch_size, dtype = torch.int32)
+                else:
+                    torch_gpu_device = torch.device('cuda', self.device_id)
+                    if self.tensor_dtype == types.FLOAT:
+                        self.out = torch.empty((self.batch_size, self.h, self.w, self.color_format), dtype=torch.float32, device=torch_gpu_device)
+                    elif self.tensor_dtype == types.FLOAT16:
+                        self.out = torch.empty((self.batch_size, self.h, self.w, self.color_format), dtype=torch.float16, device=torch_gpu_device)
+                    self.labels_tensor = torch.empty(self.batch_size, dtype = torch.int32, device = torch_gpu_device)
+        self.index = self.index + 1
+        self.loader.copyToExternalTensor(
+            self.out, self.multiplier, self.offset, self.reverse_channels, self.tensor_format, self.tensor_dtype)
+        self.labels = self.loader.rocalGetImageLabels()
+        self.labels_tensor = self.labels_tensor.copy_(torch.from_numpy(self.labels)).long()
+        if self.tensor_dtype == types.FLOAT:
+            return self.out, self.labels_tensor
+        elif self.tensor_dtype == types.FLOAT16:
+            return self.out.half(), self.labels_tensor
 
     def reset(self):
         b.rocalResetLoaders(self.loader._handle)
