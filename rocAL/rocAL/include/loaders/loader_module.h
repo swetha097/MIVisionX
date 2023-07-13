@@ -54,7 +54,7 @@ public:
     virtual Timing timing() = 0;// Returns timing info
     virtual std::vector<std::string> get_id() = 0; // returns the id of the last batch of images/frames loaded
     virtual void start_loading() = 0; // starts internal loading thread
-    virtual decoded_image_info get_decode_image_info() = 0;
+    virtual decoded_sample_info get_decode_image_info() = 0;
     virtual crop_image_info get_crop_image_info() = 0;
     virtual void set_prefetch_queue_depth(size_t prefetch_queue_depth) = 0;
     // introduce meta data reader

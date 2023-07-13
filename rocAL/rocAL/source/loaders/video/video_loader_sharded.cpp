@@ -43,7 +43,7 @@ std::vector<std::string> VideoLoaderSharded::get_id()
     return _loaders[_loader_idx]->get_id();
 }
 
-decoded_image_info VideoLoaderSharded::get_decode_image_info()
+decoded_sample_info VideoLoaderSharded::get_decode_image_info()
 {
     return _loaders[_loader_idx]->get_decode_image_info();
 }
