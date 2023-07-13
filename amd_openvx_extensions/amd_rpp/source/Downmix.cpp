@@ -67,11 +67,9 @@ static vx_status VX_CALLBACK refreshDownmix(vx_node node, const vx_reference *pa
 static vx_status VX_CALLBACK validateDownmix(vx_node node, const vx_reference parameters[], vx_uint32 num, vx_meta_format metas[]) {
     vx_status status = VX_SUCCESS;
     vx_enum scalar_type;
-    if (scalar_type != VX_TYPE_UINT32)
-        return ERRMSG(VX_ERROR_INVALID_TYPE, "validate: Paramter: #4 type=%d (must be size)\n", scalar_type);
     STATUS_ERROR_CHECK(vxQueryScalar((vx_scalar)parameters[4], VX_SCALAR_TYPE, &scalar_type, sizeof(scalar_type)));
     if (scalar_type != VX_TYPE_UINT32)
-        return ERRMSG(VX_ERROR_INVALID_TYPE, "validate: Paramter: #5 type=%d (must be size)\n", scalar_type);
+        return ERRMSG(VX_ERROR_INVALID_TYPE, "validate: Paramter: #4 type=%d (must be size)\n", scalar_type);
 
     // Check for output parameters
     vx_tensor output;

@@ -71,7 +71,6 @@ ROCAL_API_CALL rocalCreateFileListLabelReader(RocalContext p_context, const char
     if (!p_context)
         THROW("Invalid rocal context passed to rocalCreateLabelReader")
     auto context = static_cast<Context*>(p_context);
-    std::cerr << "In rocALCreateFileListLabelReader";
     return context->master_graph->create_file_list_label_reader(source_path, file_list_path, MetaDataReaderType::TEXT_FILE_META_DATA_READER);
 }
 

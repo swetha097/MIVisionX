@@ -47,7 +47,7 @@ def resize(*inputs, bytes_per_sample_hint=0, image_type=0, interp_type=1, mag_fi
             minibatch_size=32, preserve=False, resize_longer=0, resize_shorter= 0, resize_depth = 0, resize_width = 0, resize_height = 0,  scaling_mode=types.SCALING_MODE_DEFAULT, interpolation_type=types.LINEAR_INTERPOLATION,
             save_attrs=False, seed=1, rocal_tensor_layout=types.NCHW, rocal_tensor_output_type=types.UINT8, temp_buffer_hint=0, device = None):
     # pybind call arguments
-    kwargs_pybind = {"input_image0": inputs[0], "dest_width:" : resize_width , "dest_height": resize_height, "is_output": False, "scaling_mode": scaling_mode, "max_size": max_size, "resize_shorter": resize_shorter, 
+    kwargs_pybind = {"input_image0": inputs[0], "dest_width:" : resize_width , "dest_height": resize_height, "is_output": False, "scaling_mode": scaling_mode, "max_size": max_size, "resize_shorter": resize_shorter,
                      "resize_longer": resize_longer, "interpolation_type": interpolation_type, "rocal_tensor_layout" : rocal_tensor_layout, "rocal_tensor_output_type" : rocal_tensor_output_type}
     resized_image = b.Resize(Pipeline._current_pipeline._handle ,*(kwargs_pybind.values()))
     return (resized_image)
@@ -185,7 +185,7 @@ def box_iou_matcher(*inputs, anchors, criteria=0.5, high_threshold=0.5, low_thre
     kwargs_pybind ={"anchors":anchors, "criteria":criteria, "high_threshold":high_threshold, "low_threshold":low_threshold, "allow_low_quality_matches":allow_low_quality_matches}
     box_iou_matcher = b.BoxIOUMatcher(Pipeline._current_pipeline._handle ,*(kwargs_pybind.values()))
     Pipeline._current_pipeline._BoxIOUMatcher = True
-    return (box_iou_matcher , []) # check what should be the return type 
+    return (box_iou_matcher , []) # check what should be the return type
 
 def spectrogram(*inputs, bytes_per_sample_hint=[0], center_windows=True, layout=types.FT, nfft=None, power=2, preserve=False, reflect_padding=True, seed=1, window_fn=[], window_length=512, window_step=256, rocal_tensor_layout=types.NCHW, rocal_tensor_output_type=types.FLOAT) :
     '''
@@ -210,7 +210,6 @@ def nonsilent_region(*inputs, rocal_tensor_output_type=types.FLOAT, bytes_per_sa
     """
     kwargs_pybind = {"input_audio0": inputs[0], "is_output": False, "cutoff_db": cutoff_db,
                      "reference_power": reference_power, "reset_interval": reset_interval, "window_length":window_length }
-    print("kwargs_pybind", kwargs_pybind)
     non_slient_region_output = b.NonSilentRegion(Pipeline._current_pipeline._handle ,*(kwargs_pybind.values()))
     return non_slient_region_output
 
@@ -272,7 +271,7 @@ def preemphasis_filter(*inputs, border=types.CLAMP, bytes_per_sample_hint=[0], p
     X_border = 0                    if border_type == 'zero'
     X_border = X[0]                 if border_type == 'clamp'
     X_border = X[1]                 if border_type == 'reflect'
-    
+
     '''
     preemph_coeff_float_param = b.CreateFloatParameter(preemph_coeff)
     kwargs_pybind = {"input_audio0": inputs[0], "rocal_tensor_output_type" :rocal_tensor_output_type, "is_output": False,

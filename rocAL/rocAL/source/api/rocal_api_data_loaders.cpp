@@ -346,7 +346,7 @@ rocalSequenceReader(
 
         INFO("Internal buffer size width = "+ TOSTR(width)+ " height = "+ TOSTR(height) + " depth = "+ TOSTR(num_of_planes))
 
-        std::vector<size_t> dims = {context->user_batch_size(), sequence_length, height, 
+        std::vector<size_t> dims = {context->user_batch_size(), sequence_length, height,
                                     width, static_cast<unsigned>(num_of_planes)};
         auto info  = rocalTensorInfo(std::move(dims),
                                      context->master_graph->mem_type(),
@@ -440,7 +440,7 @@ rocalSequenceReaderSingleShard(
 
         INFO("Internal buffer size width = "+ TOSTR(width)+ " height = "+ TOSTR(height) + " depth = "+ TOSTR(num_of_planes))
 
-        std::vector<size_t> dims = {context->user_batch_size(), sequence_length, height, 
+        std::vector<size_t> dims = {context->user_batch_size(), sequence_length, height,
                                     width, static_cast<unsigned>(num_of_planes)};
         auto info  = rocalTensorInfo(std::move(dims),
                                      context->master_graph->mem_type(),
@@ -695,7 +695,6 @@ rocalAudioFileSourceSingleShard(
 {
     rocalTensor* output = nullptr;
     auto context = static_cast<Context*>(p_context);
-    std::cerr << "Inside the rocALAudioFileSourceSingleShard" ;
     try
     {
         if(shard_count < 1 )
@@ -843,7 +842,7 @@ rocalAudioFileSource(
             if(is_output)
             {
                 auto actual_output = context->master_graph->create_tensor(output_info, is_output);
-                context->master_graph->add_node<CopyNode>({downmixed_output}, {actual_output}); 
+                context->master_graph->add_node<CopyNode>({downmixed_output}, {actual_output});
                 output = downmixed_output;
             }
         }
@@ -852,7 +851,7 @@ rocalAudioFileSource(
             if(is_output)
             {
                 auto actual_output = context->master_graph->create_tensor(info, is_output);
-                context->master_graph->add_node<CopyNode>({output}, {actual_output}); 
+                context->master_graph->add_node<CopyNode>({output}, {actual_output});
             }
         }
     }
@@ -876,7 +875,7 @@ rocalJpegCaffeLMDBRecordSource(
         RocalImageSizeEvaluationPolicy decode_size_policy,
         unsigned max_width,
         unsigned max_height,
-        RocalDecoderType dec_type) 
+        RocalDecoderType dec_type)
 {
     rocalTensor* output = nullptr;
     auto context = static_cast<Context*>(p_context);
@@ -1643,7 +1642,7 @@ rocalJpegTFRecordSource(
         RocalImageSizeEvaluationPolicy decode_size_policy,
         unsigned max_width,
         unsigned max_height,
-        RocalDecoderType dec_type) 
+        RocalDecoderType dec_type)
 {
     rocalTensor* output = nullptr;
     auto context = static_cast<Context*>(p_context);
@@ -1744,7 +1743,7 @@ rocalJpegTFRecordSourceSingleShard(
         RocalImageSizeEvaluationPolicy decode_size_policy,
         unsigned max_width,
         unsigned max_height,
-        RocalDecoderType dec_type) 
+        RocalDecoderType dec_type)
 {
     rocalTensor* output = nullptr;
     auto context = static_cast<Context*>(p_context);
@@ -2021,8 +2020,8 @@ rocalVideoFileSource(
             decoder_type = DecoderType::FFMPEG_SOFTWARE_DECODE;
         auto [color_format, num_of_planes] = convert_color_format(rocal_color_format);
         auto decoder_mode = convert_decoder_mode(rocal_decode_device);
-        
-        std::vector<size_t> dims = {context->user_batch_size(), sequence_length, video_prop.height, 
+
+        std::vector<size_t> dims = {context->user_batch_size(), sequence_length, video_prop.height,
                                     video_prop.width, static_cast<unsigned>(num_of_planes)};
         auto info  = rocalTensorInfo(std::move(dims),
                                      context->master_graph->mem_type(),
@@ -2106,7 +2105,7 @@ rocalVideoFileSourceSingleShard(
             decoder_type = DecoderType::FFMPEG_SOFTWARE_DECODE;
         auto [color_format, num_of_planes] = convert_color_format(rocal_color_format);
         auto decoder_mode = convert_decoder_mode(rocal_decode_device);
-        std::vector<size_t> dims = {context->user_batch_size(), sequence_length, video_prop.height, 
+        std::vector<size_t> dims = {context->user_batch_size(), sequence_length, video_prop.height,
                                     video_prop.width, static_cast<unsigned>(num_of_planes)};
         auto info  = rocalTensorInfo(std::move(dims),
                                      context->master_graph->mem_type(),
@@ -2193,7 +2192,7 @@ rocalVideoFileResize(
             decoder_type = DecoderType::FFMPEG_SOFTWARE_DECODE;
         auto [color_format, num_of_planes] = convert_color_format(rocal_color_format);
         auto decoder_mode = convert_decoder_mode(rocal_decode_device);
-        std::vector<size_t> dims = {context->user_batch_size(), sequence_length, video_prop.height, 
+        std::vector<size_t> dims = {context->user_batch_size(), sequence_length, video_prop.height,
                                     video_prop.width, static_cast<unsigned>(num_of_planes)};
         auto info  = rocalTensorInfo(std::move(dims),
                                      context->master_graph->mem_type(),
@@ -2278,7 +2277,7 @@ rocalVideoFileResize(
             }
 
             rocalTensorInfo output_info = info;
-            std::vector<size_t>  out_dims = {context->user_batch_size(), sequence_length, max_out_height, 
+            std::vector<size_t>  out_dims = {context->user_batch_size(), sequence_length, max_out_height,
                                              max_out_width, static_cast<unsigned>(num_of_planes)};
             output_info.set_dims(out_dims);
             resize_output = context->master_graph->create_tensor(output_info, false);
@@ -2370,8 +2369,8 @@ rocalVideoFileResizeSingleShard(
             decoder_type = DecoderType::FFMPEG_SOFTWARE_DECODE;
         auto [color_format, num_of_planes] = convert_color_format(rocal_color_format);
         auto decoder_mode = convert_decoder_mode(rocal_decode_device);
-        
-        std::vector<size_t> dims = {context->user_batch_size(), sequence_length, video_prop.height, 
+
+        std::vector<size_t> dims = {context->user_batch_size(), sequence_length, video_prop.height,
                                     video_prop.width, static_cast<unsigned>(num_of_planes)};
         auto info  = rocalTensorInfo(std::move(dims),
                                      context->master_graph->mem_type(),
@@ -2456,7 +2455,7 @@ rocalVideoFileResizeSingleShard(
             }
 
             rocalTensorInfo output_info = info;
-            std::vector<size_t>  out_dims = {context->user_batch_size(), sequence_length, max_out_height, 
+            std::vector<size_t>  out_dims = {context->user_batch_size(), sequence_length, max_out_height,
                                              max_out_width, static_cast<unsigned>(num_of_planes)};
             output_info.set_dims(out_dims);
             resize_output = context->master_graph->create_tensor(output_info, false);

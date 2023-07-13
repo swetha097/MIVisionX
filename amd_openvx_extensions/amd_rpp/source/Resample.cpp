@@ -66,9 +66,9 @@ void update_destination_roi(const vx_reference *parameters, ResampleLocalData *d
     for(unsigned i = 0; i < data->nbatchSize; i++) {
         if (data->inRateTensor[i]!=0)
             _scale_ratio = data->outRateTensor[i] / (float)data->inRateTensor[i];
-        else 
+        else
             _scale_ratio = 0;
-        data->roi_ptr_dst[i].xywhROI.xy.x = (int)std::ceil(_scale_ratio * data->roi_ptr_src[i].xywhROI.xy.x); 
+        data->roi_ptr_dst[i].xywhROI.xy.x = (int)std::ceil(_scale_ratio * data->roi_ptr_src[i].xywhROI.xy.x);
         data->roi_ptr_dst[i].xywhROI.xy.y = data->roi_ptr_src[i].xywhROI.xy.y;
     }
 }
@@ -181,9 +181,7 @@ static vx_status VX_CALLBACK initializeResample(vx_node node, const vx_reference
     // unsigned roiType;
     memset(data, 0, sizeof(*data));
     STATUS_ERROR_CHECK(vxReadScalarValue((vx_scalar)parameters[8], &data->quality));
-    std::cerr << "Quality :" <<data->quality;
     STATUS_ERROR_CHECK(vxReadScalarValue((vx_scalar)parameters[9], &data->maxDstWidth));
-    std::cerr << "MAX DST WIDTH :: " << data->maxDstWidth;
     STATUS_ERROR_CHECK(vxReadScalarValue((vx_scalar)parameters[10], &data->nbatchSize));
     STATUS_ERROR_CHECK(vxCopyScalar((vx_scalar)parameters[11], &data->deviceType, VX_READ_ONLY, VX_MEMORY_TYPE_HOST));
 

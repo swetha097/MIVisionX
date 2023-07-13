@@ -88,7 +88,7 @@ void update_destination_roi(const vx_reference *parameters, SliceLocalData *data
                 data->roi_ptr_dst[i].xywhROI.xy.y = data->roi_ptr_src[i].xywhROI.xy.y;
             }
         }
-        
+
     }
 }
 
@@ -200,7 +200,6 @@ static vx_status VX_CALLBACK processSlice(vx_node node, const vx_reference *para
 
 static vx_status VX_CALLBACK initializeSlice(vx_node node, const vx_reference *parameters, vx_uint32 num)
 {
-    std::cerr<<"\n static vx_status VX_CALLBACK initializeSlice ";
     SliceLocalData *data = new SliceLocalData;
     memset(data, 0, sizeof(*data));
     STATUS_ERROR_CHECK(vxCopyScalar((vx_scalar)parameters[12], &data->deviceType, VX_READ_ONLY, VX_MEMORY_TYPE_HOST));

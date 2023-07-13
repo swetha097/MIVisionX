@@ -54,17 +54,14 @@ unsigned FileSourceReader::count_items()
 size_t
 FileSourceReader::last_batch_padded_size()
 {
-    // std::cerr << "\n The last batch padded size is :: " << _last_batch_padded_size;
     return _last_batch_padded_size;
 }
 
 Reader::Status FileSourceReader::initialize(ReaderConfig desc)
 {
-    std::cerr << "FileSourceReader::initialize(ReaderConfig desc)";
     auto ret = Reader::Status::OK;
     _file_id = 0;
     _folder_path = desc.path();
-    std::cerr << "\n _folder_path :: "<< _folder_path;
     _shard_id = desc.get_shard_id();
     _shard_count = desc.get_shard_count();
     _batch_count = desc.get_batch_size();
@@ -72,7 +69,6 @@ Reader::Status FileSourceReader::initialize(ReaderConfig desc)
     _loop = desc.loop();
     _meta_data_reader = desc.meta_data_reader();
     _last_batch_info = desc.get_last_batch_policy();
-    std::cerr<<"\n _last_batch_info "<<_last_batch_info.first<<"\t "<<_last_batch_info.second;
     ret = subfolder_reading();
         // the following code is required to make every shard the same size:: required for multi-gpu training
     if (_shard_count > 1 && _batch_count > 1) {
@@ -200,7 +196,7 @@ Reader::Status FileSourceReader::subfolder_reading()
             }
         }
         catch (const boost::filesystem::filesystem_error& ex) {
-                    if (ex.code() == boost::system::errc::permission_denied) 
+                    if (ex.code() == boost::system::errc::permission_denied)
                         THROW("Permission denied for directory: " + entry.path().string());
         }
 }

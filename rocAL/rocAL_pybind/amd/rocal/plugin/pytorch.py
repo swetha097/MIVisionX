@@ -36,7 +36,6 @@ class ROCALGenericIterator(object):
         self.device = device
         self.device_id = device_id
         self.output = None
-        print("self.device", self.device)
         self.len = b.getRemainingImages(self.loader._handle)
         self.last_batch_policy = self.loader._last_batch_policy
         self.shard_size = size
@@ -87,16 +86,16 @@ class ROCALGenericIterator(object):
                         if self.tensor_dtype == types.FLOAT:
                             self.output = torch.empty((self.batch_size, self.color_format, self.h, self.w,), dtype=torch.float32)
                         elif self.tensor_dtype == types.FLOAT16:
-                            self.output = torch.empty((self.batch_size, self.color_format, self.h, self.w,), dtype=torch.float16) 
-                        self.labels_tensor = torch.empty(self.batch_size, dtype = torch.int32)               
+                            self.output = torch.empty((self.batch_size, self.color_format, self.h, self.w,), dtype=torch.float16)
+                        self.labels_tensor = torch.empty(self.batch_size, dtype = torch.int32)
 
                     else:
                         torch_gpu_device = torch.device('cuda', self.device_id)
                         if self.tensor_dtype == types.FLOAT:
                             self.output = torch.empty((self.batch_size, self.color_format, self.h, self.w,), dtype=torch.float32, device = torch_gpu_device)
                         elif self.tensor_dtype == types.FLOAT16:
-                            self.output = torch.empty((self.batch_size, self.color_format, self.h, self.w,), dtype=torch.float16, device = torch_gpu_device)       
-                        self.labels_tensor = torch.empty(self.batch_size, dtype = torch.int32, device = torch_gpu_device)         
+                            self.output = torch.empty((self.batch_size, self.color_format, self.h, self.w,), dtype=torch.float16, device = torch_gpu_device)
+                        self.labels_tensor = torch.empty(self.batch_size, dtype = torch.int32, device = torch_gpu_device)
 
                 else: #NHWC
                     if self.device == "cpu":
