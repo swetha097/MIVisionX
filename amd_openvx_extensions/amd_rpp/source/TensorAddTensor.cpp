@@ -21,6 +21,14 @@ THE SOFTWARE.
 */
 
 #include "internal_publishKernels.h"
+#if _WIN32
+#include <intrin.h>
+#else
+#include <x86intrin.h>
+#include <smmintrin.h>
+#include <immintrin.h>
+#endif
+
 #define NUM_OF_DIMS 5
 struct TensorAddTensorLocalData
 {
@@ -148,15 +156,37 @@ static vx_status VX_CALLBACK processTensorAddTensor(vx_node node, const vx_refer
     else if (data->device_type == AGO_TARGET_AFFINITY_CPU)
     {
         refreshTensorAddTensor(node, parameters, num, data);
-         if (data->in_tensor_type == vx_type_e::VX_TYPE_FLOAT32 && data->out_tensor_type == vx_type_e::VX_TYPE_FLOAT32)
+        if (data->in_tensor_type == vx_type_e::VX_TYPE_FLOAT32 && data->out_tensor_type == vx_type_e::VX_TYPE_FLOAT32)
         {
-        data->roi_ptr_src = (RpptROI *)data->roi_tensor_ptr_src;
-        for (uint i = 0; i < data->nbatchSize; i++)
+            uint channels = 1; // for audio data
+            data->roi_ptr_src = (RpptROI *)data->roi_tensor_ptr_src;
+            size_t nStride = data->in_tensor_dims1[1] * data->in_tensor_dims1[2] * channels;
+
+            for (uint i = 0; i < data->nbatchSize; i++)
             {
-                size_t size_psrc1_elements = data->in_tensor_dims1[1] * data->in_tensor_dims1[2];
-                size_t size_psrc1_roi = data->roi_ptr_src[i].xywhROI.xy.x * data->roi_ptr_src[i].xywhROI.xy.y;
-                for (uint j = 0; j < size_psrc1_roi ; j++) {
-                    ((float *)(data->pDst))[i * size_psrc1_elements + j] = ((float *)(data->pSrc1))[i * size_psrc1_elements + j] + ((float *)(data->pSrc2))[i];
+                float *src1Temp = (float *)(data->pSrc1) + i * nStride;
+                float *src2Temp = (float *)(data->pSrc2) + i;
+                float *dstTemp = (float *)(data->pDst) + i * nStride;
+                uint height = data->roi_ptr_src[i].xywhROI.xy.y;
+                uint width = data->roi_ptr_src[i].xywhROI.xy.x;
+                uint alignedWidth = (width / 8) * 8;
+                float additionFactor = src2Temp[0];
+                __m256 pSrc2 = _mm256_set1_ps(additionFactor);
+                for (uint row = 0; row < height; row++)
+                {
+                    float *srcPtr1Row = src1Temp + row * data->in_tensor_dims1[1];
+                    float *dstPtrRow = dstTemp + row * data->in_tensor_dims1[1];
+                    uint vectorLoopCount = 0;
+                    for(; vectorLoopCount < alignedWidth; vectorLoopCount += 8)
+                    {
+                        __m256 pSrc1 = _mm256_loadu_ps(srcPtr1Row);
+                        __m256 pDst = _mm256_add_ps(pSrc1, pSrc2);
+                        _mm256_storeu_ps(dstPtrRow, pDst);
+                        srcPtr1Row += 8;
+                        dstPtrRow += 8;
+                    }
+                    for(; vectorLoopCount < width; vectorLoopCount++)
+                        *dstPtrRow++ = (*srcPtr1Row++) + additionFactor;
                 }
             }
         }
@@ -180,7 +210,7 @@ static vx_status VX_CALLBACK initializeTensorAddTensor(vx_node node, const vx_re
     STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[1], VX_TENSOR_DIMS, &data->in_tensor_dims2, sizeof(vx_size) * num_of_dims2));
     STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[1], VX_TENSOR_DATA_TYPE, &data->in_tensor_type, sizeof(data->in_tensor_type)));
     STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[2], VX_TENSOR_DATA_TYPE, &data->out_tensor_type, sizeof(data->out_tensor_type)));
-    
+
 
     refreshTensorAddTensor(node, parameters, num, data);
 

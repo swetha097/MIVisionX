@@ -21,6 +21,14 @@ THE SOFTWARE.
 */
 
 #include "internal_publishKernels.h"
+#if _WIN32
+#include <intrin.h>
+#else
+#include <x86intrin.h>
+#include <smmintrin.h>
+#include <immintrin.h>
+#endif
+
 #define NUM_OF_DIMS 5
 struct TensorMulScalarLocalData
 {
@@ -116,21 +124,28 @@ static vx_status VX_CALLBACK processTensorMulScalar(vx_node node, const vx_refer
         refreshTensorMulScalar(node, parameters, num, data);
         // memcpy(data->pDst, data->pSrc, data->tensor_size);
         // Add the case for UNIT8 datatype
-         if (data->in_tensor_type == vx_type_e::VX_TYPE_FLOAT32 && data->out_tensor_type == vx_type_e::VX_TYPE_FLOAT32)
+        if (data->in_tensor_type == vx_type_e::VX_TYPE_FLOAT32 && data->out_tensor_type == vx_type_e::VX_TYPE_FLOAT32)
         {
-        for (uint i = 0; i < (data->tensor_size)/ sizeof(float); i++)
+            __m256 pMul = _mm256_set1_ps(data->scalar_value);
+            float scalarValue = data->scalar_value;
+            float *srcPtrTemp = (float *)(data->pSrc);
+            float *dstPtrTemp = (float *)(data->pDst);
+            uint bufferLength = data->tensor_size/ sizeof(float);
+            uint alignedLength = (bufferLength / 8) * 8;
+            uint vectorLoopCount = 0;
+            for(; vectorLoopCount < alignedLength; vectorLoopCount += 8)
             {
-                // std::cerr << "\n i :: " << i;
-                // std::cerr << "\n scalar :: "<< data->scalar_value;
-                // std::cerr << "\n (float *)(data->pSrc))[i]"<< ((float *)(data->pSrc))[i];
-                ((float *)(data->pDst))[i] = ((float *)(data->pSrc))[i] * data->scalar_value;
-                // std::cerr << "\n ((float *)(data->pDst))[i]" << ((float *)(data->pDst))[i];
-            
+                __m256 pSrc = _mm256_loadu_ps(srcPtrTemp);
+                __m256 pDst = _mm256_mul_ps(pSrc, pMul);
+                _mm256_storeu_ps(dstPtrTemp, pDst);
+                srcPtrTemp += 8;
+                dstPtrTemp += 8;
             }
-            
-
+            for(; vectorLoopCount < bufferLength; vectorLoopCount++)
+                *dstPtrTemp++ = *srcPtrTemp++ * scalarValue;
         }
     }
+
     return status;
 }
 
@@ -146,7 +161,7 @@ static vx_status VX_CALLBACK initializeTensorMulScalar(vx_node node, const vx_re
     STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[0], VX_TENSOR_DIMS, tensor_dims, sizeof(vx_size) * num_of_dims));
     STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[0], VX_TENSOR_DATA_TYPE, &data->in_tensor_type, sizeof(data->in_tensor_type)));
     STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[1], VX_TENSOR_DATA_TYPE, &data->out_tensor_type, sizeof(data->out_tensor_type)));
-    
+
     data->tensor_size = 1;
     for(int i = 0; i < num_of_dims; i++)
         data->tensor_size *= tensor_dims[i];

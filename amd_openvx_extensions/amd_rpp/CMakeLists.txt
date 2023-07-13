@@ -142,12 +142,12 @@ list(APPEND SOURCES
         source/PreemphasisFilter.cpp
         source/Spectrogram.cpp
         source/NonSilentRegion.cpp
-        source/MelFilterBank.cpp 
-        source/Slice.cpp 
-        source/Normalize.cpp 
-        source/TensorMulScalar.cpp 
-        source/TensorAddTensor.cpp 
-        source/Resample.cpp 
+        source/MelFilterBank.cpp
+        source/Slice.cpp
+        source/Normalize.cpp
+        source/TensorMulScalar.cpp
+        source/TensorAddTensor.cpp
+        source/Resample.cpp
         source/Pad.cpp
         source/kernel_rpp.cpp
         source/internal_publishKernels.cpp
@@ -190,7 +190,7 @@ if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "MSVC")
     set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} /MTd")
 else()
     set(LINK_LIBRARY_LIST ${LINK_LIBRARY_LIST} openvx)
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fdata-sections -std=gnu++14")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fdata-sections -std=gnu++14 -mavx2")
 endif()
 
 target_link_libraries(vx_rpp ${LINK_LIBRARY_LIST})
