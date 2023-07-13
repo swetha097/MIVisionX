@@ -32,13 +32,16 @@ class SnPNoiseNode : public Node
 public:
     SnPNoiseNode(const std::vector<Tensor *> &inputs, const std::vector<Tensor *> &outputs);
     SnPNoiseNode() = delete;
-    void init(float sdev);
-    void init(FloatParam *sdev);
+    void init(float _noise_prob, float _salt_prob,float hue , float _noise_value,int _salt_value);
+    void init(FloatParam *_noise_prob_param, FloatParam *_salt_prob_param, FloatParam *_noise_value_param,  FloatParam *_salt_value_param, int seed);
 protected:
     void create_node() override;
     void update_node() override;
 private:
-    ParameterVX<float> _sdev;
-    constexpr static float SDEV_RANGE [2] = {0.1, 0.15};
+    ParameterVX<float> _noise_prob, _salt_prob, _noise_value, _salt_value;
+    int _seed;
+    constexpr static float NOISE_PROB_RANGE [2] = {0.1, 1};
+    constexpr static float SALT_PROB_RANGE [2] = {0.1, 1};
+    constexpr static float NOISE_RANGE [2] = {0, 0.5};
+    constexpr static float SALT_RANGE [2] = {0.1, 1};
 };
-
