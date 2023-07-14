@@ -101,7 +101,7 @@ void CropMirrorNormalizeNode::create_node() {
     if ((status = vxGetStatus((vx_reference)_crop_tensor)) != VX_SUCCESS)
         THROW("Error: vxCreateTensorFromHandle(crop_tensor: failed " + TOSTR(status))
     
-    _node = vxExtrppNode_CropMirrorNormalize(_graph->get(), _inputs[0]->handle(), _crop_tensor, _outputs[0]->handle(),
+    _node = vxRppCropMirrorNormalize(_graph->get(), _inputs[0]->handle(), _crop_tensor, _outputs[0]->handle(),
                                              _multiplier_vx_array, _offset_vx_array, _mirror.default_array(), in_layout_vx, out_layout_vx, roi_type_vx);
     if((status = vxGetStatus((vx_reference)_node)) != VX_SUCCESS)
         THROW("Error adding the crop mirror normalize (vxExtrppNode_CropMirrorNormalize) failed: " + TOSTR(status))
