@@ -189,7 +189,7 @@ int test(int test_case, int reader_type, const char *path, const char *outName, 
 
     // Creating uniformly distributed random objects to override some of the default augmentation parameters
     RocalIntParam color_temp_adj = rocalCreateIntParameter(-50);
-    RocalIntParam mirror = rocalCreateIntParameter(1);
+    RocalIntParam mirror = rocalCreateIntParameter(0);
 
 
     /*>>>>>>>>>>>>>>>>>>> Graph description <<<<<<<<<<<<<<<<<<<*/
@@ -200,6 +200,8 @@ int test(int test_case, int reader_type, const char *path, const char *outName, 
 #endif
 
     RocalTensor input1;
+    RocalTensorLayout tensorLayout = (rgb != 0) ? RocalTensorLayout::ROCAL_NHWC : RocalTensorLayout::ROCAL_NCHW;
+    RocalTensorOutputType tensorOutputType = RocalTensorOutputType::ROCAL_UINT8;
     // The jpeg file loader can automatically select the best size to decode all images to that size
     // User can alternatively set the size or change the policy that is used to automatically find the size
     switch (reader_type)
@@ -565,9 +567,9 @@ int test(int test_case, int reader_type, const char *path, const char *outName, 
     {
         std::cout << ">>>>>>> Running "
                   << "rocalCropMirrorNormalize" << std::endl;
-        std::vector<float> mean;
-        std::vector<float> std_dev;
-        image1 = rocalCropMirrorNormalize(handle, image0, 224, 224, 0.2, 0.2, mean, std_dev, true, mirror);
+        std::vector<float> mean{0, 0, 0};
+        std::vector<float> std_dev{1, 1, 1};
+        image1 = rocalCropMirrorNormalize(handle, image0, 224, 224, 0, 0, mean, std_dev, true, mirror, tensorLayout, tensorOutputType);
     }
     break;
     /*case 26:
@@ -599,13 +601,15 @@ int test(int test_case, int reader_type, const char *path, const char *outName, 
         image1 = rocalRotateFixed(handle, image0, 50, true);
     }
     break;
+*/
     case 32:
     {
         std::cout << ">>>>>>> Running "
                   << "rocalBrightnessFixed" << std::endl;
-        image1 = rocalBrightnessFixed(handle, image0, 1.90, 20, true);
+        image1 = rocalBrightnessFixed(handle, image0, 1.90, 20, true, tensorLayout, tensorOutputType);
     }
     break;
+/*
     case 33:
     {
         std::cout << ">>>>>>> Running "
