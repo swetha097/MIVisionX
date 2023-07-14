@@ -567,8 +567,8 @@ int test(int test_case, int reader_type, const char *path, const char *outName, 
     {
         std::cout << ">>>>>>> Running "
                   << "rocalCropMirrorNormalize" << std::endl;
-        std::vector<float> mean;
-        std::vector<float> std_dev;
+        std::vector<float> mean = {0, 0, 0};
+        std::vector<float> std_dev = {1, 1, 1};
         image1 = rocalCropMirrorNormalize(handle, image0, 224, 224, 0, 0, mean, std_dev, true, mirror, tensor_layout, tensor_output_type);
     }
     break;
@@ -769,8 +769,8 @@ int test(int test_case, int reader_type, const char *path, const char *outName, 
     {
         std::cout << ">>>>>>> Running "
                   << "rocalCropMirrorNormalizeFixed_center crop" << std::endl;
-        std::vector<float> mean;
-        std::vector<float> std_dev;
+        std::vector<float> mean = {0, 0, 0};
+        std::vector<float> std_dev = {1, 1, 1};
         image1 = rocalCropMirrorNormalize(handle, image0, 224, 224, 0.5, 0.5, mean, std_dev, true);
     }
     break;
