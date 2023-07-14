@@ -26,9 +26,9 @@ THE SOFTWARE.
 #include "exception.h"
 
 CropResizeNode::CropResizeNode(const std::vector<Tensor *> &inputs, const std::vector<Tensor *> &outputs) :
-        Node(inputs, outputs),
-        _dest_width(_outputs[0]->info().max_shape()[0]),
-        _dest_height(_outputs[0]->info().max_shape()[1])
+        Node(inputs, outputs)
+        // _dest_width(_outputs[0]->info().max_shape()[0]),
+        // _dest_height(_outputs[0]->info().max_shape()[1])
 {
     _crop_param = std::make_shared<RocalRandomCropParam>(_batch_size);
 }
@@ -38,8 +38,8 @@ void CropResizeNode::create_node()
     if(_node)
         return;
 
-    if(_dest_width == 0 || _dest_height == 0)
-        THROW("Uninitialized destination dimension")
+    // if(_dest_width == 0 || _dest_height == 0)
+    //     THROW("Uninitialized destination dimension")
 
     _crop_param->create_array(_graph);
     std::vector<uint32_t> dst_roi_width(_batch_size,_outputs[0]->info().max_shape()[0]);

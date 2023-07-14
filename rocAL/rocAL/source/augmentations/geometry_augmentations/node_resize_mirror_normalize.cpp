@@ -111,57 +111,58 @@ void ResizeMirrorNormalizeNode::update_node()
     _dst_roi_height_vec.clear();
     _mirror.update_array();
 }
-void ResizeMirrorNormalizeNode::init(unsigned dest_width, unsigned dest_height, RocalResizeScalingMode scaling_mode, std::vector<unsigned> max_size,
+void ResizeMirrorNormalizeNode::init(unsigned dest_width, unsigned dest_height, RocalResizeScalingMode scaling_mode, std::vector<unsigned> maximum_size,
                                      RocalResizeInterpolationType interpolation_type, std::vector<float>& mean, std::vector<float>& std_dev, IntParam *mirror)
     {
-        // Min size and max size used for MLPerf MaskRCNN resize augmentation
-        // TODO: Get the min_size and max_size as user arguments from python
-        int min_size = 800;
-        int max_size = 1333;
-        int src_width = src_roi[i].x2;
-        int src_height = src_roi[i].y2;
-        int size = min_size;
-        int output_width, output_height;
+    //     // Min size and max size used for MLPerf MaskRCNN resize augmentation
+    //     // TODO: Get the min_size and max_size as user arguments from python
+    //     auto src_roi = _inputs[0]->info().get_roi();
+    //     int min_size = 800;
+    //     int max_size = 1333;
+    //     int src_width = src_roi[i].x2;
+    //     int src_height = src_roi[i].y2;
+    //     int size = min_size;
+    //     int output_width, output_height;
 
-        float min_original_size = static_cast<float>(std::min(src_width, src_height));
-        float max_original_size = static_cast<float>(std::max(src_width, src_height));
-        if(max_original_size / min_original_size * size > max_size)
-            size = static_cast<size_t>(round(max_size * min_original_size / max_original_size));
+    //     float min_original_size = static_cast<float>(std::min(src_width, src_height));
+    //     float max_original_size = static_cast<float>(std::max(src_width, src_height));
+    //     if(max_original_size / min_original_size * size > max_size)
+    //         size = static_cast<size_t>(round(max_size * min_original_size / max_original_size));
 
-        if (((src_width <= src_height) && (src_width == size)) || ((src_height <= src_width) && (src_height == size)))
-        {
-            _dest_height_val[i] = src_height;
-            _dest_width_val[i] = src_width;
-            continue;
-        }
+    //     if (((src_width <= src_height) && (src_width == size)) || ((src_height <= src_width) && (src_height == size)))
+    //     {
+    //         _dest_height_val[i] = src_height;
+    //         _dest_width_val[i] = src_width;
+    //         continue;
+    //     }
 
-        if(src_width < src_height) {
-            output_width = size;
-            output_height = static_cast<size_t>(size * src_height / src_width);	
-        } else {
-            output_height = size;
-            output_width = static_cast<size_t>(size * src_width / src_height);
-        }
-	_dest_height_val[i] = output_height;
-	_dest_width_val[i] = output_width;
-    }
-    vxCopyArrayRange((vx_array)_dst_roi_width, 0, _batch_size, sizeof(uint), _dest_width_val.data(), VX_WRITE_ONLY, VX_MEMORY_TYPE_HOST);
-    vxCopyArrayRange((vx_array)_dst_roi_height, 0, _batch_size, sizeof(uint), _dest_height_val.data(), VX_WRITE_ONLY, VX_MEMORY_TYPE_HOST);
+    //     if(src_width < src_height) {
+    //         output_width = size;
+    //         output_height = static_cast<size_t>(size * src_height / src_width);	
+    //     } else {
+    //         output_height = size;
+    //         output_width = static_cast<size_t>(size * src_width / src_height);
+    //     }
+	// _dest_height_val[i] = output_height;
+	// _dest_width_val[i] = output_width;
+    // }
+    // vxCopyArrayRange((vx_array)_dst_roi_width, 0, _batch_size, sizeof(uint), _dest_width_val.data(), VX_WRITE_ONLY, VX_MEMORY_TYPE_HOST);
+    // vxCopyArrayRange((vx_array)_dst_roi_height, 0, _batch_size, sizeof(uint), _dest_height_val.data(), VX_WRITE_ONLY, VX_MEMORY_TYPE_HOST);
 
-    _outputs[0]->update_tensor_roi(_dest_width_val, _dest_height_val);
-    _mirror.update_array();
+    // _outputs[0]->update_tensor_roi(_dest_width_val, _dest_height_val);
+    // _mirror.update_array();
 
-    _interpolation_type = (int)interpolation_type;
-    _scaling_mode = scaling_mode;
-    _out_width = dest_width;
-    _out_height = dest_height;
-    if(max_size.size() > 0) {
-        _max_width = max_size[0];
-        _max_height = max_size[1];
-    }
-    _mean = mean;
-    _std_dev = std_dev;
-    _mirror.set_param(core(mirror));
+    // _interpolation_type = (int)interpolation_type;
+    // // _scaling_mode = scaling_mode;
+    // // _out_width = dest_width;
+    // // _out_height = dest_height;
+    // // if(max_size.size() > 0) {
+    // //     _max_width = max_size[0];
+    // //     _max_height = max_size[1];
+    // // }
+    // // _mean = mean;
+    // // _std_dev = std_dev;
+    // _mirror.set_param(core(mirror));
 }
 
 void ResizeMirrorNormalizeNode::adjust_out_roi_size() {
