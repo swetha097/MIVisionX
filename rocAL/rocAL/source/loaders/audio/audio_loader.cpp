@@ -171,8 +171,6 @@ AudioLoader::load_routine() {
                                             _max_decoded_channels,
                                             _decoded_audio_info._roi_audio_samples,
                                             _decoded_audio_info._roi_audio_channels,
-                                            _decoded_audio_info._original_audio_samples,
-                                            _decoded_audio_info._original_audio_channels,
                                             _decoded_audio_info._original_audio_sample_rates);
 
             if(load_status == LoaderModuleStatus::OK) {
