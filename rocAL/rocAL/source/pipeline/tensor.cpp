@@ -94,11 +94,11 @@ void allocate_host_or_pinned_mem(void **ptr, size_t size, RocalMemType mem_type)
     if (mem_type == RocalMemType::HIP) {
 #if ENABLE_HIP
         hipError_t err = hipHostMalloc((void **)ptr, size, hipHostMallocDefault);
-    if(err != hipSuccess || !*ptr)
-        THROW("hipHostMalloc of size " + TOSTR(size) + " failed " + TOSTR(err))
-    err = hipMemset((void *)*ptr, 0, size);
-    if(err != hipSuccess)
-        THROW("hipMemset of size " + TOSTR(size) + " failed " + TOSTR(err))
+        if(err != hipSuccess || !*ptr)
+            THROW("hipHostMalloc of size " + TOSTR(size) + " failed " + TOSTR(err))
+        err = hipMemset((void *)*ptr, 0, size);
+        if(err != hipSuccess)
+            THROW("hipMemset of size " + TOSTR(size) + " failed " + TOSTR(err))
 #endif
     } else {
         *ptr = (void *)malloc(size);
@@ -116,16 +116,10 @@ bool operator==(const rocalTensorInfo &rhs, const rocalTensorInfo &lhs) {
 
 
 void rocalTensorInfo::reset_tensor_roi_buffers() {
-    allocate_host_or_pinned_mem((void **)&_roi_buf, _batch_size * 4 * sizeof(unsigned), _mem_type);
-    if (_mem_type == RocalMemType::HIP) {
-#if ENABLE_HIP
-        _roi.reset(_roi_buf, hipHostFree);
-#endif
-    } else {
-        _roi.reset(_roi_buf, free);
+     if(!_roi_buf) {
+        size_t roi_size = (_layout == RocalTensorlayout::NFCHW || _layout == RocalTensorlayout::NFHWC) ? _dims[0] * _dims[1] : _batch_size; // For Sequences pre allocating the ROI to N * F to replicate in OpenVX extensions
+        allocate_host_or_pinned_mem((void **)&_roi_buf, roi_size * 4 * sizeof(unsigned), _mem_type);
     }
-    _orig_roi_height = std::make_shared<std::vector<uint32_t>>(_batch_size);    // TODO - Check if this needs to be reallocated every time
-    _orig_roi_width = std::make_shared<std::vector<uint32_t>>(_batch_size);
     if (_is_image) {
         auto roi = get_roi();
         for (unsigned i = 0; i < _batch_size; i++) {
