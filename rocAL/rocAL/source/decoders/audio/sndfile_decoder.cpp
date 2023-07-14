@@ -64,6 +64,7 @@ AudioDecoder::Status SndFileDecoder::decode_info(int* samples, int* channels, fl
 // Initialize will open a new decoder and initialize the context
 AudioDecoder::Status SndFileDecoder::initialize(const char *src_filename) {
     _src_filename = src_filename;
+    AudioDecoder::Status status = Status::OK;
     memset(&_sfinfo, 0, sizeof(_sfinfo)) ;
     if (!(_sf_ptr = sf_open(src_filename, SFM_READ, &_sfinfo))) {
         /* Open failed so print an error message. */
@@ -71,10 +72,9 @@ AudioDecoder::Status SndFileDecoder::initialize(const char *src_filename) {
         /* Print the error message from libsndfile. */
         puts(sf_strerror(NULL));
         sf_close(_sf_ptr);
-        AudioDecoder::Status status = Status::HEADER_DECODE_FAILED;
+        status = Status::HEADER_DECODE_FAILED;
         return status;
     };
-    AudioDecoder::Status status = Status::OK;
     return status;
 }
 
