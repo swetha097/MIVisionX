@@ -41,19 +41,8 @@ public:
     size_t max_samples();
     size_t max_channels();
 private:
-    class FindMaxSize {
-    public:
-        void process_sample(unsigned val);
-        unsigned get_max() { return _max; };
-    private:
-        unsigned _max = 0;
-        unsigned _max_count = 0;
-    };
-    FindMaxSize _samples_max;
-    FindMaxSize _channels_max;
+    int _samples_max = 0, _channels_max = 0;
     std::shared_ptr<AudioDecoder> _decoder;
     std::shared_ptr<Reader> _reader;
-    std::shared_ptr<MetaDataReader> _meta_data_reader;
-    std::vector<unsigned char> _header_buff;
     std::string _input_path;
 };
