@@ -67,6 +67,7 @@ AudioReadAndDecode::create(ReaderConfig reader_config, DecoderConfig decoder_con
     }
     _reader = create_reader(reader_config);
     _input_path = reader_config.path();
+    _num_threads = reader_config.get_cpu_num_threads();
     if(_input_path.back() != '/')
         _input_path = _input_path + "/";
 }
@@ -126,7 +127,7 @@ AudioReadAndDecode::load(float* buff,
         for (size_t i = 0; i < _batch_size; i++){
             _decompressed_buff_ptrs[i] = buff + (audio_size * i);
         }
-#pragma omp parallel for num_threads(8)  // default(none) TBD: option disabled in Ubuntu 20.04
+#pragma omp parallel for num_threads(_num_threads)  // default(none) TBD: option disabled in Ubuntu 20.04
         for (size_t i = 0; i < _batch_size; i++) {
             // initialize the actual decoded channels and samples with the maximum
             _actual_decoded_samples[i] = max_decoded_samples;

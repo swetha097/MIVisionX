@@ -2596,7 +2596,8 @@ rocalAudioFileSourceSingleShard(
         info.set_max_shape();
         output = context->master_graph->create_loader_output_tensor(info);
         output->reset_audio_sample_rate();
-        context->master_graph->add_node<AudioLoaderSingleShardNode>({}, {output})->init(shard_id, shard_count,
+        auto cpu_num_threads = context->master_graph->calculate_cpu_num_threads(shard_count);
+        context->master_graph->add_node<AudioLoaderSingleShardNode>({}, {output})->init(shard_id, shard_count, cpu_num_threads,
                                                                                         source_path,
                                                                                         source_file_list_path,
                                                                                         StorageType(storage_type),
@@ -2676,8 +2677,9 @@ rocalAudioFileSource(
                                 tensor_data_type);
         info.set_max_shape();
         output = context->master_graph->create_loader_output_tensor(info);
-
-        context->master_graph->add_node<AudioLoaderNode>({}, {output})->init(internal_shard_count,
+        output->reset_audio_sample_rate();
+        auto cpu_num_threads = context->master_graph->calculate_cpu_num_threads(shard_count);
+        context->master_graph->add_node<AudioLoaderNode>({}, {output})->init(internal_shard_count, cpu_num_threads,
                                                                              source_path,
                                                                              source_file_list_path
                                                                              StorageType::FILE_SYSTEM,
