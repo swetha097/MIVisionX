@@ -188,7 +188,7 @@ rocalFlip(
     }
     return output;
 }
-
+*/
 
 RocalImage ROCAL_API_CALL
 rocalGamma(
@@ -359,6 +359,7 @@ rocalSaturationFixed(
     return output;
 }
 
+/*
 RocalImage  ROCAL_API_CALL
 rocalCropResize(
         RocalContext p_context,
@@ -641,26 +642,32 @@ rocalBrightness(
     }
     return output;
 }
-/*
-RocalImage ROCAL_API_CALL
+
+RocalTensor ROCAL_API_CALL
 rocalBrightnessFixed(
         RocalContext p_context,
-        RocalImage p_input,
+        RocalTensor p_input,
         float alpha,
         float beta,
-        bool is_output)
-{
-    Image* output = nullptr;
+        bool is_output,
+        RocalTensorLayout rocal_tensor_output_layout,
+        RocalTensorOutputType rocal_tensor_output_datatype) {
+    Tensor* output = nullptr;
     if ((p_context == nullptr) || (p_input == nullptr)) {
         ERR("Invalid ROCAL context or invalid input image")
         return output;
     }
 
     auto context = static_cast<Context*>(p_context);
-    auto input = static_cast<Image*>(p_input);
+    auto input = static_cast<Tensor*>(p_input);
     try
     {
-        output = context->master_graph->create_image(input->info(), is_output);
+        RocalTensorlayout op_tensorLayout = (RocalTensorlayout)rocal_tensor_output_layout;
+        RocalTensorDataType op_tensorDataType = (RocalTensorDataType)rocal_tensor_output_datatype;
+        TensorInfo output_info = input->info();
+        output_info.set_tensor_layout(op_tensorLayout);
+        output_info.set_data_type(op_tensorDataType);
+        output = context->master_graph->create_tensor(output_info, is_output);
         context->master_graph->add_node<BrightnessNode>({input}, {output})->init(alpha, beta);
     }
     catch(const std::exception& e)
@@ -793,7 +800,7 @@ rocalBlendFixed(
     return output;
 }
 
-
+/*
 RocalImage  ROCAL_API_CALL
 rocalWarpAffine(
         RocalContext p_context,
@@ -918,7 +925,7 @@ rocalFishEye(
         ERR(e.what())
     }
     return output;
-}
+}*/
 
 RocalImage ROCAL_API_CALL
 rocalVignette(
@@ -978,7 +985,7 @@ rocalVignetteFixed(
     return output;
 }
 
-RocalImage ROCAL_API_CALL
+/* RocalImage ROCAL_API_CALL
 rocalJitter(
         RocalContext p_context,
         RocalImage p_input,
@@ -1158,7 +1165,7 @@ rocalFlipFixed(
     }
     return output;
 }
-
+*/
 
 RocalImage ROCAL_API_CALL
 rocalContrast(
@@ -1221,7 +1228,7 @@ rocalContrastFixed(
     }
     return output;
 }
-
+/*
 RocalImage ROCAL_API_CALL
 rocalSnow(
         RocalContext p_context,
@@ -1346,7 +1353,7 @@ rocalRainFixed(
     }
     return output;
 }
-
+*/
 RocalImage ROCAL_API_CALL
 rocalColorTemp(
         RocalContext p_context,
@@ -1404,7 +1411,7 @@ rocalColorTempFixed(
     return output;
 }
 
-
+/*
 RocalImage ROCAL_API_CALL
 rocalFog(
         RocalContext p_context,
@@ -1549,7 +1556,7 @@ rocalLensCorrectionFixed(
     }
     return output;
 }
-
+*/
 RocalImage ROCAL_API_CALL
 rocalExposure(
         RocalContext p_context,
@@ -1669,7 +1676,7 @@ rocalColorTwistFixed(
     }
     return output;
 }
-*/
+
 RocalTensor ROCAL_API_CALL 
 rocalCropMirrorNormalize(RocalContext p_context, RocalTensor p_input, unsigned crop_height,
                          unsigned crop_width,float start_x, float start_y, std::vector<float> &mean,
@@ -2016,7 +2023,7 @@ rocalSSDRandomCrop(
     }
     return output;
 }
-
+*/
 RocalImage  ROCAL_API_CALL
 rocalCopy(
         RocalContext p_context,
@@ -2068,4 +2075,3 @@ rocalNop(
     }
     return output;
 }
-*/
