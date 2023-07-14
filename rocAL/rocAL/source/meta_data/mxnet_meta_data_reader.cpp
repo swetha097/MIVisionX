@@ -55,19 +55,19 @@ void MXNetMetaDataReader::add(std::string image_name, int label)
     _map_content.insert(std::pair<std::string, std::shared_ptr<Label>>(image_name, info));
 }
 
-void MXNetMetaDataReader::lookup(const std::vector<std::string> &_image_names)
+void MXNetMetaDataReader::lookup(const std::vector<std::string> &_sample_names)
 {
-    if(_image_names.empty())
+    if(_sample_names.empty())
     {
         WRN("No image names passed")
         return;
     }
-    if(_image_names.size() != (unsigned)_output->size())
-        _output->resize(_image_names.size());
+    if(_sample_names.size() != (unsigned)_output->size())
+        _output->resize(_sample_names.size());
 
-    for(unsigned i = 0; i < _image_names.size(); i++)
+    for(unsigned i = 0; i < _sample_names.size(); i++)
     {
-        auto _image_name = _image_names[i];
+        auto _image_name = _sample_names[i];
         auto it = _map_content.find(_image_name);
         if(_map_content.end() == it)
             THROW("MXNetMetaDataReader ERROR: Given name not present in the map"+ _image_name )
