@@ -108,8 +108,6 @@ AudioReadAndDecode::load(float* buff,
                          const size_t max_decoded_channels,
                          std::vector<uint32_t> &roi_samples,
                          std::vector<uint32_t> &roi_channels,
-                         std::vector<uint32_t> &actual_samples,
-                         std::vector<uint32_t> &actual_channels,
                          std::vector<float> &actual_sample_rates)
 {
     if(max_decoded_samples == 0 || max_decoded_channels == 0 )
@@ -167,8 +165,8 @@ AudioReadAndDecode::load(float* buff,
         }
         for (size_t i = 0; i < _batch_size; i++) {
             names[i] = _audio_names[i];
-            actual_samples[i] = roi_samples[i] = _original_samples[i];
-            actual_channels[i] = roi_channels[i] = _original_channels[i];
+            roi_samples[i] = _original_samples[i];
+            roi_channels[i] = _original_channels[i];
             actual_sample_rates[i] = _original_sample_rates[i];
         }
     }

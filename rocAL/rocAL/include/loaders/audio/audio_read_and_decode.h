@@ -55,8 +55,6 @@ public:
             const size_t max_decoded_channels,
             std::vector<uint32_t> &roi_samples,
             std::vector<uint32_t> &roi_channels,
-            std::vector<uint32_t> &actual_samples,
-            std::vector<uint32_t> &actual_channels,
             std::vector<float> &actual_sample_rates);
     size_t last_batch_padded_size();
     //! returns timing info or other status information
