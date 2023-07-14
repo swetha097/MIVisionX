@@ -173,6 +173,7 @@ public:
     RocalROIType roi_type() const { return _roi_type; }
     RocalTensorDataType data_type() const { return _data_type; }
     RocalTensorlayout layout() const { return _layout; }
+    RocalROI *get_roi() const { return (RocalROI *)_roi_buf; }
     std::shared_ptr<std::vector<float>> get_sample_rate() const { return _sample_rate; }
     RocalColorFormat color_format() const { return _color_format; }
     Type type() const { return _type; }
@@ -248,7 +249,7 @@ public:
     int create_from_handle(vx_context context);
     int create_virtual(vx_context context, vx_graph graph);
     bool is_handle_set() { return (_vx_handle != 0); }
-    void set_dims(std::vector<size_t>& dims) { _info.set_dims(dims); }
+    void set_dims(std::vector<size_t> dims) { _info.set_dims(dims); }
 private:
     vx_tensor _vx_handle = nullptr;  //!< The OpenVX tensor
     void* _mem_handle = nullptr;  //!< Pointer to the tensor's internal buffer (opencl or host)
