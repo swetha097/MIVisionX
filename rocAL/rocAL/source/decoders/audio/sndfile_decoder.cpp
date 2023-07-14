@@ -45,19 +45,19 @@ AudioDecoder::Status SndFileDecoder::decode_info(int* samples, int* channels, fl
     *samples = _sfinfo.frames;
     *channels = _sfinfo.channels;
     *sample_rate = _sfinfo.samplerate;
+    AudioDecoder::Status status = Status::OK;
     if (_sfinfo.channels < 1) {
         THROW("Not able to process less than" + TOSTR(_sfinfo.channels) + "channels");
         sf_close(_sf_ptr);
-		AudioDecoder::Status status = Status::HEADER_DECODE_FAILED;
+		status = Status::HEADER_DECODE_FAILED;
 		return status;
 	};
     if (_sfinfo.frames < 1) {
         THROW("Not able to process less than" + TOSTR(_sfinfo.frames) + "frames");
         sf_close(_sf_ptr);
-		AudioDecoder::Status status = Status::HEADER_DECODE_FAILED;
+		status = Status::HEADER_DECODE_FAILED;
 		return status;
 	};
-    AudioDecoder::Status status = Status::OK;
     return status;
 }
 
