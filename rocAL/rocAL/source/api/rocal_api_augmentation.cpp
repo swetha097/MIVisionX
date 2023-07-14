@@ -642,35 +642,39 @@ rocalBrightness(
     return output;
 }
 
-RocalImage ROCAL_API_CALL
+RocalTensor ROCAL_API_CALL
 rocalBrightnessFixed(
         RocalContext p_context,
-        RocalImage p_input,
+        RocalTensor p_input,
         float alpha,
         float beta,
-        bool is_output)
-{
-    Image* output = nullptr;
+        bool is_output,
+        RocalTensorLayout rocal_tensor_output_layout,
+        RocalTensorOutputType rocal_tensor_output_datatype) {
+    Tensor* output = nullptr;
     if ((p_context == nullptr) || (p_input == nullptr)) {
-        ERR("Invalid ROCAL context or invalid input image")
+        ERR("Invalid ROCAL context or invalid input tensor")
         return output;
     }
 
     auto context = static_cast<Context*>(p_context);
-    auto input = static_cast<Image*>(p_input);
-    try
-    {
-        output = context->master_graph->create_image(input->info(), is_output);
+    auto input = static_cast<Tensor*>(p_input);
+    try {
+        RocalTensorlayout op_tensorLayout = (RocalTensorlayout)rocal_tensor_output_layout;
+        RocalTensorDataType op_tensorDataType = (RocalTensorDataType)rocal_tensor_output_datatype;
+        TensorInfo output_info = input->info();
+        output_info.set_tensor_layout(op_tensorLayout);
+        output_info.set_data_type(op_tensorDataType);
+        output = context->master_graph->create_tensor(output_info, is_output);
         context->master_graph->add_node<BrightnessNode>({input}, {output})->init(alpha, beta);
-    }
-    catch(const std::exception& e)
-    {
+    } catch(const std::exception& e) {
         context->capture_error(e.what());
         ERR(e.what())
     }
     return output;
 }
 
+/*
 RocalImage ROCAL_API_CALL
 rocalBlur(
         RocalContext p_context,
