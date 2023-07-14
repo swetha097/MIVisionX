@@ -282,7 +282,7 @@ ImageLoader::update_output_image()
     if (_stopped)
         return LoaderModuleStatus::OK;
 
-    _output_decoded_img_info = _circ_buff.get_image_info();
+    _output_decoded_img_info = _circ_buff.get_sample_info();
     if (_randombboxcrop_meta_data_reader) {
       _output_cropped_img_info = _circ_buff.get_cropped_image_info();
     }

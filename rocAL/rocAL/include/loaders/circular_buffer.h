@@ -58,7 +58,7 @@ public:
     void pop();// The oldest write will be erased and overwritten in upcoming writes
     void set_sample_info(const decoded_sample_info& info) { _last_sample_info = info; }
     void set_crop_image_info(const crop_image_info& info) { _last_crop_image_info = info; }
-    decoded_sample_info& get_image_info();
+    decoded_sample_info& get_sample_info();
     crop_image_info& get_cropped_image_info();
     bool random_bbox_crop_flag = false;
     void* get_read_buffer_dev();

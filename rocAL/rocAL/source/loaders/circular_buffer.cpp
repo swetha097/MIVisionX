@@ -379,7 +379,7 @@ CircularBuffer::~CircularBuffer()
     _initialized = false;
 }
 
-decoded_sample_info &CircularBuffer::get_image_info()
+decoded_sample_info &CircularBuffer::get_sample_info()
 {
     block_if_empty();
     std::unique_lock<std::mutex> lock(_names_buff_lock);

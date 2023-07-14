@@ -257,7 +257,7 @@ VideoLoader::update_output_image()
     }
     if (_stopped)
         return LoaderModuleStatus::OK;
-    _output_decoded_img_info = _circ_buff.get_image_info();
+    _output_decoded_img_info = _circ_buff.get_sample_info();
     _output_names = _output_decoded_img_info._sample_names;
     _output_image->update_image_roi(_output_decoded_img_info._roi_width, _output_decoded_img_info._roi_height);
     _circ_buff.pop();
