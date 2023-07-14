@@ -49,7 +49,7 @@ public:
     LoaderModuleStatus set_cpu_affinity(cpu_set_t cpu_mask);
     LoaderModuleStatus set_cpu_sched_policy(struct sched_param sched_policy);
     std::vector<std::string> get_id() override;
-    decoded_sample_info get_decode_image_info() override;
+    decoded_sample_info get_decode_sample_info() override;
     void set_prefetch_queue_depth(size_t prefetch_queue_depth) override;
     crop_image_info get_crop_image_info() override { return _crop_img_info; }
     void set_random_bbox_data_reader(std::shared_ptr<RandomBBoxCrop_MetaDataReader> randombboxcrop_meta_data_reader) override {};

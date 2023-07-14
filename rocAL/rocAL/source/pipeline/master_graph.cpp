@@ -499,7 +499,7 @@ void MasterGraph::output_routine()
             if (!_processing)
                 break;
             auto full_batch_image_names =  _loader_module->get_id();
-            auto decode_image_info = _loader_module->get_decode_image_info();
+            auto decode_sample_info = _loader_module->get_decode_sample_info();
             auto crop_image_info = _loader_module->get_crop_image_info();
 
             if(full_batch_image_names.size() != _user_batch_size)
@@ -534,7 +534,7 @@ void MasterGraph::output_routine()
                 {
                     if(_is_random_bbox_crop)
                     {
-                        _meta_data_graph->update_random_bbox_meta_data(_augmented_meta_data, decode_image_info, crop_image_info);
+                        _meta_data_graph->update_random_bbox_meta_data(_augmented_meta_data, decode_sample_info, crop_image_info);
                     }
                     _meta_data_graph->process(_augmented_meta_data);
                 }

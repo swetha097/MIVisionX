@@ -47,14 +47,14 @@ class LoaderModule
 public:
     virtual void initialize(ReaderConfig reader_config, DecoderConfig decoder_config, RocalMemType mem_type, unsigned batch_size, bool keep_orig_size) = 0;
     virtual void set_output(rocalTensor* output_image) = 0;
-    virtual LoaderModuleStatus load_next() = 0; // Loads the next image data into the Image's buffer set by calling into the set_output
+    virtual LoaderModuleStatus load_next() = 0; // Loads the next sample data into the sample's buffer set by calling into the set_output
     virtual void reset() = 0; // Resets the loader to load from the beginning of the media
-    virtual size_t remaining_count() = 0; // Returns the number of available images to be loaded
+    virtual size_t remaining_count() = 0; // Returns the number of available samples to be loaded
     virtual ~LoaderModule()= default;
     virtual Timing timing() = 0;// Returns timing info
-    virtual std::vector<std::string> get_id() = 0; // returns the id of the last batch of images/frames loaded
+    virtual std::vector<std::string> get_id() = 0; // returns the id of the last batch of samples/frames loaded
     virtual void start_loading() = 0; // starts internal loading thread
-    virtual decoded_sample_info get_decode_image_info() = 0;
+    virtual decoded_sample_info get_decode_sample_info() = 0;
     virtual crop_image_info get_crop_image_info() = 0;
     virtual void set_prefetch_queue_depth(size_t prefetch_queue_depth) = 0;
     // introduce meta data reader

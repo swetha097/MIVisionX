@@ -48,7 +48,7 @@ public:
     LoaderModuleStatus set_cpu_sched_policy(struct sched_param sched_policy);
     void set_gpu_device_id(int device_id);
     std::vector<std::string> get_id() override;
-    decoded_sample_info get_decode_image_info() override;
+    decoded_sample_info get_decode_sample_info() override;
     crop_image_info get_crop_image_info() override;
     void set_prefetch_queue_depth(size_t prefetch_queue_depth)  override;
     void shut_down() override;
