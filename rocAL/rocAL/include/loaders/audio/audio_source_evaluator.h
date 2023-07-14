@@ -48,27 +48,28 @@ public:
     size_t max_samples();
     size_t max_channels();
 
+
 private:
-    class FindMaxSize
-    {
-    public:
-        // void set_policy(MaxSizeEvaluationPolicy arg) { _policy = arg; }
-        void process_sample(unsigned val);
-        unsigned get_max() { return _max; };
-    private:
-        // MaxSizeEvaluationPolicy _policy = MaxSizeEvaluationPolicy::MAXIMUM_FOUND_SIZE;
-        std::map<unsigned,unsigned> _hist;
-        unsigned _max = 0;
-        unsigned _max_count = 0;
-    };
-    FindMaxSize _samples_max;
-    FindMaxSize _channels_max;
+    int _samples_max = 0;
+    int _channels_max = 0;
+    
+    // class FindMaxSize
+    // {
+    // public:
+    //     // void set_policy(MaxSizeEvaluationPolicy arg) { _policy = arg; }
+    //     void process_sample(unsigned val);
+    //     unsigned get_max() { return _max; };
+    // private:
+    //     // MaxSizeEvaluationPolicy _policy = MaxSizeEvaluationPolicy::MAXIMUM_FOUND_SIZE;
+    //     std::map<unsigned,unsigned> _hist;
+    //     unsigned _max = 0;
+    //     unsigned _max_count = 0;
+    // };
+    // FindMaxSize _samples_max;
+    // FindMaxSize _channels_max;
     DecoderConfig _decoder_cfg_cv;
     std::shared_ptr<AudioDecoder> _decoder;
     std::shared_ptr<Reader> _reader;
-    std::shared_ptr<MetaDataReader> _meta_data_reader;
-    std::vector<unsigned char> _header_buff;
-    static const size_t COMPRESSED_SIZE = 1024 * 1024; // 1 MB
     std::string _input_path;
 };
 

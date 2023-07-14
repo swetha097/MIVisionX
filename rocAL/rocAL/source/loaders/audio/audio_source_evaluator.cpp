@@ -26,12 +26,12 @@ THE SOFTWARE.
 
 size_t AudioSourceEvaluator::max_samples()
 {
-    return _samples_max.get_max();
+    return _samples_max;
 }
 
 size_t AudioSourceEvaluator::max_channels()
 {
-    return _channels_max.get_max();
+    return _channels_max;
 }
 
 AudioSourceEvaluatorStatus
@@ -73,16 +73,18 @@ AudioSourceEvaluator::find_max_dimension()
         }
         if(samples <= 0 || channels <=0)
             continue;
-        _samples_max.process_sample(samples);
-        _channels_max.process_sample(channels);
+        _samples_max = std::max(samples, _samples_max);
+        _channels_max = std::max(channels, _channels_max);
+        // _samples_max.process_sample(samples);
+        // _channels_max.process_sample(channels);
         _decoder->release();
     }
     // return the reader read pointer to the begining of the resource
     _reader->reset();
 }
 
-void
-AudioSourceEvaluator::FindMaxSize::process_sample(unsigned val)
-{
-    _max = (val > _max) ? val : _max;
-}
+// void
+// AudioSourceEvaluator::FindMaxSize::process_sample(unsigned val)
+// {
+//     _max = (val > _max) ? val : _max;
+// }
