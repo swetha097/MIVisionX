@@ -157,22 +157,22 @@ def main():
             output1 = fn.rotate(images)
             output2 = fn.fish_eye(output1)
             output3 = fn.fog(output2)
-            pipe.set_outputs(output1, output2, output3)
+            pipe.setOutputs(output1, output2, output3)
             output_set = 1
         elif augmentation_name == "resize_brightness_jitter":
             output1 = fn.resize(images, resize_x=300, resize_y=300)
             output2 = fn.brightness(output1)
             output3 = fn.jitter(output2)
-            pipe.set_outputs(output1, output2, output3)
+            pipe.setOutputs(output1, output2, output3)
             output_set = 1
         elif augmentation_name == "vignetter_blur":
             output1 = fn.vignette(images)
             output2 = fn.blur(output1)
-            pipe.set_outputs(output1, output2)
+            pipe.setOutputs(output1, output2)
             output_set = 1
 
         if output_set==0:
-                pipe.set_outputs(output)
+                pipe.setOutputs(output)
     # build the pipeline
     pipe.build()
     # Dataloader

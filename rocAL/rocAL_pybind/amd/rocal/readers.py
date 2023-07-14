@@ -34,7 +34,7 @@ def coco(*inputs, file_root, annotations_file='', bytes_per_sample_hint=0, dump_
     labels = []
     bboxes = []
     kwargs_pybind = {"source_path": annotations_file, "is_output":True, "is_box_encoder":is_box_encoder, "is_box_iou_matcher":is_box_iou_matcher }
-    meta_data = b.COCOReader(Pipeline._current_pipeline._handle ,*(kwargs_pybind.values()))
+    meta_data = b.cocoReader(Pipeline._current_pipeline._handle ,*(kwargs_pybind.values()))
     return (meta_data, labels, bboxes)
 
 def file(*inputs, file_root, bytes_per_sample_hint=0, file_list='', initial_fill='', lazy_init='',
@@ -65,7 +65,7 @@ def tfrecord(*inputs, path, user_feature_key_map, features, index_path="", reade
                         "For Object Detection, ROCAL TFRecordReader needs all the following keys in the featureKeyMap:")
                     print("image/encoded\nimage/class/label\nimage/class/text\nimage/object/bbox/xmin\nimage/object/bbox/ymin\nimage/object/bbox/xmax\nimage/object/bbox/ymax\n")
                     exit()
-        tf_meta_data = b.TFReaderDetection(Pipeline._current_pipeline._handle ,*(kwargs_pybind.values()))
+        tf_meta_data = b.tfReaderDetection(Pipeline._current_pipeline._handle ,*(kwargs_pybind.values()))
     else:
         Pipeline._current_pipeline._reader = "TFRecordReaderClassification"
         kwargs_pybind = {"path": path, "is_output": True, "user_key_for_label": user_feature_key_map[
@@ -76,7 +76,7 @@ def tfrecord(*inputs, path, user_feature_key_map, features, index_path="", reade
                         "For Image Classification, ROCAL TFRecordReader needs all the following keys in the featureKeyMap:")
                     print("image/encoded\nimage/class/label\n")
                     exit()
-        tf_meta_data = b.TFReader(Pipeline._current_pipeline._handle ,*(kwargs_pybind.values()))
+        tf_meta_data = b.tfReader(Pipeline._current_pipeline._handle ,*(kwargs_pybind.values()))
     features["image/encoded"] = tf_meta_data
     features["image/class/label"] = labels
     return features
@@ -93,10 +93,10 @@ def caffe(*inputs, path, bbox=False, bytes_per_sample_hint=0, image_available=Tr
     #Node Object
     if (bbox == True):
         Pipeline._current_pipeline._reader = "CaffeReaderDetection"
-        caffe_reader_meta_data = b.CaffeReaderDetection(Pipeline._current_pipeline._handle ,*(kwargs_pybind.values()))
+        caffe_reader_meta_data = b.caffeReaderDetection(Pipeline._current_pipeline._handle ,*(kwargs_pybind.values()))
     else:
         Pipeline._current_pipeline._reader = "CaffeReader"
-        caffe_reader_meta_data = b.CaffeReader(Pipeline._current_pipeline._handle ,*(kwargs_pybind.values()))
+        caffe_reader_meta_data = b.caffeReader(Pipeline._current_pipeline._handle ,*(kwargs_pybind.values()))
 
     if (bbox == True):
         return (caffe_reader_meta_data,bboxes, labels)
@@ -114,10 +114,10 @@ def caffe2(*inputs, path, bbox=False, additional_inputs=0, bytes_per_sample_hint
     kwargs_pybind = {"source_path": path, "is_output":True}
     if (bbox == True):
         Pipeline._current_pipeline._reader = "Caffe2ReaderDetection"
-        caffe2_meta_data = b.Caffe2ReaderDetection(Pipeline._current_pipeline._handle ,*(kwargs_pybind.values()))
+        caffe2_meta_data = b.caffe2ReaderDetection(Pipeline._current_pipeline._handle ,*(kwargs_pybind.values()))
     else:
         Pipeline._current_pipeline._reader = "Caffe2Reader"
-        caffe2_meta_data = b.Caffe2Reader(Pipeline._current_pipeline._handle ,*(kwargs_pybind.values()))
+        caffe2_meta_data = b.caffe2Reader(Pipeline._current_pipeline._handle ,*(kwargs_pybind.values()))
     if (bbox == True):
         return (caffe2_meta_data,bboxes, labels)
     else:

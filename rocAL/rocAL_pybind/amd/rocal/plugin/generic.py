@@ -50,7 +50,7 @@ class ROCALGenericIterator(object):
         if(b.isEmpty(self.loader._handle)):
             raise StopIteration
         else:
-            self.output_tensor_list = self.loader.GetOutputTensors()
+            self.output_tensor_list = self.loader.getOutputTensors()
 
         if self.out is None:
             self.dimensions = self.output_tensor_list[0].dimensions()
@@ -70,14 +70,14 @@ class ROCALGenericIterator(object):
             self.output_tensor_list[0].copy_data_cupy(self.out.data.ptr)
         if(self.loader._name == "labelReader"):
             if(self.loader._oneHotEncoding == True):
-                self.loader.GetOneHotEncodedLabels(self.labels, self.device)
+                self.loader.getOneHotEncodedLabels(self.labels, self.device)
                 self.labels_tensor = self.labels.reshape(-1, self.batch_size, self.loader._numOfClasses)
             else:
                 if self.display:
                     for i in range(self.batch_size):
                         img = (self.out)
                         draw_patches(img[i], i, 0)
-                self.labels = self.loader.GetImageLabels()
+                self.labels = self.loader.getImageLabels()
                 if self.device == "cpu":
                     self.labels_tensor = self.labels.astype(dtype = np.int_)
                 else:

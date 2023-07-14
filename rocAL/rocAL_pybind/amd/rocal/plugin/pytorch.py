@@ -46,7 +46,7 @@ class ROCALGenericIterator(object):
         if(b.isEmpty(self.loader._handle)):
             raise StopIteration
         else:
-            self.output_tensor_list = self.loader.GetOutputTensors()
+            self.output_tensor_list = self.loader.getOutputTensors()
 
         if self.out is None:
             self.dimensions = self.output_tensor_list[0].dimensions()
@@ -69,7 +69,7 @@ class ROCALGenericIterator(object):
             self.bboxes = self.loader.rocalGetBoundingBoxCords()
             #Image sizes of a batch
             self.img_size = np.zeros((self.bs * 2),dtype = "int32")
-            self.loader.GetImgSizes(self.img_size)
+            self.loader.getImgSizes(self.img_size)
 
             count =0
             sum_count=0
@@ -108,14 +108,14 @@ class ROCALGenericIterator(object):
 
         else:
             if(self.loader._oneHotEncoding == True):
-                self.loader.GetOneHotEncodedLabels(self.labels, self.device)
+                self.loader.getOneHotEncodedLabels(self.labels, self.device)
                 self.labels_tensor = self.labels.reshape(-1, self.bs, self.loader._numOfClasses)
             else:
                 if self.display:
                     for i in range(self.bs):
                         img = (self.out)
                         draw_patches(img[i], i, 0)
-                self.labels = self.loader.GetImageLabels()
+                self.labels = self.loader.getImageLabels()
                 self.labels_tensor = self.labels_tensor.copy_(torch.from_numpy(self.labels)).long()
 
             return self.out, self.labels_tensor

@@ -107,17 +107,17 @@ class ROCALGenericIteratorDetection(object):
             self.num_bboxes_list=[]
             #Count of labels/ bboxes in a batch
             self.bboxes_label_count = np.zeros(self.bs, dtype="int32")
-            self.count_batch = self.loader.GetBoundingBoxCount(self.bboxes_label_count)
+            self.count_batch = self.loader.getBoundingBoxCount(self.bboxes_label_count)
             self.num_bboxes_list = self.bboxes_label_count.tolist()
             # 1D labels array in a batch
             self.labels = np.zeros(self.count_batch, dtype="int32")
-            self.loader.GetBBLabels(self.labels)
+            self.loader.getBBLabels(self.labels)
             # 1D bboxes array in a batch
             self.bboxes = np.zeros((self.count_batch*4), dtype="float32")
-            self.loader.GetBBCords(self.bboxes)
+            self.loader.getBBCords(self.bboxes)
             #1D Image sizes array of image in a batch
             self.img_size = np.zeros((self.bs * 2),dtype = "int32")
-            self.loader.GetImgSizes(self.img_size)
+            self.loader.getImgSizes(self.img_size)
             count =0 # number of bboxes per image
             sum_count=0 # sum of the no. of the bboxes
             for i in range(self.bs):
@@ -155,7 +155,7 @@ class ROCALGenericIteratorDetection(object):
         elif (self.loader._name == "TFRecordReaderClassification"):
             if(self.loader._oneHotEncoding == True):
                 self.labels = np.zeros((self.bs)*(self.loader._numOfClasses),dtype = "int32")
-                self.loader.GetOneHotEncodedLabels(self.labels, device="cpu")
+                self.loader.getOneHotEncodedLabels(self.labels, device="cpu")
                 self.labels = np.reshape(self.labels, (-1, self.bs, self.loader._numOfClasses))
             else:
                 self.labels = np.zeros((self.bs),dtype = "int32")

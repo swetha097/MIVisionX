@@ -71,7 +71,7 @@ class ROCALVideoIterator(object):
         if self.loader.rocalRun() != 0:
             raise StopIteration
         else:
-            self.output_tensor_list = self.loader.GetOutputTensors()
+            self.output_tensor_list = self.loader.getOutputTensors()
         self.iter_num +=1
         #Copy output from buffer to numpy array
         if self.out is None:
@@ -138,7 +138,7 @@ def main():
                                             image_type=types.RGB,
                                             mean=[0, 0, 0],
                                             std=[1, 1, 1])
-        pipe.set_outputs(output_images)
+        pipe.setOutputs(output_images)
     # Build the pipeline
     pipe.build()
     # Dataloader
