@@ -154,8 +154,8 @@ extern "C" RocalTensor ROCAL_API_CALL rocalBrightness(RocalContext context, Roca
 /// \param tensor_output_layout the layout of the output tensor
 /// \param tensor_output_datatype the data type of the output tensor
 /// \return
-extern "C" RocalTensor ROCAL_API_CALL rocalBrightnessFixed(RocalContext context, RocalTensor input, bool is_output,
-                                                           float alpha, float beta,
+extern "C" RocalTensor ROCAL_API_CALL rocalBrightnessFixed(RocalContext context, RocalTensor input,
+                                                           float alpha, float beta, bool is_output,
                                                            RocalTensorLayout rocal_tensor_output_layout = ROCAL_NHWC,
                                                            RocalTensorOutputType rocal_tensor_output_type = ROCAL_UINT8);
 
