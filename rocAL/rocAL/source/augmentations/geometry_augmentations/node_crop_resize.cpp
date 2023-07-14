@@ -69,8 +69,8 @@ void CropResizeNode::create_node()
     vx_status status;
     if ((status = vxGetStatus((vx_reference)_crop_tensor)) != VX_SUCCESS)
         THROW("Error: vxCreateTensorFromHandle(crop_tensor: failed " + TOSTR(status))
-    _node = vxExtrppNode_ResizeCrop(_graph->get(), _inputs[0]->handle(), _src_tensor_roi, _crop_tensor, _outputs[0]->handle(),_dst_roi_width, _dst_roi_height,
-                                   _input_layout, _output_layout, _roi_type);
+    // _node = vxExtrppNode_ResizeCrop(_graph->get(), _inputs[0]->handle(), _src_tensor_roi, _crop_tensor, _outputs[0]->handle(),_dst_roi_width, _dst_roi_height,
+    //                                _input_layout, _output_layout, _roi_type);
     
     if((status = vxGetStatus((vx_reference)_node)) != VX_SUCCESS)
         THROW("Error adding the crop resize node (vxExtrppNode_ResizeCrop) failed: "+TOSTR(status))
