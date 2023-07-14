@@ -94,11 +94,11 @@ void allocate_host_or_pinned_mem(void **ptr, size_t size, RocalMemType mem_type)
     if (mem_type == RocalMemType::HIP) {
 #if ENABLE_HIP
         hipError_t err = hipHostMalloc((void **)ptr, size, hipHostMallocDefault);
-    if(err != hipSuccess || !*ptr)
-        THROW("hipHostMalloc of size " + TOSTR(size) + " failed " + TOSTR(err))
-    err = hipMemset((void *)*ptr, 0, size);
-    if(err != hipSuccess)
-        THROW("hipMemset of size " + TOSTR(size) + " failed " + TOSTR(err))
+        if(err != hipSuccess || !*ptr)
+            THROW("hipHostMalloc of size " + TOSTR(size) + " failed " + TOSTR(err))
+        err = hipMemset((void *)*ptr, 0, size);
+        if(err != hipSuccess)
+            THROW("hipMemset of size " + TOSTR(size) + " failed " + TOSTR(err))
 #endif
     } else {
         *ptr = (void *)malloc(size);
