@@ -340,7 +340,7 @@ namespace rocal{
                 py::arg("output_data_type") = 0);
         m.def("rocalVerify",&rocalVerify);
         m.def("rocalRun",&rocalRun, py::return_value_policy::reference);
-        m.def("rocalRelease",&rocalRelease);
+        m.def("rocalRelease",&rocalRelease, py::return_value_policy::reference);
         // rocal_api_types.h
         py::class_<TimingInfo>(m, "TimingInfo")
             .def_readwrite("load_time",&TimingInfo::load_time)
@@ -559,6 +559,8 @@ namespace rocal{
         py::enum_<RocalTensorLayout>(types_m,"RocalTensorLayout","Tensor layout type")
             .value("NHWC",ROCAL_NHWC)
             .value("NCHW",ROCAL_NCHW)
+            .value("NFHWC",ROCAL_NFHWC)
+            .value("NFCHW",ROCAL_NFCHW)
             .export_values();
         py::enum_<RocalDecodeDevice>(types_m,"RocalDecodeDevice","Decode device type")
             .value("HARDWARE_DECODE",ROCAL_HW_DECODE)
@@ -751,6 +753,7 @@ namespace rocal{
         m.def("SequenceReader",&rocalSequenceReader,"Creates JPEG image reader and decoder. Reads [Frames] sequences from a directory representing a collection of streams.",
             py::return_value_policy::reference);
         m.def("rocalResetLoaders",&rocalResetLoaders);
+        m.def("VideoMetaDataReader",&rocalCreateVideoLabelReader, py::return_value_policy::reference);
         // rocal_api_augmentation.h
         // m.def("SSDRandomCrop",&rocalSSDRandomCrop,
         //     py::return_value_policy::reference);
