@@ -131,6 +131,11 @@ list(APPEND SOURCES
         source/tensor/Copy.cpp
         source/tensor/CropMirrorNormalize.cpp
         source/tensor/Nop.cpp
+        source/tensor/Blur.cpp
+        source/tensor/GammaCorrection.cpp
+        source/tensor/ColorTemperature.cpp
+        source/tensor/Contrast.cpp
+        source/tensor/Exposure.cpp
         # source/tensor/SequenceRearrange.cpp
         source/kernel_rpp.cpp
         source/internal_publishKernels.cpp
