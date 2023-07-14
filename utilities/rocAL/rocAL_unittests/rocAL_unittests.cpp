@@ -796,7 +796,8 @@ int test(int test_case, int reader_type, const char *path, const char *outName, 
     int p = ((color_format == RocalImageColor::ROCAL_COLOR_RGB24) ? 3 : 1);
     const unsigned number_of_cols = 1; //1920 / w;
     auto cv_color_format = ((color_format == RocalImageColor::ROCAL_COLOR_RGB24) ? CV_8UC3 : CV_8UC1);
-    cv::Mat mat_output, mat_input, mat_color;
+    std::vector<cv::Mat> mat_output, mat_input
+    cv::Mat mat_color;
     int col_counter = 0;
     if(DISPLAY)
         cv::namedWindow("output", CV_WINDOW_AUTOSIZE);
@@ -804,7 +805,7 @@ int test(int test_case, int reader_type, const char *path, const char *outName, 
     printf("Remaining images %lu \n", rocalGetRemainingImages(handle));
     high_resolution_clock::time_point t1 = high_resolution_clock::now();
     int index = 0;
-
+    bool first_run = true;
     while (rocalGetRemainingImages(handle) >= inputBatchSize)
     {
         index++;
@@ -919,13 +920,15 @@ int test(int test_case, int reader_type, const char *path, const char *outName, 
             auto output_tensor = output_tensor_list->at(idx);
             int h = output_tensor->shape().at(1) * output_tensor->dims().at(0);
             int w = output_tensor->shape().at(0);
-            mat_input = cv::Mat(h, w, cv_color_format);
-            mat_output = cv::Mat(h, w, cv_color_format);
+            if(first_run) {
+                mat_input.emplace_back(cv::Mat(h, w, cv_color_format));
+                mat_output.emplace_back(cv::Mat(h, w, cv_color_format));   
+            }
             
             unsigned char *out_buffer = reinterpret_cast<unsigned char *>malloc(output_tensor->data_size());
             output_tensor->copy_data(out_buffer, ROCAL_MEMCPY_HOST);
-            mat_input.data = reinterpret_cast<unsigned char *>out_buffer;
-            mat_input.copyTo(mat_output(cv::Rect(0, 0, w, h)));
+            mat_input[idx].data = reinterpret_cast<unsigned char *>out_buffer;
+            mat_input[idx].copyTo(mat_output[idx](cv::Rect(0, 0, w, h)));
 
             std::string out_filename = std::string(outName) + ".png";   // in case the user specifies non png filename
             if (display_all)
@@ -933,24 +936,23 @@ int test(int test_case, int reader_type, const char *path, const char *outName, 
 
             if (color_format == RocalImageColor::ROCAL_COLOR_RGB24)
             {
-                cv::cvtColor(mat_output, mat_color, CV_RGB2BGR);
+                cv::cvtColor(mat_output[idx], mat_color, CV_RGB2BGR);
                 if(DISPLAY)
-                    cv::imshow("output",mat_output);
+                    cv::imshow("output", mat_output[idx]);
                 else
                     cv::imwrite(out_filename, mat_color, compression_params);
             }
             else
             {
                 if(DISPLAY)
-                cv::imshow("output",mat_output);
+                cv::imshow("output", mat_output[idx]);
                 else
-                cv::imwrite(out_filename, mat_output, compression_params);
+                cv::imwrite(out_filename, mat_output[idx], compression_params);
             }
             // col_counter = (col_counter + 1) % number_of_cols;
             if(out_buffer != nullptr) free(out_buffer);
         }
-        mat_input.release();
-        mat_output.release();
+        first_run = false;
     }
 
     high_resolution_clock::time_point t2 = high_resolution_clock::now();
@@ -961,6 +963,10 @@ int test(int test_case, int reader_type, const char *path, const char *outName, 
     std::cout << "Process  time " << rocal_timing.process_time << std::endl;
     std::cout << "Transfer time " << rocal_timing.transfer_time << std::endl;
     std::cout << ">>>>> Total Elapsed Time " << dur / 1000000 << " sec " << dur % 1000000 << " us " << std::endl;
+    for (int i = 0; i < mat_input.size(); i++) {
+        mat_input[i].release();
+        mat_output[i].release();
+    }
     rocalRelease(handle);
     if (!image1)
         return -1;
