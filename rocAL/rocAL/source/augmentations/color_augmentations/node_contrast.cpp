@@ -27,9 +27,7 @@ THE SOFTWARE.
 ContrastNode::ContrastNode(const std::vector<Tensor *> &inputs, const std::vector<Tensor *> &outputs) :
         Node(inputs, outputs),
         _min(CONTRAST_MIN_RANGE[0], CONTRAST_MIN_RANGE[1]),
-        _max(CONTRAST_MAX_RANGE[0], CONTRAST_MAX_RANGE[1])
-{
-}
+        _max(CONTRAST_MAX_RANGE[0], CONTRAST_MAX_RANGE[1]) { }
 
 void ContrastNode::create_node() {
     if(_node)

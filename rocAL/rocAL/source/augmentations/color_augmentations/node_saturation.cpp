@@ -27,9 +27,7 @@ THE SOFTWARE.
 
 SaturationNode::SaturationNode(const std::vector<Tensor *> &inputs, const std::vector<Tensor *> &outputs) :
         Node(inputs, outputs),
-        _sat(SAT_RANGE[0], SAT_RANGE[1])
-{
-}
+        _sat(SAT_RANGE[0], SAT_RANGE[1]) { }
 
 void SaturationNode::create_node() {
     if(_node)
@@ -43,14 +41,13 @@ void SaturationNode::create_node() {
         THROW("Adding the saturation (vxExtrppNode_Gamma) node failed: "+ TOSTR(status))
 }
 
-void SaturationNode::init( float sat) {
+void SaturationNode::init(float sat) {
     _sat.set_param(sat);
 }
 
-void SaturationNode::init( FloatParam* sat) {
+void SaturationNode::init(FloatParam *sat) {
     _sat.set_param(core(sat));
 }
-
 
 void SaturationNode::update_node() {
     _sat.update_array();

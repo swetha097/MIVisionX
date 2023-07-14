@@ -47,7 +47,7 @@ void BlendNode::init(float ratio) {
     _ratio.set_param(ratio);
 }
 
-void BlendNode::init(FloatParam* ratio) {
+void BlendNode::init(FloatParam *ratio) {
     _ratio.set_param(core(ratio));
 }
 

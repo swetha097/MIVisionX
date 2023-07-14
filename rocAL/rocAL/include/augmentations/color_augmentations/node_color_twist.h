@@ -26,13 +26,12 @@ THE SOFTWARE.
 #include "parameter_vx.h"
 #include "graph.h"
 
-class ColorTwistNode : public Node
-{
+class ColorTwistNode : public Node {
 public:
     ColorTwistNode(const std::vector<Tensor *> &inputs, const std::vector<Tensor *> &outputs);
     ColorTwistNode() = delete;
     void init(float alpha, float beta, float hue, float sat);
-    void init(FloatParam* alpha_param, FloatParam* beta_param, FloatParam* hue_param, FloatParam* sat_param);
+    void init(FloatParam *alpha_param, FloatParam *beta_param, FloatParam *hue_param, FloatParam *sat_param);
 protected:
     void create_node() override;
     void update_node() override;
