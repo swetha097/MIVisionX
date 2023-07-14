@@ -39,8 +39,8 @@ std::vector<std::string> AudioLoaderSharded::get_id() {
     return _loaders[_loader_idx]->get_id();
 }
 
-decoded_sample_info AudioLoaderSharded::get_decode_image_info() {
-    return _loaders[_loader_idx]->get_decode_image_info();
+decoded_sample_info AudioLoaderSharded::get_decode_sample_info() {
+    return _loaders[_loader_idx]->get_decode_sample_info();
 }
 
 AudioLoaderSharded::~AudioLoaderSharded() {
