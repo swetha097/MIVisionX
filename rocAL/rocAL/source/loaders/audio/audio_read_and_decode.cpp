@@ -74,7 +74,6 @@ AudioReadAndDecode::create(ReaderConfig reader_config, DecoderConfig decoder_con
 
 void
 AudioReadAndDecode::reset() {
-    // TODO: Reload audios from the folder if needed
     _reader->reset();
 }
 
