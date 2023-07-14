@@ -214,7 +214,7 @@ ImageLoader::load_routine()
                     _crop_image_info._crop_image_coords = _image_loader->get_batch_random_bbox_crop_coords();
                     _circ_buff.set_crop_image_info(_crop_image_info);
                 }
-                _circ_buff.set_image_info(_decoded_img_info);
+                _circ_buff.set_sample_info(_decoded_img_info);
                 _circ_buff.push();
                 _image_counter += _output_image->info().batch_size();
             }
