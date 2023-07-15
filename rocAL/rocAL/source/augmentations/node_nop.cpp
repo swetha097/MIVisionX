@@ -27,8 +27,7 @@ THE SOFTWARE.
 NopNode::NopNode(const std::vector<Tensor *> &inputs, const std::vector<Tensor *> &outputs) :
         Node(inputs, outputs) { }
 
-void NopNode::create_node()
-{
+void NopNode::create_node() {
     if(_node)
         return;
 
@@ -36,8 +35,7 @@ void NopNode::create_node()
 
     vx_status status;
     if((status = vxGetStatus((vx_reference)_node)) != VX_SUCCESS)
-        THROW("Adding the nop (vxNopNode) node failed: "+ TOSTR(status))
-
+        THROW("Adding the nop (vxNopNode) node failed: " + TOSTR(status))
 }
 
 void NopNode::update_node() { }

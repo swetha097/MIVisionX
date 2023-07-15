@@ -25,12 +25,9 @@ THE SOFTWARE.
 #include "exception.h"
 
 CopyNode::CopyNode(const std::vector<Tensor *> &inputs, const std::vector<Tensor *> &outputs) :
-        Node(inputs, outputs)
-{
-}
+        Node(inputs, outputs) { }
 
-void CopyNode::create_node()
-{
+void CopyNode::create_node() {
     if(_node)
         return;
 
