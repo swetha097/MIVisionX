@@ -44,12 +44,12 @@ void RotateNode::create_node() {
 
 void RotateNode::init(float angle, RocalResizeInterpolationType interpolation_type) {
     _angle.set_param(angle);
-    _interpolation_type = (int)interpolation_type;
+    _interpolation_type = static_cast<int>(interpolation_type);
 }
 
 void RotateNode::init(FloatParam* angle, RocalResizeInterpolationType interpolation_type) {
     _angle.set_param(core(angle));
-    _interpolation_type = (int)interpolation_type;
+    _interpolation_type = static_cast<int>(interpolation_type);
 }
 
 void RotateNode::update_node() {

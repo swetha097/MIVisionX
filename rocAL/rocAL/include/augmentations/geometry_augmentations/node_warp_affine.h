@@ -26,8 +26,7 @@ THE SOFTWARE.
 #include "parameter_vx.h"
 #include "graph.h"
 
-class WarpAffineNode : public Node
-{
+class WarpAffineNode : public Node {
 public:
     WarpAffineNode(const std::vector<Tensor *> &inputs, const std::vector<Tensor *> &outputs);
     WarpAffineNode() = delete;
@@ -37,12 +36,17 @@ protected:
     void create_node() override;
     void update_node() override;
 private:
-    ParameterVX<float> _x0, _x1, _y0, _y1, _o0, _o1;
+    ParameterVX<float> _x0;
+    ParameterVX<float> _x1;
+    ParameterVX<float> _y0;
+    ParameterVX<float> _y1;
+    ParameterVX<float> _o0;
+    ParameterVX<float> _o1;
     std::vector<float> _affine;
-    unsigned _interpolation_type;
     vx_array _affine_array;
     constexpr static float COEFFICIENT_RANGE_0 [2] = {-0.35, 0.35};
     constexpr static float COEFFICIENT_RANGE_1 [2] = {0.65, 1.35};
     constexpr static float COEFFICIENT_RANGE_OFFSET [2] = {-10.0, 10.0};
     void update_affine_array();
+    int _interpolation_type;
 };
