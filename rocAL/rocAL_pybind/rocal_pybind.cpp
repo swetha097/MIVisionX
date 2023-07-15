@@ -584,19 +584,16 @@ namespace rocal{
         m.def("getImageNameLen", &wrapper_image_name_length);
         m.def("getStatus", &rocalGetStatus);
         m.def("setOutputImages", &rocalSetOutputs);
-        m.def("labelReader", &rocalCreateLabelReader);
-        m.def("tfReader", &rocalCreateTFReader);
-        m.def("tfReaderDetection", &rocalCreateTFReaderDetection);
-        m.def("caffeReader", &rocalCreateCaffeLMDBLabelReader);
-        m.def("caffe2Reader", &rocalCreateCaffe2LMDBLabelReader);
-        m.def("caffeReaderDetection", &rocalCreateCaffeLMDBReaderDetection);
-        m.def("caffe2ReaderDetection", &rocalCreateCaffe2LMDBReaderDetection);
+        m.def("tfReader", &rocalCreateTFReader, py::return_value_policy::reference);
+        m.def("tfReaderDetection", &rocalCreateTFReaderDetection, py::return_value_policy::reference);
+        m.def("caffeReader", &rocalCreateCaffeLMDBLabelReader, py::return_value_policy::reference);
+        m.def("caffe2Reader", &rocalCreateCaffe2LMDBLabelReader, py::return_value_policy::reference);
+        m.def("caffeReaderDetection", &rocalCreateCaffeLMDBReaderDetection, py::return_value_policy::reference);
+        m.def("caffe2ReaderDetection", &rocalCreateCaffe2LMDBReaderDetection, py::return_value_policy::reference);
         m.def("isEmpty", &rocalIsEmpty);
         m.def("getStatus", rocalGetStatus);
         m.def("rocalGetErrorMessage", &rocalGetErrorMessage);
-        m.def("rocalGetTimingInfo", &rocalGetTimingInfo);
         m.def("getTimingInfo", &rocalGetTimingInfo);
-        m.def("setOutputImages", &rocalSetOutputs);
         m.def("labelReader", &rocalCreateLabelReader, py::return_value_policy::reference);
         m.def("cocoReader", &rocalCreateCOCOReader, py::return_value_policy::reference);
         // rocal_api_meta_data.h
@@ -611,14 +608,12 @@ namespace rocal{
         // rocal_api_parameter.h
         m.def("setSeed", &rocalSetSeed);
         m.def("getSeed", &rocalGetSeed);
-        m.def("createIntUniformRand", &rocalCreateIntUniformRand);
-        m.def("createFloatUniformRand", &rocalCreateFloatUniformRand);
-        m.def("createIntRand", [](std::vector<int> values, std::vector<double> frequencies){
-            return rocalCreateIntRand(values.data(), frequencies.data(), values.size());
-        });
-        m.def("createFloatRand", &rocalCreateFloatRand);
-        m.def("createIntParameter", &rocalCreateIntParameter);
-        m.def("createFloatParameter", &rocalCreateFloatParameter);
+        m.def("createIntUniformRand", &rocalCreateIntUniformRand, py::return_value_policy::reference);
+        m.def("createFloatUniformRand", &rocalCreateFloatUniformRand, py::return_value_policy::reference);
+        m.def("createIntRand", &rocalCreateIntRand, py::return_value_policy::reference);
+        m.def("createFloatRand", &rocalCreateFloatRand, py::return_value_policy::reference);
+        m.def("createIntParameter", &rocalCreateIntParameter, py::return_value_policy::reference);
+        m.def("createFloatParameter", &rocalCreateFloatParameter, py::return_value_policy::reference);
         m.def("updateIntRand", &rocalUpdateIntUniformRand);
         m.def("updateFloatRand", &rocalUpdateFloatUniformRand);
         m.def("updateIntParameter", &rocalUpdateIntParameter);
