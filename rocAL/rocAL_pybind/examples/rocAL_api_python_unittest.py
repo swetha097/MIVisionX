@@ -170,6 +170,20 @@ def main():
             output2 = fn.blur(output1)
             pipe.setOutputs(output1, output2)
             output_set = 1
+        elif augmentation_name == "brightness_crop_mirror_normalize":
+            output = fn.brightness(images,
+                                  rocal_tensor_layout = types.NHWC if args.NHWC else types.NCHW)
+            output1 = fn.crop_mirror_normalize(output, device="gpu",
+                                        rocal_tensor_layout = types.NHWC if args.NHWC else types.NCHW,
+                                        rocal_tensor_output_type = types.UINT8,
+                                        crop_pos_x=0.0, crop_pos_y=0.0,
+                                        crop=(224, 224),
+                                        image_type=types.RGB,
+                                        mirror=0,
+                                        mean=[0, 0, 0],
+                                        std=[1, 1, 1])
+            pipe.setOutputs(output, output1)
+            output_set = 1 
 
         if output_set==0:
                 pipe.setOutputs(output)
@@ -184,18 +198,19 @@ def main():
     # Enumerate over the Dataloader
     for epoch in range(int(args.num_epochs)):
         print("EPOCH:::::", epoch)
-        for i, it in enumerate(data_loader, 0):
-            if args.print_tensor:
-                print("**************", i, "*******************")
-                print("**************starts*******************")
-                print("\nImages:\n", it[0])
-                print("\nLABELS:\n", it[1])
-                print("**************ends*******************")
-                print("**************", i, "*******************")
-            for img in it[0]:
-                cnt = cnt+1
-                if display:
-                    draw_patches(img, cnt, rocal_device)
+        for i, (output_list, labels) in enumerate(data_loader, 0):
+            for j in range(len(output_list)):
+                if args.print_tensor:
+                    print("**************", i, "*******************")
+                    print("**************starts*******************")
+                    print("\nImages:\n", output_list[j])
+                    print("\nLABELS:\n", labels)
+                    print("**************ends*******************")
+                    print("**************", i, "*******************")
+                for img in output_list[j]:
+                    cnt = cnt+1
+                    if display:
+                        draw_patches(img, cnt, rocal_device)
 
             break
         data_loader.reset()

@@ -39,7 +39,7 @@ class ROCALGenericIterator(object):
         if self.loader._name is None:
             self.loader._name = self.loader._reader
         self.labels_size = ((self.batch_size*self.loader._numOfClasses) if (self.loader._oneHotEncoding == True) else self.batch_size)
-        self.out = self.dimensions = self.dtype = None
+        self.output_list = self.dimensions = self.dtype = None
         self.len = b.getRemainingImages(self.loader._handle)//self.batch_size # iteration length
 
     def next(self):
@@ -52,22 +52,25 @@ class ROCALGenericIterator(object):
         else:
             self.output_tensor_list = self.loader.getOutputTensors()
 
-        if self.out is None:
-            self.dimensions = self.output_tensor_list[0].dimensions()
-            if self.device == "cpu":
-                self.dtype = self.output_tensor_list[0].dtype()
-                self.out = np.empty((self.dimensions[0], self.dimensions[1], self.dimensions[2], self.dimensions[3],), dtype = self.dtype)
-                self.labels = np.empty(self.labels_size, dtype = self.dtype)
-            else:
-                self.dtype = self.output_tensor_list[0].dtype()
-                with cp.cuda.Device(device = self.device_id):
-                    self.out = cp.empty((self.dimensions[0], self.dimensions[1], self.dimensions[2], self.dimensions[3],), dtype = self.dtype)
-                    self.labels = cp.empty(self.labels_size, dtype = self.dtype)
+        if self.output_list is None:
+            self.output_list = []
+            for i in range(len(self.output_tensor_list)):
+                self.dimensions = self.output_tensor_list[i].dimensions()
+                if self.device == "cpu":
+                    self.dtype = self.output_tensor_list[i].dtype()
+                    self.out = np.empty(self.dimensions, dtype = self.dtype)
+                    self.labels = np.empty(self.labels_size, dtype = self.dtype)
+                else:
+                    self.dtype = self.output_tensor_list[i].dtype()
+                    with cp.cuda.Device(device = self.device_id):
+                        self.out = cp.empty(self.dimensions, dtype = self.dtype)
+                        self.labels = cp.empty(self.labels_size, dtype = self.dtype)
 
-        if self.device == "cpu":
-            self.output_tensor_list[0].copy_data_numpy(self.out)
-        else:
-            self.output_tensor_list[0].copy_data_cupy(self.out.data.ptr)
+                if self.device == "cpu":
+                    self.output_tensor_list[i].copy_data_numpy(self.out)
+                else:
+                    self.output_tensor_list[i].copy_data_cupy(self.out.data.ptr)
+                self.output_list.append(self.out)
         if(self.loader._name == "labelReader"):
             if(self.loader._oneHotEncoding == True):
                 self.loader.getOneHotEncodedLabels(self.labels, self.device)
@@ -84,7 +87,7 @@ class ROCALGenericIterator(object):
                     with cp.cuda.Device(device = self.device_id):
                         self.labels_tensor = self.labels.astype(dtype = cp.int_)
 
-            return self.out, self.labels_tensor
+            return self.output_list, self.labels_tensor
 
     def reset(self):
         b.rocalResetLoaders(self.loader._handle)
