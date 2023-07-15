@@ -237,7 +237,9 @@ extern "C" RocalTensor ROCAL_API_CALL rocalContrastFixed(RocalContext context, R
 /// \param is_output
 /// \return
 extern "C"  RocalTensor  ROCAL_API_CALL rocalFlip(RocalContext context, RocalTensor input, bool is_output,
-                                                RocalIntParam flip_axis = NULL);
+                                                RocalIntParam horizonal_flag = NULL, RocalIntParam vertical_flag = NULL,
+                                                RocalTensorLayout rocal_tensor_output_layout = ROCAL_NHWC,
+                                                RocalTensorOutputType rocal_tensor_output_type = ROCAL_UINT8);
 
 ///
 /// \param context
@@ -245,7 +247,10 @@ extern "C"  RocalTensor  ROCAL_API_CALL rocalFlip(RocalContext context, RocalTen
 /// \param axis
 /// \param is_output
 /// \return
-extern "C"  RocalTensor  ROCAL_API_CALL rocalFlipFixed(RocalContext context, RocalTensor input, int flip_axis, bool is_output );
+extern "C"  RocalTensor  ROCAL_API_CALL rocalFlipFixed(RocalContext context, RocalTensor input,
+                                                       int horizonal_flag, int vertical_flag, bool is_output,
+                                                       RocalTensorLayout rocal_tensor_output_layout = ROCAL_NHWC,
+                                                       RocalTensorOutputType rocal_tensor_output_type = ROCAL_UINT8);
 
 /// Accepts U8 and RGB24 inputs
 /// \param context
@@ -343,7 +348,9 @@ extern "C"  RocalTensor  ROCAL_API_CALL rocalWarpAffineFixed(RocalContext contex
 /// \param input
 /// \param is_output
 /// \return
-extern "C"  RocalTensor  ROCAL_API_CALL rocalFishEye(RocalContext context, RocalTensor input, bool is_output );
+extern "C"  RocalTensor  ROCAL_API_CALL rocalFishEye(RocalContext context, RocalTensor input, bool is_output,
+                                                     RocalTensorLayout rocal_tensor_output_layout = ROCAL_NHWC,
+                                                     RocalTensorOutputType rocal_tensor_output_type = ROCAL_UINT8);
 
 ///
 /// \param context
@@ -537,7 +544,9 @@ extern "C" RocalTensor ROCAL_API_CALL rocalFogFixed(RocalContext context, RocalT
 /// \return
 extern "C"  RocalTensor  ROCAL_API_CALL rocalLensCorrection(RocalContext context, RocalTensor input, bool is_output,
                                                         RocalFloatParam strength = NULL,
-                                                        RocalFloatParam zoom = NULL);
+                                                        RocalFloatParam zoom = NULL,
+                                                        RocalTensorLayout rocal_tensor_output_layout = ROCAL_NHWC,
+                                                        RocalTensorOutputType rocal_tensor_output_type = ROCAL_UINT8);
 
 /// \param context
 /// \param input
@@ -546,7 +555,9 @@ extern "C"  RocalTensor  ROCAL_API_CALL rocalLensCorrection(RocalContext context
 /// \param is_output
 /// \return
 extern "C"  RocalTensor  ROCAL_API_CALL rocalLensCorrectionFixed(RocalContext context, RocalTensor input,
-                                                                float strength, float zoom, bool is_output);
+                                                                float strength, float zoom, bool is_output,
+                                                                RocalTensorLayout rocal_tensor_output_layout = ROCAL_NHWC,
+                                                                RocalTensorOutputType rocal_tensor_output_type = ROCAL_UINT8);
 
 ///
 /// \param context

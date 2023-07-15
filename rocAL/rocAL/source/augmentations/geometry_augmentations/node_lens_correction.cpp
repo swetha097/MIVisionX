@@ -45,14 +45,14 @@ void LensCorrectionNode::create_node() {
         THROW("Adding the lens correction  (vxExtrppNode_LensCorrection) node failed: "+ TOSTR(status))
 }
 
-void LensCorrectionNode::init(float alpha, float beta) {
-    _strength.set_param(alpha);
-    _zoom.set_param(beta);
+void LensCorrectionNode::init(float strength, float zoom) {
+    _strength.set_param(strength);
+    _zoom.set_param(zoom);
 }
 
-void LensCorrectionNode::init(FloatParam* alpha, FloatParam* beta) {
-    _strength.set_param(core(alpha));
-    _zoom.set_param(core(beta));
+void LensCorrectionNode::init(FloatParam* strength, FloatParam* zoom ) {
+    _strength.set_param(core(strength));
+    _zoom.set_param(core(zoom));
 }
 
 void LensCorrectionNode::update_node() {
