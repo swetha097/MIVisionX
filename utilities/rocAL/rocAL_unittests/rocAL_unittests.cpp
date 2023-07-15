@@ -189,7 +189,7 @@ int test(int test_case, int reader_type, const char *path, const char *outName, 
 
     // Creating uniformly distributed random objects to override some of the default augmentation parameters
     RocalIntParam color_temp_adj = rocalCreateIntParameter(-50);
-    RocalIntParam mirror = rocalCreateIntParameter(1);
+    RocalIntParam mirror = rocalCreateIntParameter(0);
 
 
     /*>>>>>>>>>>>>>>>>>>> Graph description <<<<<<<<<<<<<<<<<<<*/
@@ -200,6 +200,9 @@ int test(int test_case, int reader_type, const char *path, const char *outName, 
 #endif
 
     RocalTensor input1;
+    RocalTensorLayout tensorLayout = (rgb != 0) ? RocalTensorLayout::ROCAL_NHWC
+                                             : RocalTensorLayout::ROCAL_NCHW;
+    RocalTensorOutputType tensorOutputType = RocalTensorOutputType::ROCAL_UINT8;
     // The jpeg file loader can automatically select the best size to decode all images to that size
     // User can alternatively set the size or change the policy that is used to automatically find the size
     switch (reader_type)
@@ -361,7 +364,7 @@ int test(int test_case, int reader_type, const char *path, const char *outName, 
 
     RocalTensor image0 = input1;
     // RocalTensor image0 = rocalResize(handle, input1, resize_w, resize_h, false); // uncomment when processing images of different size
-    RocalTensor image1;
+    RocalTensor image1,image2;
     
     if((test_case == 48 || test_case == 49 || test_case == 50) && rgb == 0) {
         std::cout << "Not a valid option! Exiting!\n";
@@ -434,21 +437,27 @@ int test(int test_case, int reader_type, const char *path, const char *outName, 
         image1 = rocalFlip(handle, image0, true);
     }
     break;
+*/
     case 7:
     {
         std::cout << ">>>>>>> Running "
                   << "rocalBlur" << std::endl;
-        image1 = rocalBlur(handle, image0, true);
+        image1 = rocalBlur(handle, input1, true, NULL,  tensorLayout, tensorOutputType);
+
     }
     break;
+
     case 8:
     {
         std::cout << ">>>>>>> Running "
                   << "rocalBlend" << std::endl;
-        RocalTensor image0_b = rocalRotate(handle, image0, false);
-        image1 = rocalBlend(handle, image0, image0_b, true);
+        // image2 = rocalFlip(handle, input1, true, NULL, NULL, tensorLayout, tensorOutputType);
+        // image1 = rocalBlend(handle, input1, image2, true, NULL,  tensorLayout, tensorOutputType);
+        image1 = rocalBlend(handle, input1, input1, true, NULL,  tensorLayout, tensorOutputType);
+
     }
     break;
+/*
     case 9:
     {
         std::cout << ">>>>>>> Running "
@@ -463,13 +472,16 @@ int test(int test_case, int reader_type, const char *path, const char *outName, 
         image1 = rocalFishEye(handle, image0, true);
     }
     break;
+*/
     case 11:
     {
         std::cout << ">>>>>>> Running "
                   << "rocalVignette" << std::endl;
-        image1 = rocalVignette(handle, image0, true);
+        // image1 = rocalVignette(handle, input1, true, NULL,  tensorLayout, tensorOutputType);
+
     }
     break;
+/*
     case 12:
     {
         std::cout << ">>>>>>> Running "
@@ -519,13 +531,15 @@ int test(int test_case, int reader_type, const char *path, const char *outName, 
         image1 = rocalLensCorrection(handle, image0, true);
     }
     break;
+*/
     case 19:
     {
         std::cout << ">>>>>>> Running "
                   << "rocalPixelate" << std::endl;
-        image1 = rocalPixelate(handle, image0, true);
+        image1 = rocalPixelate(handle, input1, true, tensorLayout, tensorOutputType);
     }
     break;
+/*
     case 20:
     {
         std::cout << ">>>>>>> Running "
@@ -565,9 +579,9 @@ int test(int test_case, int reader_type, const char *path, const char *outName, 
     {
         std::cout << ">>>>>>> Running "
                   << "rocalCropMirrorNormalize" << std::endl;
-        std::vector<float> mean;
-        std::vector<float> std_dev;
-        image1 = rocalCropMirrorNormalize(handle, image0, 224, 224, 0.2, 0.2, mean, std_dev, true, mirror);
+        std::vector<float> mean{0, 0, 0};
+        std::vector<float> std_dev{1, 1, 1};
+        image1 = rocalCropMirrorNormalize(handle, image0, 224, 224, 0, 0, mean, std_dev, true, mirror,tensorLayout, tensorOutputType);
     }
     break;
     /*case 26:
@@ -599,42 +613,48 @@ int test(int test_case, int reader_type, const char *path, const char *outName, 
         image1 = rocalRotateFixed(handle, image0, 50, true);
     }
     break;
+*/
     case 32:
     {
         std::cout << ">>>>>>> Running "
                   << "rocalBrightnessFixed" << std::endl;
-        image1 = rocalBrightnessFixed(handle, image0, 1.90, 20, true);
+        image1 = rocalBrightnessFixed(handle, input1, true, 1.90, 20, tensorLayout, tensorOutputType);
+
     }
     break;
     case 33:
     {
         std::cout << ">>>>>>> Running "
                   << "rocalGammaFixed" << std::endl;
-        image1 = rocalGammaFixed(handle, image0, 0.5, true);
+        image1 = rocalGammaFixed(handle, input1, true, 0.5, tensorLayout, tensorOutputType);
     }
     break;
     case 34:
     {
         std::cout << ">>>>>>> Running "
                   << "rocalContrastFixed" << std::endl;
-        image1 = rocalContrastFixed(handle, image0, 30, 80, true);
+        image1 = rocalContrastFixed(handle, input1, true, 30, 80, tensorLayout, tensorOutputType);
     }
     break;
     case 35:
     {
         std::cout << ">>>>>>> Running "
                   << "rocalBlurFixed" << std::endl;
-        image1 = rocalBlurFixed(handle, image0, 5, true);
+        image1 = rocalBlurFixed(handle, input1, true, 5, tensorLayout, tensorOutputType);
+
     }
     break;
     case 36:
     {
         std::cout << ">>>>>>> Running "
                   << "rocalBlendFixed" << std::endl;
-        RocalTensor image0_b = rocalRotateFixed(handle, image0, 50, false);
-        image1 = rocalBlendFixed(handle, image0, image0_b, 0.5, true);
+        // image2 = rocalRotateFixed(handle, input1, true, 45, ROCAL_LINEAR_INTERPOLATION, tensorLayout, tensorOutputType);
+        // image1 = rocalBlendFixed(handle, input1, image2, true, 0.5,  tensorLayout, tensorOutputType);
+        image1 = rocalBlendFixed(handle, input1, input1, true, 0.5,  tensorLayout, tensorOutputType);
+
     }
     break;
+/*
     case 37:
     {
         std::cout << ">>>>>>> Running "
@@ -642,6 +662,7 @@ int test(int test_case, int reader_type, const char *path, const char *outName, 
         image1 = rocalWarpAffineFixed(handle, image0, 0.25, 0.25, 1, 1, 5, 5, true);
     }
     break;
+*/
     case 38:
     {
         std::cout << ">>>>>>> Running "
@@ -653,44 +674,52 @@ int test(int test_case, int reader_type, const char *path, const char *outName, 
     {
         std::cout << ">>>>>>> Running "
                   << "rocalJitterFixed" << std::endl;
-        image1 = rocalJitterFixed(handle, image0, 3, true);
+        // image1 = rocalJitterFixed(handle, image0, 3, true);
     }
     break;
     case 40:
     {
         std::cout << ">>>>>>> Running "
                   << "rocalSnPNoiseFixed" << std::endl;
-        image1 = rocalSnPNoiseFixed(handle, image0, 0.12, true);
+        image1 = rocalSnPNoiseFixed(handle, input1, true, 0.2, 0.2, 0.2, 0.5, 0, tensorLayout, tensorOutputType);
+
     }
     break;
     case 41:
     {
         std::cout << ">>>>>>> Running "
                   << "rocalSnowFixed" << std::endl;
-        image1 = rocalSnowFixed(handle, image0, 0.2, true);
+        // image1 = rocalSnowFixed(handle, image0, 0.2, true);
+        image1 = rocalSnowFixed(handle, input1, true, 0.2,  tensorLayout, tensorOutputType);
+
     }
     break;
     case 42:
     {
         std::cout << ">>>>>>> Running "
                   << "rocalRainFixed" << std::endl;
-        image1 = rocalRainFixed(handle, image0, 0.5, 2, 16, 0.25, true);
+        // image1 = rocalRainFixed(handle, image0, 0.5, 2, 16, 0.25, true);
+        image1 = rocalRainFixed(handle, input1, true, 0.5, 2, 16, 0.25, tensorLayout, tensorOutputType);
+
     }
     break;
     case 43:
     {
         std::cout << ">>>>>>> Running "
                   << "rocalColorTempFixed" << std::endl;
-        image1 = rocalColorTempFixed(handle, image0, 70, true);
+        image1 = rocalColorTempFixed(handle, input1, true, 70 ,  tensorLayout, tensorOutputType);
     }
     break;
+
     case 44:
     {
         std::cout << ">>>>>>> Running "
                   << "rocalFogFixed" << std::endl;
-        image1 = rocalFogFixed(handle, image0, 0.5, true);
+        image1 = rocalFogFixed(handle, input1, true, 0.5,  tensorLayout, tensorOutputType);
+
     }
     break;
+/*
     case 45:
     {
         std::cout << ">>>>>>> Running "
@@ -698,13 +727,15 @@ int test(int test_case, int reader_type, const char *path, const char *outName, 
         image1 = rocalLensCorrectionFixed(handle, image0, 2.9, 1.2, true);
     }
     break;
+*/
     case 46:
     {
         std::cout << ">>>>>>> Running "
                   << "rocalExposureFixed" << std::endl;
-        image1 = rocalExposureFixed(handle, image0, 1, true);
+        image1 = rocalExposureFixed(handle, input1, true, 1, tensorLayout, tensorOutputType);
     }
     break;
+/*
     case 47:
     {
         std::cout << ">>>>>>> Running "
@@ -712,27 +743,31 @@ int test(int test_case, int reader_type, const char *path, const char *outName, 
         image1 = rocalFlipFixed(handle, image0, 2, true);
     }
     break;
+*/
     case 48:
     {
         std::cout << ">>>>>>> Running "
                   << "rocalHueFixed" << std::endl;
-        image1 = rocalHueFixed(handle, image0, 150, true);
+        image1 = rocalHueFixed(handle, input1, true, 150,  tensorLayout, tensorOutputType);
     }
     break;
     case 49:
     {
         std::cout << ">>>>>>> Running "
                   << "rocalSaturationFixed" << std::endl;
-        image1 = rocalSaturationFixed(handle, image0, 0.3, true);
+        image1 = rocalSaturationFixed(handle, input1, true, 0.3,  tensorLayout, tensorOutputType);
     }
     break;
+
     case 50:
     {
         std::cout << ">>>>>>> Running "
                   << "rocalColorTwistFixed" << std::endl;
-        image1 = rocalColorTwistFixed(handle, image0, 0.2, 10.0, 100.0, 0.25, true);
+        image1 = rocalColorTwistFixed(handle, input1, true, 0.2, 10.0, 100.0, 0.25, tensorLayout, tensorOutputType);
+
     }
     break;
+/*
     case 51:
     {
         std::cout << ">>>>>>> Running "
