@@ -79,12 +79,27 @@ do
     fi
     for ((rgb=rgb_start;rgb<=rgb_end;rgb++))
     do 
-        # # FileSource Reader
-        ./rocAL_unittests 0 "$image_path" "${output_path}Brightness_${rgb_name[$rgb]}_${device_name}" $width $height 32 $device $rgb 0 $display
+        # FileSource Reader
         ./rocAL_unittests 0 "$image_path" "${output_path}CropMirrorNormalize_${rgb_name[$rgb]}_${device_name}_FileReader" $width $height 25 $device $rgb 0 $display
+        ./rocAL_unittests 0 "$image_path" "${output_path}Gamma_${rgb_name[$rgb]}_${device_name}" $width $height 33 $device $rgb 0 $display
+        ./rocAL_unittests 0 "$image_path" "${output_path}Contrast_${rgb_name[$rgb]}_${device_name}" $width $height 34 $device $rgb 0 $display
+        ./rocAL_unittests 0 "$image_path" "${output_path}Exposure_${rgb_name[$rgb]}_${device_name}" $width $height 46 $device $rgb 0 $display
+        ./rocAL_unittests 0 "$image_path" "${output_path}Brightness_${rgb_name[$rgb]}_${device_name}" $width $height 32 $device $rgb 0 $display
+        ./rocAL_unittests 0 "$image_path" "${output_path}ColorTwist_${rgb_name[$rgb]}_${device_name}" $width $height 50 $device $rgb 0 $display
+# image
+        ./rocAL_unittests 0 "$image_path" "${output_path}ColorTemp_${rgb_name[$rgb]}_${device_name}" $width $height 43 $device $rgb 0 $display
+        ./rocAL_unittests 0 "$image_path" "${output_path}Blur_${rgb_name[$rgb]}_${device_name}" $width $height 35 $device $rgb 0 $display
+        ./rocAL_unittests 0 "$image_path" "${output_path}Hue_${rgb_name[$rgb]}_${device_name}" $width $height 48 $device $rgb 0 $display
+        ./rocAL_unittests 0 "$image_path" "${output_path}Saturation_${rgb_name[$rgb]}_${device_name}" $width $height 49 $device $rgb 0 $display
+        ./rocAL_unittests 0 "$image_path" "${output_path}SNPNoise_${rgb_name[$rgb]}_${device_name}" $width $height 40 $device $rgb 0 $display
+        ./rocAL_unittests 0 "$image_path" "${output_path}Fog_${rgb_name[$rgb]}_${device_name}" $width $height 44 $device $rgb 0 $display
+        ./rocAL_unittests 0 "$image_path" "${output_path}Rain_${rgb_name[$rgb]}_${device_name}" $width $height 42 $device $rgb 0 $display
+        ./rocAL_unittests 0 "$image_path" "${output_path}Pixelate_${rgb_name[$rgb]}_${device_name}" $width $height 19 $device $rgb 0 $display
+        ./rocAL_unittests 0 "$image_path" "${output_path}Rain_${rgb_name[$rgb]}_${device_name}" $width $height 42 $device $rgb 0 $display
+        ./rocAL_unittests 0 "$image_path" "${output_path}Jitter_${rgb_name[$rgb]}_${device_name}" $width $height 39 $device $rgb 0 $display
 
-        # ./rocAL_unittests 0 "$image_path" "${output_path}LensCorrection_${rgb_name[$rgb]}_${device_name}" $width $height 45 $device $rgb 0 $display
-        # ./rocAL_unittests 0 "$image_path" "${output_path}Exposure_${rgb_name[$rgb]}_${device_name}" $width $height 46 $device $rgb 0 $display
+
+
         # ./rocAL_unittests 0 "$image_path" "${output_path}Flip_${rgb_name[$rgb]}_${device_name}" $width $height 47 $device $rgb 0 $display
 
         # # coco detection

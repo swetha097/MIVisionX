@@ -26,21 +26,17 @@ THE SOFTWARE.
 #include "parameter_vx.h"
 #include "graph.h"
 
-class RocalContrastNode : public Node
-{
+class ContrastNode : public Node {
 public:
-    RocalContrastNode(const std::vector<Tensor *> &inputs, const std::vector<Tensor *> &outputs);
-    RocalContrastNode() = delete;
-    void init(int min, int max);
-    void init(IntParam *min, IntParam * max);
-
+    ContrastNode(const std::vector<Tensor *> &inputs, const std::vector<Tensor *> &outputs);
+    ContrastNode() = delete;
+    void init(float min, float max);
+    void init(FloatParam *min, FloatParam *max);
 protected:
-    void create_node() override ;
+    void create_node() override;
     void update_node() override;
-
 private:
-    ParameterVX<int> _min;
-    ParameterVX<int> _max;
-    constexpr static int   CONTRAST_MIN_RANGE [2] = {0, 30};
-    constexpr static int   CONTRAST_MAX_RANGE [2] = {60, 90};
+    ParameterVX<float> _min, _max;
+    constexpr static float CONTRAST_MIN_RANGE[2] = {0, 30};
+    constexpr static float CONTRAST_MAX_RANGE[2] = {60, 90};
 };
