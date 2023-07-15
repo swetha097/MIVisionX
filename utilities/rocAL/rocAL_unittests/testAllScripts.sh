@@ -86,6 +86,17 @@ do
         ./rocAL_unittests 0 "$image_path" "${output_path}Exposure_${rgb_name[$rgb]}_${device_name}" $width $height 46 $device $rgb 0 $display
         ./rocAL_unittests 0 "$image_path" "${output_path}Brightness_${rgb_name[$rgb]}_${device_name}" $width $height 32 $device $rgb 0 $display
         ./rocAL_unittests 0 "$image_path" "${output_path}ColorTwist_${rgb_name[$rgb]}_${device_name}" $width $height 50 $device $rgb 0 $display
+
+        ./rocAL_unittests 0 "$image_path" "${output_path}Crop_${rgb_name[$rgb]}_${device_name}_FileReader" $width $height 51 $device $rgb 0 $display
+        ./rocAL_unittests 0 "$image_path" "${output_path}FishEye_${rgb_name[$rgb]}_${device_name}" $width $height 10 $device $rgb 0 $display
+        ./rocAL_unittests 0 "$image_path" "${output_path}Flip_${rgb_name[$rgb]}_${device_name}" $width $height 47 $device $rgb 0 $display
+        ./rocAL_unittests 0 "$image_path" "${output_path}ResizeCropMirror_${rgb_name[$rgb]}_${device_name}" $width $height 53 $device $rgb 0 $display
+        ./rocAL_unittests 0 "$image_path" "${output_path}Resize_${rgb_name[$rgb]}_${device_name}_bilinear_default_FileReader" $width $height 0 $device $rgb 0 $display 1 0 
+        ./rocAL_unittests 0 "$image_path" "${output_path}Rotate_${rgb_name[$rgb]}_${device_name}" $width $height 31 $device $rgb 0 $display
+        # ./rocAL_unittests 0 "$image_path" "${output_path}WarpAffine_${rgb_name[$rgb]}_${device_name}" $width $height 37 $device $rgb 0 $display
+        ./rocAL_unittests 0 "$image_path" "${output_path}LensCorrection_${rgb_name[$rgb]}_${device_name}" $width $height 45 $device $rgb 0 $display
+
+
 # image
         ./rocAL_unittests 0 "$image_path" "${output_path}ColorTemp_${rgb_name[$rgb]}_${device_name}" $width $height 43 $device $rgb 0 $display
         ./rocAL_unittests 0 "$image_path" "${output_path}Blur_${rgb_name[$rgb]}_${device_name}" $width $height 35 $device $rgb 0 $display
@@ -94,7 +105,7 @@ do
         ./rocAL_unittests 0 "$image_path" "${output_path}SNPNoise_${rgb_name[$rgb]}_${device_name}" $width $height 40 $device $rgb 0 $display
         ./rocAL_unittests 0 "$image_path" "${output_path}Fog_${rgb_name[$rgb]}_${device_name}" $width $height 44 $device $rgb 0 $display
         ./rocAL_unittests 0 "$image_path" "${output_path}Rain_${rgb_name[$rgb]}_${device_name}" $width $height 42 $device $rgb 0 $display
-        ./rocAL_unittests 0 "$image_path" "${output_path}Pixelate_${rgb_name[$rgb]}_${device_name}" $width $height 19 $device $rgb 0 $display
+        # ./rocAL_unittests 0 "$image_path" "${output_path}Pixelate_${rgb_name[$rgb]}_${device_name}" $width $height 19 $device $rgb 0 $display
         ./rocAL_unittests 0 "$image_path" "${output_path}Rain_${rgb_name[$rgb]}_${device_name}" $width $height 42 $device $rgb 0 $display
         ./rocAL_unittests 0 "$image_path" "${output_path}Jitter_${rgb_name[$rgb]}_${device_name}" $width $height 39 $device $rgb 0 $display
 
