@@ -33,8 +33,8 @@ class RotateNode : public Node
 public:
     RotateNode(const std::vector<Tensor *> &inputs, const std::vector<Tensor *> &outputs);
     RotateNode() = delete;
-    void init(float angle, RocalResizeInterpolationType interpolation_type);
-    void init(FloatParam* angle_param, RocalResizeInterpolationType interpolation_type);    
+    void init(float angle, RocalResizeInterpolationType interpolation_type = ROCAL_LINEAR_INTERPOLATION);
+    void init(FloatParam* angle_param, RocalResizeInterpolationType interpolation_type = ROCAL_LINEAR_INTERPOLATION);
     unsigned int get_dst_width() { return _outputs[0]->info().max_shape()[0]; }
     unsigned int get_dst_height() { return _outputs[0]->info().max_shape()[1]; }
     vx_array get_src_width() { return _src_roi_width; }
