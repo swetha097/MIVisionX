@@ -752,8 +752,8 @@ namespace rocal{
         // rocal_api_augmentation.h
         // m.def("SSDRandomCrop",&rocalSSDRandomCrop,
         //     py::return_value_policy::reference);
-        // m.def("Resize",&rocalResize, 
-        //     py::return_value_policy::reference);
+        m.def("Resize",&rocalResize, 
+            py::return_value_policy::reference);
         // m.def("ResizeMirrorNormalize", &rocalResizeMirrorNormalize,
         //     py::return_value_policy::reference);
         // m.def("CropResize",&rocalCropResize,
@@ -762,59 +762,59 @@ namespace rocal{
         //     py::return_value_policy::reference);
         // m.def("rocalNop",&rocalNop,
         //     py::return_value_policy::reference);
-        // m.def("ColorTwist",&rocalColorTwist,
-        //     py::return_value_policy::reference);
-        // m.def("ColorTwistFixed",&rocalColorTwistFixed,
-        //      py::return_value_policy::reference);
+        m.def("ColorTwist",&rocalColorTwist,
+            py::return_value_policy::reference);
+        m.def("ColorTwistFixed",&rocalColorTwistFixed,
+             py::return_value_policy::reference);
         m.def("CropMirrorNormalize", &rocalCropMirrorNormalize,
             py::return_value_policy::reference);
-        // m.def("Crop",&rocalCrop,
-        //     py::return_value_policy::reference);
-        // m.def("CropFixed",&rocalCropFixed,
-        //     py::return_value_policy::reference);
-        // m.def("CenterCropFixed",&rocalCropCenterFixed,
-        //     py::return_value_policy::reference);
+        m.def("Crop",&rocalCrop,
+            py::return_value_policy::reference);
+        m.def("CropFixed",&rocalCropFixed,
+            py::return_value_policy::reference);
+        m.def("CenterCropFixed",&rocalCropCenterFixed,
+            py::return_value_policy::reference);
         m.def("Brightness", &rocalBrightness,
             py::return_value_policy::reference);
-        // m.def("GammaCorrection",&rocalGamma,
-        //     py::return_value_policy::reference);
-        // m.def("Rain",&rocalRain,
-        //     py::return_value_policy::reference);
-        // m.def("Snow",&rocalSnow,
-        //     py::return_value_policy::reference);
-        // m.def("Blur",&rocalBlur,
-        //     py::return_value_policy::reference);
-        // m.def("Contrast",&rocalContrast,
-        //     py::return_value_policy::reference);
-        // m.def("Flip",&rocalFlip,
-        //     py::return_value_policy::reference);
-        // m.def("Jitter",&rocalJitter,
-        //     py::return_value_policy::reference);
-        // m.def("Rotate",&rocalRotate,
-        //     py::return_value_policy::reference);
-        // m.def("Hue",&rocalHue,
-        //     py::return_value_policy::reference);
-        // m.def("Saturation",&rocalSaturation,
-        //     py::return_value_policy::reference);
-        // m.def("WarpAffine",&rocalWarpAffine,
-        //     py::return_value_policy::reference);
-        // m.def("Fog",&rocalFog,
-        //     py::return_value_policy::reference);
-        // m.def("FishEye",&rocalFishEye,
-        //     py::return_value_policy::reference);
-        // m.def("Vignette",&rocalVignette,
-        //     py::return_value_policy::reference);
-        // m.def("SnPNoise",&rocalSnPNoise,
-        //     py::return_value_policy::reference);
-        // m.def("Exposure",&rocalExposure,
-        //     py::return_value_policy::reference);
-        // m.def("Pixelate",&rocalPixelate,
-        //     py::return_value_policy::reference);
-        // m.def("Blend",&rocalBlend,
-        //     py::return_value_policy::reference);
-        // m.def("RandomCrop",&rocalRandomCrop,
-        //     py::return_value_policy::reference);
-        // m.def("ColorTemp",&rocalColorTemp,
-        //     py::return_value_policy::reference);
+        m.def("GammaCorrection",&rocalGamma,
+            py::return_value_policy::reference);
+        m.def("Rain",&rocalRain,
+            py::return_value_policy::reference);
+        m.def("Snow",&rocalSnow,
+            py::return_value_policy::reference);
+        m.def("Blur",&rocalBlur,
+            py::return_value_policy::reference);
+        m.def("Contrast",&rocalContrast,
+            py::return_value_policy::reference);
+        m.def("Flip",&rocalFlip,
+            py::return_value_policy::reference);
+        m.def("Jitter",&rocalJitter,
+            py::return_value_policy::reference);
+        m.def("Rotate",&rocalRotate,
+            py::return_value_policy::reference);
+        m.def("Hue",&rocalHue,
+            py::return_value_policy::reference);
+        m.def("Saturation",&rocalSaturation,
+            py::return_value_policy::reference);
+        m.def("WarpAffine",&rocalWarpAffine,
+            py::return_value_policy::reference);
+        m.def("Fog",&rocalFog,
+            py::return_value_policy::reference);
+        m.def("FishEye",&rocalFishEye,
+            py::return_value_policy::reference);
+        m.def("Vignette",&rocalVignette,
+            py::return_value_policy::reference);
+        m.def("SnPNoise",&rocalSnPNoise,
+            py::return_value_policy::reference);
+        m.def("Exposure",&rocalExposure,
+            py::return_value_policy::reference);
+        m.def("Pixelate",&rocalPixelate,
+            py::return_value_policy::reference);
+        m.def("Blend",&rocalBlend,
+            py::return_value_policy::reference);
+        m.def("RandomCrop",&rocalRandomCrop,
+            py::return_value_policy::reference);
+        m.def("ColorTemp",&rocalColorTemp,
+            py::return_value_policy::reference);
     }
 }
