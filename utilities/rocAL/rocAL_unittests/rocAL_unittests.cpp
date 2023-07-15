@@ -372,7 +372,7 @@ int test(int test_case, int reader_type, const char *path, const char *outName, 
     }
     switch (test_case)
     {
-    /*case 0:
+    case 0:
     {
         std::cout << ">>>>>>> Running "
                   << "rocalResize" << std::endl;
@@ -384,17 +384,21 @@ int test(int test_case, int reader_type, const char *path, const char *outName, 
         interpolation_type_name = get_interpolation_type(resize_interpolation_type, interpolation_type);
         scaling_node_name = get_scaling_mode(resize_scaling_mode, scale_mode);
         std::cerr<<" \n Interpolation_type_name " << interpolation_type_name;
-        std::cerr<<" \n Scaling_node_name " << scaling_node_name;
+        std::cerr<<" \n Scaling_node_name " << scaling_node_name<<"\n ";
         if (scale_mode != ROCAL_SCALING_MODE_DEFAULT && interpolation_type != ROCAL_LINEAR_INTERPOLATION) { // (Reference output available for bilinear interpolation for this  
             std::cerr<<" \n Running "<< scaling_node_name << " scaling mode with Bilinear interpolation for comparison \n";
             interpolation_type = ROCAL_LINEAR_INTERPOLATION;
         }
-        if(scale_mode == ROCAL_SCALING_MODE_STRETCH) // For reference Output comparison 
-            image1 = rocalResize(handle, image0, resize_w, 0, true, scale_mode, {}, 0, 0, interpolation_type);
+        if(scale_mode == ROCAL_SCALING_MODE_STRETCH) // For reference Output comparison
+            image1 = rocalResize(handle, input1, resize_w, 480, true, scale_mode, {}, 0, 0, interpolation_type, tensorLayout, tensorOutputType);
+
         else
-            image1 = rocalResize(handle, image0, resize_w, resize_h, true, scale_mode, {}, 0, 0, interpolation_type);
+            image1 = rocalResize(handle, input1, resize_w, resize_h, true, scale_mode, {}, 0, 0, interpolation_type, tensorLayout, tensorOutputType);
+
+
     }
     break;
+/*
     case 1:
     {
         std::cout << ">>>>>>> Running "
@@ -457,22 +461,20 @@ int test(int test_case, int reader_type, const char *path, const char *outName, 
 
     }
     break;
-/*
     case 9:
     {
         std::cout << ">>>>>>> Running "
                   << "rocalWarpAffine" << std::endl;
-        image1 = rocalWarpAffine(handle, image0, true);
+        image1 = rocalWarpAffine(handle, input1, true, 640, 480, NULL, NULL,  NULL, NULL, NULL, NULL, (RocalResizeInterpolationType)0, tensorLayout, tensorOutputType);
     }
     break;
     case 10:
     {
         std::cout << ">>>>>>> Running "
                   << "rocalFishEye" << std::endl;
-        image1 = rocalFishEye(handle, image0, true);
+        image1 = rocalFishEye(handle, input1, true,  tensorLayout, tensorOutputType);
     }
     break;
-*/
     case 11:
     {
         std::cout << ">>>>>>> Running "
@@ -598,22 +600,23 @@ int test(int test_case, int reader_type, const char *path, const char *outName, 
         image1 = rocalResizeCropMirror(handle, image0, resize_w, resize_h, true);
     }
     break;
+*/
 
     case 30:
     {
         std::cout << ">>>>>>> Running "
                   << "rocalCropResizeFixed" << std::endl;
-        image1 = rocalCropResizeFixed(handle, image0, resize_w, resize_h, true, 0.25, 1.2, 0.6, 0.4);
+        // image1 = rocalCropResizeFixed(handle, input1, 640, 480, true,0.25, 1.2, 0.6, 0.4);
     }
     break;
     case 31:
     {
         std::cout << ">>>>>>> Running "
                   << "rocalRotateFixed" << std::endl;
-        image1 = rocalRotateFixed(handle, image0, 50, true);
+        image1 = rocalRotateFixed(handle, input1, 45, true, 640, 480, ROCAL_LINEAR_INTERPOLATION, tensorLayout, tensorOutputType);
+
     }
     break;
-*/
     case 32:
     {
         std::cout << ">>>>>>> Running "
@@ -654,15 +657,14 @@ int test(int test_case, int reader_type, const char *path, const char *outName, 
 
     }
     break;
-/*
     case 37:
     {
         std::cout << ">>>>>>> Running "
                   << "rocalWarpAffineFixed" << std::endl;
-        image1 = rocalWarpAffineFixed(handle, image0, 0.25, 0.25, 1, 1, 5, 5, true);
+        image1 = rocalWarpAffineFixed(handle, input1, 1, 1, 0.5, 0.5, 7, 7, true, 640, 480, (RocalResizeInterpolationType) 0 , tensorLayout, tensorOutputType);
+
     }
     break;
-*/
     case 38:
     {
         std::cout << ">>>>>>> Running "
@@ -719,15 +721,13 @@ int test(int test_case, int reader_type, const char *path, const char *outName, 
 
     }
     break;
-/*
     case 45:
     {
         std::cout << ">>>>>>> Running "
                   << "rocalLensCorrectionFixed" << std::endl;
-        image1 = rocalLensCorrectionFixed(handle, image0, 2.9, 1.2, true);
+        image1 = rocalLensCorrectionFixed(handle, input1, 2.9, 1.2, true, tensorLayout, tensorOutputType);
     }
     break;
-*/
     case 46:
     {
         std::cout << ">>>>>>> Running "
@@ -735,15 +735,13 @@ int test(int test_case, int reader_type, const char *path, const char *outName, 
         image1 = rocalExposureFixed(handle, input1, true, 1, tensorLayout, tensorOutputType);
     }
     break;
-/*
     case 47:
     {
         std::cout << ">>>>>>> Running "
                   << "rocalFlipFixed" << std::endl;
-        image1 = rocalFlipFixed(handle, image0, 2, true);
+        image1 = rocalFlipFixed(handle, input1, 1, 0, true, tensorLayout, tensorOutputType);
     }
     break;
-*/
     case 48:
     {
         std::cout << ">>>>>>> Running "
@@ -767,14 +765,15 @@ int test(int test_case, int reader_type, const char *path, const char *outName, 
 
     }
     break;
-/*
+
     case 51:
     {
         std::cout << ">>>>>>> Running "
                   << "rocalCropFixed" << std::endl;
-        image1 = rocalCropFixed(handle, input1, 224, 224, 1, true, 0, 0, 2);
+        image1 = rocalCropFixed(handle, input1, 224, 224, 3, true, 0, 0, 0, tensorLayout, tensorOutputType);
     }
     break;
+/*
     case 52:
     {
         std::cout << ">>>>>>> Running "
@@ -782,13 +781,15 @@ int test(int test_case, int reader_type, const char *path, const char *outName, 
         image1 = rocalCropCenterFixed(handle, image0, 224, 224, 2, true);
     }
     break;
+*/
     case 53:
     {
         std::cout << ">>>>>>> Running "
                   << "rocalResizeCropMirrorFixed" << std::endl;
-        image1 = rocalResizeCropMirrorFixed(handle, image0, 300, 300, true, 250, 250, mirror);
+        image1 = rocalResizeCropMirrorFixed(handle, input1, 400, 400, true, 200, 200, mirror, tensorLayout, tensorOutputType);
     }
     break;
+/*
     case 54:
     {
         std::cout << ">>>>>>> Running "

@@ -59,26 +59,26 @@ void ResizeMirrorNormalizeNode::create_node()
         }
     }
 
-    std::vector<float> mean_vec, std_dev_vec;
-    int mean_std_array_size = _batch_size * _inputs[0]->info().get_channels();
-    if(!_std_dev[0])
-        THROW("Standard deviation value cannot be 0");
-    mean_vec.resize(mean_std_array_size, _mean[0]);
-    std_dev_vec.resize(mean_std_array_size, _std_dev[0]);
+    // std::vector<float> mean_vec, std_dev_vec;
+    // int mean_std_array_size = _batch_size * _inputs[0]->info().get_channels();
+    // if(!_std_dev[0])
+    //     THROW("Standard deviation value cannot be 0");
+    // mean_vec.resize(mean_std_array_size, _mean[0]);
+    // std_dev_vec.resize(mean_std_array_size, _std_dev[0]);
 
-    if(_inputs[0]->info().get_channels() == 3) {
-        if(!(_std_dev[0] && _std_dev[1] && _std_dev[2]))
-            THROW("Standard deviation value cannot be 0");
-        for (uint i = 0, j = 0; i < _batch_size; i++, j += 3 ) {
-            mean_vec[j ] = _mean[0];
-            mean_vec[j + 1] = _mean[1];
-            mean_vec[j + 2] = _mean[2];
+    // if(_inputs[0]->info().get_channels() == 3) {
+    //     if(!(_std_dev[0] && _std_dev[1] && _std_dev[2]))
+    //         THROW("Standard deviation value cannot be 0");
+    //     for (uint i = 0, j = 0; i < _batch_size; i++, j += 3 ) {
+    //         mean_vec[j ] = _mean[0];
+    //         mean_vec[j + 1] = _mean[1];
+    //         mean_vec[j + 2] = _mean[2];
 
-            std_dev_vec[j ] = _std_dev[0];
-            std_dev_vec[j + 1] = _std_dev[1];
-            std_dev_vec[j + 2] = _std_dev[2];
-    }
-    }
+    //         std_dev_vec[j ] = _std_dev[0];
+    //         std_dev_vec[j + 1] = _std_dev[1];
+    //         std_dev_vec[j + 2] = _std_dev[2];
+    // }
+    // }
     
     _dst_roi_width = vxCreateArray(vxGetContext((vx_reference)_graph->get()), VX_TYPE_UINT32, _batch_size);
     _dst_roi_height = vxCreateArray(vxGetContext((vx_reference)_graph->get()), VX_TYPE_UINT32, _batch_size);
@@ -99,10 +99,10 @@ void ResizeMirrorNormalizeNode::create_node()
         THROW(" vxAddArrayItems failed in the resize mirror normalize (vxExtrppNode_ResizeMirrorNormalize) node: "+ TOSTR(width_status) + "  "+ TOSTR(height_status));
 
     vx_scalar interpolation_vx = vxCreateScalar(vxGetContext((vx_reference)_graph->get()), VX_TYPE_INT32, &_interpolation_type);
-   _node = vxExtrppNode_ResizeMirrorNormalize(_graph->get(), _inputs[0]->handle(),
-                                             _src_tensor_roi, _outputs[0]->handle(), _dst_roi_width, _dst_roi_height,
-                                             interpolation_vx, _mean_vx_array, _std_dev_vx_array, _mirror.default_array(),
-                                             _input_layout, _output_layout, _roi_type, _batch_size);
+//    _node = vxExtrppNode_ResizeMirrorNormalize(_graph->get(), _inputs[0]->handle(),
+//                                              _src_tensor_roi, _outputs[0]->handle(), _dst_roi_width, _dst_roi_height,
+//                                              interpolation_vx, _mean_vx_array, _std_dev_vx_array, _mirror.default_array(),
+//                                              _input_layout, _output_layout, _roi_type, _batch_size);
     if((status = vxGetStatus((vx_reference)_node)) != VX_SUCCESS)
         THROW("Adding the resize (vxExtrppNode_ResizeMirrorNormalize) node failed: "+ TOSTR(status))
 }

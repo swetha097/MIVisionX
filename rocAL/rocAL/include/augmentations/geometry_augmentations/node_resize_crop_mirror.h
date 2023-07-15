@@ -47,7 +47,6 @@ protected:
 private:
     vx_array  _dst_roi_width , _dst_roi_height;
     std::shared_ptr<RocalCropParam> _crop_param;
-    vx_array _dst_roi_width, _dst_roi_height;
     ParameterVX<int> _mirror;
     constexpr static int MIRROR_RANGE [2] =  {0, 1};
     void * _crop_coordinates;
