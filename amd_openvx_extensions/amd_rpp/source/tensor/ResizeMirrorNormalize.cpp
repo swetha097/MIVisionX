@@ -25,61 +25,73 @@ THE SOFTWARE.
 
 struct ResizeMirrorNormalizeLocalData
 {
-    RPPCommonHandle * handle;
-    Rpp32u device_type;
+    vxRppHandle *handle;
+    Rpp32u deviceType;
     RppPtr_t pSrc;
     RppPtr_t pDst;
-    RpptDescPtr src_desc_ptr;
-    RpptDesc srcDesc;
-    RpptDesc dstDesc;
-    RpptDescPtr dst_desc_ptr;
-    vx_uint32 *resize_h;
-    vx_uint32 *resize_w;
-    vx_float32 *mean;
-    vx_float32 *std_dev;
-    vx_uint32 *mirror;
-    void *roi_tensor_ptr;
-    RpptROI * roi_ptr;
+    RpptDescPtr pSrcDesc;
+    RpptDescPtr pDstDesc;
+    vx_uint32 *pResizeHeight;
+    vx_uint32 *pResizeWidth;
+    vx_float32 *pMean;
+    vx_float32 *pStdDev;
+    vx_uint32 *pMirror;
+    RpptROI *pSrcRoi;
     RpptRoiType roiType;
-    Rpp32s input_layout;
-    Rpp32s output_layout;
-    size_t in_tensor_dims[RPP_MAX_TENSOR_DIMS]; // will have NHWC info
-    size_t out_tensor_dims[RPP_MAX_TENSOR_DIMS];
-    vx_enum in_tensor_type;
-    vx_enum out_tensor_type;
-    RpptInterpolationType interpolation_type;
-    RpptImagePatch *dstImgSize;
+    vxTensorLayout inputLayout;
+    vxTensorLayout outputLayout;
+    size_t inputTensorDims[RPP_MAX_TENSOR_DIMS]; // will have NHWC info
+    size_t outputTensorDims[RPP_MAX_TENSOR_DIMS];
+    Rpp32s interpolationType;
+    RpptImagePatch *pDstImgSize;
 };
 
 static vx_status VX_CALLBACK refreshResizeMirrorNormalize(vx_node node, const vx_reference *parameters, vx_uint32 num, ResizeMirrorNormalizeLocalData *data)
 {
     vx_status status = VX_SUCCESS;
 
-    STATUS_ERROR_CHECK(vxCopyArrayRange((vx_array)parameters[3], 0, data->src_desc_ptr->n, sizeof(vx_uint32), data->resize_w, VX_READ_ONLY, VX_MEMORY_TYPE_HOST));
-    STATUS_ERROR_CHECK(vxCopyArrayRange((vx_array)parameters[4], 0, data->src_desc_ptr->n, sizeof(vx_uint32), data->resize_h, VX_READ_ONLY, VX_MEMORY_TYPE_HOST));
-    STATUS_ERROR_CHECK(vxCopyArrayRange((vx_array)parameters[6], 0, data->src_desc_ptr->n * data->src_desc_ptr->c, sizeof(vx_float32), data->mean, VX_READ_ONLY, VX_MEMORY_TYPE_HOST));
-    STATUS_ERROR_CHECK(vxCopyArrayRange((vx_array)parameters[7], 0, data->src_desc_ptr->n * data->src_desc_ptr->c, sizeof(vx_float32), data->std_dev, VX_READ_ONLY, VX_MEMORY_TYPE_HOST));
-    STATUS_ERROR_CHECK(vxCopyArrayRange((vx_array)parameters[8], 0, data->src_desc_ptr->n, sizeof(vx_uint32), data->mirror, VX_READ_ONLY, VX_MEMORY_TYPE_HOST));
-    for (int i = 0; i < data->src_desc_ptr->n; i++)
+    STATUS_ERROR_CHECK(vxCopyArrayRange((vx_array)parameters[3], 0, data->inputTensorDims[0], sizeof(vx_uint32), data->pResizeWidth, VX_READ_ONLY, VX_MEMORY_TYPE_HOST));
+    STATUS_ERROR_CHECK(vxCopyArrayRange((vx_array)parameters[4], 0, data->inputTensorDims[0], sizeof(vx_uint32), data->pResizeHeight, VX_READ_ONLY, VX_MEMORY_TYPE_HOST));
+    STATUS_ERROR_CHECK(vxCopyArrayRange((vx_array)parameters[6], 0, data->inputTensorDims[0] * data->pSrcDesc->c, sizeof(vx_float32), data->pMean, VX_READ_ONLY, VX_MEMORY_TYPE_HOST));
+    STATUS_ERROR_CHECK(vxCopyArrayRange((vx_array)parameters[7], 0, data->inputTensorDims[0] * data->pSrcDesc->c, sizeof(vx_float32), data->pStdDev, VX_READ_ONLY, VX_MEMORY_TYPE_HOST));
+    STATUS_ERROR_CHECK(vxCopyArrayRange((vx_array)parameters[8], 0, data->inputTensorDims[0], sizeof(vx_uint32), data->pMirror, VX_READ_ONLY, VX_MEMORY_TYPE_HOST));
+    for (int i = 0; i < data->pSrcDesc->n; i++)
     {
-        data->dstImgSize[i].width = data->resize_w[i];
-        data->dstImgSize[i].height = data->resize_h[i];
+        data->pDstImgSize[i].width = data->pResizeWidth[i];
+        data->pDstImgSize[i].height = data->pResizeHeight[i];
     }
-    if (data->device_type == AGO_TARGET_AFFINITY_GPU)
+
+    void *roi_tensor_ptr;
+    if (data->deviceType == AGO_TARGET_AFFINITY_GPU)
     {
-#if ENABLE_HIP
-        STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[1], VX_TENSOR_BUFFER_HIP, &data->roi_tensor_ptr, sizeof(data->roi_tensor_ptr)));
+#if ENABLE_OPENCL
+        return VX_ERROR_NOT_IMPLEMENTED;
+#elif ENABLE_HIP
+        STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[1], VX_TENSOR_BUFFER_HIP, &roi_tensor_ptr, sizeof(roi_tensor_ptr)));
         STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[0], VX_TENSOR_BUFFER_HIP, &data->pSrc, sizeof(data->pSrc)));
         STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[2], VX_TENSOR_BUFFER_HIP, &data->pDst, sizeof(data->pDst)));
 #endif
     }
-    else if (data->device_type == AGO_TARGET_AFFINITY_CPU)
+    else if (data->deviceType == AGO_TARGET_AFFINITY_CPU)
     {
-        STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[1], VX_TENSOR_BUFFER_HOST, &data->roi_tensor_ptr, sizeof(data->roi_tensor_ptr)));
+        STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[1], VX_TENSOR_BUFFER_HOST, &roi_tensor_ptr, sizeof(roi_tensor_ptr)));
         STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[0], VX_TENSOR_BUFFER_HOST, &data->pSrc, sizeof(data->pSrc)));
         STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[2], VX_TENSOR_BUFFER_HOST, &data->pDst, sizeof(data->pDst)));
     }
-    data->roi_ptr = (RpptROI *)data->roi_tensor_ptr;
+    data->pSrcRoi = reinterpret_cast<RpptROI *>(roi_tensor_ptr);
+    if((data->inputLayout == vxTensorLayout::VX_NFHWC || data->inputLayout == vxTensorLayout::VX_NFCHW)) {
+        unsigned num_of_frames = data->inputTensorDims[1]; // Num of frames 'F'
+        for(int n = data->inputTensorDims[0] - 1; n >= 0; n--) {
+            unsigned index = n * num_of_frames;
+            for(int f = 0; f < num_of_frames; f++) {
+                data->pDstImgSize[index + f] = data->pDstImgSize[n];
+                data->pMirror[index + f] = data->pMirror[n];
+                data->pMean[index + f] = data->pMean[n];
+                data->pStdDev[index + f] = data->pStdDev[n];
+                data->pSrcRoi[index + f].xywhROI = data->pSrcRoi[n].xywhROI;
+            }
+        }
+    }
     return status;
 }
 
@@ -131,22 +143,23 @@ static vx_status VX_CALLBACK processResizeMirrorNormalize(vx_node node, const vx
     vx_status return_status = VX_SUCCESS;
     ResizeMirrorNormalizeLocalData *data = NULL;
     STATUS_ERROR_CHECK(vxQueryNode(node, VX_NODE_LOCAL_DATA_PTR, &data, sizeof(data)));
-    if (data->device_type == AGO_TARGET_AFFINITY_GPU)
+    refreshResizeMirrorNormalize(node, parameters, num, data);
+    if (data->deviceType == AGO_TARGET_AFFINITY_GPU)
     {
-#if ENABLE_HIP
-        refreshResizeMirrorNormalize(node, parameters, num, data);
-        rpp_status = rppt_resize_mirror_normalize_gpu((void *)data->pSrc, data->src_desc_ptr, (void *)data->pDst, data->dst_desc_ptr, data->dstImgSize, RpptInterpolationType::BILINEAR, data->mean, data->std_dev,
-                                                     data->mirror, data->roi_ptr, data->roiType, data->handle->rppHandle);
+#if ENABLE_OPENCL
+        return_status = VX_ERROR_NOT_IMPLEMENTED;
+#elif ENABLE_HIP
+        rpp_status = rppt_resize_Mirror_normalize_gpu((void *)data->pSrc, data->pSrcDesc, (void *)data->pDst, data->pDstDesc, data->pDstImgSize, RpptInterpolationType::BILINEAR, data->pMean, data->pStdDev,
+                                                     data->pMirror, data->pSrcRoi, data->roiType, data->handle->rppHandle);
 
         return_status = (rpp_status == RPP_SUCCESS) ? VX_SUCCESS : VX_FAILURE;
 #endif
     }
 
-    if (data->device_type == AGO_TARGET_AFFINITY_CPU)
+    if (data->deviceType == AGO_TARGET_AFFINITY_CPU)
     {
-        refreshResizeMirrorNormalize(node, parameters, num, data);
-        rpp_status = rppt_resize_mirror_normalize_host(data->pSrc, data->src_desc_ptr, data->pDst, data->dst_desc_ptr, data->dstImgSize, RpptInterpolationType::BILINEAR,
-                                                       data->mean, data->std_dev, data->mirror, data->roi_ptr, data->roiType, data->handle->rppHandle);
+        rpp_status = rppt_resize_Mirror_normalize_host(data->pSrc, data->pSrcDesc, data->pDst, data->pDstDesc, data->pDstImgSize, RpptInterpolationType::BILINEAR,
+                                                       data->pMean, data->pStdDev, data->pMirror, data->pSrcRoi, data->roiType, data->handle->rppHandle);
 
         return_status = (rpp_status == RPP_SUCCESS) ? VX_SUCCESS : VX_FAILURE;
     }
@@ -156,47 +169,50 @@ static vx_status VX_CALLBACK processResizeMirrorNormalize(vx_node node, const vx
 static vx_status VX_CALLBACK initializeResizeMirrorNormalize(vx_node node, const vx_reference *parameters, vx_uint32 num)
 {
     ResizeMirrorNormalizeLocalData *data = new ResizeMirrorNormalizeLocalData;
-    memset(data, 0, sizeof(*data));
-    
-    int roiType;
-    STATUS_ERROR_CHECK(vxCopyScalar((vx_scalar)parameters[5], &data->interpolation_type, VX_READ_ONLY, VX_MEMORY_TYPE_HOST));
-    STATUS_ERROR_CHECK(vxCopyScalar((vx_scalar)parameters[9], &data->input_layout, VX_READ_ONLY, VX_MEMORY_TYPE_HOST));
-    STATUS_ERROR_CHECK(vxCopyScalar((vx_scalar)parameters[10], &data->output_layout, VX_READ_ONLY, VX_MEMORY_TYPE_HOST));
-    STATUS_ERROR_CHECK(vxCopyScalar((vx_scalar)parameters[11], &roiType, VX_READ_ONLY, VX_MEMORY_TYPE_HOST));
-    STATUS_ERROR_CHECK(vxCopyScalar((vx_scalar)parameters[12], &data->device_type, VX_READ_ONLY, VX_MEMORY_TYPE_HOST));
-    data->roiType = (roiType == 0) ? RpptRoiType::XYWH : RpptRoiType::LTRB;
+    memset(data, 0, sizeof(ResizeMirrorNormalizeLocalData));
+
+    vx_enum input_tensor_type, output_tensor_type;
+    int roi_type, input_layout, output_layout;
+    STATUS_ERROR_CHECK(vxCopyScalar((vx_scalar)parameters[5], &data->interpolationType, VX_READ_ONLY, VX_MEMORY_TYPE_HOST));
+    STATUS_ERROR_CHECK(vxCopyScalar((vx_scalar)parameters[9], &input_layout, VX_READ_ONLY, VX_MEMORY_TYPE_HOST));
+    STATUS_ERROR_CHECK(vxCopyScalar((vx_scalar)parameters[10], &output_layout, VX_READ_ONLY, VX_MEMORY_TYPE_HOST));
+    STATUS_ERROR_CHECK(vxCopyScalar((vx_scalar)parameters[11], &roi_type, VX_READ_ONLY, VX_MEMORY_TYPE_HOST));
+    STATUS_ERROR_CHECK(vxCopyScalar((vx_scalar)parameters[12], &data->deviceType, VX_READ_ONLY, VX_MEMORY_TYPE_HOST));
+    data->roiType = (roi_type == 0) ? RpptRoiType::XYWH : RpptRoiType::LTRB;
+    data->inputLayout = static_cast<vxTensorLayout>(input_layout);
+    data->outputLayout = static_cast<vxTensorLayout>(output_layout);
 
     // Querying for input tensor
-    data->src_desc_ptr = &data->srcDesc;
-    STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[0], VX_TENSOR_NUMBER_OF_DIMS, &data->src_desc_ptr->numDims, sizeof(data->src_desc_ptr->numDims)));
-    STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[0], VX_TENSOR_DIMS, &data->in_tensor_dims, sizeof(vx_size) * data->src_desc_ptr->numDims));
-    STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[0], VX_TENSOR_DATA_TYPE, &data->in_tensor_type, sizeof(data->in_tensor_type)));
-    data->src_desc_ptr->dataType = getRpptDataType(data->in_tensor_type);
-    data->src_desc_ptr->offsetInBytes = 0;
-    fillDescriptionPtrfromDims(data->src_desc_ptr, data->input_layout, data->in_tensor_dims);
+    data->pSrcDesc = new RpptDesc;
+    STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[0], VX_TENSOR_NUMBER_OF_DIMS, &data->pSrcDesc->numDims, sizeof(data->pSrcDesc->numDims)));
+    STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[0], VX_TENSOR_DIMS, &data->in_tensor_dims, sizeof(vx_size) * data->pSrcDesc->numDims));
+    STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[0], VX_TENSOR_DATA_TYPE, &input_tensor_type, sizeof(input_tensor_type)));
+    data->pSrcDesc->dataType = getRpptDataType(input_tensor_type);
+    data->pSrcDesc->offsetInBytes = 0;
+    fillDescriptionPtrfromDims(data->pSrcDesc, data->inputLayout, data->in_tensor_dims);
 
     // Querying for output tensor
-    data->dst_desc_ptr = &data->dstDesc;
-    STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[2], VX_TENSOR_NUMBER_OF_DIMS, &data->dst_desc_ptr->numDims, sizeof(data->dst_desc_ptr->numDims)));
-    STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[2], VX_TENSOR_DIMS, &data->out_tensor_dims, sizeof(vx_size) * data->dst_desc_ptr->numDims));
-    STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[2], VX_TENSOR_DATA_TYPE, &data->out_tensor_type, sizeof(data->out_tensor_type)));
-    data->dst_desc_ptr->dataType = getRpptDataType(data->out_tensor_type);
-    data->dst_desc_ptr->offsetInBytes = 0;
-    fillDescriptionPtrfromDims(data->dst_desc_ptr, data->output_layout, data->out_tensor_dims);
+    data->pDstDesc = new RpptDesc;
+    STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[2], VX_TENSOR_NUMBER_OF_DIMS, &data->pDstDesc->numDims, sizeof(data->pDstDesc->numDims)));
+    STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[2], VX_TENSOR_DIMS, &data->out_tensor_dims, sizeof(vx_size) * data->pDstDesc->numDims));
+    STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[2], VX_TENSOR_DATA_TYPE, &output_tensor_type, sizeof(output_tensor_type)));
+    data->pDstDesc->dataType = getRpptDataType(output_tensor_type);
+    data->pDstDesc->offsetInBytes = 0;
+    fillDescriptionPtrfromDims(data->pDstDesc, data->outputLayout, data->out_tensor_dims);
 
 
-    data->resize_w = (vx_uint32 *)malloc(sizeof(vx_uint32) * data->src_desc_ptr->n);
-    data->resize_h = (vx_uint32 *)malloc(sizeof(vx_uint32) * data->src_desc_ptr->n);
-    data->mean = (vx_float32 *)malloc(sizeof(vx_float32) * data->src_desc_ptr->n * data->src_desc_ptr->c);
-    data->std_dev = (vx_float32 *)malloc(sizeof(vx_float32) * data->src_desc_ptr->n * data->src_desc_ptr->c);
-    data->mirror = (vx_uint32 *)malloc(sizeof(vx_uint32) * data->src_desc_ptr->n);
+    data->pResizeWidth = static_cast<vx_uint32 *>(malloc(sizeof(vx_uint32) * data->pSrcDesc->n));
+    data->pResizeHeight = static_cast<vx_uint32 *>(malloc(sizeof(vx_uint32) * data->pSrcDesc->n));
+    data->pMean = static_cast<vx_float32 *>(malloc(sizeof(vx_float32) * data->pSrcDesc->n * data->pSrcDesc->c));
+    data->pStdDev = static_cast<vx_float32 *>(malloc(sizeof(vx_float32) * data->pSrcDesc->n * data->pSrcDesc->c));
+    data->pMirror = static_cast<vx_uint32 *>(malloc(sizeof(vx_uint32) * data->pSrcDesc->n));
 #if ENABLE_HIP
-    hipHostMalloc(&data->dstImgSize, data->src_desc_ptr->n * sizeof(RpptImagePatch));
+    hipHostMalloc(&data->pDstImgSize, data->pSrcDesc->n * sizeof(RpptImagePatch));
 #else
-    data->dstImgSize = (RpptImagePatch *)calloc(data->src_desc_ptr->n, sizeof(RpptImagePatch));
+    data->pDstImgSize = (RpptImagePatch *)calloc(data->pSrcDesc->n, sizeof(RpptImagePatch));
 #endif    
     refreshResizeMirrorNormalize(node, parameters, num, data);
-    STATUS_ERROR_CHECK(createGraphHandle(node, &data->handle, data->src_desc_ptr->n, data->device_type));
+    STATUS_ERROR_CHECK(createRPPHandle(node, &data->handle, data->pSrcDesc->n, data->deviceType));
     STATUS_ERROR_CHECK(vxSetNodeAttribute(node, VX_NODE_LOCAL_DATA_PTR, &data, sizeof(data)));
     return VX_SUCCESS;
 }
@@ -205,17 +221,19 @@ static vx_status VX_CALLBACK uninitializeResizeMirrorNormalize(vx_node node, con
 {
     ResizeMirrorNormalizeLocalData *data;
     STATUS_ERROR_CHECK(vxQueryNode(node, VX_NODE_LOCAL_DATA_PTR, &data, sizeof(data)));
-    STATUS_ERROR_CHECK(releaseGraphHandle(node, data->handle, data->device_type));
-    free(data->resize_w);
-    free(data->resize_h);
-    free(data->mean);
-    free(data->std_dev);
-    free(data->mirror);
+    if(pResizeWidth != nullptr)  free(data->pResizeWidth);
+    if(pResizeWidth != nullptr)  free(data->pResizeHeight);
+    if(pMean != nullptr)  free(data->pMean);
+    if(pStdDev != nullptr)  free(data->pStdDev);
+    if(pMirror != nullptr) free(data->pMirror);
 #if ENABLE_HIP
-    hipHostFree(data->dstImgSize);
+    hipHostFree(data->pDstImgSize);
 #else
-    free(data->dstImgSize);
+    free(data->pDstImgSize);
 #endif
+    delete(data->pSrcDesc);
+    delete(data->pDstDesc);
+    STATUS_ERROR_CHECK(releaseRPPHandle(node, data->handle, data->deviceType));
     delete (data);
     return VX_SUCCESS;
 }
@@ -230,7 +248,7 @@ static vx_status VX_CALLBACK query_target_support(vx_graph graph, vx_node node,
     vx_context context = vxGetContext((vx_reference)graph);
     AgoTargetAffinityInfo affinity;
     vxQueryContext(context, VX_CONTEXT_ATTRIBUTE_AMD_AFFINITY, &affinity, sizeof(affinity));
-    if (affinity.device_type == AGO_TARGET_AFFINITY_GPU)
+    if (affinity.deviceType == AGO_TARGET_AFFINITY_GPU)
         supported_target_affinity = AGO_TARGET_AFFINITY_GPU;
     else
         supported_target_affinity = AGO_TARGET_AFFINITY_CPU;
@@ -260,7 +278,7 @@ vx_status ResizeMirrorNormalize_Register(vx_context context)
 #if ENABLE_OPENCL || ENABLE_HIP
     // enable OpenCL buffer access since the kernel_f callback uses OpenCL buffers instead of host accessible buffers
     vx_bool enableBufferAccess = vx_true_e;
-    if (affinity.device_type == AGO_TARGET_AFFINITY_GPU)
+    if (affinity.deviceType == AGO_TARGET_AFFINITY_GPU)
         STATUS_ERROR_CHECK(vxSetKernelAttribute(kernel, VX_KERNEL_ATTRIBUTE_AMD_GPU_BUFFER_ACCESS_ENABLE, &enableBufferAccess, sizeof(enableBufferAccess)));
 #else
     vx_bool enableBufferAccess = vx_false_e;

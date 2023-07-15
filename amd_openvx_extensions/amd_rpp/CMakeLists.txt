@@ -139,6 +139,12 @@ list(APPEND SOURCES
         source/tensor/Jitter.cpp
         source/tensor/Nop.cpp
         source/tensor/Rotate.cpp
+        source/tensor/Pixelate.cpp
+        source/tensor/Rain.cpp
+        source/tensor/Resize.cpp
+        source/tensor/ResizeCrop.cpp
+        source/tensor/ResizeCropMirror.cpp
+        source/tensor/ResizeMirrorNormalize.cpp
         # source/tensor/SequenceRearrange.cpp
         source/tensor/Vignette.cpp
         source/tensor/WarpAffine.cpp
