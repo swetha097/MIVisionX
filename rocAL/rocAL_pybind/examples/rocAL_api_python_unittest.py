@@ -27,11 +27,12 @@ import amd.rocal.fn as fn
 import amd.rocal.types as types
 from parse_config import parse_args
 import os
+import cv2
 import cupy as cp
 
+
 def draw_patches(img, idx, device):
-    #image is expected as a tensor, bboxes as numpy
-    import cv2
+    # image is expected as a tensor, bboxes as numpy
     args = parse_args()
     if device == "gpu":
         img = cp.asnumpy(img)
@@ -40,7 +41,8 @@ def draw_patches(img, idx, device):
     if args.fp16:
         img = (img).astype('uint8')
     img = cv2.cvtColor(img, cv2.COLOR_RGB2BGR)
-    cv2.imwrite("OUTPUT_IMAGES_PYTHON/NEW_API/FILE_READER/" + args.augmentation_name + "/" + str(idx)+"_"+"train"+".png", img)
+    cv2.imwrite("OUTPUT_IMAGES_PYTHON/NEW_API/FILE_READER/" +
+                args.augmentation_name + "/" + str(idx)+"_"+"train"+".png", img)
 
 
 def main():
@@ -54,38 +56,53 @@ def main():
     batch_size = args.batch_size
     num_threads = args.num_threads
     random_seed = args.seed
-    local_rank =  args.local_rank
-    world_size =  args.world_size
+    local_rank = args.local_rank
+    world_size = args.world_size
     display = True if args.display else False
     try:
-        path= "OUTPUT_IMAGES_PYTHON/NEW_API/FILE_READER/" + args.augmentation_name
+        path = "OUTPUT_IMAGES_PYTHON/NEW_API/FILE_READER/" + args.augmentation_name
         isExist = os.path.exists(path)
         if not isExist:
             os.makedirs(path)
     except OSError as error:
         print(error)
     # Create Pipeline instance
-    pipe = Pipeline(batch_size=batch_size, num_threads=num_threads, device_id=local_rank, seed=random_seed, rocal_cpu=rocal_cpu, tensor_layout=types.NHWC if args.NHWC else types.NCHW , tensor_dtype=types.FLOAT16 if args.fp16 else types.FLOAT, output_memory_type=types.CPU_MEMORY if rocal_cpu else types.GPU_MEMORY)
+    pipe = Pipeline(
+        batch_size=batch_size,
+        num_threads=num_threads,
+        device_id=local_rank,
+        seed=random_seed,
+        rocal_cpu=rocal_cpu,
+        tensor_layout=types.NHWC if args.NHWC else types.NCHW,
+        tensor_dtype=types.FLOAT16 if args.fp16 else types.FLOAT,
+        output_memory_type=types.CPU_MEMORY if rocal_cpu else types.GPU_MEMORY)
     # Set Params
     output_set = 0
     rocal_device = 'cpu' if rocal_cpu else 'gpu'
-    #hardcoding decoder_device to cpu until VCN can decode all JPEGs
+    # hardcoding decoder_device to cpu until VCN can decode all JPEGs
     decoder_device = 'cpu'
     # Use pipeline instance to make calls to reader, decoder & augmentation's
     with pipe:
-        jpegs, _ = fn.readers.file(file_root=data_path, shard_id=local_rank, num_shards=world_size, random_shuffle=True)
-        images = fn.decoders.image(jpegs, file_root=data_path, device=decoder_device, output_type=types.RGB, shard_id=0, num_shards=1, random_shuffle=True)
-        images = fn.resize(images, device=rocal_device, resize_width=300, resize_height=300)
-
+        jpegs, _ = fn.readers.file(
+            file_root=data_path, shard_id=local_rank, num_shards=world_size, random_shuffle=True)
+        images = fn.decoders.image(
+            jpegs,
+            file_root=data_path,
+            device=decoder_device,
+            output_type=types.RGB,
+            shard_id=0,
+            num_shards=1,
+            random_shuffle=True)
+        images = fn.resize(images, resize_width=300, resize_height=300)
 
         if augmentation_name == "resize":
-            output = fn.resize(images, device=rocal_device, resize_width=300, resize_height=300, 
+            output = fn.resize(images, resize_width=300, resize_height=300,
                                scaling_mode=types.SCALING_MODE_NOT_SMALLER, interpolation_type=types.TRIANGULAR_INTERPOLATION)
         elif augmentation_name == "rotate":
             output = fn.rotate(images)
         elif augmentation_name == "brightness":
             output = fn.brightness(images,
-                                  rocal_tensor_layout = types.NHWC if args.NHWC else types.NCHW)
+                                   rocal_tensor_layout=types.NHWC if args.NHWC else types.NCHW)
         elif augmentation_name == "gamma_correction":
             output = fn.gamma_correction(images)
         elif augmentation_name == "contrast":
@@ -96,7 +113,7 @@ def main():
             output = fn.blur(images)
         elif augmentation_name == "one_hot":
             _ = fn.one_hot(num_classes=2)
-            output = fn.resize(images, device=rocal_device, resize_width=300, resize_height=300)
+            output = fn.resize(images, resize_width=300, resize_height=300)
         elif augmentation_name == "hue_rotate_blend":
             images_hue = fn.hue(images)
             images_rotate = fn.rotate(images)
@@ -113,7 +130,7 @@ def main():
             output = fn.snp_noise(images)
         elif augmentation_name == "snow":
             output = fn.snow(images)
-        elif augmentation_name =="rain":
+        elif augmentation_name == "rain":
             output = fn.rain(images)
         elif augmentation_name == "fog":
             output = fn.fog(images)
@@ -128,23 +145,20 @@ def main():
         elif augmentation_name == "color_twist":
             output = fn.color_twist(images)
         elif augmentation_name == "crop_mirror_normalize":
-            output = fn.crop_mirror_normalize(images, device="gpu",
-                                        rocal_tensor_layout = types.NHWC if args.NHWC else types.NCHW,
-                                        rocal_tensor_output_type = types.UINT8,
-                                        crop=(224, 224),
-                                        image_type=types.RGB,
-                                        mean=[0, 0, 0],
-                                        std=[1, 1, 1])
+            output = fn.crop_mirror_normalize(images,
+                                              rocal_tensor_layout=types.NHWC if args.NHWC else types.NCHW,
+                                              rocal_tensor_output_type=types.UINT8,
+                                              crop=(224, 224),
+                                              mean=[0, 0, 0],
+                                              std=[1, 1, 1])
         elif augmentation_name == "resize_mirror_normalize":
             output = fn.resize_mirror_normalize(images,
-                                            device="gpu",
-                                            output_dtype=types.UINT8,
-                                            output_layout=types.NHWC,
-                                            resize_min = 1344,
-                                            resize_max = 1344,
-                                            image_type=types.RGB,
-                                            mean=[0, 0, 0],
-                                            std=[1, 1, 1])
+                                                output_dtype=types.UINT8,
+                                                output_layout=types.NHWC,
+                                                resize_min=1344,
+                                                resize_max=1344,
+                                                mean=[0, 0, 0],
+                                                std=[1, 1, 1])
         elif augmentation_name == "nop":
             output = fn.nop(images)
         elif augmentation_name == "centre_crop":
@@ -172,25 +186,25 @@ def main():
             output_set = 1
         elif augmentation_name == "brightness_crop_mirror_normalize":
             output = fn.brightness(images,
-                                  rocal_tensor_layout = types.NHWC if args.NHWC else types.NCHW)
-            output1 = fn.crop_mirror_normalize(output, device="gpu",
-                                        rocal_tensor_layout = types.NHWC if args.NHWC else types.NCHW,
-                                        rocal_tensor_output_type = types.UINT8,
-                                        crop_pos_x=0.0, crop_pos_y=0.0,
-                                        crop=(224, 224),
-                                        image_type=types.RGB,
-                                        mirror=0,
-                                        mean=[0, 0, 0],
-                                        std=[1, 1, 1])
+                                   rocal_tensor_layout=types.NHWC if args.NHWC else types.NCHW)
+            output1 = fn.crop_mirror_normalize(output,
+                                               rocal_tensor_layout=types.NHWC if args.NHWC else types.NCHW,
+                                               rocal_tensor_output_type=types.UINT8,
+                                               crop_pos_x=0.0, crop_pos_y=0.0,
+                                               crop=(224, 224),
+                                               mirror=0,
+                                               mean=[0, 0, 0],
+                                               std=[1, 1, 1])
             pipe.setOutputs(output, output1)
-            output_set = 1 
+            output_set = 1
 
-        if output_set==0:
-                pipe.setOutputs(output)
+        if output_set == 0:
+            pipe.setOutputs(output)
     # build the pipeline
     pipe.build()
     # Dataloader
-    data_loader = ROCALClassificationIterator(pipe,device=device,device_id=local_rank)
+    data_loader = ROCALClassificationIterator(
+        pipe, device=device, device_id=local_rank)
     cnt = 0
     import timeit
     start = timeit.default_timer()
@@ -208,14 +222,13 @@ def main():
                     print("**************ends*******************")
                     print("**************", i, "*******************")
                 for img in output_list[j]:
-                    cnt = cnt+1
+                    cnt = cnt + 1
                     if display:
                         draw_patches(img, cnt, rocal_device)
 
             break
         data_loader.reset()
 
-    #Your statements here
     stop = timeit.default_timer()
 
     print('\n Time: ', stop - start)
@@ -223,7 +236,6 @@ def main():
 
     print(f'###############################################                             {augmentation_name.upper()}                         ############################################')
     print("###############################################                             SUCCESS                             ###############################################")
-
 
 
 if __name__ == '__main__':

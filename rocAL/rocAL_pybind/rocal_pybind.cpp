@@ -776,6 +776,8 @@ namespace rocal{
             py::return_value_policy::reference);
         m.def("Brightness", &rocalBrightness,
             py::return_value_policy::reference);
+        m.def("BrightnessFixed", &rocalBrightnessFixed,
+            py::return_value_policy::reference);
         m.def("GammaCorrection",&rocalGamma,
             py::return_value_policy::reference);
         m.def("Rain",&rocalRain,
