@@ -200,8 +200,8 @@ int test(int test_case, int reader_type, const char *path, const char *outName, 
 #endif
 
     RocalTensor input;
-    RocalTensorLayout tensor_layout = (rgb != 0) ? RocalTensorLayout::ROCAL_NHWC : RocalTensorLayout::ROCAL_NCHW;
-    RocalTensorOutputType tensor_output_type = RocalTensorOutputType::ROCAL_UINT8;
+    RocalTensorLayout output_tensor_layout = (rgb != 0) ? RocalTensorLayout::ROCAL_NHWC : RocalTensorLayout::ROCAL_NCHW;
+    RocalTensorOutputType output_tensor_dtype = RocalTensorOutputType::ROCAL_UINT8;
     // The jpeg file loader can automatically select the best size to decode all images to that size
     // User can alternatively set the size or change the policy that is used to automatically find the size
     switch (reader_type)
@@ -569,7 +569,7 @@ int test(int test_case, int reader_type, const char *path, const char *outName, 
                   << "rocalCropMirrorNormalize" << std::endl;
         std::vector<float> mean = {0, 0, 0};
         std::vector<float> std_dev = {1, 1, 1};
-        image1 = rocalCropMirrorNormalize(handle, image0, 224, 224, 0, 0, mean, std_dev, true, mirror, tensor_layout, tensor_output_type);
+        image1 = rocalCropMirrorNormalize(handle, image0, 224, 224, 0, 0, mean, std_dev, true, mirror, output_tensor_layout, output_tensor_dtype);
     }
     break;
     /*case 26:
@@ -606,7 +606,7 @@ int test(int test_case, int reader_type, const char *path, const char *outName, 
     {
         std::cout << ">>>>>>> Running "
                   << "rocalBrightnessFixed" << std::endl;
-        image1 = rocalBrightnessFixed(handle, image0, 1.90, 20, true, tensor_layout, tensor_output_type);
+        image1 = rocalBrightnessFixed(handle, image0, 1.90, 20, true, output_tensor_layout, output_tensor_dtype);
     }
     break;
 /*
@@ -798,6 +798,7 @@ int test(int test_case, int reader_type, const char *path, const char *outName, 
     auto cv_color_format = ((color_format == RocalImageColor::ROCAL_COLOR_RGB24) ? CV_8UC3 : CV_8UC1);
     std::vector<cv::Mat> mat_output, mat_input;
     cv::Mat mat_color;
+    std::vector<void *> output_buffers;
     int col_counter = 0;
     if(DISPLAY)
         cv::namedWindow("output", CV_WINDOW_AUTOSIZE);
@@ -858,8 +859,7 @@ int test(int test_case, int reader_type, const char *path, const char *outName, 
                 std::cerr << "\nPrinting image names of batch: " << img_name;
                 RocalTensorList bbox_labels = rocalGetBoundingBoxLabel(handle);
                 RocalTensorList bbox_coords = rocalGetBoundingBoxCords(handle);
-                for(int i = 0; i < bbox_labels->size(); i++)
-                {
+                for(int i = 0; i < bbox_labels->size(); i++) {
                     int *labels_buffer = reinterpret_cast<int *>(bbox_labels->at(i)->buffer());
                     float *bbox_buffer = reinterpret_cast<float *>(bbox_coords->at(i)->buffer());
                     std::cerr << "\n>>>>> BBOX LABELS : ";
@@ -919,12 +919,14 @@ int test(int test_case, int reader_type, const char *path, const char *outName, 
             auto output_tensor = output_tensor_list->at(idx);
             int h = output_tensor->shape().at(1) * output_tensor->dims().at(0);
             int w = output_tensor->shape().at(0);
-            if(first_run) { // Allocate cv matrix for each output in first run and reuse in every iteration
+            if(first_run) { // Allocate cv matrix and output buffers for each output in first run and reuse in every iteration
                 mat_input.emplace_back(cv::Mat(h, w, cv_color_format));
-                mat_output.emplace_back(cv::Mat(h, w, cv_color_format));   
+                mat_output.emplace_back(cv::Mat(h, w, cv_color_format));
+                void *out_ptr = malloc(output_tensor->data_size());
+                output_buffers.push_back(out_ptr);
             }
             
-            unsigned char *out_buffer = reinterpret_cast<unsigned char *>(malloc(output_tensor->data_size()));
+            unsigned char *out_buffer = reinterpret_cast<unsigned char *>(output_buffers[idx]);
             output_tensor->copy_data(out_buffer, ROCAL_MEMCPY_HOST);
             mat_input[idx].data = reinterpret_cast<unsigned char *>(out_buffer);
             mat_input[idx].copyTo(mat_output[idx](cv::Rect(0, 0, w, h)));
@@ -948,8 +950,7 @@ int test(int test_case, int reader_type, const char *path, const char *outName, 
                 else
                 cv::imwrite(out_filename, mat_output[idx], compression_params);
             }
-            // col_counter = (col_counter + 1) % number_of_cols;
-            if(out_buffer != nullptr) free(out_buffer);
+            col_counter = (col_counter + 1) % number_of_cols;
         }
         first_run = false;
     }
@@ -965,6 +966,7 @@ int test(int test_case, int reader_type, const char *path, const char *outName, 
     for (int i = 0; i < mat_input.size(); i++) {
         mat_input[i].release();
         mat_output[i].release();
+        if(output_buffers[i] != nullptr) free(output_buffers[i]);
     }
     rocalRelease(handle);
     if (!image1)
