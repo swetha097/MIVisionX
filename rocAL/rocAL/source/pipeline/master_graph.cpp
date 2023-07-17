@@ -1517,7 +1517,7 @@ MasterGraph::get_bbox_encoded_buffers(size_t num_encoded_boxes)
 
 void MasterGraph::feed_external_input(std::vector<std::string> input_images_names, std::vector<int> labels, std::vector<unsigned char *>input_buffer,
                             std::vector<unsigned> roi_width, std::vector<unsigned> roi_height, unsigned int max_width, unsigned int max_height, int channels,
-                            ExternalFileMode mode, RocalTensorFormat layout, bool eos)
+                            ExternalFileMode mode, RocalTensorlayout layout, bool eos)
 {
     _external_source_eos = eos;
     _loader_module->feed_external_input(input_images_names, labels, input_buffer, roi_width, roi_height, max_width, max_height, channels, mode, eos);

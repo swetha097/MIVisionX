@@ -336,7 +336,7 @@ rocalSequenceReader(
         auto cpu_num_threads = context->master_graph->calculate_cpu_num_threads(1);
 
         context->master_graph->add_node<ImageLoaderNode>({}, {output})->init(internal_shard_count, cpu_num_threads,
-                                                                            source_path, ExternalFileMode::FILENAME, "",
+                                                                            source_path, "",
                                                                             std::map<std::string, std::string>(),
                                                                             StorageType::SEQUENCE_FILE_SYSTEM,
                                                                             DecoderType::TURBO_JPEG,
@@ -345,7 +345,7 @@ rocalSequenceReader(
                                                                             context->master_graph->sequence_batch_size(),
                                                                             context->master_graph->mem_type(),
                                                                             context->master_graph->meta_data_reader(),
-                                                                            decoder_keep_original, "",
+                                                                            decoder_keep_original, ExternalFileMode::FILENAME, "",
                                                                             sequence_length,
                                                                             step, stride);
         context->master_graph->set_loop(loop);
@@ -435,6 +435,7 @@ rocalSequenceReaderSingleShard(
                                                                                         context->master_graph->mem_type(),
                                                                                         context->master_graph->meta_data_reader(),
                                                                                         decoder_keep_original,
+                                                                                        ExternalFileMode::FILENAME,
                                                                                         std::map<std::string, std::string>(),
                                                                                         sequence_length,
                                                                                         step, stride);
@@ -2300,7 +2301,9 @@ rocalJpegExternalFileSource(
         //                       color_format );
         output = context->master_graph->create_loader_output_tensor(info);
         context->master_graph->set_external_source_reader_flag();
-        context->master_graph->add_node<ImageLoaderNode>({}, {output})->init(internal_shard_count,
+        unsigned shard_count = 1; // Hardcoding the shard count to 1 for now. Check with Shobana on this
+        auto cpu_num_threads = context->master_graph->calculate_cpu_num_threads(shard_count);
+        context->master_graph->add_node<ImageLoaderNode>({}, {output})->init(internal_shard_count, cpu_num_threads,
                                                                             source_path, "",
                                                                             std::map<std::string, std::string>(),
                                                                             StorageType::EXTERNAL_FILE_SOURCE,
