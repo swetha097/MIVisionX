@@ -50,6 +50,25 @@ THE SOFTWARE.
 #define MAX_NUM_ANCHORS 8732  // Num of bbox achors used in SSD training
 #define MAX_MASK_BUFFER 10000
 
+#if ENABLE_SIMD
+#if _WIN32
+#include <intrin.h>
+#else
+#include <x86intrin.h>
+#include <smmintrin.h>
+#include <immintrin.h>
+#endif
+#endif
+
+#if (ENABLE_SIMD && __AVX2__)
+const __m256i avx_pkdMaskR = _mm256_setr_epi32(0x80808000, 0x80808003, 0x80808006, 0x80808009, 0x80808000,
+                                               0x80808003, 0x80808006, 0x80808009);
+const __m256i avx_pkdMaskG = _mm256_setr_epi32(0x80808001, 0x80808004, 0x80808007, 0x8080800A, 0x80808001,
+                                               0x80808004, 0x80808007, 0x8080800A);
+const __m256i avx_pkdMaskB = _mm256_setr_epi32(0x80808002, 0x80808005, 0x80808008, 0x8080800B, 0x80808002,
+                                               0x80808005, 0x80808008, 0x8080800B);
+#endif
+                                  
 class MasterGraph
 {
 public:
@@ -58,9 +77,18 @@ public:
     ~MasterGraph();
     Status reset();
     size_t remaining_count();
+    MasterGraph::Status to_tensor(void *out_ptr, RocalTensorlayout format, float multiplier0, float multiplier1, float multiplier2,
+                                  float offset0, float offset1, float offset2, bool reverse_channels, RocalTensorDataType output_data_type, RocalOutputMemType output_mem_type);
+    Status copy_output(unsigned char* out_ptr, size_t out_size_in_bytes);
+    Status copy_out_tensor_planar(void *out_ptr, RocalTensorlayout format, float multiplier0, float multiplier1, float multiplier2,
+                                  float offset0, float offset1, float offset2, bool reverse_channels, RocalTensorDataType output_data_type);
     TensorList *get_output_tensors();
+    size_t output_width();
+    size_t output_height();
     void sequence_start_frame_number(std::vector<size_t> &sequence_start_framenum); // Returns the starting frame number of the sequences
     void sequence_frame_timestamps(std::vector<std::vector<float>> &sequence_frame_timestamp); // Returns the timestamps of the frames in the sequences
+    size_t augmentation_branch_count(); // Returns the number of output tensors from the pipeline
+    RocalColorFormat output_color_format();
     Status build();
     Status run();
     Timing timing();
@@ -123,6 +151,7 @@ private:
     std::list<std::shared_ptr<Node>> _root_nodes;//!< List of all root nodes (image/video loaders)
     std::list<std::shared_ptr<Node>> _meta_data_nodes;//!< List of nodes where meta data has to be updated after augmentation
     std::map<Tensor*, std::shared_ptr<Node>> _tensor_map;//!< key: tensor, value : Parent node
+    void * _output_tensor_buffer = nullptr;//!< In the GPU processing case , is used to convert the U8 samples to float32 before they are being transfered back to host
 
     // Output tensorList for metadata
     std::vector<rocalTensorList *> _metadata_output_tensor_list;
