@@ -651,9 +651,9 @@ int test(int test_case, int reader_type, const char *path, const char *outName, 
     {
         std::cout << ">>>>>>> Running "
                   << "rocalBlendFixed" << std::endl;
-        // image2 = rocalRotateFixed(handle, input1, true, 45, ROCAL_LINEAR_INTERPOLATION, tensorLayout, tensorOutputType);
-        // image1 = rocalBlendFixed(handle, input1, image2, true, 0.5,  tensorLayout, tensorOutputType);
-        image1 = rocalBlendFixed(handle, input1, input1, true, 0.5,  tensorLayout, tensorOutputType);
+        image2 = rocalRotateFixed(handle, input1, 45, true, 640, 480, ROCAL_LINEAR_INTERPOLATION, tensorLayout, tensorOutputType);
+        image1 = rocalBlendFixed(handle, input1, image2, true, 0.5,  tensorLayout, tensorOutputType);
+        // image1 = rocalBlendFixed(handle, input1, input1, true, 0.5,  tensorLayout, tensorOutputType);
 
     }
     break;
@@ -786,6 +786,7 @@ int test(int test_case, int reader_type, const char *path, const char *outName, 
     {
         std::cout << ">>>>>>> Running "
                   << "rocalResizeCropMirrorFixed" << std::endl;
+        mirror = rocalCreateIntParameter(1);
         image1 = rocalResizeCropMirrorFixed(handle, input1, 400, 400, true, 200, 200, mirror, tensorLayout, tensorOutputType);
     }
     break;
