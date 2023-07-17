@@ -417,7 +417,9 @@ int test(int test_case, int reader_type, const char *path, const char *outName, 
     {
         std::cout << ">>>>>>> Running "
                   << "rocalBrightness" << std::endl;
-        image1 = rocalBrightness(handle, image0, true);
+        // image1 = rocalBrightness(handle, image0, true);
+        image1 = rocalBrightness(handle, input1, true, NULL, NULL, tensorLayout, tensorOutputType);
+
     }
     break;
     /*case 4:
@@ -465,7 +467,7 @@ int test(int test_case, int reader_type, const char *path, const char *outName, 
     {
         std::cout << ">>>>>>> Running "
                   << "rocalWarpAffine" << std::endl;
-        image1 = rocalWarpAffine(handle, input1, true, 640, 480, NULL, NULL,  NULL, NULL, NULL, NULL, (RocalResizeInterpolationType)0, tensorLayout, tensorOutputType);
+        image1 = rocalWarpAffine(handle, input1, true, 480, 640, NULL, NULL,  NULL, NULL, NULL, NULL, (RocalResizeInterpolationType)0, tensorLayout, tensorOutputType);
     }
     break;
     case 10:
@@ -586,14 +588,16 @@ int test(int test_case, int reader_type, const char *path, const char *outName, 
         image1 = rocalCropMirrorNormalize(handle, image0, 224, 224, 0, 0, mean, std_dev, true, mirror,tensorLayout, tensorOutputType);
     }
     break;
-    /*case 26:
+    case 26:
     {
         std::cout << ">>>>>>> Running "
                   << "rocalCrop" << std::endl;
-        image1 = rocalCrop(handle, image0, true);
+        // image1 = rocalCrop(handle, image0, true);
+        // image1 = rocalCrop(handle, input1,true, tensorLayout, tensorOutputType);
+
     }
     break;
-    case 27:
+    /*case 27:
     {
         std::cout << ">>>>>>> Running "
                   << "rocalResizeCropMirror" << std::endl;
@@ -606,7 +610,7 @@ int test(int test_case, int reader_type, const char *path, const char *outName, 
     {
         std::cout << ">>>>>>> Running "
                   << "rocalCropResizeFixed" << std::endl;
-        // image1 = rocalCropResizeFixed(handle, input1, 640, 480, true,0.25, 1.2, 0.6, 0.4);
+        image1 = rocalCropResizeFixed(handle, input1, 640, 480, true,0.25, 1.2, 0.6, 0.4);
     }
     break;
     case 31:
@@ -661,7 +665,7 @@ int test(int test_case, int reader_type, const char *path, const char *outName, 
     {
         std::cout << ">>>>>>> Running "
                   << "rocalWarpAffineFixed" << std::endl;
-        image1 = rocalWarpAffineFixed(handle, input1, 1, 1, 0.5, 0.5, 7, 7, true, 640, 480, (RocalResizeInterpolationType) 0 , tensorLayout, tensorOutputType);
+        image1 = rocalWarpAffineFixed(handle, input1, 1, 1, 0.5, 0.5, 7, 7, true, 480, 640, (RocalResizeInterpolationType) 0 , tensorLayout, tensorOutputType);
 
     }
     break;
