@@ -79,16 +79,17 @@ rocalExternalSourceFeedInput(
         unsigned int max_height,
         int channels,
         RocalExtSourceMode mode,
-        RocalTensorlayout layout,
+        RocalTensorLayout layout,
         bool eos)
 {
     auto context = static_cast<Context*>(p_context);
     try
     {
         ExternalFileMode external_file_mode = (ExternalFileMode) mode;
+        RocalTensorlayout format = (RocalTensorlayout) layout;
         context->master_graph->feed_external_input(input_images_names, labels, input_buffer,
                                                     roi_width, roi_height, max_width, max_height, channels,
-                                                    external_file_mode, layout, eos);
+                                                    external_file_mode, format, eos);
     }
     catch(const std::exception& e)
     {
