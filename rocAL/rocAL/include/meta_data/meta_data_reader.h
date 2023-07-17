@@ -89,6 +89,7 @@ public:
     virtual void init(const MetaDataConfig& cfg, pMetaDataBatch meta_data_batch) = 0;
     virtual void read_all(const std::string& path) = 0;// Reads all the meta data information
     virtual void lookup(const std::vector<std::string>& image_names) = 0;// finds meta_data info associated with given names and fills the output
+    virtual void add_labels(std::vector<std::string> image_name, std::vector<int> label) = 0;
     virtual void release() = 0; // Deletes the loaded information
     virtual const std::map<std::string, std::shared_ptr<MetaData>> & get_map_content()=0;
     virtual bool exists(const std::string &image_name) = 0;
