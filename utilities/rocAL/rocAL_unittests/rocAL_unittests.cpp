@@ -796,7 +796,7 @@ int test(int test_case, int reader_type, const char *path, const char *outName, 
     int p = ((color_format == RocalImageColor::ROCAL_COLOR_RGB24) ? 3 : 1);
     const unsigned number_of_cols = 1; //1920 / w;
     auto cv_color_format = ((color_format == RocalImageColor::ROCAL_COLOR_RGB24) ? CV_8UC3 : CV_8UC1);
-    std::vector<cv::Mat> mat_output, mat_input
+    std::vector<cv::Mat> mat_output, mat_input;
     cv::Mat mat_color;
     int col_counter = 0;
     if(DISPLAY)
@@ -925,9 +925,9 @@ int test(int test_case, int reader_type, const char *path, const char *outName, 
                 mat_output.emplace_back(cv::Mat(h, w, cv_color_format));   
             }
             
-            unsigned char *out_buffer = reinterpret_cast<unsigned char *>malloc(output_tensor->data_size());
+            unsigned char *out_buffer = reinterpret_cast<unsigned char *>(malloc(output_tensor->data_size()));
             output_tensor->copy_data(out_buffer, ROCAL_MEMCPY_HOST);
-            mat_input[idx].data = reinterpret_cast<unsigned char *>out_buffer;
+            mat_input[idx].data = reinterpret_cast<unsigned char *>(out_buffer);
             mat_input[idx].copyTo(mat_output[idx](cv::Rect(0, 0, w, h)));
 
             std::string out_filename = std::string(outName) + ".png";   // in case the user specifies non png filename
