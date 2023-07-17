@@ -48,18 +48,15 @@ struct LensCorrectionLocalData {
 };
 
 static vx_status VX_CALLBACK refreshLensCorrection(vx_node node, const vx_reference *parameters, vx_uint32 num, LensCorrectionLocalData *data) {
-    std::cerr<<"\n check in refreshLensCorrection";
 
     vx_status status = VX_SUCCESS;
     STATUS_ERROR_CHECK(vxCopyArrayRange((vx_array)parameters[3], 0, data->srcDescPtr->n, sizeof(vx_float32), data->strength, VX_READ_ONLY, VX_MEMORY_TYPE_HOST));
     STATUS_ERROR_CHECK(vxCopyArrayRange((vx_array)parameters[4], 0, data->srcDescPtr->n, sizeof(vx_float32), data->zoom, VX_READ_ONLY, VX_MEMORY_TYPE_HOST));
     for (int i = 0; i < data->inputTensorDims[0]; i++)
         {
-            std::cerr<<"\n check ";
             data->srcDimensions[i].width = data->srcDescPtr->w;  //  640;//data->roiPtr[i].xywhROI.roiWidth;
             data->srcDimensions[i].height = data->srcDescPtr->h; // 480;//data->roiPtr[i].xywhROI.roiHeight;
         }
-        std::cerr<<"\n chec 222";
     if (data->deviceType == AGO_TARGET_AFFINITY_GPU) {
 #if ENABLE_HIP
         STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[1], VX_TENSOR_BUFFER_HIP, &data->roiTensorPtr, sizeof(data->roiTensorPtr)));
@@ -71,7 +68,6 @@ static vx_status VX_CALLBACK refreshLensCorrection(vx_node node, const vx_refere
         STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[0], VX_TENSOR_BUFFER_HOST, &data->pSrc, sizeof(data->pSrc)));
         STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[2], VX_TENSOR_BUFFER_HOST, &data->pDst, sizeof(data->pDst)));
     }
-    std::cerr<<"\n checking before ";
     data->roiPtr = (RpptROI *)data->roiTensorPtr;
     if((data->inputLayout == 2 || data->inputLayout == 3)) { // For NFCHW and NFHWC formats
         unsigned num_of_frames = data->inputTensorDims[1]; // Num of frames 'F'
@@ -84,14 +80,12 @@ static vx_status VX_CALLBACK refreshLensCorrection(vx_node node, const vx_refere
             }
         }
     }
-    std::cerr<<"\n checking after ";
 
     return status;
 }
 
 static vx_status VX_CALLBACK validateLensCorrection(vx_node node, const vx_reference parameters[], vx_uint32 num, vx_meta_format metas[]) {
     
-    std::cerr<<"\n check in validateLensCorrection";
 
     vx_status status = VX_SUCCESS;
     vx_enum scalar_type;
@@ -143,7 +137,6 @@ static vx_status VX_CALLBACK validateLensCorrection(vx_node node, const vx_refer
 }
 
 static vx_status VX_CALLBACK processLensCorrection(vx_node node, const vx_reference *parameters, vx_uint32 num) {
-    std::cerr<<"\n check in processLensCorrection";
 
     RppStatus rpp_status = RPP_SUCCESS;
     vx_status return_status = VX_SUCCESS;
@@ -161,8 +154,6 @@ static vx_status VX_CALLBACK processLensCorrection(vx_node node, const vx_refere
 #endif
     } else if (data->deviceType == AGO_TARGET_AFFINITY_CPU) {
         refreshLensCorrection(node, parameters, num, data);
-        std::cerr<<"data->srcDimensions "<<data->srcDimensions[0].width<<" "<<data->srcDimensions[0].height;
-        std::cerr<<"\n dstDescPtr "<<data->dstDescPtr->c;
         if(data->dstDescPtr->c==1 ) 
             rpp_status = rppi_lens_correction_u8_pln1_batchPD_host(data->pSrc, data->srcDimensions, data->maxSrcDimensions, data->pDst, data->strength, data->zoom, data->nbatchSize, data->handle->rppHandle);
         else 
@@ -174,7 +165,6 @@ static vx_status VX_CALLBACK processLensCorrection(vx_node node, const vx_refere
 }
 
 static vx_status VX_CALLBACK initializeLensCorrection(vx_node node, const vx_reference *parameters, vx_uint32 num) {
-    std::cerr<<"\n check in initializeLensCorrection";
     LensCorrectionLocalData *data = new LensCorrectionLocalData;
     memset(data, 0, sizeof(*data));
     int roi_type;

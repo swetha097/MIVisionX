@@ -816,5 +816,7 @@ namespace rocal{
             py::return_value_policy::reference);
         m.def("ColorTemp",&rocalColorTemp,
             py::return_value_policy::reference);
+        m.def("LensCorrection",&rocalLensCorrection,
+            py::return_value_policy::reference);
     }
 }
