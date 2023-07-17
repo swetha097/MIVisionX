@@ -49,11 +49,11 @@ void SSDRandomCropNode::create_node()
         THROW("Uninitialized destination dimension")
 
     _crop_param->create_array(_graph);
-    _node = vxExtrppNode_Crop(_graph->get(), _inputs[0]->handle(), _src_tensor_roi, _outputs[0]->handle(), _input_layout, _output_layout, _roi_type);
+    _node = vxRppCrop(_graph->get(), _inputs[0]->handle(), _src_tensor_roi, _outputs[0]->handle(), _input_layout, _output_layout, _roi_type);
 
     vx_status status;
     if ((status = vxGetStatus((vx_reference)_node)) != VX_SUCCESS)
-        THROW("Error adding the crop resize node (vxExtrppNode_ResizeCropbatchPD    ) failed: " + TOSTR(status))
+        THROW("Error adding the crop resize node (vxRppResizeCropbatchPD    ) failed: " + TOSTR(status))
 }
 
 inline double ssd_BBoxIntersectionOverUnion(const BoundingBoxCord &box1, const BoundingBoxCord &box2, bool is_iou = false)

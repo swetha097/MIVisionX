@@ -33,11 +33,11 @@ void ColorTemperatureNode::create_node() {
         return;
 
     _adj_value_param.create_array(_graph , VX_TYPE_UINT32, _batch_size);
-    _node = vxExtrppNode_ColorTemperature(_graph->get(), _inputs[0]->handle(), _src_tensor_roi, _outputs[0]->handle(), _adj_value_param.default_array(), _input_layout, _output_layout, _roi_type);
+    _node = vxRppColorTemperature(_graph->get(), _inputs[0]->handle(), _src_tensor_roi, _outputs[0]->handle(), _adj_value_param.default_array(), _input_layout, _output_layout, _roi_type);
 
     vx_status status;
     if((status = vxGetStatus((vx_reference)_node)) != VX_SUCCESS)
-        THROW("Adding the ColorTemperature (vxExtrppNode_ColorTemperature) node failed: "+ TOSTR(status))
+        THROW("Adding the ColorTemperature (vxRppColorTemperature) node failed: "+ TOSTR(status))
 }
 
 void ColorTemperatureNode::init(int adjustment) {

@@ -108,6 +108,7 @@ do
         # ./rocAL_unittests 0 "$image_path" "${output_path}Pixelate_${rgb_name[$rgb]}_${device_name}" $width $height 19 $device $rgb 0 $display
         ./rocAL_unittests 0 "$image_path" "${output_path}Rain_${rgb_name[$rgb]}_${device_name}" $width $height 42 $device $rgb 0 $display
         ./rocAL_unittests 0 "$image_path" "${output_path}Jitter_${rgb_name[$rgb]}_${device_name}" $width $height 39 $device $rgb 0 $display
+        ./rocAL_unittests 0 "$image_path" "${output_path}Blend_${rgb_name[$rgb]}_${device_name}" $width $height 36 $device $rgb 0 $display
 
 
 

@@ -88,7 +88,6 @@ static vx_status VX_CALLBACK refreshColorTwist(vx_node node, const vx_reference 
                 data->pHue[index + f] = data->pHue[n];
                 data->pSat[index + f] = data->pSat[n];
                 data->pSrcRoi[index + f].xywhROI = data->pSrcRoi[n].xywhROI;
-
             }
         }
     }
