@@ -33,11 +33,11 @@ void ExposureNode::create_node() {
         return;
 
     _shift.create_array(_graph, VX_TYPE_FLOAT32, _batch_size);
-    _node = vxExtrppNode_Exposure(_graph->get(), _inputs[0]->handle(), _src_tensor_roi, _outputs[0]->handle(), _shift.default_array(), _input_layout, _output_layout, _roi_type);
+    _node = vxRppExposure(_graph->get(), _inputs[0]->handle(), _src_tensor_roi, _outputs[0]->handle(), _shift.default_array(), _input_layout, _output_layout, _roi_type);
 
     vx_status status;
     if((status = vxGetStatus((vx_reference)_node)) != VX_SUCCESS)
-        THROW("Adding the exposure (vxExtrppNode_Exposure) node failed: "+ TOSTR(status))
+        THROW("Adding the exposure (vxRppExposure) node failed: "+ TOSTR(status))
 }
 
 void ExposureNode::init(float shift) {

@@ -32,7 +32,7 @@ void NopNode::create_node()
     if(_node)
         return;
 
-    _node = vxExtrppNode_Nop(_graph->get(), _inputs[0]->handle(), _outputs[0]->handle());
+    _node = vxRppNop(_graph->get(), _inputs[0]->handle(), _outputs[0]->handle());
 
     vx_status status;
     if((status = vxGetStatus((vx_reference)_node)) != VX_SUCCESS)

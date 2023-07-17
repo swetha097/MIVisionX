@@ -32,11 +32,11 @@ FisheyeNode::FisheyeNode(const std::vector<Tensor *> &inputs, const std::vector<
 void FisheyeNode::create_node() {
     if(_node)
         return;
-    _node = vxExtrppNode_FishEye(_graph->get(), _inputs[0]->handle(), _src_tensor_roi, _outputs[0]->handle(), _input_layout, _output_layout, _roi_type);
+    _node = vxRppFishEye(_graph->get(), _inputs[0]->handle(), _src_tensor_roi, _outputs[0]->handle(), _input_layout, _output_layout, _roi_type);
 
     vx_status status;
     if((status = vxGetStatus((vx_reference)_node)) != VX_SUCCESS)
-        THROW("Adding the FishEye (vxExtrppNode_FishEye) node failed: "+ TOSTR(status))
+        THROW("Adding the FishEye (vxRppFishEye) node failed: "+ TOSTR(status))
 }
 
 void FisheyeNode::update_node() { }
