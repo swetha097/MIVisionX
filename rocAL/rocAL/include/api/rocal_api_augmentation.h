@@ -352,8 +352,12 @@ extern "C" RocalTensor ROCAL_API_CALL rocalVignetteFixed(RocalContext context, R
 /// \param min
 /// \param max
 /// \return
-extern "C"  RocalTensor  ROCAL_API_CALL rocalJitter(RocalContext context, RocalTensor input, bool is_output,
-                                                RocalIntParam kernel_size = NULL);
+extern "C" RocalTensor ROCAL_API_CALL rocalJitter(RocalContext context, RocalTensor input,
+                                                bool is_output,
+                                                RocalIntParam kernel_size = NULL,
+                                                int seed=0,
+                                                RocalTensorLayout rocal_tensor_output_layout = ROCAL_NHWC,
+                                                RocalTensorOutputType rocal_tensor_output_datatype = ROCAL_UINT8);
 
 ///
 /// \param context
@@ -362,8 +366,12 @@ extern "C"  RocalTensor  ROCAL_API_CALL rocalJitter(RocalContext context, RocalT
 /// \param max
 /// \param is_output
 /// \return
-extern "C"  RocalTensor  ROCAL_API_CALL rocalJitterFixed(RocalContext context, RocalTensor input,
-                                                        int kernel_size, bool is_output);
+extern "C" RocalTensor ROCAL_API_CALL rocalJitterFixed(RocalContext context, RocalTensor input,
+                                                      bool is_output,
+                                                      int kernel_size,
+                                                      int seed=0,
+                                                      RocalTensorLayout rocal_tensor_output_layout = ROCAL_NHWC,
+                                                      RocalTensorOutputType rocal_tensor_output_datatype = ROCAL_UINT8);
 
 ///
 /// \param context
@@ -371,8 +379,13 @@ extern "C"  RocalTensor  ROCAL_API_CALL rocalJitterFixed(RocalContext context, R
 /// \param is_output
 /// \param sdev
 /// \return
-extern "C"  RocalTensor  ROCAL_API_CALL rocalSnPNoise(RocalContext context, RocalTensor input, bool is_output,
-                                                        RocalFloatParam sdev = NULL);
+extern "C" RocalTensor ROCAL_API_CALL rocalSnPNoise(RocalContext context, RocalTensor input,
+                                                      bool is_output,
+                                                      RocalFloatParam noise_prob = NULL, RocalFloatParam salt_prob = NULL,
+                                                      RocalFloatParam noise_val = NULL, RocalFloatParam salt_val = NULL,
+                                                      int seed=11110,
+                                                      RocalTensorLayout rocal_tensor_output_layout = ROCAL_NHWC,
+                                                      RocalTensorOutputType rocal_tensor_output_datatype = ROCAL_UINT8);
 
 ///
 /// \param context
@@ -380,7 +393,13 @@ extern "C"  RocalTensor  ROCAL_API_CALL rocalSnPNoise(RocalContext context, Roca
 /// \param sdev
 /// \param is_output
 /// \return
-extern "C"  RocalTensor  ROCAL_API_CALL rocalSnPNoiseFixed(RocalContext context, RocalTensor input, float sdev, bool is_output);
+extern "C" RocalTensor ROCAL_API_CALL rocalSnPNoiseFixed(RocalContext context, RocalTensor input,
+                                                      bool is_output,
+                                                      float noise_prob, float salt_prob,
+                                                      float noise_val, float salt_val,
+                                                      int seed=11110,
+                                                      RocalTensorLayout rocal_tensor_output_layout = ROCAL_NHWC,
+                                                      RocalTensorOutputType rocal_tensor_output_datatype = ROCAL_UINT8);
 
 ///
 /// \param context
@@ -388,15 +407,22 @@ extern "C"  RocalTensor  ROCAL_API_CALL rocalSnPNoiseFixed(RocalContext context,
 /// \param is_output
 /// \param sdev
 /// \return
-extern "C"  RocalTensor  ROCAL_API_CALL rocalSnow(RocalContext context, RocalTensor input, bool is_output,
-                                                RocalFloatParam shift = NULL);
+extern "C" RocalTensor ROCAL_API_CALL rocalSnow(RocalContext context, RocalTensor input,
+                                                      bool is_output,
+                                                      RocalFloatParam shift = NULL,
+                                                      RocalTensorLayout rocal_tensor_output_layout = ROCAL_NHWC,
+                                                      RocalTensorOutputType rocal_tensor_output_datatype = ROCAL_UINT8);
 
 /// \param context
 /// \param input
 /// \param sdev
 /// \param is_output
 /// \return
-extern "C"  RocalTensor  ROCAL_API_CALL rocalSnowFixed(RocalContext context, RocalTensor input, float shift, bool is_output );
+extern "C" RocalTensor ROCAL_API_CALL rocalSnowFixed(RocalContext context, RocalTensor input,
+                                                      bool is_output,
+                                                      float shift,
+                                                      RocalTensorLayout rocal_tensor_output_layout = ROCAL_NHWC,
+                                                      RocalTensorOutputType rocal_tensor_output_datatype = ROCAL_UINT8);
 
 ///
 /// \param context
@@ -407,11 +433,15 @@ extern "C"  RocalTensor  ROCAL_API_CALL rocalSnowFixed(RocalContext context, Roc
 /// \param rain_heigth
 /// \param rain_transparency
 /// \return
-extern "C"  RocalTensor  ROCAL_API_CALL rocalRain(RocalContext context, RocalTensor input, bool is_output,
+extern "C" RocalTensor ROCAL_API_CALL rocalRain(RocalContext context, RocalTensor input,
+                                                bool is_output,
                                                 RocalFloatParam rain_value = NULL,
                                                 RocalIntParam rain_width = NULL,
                                                 RocalIntParam rain_height = NULL,
-                                                RocalFloatParam rain_transparency = NULL);
+                                                RocalFloatParam rain_transparency = NULL,
+                                                RocalTensorLayout rocal_tensor_output_layout = ROCAL_NHWC,
+                                                RocalTensorOutputType rocal_tensor_output_datatype = ROCAL_UINT8);
+
 
 /// \param context
 /// \param input
@@ -421,12 +451,14 @@ extern "C"  RocalTensor  ROCAL_API_CALL rocalRain(RocalContext context, RocalTen
 /// \param rain_heigth
 /// \param rain_transparency
 /// \return
-extern "C"  RocalTensor  ROCAL_API_CALL rocalRainFixed(RocalContext context, RocalTensor input,
-                                                        float rain_value,
-                                                        int rain_width,
-                                                        int rain_height,
-                                                        float rain_transparency,
-                                                        bool is_output);
+extern "C" RocalTensor ROCAL_API_CALL rocalRainFixed(RocalContext context, RocalTensor input,
+                                                    bool is_output,
+                                                    float rain_value,
+                                                    int rain_width,
+                                                    int rain_height,
+                                                    float rain_transparency,
+                                                    RocalTensorLayout rocal_tensor_output_layout = ROCAL_NHWC,
+                                                    RocalTensorOutputType rocal_tensor_output_datatype = ROCAL_UINT8);
 
 /// \param context
 /// \param input
@@ -455,15 +487,22 @@ extern "C" RocalTensor ROCAL_API_CALL rocalColorTempFixed(RocalContext context, 
 /// \param is_output
 /// \param fog_value
 /// \return
-extern "C"  RocalTensor  ROCAL_API_CALL rocalFog(RocalContext context, RocalTensor input, bool is_output,
-                                                RocalFloatParam fog_value = NULL);
+extern "C" RocalTensor ROCAL_API_CALL rocalFog(RocalContext context, RocalTensor input,
+                                                bool is_output,
+                                                RocalFloatParam fog_value = NULL,
+                                                RocalTensorLayout rocal_tensor_output_layout = ROCAL_NHWC,
+                                                RocalTensorOutputType rocal_tensor_output_datatype = ROCAL_UINT8);
 
 /// \param context
 /// \param input
 /// \param fog_value
 /// \param is_output
 /// \return
-extern "C"  RocalTensor  ROCAL_API_CALL rocalFogFixed(RocalContext context, RocalTensor input, float fog_value, bool is_output);
+extern "C" RocalTensor ROCAL_API_CALL rocalFogFixed(RocalContext context, RocalTensor input,
+                                                      bool is_output,
+                                                      float fog_value,
+                                                      RocalTensorLayout rocal_tensor_output_layout = ROCAL_NHWC,
+                                                      RocalTensorOutputType rocal_tensor_output_datatype = ROCAL_UINT8);
 
 /// \param context
 /// \param input
@@ -489,7 +528,11 @@ extern "C"  RocalTensor  ROCAL_API_CALL rocalLensCorrectionFixed(RocalContext co
 /// \param input
 /// \param is_output
 /// \return
-extern "C"  RocalTensor  ROCAL_API_CALL rocalPixelate(RocalContext context, RocalTensor input, bool is_output );
+extern "C" RocalTensor ROCAL_API_CALL rocalPixelate(RocalContext context, RocalTensor input,
+                                                    bool is_output,
+                                                    RocalTensorLayout rocal_tensor_output_layout = ROCAL_NHWC,
+                                                    RocalTensorOutputType rocal_tensor_output_datatype = ROCAL_UINT8);
+
 
 ///
 /// \param context
