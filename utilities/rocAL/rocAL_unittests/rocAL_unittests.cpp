@@ -858,14 +858,14 @@ int test(int test_case, int reader_type, const char *path, const char *outName, 
                 std::cerr << "\nPrinting image names of batch: " << img_name;
                 RocalTensorList bbox_labels = rocalGetBoundingBoxLabel(handle);
                 RocalTensorList bbox_coords = rocalGetBoundingBoxCords(handle);
-                for(int i = 0; i < bbox_labels->size(); i++) {
+                for(unsigned i = 0; i < bbox_labels->size(); i++) {
                     int *labels_buffer = reinterpret_cast<int *>(bbox_labels->at(i)->buffer());
                     float *bbox_buffer = reinterpret_cast<float *>(bbox_coords->at(i)->buffer());
                     std::cerr << "\n>>>>> BBOX LABELS : ";
-                    for(int j = 0; j < bbox_labels->at(i)->dims().at(0); j++)
+                    for(unsigned j = 0; j < bbox_labels->at(i)->dims().at(0); j++)
                         std::cerr << labels_buffer[j] << " ";
                     std::cerr << "\n>>>>> BBOX : " << bbox_coords->at(i)->dims().at(0) << " : \n";
-                    for(int j = 0, j4 = 0; j < bbox_coords->at(i)->dims().at(0); j++, j4 = j * 4)
+                    for(unsigned j = 0, j4 = 0; j < bbox_coords->at(i)->dims().at(0); j++, j4 = j * 4)
                         std::cerr << bbox_buffer[j4] << " " << bbox_buffer[j4 + 1] << " " << bbox_buffer[j4 + 2] << " " << bbox_buffer[j4 + 3] << "\n";
                 }
                 int img_sizes_batch[inputBatchSize * 2];
@@ -914,17 +914,14 @@ int test(int test_case, int reader_type, const char *path, const char *outName, 
         compression_params.push_back(IMWRITE_PNG_COMPRESSION);
         compression_params.push_back(9);
 
-        for(int idx = 0; idx < output_tensor_list->size(); idx++) { // Iterate over each output
+        for(unsigned idx = 0; idx < output_tensor_list->size(); idx++) { // Iterate over each output
             auto output_tensor = output_tensor_list->at(idx);
             int h = output_tensor->shape().at(1) * output_tensor->dims().at(0);
             int w = output_tensor->shape().at(0);
             if(first_run) { // Allocate cv matrix and output buffers for each output in first run and reuse in every iteration
-                mat_input.emplace_back(cv::Mat(h, w, cv_color_format));
                 mat_output.emplace_back(cv::Mat(h, w, cv_color_format));
-            }
-            
-            output_tensor->copy_data(mat_input[idx].data, ROCAL_MEMCPY_HOST);
-            mat_input[idx].copyTo(mat_output[idx](cv::Rect(0, 0, w, h)));
+            }            
+            output_tensor->copy_data(mat_output[idx].data, ROCAL_MEMCPY_HOST);  // Copy the output data into Opencv matrix
 
             std::string out_filename = std::string(outName) + ".png";   // in case the user specifies non png filename
             if (display_all)
@@ -958,8 +955,7 @@ int test(int test_case, int reader_type, const char *path, const char *outName, 
     std::cout << "Process  time " << rocal_timing.process_time << std::endl;
     std::cout << "Transfer time " << rocal_timing.transfer_time << std::endl;
     std::cout << ">>>>> Total Elapsed Time " << dur / 1000000 << " sec " << dur % 1000000 << " us " << std::endl;
-    for (int i = 0; i < mat_input.size(); i++) {
-        mat_input[i].release();
+    for (unsigned i = 0; i < mat_output.size(); i++) {
         mat_output[i].release();
     }
     rocalRelease(handle);
