@@ -37,11 +37,11 @@ void FlipNode::create_node() {
 
     _horizontal.create_array(_graph, VX_TYPE_UINT32, _batch_size);
     _vertical.create_array(_graph, VX_TYPE_UINT32, _batch_size);
-    _node = vxExtrppNode_Flip(_graph->get(), _inputs[0]->handle(), _src_tensor_roi, _outputs[0]->handle(),  _horizontal.default_array(), _vertical.default_array(), _input_layout, _output_layout, _roi_type);
+    _node = vxRppFlip(_graph->get(), _inputs[0]->handle(), _src_tensor_roi, _outputs[0]->handle(),  _horizontal.default_array(), _vertical.default_array(), _input_layout, _output_layout, _roi_type);
 
     vx_status status;
     if((status = vxGetStatus((vx_reference)_node)) != VX_SUCCESS)
-        THROW("Adding the flip (vxExtrppNode_Flip) node failed: "+ TOSTR(status))
+        THROW("Adding the flip (vxRppFlip) node failed: "+ TOSTR(status))
 }
 
 void FlipNode::init(int h_flag, int v_flag) {

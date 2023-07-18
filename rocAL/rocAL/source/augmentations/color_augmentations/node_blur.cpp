@@ -33,11 +33,11 @@ void BlurNode::create_node() {
         return;
 
     _kernel_size.create_array(_graph , VX_TYPE_FLOAT32, _batch_size);
-    _node = vxExtrppNode_Blur(_graph->get(), _inputs[0]->handle(), _src_tensor_roi, _outputs[0]->handle(), _kernel_size.default_array(), _input_layout, _output_layout, _roi_type);
+    _node = vxRppBlur(_graph->get(), _inputs[0]->handle(), _src_tensor_roi, _outputs[0]->handle(), _kernel_size.default_array(), _input_layout, _output_layout, _roi_type);
 
     vx_status status;
     if((status = vxGetStatus((vx_reference)_node)) != VX_SUCCESS)
-        THROW("Adding the brightness (vxExtrppNode_Blur) node failed: "+ TOSTR(status))
+        THROW("Adding the brightness (vxRppBlur) node failed: "+ TOSTR(status))
 }
 
 void BlurNode::init(int kernel_size) {

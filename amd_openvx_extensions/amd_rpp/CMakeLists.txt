@@ -147,13 +147,13 @@ list(APPEND SOURCES
         source/tensor/LensCorrection.cpp
         source/tensor/Noise.cpp
         source/tensor/Nop.cpp
+        source/tensor/Rotate.cpp
         source/tensor/Pixelate.cpp
         source/tensor/Rain.cpp
         source/tensor/Resize.cpp
         source/tensor/ResizeCrop.cpp
         source/tensor/ResizeCropMirror.cpp
         source/tensor/ResizeMirrorNormalize.cpp
-        source/tensor/Rotate.cpp
         source/tensor/Saturation.cpp
         source/tensor/SequenceRearrange.cpp
         source/tensor/Snow.cpp

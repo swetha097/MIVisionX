@@ -29,12 +29,10 @@ struct SequenceRearrangeLocalData {
     Rpp32u deviceType;
     vx_uint32 newSequenceLength;
     vx_uint32 sequenceLength;
-    vx_uint32 *newOrder;
-    Rpp32s layout;
-    RpptDescPtr srcDescPtr;
-    RpptDesc srcDesc;
-    RpptDescPtr dstDescPtr;
-    RpptDesc dstDesc;
+    vx_uint32 *pNewOrder;
+    vxTensorLayout layout;
+    RpptDescPtr pSrcDesc;
+    RpptDescPtr pDstDesc;
 #if ENABLE_OPENCL
     cl_mem cl_pSrc;
     cl_mem cl_pDst;
@@ -43,7 +41,7 @@ struct SequenceRearrangeLocalData {
 
 static vx_status VX_CALLBACK refreshSequenceRearrange(vx_node node, const vx_reference *parameters, vx_uint32 num, SequenceRearrangeLocalData *data) {
     vx_status status = VX_SUCCESS;
-    STATUS_ERROR_CHECK(vxCopyArrayRange((vx_array)parameters[2], 0, data->newSequenceLength, sizeof(vx_uint32), data->newOrder, VX_READ_ONLY, VX_MEMORY_TYPE_HOST));
+    STATUS_ERROR_CHECK(vxCopyArrayRange((vx_array)parameters[2], 0, data->newSequenceLength, sizeof(vx_uint32), data->pNewOrder, VX_READ_ONLY, VX_MEMORY_TYPE_HOST));
     if (data->deviceType == AGO_TARGET_AFFINITY_GPU) {
 #if ENABLE_OPENCL
         STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[0], VX_TENSOR_BUFFER_OPENCL, &data->cl_pSrc, sizeof(data->cl_pSrc)));
@@ -101,46 +99,46 @@ static vx_status VX_CALLBACK processSequenceRearrange(vx_node node, const vx_ref
     if (data->deviceType == AGO_TARGET_AFFINITY_GPU) {
 #if ENABLE_OPENCL
         cl_command_queue handle = data->handle->cmdq;
-        for (int sequence_cnt = 0; sequence_cnt < data->srcDescPtr->n; sequence_cnt++) {
-            unsigned src_sequence_start_address = sequence_cnt * data->srcDescPtr->strides.nStride * data->sequenceLength;
-            unsigned dst_sequence_start_address = sequence_cnt * data->dstDescPtr->strides.nStride * data->newSequenceLength;
+        for (int sequence_cnt = 0; sequence_cnt < data->pSrcDesc->n; sequence_cnt++) {
+            unsigned src_sequence_start_address = sequence_cnt * data->pSrcDesc->strides.nStride * data->sequenceLength;
+            unsigned dst_sequence_start_address = sequence_cnt * data->pDstDesc->strides.nStride * data->newSequenceLength;
             for (unsigned dst_index = 0; dst_index < (data->newSequenceLength); dst_index++) {
-                unsigned src_index = data->newOrder[dst_index];
+                unsigned src_index = data->pNewOrder[dst_index];
                 if (src_index > data->sequenceLength)
                     ERRMSG(VX_ERROR_INVALID_VALUE, "invalid new order value=%d (must be between 0-%d)\n", src_index, data->sequenceLength - 1);
-                auto dst_offset = (unsigned char *)data->cl_pDst + dst_sequence_start_address + (dst_index * data->srcDescPtr->strides.nStride);
-                auto src_offset = (unsigned char *)data->cl_pSrc + src_sequence_start_address + (src_index * data->dstDescPtr->strides.nStride);
-                if (clEnqueueCopyBuffer(handle, data->cl_pSrc, data->cl_pDst, src_offset, dst_offset, data->srcDescPtr->strides.nStride, 0, NULL, NULL) != CL_SUCCESS)
+                auto dst_offset = (unsigned char *)data->cl_pDst + dst_sequence_start_address + (dst_index * data->pSrcDesc->strides.nStride);
+                auto src_offset = (unsigned char *)data->cl_pSrc + src_sequence_start_address + (src_index * data->pDstDesc->strides.nStride);
+                if (clEnqueueCopyBuffer(handle, data->cl_pSrc, data->cl_pDst, src_offset, dst_offset, data->pSrcDesc->strides.nStride, 0, NULL, NULL) != CL_SUCCESS)
                         return VX_FAILURE;
             }
         }
 #elif ENABLE_HIP
-        for (int sequence_cnt = 0; sequence_cnt < data->srcDescPtr->n; sequence_cnt++) {
-            unsigned src_sequence_start_address = sequence_cnt * data->srcDescPtr->strides.nStride * data->sequenceLength;
-            unsigned dst_sequence_start_address = sequence_cnt * data->dstDescPtr->strides.nStride * data->newSequenceLength;
+        for (int sequence_cnt = 0; sequence_cnt < data->pSrcDesc->n; sequence_cnt++) {
+            unsigned src_sequence_start_address = sequence_cnt * data->pSrcDesc->strides.nStride * data->sequenceLength;
+            unsigned dst_sequence_start_address = sequence_cnt * data->pDstDesc->strides.nStride * data->newSequenceLength;
             for (unsigned dst_index = 0; dst_index < (data->newSequenceLength); dst_index++) {
-                unsigned src_index = data->newOrder[dst_index];
+                unsigned src_index = data->pNewOrder[dst_index];
                 if (src_index > data->sequenceLength)
                     ERRMSG(VX_ERROR_INVALID_VALUE, "invalid new order value=%d (must be between 0-%d)\n", src_index, data->sequenceLength - 1);
-                auto dst_address = (unsigned char *)data->pDst + dst_sequence_start_address + (dst_index * data->srcDescPtr->strides.nStride);
-                auto src_address = (unsigned char *)data->pSrc + src_sequence_start_address + (src_index * data->dstDescPtr->strides.nStride);
-                hipError_t status = hipMemcpyDtoD(dst_address, src_address, data->srcDescPtr->strides.nStride);
+                auto dst_address = (unsigned char *)data->pDst + dst_sequence_start_address + (dst_index * data->pSrcDesc->strides.nStride);
+                auto src_address = (unsigned char *)data->pSrc + src_sequence_start_address + (src_index * data->pDstDesc->strides.nStride);
+                hipError_t status = hipMemcpyDtoD(dst_address, src_address, data->pSrcDesc->strides.nStride);
                     if (status != hipSuccess)
                         return VX_FAILURE;  
             }
         }
 #endif
     } else if (data->deviceType == AGO_TARGET_AFFINITY_CPU) {
-        for (int sequence_cnt = 0; sequence_cnt < data->srcDescPtr->n; sequence_cnt++) {
-            unsigned src_sequence_start_address = sequence_cnt * data->srcDescPtr->strides.nStride * data->sequenceLength;
-            unsigned dst_sequence_start_address = sequence_cnt * data->dstDescPtr->strides.nStride * data->newSequenceLength;
+        for (int sequence_cnt = 0; sequence_cnt < data->pSrcDesc->n; sequence_cnt++) {
+            unsigned src_sequence_start_address = sequence_cnt * data->pSrcDesc->strides.nStride * data->sequenceLength;
+            unsigned dst_sequence_start_address = sequence_cnt * data->pDstDesc->strides.nStride * data->newSequenceLength;
             for (unsigned dst_index = 0; dst_index < (data->newSequenceLength); dst_index++) {
-                unsigned src_index = data->newOrder[dst_index];
+                unsigned src_index = data->pNewOrder[dst_index];
                 if (src_index > data->sequenceLength)
                     ERRMSG(VX_ERROR_INVALID_VALUE, "invalid new order value=%d (must be between 0-%d)\n", src_index, data->sequenceLength - 1);
-                auto dst_address = (unsigned char *)data->pDst + dst_sequence_start_address + (dst_index * data->srcDescPtr->strides.nStride);
-                auto src_address = (unsigned char *)data->pSrc + src_sequence_start_address + (src_index * data->dstDescPtr->strides.nStride);
-                memcpy(dst_address, src_address, data->srcDescPtr->strides.nStride);
+                auto dst_address = (unsigned char *)data->pDst + dst_sequence_start_address + (dst_index * data->pSrcDesc->strides.nStride);
+                auto src_address = (unsigned char *)data->pSrc + src_sequence_start_address + (src_index * data->pDstDesc->strides.nStride);
+                memcpy(dst_address, src_address, data->pSrcDesc->strides.nStride);
             }
         }
     }
@@ -149,7 +147,7 @@ static vx_status VX_CALLBACK processSequenceRearrange(vx_node node, const vx_ref
 
 static vx_status VX_CALLBACK initializeSequenceRearrange(vx_node node, const vx_reference *parameters, vx_uint32 num) {
     SequenceRearrangeLocalData *data = new SequenceRearrangeLocalData;
-    memset(data, 0, sizeof(*data));
+    memset(data, 0, sizeof(SequenceRearrangeLocalData));
 
     STATUS_ERROR_CHECK(vxCopyScalar((vx_scalar)parameters[3], &data->layout, VX_READ_ONLY, VX_MEMORY_TYPE_HOST));
     STATUS_ERROR_CHECK(vxCopyScalar((vx_scalar)parameters[4], &data->deviceType, VX_READ_ONLY, VX_MEMORY_TYPE_HOST));
@@ -158,27 +156,27 @@ static vx_status VX_CALLBACK initializeSequenceRearrange(vx_node node, const vx_
     size_t in_tensor_dims[RPP_MAX_TENSOR_DIMS], out_tensor_dims[RPP_MAX_TENSOR_DIMS];
     
     // Querying for input tensor 
-    data->srcDescPtr = &data->srcDesc;
+    data->pSrcDesc = new RpptDesc;
     STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[0], VX_TENSOR_NUMBER_OF_DIMS, &in_num_of_dims, sizeof(vx_size)));
     STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[0], VX_TENSOR_DIMS, in_tensor_dims, sizeof(vx_size) * in_num_of_dims));
-    data->srcDescPtr->offsetInBytes = 0;
-    fillDescriptionPtrfromDims(data->srcDescPtr, data->layout, in_tensor_dims);
+    data->pSrcDesc->offsetInBytes = 0;
+    fillDescriptionPtrfromDims(data->pSrcDesc, data->layout, in_tensor_dims);
 
     // Querying for output tensor
-    data->dstDescPtr = &data->dstDesc;
+    data->pDstDesc = new RpptDesc;
     STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[1], VX_TENSOR_NUMBER_OF_DIMS, &out_num_of_dims, sizeof(vx_size)));
     STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[1], VX_TENSOR_DIMS, out_tensor_dims, sizeof(vx_size) * out_num_of_dims));
-    data->dstDescPtr->offsetInBytes = 0;
-    fillDescriptionPtrfromDims(data->dstDescPtr, data->layout, out_tensor_dims);
+    data->pDstDesc->offsetInBytes = 0;
+    fillDescriptionPtrfromDims(data->pDstDesc, data->layout, out_tensor_dims);
     
-    data->srcDescPtr->n = in_tensor_dims[0];
+    data->pSrcDesc->n = in_tensor_dims[0];
     data->sequenceLength = in_tensor_dims[1];
 
-    data->dstDescPtr->n = out_tensor_dims[0];
+    data->pDstDesc->n = out_tensor_dims[0];
     data->newSequenceLength = out_tensor_dims[1];
-    data->newOrder = (vx_uint32 *)malloc(sizeof(vx_uint32) * data->newSequenceLength);
+    data->pNewOrder = static_cast<vx_uint32 *>(malloc(sizeof(vx_uint32) * data->newSequenceLength));
     refreshSequenceRearrange(node, parameters, num, data);
-    STATUS_ERROR_CHECK(createRPPHandle(node, &data->handle, data->srcDescPtr->n, data->deviceType));
+    STATUS_ERROR_CHECK(createRPPHandle(node, &data->handle, data->pSrcDesc->n, data->deviceType));
     STATUS_ERROR_CHECK(vxSetNodeAttribute(node, VX_NODE_LOCAL_DATA_PTR, &data, sizeof(data)));
 
     return VX_SUCCESS;
@@ -188,7 +186,9 @@ static vx_status VX_CALLBACK uninitializeSequenceRearrange(vx_node node, const v
     SequenceRearrangeLocalData *data;
     STATUS_ERROR_CHECK(vxQueryNode(node, VX_NODE_LOCAL_DATA_PTR, &data, sizeof(data)));
     STATUS_ERROR_CHECK(releaseRPPHandle(node, data->handle, data->deviceType));
-    if(data->newOrder) free(data->newOrder);
+    if(data->pNewOrder != nullptr) free(data->pNewOrder);
+    delete(data->pSrcDesc);
+    delete(data->pDstDesc);
     delete (data);
     return VX_SUCCESS;
 }

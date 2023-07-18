@@ -38,11 +38,11 @@ void LensCorrectionNode::create_node() {
 
     _strength.create_array(_graph , VX_TYPE_FLOAT32, _batch_size);
     _zoom.create_array(_graph , VX_TYPE_FLOAT32, _batch_size);
-    _node = vxExtrppNode_LensCorrection(_graph->get(), _inputs[0]->handle(), _src_tensor_roi, _outputs[0]->handle(), _strength.default_array(), _zoom.default_array(), _input_layout, _output_layout, _roi_type);
+    _node = vxRppLensCorrection(_graph->get(), _inputs[0]->handle(), _src_tensor_roi, _outputs[0]->handle(), _strength.default_array(), _zoom.default_array(), _input_layout, _output_layout, _roi_type);
 
     vx_status status;
     if((status = vxGetStatus((vx_reference)_node)) != VX_SUCCESS)
-        THROW("Adding the lens correction  (vxExtrppNode_LensCorrection) node failed: "+ TOSTR(status))
+        THROW("Adding the lens correction  (vxRppLensCorrection) node failed: "+ TOSTR(status))
 }
 
 void LensCorrectionNode::init(float strength, float zoom) {
