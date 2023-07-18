@@ -130,12 +130,15 @@ list(APPEND SOURCES
         source/tensor/Blur.cpp
         source/tensor/Brightness.cpp
         source/tensor/ColorTemperature.cpp
+        source/tensor/ColorTwist.cpp
         source/tensor/Contrast.cpp
         source/tensor/Copy.cpp
+        source/tensor/Crop.cpp
         source/tensor/CropMirrorNormalize.cpp
         source/tensor/Exposure.cpp
         source/tensor/Flip.cpp
         source/tensor/GammaCorrection.cpp
+        source/tensor/Hue.cpp
         source/tensor/Jitter.cpp
         source/tensor/Nop.cpp
         source/tensor/Rotate.cpp
@@ -145,7 +148,9 @@ list(APPEND SOURCES
         source/tensor/ResizeCrop.cpp
         source/tensor/ResizeCropMirror.cpp
         source/tensor/ResizeMirrorNormalize.cpp
+        source/tensor/Saturation.cpp
         # source/tensor/SequenceRearrange.cpp
+        source/tensor/Snow.cpp
         source/tensor/Vignette.cpp
         source/tensor/WarpAffine.cpp
         source/kernel_rpp.cpp
