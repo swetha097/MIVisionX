@@ -50,7 +50,6 @@ public:
     LoaderModuleStatus set_cpu_sched_policy(struct sched_param sched_policy);
     std::vector<std::string> get_id() override;
     decoded_sample_info get_decode_sample_info() override;
-    crop_image_info get_crop_image_info() override { THROW("The get_crop_image_info is not applicable for audio data") };
     void set_prefetch_queue_depth(size_t prefetch_queue_depth)  override;
     void set_gpu_device_id(int device_id);
     void shut_down() override;
