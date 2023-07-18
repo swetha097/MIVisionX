@@ -257,9 +257,9 @@ VideoLoader::update_output_image()
     }
     if (_stopped)
         return LoaderModuleStatus::OK;
-    _output_decoded_img_info = _circ_buff.get_sample_info();
-    _output_names = _output_decoded_img_info._sample_names;
-    _output_image->update_image_roi(_output_decoded_img_info._roi_width, _output_decoded_img_info._roi_height);
+    _output_decoded_sample_info = _circ_buff.get_sample_info();
+    _output_names = _output_decoded_sample_info._sample_names;
+    _output_image->update_image_roi(_output_decoded_sample_info._roi_width, _output_decoded_sample_info._roi_height);
     _circ_buff.pop();
     if (!_loop)
         _remaining_sequences_count -= _sequence_count;
@@ -307,7 +307,7 @@ std::vector<std::string> VideoLoader::get_id()
 
 decoded_sample_info VideoLoader::get_decode_sample_info()
 {
-    return _output_decoded_img_info;
+    return _output_decoded_sample_info;
 }
 
 std::vector<size_t> VideoLoader::get_sequence_start_frame_number()

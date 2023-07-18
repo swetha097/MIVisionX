@@ -57,19 +57,19 @@ void Caffe2MetaDataReaderDetection::add(std::string image_name, BoundingBoxCords
     _map_content.insert(pair<std::string, std::shared_ptr<BoundingBox>>(image_name, info));
 }
 
-void Caffe2MetaDataReaderDetection::lookup(const std::vector<std::string> &_sample_names)
+void Caffe2MetaDataReaderDetection::lookup(const std::vector<std::string> &_image_names)
 {
-    if (_sample_names.empty())
+    if (_image_names.empty())
     {
         WRN("No image names passed")
         return;
     }
-    if (_sample_names.size() != (unsigned)_output->size())
-        _output->resize(_sample_names.size());
+    if (_image_names.size() != (unsigned)_output->size())
+        _output->resize(_image_names.size());
 
-    for (unsigned i = 0; i < _sample_names.size(); i++)
+    for (unsigned i = 0; i < _image_names.size(); i++)
     {
-        auto image_name = _sample_names[i];
+        auto image_name = _image_names[i];
         auto it = _map_content.find(image_name);
         if (_map_content.end() == it)
             THROW("ERROR: Given name not present in the map" + image_name)

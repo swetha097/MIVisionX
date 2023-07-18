@@ -132,11 +132,9 @@ void rocalTensorInfo::reset_tensor_roi_buffers() {
 }
 
 void rocalTensorInfo::reallocate_tensor_sample_rate_buffers() {
-    _sample_rate = std::make_shared<std::vector<float>>(_batch_size);
-    _sample_rate->resize(_batch_size);
-    if (_is_image) {
+    if (_is_image)
         THROW("No sample rate available for Image data")
-    }
+    _sample_rate = std::make_shared<std::vector<float>>(_batch_size);
 }
 
 rocalTensorInfo::rocalTensorInfo()
@@ -374,23 +372,18 @@ unsigned rocalTensor::copy_data(hipStream_t stream, void *host_memory, bool sync
 unsigned rocalTensor::copy_data(void *user_buffer) {
     if (_mem_handle == nullptr) return 0;
 
-    #if ENABLE_HIP
-        if (_info._mem_type == RocalMemType::HIP) {
-            // copy from device to device
-            hipError_t status;
-            if ((status = hipMemcpyDtoD((void *)user_buffer, _mem_handle, _info.data_size())))
-                THROW("copy_data::hipMemcpyDtoH failed: " + TOSTR(status))
-        } else if (_info._mem_type == RocalMemType::HOST) {
-            // copy from host to device
-            hipError_t status;
-            if ((status = hipMemcpyHtoD((void *)user_buffer, _mem_handle, _info.data_size())))
-                THROW("copy_data::hipMemcpyHtoD failed: " + TOSTR(status))
-        }
-    #else
-        if (_info._mem_type == RocalMemType::HOST)
-            memcpy(user_buffer, _mem_handle, _info.data_size());
-    #endif
-
+#if ENABLE_HIP
+    if (_info._mem_type == RocalMemType::HIP) {
+        // copy from device to host
+        hipError_t status;
+        if ((status = hipMemcpyDtoH((void *)user_buffer, _mem_handle, _info.data_size())))
+            THROW("copy_data::hipMemcpyDtoH failed: " + TOSTR(status))
+    } else
+#endif
+    {
+        // copy from host to host
+        memcpy(user_buffer, _mem_handle, _info.data_size());
+    }
     return 0;
 }
 

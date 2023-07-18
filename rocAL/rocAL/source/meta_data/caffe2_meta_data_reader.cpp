@@ -56,19 +56,19 @@ void Caffe2MetaDataReader::add(std::string _image_name, int label)
     _map_content.insert(pair<std::string, std::shared_ptr<MetaData>>(_image_name, info));
 }
 
-void Caffe2MetaDataReader::lookup(const std::vector<std::string> &_sample_names)
+void Caffe2MetaDataReader::lookup(const std::vector<std::string> &_image_names)
 {
-    if(_sample_names.empty())
+    if(_image_names.empty())
     {
         WRN("No image names passed")
         return;
     }
-    if(_sample_names.size() != (unsigned)_output->size())
-        _output->resize(_sample_names.size());
+    if(_image_names.size() != (unsigned)_output->size())
+        _output->resize(_image_names.size());
 
-    for(unsigned i = 0; i < _sample_names.size(); i++)
+    for(unsigned i = 0; i < _image_names.size(); i++)
     {
-        auto _image_name = _sample_names[i];
+        auto _image_name = _image_names[i];
         auto it = _map_content.find(_image_name);
         if(_map_content.end() == it)
             THROW("ERROR: Given name not present in the map"+ _image_name )
