@@ -32,8 +32,8 @@ public:
     void init(float shift);
     void init(FloatParam *shift);
 protected:
-    void create_node() override;
     void update_node() override;
+    void create_node() override;
 private:
     ParameterVX<float> _shift;
     constexpr static float SHIFT_RANGE [2] = {0.3, 7.00};

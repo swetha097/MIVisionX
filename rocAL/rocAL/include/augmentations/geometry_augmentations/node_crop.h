@@ -26,8 +26,7 @@ THE SOFTWARE.
 #include "parameter_crop_factory.h"
 #include "parameter_rocal_crop.h"
 
-class CropNode : public Node
-{
+class CropNode : public Node {
 public:
     CropNode(const std::vector<Tensor *> &inputs, const std::vector<Tensor *> &outputs);
     CropNode() = delete;

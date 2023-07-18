@@ -26,7 +26,7 @@ THE SOFTWARE.
 
 BlurNode::BlurNode(const std::vector<Tensor *> &inputs, const std::vector<Tensor *> &outputs) :
         Node(inputs, outputs),
-        _kernel_size(KERNEL_RANGE[0], KERNEL_RANGE[1]) { }
+        _kernel_size(KERNEL_SIZE_RANGE[0], KERNEL_SIZE_RANGE[1]) { }
 
 void BlurNode::create_node() {
     if(_node)

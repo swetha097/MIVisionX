@@ -30,7 +30,7 @@ SSDRandomCropNode::SSDRandomCropNode(const std::vector<Tensor *> &inputs, const 
                                                                                                           _dest_height(_outputs[0]->info().max_shape()[1])
 {
     _crop_param = std::make_shared<RocalRandomCropParam>(_batch_size);
-    _is_ssd     = true;
+    _is_ssd = true;
 }
 
 void SSDRandomCropNode::create_node()

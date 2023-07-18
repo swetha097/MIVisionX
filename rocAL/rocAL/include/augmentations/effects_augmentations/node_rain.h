@@ -25,8 +25,7 @@ THE SOFTWARE.
 #include "parameter_factory.h"
 #include "parameter_vx.h"
 
-class RainNode : public Node
-{
+class RainNode : public Node {
 public:
     RainNode(const std::vector<Tensor *> &inputs, const std::vector<Tensor *> &outputs);
     RainNode() = delete;

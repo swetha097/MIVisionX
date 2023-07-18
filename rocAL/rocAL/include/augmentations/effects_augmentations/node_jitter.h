@@ -25,8 +25,7 @@ THE SOFTWARE.
 #include "parameter_factory.h"
 #include "parameter_vx.h"
 
-class JitterNode : public Node
-{
+class JitterNode : public Node {
 public:
     JitterNode(const std::vector<Tensor *> &inputs, const std::vector<Tensor *> &outputs);
     JitterNode() = delete;

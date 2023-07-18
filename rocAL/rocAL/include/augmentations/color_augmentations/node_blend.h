@@ -32,8 +32,8 @@ public:
     void init(float ratio);
     void init(FloatParam *ratio);
 protected:
-    void create_node() override;
     void update_node() override;
+    void create_node() override;
 private:
     ParameterVX<float> _ratio;
     constexpr static float RATIO_RANGE[2] = {0.1, 0.9};

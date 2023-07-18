@@ -25,8 +25,7 @@ THE SOFTWARE.
 #include "parameter_factory.h"
 #include "parameter_vx.h"
 
-class ResizeMirrorNormalizeNode : public Node
-{
+class ResizeMirrorNormalizeNode : public Node {
 public:
     ResizeMirrorNormalizeNode(const std::vector<Tensor *> &inputs, const std::vector<Tensor *> &outputs);
     ResizeMirrorNormalizeNode() = delete;

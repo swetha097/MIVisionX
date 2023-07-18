@@ -27,7 +27,6 @@ THE SOFTWARE.
 #include "graph.h"
 #include "rocal_api_types.h"
 
-
 class RotateNode : public Node
 {
 public:

@@ -33,9 +33,9 @@ public:
     void init(int kernel_size);
     void init(IntParam *kernel_size);
 protected:
-    void create_node() override;
     void update_node() override;
+    void create_node() override;
 private:
     ParameterVX<int> _kernel_size;
-    constexpr static int KERNEL_RANGE[2] = {3, 9};
+    constexpr static int KERNEL_SIZE_RANGE[2] = {3, 9};
 };
