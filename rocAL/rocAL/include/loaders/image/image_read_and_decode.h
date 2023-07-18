@@ -81,7 +81,7 @@ private:
     std::shared_ptr<Reader> _reader;
     std::vector<std::vector<unsigned char>> _compressed_buff;
     std::vector<size_t> _actual_read_size;
-    std::vector<std::string> _sample_names;
+    std::vector<std::string> _image_names;
     std::vector<size_t> _compressed_image_size;
     std::vector<unsigned char*> _decompressed_buff_ptrs;
     std::vector<size_t> _actual_decoded_width;
