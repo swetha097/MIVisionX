@@ -41,23 +41,21 @@ void CropResizeNode::create_node()
     _dst_roi_width = vxCreateArray(vxGetContext((vx_reference)_graph->get()), VX_TYPE_UINT32, _batch_size);
     _dst_roi_height = vxCreateArray(vxGetContext((vx_reference)_graph->get()), VX_TYPE_UINT32, _batch_size);
     vx_status width_status, height_status;
-
     width_status = vxAddArrayItems(_dst_roi_width, _batch_size, dst_roi_width.data(), sizeof(vx_uint32));
     height_status = vxAddArrayItems(_dst_roi_height, _batch_size, dst_roi_height.data(), sizeof(vx_uint32));
     if(width_status != 0 || height_status != 0)
         THROW(" vxAddArrayItems failed in the crop resize node (vxRppResizeCrop)  node: "+ TOSTR(width_status) + "  "+ TOSTR(height_status))
 
     create_crop_tensor(_crop_tensor, &_crop_coordinates);
-    _node = vxRppResizeCrop(_graph->get(), _inputs[0]->handle(), _src_tensor_roi, _crop_tensor, _outputs[0]->handle(),_dst_roi_width, _dst_roi_height,
-                                   _input_layout, _output_layout, _roi_type);
+    _node = vxRppResizeCrop(_graph->get(), _inputs[0]->handle(), _src_tensor_roi, _crop_tensor, _outputs[0]->handle(),
+                            _dst_roi_width, _dst_roi_height, _input_layout, _output_layout, _roi_type);
 
     vx_status status;
     if((status = vxGetStatus((vx_reference)_node)) != VX_SUCCESS)
-        THROW("Error adding the crop resize node (vxRppResizeCrop) failed: "+TOSTR(status))
+        THROW("Error adding the crop resize node (vxRppResizeCrop) failed: " + TOSTR(status))
 }
 
-void CropResizeNode::update_node()
-{
+void CropResizeNode::update_node() {
     _crop_param->set_image_dimensions(_inputs[0]->info().get_roi());
     _crop_param->update_array();
     std::vector<uint32_t> crop_h_dims, crop_w_dims;
@@ -69,30 +67,27 @@ void CropResizeNode::update_node()
     auto y1 = _crop_param->get_y1_arr_val();
     auto x2 = _crop_param->get_croph_arr_val();
     auto y2 = _crop_param->get_cropw_arr_val();
-    RocalROI *src_roi = (RocalROI *)_crop_coordinates;
+    RocalROI *crop_dims = static_cast<RocalROI *>_crop_coordinates;
     for(unsigned i = 0; i < _batch_size; i++) {
-        src_roi[i].x1 = x1[i];
-        src_roi[i].y1 = y1[i];
-        src_roi[i].x2 = crop_w_dims[i];
-        src_roi[i].y2 = crop_h_dims[i];
+        crop_dims[i].x1 = x1[i];
+        crop_dims[i].y1 = y1[i];
+        crop_dims[i].x2 = crop_w_dims[i];
+        crop_dims[i].y2 = crop_h_dims[i];
     }
 }
 
-void CropResizeNode::init(float area, float aspect_ratio, float x_center_drift, float y_center_drift)
-{
+void CropResizeNode::init(float area, float aspect_ratio, float x_center_drift, float y_center_drift) {
     _crop_param->set_area_factor(ParameterFactory::instance()->create_single_value_param(area));
     _crop_param->set_aspect_ratio(ParameterFactory::instance()->create_single_value_param(aspect_ratio));
     _crop_param->set_x_drift_factor(ParameterFactory::instance()->create_single_value_param(x_center_drift));
     _crop_param->set_y_drift_factor(ParameterFactory::instance()->create_single_value_param(y_center_drift));
 }
 
-void CropResizeNode::init(FloatParam* area, FloatParam* aspect_ratio, FloatParam *x_center_drift, FloatParam *y_center_drift)
-{
+void CropResizeNode::init(FloatParam* area, FloatParam* aspect_ratio, FloatParam *x_center_drift, FloatParam *y_center_drift) {
     _crop_param->set_area_factor(core(area));
     _crop_param->set_aspect_ratio(core(aspect_ratio));
     _crop_param->set_x_drift_factor(core(x_center_drift));
     _crop_param->set_y_drift_factor(core(y_center_drift));
-    _crop_param->set_random();
 }
 
 CropResizeNode::~CropResizeNode() {

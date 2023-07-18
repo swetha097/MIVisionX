@@ -27,8 +27,7 @@ THE SOFTWARE.
 NopNode::NopNode(const std::vector<Tensor *> &inputs, const std::vector<Tensor *> &outputs) :
         Node(inputs, outputs) { }
 
-void NopNode::create_node()
-{
+void NopNode::create_node() {
     if(_node)
         return;
 

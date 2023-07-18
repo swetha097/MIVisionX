@@ -43,5 +43,4 @@ private:
     void * _crop_coordinates;
     vx_tensor _crop_tensor;
     vx_array _dst_roi_width, _dst_roi_height;
-    std::vector<unsigned> _dst_roi_width_vec, _dst_roi_height_vec;
 };

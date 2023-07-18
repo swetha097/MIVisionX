@@ -25,9 +25,7 @@ THE SOFTWARE.
 #include "exception.h"
 
 FisheyeNode::FisheyeNode(const std::vector<Tensor *> &inputs, const std::vector<Tensor *> &outputs) :
-        Node(inputs, outputs)
-{
-}
+        Node(inputs, outputs) { }
 
 void FisheyeNode::create_node() {
     if(_node)
@@ -36,7 +34,7 @@ void FisheyeNode::create_node() {
 
     vx_status status;
     if((status = vxGetStatus((vx_reference)_node)) != VX_SUCCESS)
-        THROW("Adding the FishEye (vxRppFishEye) node failed: "+ TOSTR(status))
+        THROW("Adding the FishEye (vxRppFishEye) node failed: " + TOSTR(status))
 }
 
 void FisheyeNode::update_node() { }

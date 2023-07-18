@@ -44,7 +44,7 @@ void SequenceRearrangeNode::create_node() {
     _node = vxRppSequenceRearrange(_graph->get(), _inputs[0]->handle(), _outputs[0]->handle(), sequence_array, in_layout_vx);
     
     if((status = vxGetStatus((vx_reference)_node)) != VX_SUCCESS)
-        THROW("Adding the sequence rearrange (vxRppSequenceRearrange) node failed: "+ TOSTR(status))
+        THROW("Adding the sequence rearrange (vxRppSequenceRearrange) node failed: " + TOSTR(status))
 }
 
 void SequenceRearrangeNode::init(std::vector<unsigned int>& new_order) {
