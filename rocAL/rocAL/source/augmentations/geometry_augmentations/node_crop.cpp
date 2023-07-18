@@ -36,23 +36,11 @@ void CropNode::create_node() {
         return;
 
     _crop_param->create_array(_graph);
-        crop_tensor_dims = {_inputs[0]->info().dims()[0] * _inputs[0]->info().dims()[1], 4}; // For Sequences pre allocating the ROI to N * F to replicate in OpenVX extensions
-    stride[0] = sizeof(vx_uint32);
-    stride[1] = stride[0] * crop_tensor_dims[0];
-    vx_enum mem_type = VX_MEMORY_TYPE_HOST;
-    if (_inputs[0]->info().mem_type() == RocalMemType::HIP)
-        mem_type = VX_MEMORY_TYPE_HIP;
-    allocate_host_or_pinned_mem(&_crop_coordinates, stride[1] * 4, _inputs[0]->info().mem_type());
+    create_crop_tensor(_crop_tensor, &_crop_coordinates);
 
-    _crop_tensor = vxCreateTensorFromHandle(vxGetContext((vx_reference) _graph->get()), num_of_dims, crop_tensor_dims.data(), VX_TYPE_UINT32, 0, 
-                                                                  stride, (void *)_crop_coordinates, mem_type);
-    vx_status status;
-    if ((status = vxGetStatus((vx_reference)_crop_tensor)) != VX_SUCCESS)
-        THROW("Error: vxCreateTensorFromHandle(crop_tensor: failed " + TOSTR(status))
-    
     _node = vxExtrppNode_Crop(_graph->get(), _inputs[0]->handle(), _crop_tensor, _outputs[0]->handle(),
                               _input_layout, _output_layout, _roi_type);
-    
+    vx_status status;
     if((status = vxGetStatus((vx_reference)_node)) != VX_SUCCESS)
         THROW("Error adding the Crop node (vxExtrppNode_Crop) failed: "+TOSTR(status))
 }
