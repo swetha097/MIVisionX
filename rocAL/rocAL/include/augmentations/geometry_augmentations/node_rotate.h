@@ -35,10 +35,10 @@ public:
     RotateNode() = delete;
     void init(float angle, RocalResizeInterpolationType interpolation_type);
     void init(FloatParam* angle_param, RocalResizeInterpolationType interpolation_type);    
-    // unsigned int get_dst_width() { return _outputs[0]->info().max_shape()[0]; }
-    // unsigned int get_dst_height() { return _outputs[0]->info().max_shape()[1]; }
-    // vx_array get_src_width() { return _src_roi_width; }
-    // vx_array get_src_height() { return _src_roi_height; }
+    unsigned int get_dst_width() { return _outputs[0]->info().max_shape()[0]; }
+    unsigned int get_dst_height() { return _outputs[0]->info().max_shape()[1]; }
+    vx_array get_src_width() { return _src_roi_width; }
+    vx_array get_src_height() { return _src_roi_height; }
     vx_array get_angle() { return _angle.default_array(); }
 
 protected:

@@ -37,7 +37,7 @@ protected:
     void create_node() override;
     void update_node() override;
 private:
-    ParameterVX<float> _x0, _x1, _y0, _y1, _o0, o1;
+    ParameterVX<float> _x0, _x1, _y0, _y1, _o0, _o1;
     std::vector<float> _affine;
     unsigned _interpolation_type;
     vx_array _affine_array;

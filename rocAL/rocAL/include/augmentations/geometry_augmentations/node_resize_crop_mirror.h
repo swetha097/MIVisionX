@@ -39,6 +39,7 @@ public:
     unsigned int get_dst_height() { return _outputs[0]->info().max_shape()[1]; }
     std::shared_ptr<RocalCropParam> get_crop_param() { return _crop_param; }
     vx_array get_mirror() { return _mirror.default_array(); }
+    void adjust_out_roi_size();
 protected:
     void create_node() override;
     void update_node() override;
