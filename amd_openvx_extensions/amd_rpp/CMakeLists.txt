@@ -127,16 +127,21 @@ list(APPEND SOURCES
         source/image/VignettebatchPD.cpp
         source/image/WarpAffinebatchPD.cpp
         source/image/WarpPerspectivebatchPD.cpp
-        source/tensor/Brightness.cpp
-        source/tensor/Copy.cpp
-        source/tensor/CropMirrorNormalize.cpp
-        source/tensor/Nop.cpp
         source/tensor/Blur.cpp
-        source/tensor/GammaCorrection.cpp
+        source/tensor/Brightness.cpp
         source/tensor/ColorTemperature.cpp
         source/tensor/Contrast.cpp
+        source/tensor/Copy.cpp
+        source/tensor/CropMirrorNormalize.cpp
         source/tensor/Exposure.cpp
+        source/tensor/Flip.cpp
+        source/tensor/GammaCorrection.cpp
+        source/tensor/Jitter.cpp
+        source/tensor/Nop.cpp
+        source/tensor/Rotate.cpp
         # source/tensor/SequenceRearrange.cpp
+        source/tensor/Vignette.cpp
+        source/tensor/WarpAffine.cpp
         source/kernel_rpp.cpp
         source/internal_publishKernels.cpp
     )
