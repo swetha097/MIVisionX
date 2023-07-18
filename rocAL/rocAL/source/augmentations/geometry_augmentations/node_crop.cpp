@@ -27,10 +27,7 @@ THE SOFTWARE.
 #include "exception.h"
 
 CropNode::CropNode(const std::vector<Tensor *> &inputs, const std::vector<Tensor *> &outputs) :
-        Node(inputs, outputs)
-        // _dest_width(_outputs[0]->info().max_shape()[0]),
-        // _dest_height(_outputs[0]->info().max_shape()[1])
-{
+        Node(inputs, outputs) {
     _crop_param = std::make_shared<RocalCropParam>(_batch_size);
 }
 
@@ -38,16 +35,7 @@ void CropNode::create_node() {
     if(_node)
         return;
 
-    // if(_dest_width == 0 || _dest_height == 0)
-    //     THROW("Uninitialized destination dimension")
-
     _crop_param->create_array(_graph);
-
-    // Create vx_tensor for the crop coordinates
-    vx_size num_of_dims = 2;
-    vx_size stride[num_of_dims];
-    std::vector<size_t> crop_tensor_dims = {_batch_size, 4};
-    if(_inputs[0]->info().layout() == RocalTensorlayout::NFCHW || _inputs[0]->info().layout() == RocalTensorlayout::NFHWC)
         crop_tensor_dims = {_inputs[0]->info().dims()[0] * _inputs[0]->info().dims()[1], 4}; // For Sequences pre allocating the ROI to N * F to replicate in OpenVX extensions
     stride[0] = sizeof(vx_uint32);
     stride[1] = stride[0] * crop_tensor_dims[0];
@@ -66,7 +54,7 @@ void CropNode::create_node() {
                               _input_layout, _output_layout, _roi_type);
     
     if((status = vxGetStatus((vx_reference)_node)) != VX_SUCCESS)
-        THROW("Error adding the crop node (vxExtrppNode_Crop) failed: "+TOSTR(status))
+        THROW("Error adding the Crop node (vxExtrppNode_Crop) failed: "+TOSTR(status))
 }
 
 void CropNode::update_node() {
@@ -75,7 +63,6 @@ void CropNode::update_node() {
     std::vector<uint32_t> crop_h_dims, crop_w_dims;
     _crop_param->get_crop_dimensions(crop_w_dims, crop_h_dims);
     _outputs[0]->update_tensor_roi(crop_w_dims, crop_h_dims);
-    
     // Obtain the crop coordinates and update the roi
     auto x1 = _crop_param->get_x1_arr_val();
     auto y1 = _crop_param->get_y1_arr_val();
