@@ -25,8 +25,7 @@ THE SOFTWARE.
 #include "parameter_factory.h"
 #include "parameter_vx.h"
 
-class SaturationNode : public Node
-{
+class SaturationNode : public Node {
 public:
     SaturationNode(const std::vector<Tensor *> &inputs, const std::vector<Tensor *> &outputs);
     SaturationNode() = delete;

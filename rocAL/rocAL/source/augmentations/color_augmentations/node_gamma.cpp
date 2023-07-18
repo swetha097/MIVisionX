@@ -26,9 +26,7 @@ THE SOFTWARE.
 
 GammaNode::GammaNode(const std::vector<Tensor *> &inputs, const std::vector<Tensor *> &outputs) :
         Node(inputs, outputs),
-        _shift(SHIFT_RANGE[0], SHIFT_RANGE[1])
-{
-}
+        _shift(SHIFT_RANGE[0], SHIFT_RANGE[1]) { }
 
 void GammaNode::create_node() {
     if(_node)
@@ -49,12 +47,10 @@ void GammaNode::init(float shift) {
     _shift.set_param(shift);
 }
 
-void GammaNode::init(FloatParam* shift) {
+void GammaNode::init(FloatParam *shift) {
     _shift.set_param(core(shift));
 }
-
 
 void GammaNode::update_node() {
     _shift.update_array();
 }
-

@@ -29,18 +29,16 @@ ColorTwistNode::ColorTwistNode(const std::vector<Tensor *> &inputs,const std::ve
         _alpha(ALPHA_RANGE[0], ALPHA_RANGE[1]),
         _beta (BETA_RANGE[0], BETA_RANGE[1]),
         _hue(HUE_RANGE[0], HUE_RANGE[1]),
-        _sat(SAT_RANGE[0], SAT_RANGE[1])
-{
-}
+        _sat(SAT_RANGE[0], SAT_RANGE[1]) { }
 
 void ColorTwistNode::create_node() {
     if(_node)
         return;
 
-    _alpha.create_array(_graph , VX_TYPE_FLOAT32, _batch_size);
-    _beta.create_array(_graph , VX_TYPE_FLOAT32, _batch_size);
-    _hue.create_array(_graph , VX_TYPE_FLOAT32, _batch_size);
-    _sat.create_array(_graph , VX_TYPE_FLOAT32, _batch_size);
+    _alpha.create_array(_graph, VX_TYPE_FLOAT32, _batch_size);
+    _beta.create_array(_graph, VX_TYPE_FLOAT32, _batch_size);
+    _hue.create_array(_graph, VX_TYPE_FLOAT32, _batch_size);
+    _sat.create_array(_graph, VX_TYPE_FLOAT32, _batch_size);
     _node = vxExtrppNode_ColorTwist(_graph->get(), _inputs[0]->handle(), _src_tensor_roi, _outputs[0]->handle(), _alpha.default_array(), _beta.default_array(), _hue.default_array(), _sat.default_array(), _input_layout, _roi_type, _batch_size);
 
     vx_status status;
@@ -48,14 +46,14 @@ void ColorTwistNode::create_node() {
         THROW("Adding the Colortwist (vxExtrppNode_ColotTwsit) node failed: "+ TOSTR(status))
 }
 
-void ColorTwistNode::init(float alpha, float beta, float hue , float sat) {
+void ColorTwistNode::init(float alpha, float beta, float hue, float sat) {
     _alpha.set_param(alpha);
     _beta.set_param(beta);
     _hue.set_param(hue);
     _sat.set_param(sat);
 }
 
-void ColorTwistNode::init(FloatParam* alpha, FloatParam* beta, FloatParam* hue, FloatParam* sat) {
+void ColorTwistNode::init(FloatParam *alpha, FloatParam *beta, FloatParam *hue, FloatParam *sat) {
     _alpha.set_param(core(alpha));
     _beta.set_param(core(beta));
     _hue.set_param(core(hue));

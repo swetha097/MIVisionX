@@ -26,13 +26,12 @@ THE SOFTWARE.
 #include "parameter_vx.h"
 #include "graph.h"
 
-class BlurNode : public Node
-{
+class BlurNode : public Node {
 public:
     BlurNode(const std::vector<Tensor *> &inputs, const std::vector<Tensor *> &outputs);
     BlurNode() = delete;
     void init(int kernel_size);
-    void init(IntParam* kernel_size_param);
+    void init(IntParam *kernel_size);
 protected:
     void create_node() override;
     void update_node() override;

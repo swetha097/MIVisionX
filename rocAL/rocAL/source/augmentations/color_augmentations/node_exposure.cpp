@@ -26,15 +26,13 @@ THE SOFTWARE.
 
 ExposureNode::ExposureNode(const std::vector<Tensor *> &inputs, const std::vector<Tensor *> &outputs) :
         Node(inputs, outputs),
-        _shift(SHIFT_RANGE[0], SHIFT_RANGE[1])
-{
-}
+        _shift(SHIFT_RANGE[0], SHIFT_RANGE[1]) { }
 
 void ExposureNode::create_node() {
     if(_node)
         return;
 
-    _shift.create_array(_graph , VX_TYPE_FLOAT32, _batch_size);
+    _shift.create_array(_graph, VX_TYPE_FLOAT32, _batch_size);
     _node = vxExtrppNode_Exposure(_graph->get(), _inputs[0]->handle(), _src_tensor_roi, _outputs[0]->handle(), _shift.default_array(), _input_layout, _output_layout, _roi_type);
 
     vx_status status;

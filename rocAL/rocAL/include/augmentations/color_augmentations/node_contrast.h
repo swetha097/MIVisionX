@@ -26,8 +26,7 @@ THE SOFTWARE.
 #include "parameter_vx.h"
 #include "graph.h"
 
-class ContrastNode : public Node
-{
+class ContrastNode : public Node {
 public:
     ContrastNode(const std::vector<Tensor *> &inputs, const std::vector<Tensor *> &outputs);
     ContrastNode() = delete;

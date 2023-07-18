@@ -26,8 +26,7 @@ THE SOFTWARE.
 #include "parameter_vx.h"
 #include "graph.h"
 
-class ExposureNode : public Node
-{
+class ExposureNode : public Node {
 public:
     ExposureNode(const std::vector<Tensor *> &inputs, const std::vector<Tensor *> &outputs);
     ExposureNode() = delete;
@@ -38,5 +37,5 @@ protected:
     void update_node() override;
 private:
     ParameterVX<float> _shift;
-    constexpr static float SHIFT_RANGE [2] = {0.15, 0.95};
+    constexpr static float SHIFT_RANGE[2] = {0.15, 0.95};
 };
