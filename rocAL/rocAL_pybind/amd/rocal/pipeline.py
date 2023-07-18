@@ -161,8 +161,6 @@ class Pipeline(object):
         """ Run the pipeline using rocalRun call
         """
         status = b.rocalRun(self._handle)
-        if(status != types.OK):
-            print("Rocal Run failed")
         return status
 
     def defineGraph(self):

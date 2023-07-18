@@ -47,7 +47,7 @@ class ROCALGenericIterator(object):
 
     def __next__(self):
         
-        if(b.isEmpty(self.loader._handle)):
+        if self.loader.rocalRun() != 0:
             raise StopIteration
         else:
             self.output_tensor_list = self.loader.getOutputTensors()
@@ -71,6 +71,13 @@ class ROCALGenericIterator(object):
                 else:
                     self.output_tensor_list[i].copy_data_cupy(self.out.data.ptr)
                 self.output_list.append(self.out)
+        else:
+            for i in range(len(self.output_tensor_list)):
+                if self.device == "cpu":
+                    self.output_tensor_list[i].copy_data_numpy(self.output_list[i])
+                else:
+                    self.output_tensor_list[i].copy_data_cupy(self.output_list[i].data.ptr)
+                
         if(self.loader._name == "labelReader"):
             if(self.loader._oneHotEncoding == True):
                 self.loader.getOneHotEncodedLabels(self.labels, self.device)
