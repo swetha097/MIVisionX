@@ -36,12 +36,20 @@ struct ColorTemperatureLocalData {
     vxTensorLayout outputLayout;
     size_t inputTensorDims[RPP_MAX_TENSOR_DIMS];
     size_t ouputTensorDims[RPP_MAX_TENSOR_DIMS];
+    RppiSize *srcDimensions;
+    RppiSize maxSrcDimensions;  // TBR : Not present in tensor
+    Rpp32u *srcBatch_width; // TBR : Not present in tensor
+    Rpp32u *srcBatch_height; // TBR : Not present in tensor
 };
 
 static vx_status VX_CALLBACK refreshColorTemperature(vx_node node, const vx_reference *parameters, vx_uint32 num, ColorTemperatureLocalData *data) {
     vx_status status = VX_SUCCESS;
     STATUS_ERROR_CHECK(vxCopyArrayRange((vx_array)parameters[3], 0, data->inputTensorDims[0], sizeof(vx_uint32), data->pAdjustmentValue, VX_READ_ONLY, VX_MEMORY_TYPE_HOST));
-
+    for (int i = 0; i < data->inputTensorDims[0]; i++)
+    {
+        data->srcDimensions[i].width = data->pSrcDesc->w;
+        data->srcDimensions[i].height = data->pSrcDesc->h;
+    }
     void *roi_tensor_ptr;
     if (data->deviceType == AGO_TARGET_AFFINITY_GPU) {
 #if ENABLE_OPENCL
@@ -52,7 +60,7 @@ static vx_status VX_CALLBACK refreshColorTemperature(vx_node node, const vx_refe
         STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[2], VX_TENSOR_BUFFER_HIP, &data->pDst, sizeof(data->pDst)));
 #endif
     } else if (data->deviceType == AGO_TARGET_AFFINITY_CPU) {
-        STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[1], VX_TENSOR_BUFFER_HOST,&roi_tensor_ptr, sizeof(roi_tensor_ptr)));
+        STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[1], VX_TENSOR_BUFFER_HOST, &roi_tensor_ptr, sizeof(roi_tensor_ptr)));
         STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[0], VX_TENSOR_BUFFER_HOST, &data->pSrc, sizeof(data->pSrc)));
         STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[2], VX_TENSOR_BUFFER_HOST, &data->pDst, sizeof(data->pDst)));
     }
@@ -119,11 +127,19 @@ static vx_status VX_CALLBACK processColorTemperature(vx_node node, const vx_refe
 #if ENABLE_OPENCL
         return_status = VX_ERROR_NOT_IMPLEMENTED;
 #elif ENABLE_HIP
-        // rpp_status = rppt_color_temperature_gpu((void *)data->pSrc, data->pSrcDesc, (void *)data->pDst, data->pDstDesc,  data->pAdjustmentValue, data->pSrcRoi, data->roiType, data->handle->rppHandle);
+
+        if(data->pDstDesc->c==1 )
+            rpp_status = rppi_color_temperature_u8_pln1_batchPD_gpu((void *)data->pSrc, data->srcDimensions, data->maxSrcDimensions, (void *)data->pDst, data->pAdjustmentValue, data->pSrcDesc->n, data->handle->rppHandle);
+        else
+            rpp_status = rppi_color_temperature_u8_pkd3_batchPD_gpu((void *)data->pSrc, data->srcDimensions, data->maxSrcDimensions, (void *)data->pDst, data->pAdjustmentValue, data->pSrcDesc->n, data->handle->rppHandle);
         return_status = (rpp_status == RPP_SUCCESS) ? VX_SUCCESS : VX_FAILURE;
 #endif
     } else if (data->deviceType == AGO_TARGET_AFFINITY_CPU) {
         // rpp_status = rppt_color_temperature_host(data->pSrc, data->pSrcDesc, data->pDst, data->pDstDesc, data->pAdjustmentValue, data->pSrcRoi, data->roiType, data->handle->rppHandle);
+        if(data->pDstDesc->c==1 )
+            rpp_status = rppi_color_temperature_u8_pln1_batchPD_host(data->pSrc, data->srcDimensions, data->maxSrcDimensions, data->pDst, data->pAdjustmentValue, data->pSrcDesc->n, data->handle->rppHandle);
+        else
+            rpp_status = rppi_color_temperature_u8_pkd3_batchPD_host(data->pSrc, data->srcDimensions, data->maxSrcDimensions, data->pDst, data->pAdjustmentValue, data->pSrcDesc->n, data->handle->rppHandle);
         return_status = (rpp_status == RPP_SUCCESS) ? VX_SUCCESS : VX_FAILURE;
     }
     return return_status;
@@ -162,6 +178,10 @@ static vx_status VX_CALLBACK initializeColorTemperature(vx_node node, const vx_r
     fillDescriptionPtrfromDims(data->pDstDesc, data->outputLayout, data->ouputTensorDims);
 
     data->pAdjustmentValue = static_cast<vx_int32 *>(malloc(sizeof(vx_int32) * data->pSrcDesc->n));
+    data->srcDimensions = static_cast<RppiSize *>(malloc(sizeof(RppiSize) * data->pSrcDesc->n));
+
+    data->maxSrcDimensions.height = data->pSrcDesc->h;
+    data->maxSrcDimensions.width = data->pSrcDesc->w;
     refreshColorTemperature(node, parameters, num, data);
     STATUS_ERROR_CHECK(createRPPHandle(node, &data->handle, data->pSrcDesc->n, data->deviceType));
     STATUS_ERROR_CHECK(vxSetNodeAttribute(node, VX_NODE_LOCAL_DATA_PTR, &data, sizeof(data)));

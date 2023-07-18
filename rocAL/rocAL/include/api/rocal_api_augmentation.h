@@ -729,7 +729,7 @@ extern "C" RocalTensor  ROCAL_API_CALL rocalCrop(RocalContext context, RocalTens
                                                  RocalFloatParam crop_pos_y = NULL,
                                                  RocalFloatParam crop_pos_z = NULL,
                                                  RocalTensorLayout rocal_tensor_output_layout = ROCAL_NHWC,
-                                                 RocalTensorOutputType rocal_tensor_output_datatype = ROCAL_UINT8,);
+                                                 RocalTensorOutputType rocal_tensor_output_datatype = ROCAL_UINT8);
 
 extern "C"  RocalTensor  ROCAL_API_CALL rocalCropFixed(RocalContext context, RocalTensor  input,
                                                        unsigned crop_width,
