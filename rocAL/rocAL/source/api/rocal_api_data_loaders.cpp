@@ -186,12 +186,12 @@ rocalJpegFileSourceSingleShard(
         auto [color_format, num_of_planes] = convert_color_format(rocal_color_format);
         INFO("Internal buffer size width = "+ TOSTR(width)+ " height = "+ TOSTR(height) + " depth = "+ TOSTR(num_of_planes))
 
-        auto [tensor_format, dims] = convert_color_format_to_layout(rocal_color_format, context->user_batch_size(), height, width, num_of_planes);
+        auto [tensor_layout, dims] = convert_color_format_to_layout(rocal_color_format, context->user_batch_size(), height, width, num_of_planes);
         auto info  = TensorInfo(std::move(dims),
                                      context->master_graph->mem_type(),
                                      RocalTensorDataType::UINT8);
         info.set_color_format(color_format);
-        info.set_tensor_layout(tensor_format);
+        info.set_tensor_layout(tensor_layout);
         info.set_max_shape();
         output = context->master_graph->create_loader_output_tensor(info);
         auto cpu_num_threads = context->master_graph->calculate_cpu_num_threads(shard_count);
@@ -266,12 +266,12 @@ rocalJpegFileSource(
         auto [color_format, num_of_planes] = convert_color_format(rocal_color_format);
         INFO("Internal buffer size width = "+ TOSTR(width)+ " height = "+ TOSTR(height) + " depth = "+ TOSTR(num_of_planes))
         
-        auto [tensor_format, dims] = convert_color_format_to_layout(rocal_color_format, context->user_batch_size(), height, width, num_of_planes);
+        auto [tensor_layout, dims] = convert_color_format_to_layout(rocal_color_format, context->user_batch_size(), height, width, num_of_planes);
         auto info  = TensorInfo(std::move(dims),
                                      context->master_graph->mem_type(),
                                      RocalTensorDataType::UINT8);
         info.set_color_format(color_format);
-        info.set_tensor_layout(tensor_format);
+        info.set_tensor_layout(tensor_layout);
         info.set_max_shape();
         output = context->master_graph->create_loader_output_tensor(info);
         auto cpu_num_threads = context->master_graph->calculate_cpu_num_threads(1);
@@ -2041,13 +2041,13 @@ rocalVideoFileSource(
         auto [color_format, num_of_planes] = convert_color_format(rocal_color_format);
         auto decoder_mode = convert_decoder_mode(rocal_decode_device);
         
-        auto [tensor_format, dims] = convert_color_format_to_sequence_layout(rocal_color_format, context->user_batch_size(),
+        auto [tensor_layout, dims] = convert_color_format_to_sequence_layout(rocal_color_format, context->user_batch_size(),
                                                                              video_prop.height, video_prop.width, num_of_planes, sequence_length);
         auto info  = TensorInfo(std::move(dims),
                                      context->master_graph->mem_type(),
                                      RocalTensorDataType::UINT8);
         info.set_color_format(color_format);
-        info.set_tensor_layout(tensor_format);
+        info.set_tensor_layout(tensor_layout);
         info.set_max_shape();
 
         output = context->master_graph->create_loader_output_tensor(info);
@@ -2126,13 +2126,13 @@ rocalVideoFileSourceSingleShard(
             decoder_type = DecoderType::FFMPEG_SOFTWARE_DECODE;
         auto [color_format, num_of_planes] = convert_color_format(rocal_color_format);
         auto decoder_mode = convert_decoder_mode(rocal_decode_device);
-        auto [tensor_format, dims] = convert_color_format_to_sequence_layout(rocal_color_format, context->user_batch_size(),
+        auto [tensor_layout, dims] = convert_color_format_to_sequence_layout(rocal_color_format, context->user_batch_size(),
                                                                              video_prop.height, video_prop.width, num_of_planes, sequence_length);
         auto info  = TensorInfo(std::move(dims),
                                      context->master_graph->mem_type(),
                                      RocalTensorDataType::UINT8);
         info.set_color_format(color_format);
-        info.set_tensor_layout(tensor_format);
+        info.set_tensor_layout(tensor_layout);
         info.set_max_shape();
 
         output = context->master_graph->create_loader_output_tensor(info);
@@ -2214,13 +2214,13 @@ rocalVideoFileResize(
             decoder_type = DecoderType::FFMPEG_SOFTWARE_DECODE;
         auto [color_format, num_of_planes] = convert_color_format(rocal_color_format);
         auto decoder_mode = convert_decoder_mode(rocal_decode_device);
-        auto [tensor_format, dims] = convert_color_format_to_sequence_layout(rocal_color_format, context->user_batch_size(),
+        auto [tensor_layout, dims] = convert_color_format_to_sequence_layout(rocal_color_format, context->user_batch_size(),
                                                                              video_prop.height, video_prop.width, num_of_planes, sequence_length);
         auto info  = TensorInfo(std::move(dims),
                                      context->master_graph->mem_type(),
                                      RocalTensorDataType::UINT8);
         info.set_color_format(color_format);
-        info.set_tensor_layout(tensor_format);
+        info.set_tensor_layout(tensor_layout);
         info.set_max_shape();
 
         Tensor* output = context->master_graph->create_loader_output_tensor(info);
@@ -2388,13 +2388,13 @@ rocalVideoFileResizeSingleShard(
         auto [color_format, num_of_planes] = convert_color_format(rocal_color_format);
         auto decoder_mode = convert_decoder_mode(rocal_decode_device);
         
-        auto [tensor_format, dims] = convert_color_format_to_sequence_layout(rocal_color_format, context->user_batch_size(),
+        auto [tensor_layout, dims] = convert_color_format_to_sequence_layout(rocal_color_format, context->user_batch_size(),
                                                                              video_prop.height, video_prop.width, num_of_planes, sequence_length);
         auto info  = TensorInfo(std::move(dims),
                                      context->master_graph->mem_type(),
                                      RocalTensorDataType::UINT8);
         info.set_color_format(color_format);
-        info.set_tensor_layout(tensor_format);
+        info.set_tensor_layout(tensor_layout);
         info.set_max_shape();
         Tensor*  output = context->master_graph->create_loader_output_tensor(info);
         context->master_graph->add_node<VideoLoaderSingleShardNode>({}, {output})->init(shard_id, shard_count,
