@@ -26,15 +26,15 @@ THE SOFTWARE.
 #include "parameter_factory.h"
 #include "parameter_crop_factory.h"
 
-class CropParam;
-
-class ResizeCropMirrorNode : public Node
-{
+class ResizeCropMirrorNode : public Node {
 public:
     ResizeCropMirrorNode(const std::vector<Tensor *> &inputs, const std::vector<Tensor *> &outputs);
     ResizeCropMirrorNode() = delete;
-    void init(unsigned int crop_h, unsigned int crop_w, IntParam *mirror);
-    void init( FloatParam *crop_h_factor, FloatParam *crop_w_factor, IntParam *mirror);
+    ~ResizeCropMirrorNode();
+    void init(unsigned dest_width, unsigned dest_height, unsigned crop_width, unsigned crop_height, IntParam *mirror, RocalResizeScalingMode scaling_mode,
+              const std::vector<unsigned>& max_size, RocalResizeInterpolationType interpolation_type);
+    void init(unsigned dest_width, unsigned dest_height, FloatParam * crop_width, FloatParam * crop_height, IntParam *mirror, RocalResizeScalingMode scaling_mode,
+              const std::vector<unsigned>& max_size, RocalResizeInterpolationType interpolation_type);
     unsigned int get_dst_width() { return _outputs[0]->info().max_shape()[0]; }
     unsigned int get_dst_height() { return _outputs[0]->info().max_shape()[1]; }
     std::shared_ptr<RocalCropParam> get_crop_param() { return _crop_param; }
@@ -43,9 +43,15 @@ protected:
     void create_node() override;
     void update_node() override;
 private:
+    vx_array  _dst_roi_width , _dst_roi_height;
     std::shared_ptr<RocalCropParam> _crop_param;
-    vx_array _dst_roi_width ,_dst_roi_height;
+    int _interpolation_type;
     ParameterVX<int> _mirror;
-    constexpr static int MIRROR_RANGE [2] =  {0, 1};
+    constexpr static int MIRROR_RANGE[2] =  {0, 1};
+    RocalResizeScalingMode _scaling_mode;
+    unsigned _src_width, _src_height, _dst_width, _dst_height, _out_width, _out_height;
+    unsigned _max_width = 0, _max_height = 0;
+    std::vector<unsigned> _dst_roi_width_vec, _dst_roi_height_vec;
+    void * _crop_coordinates;
+    vx_tensor _crop_tensor;
 };
-

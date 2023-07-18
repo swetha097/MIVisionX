@@ -30,7 +30,7 @@ class VignetteNode : public Node
 {
 public:
     VignetteNode(const std::vector<Tensor *> &inputs, const std::vector<Tensor *> &outputs);
-    VignetteNode () = delete;
+    VignetteNode() = delete;
     void init(float sdev);
     void init(FloatParam *sdev);
 protected:

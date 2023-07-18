@@ -30,31 +30,26 @@ ExposureNode::ExposureNode(const std::vector<Tensor *> &inputs, const std::vecto
 {
 }
 
-void ExposureNode::create_node()
-{
+void ExposureNode::create_node() {
     if(_node)
         return;
 
     _shift.create_array(_graph , VX_TYPE_FLOAT32, _batch_size);
-    // _node = vxExtrppNode_ExposurebatchPD(_graph->get(), _inputs[0]->handle(), _src_roi_width, _src_roi_height, _outputs[0]->handle(), _shift.default_array(), _batch_size);
+    _node = vxExtrppNode_Exposure(_graph->get(), _inputs[0]->handle(), _src_tensor_roi, _outputs[0]->handle(), _shift.default_array(), _input_layout, _output_layout, _roi_type);
 
     vx_status status;
     if((status = vxGetStatus((vx_reference)_node)) != VX_SUCCESS)
         THROW("Adding the exposure (vxExtrppNode_Exposure) node failed: "+ TOSTR(status))
-
 }
 
-void ExposureNode::init(float shfit)
-{
-    _shift.set_param(shfit);
+void ExposureNode::init(float shift) {
+    _shift.set_param(shift);
 }
 
-void ExposureNode::init(FloatParam* shfit)
-{
-    _shift.set_param(core(shfit));
+void ExposureNode::init(FloatParam *shift) {
+    _shift.set_param(core(shift));
 }
 
-void ExposureNode::update_node()
-{
+void ExposureNode::update_node() {
     _shift.update_array();
 }

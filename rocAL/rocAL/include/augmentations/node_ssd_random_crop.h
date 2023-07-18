@@ -82,7 +82,6 @@ private:
     vx_array _crop_width, _crop_height, _x1, _y1, _x2, _y2;
     std::vector<uint> _crop_width_val, _crop_height_val, _x1_val, _y1_val, _x2_val, _y2_val;
     // unsigned int _dst_width, _dst_height;
-    std::vector<uint32_t> in_width, in_height;
     size_t _dest_width;
     size_t _dest_height;
     float  _threshold = 0.05;
@@ -91,5 +90,4 @@ private:
     bool _entire_iou = false;
     std::shared_ptr<RocalRandomCropParam> _crop_param;
     SeededRNG<std::mt19937, 4> _rngs;     // setting the state_size to 4 for 4 random parameters.
-
 };

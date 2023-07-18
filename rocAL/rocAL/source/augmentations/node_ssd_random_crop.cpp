@@ -49,8 +49,7 @@ void SSDRandomCropNode::create_node()
         THROW("Uninitialized destination dimension")
 
     _crop_param->create_array(_graph);
-    // _node = vxExtrppNode_CropPD(_graph->get(), _inputs[0]->handle(), _src_roi_width, _src_roi_height, _outputs[0]->handle(), _crop_param->cropw_arr,
-                                // _crop_param->croph_arr, _crop_param->x1_arr, _crop_param->y1_arr, _batch_size);
+    _node = vxExtrppNode_Crop(_graph->get(), _inputs[0]->handle(), _src_tensor_roi, _outputs[0]->handle(), _input_layout, _output_layout, _roi_type);
 
     vx_status status;
     if ((status = vxGetStatus((vx_reference)_node)) != VX_SUCCESS)
@@ -94,8 +93,7 @@ void SSDRandomCropNode::update_node()
     std::pair<float, float> iou;
     float min_iou, max_iou;
     float w_factor = 0.0f, h_factor = 0.0f;
-    // in_width = _crop_param->in_width; TODO - Commenting for now to be replaced with ROI
-    // in_height = _crop_param->in_height;
+    auto input_roi = _crop_param->in_roi;
     bool invalid_bboxes = true;
     _entire_iou = true;
     BoundingBoxCord crop_box, jth_box;
@@ -192,12 +190,12 @@ void SSDRandomCropNode::update_node()
                 continue;
             break;
         } // while loop
-        _x1_val[i] = (crop_box.l) * in_width[i];
-        _y1_val[i] = (crop_box.t) * in_height[i];
-        _crop_width_val[i] = (crop_box.r - crop_box.l) * in_width[i];
-        _crop_height_val[i] = (crop_box.b - crop_box.t) * in_height[i];
-        _x2_val[i] =  (crop_box.r) * in_width[i];
-        _y2_val[i] =  (crop_box.b) * in_height[i];
+        _x1_val[i] = (crop_box.l) * input_roi[i].x2;
+        _y1_val[i] = (crop_box.t) * input_roi[i].y2;
+        _crop_width_val[i] = (crop_box.r - crop_box.l) * input_roi[i].x2;
+        _crop_height_val[i] = (crop_box.b - crop_box.t) * input_roi[i].y2;
+        _x2_val[i] =  (crop_box.r) * input_roi[i].x2;
+        _y2_val[i] =  (crop_box.b) * input_roi[i].y2;
 
     }
     vxCopyArrayRange((vx_array)_crop_param->cropw_arr, 0, _batch_size, sizeof(uint), _crop_width_val.data(), VX_WRITE_ONLY, VX_MEMORY_TYPE_HOST);
