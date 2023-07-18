@@ -142,12 +142,12 @@ void VideoLoader::initialize(ReaderConfig reader_cfg, DecoderConfig decoder_cfg,
     }
     _max_decoded_width = _output_tensor->info().max_shape().at(0);
     _max_decoded_height = _output_tensor->info().max_shape().at(1);
-    _decoded_img_info._image_names.resize(_batch_size);
+    _decoded_sample_info._sample_names.resize(_batch_size);
     // TODO -the below 4 lines need change?
-    _decoded_img_info._roi_height.resize(_batch_size);
-    _decoded_img_info._roi_width.resize(_batch_size);
-    _decoded_img_info._original_height.resize(_batch_size);
-    _decoded_img_info._original_width.resize(_batch_size);
+    _decoded_sample_info._roi_height.resize(_batch_size);
+    _decoded_sample_info._roi_width.resize(_batch_size);
+    _decoded_sample_info._original_height.resize(_batch_size);
+    _decoded_sample_info._original_width.resize(_batch_size);
     _circ_buff.init(_mem_type, _output_mem_size, _prefetch_queue_depth);
     _is_initialized = true;
     LOG("Loader module initialized");
@@ -178,20 +178,20 @@ VideoLoader::load_routine()
         auto load_status = LoaderModuleStatus::NO_MORE_DATA_TO_READ;
         {
             load_status = _video_loader->load((unsigned char*)data,
-                                              _decoded_img_info._image_names,
+                                              _decoded_sample_info._sample_names,
                                               _max_decoded_width,
                                               _max_decoded_height,
-                                              _decoded_img_info._roi_width,
-                                              _decoded_img_info._roi_height,
-                                              _decoded_img_info._original_width,
-                                              _decoded_img_info._original_height,
+                                              _decoded_sample_info._roi_width,
+                                              _decoded_sample_info._roi_height,
+                                              _decoded_sample_info._original_width,
+                                              _decoded_sample_info._original_height,
                                               _sequence_start_framenum_vec,
                                               _sequence_frame_timestamps_vec,
                                               _output_tensor->info().color_format());
 
             if (load_status == LoaderModuleStatus::OK)
             {
-                _circ_buff.set_image_info(_decoded_img_info);
+                _circ_buff.set_sample_info(_decoded_sample_info);
                 _circ_buff.push();
                 _image_counter += _output_tensor->info().batch_size();
             }
@@ -264,9 +264,9 @@ VideoLoader::update_output_image()
     }
     if (_stopped)
         return LoaderModuleStatus::OK;
-    _output_decoded_img_info = _circ_buff.get_image_info();
-    _output_names = _output_decoded_img_info._image_names;
-    _output_tensor->update_tensor_roi(_output_decoded_img_info._roi_width, _output_decoded_img_info._roi_height);
+    _output_decoded_sample_info = _circ_buff.get_sample_info();
+    _output_names = _output_decoded_sample_info._sample_names;
+    _output_tensor->update_tensor_roi(_output_decoded_sample_info._roi_width, _output_decoded_sample_info._roi_height);
     _circ_buff.pop();
     if (!_loop)
         _remaining_sequences_count -= _batch_size;
@@ -312,9 +312,9 @@ std::vector<std::string> VideoLoader::get_id()
     return _output_names;
 }
 
-decoded_image_info VideoLoader::get_decode_image_info()
+decoded_sample_info VideoLoader::get_decode_sample_info()
 {
-    return _output_decoded_img_info;
+    return _output_decoded_sample_info;
 }
 
 std::vector<size_t> VideoLoader::get_sequence_start_frame_number()

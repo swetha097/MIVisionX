@@ -49,8 +49,8 @@ public:
     LoaderModuleStatus set_cpu_affinity(cpu_set_t cpu_mask);
     LoaderModuleStatus set_cpu_sched_policy(struct sched_param sched_policy);
     std::vector<std::string> get_id() override;
-    decoded_image_info get_decode_image_info() override;
-    crop_image_info get_crop_image_info() override;
+    decoded_sample_info get_decode_sample_info() override;
+    crop_image_info get_crop_image_info() override { THROW("The get_crop_image_info is not applicable for audio data") };
     void set_prefetch_queue_depth(size_t prefetch_queue_depth)  override;
     void set_gpu_device_id(int device_id);
     void shut_down() override;
@@ -70,10 +70,8 @@ private:
     size_t _batch_size;
     std::thread _load_thread;
     RocalMemType _mem_type;
-    decoded_image_info _decoded_img_info;
-    crop_image_info _crop_image_info;
-    decoded_image_info _output_decoded_img_info;
-    crop_image_info _output_cropped_img_info;
+    decoded_sample_info _decoded_sample_info;
+    decoded_sample_info _output_decoded_img_info;
     CircularBuffer _circ_buff;
     TimingDBG _swap_handle_time;
     bool _is_initialized;

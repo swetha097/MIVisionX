@@ -40,8 +40,8 @@ public:
     void reset() override;
     void start_loading() override;
     std::vector<std::string> get_id() override;
-    decoded_image_info get_decode_image_info() override;
-    crop_image_info get_crop_image_info() override;
+    decoded_sample_info get_decode_sample_info() override;
+    crop_image_info get_crop_image_info() override { THROW("The get_crop_image_info is not applicable for audio data") };
     Timing timing() override;
     void set_prefetch_queue_depth(size_t prefetch_queue_depth) override;
     void shut_down() override;
