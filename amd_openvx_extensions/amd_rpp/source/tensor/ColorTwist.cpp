@@ -108,9 +108,6 @@ static vx_status VX_CALLBACK validateColorTwist(vx_node node, const vx_reference
     STATUS_ERROR_CHECK(vxQueryScalar((vx_scalar)parameters[9], VX_SCALAR_TYPE, &scalar_type, sizeof(scalar_type)));
     if (scalar_type != VX_TYPE_UINT32)
         return ERRMSG(VX_ERROR_INVALID_TYPE, "validate: Paramter: #9 type=%d (must be size)\n", scalar_type);
-    STATUS_ERROR_CHECK(vxQueryScalar((vx_scalar)parameters[10], VX_SCALAR_TYPE, &scalar_type, sizeof(scalar_type)));
-    if (scalar_type != VX_TYPE_UINT32)
-        return ERRMSG(VX_ERROR_INVALID_TYPE, "validate: Paramter: #10 type=%d (must be size)\n", scalar_type);
 
     // Check for input parameters
     size_t num_tensor_dims;
@@ -166,18 +163,12 @@ static vx_status VX_CALLBACK processColorTwist(vx_node node, const vx_reference 
 static vx_status VX_CALLBACK initializeColorTwist(vx_node node, const vx_reference *parameters, vx_uint32 num)
 {
     ColorTwistLocalData *data = new ColorTwistLocalData;
+    memset(data, 0, sizeof(ColorTwistLocalData));
     vx_enum input_tensor_type, output_tensor_type;
     int roi_type, layout;
-    memset(data, 0, sizeof(ColorTwistLocalData));
-#if ENABLE_OPENCL
-    STATUS_ERROR_CHECK(vxQueryNode(node, VX_NODE_ATTRIBUTE_AMD_OPENCL_COMMAND_QUEUE, &data->handle.cmdq, sizeof(data->handle.cmdq)));
-#elif ENABLE_HIP
-    STATUS_ERROR_CHECK(vxQueryNode(node, VX_NODE_ATTRIBUTE_AMD_HIP_STREAM, &data->handle->hipstream, sizeof(data->handle->hipstream)));
-#endif
-    STATUS_ERROR_CHECK(vxCopyScalar((vx_scalar)parameters[10], &data->deviceType, VX_READ_ONLY, VX_MEMORY_TYPE_HOST));
-    STATUS_ERROR_CHECK(vxReadScalarValue((vx_scalar)parameters[9], &data->pSrcDesc->n));
     STATUS_ERROR_CHECK(vxCopyScalar((vx_scalar)parameters[7], &layout, VX_READ_ONLY, VX_MEMORY_TYPE_HOST));
     STATUS_ERROR_CHECK(vxCopyScalar((vx_scalar)parameters[8], &roi_type, VX_READ_ONLY, VX_MEMORY_TYPE_HOST));
+    STATUS_ERROR_CHECK(vxCopyScalar((vx_scalar)parameters[9], &data->deviceType, VX_READ_ONLY, VX_MEMORY_TYPE_HOST));
     data->roiType = (roi_type == 0) ? RpptRoiType::XYWH : RpptRoiType::LTRB;
     data->layout = static_cast<vxTensorLayout>(layout);
 
@@ -253,7 +244,7 @@ vx_status ColorTwist_Register(vx_context context)
     vx_kernel kernel = vxAddUserKernel(context, "org.rpp.ColorTwist",
                                        VX_KERNEL_RPP_COLORTWIST,
                                        processColorTwist,
-                                       11,
+                                       10,
                                        validateColorTwist,
                                        initializeColorTwist,
                                        uninitializeColorTwist);
@@ -283,7 +274,6 @@ vx_status ColorTwist_Register(vx_context context)
         PARAM_ERROR_CHECK(vxAddParameterToKernel(kernel, 7, VX_INPUT, VX_TYPE_SCALAR, VX_PARAMETER_STATE_REQUIRED));
         PARAM_ERROR_CHECK(vxAddParameterToKernel(kernel, 8, VX_INPUT, VX_TYPE_SCALAR, VX_PARAMETER_STATE_REQUIRED));
         PARAM_ERROR_CHECK(vxAddParameterToKernel(kernel, 9, VX_INPUT, VX_TYPE_SCALAR, VX_PARAMETER_STATE_REQUIRED));
-        PARAM_ERROR_CHECK(vxAddParameterToKernel(kernel, 10, VX_INPUT, VX_TYPE_SCALAR, VX_PARAMETER_STATE_REQUIRED));
         PARAM_ERROR_CHECK(vxFinalizeKernel(kernel));
     }
     if (status != VX_SUCCESS)
