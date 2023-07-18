@@ -818,7 +818,7 @@ int test(int test_case, int reader_type, const char *path, const char *outName, 
             case 1: //classification pipeline
             {
                 RocalTensorList labels = rocalGetImageLabels(handle);
-                int * label_id = reinterpret_cast<int *>(labels->at(0)->buffer());  // The labels are present contiguously in memory
+                int *label_id = reinterpret_cast<int *>(labels->at(0)->buffer());  // The labels are present contiguously in memory
                 int img_size = rocalGetImageNameLen(handle, image_name_length);
                 char img_name[img_size];
                 numOfClasses = num_of_classes;
@@ -828,7 +828,7 @@ int test(int test_case, int reader_type, const char *path, const char *outName, 
                 {
                     rocalGetOneHotImageLabels(handle, label_one_hot_encoded, numOfClasses,0);
                 }*/
-                std::cerr << "\nPrinting image names of batch: " << img_name<<"\n";
+                std::cerr << "\nPrinting image names of batch: " << img_name << "\n";
                 for (unsigned int i = 0; i < inputBatchSize; i++)
                 {
                     std::cerr<<"\t Printing label_id : " << label_id[i] << std::endl;
@@ -864,7 +864,7 @@ int test(int test_case, int reader_type, const char *path, const char *outName, 
                     std::cerr << "\n>>>>> BBOX LABELS : ";
                     for(int j = 0; j < bbox_labels->at(i)->dims().at(0); j++)
                         std::cerr << labels_buffer[j] << " ";
-                    std::cerr << "\n>>>>> BBOXX : " <<bbox_coords->at(i)->dims().at(0) << " : \n";
+                    std::cerr << "\n>>>>> BBOX : " << bbox_coords->at(i)->dims().at(0) << " : \n";
                     for(int j = 0, j4 = 0; j < bbox_coords->at(i)->dims().at(0); j++, j4 = j * 4)
                         std::cerr << bbox_buffer[j4] << " " << bbox_buffer[j4 + 1] << " " << bbox_buffer[j4 + 2] << " " << bbox_buffer[j4 + 3] << "\n";
                 }
@@ -941,9 +941,9 @@ int test(int test_case, int reader_type, const char *path, const char *outName, 
             else
             {
                 if(DISPLAY)
-                cv::imshow("output", mat_output[idx]);
+                    cv::imshow("output", mat_output[idx]);
                 else
-                cv::imwrite(out_filename, mat_output[idx], compression_params);
+                    cv::imwrite(out_filename, mat_output[idx], compression_params);
             }
             col_counter = (col_counter + 1) % number_of_cols;
         }
