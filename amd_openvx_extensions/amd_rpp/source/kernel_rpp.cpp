@@ -1852,18 +1852,18 @@ VX_API_CALL vx_node VX_API_CALL vxExtrppNode_NopbatchPD(vx_graph graph, vx_image
     return node;
 }
 
-VX_API_CALL vx_node VX_API_CALL vxExtrppNode_SequenceRearrange(vx_graph graph, vx_tensor pSrc, vx_tensor pDst, vx_array newOrder, vx_scalar layout) {
+VX_API_CALL vx_node VX_API_CALL vxRppSequenceRearrange(vx_graph graph, vx_tensor pSrc, vx_tensor pDst, vx_array pNewOrder, vx_scalar layout) {
     vx_node node = NULL;
     vx_context context = vxGetContext((vx_reference)graph);
     if(vxGetStatus((vx_reference)context) == VX_SUCCESS) {
-        vx_uint32 dev_type = getGraphAffinity(graph);
-        vx_scalar dev_type_scalar = vxCreateScalar(vxGetContext((vx_reference)graph), VX_TYPE_UINT32, &dev_type);
+        vx_uint32 devType = getGraphAffinity(graph);
+        vx_scalar deviceType = vxCreateScalar(vxGetContext((vx_reference)graph), VX_TYPE_UINT32, &devType);
         vx_reference params[] = {
             (vx_reference) pSrc,
             (vx_reference) pDst,
-            (vx_reference) newOrder,
+            (vx_reference) pNewOrder,
             (vx_reference) layout,
-            (vx_reference) dev_type_scalar
+            (vx_reference) deviceType
         };
         node = createNode(graph, VX_KERNEL_RPP_SEQUENCEREARRANGE, params, 5);
     }
@@ -2025,22 +2025,22 @@ VX_API_ENTRY vx_node VX_API_CALL vxRppExposure(vx_graph graph, vx_tensor pSrc, v
     return node;
 }
 
-VX_API_ENTRY vx_node VX_API_CALL vxExtrppNode_Blend(vx_graph graph, vx_tensor pSrc, vx_tensor pSrc2, vx_tensor srcROI, vx_tensor pDst, vx_array shift, vx_scalar inputLayout, vx_scalar outputLayout, vx_scalar roiType) {
+VX_API_ENTRY vx_node VX_API_CALL vxRppBlend(vx_graph graph, vx_tensor pSrc, vx_tensor pSrc2, vx_tensor pSrcRoi, vx_tensor pDst, vx_array pShift, vx_scalar inputLayout, vx_scalar outputLayout, vx_scalar roiType) {
     vx_node node = NULL;
     vx_context context = vxGetContext((vx_reference)graph);
     if (vxGetStatus((vx_reference)context) == VX_SUCCESS) {
-        vx_uint32 dev_type = getGraphAffinity(graph);
-        vx_scalar DEV_TYPE = vxCreateScalar(vxGetContext((vx_reference)graph), VX_TYPE_UINT32, &dev_type);
+        vx_uint32 devType = getGraphAffinity(graph);
+        vx_scalar deviceType = vxCreateScalar(vxGetContext((vx_reference)graph), VX_TYPE_UINT32, &devType);
         vx_reference params[] = {
             (vx_reference)pSrc,
             (vx_reference)pSrc2,
-            (vx_reference)srcROI,
+            (vx_reference)pSrcRoi,
             (vx_reference)pDst,
-            (vx_reference)shift,
+            (vx_reference)pShift,
             (vx_reference)inputLayout,
             (vx_reference)outputLayout,
             (vx_reference)roiType,
-            (vx_reference)DEV_TYPE};
+            (vx_reference)deviceType};
         node = createNode(graph, VX_KERNEL_RPP_BLEND, params, 9);
     }
     return node;
@@ -2242,27 +2242,27 @@ VX_API_ENTRY vx_node VX_API_CALL vxRppResizeCropMirror(vx_graph graph, vx_tensor
     return node;
 }
 
-VX_API_ENTRY vx_node VX_API_CALL vxExtrppNode_Noise(vx_graph graph, vx_tensor pSrc, vx_tensor srcROI, vx_tensor pDst, vx_array noise_prob, vx_array salt_prob, vx_array noise_value, vx_array salt_value, vx_scalar seed,vx_scalar inputLayout, vx_scalar outputLayout, vx_scalar roiType)
+VX_API_ENTRY vx_node VX_API_CALL vxRppNoise(vx_graph graph, vx_tensor pSrc, vx_tensor pSrcRoi, vx_tensor pDst, vx_array pNoiseProb, vx_array pSaltProb, vx_array pNoiseValue, vx_array pSaltValue, vx_scalar seed,vx_scalar inputLayout, vx_scalar outputLayout, vx_scalar roiType)
 {
     vx_node node = NULL;
     vx_context context = vxGetContext((vx_reference)graph);
     if (vxGetStatus((vx_reference)context) == VX_SUCCESS)
     {
-        vx_uint32 dev_type = getGraphAffinity(graph);
-        vx_scalar DEV_TYPE = vxCreateScalar(vxGetContext((vx_reference)graph), VX_TYPE_UINT32, &dev_type);
+        vx_uint32 devType = getGraphAffinity(graph);
+        vx_scalar deviceType = vxCreateScalar(vxGetContext((vx_reference)graph), VX_TYPE_UINT32, &devType);
         vx_reference params[] = {
             (vx_reference)pSrc,
-            (vx_reference)srcROI,
+            (vx_reference)pSrcRoi,
             (vx_reference)pDst,
-            (vx_reference)noise_prob,
-            (vx_reference)salt_prob,
-            (vx_reference)noise_value,
-            (vx_reference)salt_value,
+            (vx_reference)pNoiseProb,
+            (vx_reference)pSaltProb,
+            (vx_reference)pNoiseValue,
+            (vx_reference)pSaltValue,
             (vx_reference)seed,
             (vx_reference)inputLayout,
             (vx_reference)outputLayout,
             (vx_reference)roiType,
-            (vx_reference)DEV_TYPE};
+            (vx_reference)deviceType};
         node = createNode(graph, VX_KERNEL_RPP_NOISE, params, 12);
     }
     return node;
@@ -2356,23 +2356,23 @@ VX_API_ENTRY vx_node VX_API_CALL vxRppSnow(vx_graph graph, vx_tensor pSrc, vx_te
     return node;
 }
 
-VX_API_ENTRY vx_node VX_API_CALL vxExtrppNode_Fog(vx_graph graph, vx_tensor pSrc, vx_tensor srcROI, vx_tensor pDst, vx_array fogValue, vx_scalar inputLayout, vx_scalar outputLayout, vx_scalar roiType)
+VX_API_ENTRY vx_node VX_API_CALL vxRppFog(vx_graph graph, vx_tensor pSrc, vx_tensor pSrcRoi, vx_tensor pDst, vx_array pFogValue, vx_scalar inputLayout, vx_scalar outputLayout, vx_scalar roiType)
 {
     vx_node node = NULL;
     vx_context context = vxGetContext((vx_reference)graph);
     if (vxGetStatus((vx_reference)context) == VX_SUCCESS)
     {
-        vx_uint32 dev_type = getGraphAffinity(graph);
-        vx_scalar DEV_TYPE = vxCreateScalar(vxGetContext((vx_reference)graph), VX_TYPE_UINT32, &dev_type);
+        vx_uint32 devType = getGraphAffinity(graph);
+        vx_scalar deviceType = vxCreateScalar(vxGetContext((vx_reference)graph), VX_TYPE_UINT32, &devType);
         vx_reference params[] = {
             (vx_reference)pSrc,
-            (vx_reference)srcROI,
+            (vx_reference)pSrcRoi,
             (vx_reference)pDst,
-            (vx_reference)fogValue,
+            (vx_reference)pFogValue,
             (vx_reference)inputLayout,
             (vx_reference)outputLayout,
             (vx_reference)roiType,
-            (vx_reference)DEV_TYPE};
+            (vx_reference)deviceType};
         node = createNode(graph, VX_KERNEL_RPP_FOG, params, 8);
     }
     return node;
@@ -2422,22 +2422,22 @@ VX_API_ENTRY vx_node VX_API_CALL vxRppSaturation(vx_graph graph, vx_tensor pSrc,
     return node;
 }
 
-VX_API_ENTRY vx_node VX_API_CALL vxExtrppNode_FishEye(vx_graph graph, vx_tensor pSrc, vx_tensor srcROI, vx_tensor pDst, vx_scalar inputLayout, vx_scalar outputLayout, vx_scalar roiType)
+VX_API_ENTRY vx_node VX_API_CALL vxRppFishEye(vx_graph graph, vx_tensor pSrc, vx_tensor pSrcRoi, vx_tensor pDst, vx_scalar inputLayout, vx_scalar outputLayout, vx_scalar roiType)
 {
     vx_node node = NULL;
     vx_context context = vxGetContext((vx_reference)graph);
     if (vxGetStatus((vx_reference)context) == VX_SUCCESS)
     {
-        vx_uint32 dev_type = getGraphAffinity(graph);
-        vx_scalar DEV_TYPE = vxCreateScalar(vxGetContext((vx_reference)graph), VX_TYPE_UINT32, &dev_type);
+        vx_uint32 devType = getGraphAffinity(graph);
+        vx_scalar deviceType = vxCreateScalar(vxGetContext((vx_reference)graph), VX_TYPE_UINT32, &devType);
         vx_reference params[] = {
             (vx_reference)pSrc,
-            (vx_reference)srcROI,
+            (vx_reference)pSrcRoi,
             (vx_reference)pDst,
             (vx_reference)inputLayout,
             (vx_reference)outputLayout,
             (vx_reference)roiType,
-            (vx_reference)DEV_TYPE};
+            (vx_reference)deviceType};
         node = createNode(graph, VX_KERNEL_RPP_FISHEYE, params, 7);
     }
     return node;
@@ -2489,24 +2489,52 @@ VX_API_ENTRY vx_node VX_API_CALL vxRppRain(vx_graph graph, vx_tensor pSrc, vx_te
     return node;
 }
 
-VX_API_ENTRY vx_node VX_API_CALL vxExtrppNode_LensCorrection(vx_graph graph, vx_tensor pSrc, vx_tensor srcROI, vx_tensor pDst, vx_array strength, vx_array zoom, vx_scalar inputLayout, vx_scalar outputLayout, vx_scalar roiType)
+VX_API_ENTRY vx_node VX_API_CALL vxRppGlitch(vx_graph graph, vx_tensor pSrc, vx_tensor pSrcRoi, vx_tensor pDst,vx_array pXoffsetR, vx_array pYoffsetR, vx_array pXoffsetG, vx_array pYoffsetG, vx_array pXoffsetB, vx_array pYoffsetB, vx_scalar inputLayout, vx_scalar outputLayout, vx_scalar roiType)
 {
     vx_node node = NULL;
     vx_context context = vxGetContext((vx_reference)graph);
     if (vxGetStatus((vx_reference)context) == VX_SUCCESS)
     {
-        vx_uint32 dev_type = getGraphAffinity(graph);
-        vx_scalar DEV_TYPE = vxCreateScalar(vxGetContext((vx_reference)graph), VX_TYPE_UINT32, &dev_type);
+        vx_uint32 devType = getGraphAffinity(graph);
+        vx_scalar deviceType = vxCreateScalar(vxGetContext((vx_reference)graph), VX_TYPE_UINT32, &devType);
         vx_reference params[] = {
             (vx_reference)pSrc,
-            (vx_reference)srcROI,
+            (vx_reference)pSrcRoi,
             (vx_reference)pDst,
-            (vx_reference)strength,
-            (vx_reference)zoom,
+            (vx_reference)pXoffsetR,
+            (vx_reference)pYoffsetR,
+            (vx_reference)pXoffsetG,
+            (vx_reference)pYoffsetG,
+            (vx_reference)pXoffsetB,
+            (vx_reference)pYoffsetB,
             (vx_reference)inputLayout,
             (vx_reference)outputLayout,
             (vx_reference)roiType,
-            (vx_reference)DEV_TYPE};
+            (vx_reference)deviceType};
+        node = createNode(graph, VX_KERNEL_RPP_GLITCH, params, 13);
+    }
+    return node;
+}
+
+
+VX_API_ENTRY vx_node VX_API_CALL vxRppLensCorrection(vx_graph graph, vx_tensor pSrc, vx_tensor pSrcRoi, vx_tensor pDst, vx_array pStrength, vx_array pZoom, vx_scalar inputLayout, vx_scalar outputLayout, vx_scalar roiType)
+{
+    vx_node node = NULL;
+    vx_context context = vxGetContext((vx_reference)graph);
+    if (vxGetStatus((vx_reference)context) == VX_SUCCESS)
+    {
+        vx_uint32 devType = getGraphAffinity(graph);
+        vx_scalar deviceType = vxCreateScalar(vxGetContext((vx_reference)graph), VX_TYPE_UINT32, &devType);
+        vx_reference params[] = {
+            (vx_reference)pSrc,
+            (vx_reference)pSrcRoi,
+            (vx_reference)pDst,
+            (vx_reference)pStrength,
+            (vx_reference)pZoom,
+            (vx_reference)inputLayout,
+            (vx_reference)outputLayout,
+            (vx_reference)roiType,
+            (vx_reference)deviceType};
         node = createNode(graph, VX_KERNEL_RPP_LENSCORRECTION, params, 9);
     }
     return node;
