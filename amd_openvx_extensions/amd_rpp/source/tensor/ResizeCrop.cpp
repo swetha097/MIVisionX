@@ -62,7 +62,7 @@ static vx_status VX_CALLBACK refreshResizeCrop(vx_node node, const vx_reference 
             data->dstDimensions[i].height = data->pDstBatchHeight[i];
         }
         void *roi_tensor_ptr;
-        void *crop_roi_tensor_ptr
+        void *crop_roi_tensor_ptr;
     if (data->deviceType == AGO_TARGET_AFFINITY_GPU) {
 #if ENABLE_OPENCL
         return VX_ERROR_NOT_IMPLEMENTED;
@@ -155,16 +155,16 @@ static vx_status VX_CALLBACK processResizeCrop(vx_node node, const vx_reference 
         return_status = VX_ERROR_NOT_IMPLEMENTED;
 #elif ENABLE_HIP
         if(data->pDstDesc->c==1 ) 
-            rpp_status = rppi_resize_crop_u8_pln1_batchPD_gpu((void *)data->pSrc, data->srcDimensions, data->maxSrcDimensions, (void *)data->pDst, data->dstDimensions, data->maxDstDimensions, data->pX1, data->pX2, data->pY1, data->pY2, output_format_toggle, data->nbatchSize, data->handle->rppHandle);
+            rpp_status = rppi_resize_crop_u8_pln1_batchPD_gpu((void *)data->pSrc, data->srcDimensions, data->maxSrcDimensions, (void *)data->pDst, data->dstDimensions, data->maxDstDimensions, data->pX1, data->pX2, data->pY1, data->pY2, output_format_toggle, data->pSrcDesc->n, data->handle->rppHandle);
         else 
-            rpp_status = rppi_resize_crop_u8_pkd3_batchPD_gpu((void *)data->pSrc, data->srcDimensions, data->maxSrcDimensions, (void *)data->pDst, data->dstDimensions, data->maxDstDimensions, data->pX1, data->pX2, data->pY1, data->pY2, output_format_toggle, data->nbatchSize, data->handle->rppHandle);
+            rpp_status = rppi_resize_crop_u8_pkd3_batchPD_gpu((void *)data->pSrc, data->srcDimensions, data->maxSrcDimensions, (void *)data->pDst, data->dstDimensions, data->maxDstDimensions, data->pX1, data->pX2, data->pY1, data->pY2, output_format_toggle, data->pSrcDesc->n, data->handle->rppHandle);
         return_status = (rpp_status == RPP_SUCCESS) ? VX_SUCCESS : VX_FAILURE;
 #endif
     } else if (data->deviceType == AGO_TARGET_AFFINITY_CPU) {
         if(data->pDstDesc->c==1 ) 
-            rpp_status = rppi_resize_crop_u8_pln1_batchPD_host(data->pSrc, data->srcDimensions, data->maxSrcDimensions, data->pDst, data->dstDimensions, data->maxDstDimensions, data->pX1, data->pX2, data->pY1, data->pY2, output_format_toggle, data->nbatchSize, data->handle->rppHandle);
+            rpp_status = rppi_resize_crop_u8_pln1_batchPD_host(data->pSrc, data->srcDimensions, data->maxSrcDimensions, data->pDst, data->dstDimensions, data->maxDstDimensions, data->pX1, data->pX2, data->pY1, data->pY2, output_format_toggle, data->pSrcDesc->n, data->handle->rppHandle);
         else 
-            rpp_status = rppi_resize_crop_u8_pkd3_batchPD_host(data->pSrc, data->srcDimensions, data->maxSrcDimensions, data->pDst, data->dstDimensions, data->maxDstDimensions, data->pX1, data->pX2, data->pY1, data->pY2, output_format_toggle, data->nbatchSize, data->handle->rppHandle);
+            rpp_status = rppi_resize_crop_u8_pkd3_batchPD_host(data->pSrc, data->srcDimensions, data->maxSrcDimensions, data->pDst, data->dstDimensions, data->maxDstDimensions, data->pX1, data->pX2, data->pY1, data->pY2, output_format_toggle, data->pSrcDesc->n, data->handle->rppHandle);
         return_status = (rpp_status == RPP_SUCCESS) ? VX_SUCCESS : VX_FAILURE;
     }
     return return_status;
@@ -193,7 +193,7 @@ static vx_status VX_CALLBACK initializeResizeCrop(vx_node node, const vx_referen
     fillDescriptionPtrfromDims(data->pSrcDesc, data->inputLayout, data->inputTensorDims);
 
     // Querying for output tensor
-    data->pDstDesc = &data->pDstDesc;
+    data->pDstDesc = new RpptDesc;
     STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[3], VX_TENSOR_NUMBER_OF_DIMS, &data->pDstDesc->numDims, sizeof(data->pDstDesc->numDims)));
     STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[3], VX_TENSOR_DIMS, &data->ouputTensorDims, sizeof(vx_size) * data->pDstDesc->numDims));
     STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[3], VX_TENSOR_DATA_TYPE, &output_tensor_type, sizeof(output_tensor_type)));
@@ -206,10 +206,10 @@ static vx_status VX_CALLBACK initializeResizeCrop(vx_node node, const vx_referen
     data->srcDimensions = static_cast<RppiSize *>(malloc(sizeof(RppiSize) * data->pSrcDesc->n));
     data->dstDimensions = static_cast<RppiSize *>(malloc(sizeof(RppiSize) * data->pSrcDesc->n));
 
-    data->pX1 = static_cast<vx_uint32 *>(malloc(sizeof(vx_uint32) * data->nbatchSize));
-    data->pY1 = static_cast<vx_uint32 *>(malloc(sizeof(vx_uint32) * data->nbatchSize));
-    data->pX2 = static_cast<vx_uint32 *>(malloc(sizeof(vx_uint32) * data->nbatchSize));
-    data->pY2 = static_cast<vx_uint32 *>(malloc(sizeof(vx_uint32) * data->nbatchSize));
+    data->pX1 = static_cast<vx_uint32 *>(malloc(sizeof(vx_uint32) * data->pSrcDesc->n));
+    data->pY1 = static_cast<vx_uint32 *>(malloc(sizeof(vx_uint32) * data->pSrcDesc->n));
+    data->pX2 = static_cast<vx_uint32 *>(malloc(sizeof(vx_uint32) * data->pSrcDesc->n));
+    data->pY2 = static_cast<vx_uint32 *>(malloc(sizeof(vx_uint32) * data->pSrcDesc->n));
 
     data->maxSrcDimensions.height = data->pSrcDesc->h;
     data->maxSrcDimensions.width = data->pSrcDesc->w;

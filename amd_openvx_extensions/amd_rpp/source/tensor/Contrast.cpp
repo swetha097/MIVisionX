@@ -29,14 +29,14 @@ struct ContrastLocalData {
     RppPtr_t pDst;
     vx_float32 *pMin;
     vx_float32 *pMax;
-    pptDescPtr pSrcDesc;
+    RpptDescPtr pSrcDesc;
     RpptDescPtr pDstDesc;
     RpptROI *pSrcRoi;
     RpptRoiType roiType;
-    Rpp32s inputLayout;
-    Rpp32s outputLayout;
-    size_t inputTensorDims[RPP_pMax_TENSOR_DIMS];
-    size_t ouputTensorDims[RPP_pMax_TENSOR_DIMS];
+    vxTensorLayout inputLayout;
+    vxTensorLayout outputLayout;
+    size_t inputTensorDims[RPP_MAX_TENSOR_DIMS];
+    size_t outputTensorDims[RPP_MAX_TENSOR_DIMS];
 };
 
 static vx_status VX_CALLBACK refreshContrast(vx_node node, const vx_reference *parameters, vx_uint32 num, ContrastLocalData *data) {
@@ -54,7 +54,7 @@ static vx_status VX_CALLBACK refreshContrast(vx_node node, const vx_reference *p
         STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[2], VX_TENSOR_BUFFER_HIP, &data->pDst, sizeof(data->pDst)));
 #endif
     } else if (data->deviceType == AGO_TARGET_AFFINITY_CPU) {
-        STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[1], VX_TENSOR_BUFFER_HOST, &roi_tensor_ptr, sizeof(&roi_tensor_ptrr)));
+        STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[1], VX_TENSOR_BUFFER_HOST, &roi_tensor_ptr, sizeof(&roi_tensor_ptr)));
         STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[0], VX_TENSOR_BUFFER_HOST, &data->pSrc, sizeof(data->pSrc)));
         STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[2], VX_TENSOR_BUFFER_HOST, &data->pDst, sizeof(data->pDst)));
     }
@@ -98,12 +98,12 @@ static vx_status VX_CALLBACK validateContrast(vx_node node, const vx_reference p
 
     // Check for output parameters
     vx_uint8 tensor_fixed_point_position;
-    size_t tensor_dims[RPP_pMax_TENSOR_DIMS];
+    size_t tensor_dims[RPP_MAX_TENSOR_DIMS];
     vx_enum tensor_type;
-    STATUS_ERROR_CHECK(vxQueryTensor(vx_tensor)parameters[2], VX_TENSOR_NUMBER_OF_DIMS, &num_tensor_dims, sizeof(num_tensor_dims)));
-    STATUS_ERROR_CHECK(vxQueryTensor(vx_tensor)parameters[2], VX_TENSOR_DIMS, &tensor_dims, sizeof(tensor_dims)));
-    STATUS_ERROR_CHECK(vxQueryTensor(vx_tensor)parameters[2], VX_TENSOR_DATA_TYPE, &tensor_type, sizeof(tensor_type)));
-    STATUS_ERROR_CHECK(vxQueryTensor(vx_tensor)parameters[2], VX_TENSOR_FIXED_POINT_POSITION, &tensor_fixed_point_position, sizeof(tensor_fixed_point_position)));
+    STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[2], VX_TENSOR_NUMBER_OF_DIMS, &num_tensor_dims, sizeof(num_tensor_dims)));
+    STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[2], VX_TENSOR_DIMS, &tensor_dims, sizeof(tensor_dims)));
+    STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[2], VX_TENSOR_DATA_TYPE, &tensor_type, sizeof(tensor_type)));
+    STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[2], VX_TENSOR_FIXED_POINT_POSITION, &tensor_fixed_point_position, sizeof(tensor_fixed_point_position)));
     STATUS_ERROR_CHECK(vxSetMetaFormatAttribute(metas[2], VX_TENSOR_NUMBER_OF_DIMS, &num_tensor_dims, sizeof(num_tensor_dims)));
     STATUS_ERROR_CHECK(vxSetMetaFormatAttribute(metas[2], VX_TENSOR_DIMS, &tensor_dims, sizeof(tensor_dims)));
     STATUS_ERROR_CHECK(vxSetMetaFormatAttribute(metas[2], VX_TENSOR_DATA_TYPE, &tensor_type, sizeof(tensor_type)));
@@ -121,11 +121,11 @@ static vx_status VX_CALLBACK processContrast(vx_node node, const vx_reference *p
 #if ENABLE_OPENCL
         return_status = VX_ERROR_NOT_IMPLEMENTED;
 #elif ENABLE_HIP
-        rpp_status = rppt_contrast_gpu((void *)data->pSrc, data->srcDescPtr, (void *)data->pDst, data->dstDescPtr,  data->pMin, data->pMax, data->pSrcRoi, data->roiType, data->handle->rppHandle);
+        rpp_status = rppt_contrast_gpu((void *)data->pSrc, data->pSrcDesc, (void *)data->pDst, data->pDstDesc,  data->pMin, data->pMax, data->pSrcRoi, data->roiType, data->handle->rppHandle);
         return_status = (rpp_status == RPP_SUCCESS) ? VX_SUCCESS : VX_FAILURE;
 #endif
     } else if (data->deviceType == AGO_TARGET_AFFINITY_CPU) {
-        rpp_status = rppt_contrast_host(data->pSrc, data->srcDescPtr, data->pDst, data->dstDescPtr, data->pMin, data->pMax, data->pSrcRoi, data->roiType, data->handle->rppHandle);
+        rpp_status = rppt_contrast_host(data->pSrc, data->pSrcDesc, data->pDst, data->pDstDesc, data->pMin, data->pMax, data->pSrcRoi, data->roiType, data->handle->rppHandle);
         return_status = (rpp_status == RPP_SUCCESS) ? VX_SUCCESS : VX_FAILURE;
     }
     return return_status;
@@ -147,26 +147,26 @@ static vx_status VX_CALLBACK initializeContrast(vx_node node, const vx_reference
 
     // Querying for input tensor
     data->pSrcDesc = new RpptDesc;
-    STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[0], VX_TENSOR_NUMBER_OF_DIMS, &data->srcDescPtr->numDims, sizeof(data->srcDescPtr->numDims)));
-    STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[0], VX_TENSOR_DIMS, &data->inputTensorDims, sizeof(vx_size) * data->srcDescPtr->numDims));
+    STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[0], VX_TENSOR_NUMBER_OF_DIMS, &data->pSrcDesc->numDims, sizeof(data->pSrcDesc->numDims)));
+    STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[0], VX_TENSOR_DIMS, &data->inputTensorDims, sizeof(vx_size) * data->pSrcDesc->numDims));
     STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[0], VX_TENSOR_DATA_TYPE, &input_tensor_type, sizeof(input_tensor_type)));
-    data->srcDescPtr->dataType = getRpptDataType(data->input_tensor_type);
-    data->srcDescPtr->offsetInBytes = 0;
-    fillDescriptionPtrfromDims(data->srcDescPtr, data->inputLayout, data->inputTensorDims);
+    data->pSrcDesc->dataType = getRpptDataType(input_tensor_type);
+    data->pSrcDesc->offsetInBytes = 0;
+    fillDescriptionPtrfromDims(data->pSrcDesc, data->inputLayout, data->inputTensorDims);
 
     // Querying for output tensor
     data->pDstDesc = new RpptDesc;
-    STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[2], VX_TENSOR_NUMBER_OF_DIMS, &data->dstDescPtr->numDims, sizeof(data->dstDescPtr->numDims)));
-    STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[2], VX_TENSOR_DIMS, &data->ouputTensorDims, sizeof(vx_size) * data->dstDescPtr->numDims));
+    STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[2], VX_TENSOR_NUMBER_OF_DIMS, &data->pDstDesc->numDims, sizeof(data->pDstDesc->numDims)));
+    STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[2], VX_TENSOR_DIMS, &data->outputTensorDims, sizeof(vx_size) * data->pDstDesc->numDims));
     STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[2], VX_TENSOR_DATA_TYPE, &output_tensor_type, sizeof(output_tensor_type)));
-    data->dstDescPtr->dataType = getRpptDataType(output_tensor_type);
-    data->dstDescPtr->offsetInBytes = 0;
-    fillDescriptionPtrfromDims(data->dstDescPtr, data->outputLayout, data->ouputTensorDims);
+    data->pDstDesc->dataType = getRpptDataType(output_tensor_type);
+    data->pDstDesc->offsetInBytes = 0;
+    fillDescriptionPtrfromDims(data->pDstDesc, data->outputLayout, data->outputTensorDims);
 
-    data->pMin = static_cast<vx_float32 *>(malloc(sizeof(vx_float32) * data->srcDescPtr->n));
-    data->pMax = static_cast<vx_float32 *>(malloc(sizeof(vx_float32) * data->srcDescPtr->n));
+    data->pMin = static_cast<vx_float32 *>(malloc(sizeof(vx_float32) * data->pSrcDesc->n));
+    data->pMax = static_cast<vx_float32 *>(malloc(sizeof(vx_float32) * data->pSrcDesc->n));
     refreshContrast(node, parameters, num, data);
-    STATUS_ERROR_CHECK(createGraphHandle(node, &data->handle, data->srcDescPtr->n, data->deviceType));
+    STATUS_ERROR_CHECK(createRPPHandle(node, &data->handle, data->pSrcDesc->n, data->deviceType));
     STATUS_ERROR_CHECK(vxSetNodeAttribute(node, VX_NODE_LOCAL_DATA_PTR, &data, sizeof(data)));
     return VX_SUCCESS;
 }
@@ -178,7 +178,7 @@ static vx_status VX_CALLBACK uninitializeContrast(vx_node node, const vx_referen
     if (data->pMax != nullptr) free(data->pMax);
     delete(data->pSrcDesc);
     delete(data->pDstDesc);
-    STATUS_ERROR_CHECK(releaseGraphHandle(node, data->handle, data->deviceType));
+    STATUS_ERROR_CHECK(releaseRPPHandle(node, data->handle, data->deviceType));
     delete (data);
     return VX_SUCCESS;
 }

@@ -32,8 +32,8 @@ struct ColorTemperatureLocalData {
     RpptDescPtr pDstDesc;
     RpptROI *pSrcRoi;
     RpptRoiType roiType;
-    Rpp32s inputLayout;
-    Rpp32s outputLayout;
+    vxTensorLayout inputLayout;
+    vxTensorLayout outputLayout;
     size_t inputTensorDims[RPP_MAX_TENSOR_DIMS];
     size_t ouputTensorDims[RPP_MAX_TENSOR_DIMS];
 };
@@ -90,8 +90,8 @@ static vx_status VX_CALLBACK validateColorTemperature(vx_node node, const vx_ref
     // Check for input parameters
     size_t num_tensor_dims;
     STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[0], VX_TENSOR_NUMBER_OF_DIMS, &num_tensor_dims, sizeof(num_tensor_dims)));
-    if(in_num_tensor_dims < 4)
-        return ERRMSG(VX_ERROR_INVALID_DIMENSION, "validate: ColorTemperature: tensor: #0 dimensions=%lu (must be greater than or equal to 4)\n", in_num_tensor_dims);
+    if(num_tensor_dims < 4)
+        return ERRMSG(VX_ERROR_INVALID_DIMENSION, "validate: ColorTemperature: tensor: #0 dimensions=%lu (must be greater than or equal to 4)\n", num_tensor_dims);
 
     // Check for output parameters
     vx_uint8 tensor_fixed_point_position;
@@ -101,7 +101,7 @@ static vx_status VX_CALLBACK validateColorTemperature(vx_node node, const vx_ref
     STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[2], VX_TENSOR_DIMS, &tensor_dims, sizeof(tensor_dims)));
     STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[2], VX_TENSOR_DATA_TYPE, &tensor_type, sizeof(tensor_type)));
     STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[2], VX_TENSOR_FIXED_POINT_POSITION, &tensor_fixed_point_position, sizeof(tensor_fixed_point_position)));
-    STATUS_ERROR_CHECK(vxSetMetaFormatAttribute(metas[2], VX_TENSOR_NUMBER_OF_DIMS, &out_num_tensor_dims, sizeof(out_num_tensor_dims)));
+    STATUS_ERROR_CHECK(vxSetMetaFormatAttribute(metas[2], VX_TENSOR_NUMBER_OF_DIMS, &num_tensor_dims, sizeof(num_tensor_dims)));
     STATUS_ERROR_CHECK(vxSetMetaFormatAttribute(metas[2], VX_TENSOR_DIMS, &tensor_dims, sizeof(tensor_dims)));
     STATUS_ERROR_CHECK(vxSetMetaFormatAttribute(metas[2], VX_TENSOR_DATA_TYPE, &tensor_type, sizeof(tensor_type)));
     STATUS_ERROR_CHECK(vxSetMetaFormatAttribute(metas[2], VX_TENSOR_FIXED_POINT_POSITION, &tensor_fixed_point_position, sizeof(tensor_fixed_point_position)));
@@ -118,11 +118,11 @@ static vx_status VX_CALLBACK processColorTemperature(vx_node node, const vx_refe
 #if ENABLE_OPENCL
         return_status = VX_ERROR_NOT_IMPLEMENTED;
 #elif ENABLE_HIP
-        // rpp_status = rppt_color_temperature_gpu((void *)data->pSrc, data->pSrcDesc, (void *)data->pDst, data->pDstDescPtr,  data->pAdjustmentValue, data->pSrcRoi, data->roiType, data->handle->rppHandle);
+        // rpp_status = rppt_color_temperature_gpu((void *)data->pSrc, data->pSrcDesc, (void *)data->pDst, data->pDstDesc,  data->pAdjustmentValue, data->pSrcRoi, data->roiType, data->handle->rppHandle);
         return_status = (rpp_status == RPP_SUCCESS) ? VX_SUCCESS : VX_FAILURE;
 #endif
     } else if (data->deviceType == AGO_TARGET_AFFINITY_CPU) {
-        // rpp_status = rppt_color_temperature_host(data->pSrc, data->pSrcDesc, data->pDst, data->pDstDescPtr, data->pAdjustmentValue, data->pSrcRoi, data->roiType, data->handle->rppHandle);
+        // rpp_status = rppt_color_temperature_host(data->pSrc, data->pSrcDesc, data->pDst, data->pDstDesc, data->pAdjustmentValue, data->pSrcRoi, data->roiType, data->handle->rppHandle);
         return_status = (rpp_status == RPP_SUCCESS) ? VX_SUCCESS : VX_FAILURE;
     }
     return return_status;
@@ -130,7 +130,7 @@ static vx_status VX_CALLBACK processColorTemperature(vx_node node, const vx_refe
 
 static vx_status VX_CALLBACK initializeColorTemperature(vx_node node, const vx_reference *parameters, vx_uint32 num) {
     ColorTemperatureLocalData *data = new ColorTemperatureLocalData;
-    memset(data, 0, sizeof(*ColorTemperatureLocalData));
+    memset(data, 0, sizeof(ColorTemperatureLocalData));
 
     vx_enum input_tensor_type, output_tensor_type;
     int roi_type, input_layout, output_layout;
@@ -143,7 +143,7 @@ static vx_status VX_CALLBACK initializeColorTemperature(vx_node node, const vx_r
     data->outputLayout = static_cast<vxTensorLayout>(output_layout);
 
     // Querying for input tensor
-    data->pSrcDesc = &data->pSrcDesc;
+    data->pSrcDesc = new RpptDesc;
     STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[0], VX_TENSOR_NUMBER_OF_DIMS, &data->pSrcDesc->numDims, sizeof(data->pSrcDesc->numDims)));
     STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[0], VX_TENSOR_DIMS, &data->inputTensorDims, sizeof(vx_size) * data->pSrcDesc->numDims));
     STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[0], VX_TENSOR_DATA_TYPE, &input_tensor_type, sizeof(input_tensor_type)));
@@ -152,17 +152,17 @@ static vx_status VX_CALLBACK initializeColorTemperature(vx_node node, const vx_r
     fillDescriptionPtrfromDims(data->pSrcDesc, data->inputLayout, data->inputTensorDims);
 
     // Querying for output tensor
-    data->pDstDescPtr = &data->pDstDesc;
-    STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[2], VX_TENSOR_NUMBER_OF_DIMS, &data->pDstDescPtr->numDims, sizeof(data->pDstDescPtr->numDims)));
-    STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[2], VX_TENSOR_DIMS, &data->ouputTensorDims, sizeof(vx_size) * data->pDstDescPtr->numDims));
+    data->pDstDesc = new RpptDesc;
+    STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[2], VX_TENSOR_NUMBER_OF_DIMS, &data->pDstDesc->numDims, sizeof(data->pDstDesc->numDims)));
+    STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[2], VX_TENSOR_DIMS, &data->ouputTensorDims, sizeof(vx_size) * data->pDstDesc->numDims));
     STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[2], VX_TENSOR_DATA_TYPE, &output_tensor_type, sizeof(output_tensor_type)));
-    data->pDstDescPtr->dataType = getRpptDataType(output_tensor_type);
-    data->pDstDescPtr->offsetInBytes = 0;
-    fillDescriptionPtrfromDims(data->pDstDescPtr, data->outputLayout, data->ouputTensorDims);
+    data->pDstDesc->dataType = getRpptDataType(output_tensor_type);
+    data->pDstDesc->offsetInBytes = 0;
+    fillDescriptionPtrfromDims(data->pDstDesc, data->outputLayout, data->ouputTensorDims);
 
     data->pAdjustmentValue = static_cast<vx_int32 *>(malloc(sizeof(vx_int32) * data->pSrcDesc->n));
     refreshColorTemperature(node, parameters, num, data);
-    STATUS_ERROR_CHECK(createGraphHandle(node, &data->handle, data->pSrcDesc->n, data->deviceType));
+    STATUS_ERROR_CHECK(createRPPHandle(node, &data->handle, data->pSrcDesc->n, data->deviceType));
     STATUS_ERROR_CHECK(vxSetNodeAttribute(node, VX_NODE_LOCAL_DATA_PTR, &data, sizeof(data)));
     return VX_SUCCESS;
 }
@@ -173,7 +173,7 @@ static vx_status VX_CALLBACK uninitializeColorTemperature(vx_node node, const vx
     if (data->pAdjustmentValue != nullptr) free(data->pAdjustmentValue);
     delete(data->pSrcDesc);
     delete(data->pDstDesc);
-    STATUS_ERROR_CHECK(releaseGraphHandle(node, data->handle, data->deviceType));
+    STATUS_ERROR_CHECK(releaseRPPHandle(node, data->handle, data->deviceType));
     delete (data);
     return VX_SUCCESS;
 }

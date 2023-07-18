@@ -90,7 +90,7 @@ static vx_status VX_CALLBACK validateVignette(vx_node node, const vx_reference p
     // Check for input parameters
     size_t num_tensor_dims;
     STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[0], VX_TENSOR_NUMBER_OF_DIMS, &num_tensor_dims, sizeof(num_tensor_dims)));
-    if(in_num_tensor_dims < 4)
+    if(num_tensor_dims < 4)
         return ERRMSG(VX_ERROR_INVALID_DIMENSION, "validate: Vignette: tensor: #0 dimensions=%lu (must be greater than or equal to 4)\n", num_tensor_dims);
 
     // Check for output parameters
@@ -101,7 +101,7 @@ static vx_status VX_CALLBACK validateVignette(vx_node node, const vx_reference p
     STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[2], VX_TENSOR_DIMS, &tensor_dims, sizeof(tensor_dims)));
     STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[2], VX_TENSOR_DATA_TYPE, &tensor_type, sizeof(tensor_type)));
     STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[2], VX_TENSOR_FIXED_POINT_POSITION, &tensor_fixed_point_position, sizeof(tensor_fixed_point_position)));
-    STATUS_ERROR_CHECK(vxSetMetaFormatAttribute(metas[2], VX_TENSOR_NUMBER_OF_DIMS, &out_num_tensor_dims, sizeof(out_num_tensor_dims)));
+    STATUS_ERROR_CHECK(vxSetMetaFormatAttribute(metas[2], VX_TENSOR_NUMBER_OF_DIMS, &num_tensor_dims, sizeof(num_tensor_dims)));
     STATUS_ERROR_CHECK(vxSetMetaFormatAttribute(metas[2], VX_TENSOR_DIMS, &tensor_dims, sizeof(tensor_dims)));
     STATUS_ERROR_CHECK(vxSetMetaFormatAttribute(metas[2], VX_TENSOR_DATA_TYPE, &tensor_type, sizeof(tensor_type)));
     STATUS_ERROR_CHECK(vxSetMetaFormatAttribute(metas[2], VX_TENSOR_FIXED_POINT_POSITION, &tensor_fixed_point_position, sizeof(tensor_fixed_point_position)));
@@ -149,7 +149,7 @@ static vx_status VX_CALLBACK initializeVignette(vx_node node, const vx_reference
     data->pSrcDesc = new RpptDesc;
     STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[0], VX_TENSOR_NUMBER_OF_DIMS, &data->pSrcDesc->numDims, sizeof(data->pSrcDesc->numDims)));
     STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[0], VX_TENSOR_DIMS, &data->inputTensorDims, sizeof(vx_size) * data->pSrcDesc->numDims));
-    STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[0], VX_TENSOR_DATA_TYPE, &dinput_tensor_type, sizeof(input_tensor_type)));
+    STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[0], VX_TENSOR_DATA_TYPE, &input_tensor_type, sizeof(input_tensor_type)));
     data->pSrcDesc->dataType = getRpptDataType(input_tensor_type);
     data->pSrcDesc->offsetInBytes = 0;
     fillDescriptionPtrfromDims(data->pSrcDesc, data->inputLayout, data->inputTensorDims);
@@ -163,9 +163,9 @@ static vx_status VX_CALLBACK initializeVignette(vx_node node, const vx_reference
     data->pDstDesc->offsetInBytes = 0;
     fillDescriptionPtrfromDims(data->pDstDesc, data->outputLayout, data->ouputTensorDims);
 
-    data->pStdDev = <vx_float32 *>(malloc(sizeof(vx_float32) * data->pSrcDesc->n));
+    data->pStdDev = static_cast<vx_float32 *>(malloc(sizeof(vx_float32) * data->pSrcDesc->n));
     refreshVignette(node, parameters, num, data);
-    STATUS_ERROR_CHECK(createGraphHandle(node, &data->handle, data->pSrcDesc->n, data->deviceType));
+    STATUS_ERROR_CHECK(createRPPHandle(node, &data->handle, data->pSrcDesc->n, data->deviceType));
     STATUS_ERROR_CHECK(vxSetNodeAttribute(node, VX_NODE_LOCAL_DATA_PTR, &data, sizeof(data)));
     return VX_SUCCESS;
 }
@@ -176,7 +176,7 @@ static vx_status VX_CALLBACK uninitializeVignette(vx_node node, const vx_referen
     if (data->pStdDev != nullptr) free(data->pStdDev);
     delete(data->pSrcDesc);
     delete(data->pDstDesc);
-    STATUS_ERROR_CHECK(releaseGraphHandle(node, data->handle, data->deviceType));
+    STATUS_ERROR_CHECK(releaseRPPHandle(node, data->handle, data->deviceType));
     delete (data);
     return VX_SUCCESS;
 }

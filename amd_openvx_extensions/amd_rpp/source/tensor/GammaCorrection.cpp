@@ -29,20 +29,18 @@ struct GammaCorrectionLocalData {
     RppPtr_t pDst;
     vx_float32 *pGamma;
     RpptDescPtr pSrcDesc;
-    RpptDesc pSrcDesc;
-    RpptDesc pDstDesc;
     RpptDescPtr pDstDesc;
     RpptROI *pSrcRoi;
     RpptRoiType roiType;
-    Rpp32s inputLayout;
-    Rpp32s outputLayout;
+    vxTensorLayout inputLayout;
+    vxTensorLayout outputLayout;
     size_t inputTensorDims[RPP_MAX_TENSOR_DIMS];
     size_t ouputTensorDims[RPP_MAX_TENSOR_DIMS];
 };
 
-static vx_status VX_CALLBACK refreshpGammaCorrection(vx_node node, const vx_reference *parameters, vx_uint32 num, pGammaCorrectionLocalData *data) {
+static vx_status VX_CALLBACK refreshGammaCorrection(vx_node node, const vx_reference *parameters, vx_uint32 num, GammaCorrectionLocalData *data) {
     vx_status status = VX_SUCCESS;
-    STATUS_ERROR_CHECK(vxCopyArrayRange((vx_array)parameters[3], 0, data->pSrcDesc->n, sizeof(vx_float32), data->pGamma, VX_READ_ONLY, VX_MEMORY_TYPE_HOST));
+    STATUS_ERROR_CHECK(vxCopyArrayRange((vx_array)parameters[3], 0, data->inputTensorDims[0], sizeof(vx_float32), data->pGamma, VX_READ_ONLY, VX_MEMORY_TYPE_HOST));
 
     void *roi_tensor_ptr;
     if (data->deviceType == AGO_TARGET_AFFINITY_GPU) {
@@ -61,7 +59,7 @@ static vx_status VX_CALLBACK refreshpGammaCorrection(vx_node node, const vx_refe
     data->pSrcRoi = reinterpret_cast<RpptROI *>(roi_tensor_ptr);
     if((data->inputLayout == vxTensorLayout::VX_NFHWC || data->inputLayout == vxTensorLayout::VX_NFCHW)) {
         unsigned num_of_frames = data->inputTensorDims[1]; // Num of frames 'F'
-        for(int n = data->pSrcDesc->n - 1; n >= 0; n--) {
+        for(int n = data->inputTensorDims[0] - 1; n >= 0; n--) {
             unsigned index = n * num_of_frames;
             for(int f = 0; f < num_of_frames; f++) {
                 data->pGamma[index + f] = data->pGamma[n];
@@ -73,7 +71,7 @@ static vx_status VX_CALLBACK refreshpGammaCorrection(vx_node node, const vx_refe
     return status;
 }
 
-static vx_status VX_CALLBACK validatepGammaCorrection(vx_node node, const vx_reference parameters[], vx_uint32 num, vx_meta_format metas[]) {
+static vx_status VX_CALLBACK validateGammaCorrection(vx_node node, const vx_reference parameters[], vx_uint32 num, vx_meta_format metas[]) {
     vx_status status = VX_SUCCESS;
     vx_enum scalar_type;
     STATUS_ERROR_CHECK(vxQueryScalar((vx_scalar)parameters[4], VX_SCALAR_TYPE, &scalar_type, sizeof(scalar_type)));
@@ -91,49 +89,48 @@ static vx_status VX_CALLBACK validatepGammaCorrection(vx_node node, const vx_ref
 
     // Check for input parameters
     size_t num_tensor_dims;
-    STATUS_ERROR_CHECK(vxQueryTensor((vx_scalar)parameters[0], VX_TENSOR_NUMBER_OF_DIMS, &num_tensor_dims, sizeof(num_tensor_dims)));
-    if(in_num_tensor_dims < 4)
-        return ERRMSG(VX_ERROR_INVALID_DIMENSION, "validate: pGammaCorrection: tensor: #0 dimensions=%lu (must be greater than or equal to 4)\n", num_tensor_dims);
+    STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[0], VX_TENSOR_NUMBER_OF_DIMS, &num_tensor_dims, sizeof(num_tensor_dims)));
+    if(num_tensor_dims < 4)
+        return ERRMSG(VX_ERROR_INVALID_DIMENSION, "validate: GammaCorrection: tensor: #0 dimensions=%lu (must be greater than or equal to 4)\n", num_tensor_dims);
 
     // Check for output parameters
-    size_t num_tensor_dims;
     vx_uint8 tensor_fixed_point_position;
     size_t tensor_dims[RPP_MAX_TENSOR_DIMS];
     vx_enum tensor_type;
-    STATUS_ERROR_CHECK(vxQueryTensor((vx_scalar)parameters[2], VX_TENSOR_NUMBER_OF_DIMS, &num_tensor_dims, sizeof(num_tensor_dims)));
-    STATUS_ERROR_CHECK(vxQueryTensor((vx_scalar)parameters[2], VX_TENSOR_DIMS, &tensor_dims, sizeof(tensor_dims)));
-    STATUS_ERROR_CHECK(vxQueryTensor((vx_scalar)parameters[2], VX_TENSOR_DATA_TYPE, &tensor_type, sizeof(tensor_type)));
-    STATUS_ERROR_CHECK(vxQueryTensor((vx_scalar)parameters[2], VX_TENSOR_FIXED_POINT_POSITION, &tensor_fixed_point_position, sizeof(tensor_fixed_point_position)));
-    STATUS_ERROR_CHECK(vxSetMetaFormatAttribute(metas[2], VX_TENSOR_NUMBER_OF_DIMS, &out_num_tensor_dims, sizeof(out_num_tensor_dims)));
+    STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[2], VX_TENSOR_NUMBER_OF_DIMS, &num_tensor_dims, sizeof(num_tensor_dims)));
+    STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[2], VX_TENSOR_DIMS, &tensor_dims, sizeof(tensor_dims)));
+    STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[2], VX_TENSOR_DATA_TYPE, &tensor_type, sizeof(tensor_type)));
+    STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[2], VX_TENSOR_FIXED_POINT_POSITION, &tensor_fixed_point_position, sizeof(tensor_fixed_point_position)));
+    STATUS_ERROR_CHECK(vxSetMetaFormatAttribute(metas[2], VX_TENSOR_NUMBER_OF_DIMS, &num_tensor_dims, sizeof(num_tensor_dims)));
     STATUS_ERROR_CHECK(vxSetMetaFormatAttribute(metas[2], VX_TENSOR_DIMS, &tensor_dims, sizeof(tensor_dims)));
     STATUS_ERROR_CHECK(vxSetMetaFormatAttribute(metas[2], VX_TENSOR_DATA_TYPE, &tensor_type, sizeof(tensor_type)));
     STATUS_ERROR_CHECK(vxSetMetaFormatAttribute(metas[2], VX_TENSOR_FIXED_POINT_POSITION, &tensor_fixed_point_position, sizeof(tensor_fixed_point_position)));
     return status;
 }
 
-static vx_status VX_CALLBACK processpGammaCorrection(vx_node node, const vx_reference *parameters, vx_uint32 num) {
+static vx_status VX_CALLBACK processGammaCorrection(vx_node node, const vx_reference *parameters, vx_uint32 num) {
     RppStatus rpp_status = RPP_SUCCESS;
     vx_status return_status = VX_SUCCESS;
-    pGammaCorrectionLocalData *data = NULL;
+    GammaCorrectionLocalData *data = NULL;
     STATUS_ERROR_CHECK(vxQueryNode(node, VX_NODE_LOCAL_DATA_PTR, &data, sizeof(data)));
-    refreshpGammaCorrection(node, parameters, num, data);
+    refreshGammaCorrection(node, parameters, num, data);
     if (data->deviceType == AGO_TARGET_AFFINITY_GPU) {
 #if ENABLE_OPENCL
         return_status = VX_ERROR_NOT_IMPLEMENTED;
 #elif ENABLE_HIP
-        rpp_status = rppt_pGamma_correction_gpu((void *)data->pSrc, data->pSrcDesc, (void *)data->pDst, data->pDstDesc,  data->pGamma, data->pSrcRoi, data->roiType, data->handle->rppHandle);
+        rpp_status = rppt_gamma_correction_gpu((void *)data->pSrc, data->pSrcDesc, (void *)data->pDst, data->pDstDesc,  data->pGamma, data->pSrcRoi, data->roiType, data->handle->rppHandle);
         return_status = (rpp_status == RPP_SUCCESS) ? VX_SUCCESS : VX_FAILURE;
 #endif
     } else if (data->deviceType == AGO_TARGET_AFFINITY_CPU) {
-        rpp_status = rppt_pGamma_correction_host(data->pSrc, data->pSrcDesc, data->pDst, data->pDstDesc, data->pGamma, data->pSrcRoi, data->roiType, data->handle->rppHandle);
+        rpp_status = rppt_gamma_correction_host(data->pSrc, data->pSrcDesc, data->pDst, data->pDstDesc, data->pGamma, data->pSrcRoi, data->roiType, data->handle->rppHandle);
         return_status = (rpp_status == RPP_SUCCESS) ? VX_SUCCESS : VX_FAILURE;
     }
     return return_status;
 }
 
-static vx_status VX_CALLBACK initializepGammaCorrection(vx_node node, const vx_reference *parameters, vx_uint32 num) {
-    pGammaCorrectionLocalData *data = new pGammaCorrectionLocalData;
-    memset(data, 0, sizeof(pGammaCorrectionLocalData));
+static vx_status VX_CALLBACK initializeGammaCorrection(vx_node node, const vx_reference *parameters, vx_uint32 num) {
+    GammaCorrectionLocalData *data = new GammaCorrectionLocalData;
+    memset(data, 0, sizeof(GammaCorrectionLocalData));
 
     vx_enum input_tensor_type, output_tensor_type;
     int roi_type, input_layout, output_layout;
@@ -146,7 +143,7 @@ static vx_status VX_CALLBACK initializepGammaCorrection(vx_node node, const vx_r
     data->outputLayout = static_cast<vxTensorLayout>(output_layout);
 
     // Querying for input tensor
-    data->pSrcDesc = &data->srcDesc;
+    data->pSrcDesc = new RpptDesc;
     STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[0], VX_TENSOR_NUMBER_OF_DIMS, &data->pSrcDesc->numDims, sizeof(data->pSrcDesc->numDims)));
     STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[0], VX_TENSOR_DIMS, &data->inputTensorDims, sizeof(vx_size) * data->pSrcDesc->numDims));
     STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[0], VX_TENSOR_DATA_TYPE, &input_tensor_type, sizeof(input_tensor_type)));
@@ -155,7 +152,7 @@ static vx_status VX_CALLBACK initializepGammaCorrection(vx_node node, const vx_r
     fillDescriptionPtrfromDims(data->pSrcDesc, data->inputLayout, data->inputTensorDims);
 
     // Querying for output tensor
-    data->pDstDesc = &data->pDstDesc;
+    data->pDstDesc = new RpptDesc;
     STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[2], VX_TENSOR_NUMBER_OF_DIMS, &data->pDstDesc->numDims, sizeof(data->pDstDesc->numDims)));
     STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[2], VX_TENSOR_DIMS, &data->ouputTensorDims, sizeof(vx_size) * data->pDstDesc->numDims));
     STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[2], VX_TENSOR_DATA_TYPE, &output_tensor_type, sizeof(output_tensor_type)));
@@ -164,19 +161,19 @@ static vx_status VX_CALLBACK initializepGammaCorrection(vx_node node, const vx_r
     fillDescriptionPtrfromDims(data->pDstDesc, data->outputLayout, data->ouputTensorDims);
 
     data->pGamma = static_cast<vx_float32 *>(malloc(sizeof(vx_float32) * data->pSrcDesc->n));
-    refreshpGammaCorrection(node, parameters, num, data);
-    STATUS_ERROR_CHECK(createGraphHandle(node, &data->handle, data->pSrcDesc->n, data->deviceType));
+    refreshGammaCorrection(node, parameters, num, data);
+    STATUS_ERROR_CHECK(createRPPHandle(node, &data->handle, data->pSrcDesc->n, data->deviceType));
     STATUS_ERROR_CHECK(vxSetNodeAttribute(node, VX_NODE_LOCAL_DATA_PTR, &data, sizeof(data)));
     return VX_SUCCESS;
 }
 
-static vx_status VX_CALLBACK uninitializepGammaCorrection(vx_node node, const vx_reference *parameters, vx_uint32 num) {
-    pGammaCorrectionLocalData *data;
+static vx_status VX_CALLBACK uninitializeGammaCorrection(vx_node node, const vx_reference *parameters, vx_uint32 num) {
+    GammaCorrectionLocalData *data;
     STATUS_ERROR_CHECK(vxQueryNode(node, VX_NODE_LOCAL_DATA_PTR, &data, sizeof(data)));
     if (data->pGamma != nullptr) free(data->pGamma);
     delete(data->pSrcDesc);
     delete(data->pDstDesc);
-    STATUS_ERROR_CHECK(releaseGraphHandle(node, data->handle, data->deviceType));
+    STATUS_ERROR_CHECK(releaseRPPHandle(node, data->handle, data->deviceType));
     delete (data);
     return VX_SUCCESS;
 }
@@ -198,16 +195,16 @@ static vx_status VX_CALLBACK query_target_support(vx_graph graph, vx_node node,
     return VX_SUCCESS;
 }
 
-vx_status pGammaCorrection_Register(vx_context context) {
+vx_status GammaCorrection_Register(vx_context context) {
     vx_status status = VX_SUCCESS;
     // Add kernel to the context with callbacks
-    vx_kernel kernel = vxAddUserKernel(context, "org.rpp.pGammaCorrection",
-                                       VX_KERNEL_RPP_pGammaCORRECTION,
-                                       processpGammaCorrection,
+    vx_kernel kernel = vxAddUserKernel(context, "org.rpp.GammaCorrection",
+                                       VX_KERNEL_RPP_GAMMACORRECTION,
+                                       processGammaCorrection,
                                        8,
-                                       validatepGammaCorrection,
-                                       initializepGammaCorrection,
-                                       uninitializepGammaCorrection);
+                                       validateGammaCorrection,
+                                       initializeGammaCorrection,
+                                       uninitializeGammaCorrection);
     ERROR_CHECK_OBJECT(kernel);
     AgoTargetAffinityInfo affinity;
     vxQueryContext(context, VX_CONTEXT_ATTRIBUTE_AMD_AFFINITY, &affinity, sizeof(affinity));

@@ -144,10 +144,10 @@ static vx_status VX_CALLBACK processColorTwist(vx_node node, const vx_reference 
     if (data->deviceType == AGO_TARGET_AFFINITY_GPU)
     {
 #if ENABLE_OPENCL
-        rpp_status = rppt_color_twist_gpu((void *)data->cl_pSrc, data->pSrcDesc, (void *)data->cl_pDst, data->pSrcDesc,  data->pAlpha, data->pBeta, data->pHue, data->pSat, data->pSrcRoi, data->roiType, data->handle);
+        rpp_status = rppt_color_twist_gpu((void *)data->cl_pSrc, data->pSrcDesc, (void *)data->cl_pDst, data->pSrcDesc,  data->pAlpha, data->pBeta, data->pHue, data->pSat, data->pSrcRoi, data->roiType, data->handle->rppHandle);
         return_status = (rpp_status == RPP_SUCCESS) ? VX_SUCCESS : VX_FAILURE;
 #elif ENABLE_HIP
-        rpp_status = rppt_color_twist_gpu((void *)data->pSrc, data->pSrcDesc, (void *)data->pDst, data->pSrcDesc,  data->pAlpha, data->pBeta, data->pHue, data->pSat, data->pSrcRoi, data->roiType, data->handle);
+        rpp_status = rppt_color_twist_gpu((void *)data->pSrc, data->pSrcDesc, (void *)data->pDst, data->pSrcDesc,  data->pAlpha, data->pBeta, data->pHue, data->pSat, data->pSrcRoi, data->roiType, data->handle->rppHandle);
         return_status = (rpp_status == RPP_SUCCESS) ? VX_SUCCESS : VX_FAILURE;
 #endif
     }
@@ -157,7 +157,7 @@ static vx_status VX_CALLBACK processColorTwist(vx_node node, const vx_reference 
         // {
         //     std::cerr<<"\n bbox values :: "<<data->roi_tensor_Ptr[i].xywhROI.xy.x<<" "<<data->roi_tensor_Ptr[i].xywhROI.xy.y<<" "<<data->roi_tensor_Ptr[i].xywhROI.roiWidth<<" "<<data->roi_tensor_Ptr[i].xywhROI.roiHeight;
         // }
-        rpp_status = rppt_color_twist_host(data->pSrc, data->pSrcDesc, data->pDst, data->pSrcDesc, data->pAlpha, data->pBeta,data->pHue, data->pSat, data->pSrcRoi, data->roiType, data->handle);
+        rpp_status = rppt_color_twist_host(data->pSrc, data->pSrcDesc, data->pDst, data->pSrcDesc, data->pAlpha, data->pBeta,data->pHue, data->pSat, data->pSrcRoi, data->roiType, data->handle->rppHandle);
         return_status = (rpp_status == RPP_SUCCESS) ? VX_SUCCESS : VX_FAILURE;
     }
     return return_status;
@@ -172,7 +172,7 @@ static vx_status VX_CALLBACK initializeColorTwist(vx_node node, const vx_referen
 #if ENABLE_OPENCL
     STATUS_ERROR_CHECK(vxQueryNode(node, VX_NODE_ATTRIBUTE_AMD_OPENCL_COMMAND_QUEUE, &data->handle.cmdq, sizeof(data->handle.cmdq)));
 #elif ENABLE_HIP
-    STATUS_ERROR_CHECK(vxQueryNode(node, VX_NODE_ATTRIBUTE_AMD_HIP_STREAM, &data->handle->hipstream, sizeof(data->handle.hipstream)));
+    STATUS_ERROR_CHECK(vxQueryNode(node, VX_NODE_ATTRIBUTE_AMD_HIP_STREAM, &data->handle->hipstream, sizeof(data->handle->hipstream)));
 #endif
     STATUS_ERROR_CHECK(vxCopyScalar((vx_scalar)parameters[10], &data->deviceType, VX_READ_ONLY, VX_MEMORY_TYPE_HOST));
     STATUS_ERROR_CHECK(vxReadScalarValue((vx_scalar)parameters[9], &data->pSrcDesc->n));
