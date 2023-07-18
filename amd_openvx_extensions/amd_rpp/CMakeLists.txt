@@ -131,7 +131,7 @@ list(APPEND SOURCES
         source/tensor/Copy.cpp
         source/tensor/CropMirrorNormalize.cpp
         source/tensor/Nop.cpp
-        source/tensor/SequenceRearrange.cpp
+        # source/tensor/SequenceRearrange.cpp
         source/kernel_rpp.cpp
         source/internal_publishKernels.cpp
     )
