@@ -1713,18 +1713,19 @@ void MasterGraph::feed_external_input(std::vector<std::string> input_images_name
 {
     _external_source_eos = eos;
     _loader_module->feed_external_input(input_images_names, labels, input_buffer, roi_width, roi_height, max_width, max_height, channels, mode, eos);
-    if(!labels.empty() && !_meta_data_reader)
-    {
-        MetaDataConfig config(MetaDataType::Label, MetaDataReaderType::EXTERNAL_SOURCE_LABEL_READER);
-        _meta_data_reader = create_meta_data_reader(config);
-        _meta_data_reader->add_labels(input_images_names, labels);
-        if (_augmented_meta_data)
-            THROW("Metadata can only have a single output")
-        else
-            _augmented_meta_data = _meta_data_reader->get_output();
-    }
-    else if(!labels.empty() && _meta_data_reader)
-    {
-        _meta_data_reader->add_labels(input_images_names, labels);
-    }
+    //Commeneting out the meta_data reader
+    // if(!labels.empty() && !_meta_data_reader)
+    // {
+    //     MetaDataConfig config(MetaDataType::Label, MetaDataReaderType::EXTERNAL_SOURCE_LABEL_READER);
+    //     _meta_data_reader = create_meta_data_reader(config);
+    //     _meta_data_reader->add_labels(input_images_names, labels);
+    //     if (_augmented_meta_data)
+    //         THROW("Metadata can only have a single output")
+    //     else
+    //         _augmented_meta_data = _meta_data_reader->get_output();
+    // }
+    // else if(!labels.empty() && _meta_data_reader)
+    // {
+    //     _meta_data_reader->add_labels(input_images_names, labels);
+    // }
 }
