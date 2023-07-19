@@ -32,6 +32,8 @@ from amd.rocal.pipeline import Pipeline
 
 def blend(*inputs, ratio=None, rocal_tensor_layout=types.NHWC,
           rocal_tensor_output_type=types.UINT8):
+    ratio = b.createFloatParameter(
+        ratio) if isinstance(ratio, float) else ratio
     # pybind call arguments
     kwargs_pybind = {"input_image0": inputs[0], "input_image1": inputs[1], "is_output": False, "ratio": ratio,
                      "rocal_tensor_output_layout": rocal_tensor_layout, "rocal_tensor_output_datatype": rocal_tensor_output_type}
@@ -237,8 +239,43 @@ def resize(*inputs, max_size=[], resize_longer=0, resize_shorter=0, resize_width
     return (resized_image)
 
 
+def resize_crop_mirror(*inputs, resize_width=0, resize_height=0, crop_w=0, crop_h=0, mirror=1,
+                       rocal_tensor_layout=types.NHWC, rocal_tensor_output_type=types.UINT8):
+    if isinstance(mirror, int):
+        if (mirror == 0):
+            mirror = b.createIntParameter(0)
+        else:
+            mirror = b.createIntParameter(1)
+
+    # pybind call arguments
+    kwargs_pybind = {"input_image0": inputs[0], "dest_width:": resize_width, "dest_height": resize_height, "is_output": False, "crop_w": crop_w,
+                     "crop_h": crop_h, "mirror": mirror, "rocal_tensor_output_layout": rocal_tensor_layout, "rocal_tensor_output_datatype": rocal_tensor_output_type}
+    rcm = b.ResizeCropMirrorFixed(
+        Pipeline._current_pipeline._handle, *(kwargs_pybind.values()))
+    return (rcm)
+
+
+def resize_crop(*inputs, resize_width=0, resize_height=0, crop_area_factor=None, crop_aspect_ratio=None, x_drift=None, y_drift=None,
+                rocal_tensor_layout=types.NHWC, rocal_tensor_output_type=types.UINT8):
+    crop_area_factor = b.createFloatParameter(crop_area_factor) if isinstance(
+        crop_area_factor, float) else crop_area_factor
+    crop_aspect_ratio = b.createFloatParameter(crop_aspect_ratio) if isinstance(
+        crop_aspect_ratio, float) else crop_aspect_ratio
+    x_drift = b.createFloatParameter(x_drift) if isinstance(
+        x_drift, float) else x_drift
+    y_drift = b.createFloatParameter(y_drift) if isinstance(
+        y_drift, float) else y_drift
+
+    # pybind call arguments
+    kwargs_pybind = {"input_image0": inputs[0], "dest_width:": resize_width, "dest_height": resize_height, "is_output": False, "crop_area_factor": crop_area_factor,
+                     "crop_aspect_ratio": crop_aspect_ratio, "x_drift": x_drift, "y_drift": y_drift, "rocal_tensor_output_layout": rocal_tensor_layout, "rocal_tensor_output_datatype": rocal_tensor_output_type}
+    rcm = b.CropResize(
+        Pipeline._current_pipeline._handle, *(kwargs_pybind.values()))
+    return (rcm)
+
+
 def resize_mirror_normalize(*inputs, max_size=[], resize_longer=0, resize_shorter=0, resize_x=0, resize_y=0, scaling_mode=types.SCALING_MODE_DEFAULT,
-                            interpolation_type=types.LINEAR_INTERPOLATION, mean=[0.0], std=[1.0], mirror=1, output_dtype=types.UINT8, output_layout=types.NHWC):
+                            interpolation_type=types.LINEAR_INTERPOLATION, mean=[0.0], std=[1.0], mirror=1, rocal_tensor_layout=types.NHWC, rocal_tensor_output_type=types.UINT8):
     if isinstance(mirror, int):
         if (mirror == 0):
             mirror = b.createIntParameter(0)
@@ -248,7 +285,7 @@ def resize_mirror_normalize(*inputs, max_size=[], resize_longer=0, resize_shorte
     # pybind call arguments
     kwargs_pybind = {"input_image0": inputs[0], "dest_width:": resize_x, "dest_height": resize_y, "mean": mean, "std_dev": std, "is_output": False,
                      "scaling_mode": scaling_mode, "max_size": max_size, "resize_shorter": resize_shorter, "resize_longer": resize_longer,
-                     "interpolation_type": interpolation_type, "mirror": mirror, "output_layout": output_layout, "output_dtype": output_dtype}
+                     "interpolation_type": interpolation_type, "mirror": mirror, "rocal_tensor_output_layout": rocal_tensor_layout, "rocal_tensor_output_datatype": rocal_tensor_output_type}
     rmn = b.ResizeMirrorNormalize(
         Pipeline._current_pipeline._handle, *(kwargs_pybind.values()))
     return (rmn)
@@ -313,14 +350,14 @@ def ssd_random_crop(*inputs, p_threshold=None, crop_area_factor=None,
     return (ssd_random_cropped_image)
 
 
-def warp_affine(*inputs, interpolation_type=types.LINEAR_INTERPOLATION,
-                rocal_tensor_layout=types.NHWC, rocal_tensor_output_type=types.UINT8):
+def warp_affine(*inputs, dest_width=0, dest_height=0, x0=0, x1=0, y0=0, y1=0,
+                o0=0, o1=0, interpolation_type=types.LINEAR_INTERPOLATION, rocal_tensor_layout=types.NHWC, rocal_tensor_output_type=types.UINT8):
     # pybind call arguments
-    kwargs_pybind = {"input_image0": inputs[0], "is_output": False, "dest_width": 0, "dest_height": 0, "x0": None, "x1": None, "y0": None, "y1": None, "o0": None,
-                     "o1": None, "interpolation_type": interpolation_type, "rocal_tensor_output_layout": rocal_tensor_layout, "rocal_tensor_output_datatype": rocal_tensor_output_type}
-    warp_affine_outputcolor_temp_output = b.WarpAffine(
+    kwargs_pybind = {"input_image0": inputs[0], "x0": x0, "x1": x1, "y0": y0, "y1": y1, "o0": o0,
+                     "o1": o1, "is_output": False, "dest_height": dest_height, "dest_width": dest_width, "interpolation_type": interpolation_type, "rocal_tensor_output_layout": rocal_tensor_layout, "rocal_tensor_output_datatype": rocal_tensor_output_type}
+    warp_affine_output = b.WarpAffineFixed(
         Pipeline._current_pipeline._handle, *(kwargs_pybind.values()))
-    return (warp_affine_outputcolor_temp_output)
+    return (warp_affine_output)
 
 
 def vignette(*inputs, vignette=0.5, rocal_tensor_layout=types.NHWC,
@@ -361,7 +398,7 @@ def crop_mirror_normalize(*inputs, crop=[0, 0], crop_pos_x=0.5, crop_pos_y=0.5,
     return (cmn)
 
 
-def centre_crop(*inputs, crop=[100, 100], crop_h=0, crop_w=0, crop_d=1,
+def center_crop(*inputs, crop=[100, 100], crop_h=0, crop_w=0, crop_d=1,
                 rocal_tensor_layout=types.NHWC, rocal_tensor_output_type=types.UINT8):
     if (len(crop) == 2):
         crop_depth = crop_d

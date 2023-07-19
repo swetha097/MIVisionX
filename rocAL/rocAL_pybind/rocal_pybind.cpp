@@ -756,12 +756,14 @@ namespace rocal{
             py::return_value_policy::reference);
         // m.def("ResizeMirrorNormalize", &rocalResizeMirrorNormalize,
         //     py::return_value_policy::reference);
-        // m.def("CropResize",&rocalCropResize,
-        //     py::return_value_policy::reference);
-        // m.def("rocalCopy",&rocalCopy,
-        //     py::return_value_policy::reference);
-        // m.def("rocalNop",&rocalNop,
-        //     py::return_value_policy::reference);
+        m.def("ResizeCropMirrorFixed",&rocalResizeCropMirrorFixed,
+            py::return_value_policy::reference);
+        m.def("CropResize",&rocalCropResize,
+            py::return_value_policy::reference);
+        m.def("rocalCopy",&rocalCopy,
+            py::return_value_policy::reference);
+        m.def("rocalNop",&rocalNop,
+            py::return_value_policy::reference);
         m.def("ColorTwist",&rocalColorTwist,
             py::return_value_policy::reference);
         m.def("ColorTwistFixed",&rocalColorTwistFixed,
@@ -798,7 +800,7 @@ namespace rocal{
             py::return_value_policy::reference);
         m.def("Saturation",&rocalSaturation,
             py::return_value_policy::reference);
-        m.def("WarpAffine",&rocalWarpAffine,
+        m.def("WarpAffineFixed",&rocalWarpAffineFixed,
             py::return_value_policy::reference);
         m.def("Fog",&rocalFog,
             py::return_value_policy::reference);
