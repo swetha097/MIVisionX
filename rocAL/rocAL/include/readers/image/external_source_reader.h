@@ -118,5 +118,3 @@ private:
     void replicate_last_batch_to_pad_partial_shard();
     ExternalFileMode _file_mode;
 };
-
-
