@@ -141,7 +141,7 @@ void VideoLoader::initialize(ReaderConfig reader_cfg, DecoderConfig decoder_cfg,
         de_init();
         throw;
     }
-    _decoded_img_info._image_names.resize(_sequence_count);
+    _decoded_img_info._sample_names.resize(_sequence_count);
     _decoded_img_info._roi_height.resize(_batch_size);
     _decoded_img_info._roi_width.resize(_batch_size);
     _decoded_img_info._original_height.resize(_batch_size);
@@ -176,7 +176,7 @@ VideoLoader::load_routine()
         auto load_status = LoaderModuleStatus::NO_MORE_DATA_TO_READ;
         {
             load_status = _video_loader->load(data,
-                                              _decoded_img_info._image_names,
+                                              _decoded_img_info._sample_names,
                                               _output_image->info().width(),
                                               _output_image->info().height_single(),
                                               _decoded_img_info._roi_width,
@@ -189,7 +189,7 @@ VideoLoader::load_routine()
 
             if (load_status == LoaderModuleStatus::OK)
             {
-                _circ_buff.set_image_info(_decoded_img_info);
+                _circ_buff.set_sample_info(_decoded_img_info);
                 _circ_buff.push();
                 _image_counter += _output_image->info().batch_size();
             }
@@ -257,9 +257,9 @@ VideoLoader::update_output_image()
     }
     if (_stopped)
         return LoaderModuleStatus::OK;
-    _output_decoded_img_info = _circ_buff.get_image_info();
-    _output_names = _output_decoded_img_info._image_names;
-    _output_image->update_image_roi(_output_decoded_img_info._roi_width, _output_decoded_img_info._roi_height);
+    _output_decoded_sample_info = _circ_buff.get_sample_info();
+    _output_names = _output_decoded_sample_info._sample_names;
+    _output_image->update_image_roi(_output_decoded_sample_info._roi_width, _output_decoded_sample_info._roi_height);
     _circ_buff.pop();
     if (!_loop)
         _remaining_sequences_count -= _sequence_count;
@@ -305,9 +305,9 @@ std::vector<std::string> VideoLoader::get_id()
     return _output_names;
 }
 
-decoded_image_info VideoLoader::get_decode_image_info()
+decoded_sample_info VideoLoader::get_decode_sample_info()
 {
-    return _output_decoded_img_info;
+    return _output_decoded_sample_info;
 }
 
 std::vector<size_t> VideoLoader::get_sequence_start_frame_number()

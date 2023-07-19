@@ -63,6 +63,8 @@ vx_size tensor_data_size(RocalTensorDataType data_type) {
             return sizeof(vx_uint32);
         case RocalTensorDataType::INT32:
             return sizeof(vx_int32);
+        case RocalTensorDataType::FP64:
+            return sizeof(vx_float64);
         default:
             throw std::runtime_error("tensor data_type not valid");
     }
@@ -77,6 +79,12 @@ vx_enum interpret_tensor_data_type(RocalTensorDataType data_type) {
             return VX_TYPE_FLOAT16;
         case RocalTensorDataType::UINT8:
             return VX_TYPE_UINT8;
+        case RocalTensorDataType::FP64:
+            return VX_TYPE_FLOAT64;
+        case RocalTensorDataType::INT32:
+            return VX_TYPE_INT32;
+        case RocalTensorDataType::UINT32:
+            return VX_TYPE_UINT32;
         default:
             THROW("Unsupported Tensor type " + TOSTR(data_type))
     }
@@ -121,6 +129,12 @@ void rocalTensorInfo::reset_tensor_roi_buffers() {
     } else {
         // TODO - For other tensor types
     }
+}
+
+void rocalTensorInfo::reallocate_tensor_sample_rate_buffers() {
+    if (_is_image)
+        THROW("No sample rate available for Image data")
+    _sample_rate = std::make_shared<std::vector<float>>(_batch_size);
 }
 
 rocalTensorInfo::rocalTensorInfo()
@@ -210,6 +224,44 @@ void rocalTensor::update_tensor_roi(const std::vector<uint32_t> &width,
             } else {
                 _info.get_roi()[i].y2 = height[i];
             }
+        }
+    }
+    else if(!_info.is_metadata()) {
+        auto max_dims = _info.max_shape();
+        unsigned max_samples = max_dims.at(0);
+        unsigned max_channels = max_dims.at(1);
+        auto samples = width;
+        auto channels = height;
+        if (samples.size() != channels.size())
+            THROW("Batch size of Tensor height and width info does not match")
+        if (samples.size() != info().batch_size())
+            THROW("The batch size of actual Tensor height and width different from Tensor batch size " + TOSTR(samples.size()) + " != " + TOSTR(info().batch_size()))
+        for (unsigned i = 0; i < info().batch_size(); i++) {
+            if (samples[i] > max_samples) {
+                ERR("Given ROI width is larger than buffer width for tensor[" + TOSTR(i) + "] " + TOSTR(samples[i]) + " > " + TOSTR(max_samples))
+                _info.get_roi()[i].x1 = max_samples;
+            }
+            else {
+                _info.get_roi()[i].x1 = samples[i];
+            }
+            if (channels[i] > max_channels) {
+                ERR("Given ROI height is larger than buffer with for tensor[" + TOSTR(i) + "] " + TOSTR(channels[i]) + " > " + TOSTR(max_channels))
+                _info.get_roi()[i].y1 = max_channels;
+            }
+            else {
+                _info.get_roi()[i].y1 = channels[i];
+            }
+        }
+    }
+}
+
+void rocalTensor::update_audio_tensor_sample_rate(const std::vector<float> &sample_rate) {
+    if (_info.is_image()) {
+        THROW("No sample rate available for Image data")
+    }
+    else if(!_info.is_metadata()) {
+        for (unsigned i = 0; i < info().batch_size(); i++) {
+            _info.get_sample_rate()->at(i) = sample_rate[i];
         }
     }
 }
@@ -331,6 +383,25 @@ unsigned rocalTensor::copy_data(void *user_buffer) {
     {
         // copy from host to host
         memcpy(user_buffer, _mem_handle, _info.data_size());
+    }
+    return 0;
+}
+
+unsigned rocalTensor::copy_data(void *user_buffer, uint max_y1, uint max_x1) {
+    // if (_mem_handle == nullptr) return 0;
+    //TODO : Handle this case for HIP buffer
+    auto max_shape_x1 = _info.max_shape().at(0);
+    auto dtype_size = _info.data_type_size();
+    auto src_stride = (max_shape_x1 * _info.max_shape().at(1) * dtype_size);
+    auto dst_stride = (max_y1 * max_x1 * dtype_size);
+    for (uint i = 0; i < _info._batch_size; i++) {
+        auto temp_src_ptr = static_cast<unsigned char *>(_mem_handle) + i * src_stride;
+        auto temp_dst_ptr = static_cast<unsigned char *>(user_buffer) + i * dst_stride;
+        for (uint height = 0; height < max_y1; height++) {
+            memcpy(temp_dst_ptr, temp_src_ptr, max_x1 * dtype_size);
+            temp_src_ptr += max_shape_x1 * dtype_size;
+            temp_dst_ptr += max_x1 * dtype_size;
+        }
     }
     return 0;
 }

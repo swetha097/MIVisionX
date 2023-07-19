@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2019 - 2022 Advanced Micro Devices, Inc. All rights reserved.
+Copyright (c) 2019 - 2023 Advanced Micro Devices, Inc. All rights reserved.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -174,6 +174,7 @@ public:
     RocalTensorDataType data_type() const { return _data_type; }
     RocalTensorlayout layout() const { return _layout; }
     RocalROI *get_roi() const { return (RocalROI *)_roi_buf; }
+    std::shared_ptr<std::vector<float>> get_sample_rate() const { return _sample_rate; }
     RocalColorFormat color_format() const { return _color_format; }
     Type type() const { return _type; }
     uint64_t data_type_size() {
@@ -183,7 +184,6 @@ public:
     bool is_image() const { return _is_image; }
     void set_metadata() { _is_metadata = true; }
     bool is_metadata() const { return _is_metadata; }
-
 private:
     Type _type = Type::UNKNOWN;  //!< tensor type, whether is virtual tensor, created from handle or is a regular tensor
     unsigned _num_of_dims;  //!< denotes the number of dimensions in the tensor
@@ -198,6 +198,8 @@ private:
     uint64_t _data_type_size = tensor_data_size(_data_type);
     uint64_t _data_size = 0;
     std::vector<size_t> _max_shape;  //!< stores the the width and height dimensions in the tensor
+    std::shared_ptr<std::vector<float>> _sample_rate;
+    void reallocate_tensor_sample_rate_buffers();
     void reset_tensor_roi_buffers();
     bool _is_image = false;
     bool _is_metadata = false;
@@ -226,6 +228,7 @@ public:
     unsigned copy_data(hipStream_t stream, void* host_memory, bool sync);
 #endif
     unsigned copy_data(void* user_buffer);
+    unsigned copy_data(void* user_buffer, uint max_x1, uint max_y1);
     //! Default destructor
     /*! Releases the OpenVX Tensor object */
     ~rocalTensor();
@@ -234,14 +237,15 @@ public:
     explicit rocalTensor(const rocalTensorInfo& tensor_info);
     int create(vx_context context);
     void update_tensor_roi(const std::vector<uint32_t>& width, const std::vector<uint32_t>& height);
+    void update_audio_tensor_sample_rate(const std::vector<float>& sample_rate);
     void reset_tensor_roi() { _info.reset_tensor_roi_buffers(); }
+    void reset_audio_sample_rate() { _info.reallocate_tensor_sample_rate_buffers(); }
     // create_from_handle() no internal memory allocation is done here since
     // tensor's handle should be swapped with external buffers before usage
     int create_from_handle(vx_context context);
     int create_virtual(vx_context context, vx_graph graph);
     bool is_handle_set() { return (_vx_handle != 0); }
     void set_dims(std::vector<size_t> dims) { _info.set_dims(dims); }
-
 private:
     vx_tensor _vx_handle = nullptr;  //!< The OpenVX tensor
     void* _mem_handle = nullptr;  //!< Pointer to the tensor's internal buffer (opencl or host)

@@ -498,16 +498,16 @@ void MasterGraph::output_routine()
                 THROW("Loader module failed to load next batch of images, status " + TOSTR(load_ret))
             if (!_processing)
                 break;
-            auto full_batch_image_names =  _loader_module->get_id();
-            auto decode_image_info = _loader_module->get_decode_image_info();
+            auto full_batch_sample_names =  _loader_module->get_id();
+            auto decode_sample_info = _loader_module->get_decode_sample_info();
             auto crop_image_info = _loader_module->get_crop_image_info();
 
-            if(full_batch_image_names.size() != _user_batch_size)
-                WRN("Internal problem: names count "+ TOSTR(full_batch_image_names.size()))
+            if(full_batch_sample_names.size() != _user_batch_size)
+                WRN("Internal problem: names count "+ TOSTR(full_batch_sample_names.size()))
 
             // meta_data lookup is done before _meta_data_graph->process() is called to have the new meta_data ready for processing
             if (_meta_data_reader)
-                _meta_data_reader->lookup(full_batch_image_names);
+                _meta_data_reader->lookup(full_batch_sample_names);
 
             if (!_processing)
                 break;
@@ -534,7 +534,7 @@ void MasterGraph::output_routine()
                 {
                     if(_is_random_bbox_crop)
                     {
-                        _meta_data_graph->update_random_bbox_meta_data(_augmented_meta_data, decode_image_info, crop_image_info);
+                        _meta_data_graph->update_random_bbox_meta_data(_augmented_meta_data, decode_sample_info, crop_image_info);
                     }
                     _meta_data_graph->process(_augmented_meta_data);
                 }
@@ -560,7 +560,7 @@ void MasterGraph::output_routine()
             _sequence_start_framenum_vec.insert(_sequence_start_framenum_vec.begin(), _loader_module->get_sequence_start_frame_number());
             _sequence_frame_timestamps_vec.insert(_sequence_frame_timestamps_vec.begin(), _loader_module->get_sequence_frame_timestamps());
 #endif
-            _ring_buffer.set_meta_data(full_batch_image_names, full_batch_meta_data);
+            _ring_buffer.set_meta_data(full_batch_sample_names, full_batch_meta_data);
             _ring_buffer.push(); // Image data and metadata is now stored in output the ring_buffer, increases it's level by 1
         }
     }

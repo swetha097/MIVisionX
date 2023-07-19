@@ -38,6 +38,10 @@ set(BOOST_COMPONENTS filesystem system)
 find_package(Boost COMPONENTS ${BOOST_COMPONENTS} QUIET)
 set(THREADS_PREFER_PTHREAD_FLAG ON)
 find_package(Threads QUIET)
+find_library(libsnd_LIBS
+    NAMES sndfile libsndfile
+    PATHS ${CMAKE_SYSTEM_PREFIX_PATH} ${LIBSND_ROOT_DIR} "/usr/local"
+    PATH_SUFFIXES lib lib64)
 
 if( GPU_SUPPORT AND "${BACKEND}" STREQUAL "HIP")
     if(NOT DEFINED HIP_PATH)
@@ -120,6 +124,12 @@ if(NOT Threads_FOUND)
     set(BUILD_ROCAL false)
     message("-- ${Yellow}NOTE: rocAL library requires Threads, Not Found ${ColourReset}")
 endif()
+if (${libsnd_LIBS} STREQUAL "libsnd_LIBS-NOTFOUND")
+    set(BUILD_ROCAL false)
+    message("-- ${Yellow}NOTE: rocAL library requires libsnd (sndfile), but it was not found. Try specifying its location with `-DLIBSND_ROOT_DIR`.${ColourReset}")
+else()
+    message(STATUS "Found libsnd: ${libsnd_LIBS}")
+endif()
 
 if(${BUILD_ROCAL})
     # AMD OpenVX & VX_RPP
@@ -144,7 +154,9 @@ if(${BUILD_ROCAL})
     set(LINK_LIBRARY_LIST ${LINK_LIBRARY_LIST} ${PROTOBUF_LIBRARIES})
     # LMDB -- TBD: FIND PACKAGE Required
     set(LINK_LIBRARY_LIST ${LINK_LIBRARY_LIST} lmdb)
-
+    # SndFile
+    include_directories(${SndFile_INCLUDE_DIRS})
+    set(LINK_LIBRARY_LIST ${LINK_LIBRARY_LIST} sndfile)
     # rocAL uses C++ 17 features
     set(CMAKE_CXX_STANDARD 17)
     message("-- ${Green}ROCm Augmentation Library -- rocAL module added${ColourReset}")
@@ -164,11 +176,14 @@ if(${BUILD_ROCAL})
                 ./include/augmentations/color_augmentations/
                 ./include/augmentations/effects_augmentations/
                 ./include/augmentations/geometry_augmentations/
+                ./include/augmentations/audio_augmentations/
                 ./include/augmentations/
+                ./include/decoders/audio/
                 ./include/decoders/image/
                 ./include/decoders/video/
                 ./include/device/
                 ./include/loaders/
+                ./include/loaders/audio/
                 ./include/loaders/image/
                 ./include/loaders/video/
                 ./include/meta_data/
