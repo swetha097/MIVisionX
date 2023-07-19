@@ -38,50 +38,63 @@ class ROCALGenericIterator(object):
         self.batch_size = pipeline._batch_size
         if self.loader._name is None:
             self.loader._name = self.loader._reader
-        self.labels_size = ((self.bs*self.loader._numOfClasses) if (self.loader._oneHotEncoding == True) else self.bs)
-        self.out = self.dimensions = self.dtype = None
-        self.len = b.getRemainingImages(self.loader._handle)//self.bs # iteration length
+        self.labels_size = ((self.batch_size*self.loader._numOfClasses) if (self.loader._oneHotEncoding == True) else self.batch_size)
+        self.output_list = self.dimensions = self.dtype = None
+        self.len = b.getRemainingImages(self.loader._handle)//self.batch_size # iteration length
 
     def next(self):
         return self.__next__()
 
     def __next__(self):
         
-        if(b.isEmpty(self.loader._handle)):
+        if self.loader.rocalRun() != 0:
             raise StopIteration
         else:
             self.output_tensor_list = self.loader.getOutputTensors()
 
-        if self.out is None:
-            self.dimensions = self.output_tensor_list[0].dimensions()
-            if self.device == "cpu":
-                self.dtype = self.output_tensor_list[0].dtype()
-                self.out = np.empty((self.dimensions[0], self.dimensions[1], self.dimensions[2], self.dimensions[3],), dtype = self.dtype)
-                self.labels = np.empty(self.labels_size, dtype = self.dtype)
-            else:
-                self.dtype = self.output_tensor_list[0].dtype()
-                with cp.cuda.Device(device = self.device_id):
-                    self.out = cp.empty((self.dimensions[0], self.dimensions[1], self.dimensions[2], self.dimensions[3],), dtype = self.dtype)
-                    self.labels = cp.empty(self.labels_size, dtype = self.dtype)
+        if self.output_list is None:
+            self.output_list = []
+            for i in range(len(self.output_tensor_list)):
+                self.dimensions = self.output_tensor_list[i].dimensions()
+                if self.device == "cpu":
+                    self.dtype = self.output_tensor_list[i].dtype()
+                    self.out = np.empty(self.dimensions, dtype = self.dtype)
+                    self.labels = np.empty(self.labels_size, dtype = self.dtype)
+                else:
+                    self.dtype = self.output_tensor_list[i].dtype()
+                    with cp.cuda.Device(device = self.device_id):
+                        self.out = cp.empty(self.dimensions, dtype = self.dtype)
+                        self.labels = cp.empty(self.labels_size, dtype = self.dtype)
 
-        self.output_tensor_list[0].copy_data(ctypes.c_void_p(self.out.data_ptr()))
+                if self.device == "cpu":
+                    self.output_tensor_list[i].copy_data_numpy(self.out)
+                else:
+                    self.output_tensor_list[i].copy_data_cupy(self.out.data.ptr)
+                self.output_list.append(self.out)
+        else:
+            for i in range(len(self.output_tensor_list)):
+                if self.device == "cpu":
+                    self.output_tensor_list[i].copy_data_numpy(self.output_list[i])
+                else:
+                    self.output_tensor_list[i].copy_data_cupy(self.output_list[i].data.ptr)
+                
         if(self.loader._name == "labelReader"):
             if(self.loader._oneHotEncoding == True):
-                self.loader.GetOneHotEncodedLabels(self.labels, self.device)
-                self.labels_tensor = self.labels.reshape(-1, self.bs, self.loader._numOfClasses)
+                self.loader.getOneHotEncodedLabels(self.labels, self.device)
+                self.labels_tensor = self.labels.reshape(-1, self.batch_size, self.loader._numOfClasses)
             else:
                 if self.display:
-                    for i in range(self.bs):
+                    for i in range(self.batch_size):
                         img = (self.out)
                         draw_patches(img[i], i, 0)
-                self.labels = self.loader.rocalGetImageLabels()
+                self.labels = self.loader.getImageLabels()
                 if self.device == "cpu":
                     self.labels_tensor = self.labels.astype(dtype = np.int_)
                 else:
                     with cp.cuda.Device(device = self.device_id):
                         self.labels_tensor = self.labels.astype(dtype = cp.int_)
 
-            return self.out, self.labels_tensor
+            return self.output_list, self.labels_tensor
 
     def reset(self):
         b.rocalResetLoaders(self.loader._handle)
