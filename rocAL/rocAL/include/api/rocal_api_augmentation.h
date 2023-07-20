@@ -796,7 +796,9 @@ extern "C" RocalTensor ROCAL_API_CALL rocalSSDRandomCrop(  RocalContext context,
                                                     RocalFloatParam crop_aspect_ratio = NULL,
                                                     RocalFloatParam crop_pos_x = NULL,
                                                     RocalFloatParam crop_pos_y = NULL,
-                                                    int num_of_attempts = 20);
+                                                    int num_of_attempts = 20,
+                                                    RocalTensorLayout rocal_tensor_output_layout = ROCAL_NHWC,
+                                                    RocalTensorOutputType rocal_tensor_output_datatype = ROCAL_UINT8);
 // /// Accepts U8 and RGB24 input. The output image dimension can be set to new values allowing the rotated image to fit,
 // /// otherwise; the image is cropped to fit the result.
 // /// \param context Rocal context

@@ -565,13 +565,15 @@ int test(int test_case, int reader_type, const char *path, const char *outName, 
         image1 = rocalSaturation(handle, image0, true);
     }
     break;
+*/
     case 23:
     {
         std::cout << ">>>>>>> Running "
                   << "rocalCopy" << std::endl;
-        image1 = rocalCopy(handle, image0, true);
+        image1 = rocalNop(handle, image0, true);
     }
     break;
+/*
     case 24:
     {
         std::cout << ">>>>>>> Running "
@@ -778,11 +780,12 @@ int test(int test_case, int reader_type, const char *path, const char *outName, 
     }
     break;
 /*
+
     case 52:
     {
         std::cout << ">>>>>>> Running "
                   << "rocalCropCenterFixed" << std::endl;
-        image1 = rocalCropCenterFixed(handle, image0, 224, 224, 2, true);
+        image1 = rocalCropCenterFixed(handle, input1, 224, 224, 2, true, tensorLayout, tensorOutputType);
     }
     break;
 */
@@ -794,14 +797,14 @@ int test(int test_case, int reader_type, const char *path, const char *outName, 
         image1 = rocalResizeCropMirrorFixed(handle, input1, 400, 400, true, 200, 200, mirror, tensorLayout, tensorOutputType);
     }
     break;
-/*
+
     case 54:
     {
         std::cout << ">>>>>>> Running "
                   << "rocalSSDRandomCrop" << std::endl;
-        image1 = rocalSSDRandomCrop(handle, input1, true);
+        image1 = rocalSSDRandomCrop(handle, input1, true, NULL, NULL, NULL, NULL,NULL, 20, tensorLayout, tensorOutputType);
     }
-    break;*/
+    break;
     case 55:
     {
         std::cout << ">>>>>>> Running "
@@ -811,6 +814,16 @@ int test(int test_case, int reader_type, const char *path, const char *outName, 
         image1 = rocalCropMirrorNormalize(handle, image0, 224, 224, 0.5, 0.5, mean, std_dev, true);
     }
     break;
+    case 56:
+    {
+        std::vector<float> mean{0, 0, 0};
+        std::vector<float> sdev{1, 1, 1};
+        std::cout << ">>>>>>> Running "
+                  << " Resize Mirror Normalize " << std::endl;
+        image1 = rocalResizeMirrorNormalize(handle, input1, 300 , resize_h, mean, sdev, true, ROCAL_SCALING_MODE_DEFAULT,
+                                            {}, 0, 0, ROCAL_LINEAR_INTERPOLATION, NULL, tensorLayout, tensorOutputType);
+        break;
+    }
 
     default:
         std::cout << "Not a valid option! Exiting!\n";

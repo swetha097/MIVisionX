@@ -257,7 +257,7 @@ vx_status ResizeCrop_Register(vx_context);
 #define VX_KERNEL_RPP_WARPAFFINE_NAME                           "org.rpp.WarpAffine"
 #define VX_KERNEL_RPP_RAIN_NAME                                 "org.rpp.Rain"
 #define VX_KERNEL_RPP_RESIZE_NAME                               "org.rpp.Resize"
-#define VX_KERNEL_RPP_RESIZEMIRROR_NAME                         "org.rpp.ResizeMirrorNormalize"
+#define VX_KERNEL_RPP_RESIZEMIRRORNORMALIZE_NAME                "org.rpp.ResizeMirrorNormalize"
 #define VX_KERNEL_RPP_RESIZECROPMIRROR_NAME                     "org.rpp.ResizeCropMirror"
 #define VX_KERNEL_RPP_ROTATE_NAME                               "org.rpp.Rotate"
 #define VX_KERNEL_RPP_SATURATION_NAME                           "org.rpp.Saturation"
