@@ -116,7 +116,9 @@ static vx_status VX_CALLBACK processJitter(vx_node node, const vx_reference *par
     refreshJitter(node, parameters, num, data);
 
     if (data->deviceType == AGO_TARGET_AFFINITY_GPU) {
-#if ENABLE_HIP
+#if ENABLE_OPENCL
+        return_status = VX_ERROR_NOT_IMPLEMENTED;
+#elif ENABLE_HIP
         // rpp_status = rppt_jitter_gpu((void *)data->pSrc, data->pSrcDesc, (void *)data->pDst, data->pDstDesc,  data->pKernelSize, data->seed, data->roiPtr, data->roiType, data->handle->rppHandle);
         return_status = (rpp_status == RPP_SUCCESS) ? VX_SUCCESS : VX_FAILURE;
 #endif
@@ -174,7 +176,6 @@ static vx_status VX_CALLBACK uninitializeJitter(vx_node node, const vx_reference
     delete(data->pSrcDesc);
     delete(data->pDstDesc);
     STATUS_ERROR_CHECK(releaseRPPHandle(node, data->handle, data->deviceType));
-    free(data->pKernelSize);
     delete (data);
     return VX_SUCCESS;
 }

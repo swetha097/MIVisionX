@@ -91,6 +91,8 @@ do
         ./rocAL_unittests 0 "$image_path" "${output_path}Contrast_${rgb_name[$rgb]}_${device_name}" $width $height 34 $device $rgb 0 $display
         ./rocAL_unittests 0 "$image_path" "${output_path}ColorTwist_${rgb_name[$rgb]}_${device_name}" $width $height 50 $device $rgb 0 $display
         ./rocAL_unittests 0 "$image_path" "${output_path}ColorTemp_${rgb_name[$rgb]}_${device_name}" $width $height 43 $device $rgb 0 $display
+        ./rocAL_unittests 0 "$image_path" "${output_path}CropCenter_${rgb_name[$rgb]}_${device_name}_cmn" $width $height 55 $device $rgb 0 $display
+
         ./rocAL_unittests 0 "$image_path" "${output_path}Exposure_${rgb_name[$rgb]}_${device_name}" $width $height 46 $device $rgb 0 $display
         ./rocAL_unittests 0 "$image_path" "${output_path}FishEye_${rgb_name[$rgb]}_${device_name}" $width $height 10 $device $rgb 0 $display
         ./rocAL_unittests 0 "$image_path" "${output_path}Flip_${rgb_name[$rgb]}_${device_name}" $width $height 47 $device $rgb 0 $display
