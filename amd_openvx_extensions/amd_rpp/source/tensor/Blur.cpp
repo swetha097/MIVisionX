@@ -27,7 +27,7 @@ struct BlurLocalData {
     Rpp32u deviceType;
     RppPtr_t pSrc;
     RppPtr_t pDst;
-    vx_uint32 *pKernelSize;
+    Rpp32u *pKernelSize;
     RpptDescPtr pSrcDesc;
     RpptDescPtr pDstDesc;
     RpptROI *pSrcRoi;
@@ -36,19 +36,16 @@ struct BlurLocalData {
     vxTensorLayout outputLayout;
     size_t inputTensorDims[RPP_MAX_TENSOR_DIMS];
     size_t ouputTensorDims[RPP_MAX_TENSOR_DIMS];
-    RppiSize *srcDimensions;
-    RppiSize maxSrcDimensions;  // TBR : Not present in tensor
-    Rpp32u *srcBatch_width; // TBR : Not present in tensor
-    Rpp32u *srcBatch_height; // TBR : Not present in tensor
+    RppiSize *pSrcDimensions;
+    RppiSize maxSrcDimensions;
 };
 
 static vx_status VX_CALLBACK refreshBlur(vx_node node, const vx_reference *parameters, vx_uint32 num, BlurLocalData *data) {
     vx_status status = VX_SUCCESS;
-    STATUS_ERROR_CHECK(vxCopyArrayRange((vx_array)parameters[3], 0, data->inputTensorDims[0], sizeof(vx_float32), data->pKernelSize, VX_READ_ONLY, VX_MEMORY_TYPE_HOST));
-    for (int i = 0; i < data->inputTensorDims[0]; i++)
-    {
-        data->srcDimensions[i].width = data->pSrcDesc->w;
-        data->srcDimensions[i].height = data->pSrcDesc->h;
+    STATUS_ERROR_CHECK(vxCopyArrayRange((vx_array)parameters[3], 0, data->inputTensorDims[0], sizeof(Rpp32u), data->pKernelSize, VX_READ_ONLY, VX_MEMORY_TYPE_HOST));
+    for (int i = 0; i < data->inputTensorDims[0]; i++) {
+        data->pSrcDimensions[i].width = data->pSrcDesc->w;
+        data->pSrcDimensions[i].height = data->pSrcDesc->h;
     }
     void *roi_tensor_ptr;
     if (data->deviceType == AGO_TARGET_AFFINITY_GPU) {
@@ -127,17 +124,19 @@ static vx_status VX_CALLBACK processBlur(vx_node node, const vx_reference *param
 #if ENABLE_OPENCL
         return_status = VX_ERROR_NOT_IMPLEMENTED;
 #elif ENABLE_HIP
-        if (data->pDstDesc->c==1 )
-            rpp_status = rppi_blur_u8_pln1_batchPD_gpu(data->pSrc, data->srcDimensions, data->maxSrcDimensions, data->pDst, data->pKernelSize, data->pSrcDesc->n, data->handle->rppHandle);
-        else
-            rpp_status = rppi_blur_u8_pkd3_batchPD_gpu(data->pSrc, data->srcDimensions, data->maxSrcDimensions, data->pDst, data->pKernelSize, data->pSrcDesc->n, data->handle->rppHandle);
+        if (data->pSrcDesc->c == 1) {
+            rpp_status = rppi_blur_u8_pln1_batchPD_gpu(data->pSrc, data->pSrcDimensions, data->maxSrcDimensions, data->pDst, data->pKernelSize, data->pSrcDesc->n, data->handle->rppHandle);
+        } else {
+            rpp_status = rppi_blur_u8_pkd3_batchPD_gpu(data->pSrc, data->pSrcDimensions, data->maxSrcDimensions, data->pDst, data->pKernelSize, data->pSrcDesc->n, data->handle->rppHandle);
+        }
         return_status = (rpp_status == RPP_SUCCESS) ? VX_SUCCESS : VX_FAILURE;
 #endif
     } else if (data->deviceType == AGO_TARGET_AFFINITY_CPU) {
-        if (data->pDstDesc->c==1 )
-            rpp_status = rppi_blur_u8_pln1_batchPD_host(data->pSrc, data->srcDimensions, data->maxSrcDimensions, data->pDst, data->pKernelSize, data->pSrcDesc->n, data->handle->rppHandle);
-        else
-            rpp_status = rppi_blur_u8_pkd3_batchPD_host(data->pSrc, data->srcDimensions, data->maxSrcDimensions, data->pDst, data->pKernelSize, data->pSrcDesc->n, data->handle->rppHandle);
+        if (data->pSrcDesc->c == 1) {
+            rpp_status = rppi_blur_u8_pln1_batchPD_host(data->pSrc, data->pSrcDimensions, data->maxSrcDimensions, data->pDst, data->pKernelSize, data->pSrcDesc->n, data->handle->rppHandle);
+        } else {
+            rpp_status = rppi_blur_u8_pkd3_batchPD_host(data->pSrc, data->pSrcDimensions, data->maxSrcDimensions, data->pDst, data->pKernelSize, data->pSrcDesc->n, data->handle->rppHandle);
+        }
         return_status = (rpp_status == RPP_SUCCESS) ? VX_SUCCESS : VX_FAILURE;
     }
     return return_status;
@@ -146,6 +145,7 @@ static vx_status VX_CALLBACK processBlur(vx_node node, const vx_reference *param
 static vx_status VX_CALLBACK initializeBlur(vx_node node, const vx_reference *parameters, vx_uint32 num) {
     BlurLocalData *data = new BlurLocalData;
     memset(data, 0, sizeof(BlurLocalData));
+
     vx_enum input_tensor_type, output_tensor_type;
     int roi_type, input_layout, output_layout;
     STATUS_ERROR_CHECK(vxCopyScalar((vx_scalar)parameters[4], &input_layout, VX_READ_ONLY, VX_MEMORY_TYPE_HOST));
@@ -174,11 +174,10 @@ static vx_status VX_CALLBACK initializeBlur(vx_node node, const vx_reference *pa
     data->pDstDesc->offsetInBytes = 0;
     fillDescriptionPtrfromDims(data->pDstDesc, data->outputLayout, data->ouputTensorDims);
 
-    data->pKernelSize = static_cast<vx_uint32 *>(malloc(sizeof(vx_uint32) * data->pSrcDesc->n));
-    data->srcDimensions = static_cast<RppiSize *>(malloc(sizeof(RppiSize) * data->pSrcDesc->n));
-
     data->maxSrcDimensions.height = data->pSrcDesc->h;
     data->maxSrcDimensions.width = data->pSrcDesc->w;
+    data->pKernelSize = static_cast<Rpp32u *>(malloc(sizeof(Rpp32u) * data->pSrcDesc->n));
+    data->pSrcDimensions = static_cast<RppiSize *>(malloc(sizeof(RppiSize) * data->pSrcDesc->n));
 
     refreshBlur(node, parameters, num, data);
     STATUS_ERROR_CHECK(createRPPHandle(node, &data->handle, data->pSrcDesc->n, data->deviceType));
@@ -190,7 +189,7 @@ static vx_status VX_CALLBACK uninitializeBlur(vx_node node, const vx_reference *
     BlurLocalData *data;
     STATUS_ERROR_CHECK(vxQueryNode(node, VX_NODE_LOCAL_DATA_PTR, &data, sizeof(data)));
     if (data->pKernelSize != nullptr) free(data->pKernelSize);
-    free(data->srcDimensions);
+    free(data->pSrcDimensions);
     delete(data->pSrcDesc);
     delete(data->pDstDesc);
     STATUS_ERROR_CHECK(releaseRPPHandle(node, data->handle, data->deviceType));
