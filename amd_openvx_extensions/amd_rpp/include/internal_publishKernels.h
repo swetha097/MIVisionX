@@ -122,7 +122,6 @@ vx_status VignettebatchPD_Register(vx_context);
 vx_status WarpAffinebatchPD_Register(vx_context);
 vx_status WarpPerspectivebatchPD_Register(vx_context);
 
-// Tensor registers which calls RPP Tensor API's.
 vx_status Blend_Register(vx_context);
 vx_status Blur_Register(vx_context);
 vx_status Brightness_Register(vx_context);
