@@ -23,13 +23,16 @@ THE SOFTWARE.
 #ifndef _PUBLISH_KERNELS_H_
 #define _PUBLISH_KERNELS_H_
 
+#include "internal_rpp.h"
+
+#ifndef SHARED_PUBLIC
 #if _WIN32
 #define SHARED_PUBLIC __declspec(dllexport)
 #else
 #define SHARED_PUBLIC __attribute__ ((visibility ("default")))
 #endif
+#endif
 
-#include "internal_rpp.h"
 #define RPP_MAX_TENSOR_DIMS 5
 
 extern "C" SHARED_PUBLIC vx_status VX_API_CALL vxPublishKernels(vx_context context);
@@ -101,6 +104,7 @@ vx_status ResizebatchPD_Register(vx_context);
 vx_status ResizeCropbatchPD_Register(vx_context);
 vx_status ResizeCropMirrorPD_Register(vx_context);
 vx_status ResizeMirrorNormalizeTensor_Register(vx_context);
+vx_status Resizetensor_Register(vx_context);
 vx_status RotatebatchPD_Register(vx_context);
 vx_status SaturationbatchPD_Register(vx_context);
 vx_status ScalebatchPD_Register(vx_context);
@@ -116,7 +120,6 @@ vx_status ThresholdingbatchPD_Register(vx_context);
 vx_status VignettebatchPD_Register(vx_context);
 vx_status WarpAffinebatchPD_Register(vx_context);
 vx_status WarpPerspectivebatchPD_Register(vx_context);
-vx_status Resizetensor_Register(vx_context);
 
 // Tensor registers which calls RPP Tensor API's.
 vx_status Blend_Register(vx_context);
@@ -236,7 +239,7 @@ vx_status ResizeCrop_Register(vx_context);
 #define VX_KERNEL_RPP_SEQUENCEREARRANGE_NAME                    "org.rpp.SequenceRearrange"
 #define VX_KERNEL_RPP_RESIZETENSOR_NAME      					"org.rpp.Resizetensor"
 
-// Tensor kernel names
+//tensor
 #define VX_KERNEL_RPP_BLEND_NAME                                "org.rpp.Blend"
 #define VX_KERNEL_RPP_BLUR_NAME                                 "org.rpp.Blur"
 #define VX_KERNEL_RPP_BRIGHTNESS_NAME                           "org.rpp.Brightness"
