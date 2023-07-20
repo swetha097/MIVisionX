@@ -90,6 +90,8 @@ def main():
     if (scaling_mode != types.SCALING_MODE_DEFAULT and interpolation_type !=
             types.LINEAR_INTERPOLATION):
         interpolation_type = types.LINEAR_INTERPOLATION
+    if augmentation_name in ["hue", "saturation", "color_twist"] and color_format == types.GRAY:
+        print("Not a valid option! Exiting!")
 
     try:
         path = "OUTPUT_IMAGES_PYTHON/NEW_API/FILE_READER/" + args.augmentation_name
