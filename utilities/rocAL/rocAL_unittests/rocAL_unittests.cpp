@@ -791,12 +791,13 @@ int test(int test_case, int reader_type, const char *path, const char *outName, 
     printf("\n\nAugmented copies count %lu \n", rocalGetAugmentationBranchCount(handle));
 
     /*>>>>>>>>>>>>>>>>>>> Diplay using OpenCV <<<<<<<<<<<<<<<<<*/
-    int h = rocalGetAugmentationBranchCount(handle) * rocalGetOutputHeight(handle);
+    int h = rocalGetAugmentationBranchCount(handle) * rocalGetOutputHeight(handle) * inputBatchSize;
     int w = rocalGetOutputWidth(handle);
     int p = ((color_format == RocalImageColor::ROCAL_COLOR_RGB24) ? 3 : 1);
     const unsigned number_of_cols = 1; //1920 / w;
     auto cv_color_format = ((color_format == RocalImageColor::ROCAL_COLOR_RGB24) ? CV_8UC3 : CV_8UC1);
-    std::vector<cv::Mat> mat_output, mat_input;
+    cv::Mat mat_output(h, w, cv_color_format);
+    cv::Mat mat_input(h, w, cv_color_format);
     cv::Mat mat_color;
     int col_counter = 0;
     if(DISPLAY)
@@ -805,7 +806,7 @@ int test(int test_case, int reader_type, const char *path, const char *outName, 
     printf("Remaining images %lu \n", rocalGetRemainingImages(handle));
     high_resolution_clock::time_point t1 = high_resolution_clock::now();
     int index = 0;
-    bool first_run = true;
+
     while (rocalGetRemainingImages(handle) >= inputBatchSize)
     {
         index++;
@@ -908,43 +909,33 @@ int test(int test_case, int reader_type, const char *path, const char *outName, 
         auto last_colot_temp = rocalGetIntValue(color_temp_adj);
         rocalUpdateIntParameter(last_colot_temp + 1, color_temp_adj);
 
-        RocalTensorList output_tensor_list = rocalGetOutputTensors(handle);
+        rocalCopyToOutput(handle, mat_input.data, h * w * p);
 
         std::vector<int> compression_params;
         compression_params.push_back(IMWRITE_PNG_COMPRESSION);
         compression_params.push_back(9);
 
-        for(unsigned idx = 0; idx < output_tensor_list->size(); idx++) { // Iterate over each output
-            auto output_tensor = output_tensor_list->at(idx);
-            int h = output_tensor->shape().at(1) * output_tensor->dims().at(0);
-            int w = output_tensor->shape().at(0);
-            if(first_run) { // Allocate cv matrix and output buffers for each output in first run and reuse in every iteration
-                mat_output.emplace_back(cv::Mat(h, w, cv_color_format));
-            }            
-            output_tensor->copy_data(mat_output[idx].data, ROCAL_MEMCPY_HOST);  // Copy the output data into Opencv matrix
+        mat_input.copyTo(mat_output(cv::Rect(col_counter * w, 0, w, h)));
+        std::string out_filename = std::string(outName) + ".png";   // in case the user specifies non png filename
+        if (display_all)
+            out_filename = std::string(outName) + std::to_string(index) + ".png";   // in case the user specifies non png filename
 
-            std::string out_filename = std::string(outName) + ".png";   // in case the user specifies non png filename
-            if (display_all)
-                out_filename = std::string(outName) + std::to_string(index) + std::to_string(idx) + ".png";   // in case the user specifies non png filename
-
-            if (color_format == RocalImageColor::ROCAL_COLOR_RGB24)
-            {
-                cv::cvtColor(mat_output[idx], mat_color, CV_RGB2BGR);
-                if(DISPLAY)
-                    cv::imshow("output", mat_output[idx]);
-                else
-                    cv::imwrite(out_filename, mat_color, compression_params);
-            }
+        if (color_format == RocalImageColor::ROCAL_COLOR_RGB24)
+        {
+            cv::cvtColor(mat_output, mat_color, CV_RGB2BGR);
+            if(DISPLAY)
+                cv::imshow("output", mat_output);
             else
-            {
-                if(DISPLAY)
-                    cv::imshow("output", mat_output[idx]);
-                else
-                    cv::imwrite(out_filename, mat_output[idx], compression_params);
-            }
-            col_counter = (col_counter + 1) % number_of_cols;
+                cv::imwrite(out_filename, mat_color, compression_params);
         }
-        first_run = false;
+        else
+        {
+            if(DISPLAY)
+                cv::imshow("output", mat_output);
+            else
+                cv::imwrite(out_filename, mat_output, compression_params);
+        }
+        col_counter = (col_counter + 1) % number_of_cols;
     }
 
     high_resolution_clock::time_point t2 = high_resolution_clock::now();
@@ -955,10 +946,9 @@ int test(int test_case, int reader_type, const char *path, const char *outName, 
     std::cout << "Process  time " << rocal_timing.process_time << std::endl;
     std::cout << "Transfer time " << rocal_timing.transfer_time << std::endl;
     std::cout << ">>>>> Total Elapsed Time " << dur / 1000000 << " sec " << dur % 1000000 << " us " << std::endl;
-    for (unsigned i = 0; i < mat_output.size(); i++) {
-        mat_output[i].release();
-    }
     rocalRelease(handle);
+    mat_input.release();
+    mat_output.release();
     if (!output)
         return -1;
     return 0;
