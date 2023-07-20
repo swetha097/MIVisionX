@@ -27,8 +27,8 @@ struct JitterLocalData {
     Rpp32u deviceType;
     RppPtr_t pSrc;
     RppPtr_t pDst;
-    vx_uint32 *pKernelSize;
-    vx_uint32 seed;
+    Rpp32u *pKernelSize;
+    Rpp32u seed;
     RpptDescPtr pSrcDesc;
     RpptDescPtr pDstDesc;
     RpptROI *pSrcRoi;
@@ -41,7 +41,7 @@ struct JitterLocalData {
 
 static vx_status VX_CALLBACK refreshJitter(vx_node node, const vx_reference *parameters, vx_uint32 num, JitterLocalData *data) {
     vx_status status = VX_SUCCESS;
-    STATUS_ERROR_CHECK(vxCopyArrayRange((vx_array)parameters[3], 0, data->pSrcDesc->n, sizeof(vx_uint32), data->pKernelSize, VX_READ_ONLY, VX_MEMORY_TYPE_HOST));
+    STATUS_ERROR_CHECK(vxCopyArrayRange((vx_array)parameters[3], 0, data->inputTensorDims[0], sizeof(Rpp32u), data->pKernelSize, VX_READ_ONLY, VX_MEMORY_TYPE_HOST));
 
     void *roi_tensor_ptr;
     if (data->deviceType == AGO_TARGET_AFFINITY_GPU) {
@@ -60,7 +60,7 @@ static vx_status VX_CALLBACK refreshJitter(vx_node node, const vx_reference *par
     data->pSrcRoi = reinterpret_cast<RpptROI *>(roi_tensor_ptr);
     if ((data->inputLayout == vxTensorLayout::VX_NFHWC || data->inputLayout == vxTensorLayout::VX_NFCHW)) {
         unsigned num_of_frames = data->inputTensorDims[1]; // Num of frames 'F'
-        for(int n = data->pSrcDesc->n - 1; n >= 0; n--) {
+        for(int n = data->inputTensorDims[0] - 1; n >= 0; n--) {
             unsigned index = n * num_of_frames;
             for(int f = 0; f < num_of_frames; f++) {
                 data->pKernelSize[index + f] = data->pKernelSize[n];
@@ -113,18 +113,20 @@ static vx_status VX_CALLBACK validateJitter(vx_node node, const vx_reference par
 static vx_status VX_CALLBACK processJitter(vx_node node, const vx_reference *parameters, vx_uint32 num) {
     RppStatus rpp_status = RPP_SUCCESS;
     vx_status return_status = VX_SUCCESS;
+
     JitterLocalData *data = NULL;
-    refreshJitter(node, parameters, num, data);
     STATUS_ERROR_CHECK(vxQueryNode(node, VX_NODE_LOCAL_DATA_PTR, &data, sizeof(data)));
-    if (data->deviceType == AGO_TARGET_AFFINITY_GPU) {
+    refreshJitter(node, parameters, num, data);
+    // rppt_jitter is not available in RPP TOT, will be enabled once support is added
+    /* if (data->deviceType == AGO_TARGET_AFFINITY_GPU) {
 #if ENABLE_HIP
-        // rpp_status = rppt_jitter_gpu(data->pSrc, data->pSrcDesc, data->pDst, data->pDstDesc,  data->pKernelSize, data->seed, data->roiPtr, data->roiType, data->handle->rppHandle);
+        // rpp_status = rppt_jitter_gpu(data->pSrc, data->pSrcDesc, data->pDst, data->pDstDesc, data->pKernelSize, data->seed, data->roiPtr, data->roiType, data->handle->rppHandle);
         return_status = (rpp_status == RPP_SUCCESS) ? VX_SUCCESS : VX_FAILURE;
 #endif
     } else if (data->deviceType == AGO_TARGET_AFFINITY_CPU) {
         // rpp_status = rppt_jitter_host(data->pSrc, data->pSrcDesc, data->pDst, data->pDstDesc, data->pKernelSize, data->seed, data->roiPtr, data->roiType, data->handle->rppHandle);
         return_status = (rpp_status == RPP_SUCCESS) ? VX_SUCCESS : VX_FAILURE;
-    }
+    } */
     return return_status;
 }
 
@@ -161,7 +163,7 @@ static vx_status VX_CALLBACK initializeJitter(vx_node node, const vx_reference *
     data->pDstDesc->offsetInBytes = 0;
     fillDescriptionPtrfromDims(data->pDstDesc, data->outputLayout, data->ouputTensorDims);
 
-    data->pKernelSize = static_cast<vx_uint32 *>(malloc(sizeof(vx_uint32) * data->pSrcDesc->n));
+    data->pKernelSize = static_cast<Rpp32u *>(malloc(sizeof(Rpp32u) * data->pSrcDesc->n));
     refreshJitter(node, parameters, num, data);
     STATUS_ERROR_CHECK(createRPPHandle(node, &data->handle, data->pSrcDesc->n, data->deviceType));
     STATUS_ERROR_CHECK(vxSetNodeAttribute(node, VX_NODE_LOCAL_DATA_PTR, &data, sizeof(data)));
@@ -175,7 +177,6 @@ static vx_status VX_CALLBACK uninitializeJitter(vx_node node, const vx_reference
     delete(data->pSrcDesc);
     delete(data->pDstDesc);
     STATUS_ERROR_CHECK(releaseRPPHandle(node, data->handle, data->deviceType));
-    free(data->pKernelSize);
     delete(data);
     return VX_SUCCESS;
 }

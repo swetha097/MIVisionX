@@ -27,7 +27,7 @@ struct FogLocalData {
     Rpp32u deviceType;
     RppPtr_t pSrc;
     RppPtr_t pDst;
-    vx_float32 *pFogValue;
+    Rpp32f *pFogValue;
     RpptDescPtr pSrcDesc;
     RpptDescPtr pDstDesc;
     RpptROI *pSrcRoi;
@@ -36,20 +36,14 @@ struct FogLocalData {
     vxTensorLayout outputLayout;
     size_t inputTensorDims[RPP_MAX_TENSOR_DIMS];
     size_t ouputTensorDims[RPP_MAX_TENSOR_DIMS];
-    RppiSize *srcDimensions; // TBR : Not present in tensor
-    RppiSize maxSrcDimensions;  // TBR : Not present in tensor
-    Rpp32u *srcBatch_width; // TBR : Not present in tensor
-    Rpp32u *srcBatch_height;    // TBR : Not present in tensor
+    RppiSize *pSrcDimensions;
+    RppiSize maxSrcDimensions;
 };
 
 static vx_status VX_CALLBACK refreshFog(vx_node node, const vx_reference *parameters, vx_uint32 num, FogLocalData *data) {
     vx_status status = VX_SUCCESS;
-    STATUS_ERROR_CHECK(vxCopyArrayRange((vx_array)parameters[3], 0, data->inputTensorDims[0], sizeof(vx_float32), data->pFogValue, VX_READ_ONLY, VX_MEMORY_TYPE_HOST));
-    for (int i = 0; i < data->inputTensorDims[0]; i++)
-    {
-        data->srcDimensions[i].width = data->pSrcDesc->w;  //  640;//data->pSrcRoi[i].xywhROI.roiWidth;
-        data->srcDimensions[i].height = data->pSrcDesc->h; // 480;//data->pSrcRoi[i].xywhROI.roiHeight;
-    }
+    STATUS_ERROR_CHECK(vxCopyArrayRange((vx_array)parameters[3], 0, data->inputTensorDims[0], sizeof(Rpp32f), data->pFogValue, VX_READ_ONLY, VX_MEMORY_TYPE_HOST));
+
     void *roi_tensor_ptr;
     if (data->deviceType == AGO_TARGET_AFFINITY_GPU) {
 #if ENABLE_OPENCL
@@ -65,13 +59,18 @@ static vx_status VX_CALLBACK refreshFog(vx_node node, const vx_reference *parame
         STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[2], VX_TENSOR_BUFFER_HOST, &data->pDst, sizeof(data->pDst)));
     }
     data->pSrcRoi = reinterpret_cast<RpptROI *>(roi_tensor_ptr);
+    // Fill width and height array with ROI data required by RPP batchPD kernels
+    for (int i = 0; i < data->pSrcDesc->n; i++) {
+        data->pSrcDimensions[i].width = data->pSrcRoi[i].xywhROI.roiWidth;
+        data->pSrcDimensions[i].height = data->pSrcRoi[i].xywhROI.roiHeight;
+    }
     if ((data->inputLayout == vxTensorLayout::VX_NFHWC || data->inputLayout == vxTensorLayout::VX_NFCHW)) {
         unsigned num_of_frames = data->inputTensorDims[1]; // Num of frames 'F'
         for(int n = data->inputTensorDims[0] - 1; n >= 0; n--) {
             unsigned index = n * num_of_frames;
             for(int f = 0; f < num_of_frames; f++) {
                 data->pFogValue[index + f] = data->pFogValue[n];
-                data->pSrcRoi[index + f].xywhROI = data->pSrcRoi[n].xywhROI;
+                data->pSrcDimensions[index + f] = data->pSrcDimensions[n];
             }
         }
     }
@@ -80,9 +79,6 @@ static vx_status VX_CALLBACK refreshFog(vx_node node, const vx_reference *parame
 }
 
 static vx_status VX_CALLBACK validateFog(vx_node node, const vx_reference parameters[], vx_uint32 num, vx_meta_format metas[]) {
-    
-    std::cerr<<"\n check in validateFog";
-
     vx_status status = VX_SUCCESS;
     vx_enum scalar_type;
     STATUS_ERROR_CHECK(vxQueryScalar((vx_scalar)parameters[4], VX_SCALAR_TYPE, &scalar_type, sizeof(scalar_type)));
@@ -121,10 +117,9 @@ static vx_status VX_CALLBACK validateFog(vx_node node, const vx_reference parame
 }
 
 static vx_status VX_CALLBACK processFog(vx_node node, const vx_reference *parameters, vx_uint32 num) {
-    std::cerr<<"\n check in processFog";
-
     RppStatus rpp_status = RPP_SUCCESS;
     vx_status return_status = VX_SUCCESS;
+
     FogLocalData *data = NULL;
     STATUS_ERROR_CHECK(vxQueryNode(node, VX_NODE_LOCAL_DATA_PTR, &data, sizeof(data)));
     refreshFog(node, parameters, num, data);
@@ -132,27 +127,28 @@ static vx_status VX_CALLBACK processFog(vx_node node, const vx_reference *parame
 #if ENABLE_OPENCL
         return_status = VX_ERROR_NOT_IMPLEMENTED;
 #elif ENABLE_HIP
-        // rpp_status = rppt_gamma_correction_gpu(data->pSrc, data->pSrcDesc, data->pDst, data->pDstDesc,  data->pFogValue, data->pSrcRoi, data->roiType, data->handle->rppHandle);
-        if (data->pDstDesc->c==1 ) 
-            rpp_status = rppi_fog_u8_pln1_batchPD_gpu(data->pSrc, data->srcDimensions, data->maxSrcDimensions, data->pDst, data->pFogValue, data->pSrcDesc->n, data->handle->rppHandle);
-        else 
-            rpp_status = rppi_fog_u8_pkd3_batchPD_gpu(data->pSrc, data->srcDimensions, data->maxSrcDimensions, data->pDst, data->pFogValue, data->pSrcDesc->n, data->handle->rppHandle);
+        if (data->pSrcDesc->c == 1) { 
+            rpp_status = rppi_fog_u8_pln1_batchPD_gpu(data->pSrc, data->pSrcDimensions, data->maxSrcDimensions, data->pDst, data->pFogValue, data->pSrcDesc->n, data->handle->rppHandle);
+        } else { 
+            rpp_status = rppi_fog_u8_pkd3_batchPD_gpu(data->pSrc, data->pSrcDimensions, data->maxSrcDimensions, data->pDst, data->pFogValue, data->pSrcDesc->n, data->handle->rppHandle);
+        }
         return_status = (rpp_status == RPP_SUCCESS) ? VX_SUCCESS : VX_FAILURE;
 #endif
     } else if (data->deviceType == AGO_TARGET_AFFINITY_CPU) {
-        if (data->pDstDesc->c==1 ) 
-            rpp_status = rppi_fog_u8_pln1_batchPD_host(data->pSrc, data->srcDimensions, data->maxSrcDimensions, data->pDst, data->pFogValue, data->pSrcDesc->n, data->handle->rppHandle);
-        else 
-            rpp_status = rppi_fog_u8_pkd3_batchPD_host(data->pSrc, data->srcDimensions, data->maxSrcDimensions, data->pDst, data->pFogValue, data->pSrcDesc->n, data->handle->rppHandle);
+        if (data->pSrcDesc->c == 1) { 
+            rpp_status = rppi_fog_u8_pln1_batchPD_host(data->pSrc, data->pSrcDimensions, data->maxSrcDimensions, data->pDst, data->pFogValue, data->pSrcDesc->n, data->handle->rppHandle);
+        } else { 
+            rpp_status = rppi_fog_u8_pkd3_batchPD_host(data->pSrc, data->pSrcDimensions, data->maxSrcDimensions, data->pDst, data->pFogValue, data->pSrcDesc->n, data->handle->rppHandle);
+        }
         return_status = (rpp_status == RPP_SUCCESS) ? VX_SUCCESS : VX_FAILURE;
     }
     return return_status;
 }
 
 static vx_status VX_CALLBACK initializeFog(vx_node node, const vx_reference *parameters, vx_uint32 num) {
-    std::cerr<<"\n check in initializeFog";
     FogLocalData *data = new FogLocalData;
     memset(data, 0, sizeof(FogLocalData));
+
     vx_enum input_tensor_type, output_tensor_type;
     int roi_type, input_layout, output_layout;
     STATUS_ERROR_CHECK(vxCopyScalar((vx_scalar)parameters[4], &input_layout, VX_READ_ONLY, VX_MEMORY_TYPE_HOST));
@@ -181,11 +177,10 @@ static vx_status VX_CALLBACK initializeFog(vx_node node, const vx_reference *par
     data->pDstDesc->offsetInBytes = 0;
     fillDescriptionPtrfromDims(data->pDstDesc, data->outputLayout, data->ouputTensorDims);
 
-    data->pFogValue = static_cast<vx_float32 *>(malloc(sizeof(vx_float32) * data->pSrcDesc->n));
-    data->srcDimensions = static_cast<RppiSize *>(malloc(sizeof(RppiSize) * data->pSrcDesc->n));
-
     data->maxSrcDimensions.height = data->pSrcDesc->h;
     data->maxSrcDimensions.width = data->pSrcDesc->w;
+    data->pSrcDimensions = static_cast<RppiSize *>(malloc(sizeof(RppiSize) * data->pSrcDesc->n));
+    data->pFogValue = static_cast<Rpp32f *>(malloc(sizeof(Rpp32f) * data->pSrcDesc->n));
     refreshFog(node, parameters, num, data);
     STATUS_ERROR_CHECK(createRPPHandle(node, &data->handle, data->pSrcDesc->n, data->deviceType));
     STATUS_ERROR_CHECK(vxSetNodeAttribute(node, VX_NODE_LOCAL_DATA_PTR, &data, sizeof(data)));
@@ -196,11 +191,10 @@ static vx_status VX_CALLBACK uninitializeFog(vx_node node, const vx_reference *p
     FogLocalData *data;
     STATUS_ERROR_CHECK(vxQueryNode(node, VX_NODE_LOCAL_DATA_PTR, &data, sizeof(data)));
     if (data->pFogValue != nullptr)  free(data->pFogValue);
-    free(data->srcDimensions);
+    if (data->pSrcDimensions != nullptr) free(data->pSrcDimensions);
     delete(data->pSrcDesc);
     delete(data->pDstDesc);
     STATUS_ERROR_CHECK(releaseRPPHandle(node, data->handle, data->deviceType));
-
     delete(data);
     return VX_SUCCESS;
 }
@@ -251,7 +245,6 @@ vx_status Fog_Register(vx_context context) {
         PARAM_ERROR_CHECK(vxAddParameterToKernel(kernel, 1, VX_INPUT, VX_TYPE_TENSOR, VX_PARAMETER_STATE_REQUIRED));
         PARAM_ERROR_CHECK(vxAddParameterToKernel(kernel, 2, VX_OUTPUT, VX_TYPE_TENSOR, VX_PARAMETER_STATE_REQUIRED));
         PARAM_ERROR_CHECK(vxAddParameterToKernel(kernel, 3, VX_INPUT, VX_TYPE_ARRAY, VX_PARAMETER_STATE_REQUIRED));
-        // PARAM_ERROR_CHECK(vxAddParameterToKernel(kernel, 4, VX_INPUT, VX_TYPE_ARRAY, VX_PARAMETER_STATE_REQUIRED));
         PARAM_ERROR_CHECK(vxAddParameterToKernel(kernel, 4, VX_INPUT, VX_TYPE_SCALAR, VX_PARAMETER_STATE_REQUIRED));
         PARAM_ERROR_CHECK(vxAddParameterToKernel(kernel, 5, VX_INPUT, VX_TYPE_SCALAR, VX_PARAMETER_STATE_REQUIRED));
         PARAM_ERROR_CHECK(vxAddParameterToKernel(kernel, 6, VX_INPUT, VX_TYPE_SCALAR, VX_PARAMETER_STATE_REQUIRED));

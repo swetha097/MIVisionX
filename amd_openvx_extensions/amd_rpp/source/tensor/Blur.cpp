@@ -43,10 +43,6 @@ struct BlurLocalData {
 static vx_status VX_CALLBACK refreshBlur(vx_node node, const vx_reference *parameters, vx_uint32 num, BlurLocalData *data) {
     vx_status status = VX_SUCCESS;
     STATUS_ERROR_CHECK(vxCopyArrayRange((vx_array)parameters[3], 0, data->inputTensorDims[0], sizeof(Rpp32u), data->pKernelSize, VX_READ_ONLY, VX_MEMORY_TYPE_HOST));
-    for (int i = 0; i < data->inputTensorDims[0]; i++) {
-        data->pSrcDimensions[i].width = data->pSrcDesc->w;
-        data->pSrcDimensions[i].height = data->pSrcDesc->h;
-    }
     void *roi_tensor_ptr;
     if (data->deviceType == AGO_TARGET_AFFINITY_GPU) {
 #if ENABLE_OPENCL
@@ -61,14 +57,20 @@ static vx_status VX_CALLBACK refreshBlur(vx_node node, const vx_reference *param
         STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[0], VX_TENSOR_BUFFER_HOST, &data->pSrc, sizeof(data->pSrc)));
         STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[2], VX_TENSOR_BUFFER_HOST, &data->pDst, sizeof(data->pDst)));
     }
+
     data->pSrcRoi = reinterpret_cast<RpptROI *>(roi_tensor_ptr);
+    // Fill width and height array with ROI data required by RPP batchPD kernels
+    for (int i = 0; i < data->pSrcDesc->n; i++) {
+        data->pSrcDimensions[i].width = data->pSrcRoi[i].xywhROI.roiWidth;
+        data->pSrcDimensions[i].height = data->pSrcRoi[i].xywhROI.roiHeight;
+    }
     if ((data->inputLayout == vxTensorLayout::VX_NFHWC || data->inputLayout == vxTensorLayout::VX_NFCHW)) {
         unsigned num_of_frames = data->inputTensorDims[1]; // Num of frames 'F'
         for(int n = data->inputTensorDims[0] - 1; n >= 0; n--) {
             unsigned index = n * num_of_frames;
             for(int f = 0; f < num_of_frames; f++) {
                 data->pKernelSize[index + f] = data->pKernelSize[n];
-                data->pSrcRoi[index + f].xywhROI = data->pSrcRoi[n].xywhROI;
+                data->pSrcDimensions[index + f] = data->pSrcDimensions[n];
             }
         }
     }

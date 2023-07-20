@@ -1969,7 +1969,7 @@ VX_API_ENTRY vx_node VX_API_CALL vxRppGammaCorrection(vx_graph graph, vx_tensor 
     return node;
 }
 
-VX_API_ENTRY vx_node VX_API_CALL vxRppContrast(vx_graph graph, vx_tensor pSrc, vx_tensor pSrcRoi, vx_tensor pDst, vx_array pMin, vx_array pMax, vx_scalar inputLayout, vx_scalar outputLayout, vx_scalar roiType) {
+VX_API_ENTRY vx_node VX_API_CALL vxRppContrast(vx_graph graph, vx_tensor pSrc, vx_tensor pSrcRoi, vx_tensor pDst, vx_array pContrastFactor, vx_array pContrastCenter, vx_scalar inputLayout, vx_scalar outputLayout, vx_scalar roiType) {
     vx_node node = NULL;
     vx_context context = vxGetContext((vx_reference)graph);
     if (vxGetStatus((vx_reference)context) == VX_SUCCESS) {
@@ -1979,8 +1979,8 @@ VX_API_ENTRY vx_node VX_API_CALL vxRppContrast(vx_graph graph, vx_tensor pSrc, v
             (vx_reference)pSrc,
             (vx_reference)pSrcRoi,
             (vx_reference)pDst,
-            (vx_reference)pMin,
-            (vx_reference)pMax,
+            (vx_reference)pContrastFactor,
+            (vx_reference)pContrastCenter,
             (vx_reference)inputLayout,
             (vx_reference)outputLayout,
             (vx_reference)roiType,
@@ -2011,7 +2011,7 @@ VX_API_ENTRY vx_node VX_API_CALL vxRppFlip(vx_graph graph, vx_tensor pSrc, vx_te
     return node;
 }
 
-VX_API_ENTRY vx_node VX_API_CALL vxRppExposure(vx_graph graph, vx_tensor pSrc, vx_tensor pSrcRoi, vx_tensor pDst, vx_array pShift, vx_scalar inputLayout, vx_scalar outputLayout, vx_scalar roiType) {
+VX_API_ENTRY vx_node VX_API_CALL vxRppExposure(vx_graph graph, vx_tensor pSrc, vx_tensor pSrcRoi, vx_tensor pDst, vx_array pExposureFactor, vx_scalar inputLayout, vx_scalar outputLayout, vx_scalar roiType) {
     vx_node node = NULL;
     vx_context context = vxGetContext((vx_reference)graph);
     if (vxGetStatus((vx_reference)context) == VX_SUCCESS) {
@@ -2021,7 +2021,7 @@ VX_API_ENTRY vx_node VX_API_CALL vxRppExposure(vx_graph graph, vx_tensor pSrc, v
             (vx_reference)pSrc,
             (vx_reference)pSrcRoi,
             (vx_reference)pDst,
-            (vx_reference)pShift,
+            (vx_reference)pExposureFactor,
             (vx_reference)inputLayout,
             (vx_reference)outputLayout,
             (vx_reference)roiType,

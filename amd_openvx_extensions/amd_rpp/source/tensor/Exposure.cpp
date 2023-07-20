@@ -27,7 +27,7 @@ struct ExposureLocalData {
     Rpp32u deviceType;
     RppPtr_t pSrc;
     RppPtr_t pDst;
-    vx_float32 *pShift;
+    Rpp32f *pExposureFactor;
     RpptDescPtr pSrcDesc;
     RpptDescPtr pDstDesc;
     RpptROI *pSrcRoi;
@@ -40,7 +40,7 @@ struct ExposureLocalData {
 
 static vx_status VX_CALLBACK refreshExposure(vx_node node, const vx_reference *parameters, vx_uint32 num, ExposureLocalData *data) {
     vx_status status = VX_SUCCESS;
-    STATUS_ERROR_CHECK(vxCopyArrayRange((vx_array)parameters[3], 0, data->inputTensorDims[0], sizeof(vx_float32), data->pShift, VX_READ_ONLY, VX_MEMORY_TYPE_HOST));
+    STATUS_ERROR_CHECK(vxCopyArrayRange((vx_array)parameters[3], 0, data->inputTensorDims[0], sizeof(Rpp32f), data->pExposureFactor, VX_READ_ONLY, VX_MEMORY_TYPE_HOST));
 
     void *roi_tensor_ptr;
     if (data->deviceType == AGO_TARGET_AFFINITY_GPU) {
@@ -59,10 +59,10 @@ static vx_status VX_CALLBACK refreshExposure(vx_node node, const vx_reference *p
     data->pSrcRoi = reinterpret_cast<RpptROI *>(roi_tensor_ptr);
     if ((data->inputLayout == vxTensorLayout::VX_NFHWC || data->inputLayout == vxTensorLayout::VX_NFCHW)) {
         unsigned num_of_frames = data->inputTensorDims[1]; // Num of frames 'F'
-        for(int n = data->inputTensorDims[0] - 1; n >= 0; n--) {
+        for (int n = data->inputTensorDims[0] - 1; n >= 0; n--) {
             unsigned index = n * num_of_frames;
-            for(int f = 0; f < num_of_frames; f++) {
-                data->pShift[index + f] = data->pShift[n];
+            for (int f = 0; f < num_of_frames; f++) {
+                data->pExposureFactor[index + f] = data->pExposureFactor[n];
                 data->pSrcRoi[index + f].xywhROI = data->pSrcRoi[n].xywhROI;
             }
         }
@@ -112,6 +112,7 @@ static vx_status VX_CALLBACK validateExposure(vx_node node, const vx_reference p
 static vx_status VX_CALLBACK processExposure(vx_node node, const vx_reference *parameters, vx_uint32 num) {
     RppStatus rpp_status = RPP_SUCCESS;
     vx_status return_status = VX_SUCCESS;
+
     ExposureLocalData *data = NULL;
     STATUS_ERROR_CHECK(vxQueryNode(node, VX_NODE_LOCAL_DATA_PTR, &data, sizeof(data)));
     refreshExposure(node, parameters, num, data);
@@ -119,11 +120,11 @@ static vx_status VX_CALLBACK processExposure(vx_node node, const vx_reference *p
 #if ENABLE_OPENCL
         return_status = VX_ERROR_NOT_IMPLEMENTED;
 #elif ENABLE_HIP
-        rpp_status = rppt_exposure_gpu(data->pSrc, data->pSrcDesc, data->pDst, data->pDstDesc,  data->pShift, data->pSrcRoi, data->roiType, data->handle->rppHandle);
+        rpp_status = rppt_exposure_gpu(data->pSrc, data->pSrcDesc, data->pDst, data->pDstDesc, data->pExposureFactor, data->pSrcRoi, data->roiType, data->handle->rppHandle);
         return_status = (rpp_status == RPP_SUCCESS) ? VX_SUCCESS : VX_FAILURE;
 #endif
     } else if (data->deviceType == AGO_TARGET_AFFINITY_CPU) {
-        rpp_status = rppt_exposure_host(data->pSrc, data->pSrcDesc, data->pDst, data->pDstDesc, data->pShift, data->pSrcRoi, data->roiType, data->handle->rppHandle);
+        rpp_status = rppt_exposure_host(data->pSrc, data->pSrcDesc, data->pDst, data->pDstDesc, data->pExposureFactor, data->pSrcRoi, data->roiType, data->handle->rppHandle);
         return_status = (rpp_status == RPP_SUCCESS) ? VX_SUCCESS : VX_FAILURE;
     }
     return return_status;
@@ -161,7 +162,7 @@ static vx_status VX_CALLBACK initializeExposure(vx_node node, const vx_reference
     data->pDstDesc->offsetInBytes = 0;
     fillDescriptionPtrfromDims(data->pDstDesc, data->outputLayout, data->outputTensorDims);
 
-    data->pShift = static_cast<vx_float32 *>(malloc(sizeof(vx_float32) * data->pSrcDesc->n));
+    data->pExposureFactor = static_cast<Rpp32f *>(malloc(sizeof(Rpp32f) * data->pSrcDesc->n));
     refreshExposure(node, parameters, num, data);
     STATUS_ERROR_CHECK(createRPPHandle(node, &data->handle, data->pSrcDesc->n, data->deviceType));
     STATUS_ERROR_CHECK(vxSetNodeAttribute(node, VX_NODE_LOCAL_DATA_PTR, &data, sizeof(data)));
@@ -171,7 +172,7 @@ static vx_status VX_CALLBACK initializeExposure(vx_node node, const vx_reference
 static vx_status VX_CALLBACK uninitializeExposure(vx_node node, const vx_reference *parameters, vx_uint32 num) {
     ExposureLocalData *data;
     STATUS_ERROR_CHECK(vxQueryNode(node, VX_NODE_LOCAL_DATA_PTR, &data, sizeof(data)));
-    if (data->pShift != nullptr) free(data->pShift);
+    if (data->pExposureFactor != nullptr) free(data->pExposureFactor);
     delete(data->pSrcDesc);
     delete(data->pDstDesc);
     STATUS_ERROR_CHECK(releaseRPPHandle(node, data->handle, data->deviceType));
