@@ -58,7 +58,6 @@ static vx_status VX_CALLBACK refreshSequenceRearrange(vx_node node, const vx_ref
 }
 
 static vx_status VX_CALLBACK validateSequenceRearrange(vx_node node, const vx_reference parameters[], vx_uint32 num, vx_meta_format metas[]) {
-    // check scalar alpha and beta type
     vx_status status = VX_SUCCESS;
     vx_enum scalar_type;
     STATUS_ERROR_CHECK(vxQueryScalar((vx_scalar)parameters[3], VX_SCALAR_TYPE, &scalar_type, sizeof(scalar_type)));
@@ -102,12 +101,12 @@ static vx_status VX_CALLBACK processSequenceRearrange(vx_node node, const vx_ref
         for (int sequence_cnt = 0; sequence_cnt < data->pSrcDesc->n; sequence_cnt++) {
             unsigned src_sequence_start_address = sequence_cnt * data->pSrcDesc->strides.nStride * data->sequenceLength;
             unsigned dst_sequence_start_address = sequence_cnt * data->pDstDesc->strides.nStride * data->newSequenceLength;
-            for (unsigned dst_index = 0; dst_index < (data->newSequenceLength); dst_index++) {
+            for (unsigned dst_index = 0; dst_index < data->newSequenceLength; dst_index++) {
                 unsigned src_index = data->pNewOrder[dst_index];
                 if (src_index > data->sequenceLength)
                     ERRMSG(VX_ERROR_INVALID_VALUE, "invalid new order value=%d (must be between 0-%d)\n", src_index, data->sequenceLength - 1);
-                auto dst_offset = (unsigned char *)data->pClDst + dst_sequence_start_address + (dst_index * data->pSrcDesc->strides.nStride);
-                auto src_offset = (unsigned char *)data->pClSrc + src_sequence_start_address + (src_index * data->pDstDesc->strides.nStride);
+                auto dst_offset = dst_sequence_start_address + (dst_index * data->pSrcDesc->strides.nStride);
+                auto src_offset = src_sequence_start_address + (src_index * data->pDstDesc->strides.nStride);
                 if (clEnqueueCopyBuffer(handle, data->pClSrc, data->pClDst, src_offset, dst_offset, data->pSrcDesc->strides.nStride, 0, NULL, NULL) != CL_SUCCESS)
                         return VX_FAILURE;
             }
@@ -120,8 +119,8 @@ static vx_status VX_CALLBACK processSequenceRearrange(vx_node node, const vx_ref
                 unsigned src_index = data->pNewOrder[dst_index];
                 if (src_index > data->sequenceLength)
                     ERRMSG(VX_ERROR_INVALID_VALUE, "invalid new order value=%d (must be between 0-%d)\n", src_index, data->sequenceLength - 1);
-                auto dst_address = (unsigned char *)data->pDst + dst_sequence_start_address + (dst_index * data->pSrcDesc->strides.nStride);
-                auto src_address = (unsigned char *)data->pSrc + src_sequence_start_address + (src_index * data->pDstDesc->strides.nStride);
+                auto dst_address = static_cast<unsigned char *>(data->pDst) + dst_sequence_start_address + (dst_index * data->pSrcDesc->strides.nStride);
+                auto src_address = static_cast<unsigned char *>(data->pSrc) + src_sequence_start_address + (src_index * data->pDstDesc->strides.nStride);
                 hipError_t status = hipMemcpyDtoD(dst_address, src_address, data->pSrcDesc->strides.nStride);
                     if (status != hipSuccess)
                         return VX_FAILURE;  
@@ -136,8 +135,8 @@ static vx_status VX_CALLBACK processSequenceRearrange(vx_node node, const vx_ref
                 unsigned src_index = data->pNewOrder[dst_index];
                 if (src_index > data->sequenceLength)
                     ERRMSG(VX_ERROR_INVALID_VALUE, "invalid new order value=%d (must be between 0-%d)\n", src_index, data->sequenceLength - 1);
-                auto dst_address = (unsigned char *)data->pDst + dst_sequence_start_address + (dst_index * data->pSrcDesc->strides.nStride);
-                auto src_address = (unsigned char *)data->pSrc + src_sequence_start_address + (src_index * data->pDstDesc->strides.nStride);
+                auto dst_address = static_cast<unsigned char *>(data->pDst) + dst_sequence_start_address + (dst_index * data->pSrcDesc->strides.nStride);
+                auto src_address = static_cast<unsigned char *>(data->pSrc) + src_sequence_start_address + (src_index * data->pDstDesc->strides.nStride);
                 memcpy(dst_address, src_address, data->pSrcDesc->strides.nStride);
             }
         }
@@ -147,7 +146,7 @@ static vx_status VX_CALLBACK processSequenceRearrange(vx_node node, const vx_ref
 
 static vx_status VX_CALLBACK initializeSequenceRearrange(vx_node node, const vx_reference *parameters, vx_uint32 num) {
     SequenceRearrangeLocalData *data = new SequenceRearrangeLocalData;
-    memset(data, 0, sizeof(*data));
+    memset(data, 0, sizeof(SequenceRearrangeLocalData));
     
     int layout;
     STATUS_ERROR_CHECK(vxCopyScalar((vx_scalar)parameters[3], &layout, VX_READ_ONLY, VX_MEMORY_TYPE_HOST));
@@ -188,10 +187,10 @@ static vx_status VX_CALLBACK uninitializeSequenceRearrange(vx_node node, const v
     SequenceRearrangeLocalData *data;
     STATUS_ERROR_CHECK(vxQueryNode(node, VX_NODE_LOCAL_DATA_PTR, &data, sizeof(data)));
     if(data->pNewOrder) free(data->pNewOrder);
-    delete (data->pSrcDesc);
-    delete (data->pDstDesc);
+    delete(data->pSrcDesc);
+    delete(data->pDstDesc);
     STATUS_ERROR_CHECK(releaseRPPHandle(node, data->handle, data->deviceType));
-    delete (data);
+    delete(data);
     return VX_SUCCESS;
 }
 
