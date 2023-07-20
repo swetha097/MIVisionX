@@ -787,8 +787,14 @@ int test(int test_case, int reader_type, const char *path, const char *outName, 
         std::cout << "Could not verify the augmentation graph " << rocalGetErrorMessage(handle);
         return -1;
     }
-
-    printf("\n\nAugmented copies count %lu \n", rocalGetAugmentationBranchCount(handle));
+    
+    auto number_of_outputs = rocalGetAugmentationBranchCount(handle);
+    std::cout << "\n\nAugmented copies count " << number_of_outputs << "\n";
+    
+    if(number_of_outputs != 1) {
+        std::cout << "More than 1 output set in the pipeline";
+        return -1;
+    }
 
     /*>>>>>>>>>>>>>>>>>>> Diplay using OpenCV <<<<<<<<<<<<<<<<<*/
     int h = rocalGetAugmentationBranchCount(handle) * rocalGetOutputHeight(handle) * inputBatchSize;
