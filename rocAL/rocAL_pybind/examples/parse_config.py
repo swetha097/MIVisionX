@@ -37,6 +37,11 @@ def parse_args():
                         help='maximum width set during decoding')
     common_group.add_argument('--color-format', '-c', type=int, default=1,
                         help='color format used during decoding')
+    common_group.add_argument('--display', action="store_true",
+                        help='--display:to display output from the pipeline')
+    common_group.add_argument('--no-display', dest='display', action="store_false",
+                        help='--no-display:to not display output from the pipeline')
+    parser.set_defaults(display=False)   #case when none of the above is specified
 
     common_group.add_argument('--print_tensor', action="store_true",
                         help='--print_tensor: to print tensor output from the pipeline')
