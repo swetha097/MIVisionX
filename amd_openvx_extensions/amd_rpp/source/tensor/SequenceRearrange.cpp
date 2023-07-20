@@ -30,7 +30,7 @@ struct SequenceRearrangeLocalData {
     vx_uint32 newSequenceLength;
     vx_uint32 sequenceLength;
     vx_uint32 *newOrder;
-    Rpp32s layout;
+    vxTensorLayout layout;
     RpptDescPtr srcDescPtr;
     RpptDesc srcDesc;
     RpptDescPtr dstDescPtr;
@@ -150,13 +150,15 @@ static vx_status VX_CALLBACK processSequenceRearrange(vx_node node, const vx_ref
 static vx_status VX_CALLBACK initializeSequenceRearrange(vx_node node, const vx_reference *parameters, vx_uint32 num) {
     SequenceRearrangeLocalData *data = new SequenceRearrangeLocalData;
     memset(data, 0, sizeof(*data));
-
-    STATUS_ERROR_CHECK(vxCopyScalar((vx_scalar)parameters[3], &data->layout, VX_READ_ONLY, VX_MEMORY_TYPE_HOST));
+    
+    int layout;
+    STATUS_ERROR_CHECK(vxCopyScalar((vx_scalar)parameters[3], &layout, VX_READ_ONLY, VX_MEMORY_TYPE_HOST));
     STATUS_ERROR_CHECK(vxCopyScalar((vx_scalar)parameters[4], &data->deviceType, VX_READ_ONLY, VX_MEMORY_TYPE_HOST));
- 
+    data->layout = static_cast<vxTensorLayout>(layout);
+
     vx_size in_num_of_dims, out_num_of_dims;
     size_t in_tensor_dims[RPP_MAX_TENSOR_DIMS], out_tensor_dims[RPP_MAX_TENSOR_DIMS];
-    
+
     // Querying for input tensor 
     data->srcDescPtr = &data->srcDesc;
     STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[0], VX_TENSOR_NUMBER_OF_DIMS, &in_num_of_dims, sizeof(vx_size)));

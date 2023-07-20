@@ -108,7 +108,7 @@ vx_status Resizetensor_Register(vx_context);
 vx_status RotatebatchPD_Register(vx_context);
 vx_status SaturationbatchPD_Register(vx_context);
 vx_status ScalebatchPD_Register(vx_context);
-vx_status SequenceRearrange_Register(vx_context);
+vx_status SequenceRearrangeImage_Register(vx_context);
 vx_status SnowbatchPD_Register(vx_context);
 vx_status SobelbatchPD_Register(vx_context);
 vx_status SubtractbatchPD_Register(vx_context);
@@ -127,6 +127,7 @@ vx_status Copy_Register(vx_context);
 vx_status CropMirrorNormalize_Register(vx_context);
 vx_status Nop_Register(vx_context);
 vx_status Resize_Register(vx_context);
+vx_status SequenceRearrange_Register(vx_context);
 
 // kernel names
 #define VX_KERNEL_RPP_NOPBATCHPD_NAME                   "org.rpp.NopbatchPD"
@@ -209,7 +210,7 @@ vx_status Resize_Register(vx_context);
 #define VX_KERNEL_RPP_CROPPD_NAME   							"org.rpp.CropPD"
 #define VX_KERNEL_RPP_RESIZECROPMIRRORPD_NAME      				"org.rpp.ResizeCropMirrorPD"
 #define VX_KERNEL_RPP_RESIZEMIRRORNORMALIZETENSOR_NAME        	"org.rpp.ResizeMirrorNormalizeTensor"
-#define VX_KERNEL_RPP_SEQUENCEREARRANGE_NAME                    "org.rpp.SequenceRearrange"
+#define VX_KERNEL_RPP_SEQUENCEREARRANGEIMAGE_NAME               "org.rpp.SequenceRearrangeImage"
 #define VX_KERNEL_RPP_RESIZETENSOR_NAME      					"org.rpp.Resizetensor"
 
 //tensor
@@ -218,5 +219,6 @@ vx_status Resize_Register(vx_context);
 #define VX_KERNEL_RPP_CROPMIRRORNORMALIZE_NAME                   "org.rpp.CropMirrorNormalize"
 #define VX_KERNEL_RPP_NOP_NAME                                   "org.rpp.Nop"
 #define VX_KERNEL_RPP_RESIZE_NAME                                "org.rpp.Resize"
+#define VX_KERNEL_RPP_SEQUENCEREARRANGE_NAME                     "org.rpp.SequenceRearrange"
 
 #endif //_AMDVX_EXT__PUBLISH_KERNELS_H_
