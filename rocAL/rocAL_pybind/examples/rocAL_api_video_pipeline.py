@@ -135,7 +135,6 @@ def main():
                                             rocal_tensor_layout = tensor_format,
                                             rocal_tensor_output_type = tensor_dtype,
                                             crop=crop_size,
-                                            image_type=types.RGB,
                                             mean=[0, 0, 0],
                                             std=[1, 1, 1])
         pipe.setOutputs(output_images)
