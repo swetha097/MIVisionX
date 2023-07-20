@@ -115,7 +115,7 @@ list(APPEND SOURCES
         source/image/RotatebatchPD.cpp
         source/image/SaturationbatchPD.cpp
         source/image/ScalebatchPD.cpp
-        source/image/SequenceRearrange.cpp
+        source/image/SequenceRearrangeImage.cpp
         source/image/SnowbatchPD.cpp
         source/image/SobelbatchPD.cpp
         source/image/SubtractbatchPD.cpp

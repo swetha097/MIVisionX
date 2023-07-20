@@ -26,7 +26,7 @@ struct SequenceRearrangeLocalData {
     vxRppHandle *handle;
     RppPtr_t pSrc;
     RppPtr_t pDst;
-    Rpp32u deviceType;
+    vx_uint32 deviceType;
     vx_uint32 newSequenceLength;
     vx_uint32 sequenceLength;
     vx_uint32 *pNewOrder;
@@ -34,8 +34,8 @@ struct SequenceRearrangeLocalData {
     RpptDescPtr pSrcDesc;
     RpptDescPtr pDstDesc;
 #if ENABLE_OPENCL
-    cl_mem cl_pSrc;
-    cl_mem cl_pDst;
+    cl_mem pClSrc;
+    cl_mem pClDst;
 #endif
 };
 
@@ -44,8 +44,8 @@ static vx_status VX_CALLBACK refreshSequenceRearrange(vx_node node, const vx_ref
     STATUS_ERROR_CHECK(vxCopyArrayRange((vx_array)parameters[2], 0, data->newSequenceLength, sizeof(vx_uint32), data->pNewOrder, VX_READ_ONLY, VX_MEMORY_TYPE_HOST));
     if (data->deviceType == AGO_TARGET_AFFINITY_GPU) {
 #if ENABLE_OPENCL
-        STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[0], VX_TENSOR_BUFFER_OPENCL, &data->cl_pSrc, sizeof(data->cl_pSrc)));
-        STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[1], VX_TENSOR_BUFFER_OPENCL, &data->cl_pDst, sizeof(data->cl_pDst)));
+        STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[0], VX_TENSOR_BUFFER_OPENCL, &data->pClSrc, sizeof(data->pClSrc)));
+        STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[1], VX_TENSOR_BUFFER_OPENCL, &data->pClDst, sizeof(data->pClDst)));
 #elif ENABLE_HIP
         STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[0], VX_TENSOR_BUFFER_HIP, &data->pSrc, sizeof(data->pSrc)));
         STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[1], VX_TENSOR_BUFFER_HIP, &data->pDst, sizeof(data->pDst)));
@@ -106,9 +106,9 @@ static vx_status VX_CALLBACK processSequenceRearrange(vx_node node, const vx_ref
                 unsigned src_index = data->pNewOrder[dst_index];
                 if (src_index > data->sequenceLength)
                     ERRMSG(VX_ERROR_INVALID_VALUE, "invalid new order value=%d (must be between 0-%d)\n", src_index, data->sequenceLength - 1);
-                auto dst_offset = (unsigned char *)data->cl_pDst + dst_sequence_start_address + (dst_index * data->pSrcDesc->strides.nStride);
-                auto src_offset = (unsigned char *)data->cl_pSrc + src_sequence_start_address + (src_index * data->pDstDesc->strides.nStride);
-                if (clEnqueueCopyBuffer(handle, data->cl_pSrc, data->cl_pDst, src_offset, dst_offset, data->pSrcDesc->strides.nStride, 0, NULL, NULL) != CL_SUCCESS)
+                auto dst_offset = (unsigned char *)data->pClDst + dst_sequence_start_address + (dst_index * data->pSrcDesc->strides.nStride);
+                auto src_offset = (unsigned char *)data->pClSrc + src_sequence_start_address + (src_index * data->pDstDesc->strides.nStride);
+                if (clEnqueueCopyBuffer(handle, data->pClSrc, data->pClDst, src_offset, dst_offset, data->pSrcDesc->strides.nStride, 0, NULL, NULL) != CL_SUCCESS)
                         return VX_FAILURE;
             }
         }
@@ -148,13 +148,15 @@ static vx_status VX_CALLBACK processSequenceRearrange(vx_node node, const vx_ref
 static vx_status VX_CALLBACK initializeSequenceRearrange(vx_node node, const vx_reference *parameters, vx_uint32 num) {
     SequenceRearrangeLocalData *data = new SequenceRearrangeLocalData;
     memset(data, 0, sizeof(SequenceRearrangeLocalData));
-
-    STATUS_ERROR_CHECK(vxCopyScalar((vx_scalar)parameters[3], &data->layout, VX_READ_ONLY, VX_MEMORY_TYPE_HOST));
+    
+    int layout;
+    STATUS_ERROR_CHECK(vxCopyScalar((vx_scalar)parameters[3], &layout, VX_READ_ONLY, VX_MEMORY_TYPE_HOST));
     STATUS_ERROR_CHECK(vxCopyScalar((vx_scalar)parameters[4], &data->deviceType, VX_READ_ONLY, VX_MEMORY_TYPE_HOST));
- 
+    data->layout = static_cast<vxTensorLayout>(layout);
+
     vx_size in_num_of_dims, out_num_of_dims;
     size_t in_tensor_dims[RPP_MAX_TENSOR_DIMS], out_tensor_dims[RPP_MAX_TENSOR_DIMS];
-    
+
     // Querying for input tensor 
     data->pSrcDesc = new RpptDesc;
     STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[0], VX_TENSOR_NUMBER_OF_DIMS, &in_num_of_dims, sizeof(vx_size)));
@@ -185,10 +187,10 @@ static vx_status VX_CALLBACK initializeSequenceRearrange(vx_node node, const vx_
 static vx_status VX_CALLBACK uninitializeSequenceRearrange(vx_node node, const vx_reference *parameters, vx_uint32 num) {
     SequenceRearrangeLocalData *data;
     STATUS_ERROR_CHECK(vxQueryNode(node, VX_NODE_LOCAL_DATA_PTR, &data, sizeof(data)));
+    if(data->pNewOrder) free(data->pNewOrder);
+    delete (data->pSrcDesc);
+    delete (data->pDstDesc);
     STATUS_ERROR_CHECK(releaseRPPHandle(node, data->handle, data->deviceType));
-    if(data->pNewOrder != nullptr) free(data->pNewOrder);
-    delete(data->pSrcDesc);
-    delete(data->pDstDesc);
     delete (data);
     return VX_SUCCESS;
 }

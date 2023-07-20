@@ -968,7 +968,7 @@ extern "C"
 	 * \ingroup group_amd_rpp
 	 * @note - TBD
 	 */
-	SHARED_PUBLIC vx_node VX_API_CALL vxExtrppNode_SequenceRearrange(vx_graph graph, vx_image pSrc, vx_image pDst, vx_array newOrder, vx_uint32 newSequenceLength, vx_uint32 sequenceLength, vx_uint32 sequenceCount);
+	SHARED_PUBLIC vx_node VX_API_CALL vxExtrppNode_SequenceRearrangeImage(vx_graph graph, vx_image pSrc, vx_image pDst, vx_array newOrder, vx_uint32 newSequenceLength, vx_uint32 sequenceLength, vx_uint32 sequenceCount);
 
 	/*!
 	 * \brief [Graph] Creates a RPP Resize Tensor function node.
@@ -1052,6 +1052,20 @@ extern "C"
 	 * successful creation should be checked using <tt>\ref vxGetStatus</tt>.
 	 */
 	SHARED_PUBLIC vx_node VX_API_CALL vxRppResize(vx_graph graph, vx_tensor pSrc, vx_tensor pSrcRoi, vx_tensor pDst, vx_array pDstWidth, vx_array pDstHeight, vx_scalar interpolationType, vx_scalar inputLayout, vx_scalar outputLayout, vx_scalar roiType);
+
+	/*!
+	 * \brief [Graph] Creates a Tensor SequenceRearrange function node.
+	 * \ingroup group_amd_rpp
+	 * \param [in] graph The handle to the graph.
+	 * \param [in] pSrc The input tensor data.
+	 * \param [out] pDst The output tensor data.
+	 * \param [in] pNewOrder The rearrange order in <tt>\ref VX_TYPE_UINT32<tt> containing the order in which frames are copied.
+	 * \param [in] layout The layout in <tt>\ref VX_TYPE_INT32<tt> denotes the layout of input and output tensor.
+	 * \return <tt> vx_node</tt>.
+	 * \returns A node reference <tt>\ref vx_node</tt>. Any possible errors preventing a
+	 * successful creation should be checked using <tt>\ref vxGetStatus</tt>.
+	 */
+	SHARED_PUBLIC vx_node VX_API_CALL vxRppSequenceRearrange(vx_graph graph, vx_tensor pSrc, vx_tensor pDst, vx_array pNewOrder, vx_scalar layout);
 
 	SHARED_PUBLIC vx_node VX_API_CALL vxRppBlend(vx_graph graph, vx_tensor pSrc, vx_tensor pSrc_2, vx_tensor pSrcRoi, vx_tensor pDst, vx_array pShift, vx_scalar inputLayout, vx_scalar outputLayout, vx_scalar roiType);
 	SHARED_PUBLIC vx_node VX_API_CALL vxRppBlur(vx_graph graph, vx_tensor pSrc, vx_tensor pSrcROi, vx_tensor pDst, vx_array pAlpha, vx_scalar inputLayout, vx_scalar outputLayout, vx_scalar roiType);
