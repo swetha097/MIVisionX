@@ -1022,7 +1022,7 @@ extern "C"
 	 * \returns A node reference <tt>\ref vx_node</tt>. Any possible errors preventing a
 	 * successful creation should be checked using <tt>\ref vxGetStatus</tt>.
 	 */
-	SHARED_PUBLIC vx_node VX_API_CALL vxRppCropMirrorNormalize(vx_graph graph, vx_tensor pSrc, vx_tensor pSrcRoi, vx_tensor pDst, vx_array pMultiplier, vx_array pOffset, vx_array pFlip, vx_scalar inputLayout, vx_scalar outputLayout, vx_scalar roiType);
+	SHARED_PUBLIC vx_node VX_API_CALL vxRppCropMirrorNormalize(vx_graph graph, vx_tensor pSrc, vx_tensor pSrcRoi, vx_tensor pDst, vx_array pMultiplier, vx_array pOffset, vx_array pMirror, vx_scalar inputLayout, vx_scalar outputLayout, vx_scalar roiType);
 
 	/*! \brief [Graph] Creates a RPP Nop function node.
 	 * \ingroup group_amd_rpp
@@ -1067,7 +1067,7 @@ extern "C"
 	 */
 	SHARED_PUBLIC vx_node VX_API_CALL vxRppSequenceRearrange(vx_graph graph, vx_tensor pSrc, vx_tensor pDst, vx_array pNewOrder, vx_scalar layout);
 
-	SHARED_PUBLIC vx_node VX_API_CALL vxRppBlend(vx_graph graph, vx_tensor pSrc, vx_tensor pSrc_2, vx_tensor pSrcRoi, vx_tensor pDst, vx_array pShift, vx_scalar inputLayout, vx_scalar outputLayout, vx_scalar roiType);
+	SHARED_PUBLIC vx_node VX_API_CALL vxRppBlend(vx_graph graph, vx_tensor pSrc1, vx_tensor pSrc2, vx_tensor pSrcRoi, vx_tensor pDst, vx_array pShift, vx_scalar inputLayout, vx_scalar outputLayout, vx_scalar roiType);
 	SHARED_PUBLIC vx_node VX_API_CALL vxRppBlur(vx_graph graph, vx_tensor pSrc, vx_tensor pSrcROi, vx_tensor pDst, vx_array pAlpha, vx_scalar inputLayout, vx_scalar outputLayout, vx_scalar roiType);
 	SHARED_PUBLIC vx_node VX_API_CALL vxRppContrast(vx_graph graph, vx_tensor pSrc, vx_tensor pSrcRoi, vx_tensor pDst, vx_array pMin, vx_array pMax, vx_scalar inputLayout, vx_scalar outputLayout, vx_scalar roiType);
 	SHARED_PUBLIC vx_node VX_API_CALL vxRppSnow(vx_graph graph, vx_tensor pSrc, vx_tensor pSrcRoi, vx_tensor pDst, vx_array pSnowValue, vx_scalar inputLayout, vx_scalar outputLayout, vx_scalar roiType);
@@ -1079,14 +1079,13 @@ extern "C"
 	SHARED_PUBLIC vx_node VX_API_CALL vxRppLensCorrection(vx_graph graph, vx_tensor pSrc, vx_tensor pSrcRoi, vx_tensor pDst, vx_array pStrength, vx_array pZoom, vx_scalar inputLayout, vx_scalar outputLayout, vx_scalar roiType);
 	SHARED_PUBLIC vx_node VX_API_CALL vxRppColorTwist(vx_graph graph, vx_tensor pSrc, vx_tensor pSrcRoi, vx_tensor pDst, vx_array pAlpha, vx_array pBeta, vx_array pHue, vx_array pSat, vx_scalar layout, vx_scalar roiType);
 	SHARED_PUBLIC vx_node VX_API_CALL vxRppCrop(vx_graph graph, vx_tensor pSrc, vx_tensor pSrcRoi, vx_tensor pDst, vx_scalar inputLayout, vx_scalar outputLayout, vx_scalar roiType);
-	SHARED_PUBLIC vx_node VX_API_CALL vxRppCropMirrorNormalize(vx_graph graph, vx_tensor pSrc, vx_tensor pSrcRoi, vx_tensor pDst, vx_array pMultiplier, vx_array pOffset, vx_array pFlip, vx_scalar inputLayout, vx_scalar outputLayout, vx_scalar roiType);
+	SHARED_PUBLIC vx_node VX_API_CALL vxRppCropMirrorNormalize(vx_graph graph, vx_tensor pSrc, vx_tensor pSrcRoi, vx_tensor pDst, vx_array pMultiplier, vx_array pOffset, vx_array pMirror, vx_scalar inputLayout, vx_scalar outputLayout, vx_scalar roiType);
 	SHARED_PUBLIC vx_node VX_API_CALL vxRppExposure(vx_graph graph, vx_tensor pSrc, vx_tensor pSrcRoi, vx_tensor pDst, vx_array pShift, vx_scalar inputLayout, vx_scalar outputLayout, vx_scalar roiType);
 	SHARED_PUBLIC vx_node VX_API_CALL vxRppFlip(vx_graph graph, vx_tensor pSrc, vx_tensor pSrcRoi, vx_tensor pDst, vx_array pHflag, vx_array pVflag, vx_scalar inputLayout, vx_scalar outputLayout, vx_scalar roiType);
 	SHARED_PUBLIC vx_node VX_API_CALL vxRppGammaCorrection(vx_graph graph, vx_tensor pSrc, vx_tensor pSrcRoi, vx_tensor pDst, vx_array pAlpha, vx_scalar inputLayout, vx_scalar outputLayout, vx_scalar roiType);
 	SHARED_PUBLIC vx_node VX_API_CALL vxRppResizeCropMirror(vx_graph graph, vx_tensor pSrc, vx_tensor pSrcRoi, vx_tensor pDst, vx_array pDstWidth, vx_array pDstHeight,vx_array pMirror, vx_scalar interpolationType, vx_scalar inputLayout, vx_scalar outputLayout, vx_scalar roiType);
-	SHARED_PUBLIC vx_node VX_API_CALL vxRppResizeMirrorNormalize(vx_graph graph, vx_tensor pSrc, vx_tensor pSrcRoi, vx_tensor pDst,vx_array pDstWidth,vx_array pDstHeight, vx_scalar interpolationType, vx_array pMean, vx_array pStdDev, vx_array pFlip, vx_scalar inputLayout, vx_scalar outputLayout, vx_scalar roiType);
+	SHARED_PUBLIC vx_node VX_API_CALL vxRppResizeMirrorNormalize(vx_graph graph, vx_tensor pSrc, vx_tensor pSrcRoi, vx_tensor pDst,vx_array pDstWidth,vx_array pDstHeight, vx_scalar interpolationType, vx_array pMean, vx_array pStdDev, vx_array pMirror, vx_scalar inputLayout, vx_scalar outputLayout, vx_scalar roiType);
 	SHARED_PUBLIC vx_node VX_API_CALL vxRppRotate(vx_graph graph, vx_tensor pSrc, vx_tensor pSrcRoi, vx_tensor pDst, vx_array pAngle, vx_scalar interpolation_type, vx_scalar inputLayout, vx_scalar outputLayout, vx_scalar roiType);
-	SHARED_PUBLIC vx_node VX_API_CALL vxExtrppNode_SequenceRearrange(vx_graph graph,vx_tensor pSrc,vx_tensor pDst, vx_array newOrder,vx_uint32 newSequenceLength, vx_uint32 sequenceLength, vx_uint32 sequenceCount, vx_scalar layout);
 	SHARED_PUBLIC vx_node VX_API_CALL vxRppWarpAffine(vx_graph graph, vx_tensor pSrc, vx_tensor pSrcRoi, vx_tensor pDst, vx_array pAffineArray, vx_scalar interpolationType, vx_scalar inputLayout, vx_scalar outputLayout, vx_scalar roiType);
 	SHARED_PUBLIC vx_node VX_API_CALL vxRppPixelate(vx_graph graph, vx_tensor pSrc, vx_tensor pSrcRoi, vx_tensor pDst, vx_scalar inputLayout, vx_scalar outputLayout, vx_scalar roiType);
 	SHARED_PUBLIC vx_node VX_API_CALL vxRppVignette(vx_graph graph, vx_tensor pSrc, vx_tensor pSrcRoi, vx_tensor pDst, vx_array pSdev, vx_scalar inputLayout, vx_scalar outputLayout, vx_scalar roiType);
