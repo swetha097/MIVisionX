@@ -481,18 +481,18 @@ int test(int test_case, int reader_type, const char *path, const char *outName, 
     {
         std::cout << ">>>>>>> Running "
                   << "rocalVignette" << std::endl;
-        // image1 = rocalVignette(handle, input1, true, NULL,  tensorLayout, tensorOutputType);
+        image1 = rocalVignette(handle, input1, true, NULL,  tensorLayout, tensorOutputType);
 
     }
     break;
-/*
     case 12:
     {
         std::cout << ">>>>>>> Running "
                   << "rocalJitter" << std::endl;
-        image1 = rocalJitter(handle, image0, true);
+        image1 = rocalJitter(handle, image0, true,NULL,12212,  tensorLayout, tensorOutputType);
     }
     break;
+/*
     case 13:
     {
         std::cout << ">>>>>>> Running "
@@ -675,14 +675,14 @@ int test(int test_case, int reader_type, const char *path, const char *outName, 
     {
         std::cout << ">>>>>>> Running "
                   << "rocalVignetteFixed" << std::endl;
-        image1 = rocalVignetteFixed(handle, image0, 50, true);
+        image1 = rocalVignetteFixed(handle, image0, 50, true,tensorLayout, tensorOutputType);
     }
     break;
     case 39:
     {
         std::cout << ">>>>>>> Running "
                   << "rocalJitterFixed" << std::endl;
-        // image1 = rocalJitterFixed(handle, image0, 3, true);
+        image1 = rocalJitterFixed(handle, image0, true, 5, 122121,tensorLayout, tensorOutputType);
     }
     break;
     case 40:
@@ -820,7 +820,7 @@ int test(int test_case, int reader_type, const char *path, const char *outName, 
         std::vector<float> sdev{1, 1, 1};
         std::cout << ">>>>>>> Running "
                   << " Resize Mirror Normalize " << std::endl;
-        image1 = rocalResizeMirrorNormalize(handle, input1, 300 , resize_h, mean, sdev, true, ROCAL_SCALING_MODE_DEFAULT,
+        image1 = rocalResizeMirrorNormalize(handle, input1, 400 , 400, mean, sdev, true, ROCAL_SCALING_MODE_DEFAULT,
                                             {}, 0, 0, ROCAL_LINEAR_INTERPOLATION, NULL, tensorLayout, tensorOutputType);
         break;
     }

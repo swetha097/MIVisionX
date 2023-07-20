@@ -41,8 +41,7 @@ struct JitterLocalData {
 
 static vx_status VX_CALLBACK refreshJitter(vx_node node, const vx_reference *parameters, vx_uint32 num, JitterLocalData *data) {
     vx_status status = VX_SUCCESS;
-    STATUS_ERROR_CHECK(vxCopyArrayRange((vx_array)parameters[3], 0, data->pSrcDesc->n, sizeof(vx_uint32), data->pKernelSize, VX_READ_ONLY, VX_MEMORY_TYPE_HOST));
-
+    STATUS_ERROR_CHECK(vxCopyArrayRange((vx_array)parameters[3], 0, data->inputTensorDims[0], sizeof(vx_uint32), data->pKernelSize, VX_READ_ONLY, VX_MEMORY_TYPE_HOST));
     void *roi_tensor_ptr;
     if (data->deviceType == AGO_TARGET_AFFINITY_GPU) {
 #if ENABLE_OPENCL
@@ -60,7 +59,7 @@ static vx_status VX_CALLBACK refreshJitter(vx_node node, const vx_reference *par
     data->pSrcRoi = reinterpret_cast<RpptROI *>(roi_tensor_ptr);
     if((data->inputLayout == vxTensorLayout::VX_NFHWC || data->inputLayout == vxTensorLayout::VX_NFCHW)) {
         unsigned num_of_frames = data->inputTensorDims[1]; // Num of frames 'F'
-        for(int n = data->pSrcDesc->n - 1; n >= 0; n--) {
+        for(int n = data->inputTensorDims[0] - 1; n >= 0; n--) {
             unsigned index = n * num_of_frames;
             for(int f = 0; f < num_of_frames; f++) {
                 data->pKernelSize[index + f] = data->pKernelSize[n];
@@ -91,8 +90,7 @@ static vx_status VX_CALLBACK validateJitter(vx_node node, const vx_reference par
     // Check for input parameters
     size_t num_tensor_dims;
     STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[0], VX_TENSOR_NUMBER_OF_DIMS, &num_tensor_dims, sizeof(num_tensor_dims)));
-    if(num_tensor_dims < 4)
-        return ERRMSG(VX_ERROR_INVALID_DIMENSION, "validate: Jitter: tensor: #0 dimensions=%lu (must be greater than or equal to 4)\n", num_tensor_dims);
+    if(num_tensor_dims < 4) return ERRMSG(VX_ERROR_INVALID_DIMENSION, "validate: Jitter: tensor: #0 dimensions=%lu (must be greater than or equal to 4)\n", num_tensor_dims);
 
     // Check for output parameters
     vx_uint8 tensor_fixed_point_position;
@@ -114,8 +112,9 @@ static vx_status VX_CALLBACK processJitter(vx_node node, const vx_reference *par
     RppStatus rpp_status = RPP_SUCCESS;
     vx_status return_status = VX_SUCCESS;
     JitterLocalData *data = NULL;
-    refreshJitter(node, parameters, num, data);
     STATUS_ERROR_CHECK(vxQueryNode(node, VX_NODE_LOCAL_DATA_PTR, &data, sizeof(data)));
+    refreshJitter(node, parameters, num, data);
+
     if (data->deviceType == AGO_TARGET_AFFINITY_GPU) {
 #if ENABLE_HIP
         // rpp_status = rppt_jitter_gpu((void *)data->pSrc, data->pSrcDesc, (void *)data->pDst, data->pDstDesc,  data->pKernelSize, data->seed, data->roiPtr, data->roiType, data->handle->rppHandle);
