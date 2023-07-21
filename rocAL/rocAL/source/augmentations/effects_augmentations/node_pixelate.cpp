@@ -33,7 +33,7 @@ void PixelateNode::create_node() {
     if(_node)
         return;
 
-    // _node = vxRppPixelate(_graph->get(), _inputs[0]->handle(), _src_tensor_roi, _outputs[0]->handle(), _input_layout, _output_layout, _roi_type);
+    _node = vxRppPixelate(_graph->get(), _inputs[0]->handle(), _src_tensor_roi, _outputs[0]->handle(), _input_layout, _output_layout, _roi_type);
 
     vx_status status;
     if((status = vxGetStatus((vx_reference)_node)) != VX_SUCCESS)

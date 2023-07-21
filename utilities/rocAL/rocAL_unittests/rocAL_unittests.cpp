@@ -207,7 +207,7 @@ int test(int test_case, int reader_type, const char *path, const char *outName, 
     // User can alternatively set the size or change the policy that is used to automatically find the size
     switch (reader_type)
     {
-        /* case 1: //image_partial decode
+        case 1: //image_partial decode
         {
             std::cout << ">>>>>>> Running PARTIAL DECODE" << std::endl;
             pipeline_type = 1;
@@ -340,7 +340,7 @@ int test(int test_case, int reader_type, const char *path, const char *outName, 
             rocalCreateMXNetReader(handle, path, true);
             input1 = rocalMXNetRecordSource(handle, path, color_format, num_threads, false, false, false, ROCAL_USE_USER_GIVEN_SIZE_RESTRICTED, decode_max_width, decode_max_height);
         }
-        break;*/
+        break;
         default:
         {
             std::cout << ">>>>>>> Running IMAGE READER" << std::endl;
@@ -398,58 +398,53 @@ int test(int test_case, int reader_type, const char *path, const char *outName, 
 
     }
     break;
-/*
     case 1:
     {
         std::cout << ">>>>>>> Running "
                   << "rocalCropResize" << std::endl;
-        image1 = rocalCropResize(handle, input1, resize_w, resize_h, true);
+        image1 = rocalCropResize(handle, input1, resize_w, resize_h, true, NULL, NULL, NULL,NULL, tensorLayout, tensorOutputType);
     }
     break;
     case 2:
     {
         std::cout << ">>>>>>> Running "
                   << "rocalRotate" << std::endl;
-        image1 = rocalRotate(handle, image0, true);
+        image1 = rocalRotate(handle, input1, true, NULL, 640, 480, ROCAL_LINEAR_INTERPOLATION, tensorLayout, tensorOutputType);
     }
-    break;*/
+    break;
     case 3:
     {
         std::cout << ">>>>>>> Running "
                   << "rocalBrightness" << std::endl;
-        // image1 = rocalBrightness(handle, image0, true);
         image1 = rocalBrightness(handle, input1, true, NULL, NULL, tensorLayout, tensorOutputType);
-
     }
     break;
-    /*case 4:
+    case 4:
     {
         std::cout << ">>>>>>> Running "
                   << "rocalGamma" << std::endl;
-        image1 = rocalGamma(handle, image0, true);
+        image1 = rocalGamma(handle, input1, true, NULL, tensorLayout, tensorOutputType);
     }
     break;
     case 5:
     {
         std::cout << ">>>>>>> Running "
                   << "rocalContrast" << std::endl;
-        image1 = rocalContrast(handle, image0, true);
+        image1 = rocalContrast(handle, input1, true, NULL, NULL, tensorLayout, tensorOutputType);
     }
     break;
     case 6:
     {
         std::cout << ">>>>>>> Running "
                   << "rocalFlip" << std::endl;
-        image1 = rocalFlip(handle, image0, true);
+        image1 = rocalFlip(handle, input1, true, NULL, NULL, tensorLayout, tensorOutputType);
     }
     break;
-*/
     case 7:
     {
         std::cout << ">>>>>>> Running "
                   << "rocalBlur" << std::endl;
         image1 = rocalBlur(handle, input1, true, NULL,  tensorLayout, tensorOutputType);
-
     }
     break;
 
@@ -459,7 +454,8 @@ int test(int test_case, int reader_type, const char *path, const char *outName, 
                   << "rocalBlend" << std::endl;
         // image2 = rocalFlip(handle, input1, true, NULL, NULL, tensorLayout, tensorOutputType);
         // image1 = rocalBlend(handle, input1, image2, true, NULL,  tensorLayout, tensorOutputType);
-        image1 = rocalBlend(handle, input1, input1, true, NULL,  tensorLayout, tensorOutputType);
+        image2 = rocalRotate(handle, input1, true, NULL, 640, 480, ROCAL_LINEAR_INTERPOLATION, tensorLayout, tensorOutputType);
+        image1 = rocalBlend(handle, input1, image2, true, NULL,  tensorLayout, tensorOutputType);
 
     }
     break;
@@ -474,68 +470,65 @@ int test(int test_case, int reader_type, const char *path, const char *outName, 
     {
         std::cout << ">>>>>>> Running "
                   << "rocalFishEye" << std::endl;
-        image1 = rocalFishEye(handle, input1, true,  tensorLayout, tensorOutputType);
+        image1 = rocalFishEye(handle, input1, true, tensorLayout, tensorOutputType);
     }
     break;
     case 11:
     {
         std::cout << ">>>>>>> Running "
                   << "rocalVignette" << std::endl;
-        // image1 = rocalVignette(handle, input1, true, NULL,  tensorLayout, tensorOutputType);
-
+        image1 = rocalVignette(handle, input1, true, NULL,  tensorLayout, tensorOutputType);
     }
     break;
-/*
     case 12:
     {
         std::cout << ">>>>>>> Running "
                   << "rocalJitter" << std::endl;
-        image1 = rocalJitter(handle, image0, true);
+        image1 = rocalJitter(handle, input1, true,NULL,12212,  tensorLayout, tensorOutputType);
     }
     break;
     case 13:
     {
         std::cout << ">>>>>>> Running "
                   << "rocalSnPNoise" << std::endl;
-        image1 = rocalSnPNoise(handle, image0, true);
+        image1 = rocalSnPNoise(handle, input1, true, NULL, NULL, NULL, NULL, 0, tensorLayout, tensorOutputType);
     }
     break;
     case 14:
     {
         std::cout << ">>>>>>> Running "
                   << "rocalSnow" << std::endl;
-        image1 = rocalSnow(handle, image0, true);
+        image1 = rocalSnow(handle, input1, true, NULL,  tensorLayout, tensorOutputType);
     }
     break;
     case 15:
     {
         std::cout << ">>>>>>> Running "
                   << "rocalRain" << std::endl;
-        image1 = rocalRain(handle, image0, true);
+        image1 = rocalRain(handle, input1, true, NULL, NULL, NULL, NULL, tensorLayout, tensorOutputType);
     }
     break;
     case 16:
     {
         std::cout << ">>>>>>> Running "
                   << "rocalColorTemp" << std::endl;
-        image1 = rocalColorTemp(handle, image0, true);
+        image1 = rocalColorTemp(handle, input1, true, NULL ,  tensorLayout, tensorOutputType);
     }
     break;
     case 17:
     {
         std::cout << ">>>>>>> Running "
                   << "rocalFog" << std::endl;
-        image1 = rocalFog(handle, image0, true);
+        image1 = rocalFog(handle, input1, true, NULL,  tensorLayout, tensorOutputType);
     }
     break;
     case 18:
     {
         std::cout << ">>>>>>> Running "
                   << "rocalLensCorrection" << std::endl;
-        image1 = rocalLensCorrection(handle, image0, true);
+        image1 = rocalLensCorrectionFixed(handle, input1, NULL, NULL, true, tensorLayout, tensorOutputType);
     }
     break;
-*/
     case 19:
     {
         std::cout << ">>>>>>> Running "
@@ -543,69 +536,67 @@ int test(int test_case, int reader_type, const char *path, const char *outName, 
         image1 = rocalPixelate(handle, input1, true, tensorLayout, tensorOutputType);
     }
     break;
-/*
     case 20:
     {
         std::cout << ">>>>>>> Running "
                   << "rocalExposure" << std::endl;
-        image1 = rocalExposure(handle, image0, true);
+        image1 = rocalExposure(handle, input1, true, NULL, tensorLayout, tensorOutputType);
     }
     break;
     case 21:
     {
         std::cout << ">>>>>>> Running "
                   << "rocalHue" << std::endl;
-        image1 = rocalHue(handle, image0, true);
+        image1 = rocalHue(handle, input1, true, NULL,  tensorLayout, tensorOutputType);
     }
     break;
     case 22:
     {
         std::cout << ">>>>>>> Running "
                   << "rocalSaturation" << std::endl;
-        image1 = rocalSaturation(handle, image0, true);
+        image1 = rocalSaturation(handle, input1, true, NULL,  tensorLayout, tensorOutputType);
     }
     break;
     case 23:
     {
         std::cout << ">>>>>>> Running "
                   << "rocalCopy" << std::endl;
-        image1 = rocalCopy(handle, image0, true);
+        image1 = rocalNop(handle, input1, true);
     }
     break;
     case 24:
     {
         std::cout << ">>>>>>> Running "
                   << "rocalColorTwist" << std::endl;
-        image1 = rocalColorTwist(handle, image0, true);
+        image1 = rocalColorTwist(handle, input1, true, NULL, NULL, NULL, NULL, tensorLayout, tensorOutputType);
+
     }
-    break;*/
+    break;
     case 25:
     {
         std::cout << ">>>>>>> Running "
                   << "rocalCropMirrorNormalize" << std::endl;
-        std::vector<float> mean{0, 0, 0};
-        std::vector<float> std_dev{1, 1, 1};
-        image1 = rocalCropMirrorNormalize(handle, image0, 224, 224, 0, 0, mean, std_dev, true, mirror,tensorLayout, tensorOutputType);
+        std::vector<float> mean{128, 128, 128};
+        std::vector<float> std_dev{1.2, 1.2, 1.2};
+        RocalIntParam mirror = rocalCreateIntParameter(1);
+        image1 = rocalCropMirrorNormalize(handle, input1, 224, 224, 0, 0, mean, std_dev, true, mirror,tensorLayout, tensorOutputType);
     }
     break;
     case 26:
     {
         std::cout << ">>>>>>> Running "
                   << "rocalCrop" << std::endl;
-        // image1 = rocalCrop(handle, image0, true);
-        // image1 = rocalCrop(handle, input1,true, tensorLayout, tensorOutputType);
+        image1 = rocalCrop(handle, input1,true, NULL, NULL, NULL, NULL, NULL, NULL,tensorLayout, tensorOutputType);
 
     }
     break;
-    /*case 27:
+    case 27:
     {
         std::cout << ">>>>>>> Running "
                   << "rocalResizeCropMirror" << std::endl;
-        image1 = rocalResizeCropMirror(handle, image0, resize_w, resize_h, true);
+        image1 = rocalResizeCropMirror(handle, input1, 400, 400, true, NULL, NULL, mirror, tensorLayout, tensorOutputType);
     }
     break;
-*/
-
     case 30:
     {
         std::cout << ">>>>>>> Running "
@@ -628,7 +619,6 @@ int test(int test_case, int reader_type, const char *path, const char *outName, 
         image1 = rocalBrightnessFixed(handle, input1, true, 1.90, 20, tensorLayout, tensorOutputType);
     }
     break;
-/*
     case 33:
     {
         std::cout << ">>>>>>> Running "
@@ -673,14 +663,14 @@ int test(int test_case, int reader_type, const char *path, const char *outName, 
     {
         std::cout << ">>>>>>> Running "
                   << "rocalVignetteFixed" << std::endl;
-        image1 = rocalVignetteFixed(handle, image0, 50, true);
+        image1 = rocalVignetteFixed(handle, input1, 50, true,tensorLayout, tensorOutputType);
     }
     break;
     case 39:
     {
         std::cout << ">>>>>>> Running "
                   << "rocalJitterFixed" << std::endl;
-        // image1 = rocalJitterFixed(handle, image0, 3, true);
+        image1 = rocalJitterFixed(handle, input1, true, 5, 122121,tensorLayout, tensorOutputType);
     }
     break;
     case 40:
@@ -695,7 +685,6 @@ int test(int test_case, int reader_type, const char *path, const char *outName, 
     {
         std::cout << ">>>>>>> Running "
                   << "rocalSnowFixed" << std::endl;
-        // image1 = rocalSnowFixed(handle, image0, 0.2, true);
         image1 = rocalSnowFixed(handle, input1, true, 0.2,  tensorLayout, tensorOutputType);
 
     }
@@ -704,7 +693,6 @@ int test(int test_case, int reader_type, const char *path, const char *outName, 
     {
         std::cout << ">>>>>>> Running "
                   << "rocalRainFixed" << std::endl;
-        // image1 = rocalRainFixed(handle, image0, 0.5, 2, 16, 0.25, true);
         image1 = rocalRainFixed(handle, input1, true, 0.5, 2, 16, 0.25, tensorLayout, tensorOutputType);
 
     }
@@ -778,11 +766,12 @@ int test(int test_case, int reader_type, const char *path, const char *outName, 
     }
     break;
 /*
+
     case 52:
     {
         std::cout << ">>>>>>> Running "
                   << "rocalCropCenterFixed" << std::endl;
-        image1 = rocalCropCenterFixed(handle, image0, 224, 224, 2, true);
+        image1 = rocalCropCenterFixed(handle, input1, 224, 224, 2, true, tensorLayout, tensorOutputType);
     }
     break;
 */
@@ -794,21 +783,38 @@ int test(int test_case, int reader_type, const char *path, const char *outName, 
         image1 = rocalResizeCropMirrorFixed(handle, input1, 400, 400, true, 200, 200, mirror, tensorLayout, tensorOutputType);
     }
     break;
-/*
+
     case 54:
     {
         std::cout << ">>>>>>> Running "
                   << "rocalSSDRandomCrop" << std::endl;
-        image1 = rocalSSDRandomCrop(handle, input1, true);
+        image1 = rocalSSDRandomCrop(handle, input1, true, NULL, NULL, NULL, NULL,NULL, 20, tensorLayout, tensorOutputType);
     }
-    break;*/
+    break;
     case 55:
     {
         std::cout << ">>>>>>> Running "
                   << "rocalCropMirrorNormalizeFixed_center crop" << std::endl;
-        std::vector<float> mean;
-        std::vector<float> std_dev;
-        image1 = rocalCropMirrorNormalize(handle, image0, 224, 224, 0.5, 0.5, mean, std_dev, true);
+        std::vector<float> mean{0, 0, 0};
+        std::vector<float> std_dev{1, 1, 1};
+        image1 = rocalCropMirrorNormalize(handle, input1, 224, 224, 0.5, 0.5, mean, std_dev, true,mirror,tensorLayout, tensorOutputType);
+    }
+    break;
+    case 56:
+    {
+        std::vector<float> mean{0, 0, 0};
+        std::vector<float> sdev{1, 1, 1};
+        std::cout << ">>>>>>> Running "
+                  << " Resize Mirror Normalize " << std::endl;
+        image1 = rocalResizeMirrorNormalize(handle, input1, 400 , 400, mean, sdev, true, ROCAL_SCALING_MODE_DEFAULT,
+                                            {}, 0, 0, ROCAL_LINEAR_INTERPOLATION, NULL, tensorLayout, tensorOutputType);
+        break;
+    }
+    case 57:
+    {
+        std::cout << ">>>>>>> Running "
+                  << "rocalSSDRandomCrop" << std::endl;
+        image1 = rocalRandomCrop(handle, input1, true, NULL, NULL, NULL, NULL, 20, tensorLayout, tensorOutputType);
     }
     break;
 

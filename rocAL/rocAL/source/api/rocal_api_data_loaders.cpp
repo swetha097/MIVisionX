@@ -122,24 +122,6 @@ auto convert_color_format_to_layout = [](RocalImageColor color_format, size_t n,
             THROW("Unsupported Image type" + TOSTR(color_format))
     } 
 };
-
-auto convert_color_format_to_sequence_layout = [](RocalImageColor color_format, size_t n, size_t h, size_t w, size_t c, size_t f) {
-    switch(color_format) {
-        case ROCAL_COLOR_RGB24:
-        case ROCAL_COLOR_BGR24: {
-            std::vector<size_t> dims_vector = {n, f, h, w, c};
-            return std::make_tuple(RocalTensorlayout::NFHWC, dims_vector);
-        }
-        case ROCAL_COLOR_U8:
-        case ROCAL_COLOR_RGB_PLANAR: {
-            std::vector<size_t> dims_vector = {n, f, c, h, w};
-            return std::make_tuple(RocalTensorlayout::NFCHW, dims_vector);
-        }
-        default:
-            THROW("Unsupported Image type" + TOSTR(color_format))
-    } 
-};
-
 RocalTensor  ROCAL_API_CALL
 rocalJpegFileSourceSingleShard(
         RocalContext p_context,
@@ -186,7 +168,17 @@ rocalJpegFileSourceSingleShard(
         auto [color_format, num_of_planes] = convert_color_format(rocal_color_format);
         INFO("Internal buffer size width = "+ TOSTR(width)+ " height = "+ TOSTR(height) + " depth = "+ TOSTR(num_of_planes))
 
-        auto [tensor_format, dims] = convert_color_format_to_layout(rocal_color_format, context->user_batch_size(), height, width, num_of_planes);
+        RocalTensorlayout tensor_format = RocalTensorlayout::NHWC;
+        RocalTensorDataType tensor_data_type = RocalTensorDataType::UINT8;
+        unsigned num_of_dims = 4;
+        std::vector<size_t> dims;
+        if(rocal_color_format == ROCAL_COLOR_U8) {
+            tensor_format = RocalTensorlayout::NCHW;
+            dims = {context->user_batch_size(),num_of_planes, height, width};
+        }
+        else {
+            dims = {context->user_batch_size(), height, width, num_of_planes};
+        }
         auto info  = TensorInfo(std::move(dims),
                                      context->master_graph->mem_type(),
                                      RocalTensorDataType::UINT8);
@@ -265,13 +257,13 @@ rocalJpegFileSource(
 
         auto [color_format, num_of_planes] = convert_color_format(rocal_color_format);
         INFO("Internal buffer size width = "+ TOSTR(width)+ " height = "+ TOSTR(height) + " depth = "+ TOSTR(num_of_planes))
-        
-        auto [tensor_format, dims] = convert_color_format_to_layout(rocal_color_format, context->user_batch_size(), height, width, num_of_planes);
+
+        auto [tensor_layout, dims] = convert_color_format_to_layout(rocal_color_format, context->user_batch_size(), height, width, num_of_planes);
         auto info  = TensorInfo(std::move(dims),
                                      context->master_graph->mem_type(),
                                      RocalTensorDataType::UINT8);
         info.set_color_format(color_format);
-        info.set_tensor_layout(tensor_format);
+        info.set_tensor_layout(tensor_layout);
         info.set_max_shape();
         output = context->master_graph->create_loader_output_tensor(info);
         auto cpu_num_threads = context->master_graph->calculate_cpu_num_threads(1);
@@ -470,8 +462,8 @@ rocalSequenceReaderSingleShard(
     }
     return output;
 }
-/*
-RocalImage  ROCAL_API_CALL
+
+RocalTensor  ROCAL_API_CALL
 rocalJpegCaffe2LMDBRecordSource(
         RocalContext p_context,
         const char* source_path,
@@ -483,12 +475,10 @@ rocalJpegCaffe2LMDBRecordSource(
         RocalImageSizeEvaluationPolicy decode_size_policy,
         unsigned max_width,
         unsigned max_height,
-        RocalDecoderType dec_type)
-{
-    Image* output = nullptr;
+        RocalDecoderType dec_type) {
+    Tensor* output = nullptr;
     auto context = static_cast<Context*>(p_context);
-    try
-    {
+    try {
         bool use_input_dimension = (decode_size_policy == ROCAL_USE_USER_GIVEN_SIZE) || (decode_size_policy == ROCAL_USE_USER_GIVEN_SIZE_RESTRICTED);
         bool decoder_keep_original = (decode_size_policy == ROCAL_USE_USER_GIVEN_SIZE_RESTRICTED) || (decode_size_policy == ROCAL_USE_MAX_SIZE_RESTRICTED);
         DecoderType decType = DecoderType::TURBO_JPEG; // default
@@ -515,12 +505,14 @@ rocalJpegCaffe2LMDBRecordSource(
 
         INFO("Internal buffer size width = "+ TOSTR(width)+ " height = "+ TOSTR(height) + " depth = "+ TOSTR(num_of_planes))
 
-        auto info = ImageInfo(width, height,
-                              context->user_batch_size(),
-                              num_of_planes,
-                              context->master_graph->mem_type(),
-                              color_format );
-        output = context->master_graph->create_loader_output_image(info);
+        auto [tensor_layout, dims] = convert_color_format_to_layout(rocal_color_format, context->user_batch_size(), height, width, num_of_planes);
+        auto info  = TensorInfo(std::move(dims),
+                                     context->master_graph->mem_type(),
+                                     RocalTensorDataType::UINT8);
+        info.set_color_format(color_format);
+        info.set_tensor_layout(tensor_layout);
+        info.set_max_shape();
+        output = context->master_graph->create_loader_output_tensor(info);
         auto cpu_num_threads = context->master_graph->calculate_cpu_num_threads(1);
 
         context->master_graph->add_node<ImageLoaderNode>({}, {output})->init(internal_shard_count, cpu_num_threads,
@@ -536,22 +528,20 @@ rocalJpegCaffe2LMDBRecordSource(
                                                                              decoder_keep_original);
         context->master_graph->set_loop(loop);
 
-        if(is_output)
-        {
-            auto actual_output = context->master_graph->create_image(info, is_output);
+        if(is_output) {
+            auto actual_output = context->master_graph->create_tensor(info, is_output);
             context->master_graph->add_node<CopyNode>({output}, {actual_output});
         }
 
-    }
-    catch(const std::exception& e)
-    {
+    } catch(const std::exception& e) {
         context->capture_error(e.what());
         std::cerr << e.what() << '\n';
     }
     return output;
 }
 
-RocalImage  ROCAL_API_CALL
+
+RocalTensor  ROCAL_API_CALL
 rocalJpegCaffe2LMDBRecordSourceSingleShard(
         RocalContext p_context,
         const char* source_path,
@@ -564,12 +554,10 @@ rocalJpegCaffe2LMDBRecordSourceSingleShard(
         RocalImageSizeEvaluationPolicy decode_size_policy,
         unsigned max_width,
         unsigned max_height,
-        RocalDecoderType dec_type)
-{
-    Image* output = nullptr;
+        RocalDecoderType dec_type) {
+    Tensor* output = nullptr;
     auto context = static_cast<Context*>(p_context);
-    try
-    {
+    try {
         bool use_input_dimension = (decode_size_policy == ROCAL_USE_USER_GIVEN_SIZE) || (decode_size_policy == ROCAL_USE_USER_GIVEN_SIZE_RESTRICTED);
         bool decoder_keep_original = (decode_size_policy == ROCAL_USE_USER_GIVEN_SIZE_RESTRICTED) || (decode_size_policy == ROCAL_USE_MAX_SIZE_RESTRICTED);
         DecoderType decType = DecoderType::TURBO_JPEG; // default
@@ -599,12 +587,14 @@ rocalJpegCaffe2LMDBRecordSourceSingleShard(
 
         INFO("Internal buffer size width = "+ TOSTR(width)+ " height = "+ TOSTR(height) + " depth = "+ TOSTR(num_of_planes))
 
-        auto info = ImageInfo(width, height,
-                              context->user_batch_size(),
-                              num_of_planes,
-                              context->master_graph->mem_type(),
-                              color_format );
-        output = context->master_graph->create_loader_output_image(info);
+        auto [tensor_layout, dims] = convert_color_format_to_layout(rocal_color_format, context->user_batch_size(), height, width, num_of_planes);
+        auto info  = TensorInfo(std::move(dims),
+                                     context->master_graph->mem_type(),
+                                     RocalTensorDataType::UINT8);
+        info.set_color_format(color_format);
+        info.set_tensor_layout(tensor_layout);
+        info.set_max_shape();
+        output = context->master_graph->create_loader_output_tensor(info);
         auto cpu_num_threads = context->master_graph->calculate_cpu_num_threads(shard_count);
 
         context->master_graph->add_node<ImageLoaderSingleShardNode>({}, {output})->init(shard_id, shard_count, cpu_num_threads,
@@ -619,22 +609,19 @@ rocalJpegCaffe2LMDBRecordSourceSingleShard(
                                                                                         decoder_keep_original);
         context->master_graph->set_loop(loop);
 
-        if(is_output)
-        {
-            auto actual_output = context->master_graph->create_image(info, is_output);
+        if(is_output) {
+            auto actual_output = context->master_graph->create_tensor(info, is_output);
             context->master_graph->add_node<CopyNode>({output}, {actual_output});
         }
 
-    }
-    catch(const std::exception& e)
-    {
+    } catch(const std::exception& e) {
         context->capture_error(e.what());
         std::cerr << e.what() << '\n';
     }
     return output;
 }
 
-RocalImage  ROCAL_API_CALL
+RocalTensor  ROCAL_API_CALL
 rocalJpegCaffeLMDBRecordSource(
         RocalContext p_context,
         const char* source_path,
@@ -646,12 +633,10 @@ rocalJpegCaffeLMDBRecordSource(
         RocalImageSizeEvaluationPolicy decode_size_policy,
         unsigned max_width,
         unsigned max_height,
-        RocalDecoderType dec_type) 
-{
-    Image* output = nullptr;
+        RocalDecoderType dec_type)  {
+    Tensor* output = nullptr;
     auto context = static_cast<Context*>(p_context);
-    try
-    {
+    try {
         bool use_input_dimension = (decode_size_policy == ROCAL_USE_USER_GIVEN_SIZE) || (decode_size_policy == ROCAL_USE_USER_GIVEN_SIZE_RESTRICTED);
         bool decoder_keep_original = (decode_size_policy == ROCAL_USE_USER_GIVEN_SIZE_RESTRICTED) || (decode_size_policy == ROCAL_USE_MAX_SIZE_RESTRICTED);
         DecoderType decType = DecoderType::TURBO_JPEG; // default
@@ -678,12 +663,14 @@ rocalJpegCaffeLMDBRecordSource(
 
         INFO("Internal buffer size width = "+ TOSTR(width)+ " height = "+ TOSTR(height) + " depth = "+ TOSTR(num_of_planes))
 
-        auto info = ImageInfo(width, height,
-                              context->user_batch_size(),
-                              num_of_planes,
-                              context->master_graph->mem_type(),
-                              color_format );
-        output = context->master_graph->create_loader_output_image(info);
+       auto [tensor_layout, dims] = convert_color_format_to_layout(rocal_color_format, context->user_batch_size(), height, width, num_of_planes);
+        auto info  = TensorInfo(std::move(dims),
+                                     context->master_graph->mem_type(),
+                                     RocalTensorDataType::UINT8);
+        info.set_color_format(color_format);
+        info.set_tensor_layout(tensor_layout);
+        info.set_max_shape();
+        output = context->master_graph->create_loader_output_tensor(info);
         auto cpu_num_threads = context->master_graph->calculate_cpu_num_threads(1);
 
         context->master_graph->add_node<ImageLoaderNode>({}, {output})->init(internal_shard_count, cpu_num_threads,
@@ -700,22 +687,20 @@ rocalJpegCaffeLMDBRecordSource(
 
         context->master_graph->set_loop(loop);
 
-        if(is_output)
-        {
-            auto actual_output = context->master_graph->create_image(info, is_output);
+        if(is_output) {
+            auto actual_output = context->master_graph->create_tensor(info, is_output);
             context->master_graph->add_node<CopyNode>({output}, {actual_output});
         }
 
-    }
-    catch(const std::exception& e)
-    {
+    } catch(const std::exception& e) {
         context->capture_error(e.what());
         std::cerr << e.what() << '\n';
     }
     return output;
 }
 
-RocalImage  ROCAL_API_CALL
+
+RocalTensor  ROCAL_API_CALL
 rocalJpegCaffeLMDBRecordSourceSingleShard(
         RocalContext p_context,
         const char* source_path,
@@ -728,12 +713,10 @@ rocalJpegCaffeLMDBRecordSourceSingleShard(
         RocalImageSizeEvaluationPolicy decode_size_policy,
         unsigned max_width,
         unsigned max_height,
-        RocalDecoderType dec_type)
-{
-    Image* output = nullptr;
+        RocalDecoderType dec_type) {
+    Tensor* output = nullptr;
     auto context = static_cast<Context*>(p_context);
-    try
-    {
+    try {
         bool use_input_dimension = (decode_size_policy == ROCAL_USE_USER_GIVEN_SIZE) || (decode_size_policy == ROCAL_USE_USER_GIVEN_SIZE_RESTRICTED);
         bool decoder_keep_original = (decode_size_policy == ROCAL_USE_USER_GIVEN_SIZE_RESTRICTED) || (decode_size_policy == ROCAL_USE_MAX_SIZE_RESTRICTED);
         DecoderType decType = DecoderType::TURBO_JPEG; // default
@@ -763,12 +746,14 @@ rocalJpegCaffeLMDBRecordSourceSingleShard(
 
         INFO("Internal buffer size width = "+ TOSTR(width)+ " height = "+ TOSTR(height) + " depth = "+ TOSTR(num_of_planes))
 
-        auto info = ImageInfo(width, height,
-                              context->user_batch_size(),
-                              num_of_planes,
-                              context->master_graph->mem_type(),
-                              color_format );
-        output = context->master_graph->create_loader_output_image(info);
+        auto [tensor_layout, dims] = convert_color_format_to_layout(rocal_color_format, context->user_batch_size(), height, width, num_of_planes);
+        auto info  = TensorInfo(std::move(dims),
+                                     context->master_graph->mem_type(),
+                                     RocalTensorDataType::UINT8);
+        info.set_color_format(color_format);
+        info.set_tensor_layout(tensor_layout);
+        info.set_max_shape();
+        output = context->master_graph->create_loader_output_tensor(info);
         auto cpu_num_threads = context->master_graph->calculate_cpu_num_threads(shard_count);
 
         context->master_graph->add_node<ImageLoaderSingleShardNode>({}, {output})->init(shard_id, shard_count, cpu_num_threads,
@@ -783,15 +768,12 @@ rocalJpegCaffeLMDBRecordSourceSingleShard(
                                                                                         decoder_keep_original);
         context->master_graph->set_loop(loop);
 
-        if(is_output)
-        {
-            auto actual_output = context->master_graph->create_image(info, is_output);
+        if(is_output) {
+            auto actual_output = context->master_graph->create_tensor(info, is_output);
             context->master_graph->add_node<CopyNode>({output}, {actual_output});
         }
 
-    }
-    catch(const std::exception& e)
-    {
+    } catch(const std::exception& e) {
         context->capture_error(e.what());
         std::cerr << e.what() << '\n';
     }
@@ -799,7 +781,7 @@ rocalJpegCaffeLMDBRecordSourceSingleShard(
 }
 
 
-RocalImage  ROCAL_API_CALL
+RocalTensor  ROCAL_API_CALL
 rocalJpegCaffeLMDBRecordSourcePartialSingleShard(
         RocalContext p_context,
         const char* source_path,
@@ -814,12 +796,10 @@ rocalJpegCaffeLMDBRecordSourcePartialSingleShard(
         bool loop,
         RocalImageSizeEvaluationPolicy decode_size_policy,
         unsigned max_width,
-        unsigned max_height)
-{
-    Image* output = nullptr;
+        unsigned max_height) {
+    Tensor* output = nullptr;
     auto context = static_cast<Context*>(p_context);
-    try
-    {
+    try {
         bool use_input_dimension = (decode_size_policy == ROCAL_USE_USER_GIVEN_SIZE) || (decode_size_policy == ROCAL_USE_USER_GIVEN_SIZE_RESTRICTED);
         // bool decoder_keep_original = (decode_size_policy == ROCAL_USE_USER_GIVEN_SIZE_RESTRICTED) || (decode_size_policy == ROCAL_USE_MAX_SIZE_RESTRICTED);
 
@@ -845,12 +825,14 @@ rocalJpegCaffeLMDBRecordSourcePartialSingleShard(
 
         INFO("Internal buffer size width = "+ TOSTR(width)+ " height = "+ TOSTR(height) + " depth = "+ TOSTR(num_of_planes))
 
-        auto info = ImageInfo(width, height,
-                              context->user_batch_size(),
-                              num_of_planes,
-                              context->master_graph->mem_type(),
-                              color_format );
-        output = context->master_graph->create_loader_output_image(info);
+        auto [tensor_layout, dims] = convert_color_format_to_layout(rocal_color_format, context->user_batch_size(), height, width, num_of_planes);
+        auto info  = TensorInfo(std::move(dims),
+                                     context->master_graph->mem_type(),
+                                     RocalTensorDataType::UINT8);
+        info.set_color_format(color_format);
+        info.set_tensor_layout(tensor_layout);
+        info.set_max_shape();
+        output = context->master_graph->create_loader_output_tensor(info);
         auto cpu_num_threads = context->master_graph->calculate_cpu_num_threads(shard_count);
 
         context->master_graph->add_node<FusedJpegCropSingleShardNode>({}, {output})->init(shard_id, shard_count, cpu_num_threads,
@@ -867,22 +849,19 @@ rocalJpegCaffeLMDBRecordSourcePartialSingleShard(
 
         context->master_graph->set_loop(loop);
 
-        if(is_output)
-        {
-            auto actual_output = context->master_graph->create_image(info, is_output);
+        if(is_output) {
+            auto actual_output = context->master_graph->create_tensor(info, is_output);
             context->master_graph->add_node<CopyNode>({output}, {actual_output});
         }
 
-    }
-    catch(const std::exception& e)
-    {
+    } catch(const std::exception& e) {
         context->capture_error(e.what());
         std::cerr << e.what() << '\n';
     }
     return output;
 }
 
-RocalImage  ROCAL_API_CALL
+RocalTensor  ROCAL_API_CALL
 rocalJpegCaffe2LMDBRecordSourcePartialSingleShard(
         RocalContext p_context,
         const char* source_path,
@@ -897,12 +876,10 @@ rocalJpegCaffe2LMDBRecordSourcePartialSingleShard(
         bool loop,
         RocalImageSizeEvaluationPolicy decode_size_policy,
         unsigned max_width,
-        unsigned max_height)
-{
-    Image* output = nullptr;
+        unsigned max_height) {
+    Tensor* output = nullptr;
     auto context = static_cast<Context*>(p_context);
-    try
-    {
+    try {
         bool use_input_dimension = (decode_size_policy == ROCAL_USE_USER_GIVEN_SIZE) || (decode_size_policy == ROCAL_USE_USER_GIVEN_SIZE_RESTRICTED);
         // bool decoder_keep_original = (decode_size_policy == ROCAL_USE_USER_GIVEN_SIZE_RESTRICTED) || (decode_size_policy == ROCAL_USE_MAX_SIZE_RESTRICTED);
 
@@ -928,12 +905,14 @@ rocalJpegCaffe2LMDBRecordSourcePartialSingleShard(
 
         INFO("Internal buffer size width = "+ TOSTR(width)+ " height = "+ TOSTR(height) + " depth = "+ TOSTR(num_of_planes))
 
-        auto info = ImageInfo(width, height,
-                              context->user_batch_size(),
-                              num_of_planes,
-                              context->master_graph->mem_type(),
-                              color_format );
-        output = context->master_graph->create_loader_output_image(info);
+        auto [tensor_layout, dims] = convert_color_format_to_layout(rocal_color_format, context->user_batch_size(), height, width, num_of_planes);
+        auto info  = TensorInfo(std::move(dims),
+                                     context->master_graph->mem_type(),
+                                     RocalTensorDataType::UINT8);
+        info.set_color_format(color_format);
+        info.set_tensor_layout(tensor_layout);
+        info.set_max_shape();
+        output = context->master_graph->create_loader_output_tensor(info);
         auto cpu_num_threads = context->master_graph->calculate_cpu_num_threads(shard_count);
 
         context->master_graph->add_node<FusedJpegCropSingleShardNode>({}, {output})->init(shard_id, shard_count, cpu_num_threads,
@@ -948,22 +927,19 @@ rocalJpegCaffe2LMDBRecordSourcePartialSingleShard(
                                                                             num_attempts, area_factor, aspect_ratio);
         context->master_graph->set_loop(loop);
 
-        if(is_output)
-        {
-            auto actual_output = context->master_graph->create_image(info, is_output);
+        if(is_output) {
+            auto actual_output = context->master_graph->create_tensor(info, is_output);
             context->master_graph->add_node<CopyNode>({output}, {actual_output});
         }
 
-    }
-    catch(const std::exception& e)
-    {
+    } catch(const std::exception& e) {
         context->capture_error(e.what());
         std::cerr << e.what() << '\n';
     }
     return output;
 }
 
-RocalImage  ROCAL_API_CALL
+RocalTensor  ROCAL_API_CALL
 rocalMXNetRecordSource(
         RocalContext p_context,
         const char* source_path,
@@ -978,12 +954,10 @@ rocalMXNetRecordSource(
         bool loop,
         RocalImageSizeEvaluationPolicy decode_size_policy,
         unsigned max_width,
-        unsigned max_height)
-{
-    Image* output = nullptr;
+        unsigned max_height) {
+    Tensor* output = nullptr;
     auto context = static_cast<Context*>(p_context);
-    try
-    {
+    try {
         bool use_input_dimension = (decode_size_policy == ROCAL_USE_USER_GIVEN_SIZE) || (decode_size_policy == ROCAL_USE_USER_GIVEN_SIZE_RESTRICTED);
         // bool decoder_keep_original = (decode_size_policy == ROCAL_USE_USER_GIVEN_SIZE_RESTRICTED) || (decode_size_policy == ROCAL_USE_MAX_SIZE_RESTRICTED);
 
@@ -1009,12 +983,14 @@ rocalMXNetRecordSource(
 
         INFO("Internal buffer size width = "+ TOSTR(width)+ " height = "+ TOSTR(height) + " depth = "+ TOSTR(num_of_planes))
 
-        auto info = ImageInfo(width, height,
-                              context->user_batch_size(),
-                              num_of_planes,
-                              context->master_graph->mem_type(),
-                              color_format );
-        output = context->master_graph->create_loader_output_image(info);
+        auto [tensor_layout, dims] = convert_color_format_to_layout(rocal_color_format, context->user_batch_size(), height, width, num_of_planes);
+        auto info  = TensorInfo(std::move(dims),
+                                     context->master_graph->mem_type(),
+                                     RocalTensorDataType::UINT8);
+        info.set_color_format(color_format);
+        info.set_tensor_layout(tensor_layout);
+        info.set_max_shape();
+        output = context->master_graph->create_loader_output_tensor(info);
         auto cpu_num_threads = context->master_graph->calculate_cpu_num_threads(shard_count);
 
         context->master_graph->add_node<FusedJpegCropSingleShardNode>({}, {output})->init(shard_id, shard_count, cpu_num_threads,
@@ -1031,22 +1007,19 @@ rocalMXNetRecordSource(
 
         context->master_graph->set_loop(loop);
 
-        if(is_output)
-        {
-            auto actual_output = context->master_graph->create_image(info, is_output);
+        if(is_output) {
+            auto actual_output = context->master_graph->create_tensor(info, is_output);
             context->master_graph->add_node<CopyNode>({output}, {actual_output});
         }
 
-    }
-    catch(const std::exception& e)
-    {
+    } catch(const std::exception& e) {
         context->capture_error(e.what());
         std::cerr << e.what() << '\n';
     }
     return output;
 }
 
-RocalImage  ROCAL_API_CALL
+RocalTensor  ROCAL_API_CALL
 rocalMXNetRecordSource(
         RocalContext p_context,
         const char* source_path,
@@ -1058,16 +1031,14 @@ rocalMXNetRecordSource(
         RocalImageSizeEvaluationPolicy decode_size_policy,
         unsigned max_width,
         unsigned max_height,
-        RocalDecoderType dec_type)
-{
-    Image* output = nullptr;
+        RocalDecoderType dec_type) {
+    Tensor* output = nullptr;
     if (p_context == nullptr) {
         ERR("Invalid ROCAL context or invalid input image")
         return output;
     }
     auto context = static_cast<Context*>(p_context);
-    try
-    {
+    try {
         bool use_input_dimension = (decode_size_policy == ROCAL_USE_USER_GIVEN_SIZE) || (decode_size_policy == ROCAL_USE_USER_GIVEN_SIZE_RESTRICTED);
         bool decoder_keep_original = (decode_size_policy == ROCAL_USE_USER_GIVEN_SIZE_RESTRICTED) || (decode_size_policy == ROCAL_USE_MAX_SIZE_RESTRICTED);
         DecoderType decType = DecoderType::TURBO_JPEG; // default
@@ -1094,12 +1065,14 @@ rocalMXNetRecordSource(
 
         INFO("Internal buffer size width = "+ TOSTR(width)+ " height = "+ TOSTR(height) + " depth = "+ TOSTR(num_of_planes))
 
-        auto info = ImageInfo(width, height,
-                              context->user_batch_size(),
-                              num_of_planes,
-                              context->master_graph->mem_type(),
-                              color_format );
-        output = context->master_graph->create_loader_output_image(info);
+        auto [tensor_layout, dims] = convert_color_format_to_layout(rocal_color_format, context->user_batch_size(), height, width, num_of_planes);
+        auto info  = TensorInfo(std::move(dims),
+                                     context->master_graph->mem_type(),
+                                     RocalTensorDataType::UINT8);
+        info.set_color_format(color_format);
+        info.set_tensor_layout(tensor_layout);
+        info.set_max_shape();
+        output = context->master_graph->create_loader_output_tensor(info);
         auto cpu_num_threads = context->master_graph->calculate_cpu_num_threads(1);
 
         context->master_graph->add_node<ImageLoaderNode>({}, {output})->init(internal_shard_count, cpu_num_threads,
@@ -1116,22 +1089,19 @@ rocalMXNetRecordSource(
 
         context->master_graph->set_loop(loop);
 
-        if(is_output)
-        {
-            auto actual_output = context->master_graph->create_image(info, is_output);
+        if(is_output) {
+            auto actual_output = context->master_graph->create_tensor(info, is_output);
             context->master_graph->add_node<CopyNode>({output}, {actual_output});
         }
 
-    }
-    catch(const std::exception& e)
-    {
+    } catch(const std::exception& e) {
         context->capture_error(e.what());
         std::cerr << e.what() << '\n';
     }
     return output;
 }
 
-RocalImage  ROCAL_API_CALL
+RocalTensor  ROCAL_API_CALL
 rocalMXNetRecordSourceSingleShard(
         RocalContext p_context,
         const char* source_path,
@@ -1144,16 +1114,14 @@ rocalMXNetRecordSourceSingleShard(
         RocalImageSizeEvaluationPolicy decode_size_policy,
         unsigned max_width,
         unsigned max_height,
-        RocalDecoderType dec_type)
-{
-    Image* output = nullptr;
+        RocalDecoderType dec_type) {
+    Tensor* output = nullptr;
     if (p_context == nullptr) {
         ERR("Invalid ROCAL context or invalid input image")
         return output;
     }
     auto context = static_cast<Context*>(p_context);
-    try
-    {
+    try {
         bool use_input_dimension = (decode_size_policy == ROCAL_USE_USER_GIVEN_SIZE) || (decode_size_policy == ROCAL_USE_USER_GIVEN_SIZE_RESTRICTED);
         bool decoder_keep_original = (decode_size_policy == ROCAL_USE_USER_GIVEN_SIZE_RESTRICTED) || (decode_size_policy == ROCAL_USE_MAX_SIZE_RESTRICTED);
         DecoderType decType = DecoderType::TURBO_JPEG; // default
@@ -1183,12 +1151,14 @@ rocalMXNetRecordSourceSingleShard(
 
         INFO("Internal buffer size width = "+ TOSTR(width)+ " height = "+ TOSTR(height) + " depth = "+ TOSTR(num_of_planes))
 
-        auto info = ImageInfo(width, height,
-                              context->user_batch_size(),
-                              num_of_planes,
-                              context->master_graph->mem_type(),
-                              color_format );
-        output = context->master_graph->create_loader_output_image(info);
+        auto [tensor_layout, dims] = convert_color_format_to_layout(rocal_color_format, context->user_batch_size(), height, width, num_of_planes);
+        auto info  = TensorInfo(std::move(dims),
+                                     context->master_graph->mem_type(),
+                                     RocalTensorDataType::UINT8);
+        info.set_color_format(color_format);
+        info.set_tensor_layout(tensor_layout);
+        info.set_max_shape();
+        output = context->master_graph->create_loader_output_tensor(info);
         auto cpu_num_threads = context->master_graph->calculate_cpu_num_threads(shard_count);
 
         context->master_graph->add_node<ImageLoaderSingleShardNode>({}, {output})->init(shard_id, shard_count, cpu_num_threads,
@@ -1203,22 +1173,19 @@ rocalMXNetRecordSourceSingleShard(
                                                                                         decoder_keep_original);
         context->master_graph->set_loop(loop);
 
-        if(is_output)
-        {
-            auto actual_output = context->master_graph->create_image(info, is_output);
+        if(is_output) {
+            auto actual_output = context->master_graph->create_tensor(info, is_output);
             context->master_graph->add_node<CopyNode>({output}, {actual_output});
         }
 
-    }
-    catch(const std::exception& e)
-    {
+    } catch(const std::exception& e) {
         context->capture_error(e.what());
         std::cerr << e.what() << '\n';
     }
     return output;
 }
 
-RocalImage  ROCAL_API_CALL
+RocalTensor  ROCAL_API_CALL
 rocalJpegCOCOFileSource(
                       RocalContext p_context,
                       const char* source_path,
@@ -1231,12 +1198,10 @@ rocalJpegCOCOFileSource(
                       RocalImageSizeEvaluationPolicy decode_size_policy,
                       unsigned max_width,
                       unsigned max_height,
-                      RocalDecoderType dec_type)
-{
-    Image* output = nullptr;
+                      RocalDecoderType dec_type) {
+    Tensor* output = nullptr;
     auto context = static_cast<Context*>(p_context);
-    try
-    {
+    try {
         bool use_input_dimension = (decode_size_policy == ROCAL_USE_USER_GIVEN_SIZE) || (decode_size_policy == ROCAL_USE_USER_GIVEN_SIZE_RESTRICTED);
         bool decoder_keep_original = (decode_size_policy == ROCAL_USE_USER_GIVEN_SIZE_RESTRICTED) || (decode_size_policy == ROCAL_USE_MAX_SIZE_RESTRICTED);
         DecoderType decType = DecoderType::TURBO_JPEG; // default
@@ -1261,12 +1226,14 @@ rocalJpegCOCOFileSource(
         auto [color_format, num_of_planes] = convert_color_format(rocal_color_format);
         INFO("Internal buffer size width = "+ TOSTR(width)+ " height = "+ TOSTR(height) + " depth = "+ TOSTR(num_of_planes))
 
-        auto info = ImageInfo(width, height,
-                              context->user_batch_size(),
-                              num_of_planes,
-                              context->master_graph->mem_type(),
-                              color_format );
-        output = context->master_graph->create_loader_output_image(info);
+        auto [tensor_layout, dims] = convert_color_format_to_layout(rocal_color_format, context->user_batch_size(), height, width, num_of_planes);
+        auto info  = TensorInfo(std::move(dims),
+                                     context->master_graph->mem_type(),
+                                     RocalTensorDataType::UINT8);
+        info.set_color_format(color_format);
+        info.set_tensor_layout(tensor_layout);
+        info.set_max_shape();
+        output = context->master_graph->create_loader_output_tensor(info);
         auto cpu_num_threads = context->master_graph->calculate_cpu_num_threads(1);
 
         context->master_graph->add_node<ImageLoaderNode>({}, {output})->init(internal_shard_count, cpu_num_threads,
@@ -1283,22 +1250,19 @@ rocalJpegCOCOFileSource(
 
         context->master_graph->set_loop(loop);
 
-        if(is_output)
-        {
-            auto actual_output = context->master_graph->create_image(info, is_output);
+        if(is_output) {
+            auto actual_output = context->master_graph->create_tensor(info, is_output);
             context->master_graph->add_node<CopyNode>({output}, {actual_output});
         }
 
-    }
-    catch(const std::exception& e)
-    {
+    } catch(const std::exception& e) {
         context->capture_error(e.what());
         std::cerr << e.what() << '\n';
     }
     return output;
 }
 
-RocalImage  ROCAL_API_CALL
+RocalTensor  ROCAL_API_CALL
 rocalJpegCOCOFileSourceSingleShard(
         RocalContext p_context,
         const char* source_path,
@@ -1312,12 +1276,10 @@ rocalJpegCOCOFileSourceSingleShard(
         RocalImageSizeEvaluationPolicy decode_size_policy,
         unsigned max_width,
         unsigned max_height,
-        RocalDecoderType dec_type)
-{
-    Image* output = nullptr;
+        RocalDecoderType dec_type) {
+    Tensor* output = nullptr;
     auto context = static_cast<Context*>(p_context);
-    try
-    {
+    try {
         bool use_input_dimension = (decode_size_policy == ROCAL_USE_USER_GIVEN_SIZE) || (decode_size_policy == ROCAL_USE_USER_GIVEN_SIZE_RESTRICTED);
         bool decoder_keep_original = (decode_size_policy == ROCAL_USE_USER_GIVEN_SIZE_RESTRICTED) || (decode_size_policy == ROCAL_USE_MAX_SIZE_RESTRICTED);
         DecoderType decType = DecoderType::TURBO_JPEG; // default
@@ -1345,12 +1307,14 @@ rocalJpegCOCOFileSourceSingleShard(
         auto [color_format, num_of_planes] = convert_color_format(rocal_color_format);
         INFO("Internal buffer size width = "+ TOSTR(width)+ " height = "+ TOSTR(height) + " depth = "+ TOSTR(num_of_planes))
 
-        auto info = ImageInfo(width, height,
-                              context->user_batch_size(),
-                              num_of_planes,
-                              context->master_graph->mem_type(),
-                              color_format );
-        output = context->master_graph->create_loader_output_image(info);
+        auto [tensor_layout, dims] = convert_color_format_to_layout(rocal_color_format, context->user_batch_size(), height, width, num_of_planes);
+        auto info  = TensorInfo(std::move(dims),
+                                     context->master_graph->mem_type(),
+                                     RocalTensorDataType::UINT8);
+        info.set_color_format(color_format);
+        info.set_tensor_layout(tensor_layout);
+        info.set_max_shape();
+        output = context->master_graph->create_loader_output_tensor(info);
         auto cpu_num_threads = context->master_graph->calculate_cpu_num_threads(shard_count);
 
         context->master_graph->add_node<ImageLoaderSingleShardNode>({}, {output})->init(shard_id, shard_count, cpu_num_threads,
@@ -1365,22 +1329,19 @@ rocalJpegCOCOFileSourceSingleShard(
                                                                                         decoder_keep_original);
         context->master_graph->set_loop(loop);
 
-        if(is_output)
-        {
-            auto actual_output = context->master_graph->create_image(info, is_output);
+        if(is_output) {
+            auto actual_output = context->master_graph->create_tensor(info, is_output);
             context->master_graph->add_node<CopyNode>({output}, {actual_output});
         }
 
-    }
-    catch(const std::exception& e)
-    {
+    } catch(const std::exception& e) {
         context->capture_error(e.what());
         std::cerr << e.what() << '\n';
     }
     return output;
 }
 
-RocalImage  ROCAL_API_CALL
+RocalTensor  ROCAL_API_CALL
 rocalFusedJpegCrop(
         RocalContext p_context,
         const char* source_path,
@@ -1394,13 +1355,10 @@ rocalFusedJpegCrop(
         bool loop,
         RocalImageSizeEvaluationPolicy decode_size_policy,
         unsigned max_width,
-        unsigned max_height
-        )
-{
-    Image* output = nullptr;
+        unsigned max_height) {
+    Tensor* output = nullptr;
     auto context = static_cast<Context*>(p_context);
-    try
-    {
+    try {
         bool use_input_dimension = (decode_size_policy == ROCAL_USE_USER_GIVEN_SIZE) || (decode_size_policy == ROCAL_USE_USER_GIVEN_SIZE_RESTRICTED);
 
         if(internal_shard_count < 1 )
@@ -1420,12 +1378,14 @@ rocalFusedJpegCrop(
 
         auto [color_format, num_of_planes] = convert_color_format(rocal_color_format);
 
-        auto info = ImageInfo(width, height,
-                              context->user_batch_size(),
-                              num_of_planes,
-                              context->master_graph->mem_type(),
-                              color_format );
-        output = context->master_graph->create_loader_output_image(info);
+        auto [tensor_layout, dims] = convert_color_format_to_layout(rocal_color_format, context->user_batch_size(), height, width, num_of_planes);
+        auto info  = TensorInfo(std::move(dims),
+                                     context->master_graph->mem_type(),
+                                     RocalTensorDataType::UINT8);
+        info.set_color_format(color_format);
+        info.set_tensor_layout(tensor_layout);
+        info.set_max_shape();
+        output = context->master_graph->create_loader_output_tensor(info);
         auto cpu_num_threads = context->master_graph->calculate_cpu_num_threads(1);
         context->master_graph->add_node<FusedJpegCropNode>({}, {output})->init(internal_shard_count, cpu_num_threads,
                                                                           source_path, "",
@@ -1439,14 +1399,12 @@ rocalFusedJpegCrop(
                                                                           num_attempts, area_factor, aspect_ratio);
         context->master_graph->set_loop(loop);
 
-        if(is_output)
-        {
-            auto actual_output = context->master_graph->create_image(info, is_output);
+        if(is_output) {
+            auto actual_output = context->master_graph->create_tensor(info, is_output);
             context->master_graph->add_node<CopyNode>({output}, {actual_output});
         }
 
-    }
-    catch(const std::exception& e)
+    } catch(const std::exception& e)
     {
         context->capture_error(e.what());
         std::cerr << e.what() << '\n';
@@ -1454,7 +1412,7 @@ rocalFusedJpegCrop(
     return output;
 }
 
-RocalImage  ROCAL_API_CALL
+RocalTensor  ROCAL_API_CALL
 rocalJpegCOCOFileSourcePartial(
         RocalContext p_context,
         const char* source_path,
@@ -1469,12 +1427,10 @@ rocalJpegCOCOFileSourcePartial(
         bool loop,
         RocalImageSizeEvaluationPolicy decode_size_policy,
         unsigned max_width,
-        unsigned max_height)
-{
-    Image* output = nullptr;
+        unsigned max_height) {
+    Tensor* output = nullptr;
     auto context = static_cast<Context*>(p_context);
-    try
-    {
+    try {
         bool use_input_dimension = (decode_size_policy == ROCAL_USE_USER_GIVEN_SIZE) || (decode_size_policy == ROCAL_USE_USER_GIVEN_SIZE_RESTRICTED);
         //bool decoder_keep_original = (decode_size_policy == ROCAL_USE_USER_GIVEN_SIZE_RESTRICTED) || (decode_size_policy == ROCAL_USE_MAX_SIZE_RESTRICTED);
 
@@ -1497,12 +1453,14 @@ rocalJpegCOCOFileSourcePartial(
 
         INFO("Internal buffer size width = "+ TOSTR(width)+ " height = "+ TOSTR(height) + " depth = "+ TOSTR(num_of_planes))
 
-        auto info = ImageInfo(width, height,
-                              context->user_batch_size(),
-                              num_of_planes,
-                              context->master_graph->mem_type(),
-                              color_format );
-        output = context->master_graph->create_loader_output_image(info);
+        auto [tensor_layout, dims] = convert_color_format_to_layout(rocal_color_format, context->user_batch_size(), height, width, num_of_planes);
+        auto info  = TensorInfo(std::move(dims),
+                                     context->master_graph->mem_type(),
+                                     RocalTensorDataType::UINT8);
+        info.set_color_format(color_format);
+        info.set_tensor_layout(tensor_layout);
+        info.set_max_shape();
+        output = context->master_graph->create_loader_output_tensor(info);
         auto cpu_num_threads = context->master_graph->calculate_cpu_num_threads(1);
 
         context->master_graph->add_node<FusedJpegCropNode>({}, {output})->init(internal_shard_count, cpu_num_threads,
@@ -1518,15 +1476,12 @@ rocalJpegCOCOFileSourcePartial(
 
         context->master_graph->set_loop(loop);
 
-        if(is_output)
-        {
-            auto actual_output = context->master_graph->create_image(info, is_output);
+        if(is_output) {
+            auto actual_output = context->master_graph->create_tensor(info, is_output);
             context->master_graph->add_node<CopyNode>({output}, {actual_output});
         }
 
-    }
-    catch(const std::exception& e)
-    {
+    } catch(const std::exception& e) {
         context->capture_error(e.what());
         std::cerr << e.what() << '\n';
     }
@@ -1534,7 +1489,7 @@ rocalJpegCOCOFileSourcePartial(
 }
 
 
-RocalImage  ROCAL_API_CALL
+RocalTensor  ROCAL_API_CALL
 rocalJpegCOCOFileSourcePartialSingleShard(
         RocalContext p_context,
         const char* source_path,
@@ -1550,12 +1505,10 @@ rocalJpegCOCOFileSourcePartialSingleShard(
         bool loop,
         RocalImageSizeEvaluationPolicy decode_size_policy,
         unsigned max_width,
-        unsigned max_height)
-{
-    Image* output = nullptr;
+        unsigned max_height) {
+    Tensor* output = nullptr;
     auto context = static_cast<Context*>(p_context);
-    try
-    {
+    try {
         bool use_input_dimension = (decode_size_policy == ROCAL_USE_USER_GIVEN_SIZE) || (decode_size_policy == ROCAL_USE_USER_GIVEN_SIZE_RESTRICTED);
         //bool decoder_keep_original = (decode_size_policy == ROCAL_USE_USER_GIVEN_SIZE_RESTRICTED) || (decode_size_policy == ROCAL_USE_MAX_SIZE_RESTRICTED);
 
@@ -1579,12 +1532,14 @@ rocalJpegCOCOFileSourcePartialSingleShard(
 
         auto [color_format, num_of_planes] = convert_color_format(rocal_color_format);
 
-        auto info = ImageInfo(width, height,
-                              context->user_batch_size(),
-                              num_of_planes,
-                              context->master_graph->mem_type(),
-                              color_format );
-        output = context->master_graph->create_loader_output_image(info);
+        auto [tensor_layout, dims] = convert_color_format_to_layout(rocal_color_format, context->user_batch_size(), height, width, num_of_planes);
+        auto info  = TensorInfo(std::move(dims),
+                                     context->master_graph->mem_type(),
+                                     RocalTensorDataType::UINT8);
+        info.set_color_format(color_format);
+        info.set_tensor_layout(tensor_layout);
+        info.set_max_shape();
+        output = context->master_graph->create_loader_output_tensor(info);
         auto cpu_num_threads = context->master_graph->calculate_cpu_num_threads(shard_count);
 
         context->master_graph->add_node<FusedJpegCropSingleShardNode>({}, {output})->init(shard_id, shard_count, cpu_num_threads,
@@ -1600,14 +1555,12 @@ rocalJpegCOCOFileSourcePartialSingleShard(
 
         context->master_graph->set_loop(loop);
 
-        if(is_output)
-        {
-            auto actual_output = context->master_graph->create_image(info, is_output);
+        if(is_output) {
+            auto actual_output = context->master_graph->create_tensor(info, is_output);
             context->master_graph->add_node<CopyNode>({output}, {actual_output});
         }
 
-    }
-    catch(const std::exception& e)
+    } catch(const std::exception& e)
     {
         context->capture_error(e.what());
         std::cerr << e.what() << '\n';
@@ -1615,7 +1568,7 @@ rocalJpegCOCOFileSourcePartialSingleShard(
     return output;
 }
 
-RocalImage  ROCAL_API_CALL
+RocalTensor  ROCAL_API_CALL
 rocalJpegTFRecordSource(
         RocalContext p_context,
         const char* source_path,
@@ -1629,12 +1582,10 @@ rocalJpegTFRecordSource(
         RocalImageSizeEvaluationPolicy decode_size_policy,
         unsigned max_width,
         unsigned max_height,
-        RocalDecoderType dec_type) 
-{
-    Image* output = nullptr;
+        RocalDecoderType dec_type) {
+    Tensor* output = nullptr;
     auto context = static_cast<Context*>(p_context);
-    try
-    {
+    try {
         std::string user_key_for_encoded_str(user_key_for_encoded);
         std::string user_key_for_filename_str(user_key_for_filename);
 
@@ -1666,12 +1617,14 @@ rocalJpegTFRecordSource(
 
         INFO("Internal buffer size width = "+ TOSTR(width)+ " height = "+ TOSTR(height) + " depth = "+ TOSTR(num_of_planes))
 
-        auto info = ImageInfo(width, height,
-                              context->user_batch_size(),
-                              num_of_planes,
-                              context->master_graph->mem_type(),
-                              color_format );
-        output = context->master_graph->create_loader_output_image(info);
+        auto [tensor_layout, dims] = convert_color_format_to_layout(rocal_color_format, context->user_batch_size(), height, width, num_of_planes);
+        auto info  = TensorInfo(std::move(dims),
+                                     context->master_graph->mem_type(),
+                                     RocalTensorDataType::UINT8);
+        info.set_color_format(color_format);
+        info.set_tensor_layout(tensor_layout);
+        info.set_max_shape();
+        output = context->master_graph->create_loader_output_tensor(info);
         auto cpu_num_threads = context->master_graph->calculate_cpu_num_threads(1);
 
         context->master_graph->add_node<ImageLoaderNode>({}, {output})->init(internal_shard_count, cpu_num_threads,
@@ -1686,22 +1639,19 @@ rocalJpegTFRecordSource(
                                                                              context->master_graph->meta_data_reader());
         context->master_graph->set_loop(loop);
 
-        if(is_output)
-        {
-            auto actual_output = context->master_graph->create_image(info, is_output);
+        if(is_output) {
+            auto actual_output = context->master_graph->create_tensor(info, is_output);
             context->master_graph->add_node<CopyNode>({output}, {actual_output});
         }
 
-    }
-    catch(const std::exception& e)
-    {
+    } catch(const std::exception& e) {
         context->capture_error(e.what());
         std::cerr << e.what() << '\n';
     }
     return output;
 }
 
-RocalImage  ROCAL_API_CALL
+RocalTensor  ROCAL_API_CALL
 rocalJpegTFRecordSourceSingleShard(
         RocalContext p_context,
         const char* source_path,
@@ -1714,12 +1664,10 @@ rocalJpegTFRecordSourceSingleShard(
         RocalImageSizeEvaluationPolicy decode_size_policy,
         unsigned max_width,
         unsigned max_height,
-        RocalDecoderType dec_type) 
-{
-    Image* output = nullptr;
+        RocalDecoderType dec_type) {
+    Tensor* output = nullptr;
     auto context = static_cast<Context*>(p_context);
-    try
-    {
+    try {
         bool use_input_dimension = (decode_size_policy == ROCAL_USE_USER_GIVEN_SIZE) || (decode_size_policy == ROCAL_USE_USER_GIVEN_SIZE_RESTRICTED);
         DecoderType decType = DecoderType::TURBO_JPEG; // default
         if (dec_type == ROCAL_DECODER_OPENCV) decType = DecoderType::OPENCV_DEC;
@@ -1746,12 +1694,14 @@ rocalJpegTFRecordSourceSingleShard(
         auto [color_format, num_of_planes] = convert_color_format(rocal_color_format);
         INFO("Internal buffer size width = "+ TOSTR(width)+ " height = "+ TOSTR(height) + " depth = "+ TOSTR(num_of_planes))
 
-        auto info = ImageInfo(width, height,
-                              context->user_batch_size(),
-                              num_of_planes,
-                              context->master_graph->mem_type(),
-                              color_format );
-        output = context->master_graph->create_loader_output_image(info);
+        auto [tensor_layout, dims] = convert_color_format_to_layout(rocal_color_format, context->user_batch_size(), height, width, num_of_planes);
+        auto info  = TensorInfo(std::move(dims),
+                                     context->master_graph->mem_type(),
+                                     RocalTensorDataType::UINT8);
+        info.set_color_format(color_format);
+        info.set_tensor_layout(tensor_layout);
+        info.set_max_shape();
+        output = context->master_graph->create_loader_output_tensor(info);
         auto cpu_num_threads = context->master_graph->calculate_cpu_num_threads(shard_count);
 
         context->master_graph->add_node<ImageLoaderSingleShardNode>({}, {output})->init(shard_id, shard_count, cpu_num_threads,
@@ -1767,7 +1717,7 @@ rocalJpegTFRecordSourceSingleShard(
 
         if(is_output)
         {
-            auto actual_output = context->master_graph->create_image(info, is_output);
+            auto actual_output = context->master_graph->create_tensor(info, is_output);
             context->master_graph->add_node<CopyNode>({output}, {actual_output});
         }
 
@@ -1780,7 +1730,7 @@ rocalJpegTFRecordSourceSingleShard(
     return output;
 }
 
-RocalImage  ROCAL_API_CALL
+RocalTensor  ROCAL_API_CALL
 rocalRawTFRecordSource(
         RocalContext p_context,
         const char* source_path,
@@ -1792,17 +1742,15 @@ rocalRawTFRecordSource(
         bool loop,
         unsigned out_width,
         unsigned out_height,
-        const char* record_name_prefix)
-{
-    Image* output = nullptr;
+        const char* record_name_prefix) {
+    Tensor* output = nullptr;
     if (p_context == nullptr) {
         ERR("Invalid ROCAL context or invalid input image")
         return output;
     }
 
     auto context = static_cast<Context*>(p_context);
-    try
-    {
+    try {
         unsigned internal_shard_count = 1;
         std::map<std::string, std::string> feature_key_map = {
                 {"image/encoded",user_key_for_encoded_str},
@@ -1819,12 +1767,14 @@ rocalRawTFRecordSource(
         }
 
         auto [color_format, num_of_planes] = convert_color_format(rocal_color_format);
-        auto info = ImageInfo(out_width, out_height,
-                              context->user_batch_size(),
-                              num_of_planes,
-                              context->master_graph->mem_type(),
-                              color_format );
-        output = context->master_graph->create_loader_output_image(info);
+        auto [tensor_layout, dims] = convert_color_format_to_layout(rocal_color_format, context->user_batch_size(), out_height, out_width, num_of_planes);
+        auto info  = TensorInfo(std::move(dims),
+                                     context->master_graph->mem_type(),
+                                     RocalTensorDataType::UINT8);
+        info.set_color_format(color_format);
+        info.set_tensor_layout(tensor_layout);
+        info.set_max_shape();
+        output = context->master_graph->create_loader_output_tensor(info);
         auto cpu_num_threads = context->master_graph->calculate_cpu_num_threads(1);
 
         context->master_graph->add_node<ImageLoaderNode>({}, {output})->init(internal_shard_count, cpu_num_threads,
@@ -1840,22 +1790,19 @@ rocalRawTFRecordSource(
                                                                              false, record_name_prefix);
         context->master_graph->set_loop(loop);
 
-        if(is_output)
-        {
-            auto actual_output = context->master_graph->create_image(info, is_output);
+        if(is_output) {
+            auto actual_output = context->master_graph->create_tensor(info, is_output);
             context->master_graph->add_node<CopyNode>({output}, {actual_output});
         }
 
-    }
-    catch(const std::exception& e)
-    {
+    } catch(const std::exception& e) {
         context->capture_error(e.what());
         std::cerr << e.what() << '\n';
     }
     return output;
 }
 
-RocalImage  ROCAL_API_CALL
+RocalTensor  ROCAL_API_CALL
 rocalRawTFRecordSourceSingleShard(
         RocalContext p_context,
         const char* source_path,
@@ -1866,12 +1813,10 @@ rocalRawTFRecordSourceSingleShard(
         bool shuffle,
         bool loop,
         unsigned out_width,
-        unsigned out_height)
-{
-    Image* output = nullptr;
+        unsigned out_height) {
+    Tensor* output = nullptr;
     auto context = static_cast<Context*>(p_context);
-    try
-    {
+    try {
 
         if(shard_count < 1 )
             THROW("Shard count should be bigger than 0")
@@ -1891,12 +1836,14 @@ rocalRawTFRecordSourceSingleShard(
         auto [color_format, num_of_planes] = convert_color_format(rocal_color_format);
         INFO("Internal buffer size width = "+ TOSTR(out_width)+ " height = "+ TOSTR(out_height) + " depth = "+ TOSTR(num_of_planes))
 
-        auto info = ImageInfo(out_width, out_height,
-                              context->user_batch_size(),
-                              num_of_planes,
-                              context->master_graph->mem_type(),
-                              color_format );
-        output = context->master_graph->create_loader_output_image(info);
+        auto [tensor_layout, dims] = convert_color_format_to_layout(rocal_color_format, context->user_batch_size(), out_height, out_width, num_of_planes);
+        auto info  = TensorInfo(std::move(dims),
+                                     context->master_graph->mem_type(),
+                                     RocalTensorDataType::UINT8);
+        info.set_color_format(color_format);
+        info.set_tensor_layout(tensor_layout);
+        info.set_max_shape();
+        output = context->master_graph->create_loader_output_tensor(info);
         auto cpu_num_threads = context->master_graph->calculate_cpu_num_threads(shard_count);
 
         context->master_graph->add_node<ImageLoaderSingleShardNode>({}, {output})->init(shard_id, shard_count, cpu_num_threads,
@@ -1910,22 +1857,19 @@ rocalRawTFRecordSourceSingleShard(
                                                                                         context->master_graph->meta_data_reader());
         context->master_graph->set_loop(loop);
 
-        if(is_output)
-        {
-            auto actual_output = context->master_graph->create_image(info, is_output);
+        if(is_output) {
+            auto actual_output = context->master_graph->create_tensor(info, is_output);
             context->master_graph->add_node<CopyNode>({output}, {actual_output});
         }
 
-    }
-    catch(const std::exception& e)
-    {
+    } catch(const std::exception& e) {
         context->capture_error(e.what());
         std::cerr << e.what() << '\n';
     }
     return output;
 }
 
-RocalImage  ROCAL_API_CALL
+RocalTensor  ROCAL_API_CALL
 rocalFusedJpegCropSingleShard(
         RocalContext p_context,
         const char* source_path,
@@ -1940,9 +1884,8 @@ rocalFusedJpegCropSingleShard(
         bool loop,
         RocalImageSizeEvaluationPolicy decode_size_policy,
         unsigned max_width,
-        unsigned max_height)
-{
-    Image* output = nullptr;
+        unsigned max_height) {
+    Tensor* output = nullptr;
     auto context = static_cast<Context*>(p_context);
     try
     {
@@ -1968,12 +1911,14 @@ rocalFusedJpegCropSingleShard(
 
         auto [color_format, num_of_planes] = convert_color_format(rocal_color_format);
 
-        auto info = ImageInfo(width, height,
-                              context->user_batch_size(),
-                              num_of_planes,
-                              context->master_graph->mem_type(),
-                              color_format );
-        output = context->master_graph->create_loader_output_image(info);
+        auto [tensor_layout, dims] = convert_color_format_to_layout(rocal_color_format, context->user_batch_size(), height, width, num_of_planes);
+        auto info  = TensorInfo(std::move(dims),
+                                     context->master_graph->mem_type(),
+                                     RocalTensorDataType::UINT8);
+        info.set_color_format(color_format);
+        info.set_tensor_layout(tensor_layout);
+        info.set_max_shape();
+        output = context->master_graph->create_loader_output_tensor(info);
         auto cpu_num_threads = context->master_graph->calculate_cpu_num_threads(shard_count);
         context->master_graph->add_node<FusedJpegCropSingleShardNode>({}, {output})->init(shard_id, shard_count, cpu_num_threads,
                                                                           source_path, "",
@@ -1987,20 +1932,17 @@ rocalFusedJpegCropSingleShard(
                                                                           num_attempts, area_factor, aspect_ratio);
         context->master_graph->set_loop(loop);
 
-        if(is_output)
-        {
-            auto actual_output = context->master_graph->create_image(info, is_output);
+        if(is_output) {
+            auto actual_output = context->master_graph->create_tensor(info, is_output);
             context->master_graph->add_node<CopyNode>({output}, {actual_output});
         }
 
-    }
-    catch(const std::exception& e)
-    {
+    } catch(const std::exception& e) {
         context->capture_error(e.what());
         std::cerr << e.what() << '\n';
     }
     return output;
-}*/
+}
 
 RocalTensor  ROCAL_API_CALL
 rocalVideoFileSource(
@@ -2041,12 +1983,13 @@ rocalVideoFileSource(
         auto [color_format, num_of_planes] = convert_color_format(rocal_color_format);
         auto decoder_mode = convert_decoder_mode(rocal_decode_device);
         
-        auto [tensor_format, dims] = convert_color_format_to_sequence_layout(rocal_color_format, context->user_batch_size(),
-                                                                             video_prop.height, video_prop.width, num_of_planes, sequence_length);        auto info  = TensorInfo(std::move(dims),
+        std::vector<size_t> dims = {context->user_batch_size(), sequence_length, video_prop.height, 
+                                    video_prop.width, static_cast<unsigned>(num_of_planes)};
+        auto info  = TensorInfo(std::move(dims),
                                      context->master_graph->mem_type(),
                                      RocalTensorDataType::UINT8);
         info.set_color_format(color_format);
-        info.set_tensor_layout(tensor_format);
+        info.set_tensor_layout(RocalTensorlayout::NFHWC);
         info.set_max_shape();
 
         output = context->master_graph->create_loader_output_tensor(info);
@@ -2125,12 +2068,13 @@ rocalVideoFileSourceSingleShard(
             decoder_type = DecoderType::FFMPEG_SOFTWARE_DECODE;
         auto [color_format, num_of_planes] = convert_color_format(rocal_color_format);
         auto decoder_mode = convert_decoder_mode(rocal_decode_device);
-        auto [tensor_format, dims] = convert_color_format_to_sequence_layout(rocal_color_format, context->user_batch_size(),
-                                                                             video_prop.height, video_prop.width, num_of_planes, sequence_length);        auto info  = TensorInfo(std::move(dims),
+        std::vector<size_t> dims = {context->user_batch_size(), sequence_length, video_prop.height, 
+                                    video_prop.width, static_cast<unsigned>(num_of_planes)};
+        auto info  = TensorInfo(std::move(dims),
                                      context->master_graph->mem_type(),
                                      RocalTensorDataType::UINT8);
         info.set_color_format(color_format);
-        info.set_tensor_layout(tensor_format);
+        info.set_tensor_layout(RocalTensorlayout::NFHWC);
         info.set_max_shape();
 
         output = context->master_graph->create_loader_output_tensor(info);
@@ -2212,12 +2156,13 @@ rocalVideoFileResize(
             decoder_type = DecoderType::FFMPEG_SOFTWARE_DECODE;
         auto [color_format, num_of_planes] = convert_color_format(rocal_color_format);
         auto decoder_mode = convert_decoder_mode(rocal_decode_device);
-        auto [tensor_format, dims] = convert_color_format_to_sequence_layout(rocal_color_format, context->user_batch_size(),
-                                                                             video_prop.height, video_prop.width, num_of_planes, sequence_length);        auto info  = TensorInfo(std::move(dims),
+        std::vector<size_t> dims = {context->user_batch_size(), sequence_length, video_prop.height, 
+                                    video_prop.width, static_cast<unsigned>(num_of_planes)};
+        auto info  = TensorInfo(std::move(dims),
                                      context->master_graph->mem_type(),
                                      RocalTensorDataType::UINT8);
         info.set_color_format(color_format);
-        info.set_tensor_layout(tensor_format);
+        info.set_tensor_layout(RocalTensorlayout::NFHWC);
         info.set_max_shape();
 
         Tensor* output = context->master_graph->create_loader_output_tensor(info);
@@ -2385,13 +2330,13 @@ rocalVideoFileResizeSingleShard(
         auto [color_format, num_of_planes] = convert_color_format(rocal_color_format);
         auto decoder_mode = convert_decoder_mode(rocal_decode_device);
         
-        auto [tensor_format, dims] = convert_color_format_to_sequence_layout(rocal_color_format, context->user_batch_size(),
-                                                                            video_prop.height, video_prop.width, num_of_planes, sequence_length);
+        std::vector<size_t> dims = {context->user_batch_size(), sequence_length, video_prop.height, 
+                                    video_prop.width, static_cast<unsigned>(num_of_planes)};
         auto info  = TensorInfo(std::move(dims),
                                      context->master_graph->mem_type(),
                                      RocalTensorDataType::UINT8);
         info.set_color_format(color_format);
-        info.set_tensor_layout(tensor_format);
+        info.set_tensor_layout(RocalTensorlayout::NFHWC);
         info.set_max_shape();
         Tensor*  output = context->master_graph->create_loader_output_tensor(info);
         context->master_graph->add_node<VideoLoaderSingleShardNode>({}, {output})->init(shard_id, shard_count,
@@ -2501,9 +2446,9 @@ rocalVideoFileResizeSingleShard(
     }
     return resize_output;
 }
-/*
+
 // loader for CFAR10 raw data: Can be used for other raw data loaders as well
-RocalImage  ROCAL_API_CALL
+RocalTensor  ROCAL_API_CALL
 rocalRawCIFAR10Source(
                  RocalContext p_context,
                  const char* source_path,
@@ -2514,7 +2459,7 @@ rocalRawCIFAR10Source(
                  const char* filename_prefix,
                  bool loop )
 {
-    Image* output = nullptr;
+    Tensor* output = nullptr;
     auto context = static_cast<Context*>(p_context);
     try
     {
@@ -2533,12 +2478,14 @@ rocalRawCIFAR10Source(
 
         INFO("Internal buffer size width = "+ TOSTR(width)+ " height = "+ TOSTR(height) + " depth = "+ TOSTR(num_of_planes))
 
-        auto info = ImageInfo(width, height,
-                              context->user_batch_size(),
-                              num_of_planes,
-                              context->master_graph->mem_type(),
-                              color_format );
-        output = context->master_graph->create_loader_output_image(info);
+        auto [tensor_layout, dims] = convert_color_format_to_layout(rocal_color_format, context->user_batch_size(), height, width, num_of_planes);
+        auto info  = TensorInfo(std::move(dims),
+                                     context->master_graph->mem_type(),
+                                     RocalTensorDataType::UINT8);
+        info.set_color_format(color_format);
+        info.set_tensor_layout(tensor_layout);
+        info.set_max_shape();
+        output = context->master_graph->create_loader_output_tensor(info);
 
         context->master_graph->add_node<Cifar10LoaderNode>({}, {output})->init(source_path, "",
                                                                              StorageType::UNCOMPRESSED_BINARY_DATA,
@@ -2549,7 +2496,7 @@ rocalRawCIFAR10Source(
 
         if(is_output)
         {
-            auto actual_output = context->master_graph->create_image(info, is_output);
+            auto actual_output = context->master_graph->create_tensor(info, is_output);
             context->master_graph->add_node<CopyNode>({output}, {actual_output});
         }
 
@@ -2561,7 +2508,7 @@ rocalRawCIFAR10Source(
     }
     return output;
 }
-*/
+
 
 RocalStatus ROCAL_API_CALL
 rocalResetLoaders(RocalContext p_context)
