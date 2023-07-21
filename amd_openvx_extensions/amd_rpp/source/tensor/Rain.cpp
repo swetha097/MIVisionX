@@ -27,10 +27,10 @@ struct RainLocalData {
     Rpp32u deviceType;
     RppPtr_t pSrc;
     RppPtr_t pDst;
-    vx_float32 *pRainValue;
-    vx_uint32 *pRainWidth;
-    vx_uint32 *pRainHeight;
-    vx_float32 *pRainTransperancy;
+    Rpp32f *pRainValue;
+    Rpp32u *pRainWidth;
+    Rpp32u *pRainHeight;
+    Rpp32f *pRainTransperancy;
     RpptDescPtr pSrcDesc;
     RpptDescPtr pDstDesc;
     RpptROI *pSrcRoi;
@@ -39,22 +39,17 @@ struct RainLocalData {
     vxTensorLayout outputLayout;
     size_t inputTensorDims[RPP_MAX_TENSOR_DIMS];
     size_t ouputTensorDims[RPP_MAX_TENSOR_DIMS];
-    RppiSize *srcDimensions; // TBR : Not present in tensor
-    RppiSize maxSrcDimensions;  // TBR : Not present in tensor
+    RppiSize *pSrcDimensions;
+    RppiSize maxSrcDimensions;
 };
 
 static vx_status VX_CALLBACK refreshRain(vx_node node, const vx_reference *parameters, vx_uint32 num, RainLocalData *data) {
     vx_status status = VX_SUCCESS;
-    STATUS_ERROR_CHECK(vxCopyArrayRange((vx_array)parameters[3], 0, data->inputTensorDims[0], sizeof(vx_float32), data->pRainValue, VX_READ_ONLY, VX_MEMORY_TYPE_HOST));
-    STATUS_ERROR_CHECK(vxCopyArrayRange((vx_array)parameters[4], 0, data->inputTensorDims[0], sizeof(vx_uint32), data->pRainWidth, VX_READ_ONLY, VX_MEMORY_TYPE_HOST));
-    STATUS_ERROR_CHECK(vxCopyArrayRange((vx_array)parameters[5], 0, data->inputTensorDims[0], sizeof(vx_uint32), data->pRainHeight, VX_READ_ONLY, VX_MEMORY_TYPE_HOST));
-    STATUS_ERROR_CHECK(vxCopyArrayRange((vx_array)parameters[6], 0, data->inputTensorDims[0], sizeof(vx_float32), data->pRainTransperancy, VX_READ_ONLY, VX_MEMORY_TYPE_HOST));
+    STATUS_ERROR_CHECK(vxCopyArrayRange((vx_array)parameters[3], 0, data->inputTensorDims[0], sizeof(Rpp32f), data->pRainValue, VX_READ_ONLY, VX_MEMORY_TYPE_HOST));
+    STATUS_ERROR_CHECK(vxCopyArrayRange((vx_array)parameters[4], 0, data->inputTensorDims[0], sizeof(Rpp32u), data->pRainWidth, VX_READ_ONLY, VX_MEMORY_TYPE_HOST));
+    STATUS_ERROR_CHECK(vxCopyArrayRange((vx_array)parameters[5], 0, data->inputTensorDims[0], sizeof(Rpp32u), data->pRainHeight, VX_READ_ONLY, VX_MEMORY_TYPE_HOST));
+    STATUS_ERROR_CHECK(vxCopyArrayRange((vx_array)parameters[6], 0, data->inputTensorDims[0], sizeof(Rpp32f), data->pRainTransperancy, VX_READ_ONLY, VX_MEMORY_TYPE_HOST));
 
-    for (int i = 0; i < data->inputTensorDims[0]; i++)
-        {
-            data->srcDimensions[i].width = data->pSrcDesc->w;
-            data->srcDimensions[i].height = data->pSrcDesc->h;
-        }
     void *roi_tensor_ptr;
     if (data->deviceType == AGO_TARGET_AFFINITY_GPU) {
 #if ENABLE_OPENCL
@@ -70,6 +65,11 @@ static vx_status VX_CALLBACK refreshRain(vx_node node, const vx_reference *param
         STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[2], VX_TENSOR_BUFFER_HOST, &data->pDst, sizeof(data->pDst)));
     }
     data->pSrcRoi = reinterpret_cast<RpptROI *>(roi_tensor_ptr);
+    // Fill width and height array with ROI data required by RPP batchPD kernels
+    for (int i = 0; i < data->inputTensorDims[0]; i++) {
+        data->pSrcDimensions[i].width = data->pSrcRoi[i].xywhROI.roiWidth;
+        data->pSrcDimensions[i].height = data->pSrcRoi[i].xywhROI.roiHeight;
+    }
     if ((data->inputLayout == vxTensorLayout::VX_NFHWC || data->inputLayout == vxTensorLayout::VX_NFCHW)) {
         unsigned num_of_frames = data->inputTensorDims[1]; // Num of frames 'F'
         for(int n = data->inputTensorDims[0] - 1; n >= 0; n--) {
@@ -79,7 +79,7 @@ static vx_status VX_CALLBACK refreshRain(vx_node node, const vx_reference *param
                 data->pRainWidth[index + f] = data->pRainWidth[n];
                 data->pRainHeight[index + f] = data->pRainHeight[n];
                 data->pRainTransperancy[index + f] = data->pRainTransperancy[n];
-                data->pSrcRoi[index + f].xywhROI = data->pSrcRoi[n].xywhROI;
+                data->pSrcDimensions[index + f] = data->pSrcDimensions[n];
             }
         }
     }
@@ -88,7 +88,6 @@ static vx_status VX_CALLBACK refreshRain(vx_node node, const vx_reference *param
 }
 
 static vx_status VX_CALLBACK validateRain(vx_node node, const vx_reference parameters[], vx_uint32 num, vx_meta_format metas[]) {
-    
     vx_status status = VX_SUCCESS;
     vx_enum scalar_type;
     STATUS_ERROR_CHECK(vxQueryScalar((vx_scalar)parameters[7], VX_SCALAR_TYPE, &scalar_type, sizeof(scalar_type)));
@@ -136,18 +135,19 @@ static vx_status VX_CALLBACK processRain(vx_node node, const vx_reference *param
 #if ENABLE_OPENCL
         return_status = VX_ERROR_NOT_IMPLEMENTED;
 #elif ENABLE_HIP
-        if (data->pDstDesc->c==1 ) 
-        rpp_status = rppi_rain_u8_pln1_batchPD_gpu(data->pSrc, data->srcDimensions, data->maxSrcDimensions, data->pDst, data->pRainValue, data->pRainWidth, data->pRainHeight, data->pRainTransperancy, data->pSrcDesc->n, data->handle->rppHandle);
-        else 
-        rpp_status = rppi_rain_u8_pkd3_batchPD_gpu(data->pSrc, data->srcDimensions, data->maxSrcDimensions, data->pDst, data->pRainValue, data->pRainWidth, data->pRainHeight, data->pRainTransperancy, data->pSrcDesc->n, data->handle->rppHandle);
-
+        if (data->pSrcDesc->c == 1) {
+            rpp_status = rppi_rain_u8_pln1_batchPD_gpu(data->pSrc, data->pSrcDimensions, data->maxSrcDimensions, data->pDst, data->pRainValue, data->pRainWidth, data->pRainHeight, data->pRainTransperancy, data->pSrcDesc->n, data->handle->rppHandle);
+        } else {
+            rpp_status = rppi_rain_u8_pkd3_batchPD_gpu(data->pSrc, data->pSrcDimensions, data->maxSrcDimensions, data->pDst, data->pRainValue, data->pRainWidth, data->pRainHeight, data->pRainTransperancy, data->pSrcDesc->n, data->handle->rppHandle);
+        }
         return_status = (rpp_status == RPP_SUCCESS) ? VX_SUCCESS : VX_FAILURE;
 #endif
     } else if (data->deviceType == AGO_TARGET_AFFINITY_CPU) {
-        if (data->pDstDesc->c==1 ) 
-        rpp_status = rppi_rain_u8_pln1_batchPD_host(data->pSrc, data->srcDimensions, data->maxSrcDimensions, data->pDst, data->pRainValue, data->pRainWidth, data->pRainHeight, data->pRainTransperancy, data->pSrcDesc->n, data->handle->rppHandle);
-        else 
-        rpp_status = rppi_rain_u8_pkd3_batchPD_host(data->pSrc, data->srcDimensions, data->maxSrcDimensions, data->pDst, data->pRainValue, data->pRainWidth, data->pRainHeight, data->pRainTransperancy, data->pSrcDesc->n, data->handle->rppHandle);
+        if (data->pSrcDesc->c == 1) {
+            rpp_status = rppi_rain_u8_pln1_batchPD_host(data->pSrc, data->pSrcDimensions, data->maxSrcDimensions, data->pDst, data->pRainValue, data->pRainWidth, data->pRainHeight, data->pRainTransperancy, data->pSrcDesc->n, data->handle->rppHandle);
+        } else {
+            rpp_status = rppi_rain_u8_pkd3_batchPD_host(data->pSrc, data->pSrcDimensions, data->maxSrcDimensions, data->pDst, data->pRainValue, data->pRainWidth, data->pRainHeight, data->pRainTransperancy, data->pSrcDesc->n, data->handle->rppHandle);
+        }
         return_status = (rpp_status == RPP_SUCCESS) ? VX_SUCCESS : VX_FAILURE;
     }
     return return_status;
@@ -185,11 +185,11 @@ static vx_status VX_CALLBACK initializeRain(vx_node node, const vx_reference *pa
     data->pDstDesc->offsetInBytes = 0;
     fillDescriptionPtrfromDims(data->pDstDesc, data->outputLayout, data->ouputTensorDims);
 
-    data->pRainValue = static_cast<vx_float32 *>(malloc(sizeof(vx_float32) * data->pSrcDesc->n));
-    data->pRainWidth = static_cast<vx_uint32 *>(malloc(sizeof(vx_uint32) * data->pSrcDesc->n));
-    data->pRainHeight = static_cast<vx_uint32 *>(malloc(sizeof(vx_uint32) * data->pSrcDesc->n));
-    data->pRainTransperancy = static_cast<vx_float32 *>(malloc(sizeof(vx_float32) * data->pSrcDesc->n));
-    data->srcDimensions = static_cast<RppiSize *>(malloc(sizeof(RppiSize) * data->pSrcDesc->n));
+    data->pRainValue = static_cast<Rpp32f *>(malloc(sizeof(Rpp32f) * data->pSrcDesc->n));
+    data->pRainWidth = static_cast<Rpp32u *>(malloc(sizeof(Rpp32u) * data->pSrcDesc->n));
+    data->pRainHeight = static_cast<Rpp32u *>(malloc(sizeof(Rpp32u) * data->pSrcDesc->n));
+    data->pRainTransperancy = static_cast<Rpp32f *>(malloc(sizeof(Rpp32f) * data->pSrcDesc->n));
+    data->pSrcDimensions = static_cast<RppiSize *>(malloc(sizeof(RppiSize) * data->pSrcDesc->n));
 
     data->maxSrcDimensions.height = data->pSrcDesc->h;
     data->maxSrcDimensions.width = data->pSrcDesc->w;
@@ -206,11 +206,10 @@ static vx_status VX_CALLBACK uninitializeRain(vx_node node, const vx_reference *
     if (data->pRainWidth != nullptr) free(data->pRainWidth);
     if (data->pRainTransperancy != nullptr)  free(data->pRainTransperancy);
     if (data->pRainValue != nullptr)  free(data->pRainValue);
-    free(data->srcDimensions);
+    if (data->pSrcDimensions != nullptr) free(data->pSrcDimensions);
     delete(data->pSrcDesc);
     delete(data->pDstDesc);
     STATUS_ERROR_CHECK(releaseRPPHandle(node, data->handle, data->deviceType));
-
     delete(data);
     return VX_SUCCESS;
 }

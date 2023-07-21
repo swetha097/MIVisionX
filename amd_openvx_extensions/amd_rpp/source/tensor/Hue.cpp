@@ -60,7 +60,7 @@ static vx_status VX_CALLBACK refreshHue(vx_node node, const vx_reference *parame
     }
     data->pSrcRoi = reinterpret_cast<RpptROI *>(roi_tensor_ptr);
     // Fill width and height array with ROI data required by RPP batchPD kernels
-    for (int i = 0; i < data->pSrcDesc->n; i++) {
+    for (int i = 0; i < data->inputTensorDims[0]; i++) {
         data->pSrcDimensions[i].width = data->pSrcRoi[i].xywhROI.roiWidth;
         data->pSrcDimensions[i].height = data->pSrcRoi[i].xywhROI.roiHeight;
     }

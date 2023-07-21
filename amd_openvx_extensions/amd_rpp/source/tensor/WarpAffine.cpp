@@ -27,8 +27,8 @@ struct WarpAffineLocalData {
     Rpp32u deviceType;
     RppPtr_t pSrc;
     RppPtr_t pDst;
-    vx_float32 *pAffine;
-    vx_uint32 interpolation;
+    Rpp32f *pAffine;
+    RpptInterpolationType interpolationType;
     RpptDescPtr pSrcDesc;
     RpptDescPtr pDstDesc;
     RpptROI *pSrcRoi;
@@ -41,7 +41,7 @@ struct WarpAffineLocalData {
 
 static vx_status VX_CALLBACK refreshWarpAffine(vx_node node, const vx_reference *parameters, vx_uint32 num, WarpAffineLocalData *data) {
     vx_status status = VX_SUCCESS;
-    STATUS_ERROR_CHECK(vxCopyArrayRange((vx_array)parameters[3], 0, data->pSrcDesc->n*6, sizeof(vx_float32), data->pAffine, VX_READ_ONLY, VX_MEMORY_TYPE_HOST));
+    STATUS_ERROR_CHECK(vxCopyArrayRange((vx_array)parameters[3], 0, data->inputTensorDims[0] * 6, sizeof(Rpp32f), data->pAffine, VX_READ_ONLY, VX_MEMORY_TYPE_HOST));
 
     void *roi_tensor_ptr;
     if (data->deviceType == AGO_TARGET_AFFINITY_GPU) {
@@ -60,17 +60,17 @@ static vx_status VX_CALLBACK refreshWarpAffine(vx_node node, const vx_reference 
     data->pSrcRoi = reinterpret_cast<RpptROI *>(roi_tensor_ptr);
     if ((data->inputLayout == vxTensorLayout::VX_NFHWC || data->inputLayout == vxTensorLayout::VX_NFCHW)) {
         unsigned num_of_frames = data->inputTensorDims[1]; // Num of frames 'F'
-        for(int n = data->pSrcDesc->n - 1; n >= 0; n--) {
+        for(int n = data->inputTensorDims[0] - 1; n >= 0; n--) {
             unsigned index = n * num_of_frames;
             for(int f = 0; f < num_of_frames; f++) {
-                int var = (index*6)+f;
-                int var2 = n*6;
+                int var = (index * 6) + f;
+                int var2 = n * 6;
                 data->pAffine[var] = data->pAffine[var2];
-                data->pAffine[var+1] = data->pAffine[var2+1];
-                data->pAffine[var+2] = data->pAffine[var2+2];
-                data->pAffine[var+3] = data->pAffine[var2+3];
-                data->pAffine[var+4] = data->pAffine[var2+4];
-                data->pAffine[var+5] = data->pAffine[var2+5];
+                data->pAffine[var + 1] = data->pAffine[var2 + 1];
+                data->pAffine[var + 2] = data->pAffine[var2 + 2];
+                data->pAffine[var + 3] = data->pAffine[var2 + 3];
+                data->pAffine[var + 4] = data->pAffine[var2 + 4];
+                data->pAffine[var + 5] = data->pAffine[var2 + 5];
                 data->pSrcRoi[index + f].xywhROI = data->pSrcRoi[n].xywhROI;
             }
         }
@@ -82,6 +82,9 @@ static vx_status VX_CALLBACK refreshWarpAffine(vx_node node, const vx_reference 
 static vx_status VX_CALLBACK validateWarpAffine(vx_node node, const vx_reference parameters[], vx_uint32 num, vx_meta_format metas[]) {
     vx_status status = VX_SUCCESS;
     vx_enum scalar_type;
+    STATUS_ERROR_CHECK(vxQueryScalar((vx_scalar)parameters[4], VX_SCALAR_TYPE, &scalar_type, sizeof(scalar_type)));
+    if (scalar_type != VX_TYPE_INT32)
+        return ERRMSG(VX_ERROR_INVALID_TYPE, "validate: Paramter: #4 type=%d (must be size)\n", scalar_type);
     STATUS_ERROR_CHECK(vxQueryScalar((vx_scalar)parameters[5], VX_SCALAR_TYPE, &scalar_type, sizeof(scalar_type)));
     if (scalar_type != VX_TYPE_INT32)
         return ERRMSG(VX_ERROR_INVALID_TYPE, "validate: Paramter: #5 type=%d (must be size)\n", scalar_type);
@@ -127,11 +130,11 @@ static vx_status VX_CALLBACK processWarpAffine(vx_node node, const vx_reference 
 #if ENABLE_OPENCL
         return_status = VX_ERROR_NOT_IMPLEMENTED;
 #elif ENABLE_HIP
-        rpp_status = rppt_warp_affine_gpu(data->pSrc, data->pSrcDesc, data->pDst, data->pDstDesc,  data->pAffine, RpptInterpolationType::BILINEAR, data->pSrcRoi, data->roiType, data->handle->rppHandle);
+        rpp_status = rppt_warp_affine_gpu(data->pSrc, data->pSrcDesc, data->pDst, data->pDstDesc,  data->pAffine, data->interpolationType, data->pSrcRoi, data->roiType, data->handle->rppHandle);
         return_status = (rpp_status == RPP_SUCCESS) ? VX_SUCCESS : VX_FAILURE;
 #endif
     } else if (data->deviceType == AGO_TARGET_AFFINITY_CPU) {
-        rpp_status = rppt_warp_affine_host(data->pSrc, data->pSrcDesc, data->pDst, data->pDstDesc, data->pAffine,  RpptInterpolationType::BILINEAR, data->pSrcRoi, data->roiType, data->handle->rppHandle);
+        rpp_status = rppt_warp_affine_host(data->pSrc, data->pSrcDesc, data->pDst, data->pDstDesc, data->pAffine, data->interpolationType, data->pSrcRoi, data->roiType, data->handle->rppHandle);
         return_status = (rpp_status == RPP_SUCCESS) ? VX_SUCCESS : VX_FAILURE;
     }
     return return_status;
@@ -142,7 +145,8 @@ static vx_status VX_CALLBACK initializeWarpAffine(vx_node node, const vx_referen
     memset(data, 0, sizeof(WarpAffineLocalData));
 
     vx_enum input_tensor_type, output_tensor_type;
-    int roi_type, input_layout, output_layout;
+    int roi_type, input_layout, output_layout, interpolation_type;
+    STATUS_ERROR_CHECK(vxCopyScalar((vx_scalar)parameters[4], &interpolation_type, VX_READ_ONLY, VX_MEMORY_TYPE_HOST));
     STATUS_ERROR_CHECK(vxCopyScalar((vx_scalar)parameters[5], &input_layout, VX_READ_ONLY, VX_MEMORY_TYPE_HOST));
     STATUS_ERROR_CHECK(vxCopyScalar((vx_scalar)parameters[6], &output_layout, VX_READ_ONLY, VX_MEMORY_TYPE_HOST));
     STATUS_ERROR_CHECK(vxCopyScalar((vx_scalar)parameters[7], &roi_type, VX_READ_ONLY, VX_MEMORY_TYPE_HOST));
@@ -150,6 +154,7 @@ static vx_status VX_CALLBACK initializeWarpAffine(vx_node node, const vx_referen
     data->roiType = (roi_type == 0) ? RpptRoiType::XYWH : RpptRoiType::LTRB;
     data->inputLayout = static_cast<vxTensorLayout>(input_layout);
     data->outputLayout = static_cast<vxTensorLayout>(output_layout);
+    data->interpolationType = static_cast<RpptInterpolationType>(interpolation_type);
 
     // Querying for input tensor
     data->pSrcDesc = new RpptDesc;
@@ -169,7 +174,7 @@ static vx_status VX_CALLBACK initializeWarpAffine(vx_node node, const vx_referen
     data->pDstDesc->offsetInBytes = 0;
     fillDescriptionPtrfromDims(data->pDstDesc, data->outputLayout, data->ouputTensorDims);
 
-    data->pAffine = static_cast<vx_float32 *>(malloc(sizeof(vx_float32) * 6 * data->pSrcDesc->n));
+    data->pAffine = static_cast<Rpp32f *>(malloc(sizeof(Rpp32f) * 6 * data->pSrcDesc->n));
     refreshWarpAffine(node, parameters, num, data);
     STATUS_ERROR_CHECK(createRPPHandle(node, &data->handle, data->pSrcDesc->n, data->deviceType));
     STATUS_ERROR_CHECK(vxSetNodeAttribute(node, VX_NODE_LOCAL_DATA_PTR, &data, sizeof(data)));

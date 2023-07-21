@@ -27,8 +27,8 @@ struct ResizeLocalData {
     Rpp32u deviceType;
     RppPtr_t pSrc;
     RppPtr_t pDst;
-    vx_uint32 *pResizeHeight;
-    vx_uint32 *pResizeWidth;
+    Rpp32u *pResizeHeight;
+    Rpp32u *pResizeWidth;
     RpptDescPtr pSrcDesc;
     RpptDescPtr pDstDesc;
     RpptROI *pSrcRoi;
@@ -38,14 +38,14 @@ struct ResizeLocalData {
     size_t inputTensorDims[RPP_MAX_TENSOR_DIMS];
     size_t outputTensorDims[RPP_MAX_TENSOR_DIMS];
     RpptImagePatch *pDstImgSize;
-    Rpp32s interpolationType; 
+    RpptInterpolationType interpolationType; 
 };
 
 static vx_status VX_CALLBACK refreshResize(vx_node node, const vx_reference *parameters, vx_uint32 num, ResizeLocalData *data) {
     vx_status status = VX_SUCCESS;
-    STATUS_ERROR_CHECK(vxCopyArrayRange((vx_array)parameters[3], 0, data->inputTensorDims[0], sizeof(vx_uint32), data->pResizeWidth, VX_READ_ONLY, VX_MEMORY_TYPE_HOST));
-    STATUS_ERROR_CHECK(vxCopyArrayRange((vx_array)parameters[4], 0, data->inputTensorDims[0], sizeof(vx_uint32), data->pResizeHeight, VX_READ_ONLY, VX_MEMORY_TYPE_HOST));
-    for (int i = 0; i < data->pSrcDesc->n; i++) {
+    STATUS_ERROR_CHECK(vxCopyArrayRange((vx_array)parameters[3], 0, data->inputTensorDims[0], sizeof(Rpp32u), data->pResizeWidth, VX_READ_ONLY, VX_MEMORY_TYPE_HOST));
+    STATUS_ERROR_CHECK(vxCopyArrayRange((vx_array)parameters[4], 0, data->inputTensorDims[0], sizeof(Rpp32u), data->pResizeHeight, VX_READ_ONLY, VX_MEMORY_TYPE_HOST));
+    for (int i = 0; i < data->inputTensorDims[0]; i++) {
         data->pDstImgSize[i].width = data->pResizeWidth[i];
         data->pDstImgSize[i].height = data->pResizeHeight[i];
     }
@@ -127,11 +127,11 @@ static vx_status VX_CALLBACK processResize(vx_node node, const vx_reference *par
 #if ENABLE_OPENCL
         return_status = VX_ERROR_NOT_IMPLEMENTED;
 #elif ENABLE_HIP
-        rpp_status = rppt_resize_gpu(data->pSrc, data->pSrcDesc, data->pDst, data->pDstDesc, data->pDstImgSize, (RpptInterpolationType)data->interpolationType, data->pSrcRoi, data->roiType, data->handle->rppHandle);
+        rpp_status = rppt_resize_gpu(data->pSrc, data->pSrcDesc, data->pDst, data->pDstDesc, data->pDstImgSize, data->interpolationType, data->pSrcRoi, data->roiType, data->handle->rppHandle);
         return_status = (rpp_status == RPP_SUCCESS) ? VX_SUCCESS : VX_FAILURE;
 #endif
     } else if (data->deviceType == AGO_TARGET_AFFINITY_CPU) {
-        rpp_status = rppt_resize_host(data->pSrc, data->pSrcDesc, data->pDst, data->pDstDesc, data->pDstImgSize, (RpptInterpolationType)data->interpolationType, data->pSrcRoi, data->roiType, data->handle->rppHandle);
+        rpp_status = rppt_resize_host(data->pSrc, data->pSrcDesc, data->pDst, data->pDstDesc, data->pDstImgSize, data->interpolationType, data->pSrcRoi, data->roiType, data->handle->rppHandle);
         return_status = (rpp_status == RPP_SUCCESS) ? VX_SUCCESS : VX_FAILURE;
     }
     return return_status;
@@ -142,8 +142,8 @@ static vx_status VX_CALLBACK initializeResize(vx_node node, const vx_reference *
     memset(data, 0, sizeof(ResizeLocalData));
 
     vx_enum input_tensor_type, output_tensor_type;
-    int roi_type, input_layout, output_layout;
-    STATUS_ERROR_CHECK(vxCopyScalar((vx_scalar)parameters[5], &data->interpolationType, VX_READ_ONLY, VX_MEMORY_TYPE_HOST));
+    int roi_type, input_layout, output_layout, interpolation_type;
+    STATUS_ERROR_CHECK(vxCopyScalar((vx_scalar)parameters[5], &interpolation_type, VX_READ_ONLY, VX_MEMORY_TYPE_HOST));
     STATUS_ERROR_CHECK(vxCopyScalar((vx_scalar)parameters[6], &input_layout, VX_READ_ONLY, VX_MEMORY_TYPE_HOST));
     STATUS_ERROR_CHECK(vxCopyScalar((vx_scalar)parameters[7], &output_layout, VX_READ_ONLY, VX_MEMORY_TYPE_HOST));
     STATUS_ERROR_CHECK(vxCopyScalar((vx_scalar)parameters[8], &roi_type, VX_READ_ONLY, VX_MEMORY_TYPE_HOST));
@@ -151,6 +151,7 @@ static vx_status VX_CALLBACK initializeResize(vx_node node, const vx_reference *
     data->roiType = (roi_type == 0) ? RpptRoiType::XYWH : RpptRoiType::LTRB;
     data->inputLayout = static_cast<vxTensorLayout>(input_layout);
     data->outputLayout = static_cast<vxTensorLayout>(output_layout);
+    data->interpolationType = static_cast<RpptInterpolationType>(interpolation_type);
 
     // Querying for input tensor
     data->pSrcDesc = new RpptDesc;
@@ -175,8 +176,8 @@ static vx_status VX_CALLBACK initializeResize(vx_node node, const vx_reference *
 #else
     data->pDstImgSize = static_cast<RpptImagePatch *>(calloc(data->pSrcDesc->n, sizeof(RpptImagePatch)));
 #endif    
-    data->pResizeWidth = static_cast<vx_uint32 *>(malloc(sizeof(vx_uint32) * data->pSrcDesc->n));
-    data->pResizeHeight = static_cast<vx_uint32 *>(malloc(sizeof(vx_uint32) * data->pSrcDesc->n));
+    data->pResizeWidth = static_cast<Rpp32u *>(malloc(sizeof(Rpp32u) * data->pSrcDesc->n));
+    data->pResizeHeight = static_cast<Rpp32u *>(malloc(sizeof(Rpp32u) * data->pSrcDesc->n));
     refreshResize(node, parameters, num, data);
     STATUS_ERROR_CHECK(createRPPHandle(node, &data->handle, data->pSrcDesc->n, data->deviceType));
     STATUS_ERROR_CHECK(vxSetNodeAttribute(node, VX_NODE_LOCAL_DATA_PTR, &data, sizeof(data)));
@@ -196,7 +197,7 @@ static vx_status VX_CALLBACK uninitializeResize(vx_node node, const vx_reference
     delete(data->pSrcDesc);
     delete(data->pDstDesc);
     STATUS_ERROR_CHECK(releaseRPPHandle(node, data->handle, data->deviceType));
-    delete (data);
+    delete(data);
     return VX_SUCCESS;
 }
 

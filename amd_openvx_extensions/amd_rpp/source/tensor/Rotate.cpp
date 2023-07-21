@@ -27,8 +27,8 @@ struct RotateLocalData {
     Rpp32u deviceType;
     RppPtr_t pSrc;
     RppPtr_t pDst;
-    vx_float32 *pAngle;
-    Rpp32s interpolation_type; 
+    Rpp32f *pAngle;
+    RpptInterpolationType interpolationType; 
     RpptDescPtr pSrcDesc;
     RpptDescPtr pDstDesc;
     RpptROI *pSrcRoi;
@@ -37,13 +37,11 @@ struct RotateLocalData {
     vxTensorLayout outputLayout;
     size_t inputTensorDims[RPP_MAX_TENSOR_DIMS];
     size_t ouputTensorDims[RPP_MAX_TENSOR_DIMS];
-    vx_enum inputTensorType;
-    vx_enum outputTensorType;
 };
 
 static vx_status VX_CALLBACK refreshRotate(vx_node node, const vx_reference *parameters, vx_uint32 num, RotateLocalData *data) {
     vx_status status = VX_SUCCESS;
-    STATUS_ERROR_CHECK(vxCopyArrayRange((vx_array)parameters[3], 0, data->pSrcDesc->n, sizeof(vx_float32), data->pAngle, VX_READ_ONLY, VX_MEMORY_TYPE_HOST));
+    STATUS_ERROR_CHECK(vxCopyArrayRange((vx_array)parameters[3], 0, data->inputTensorDims[0], sizeof(Rpp32f), data->pAngle, VX_READ_ONLY, VX_MEMORY_TYPE_HOST));
 
     void *roi_tensor_ptr;
     if (data->deviceType == AGO_TARGET_AFFINITY_GPU) {
@@ -62,7 +60,7 @@ static vx_status VX_CALLBACK refreshRotate(vx_node node, const vx_reference *par
     data->pSrcRoi = reinterpret_cast<RpptROI *>(roi_tensor_ptr);
     if ((data->inputLayout == vxTensorLayout::VX_NFHWC || data->inputLayout == vxTensorLayout::VX_NFCHW)) {
         unsigned num_of_frames = data->inputTensorDims[1]; // Num of frames 'F'
-        for(int n = data->pSrcDesc->n - 1; n >= 0; n--) {
+        for(int n = data->inputTensorDims[0] - 1; n >= 0; n--) {
             unsigned index = n * num_of_frames;
             for(int f = 0; f < num_of_frames; f++) {
                 data->pAngle[index + f] = data->pAngle[n];
@@ -122,11 +120,11 @@ static vx_status VX_CALLBACK processRotate(vx_node node, const vx_reference *par
 #if ENABLE_OPENCL
         return_status = VX_ERROR_NOT_IMPLEMENTED;
 #elif ENABLE_HIP
-        rpp_status = rppt_rotate_gpu(data->pSrc, data->pSrcDesc, data->pDst, data->pDstDesc,  data->pAngle, (RpptInterpolationType)data->interpolation_type, data->pSrcRoi, data->roiType, data->handle->rppHandle);
+        rpp_status = rppt_rotate_gpu(data->pSrc, data->pSrcDesc, data->pDst, data->pDstDesc, data->pAngle, data->interpolationType, data->pSrcRoi, data->roiType, data->handle->rppHandle);
         return_status = (rpp_status == RPP_SUCCESS) ? VX_SUCCESS : VX_FAILURE;
 #endif
     } else if (data->deviceType == AGO_TARGET_AFFINITY_CPU) {
-        rpp_status = rppt_rotate_host(data->pSrc, data->pSrcDesc, data->pDst, data->pDstDesc, data->pAngle, (RpptInterpolationType)data->interpolation_type, data->pSrcRoi, data->roiType, data->handle->rppHandle);
+        rpp_status = rppt_rotate_host(data->pSrc, data->pSrcDesc, data->pDst, data->pDstDesc, data->pAngle, data->interpolationType, data->pSrcRoi, data->roiType, data->handle->rppHandle);
         return_status = (rpp_status == RPP_SUCCESS) ? VX_SUCCESS : VX_FAILURE;
     }
     return return_status;
@@ -137,8 +135,8 @@ static vx_status VX_CALLBACK initializeRotate(vx_node node, const vx_reference *
     memset(data, 0, sizeof(RotateLocalData));
 
     vx_enum input_tensor_type, output_tensor_type;
-    int roi_type, input_layout, output_layout;
-    STATUS_ERROR_CHECK(vxCopyScalar((vx_scalar)parameters[4], &data->interpolation_type, VX_READ_ONLY, VX_MEMORY_TYPE_HOST));
+    int roi_type, input_layout, output_layout, interpolation_type;
+    STATUS_ERROR_CHECK(vxCopyScalar((vx_scalar)parameters[4], &interpolation_type, VX_READ_ONLY, VX_MEMORY_TYPE_HOST));
     STATUS_ERROR_CHECK(vxCopyScalar((vx_scalar)parameters[5], &input_layout, VX_READ_ONLY, VX_MEMORY_TYPE_HOST));
     STATUS_ERROR_CHECK(vxCopyScalar((vx_scalar)parameters[6], &output_layout, VX_READ_ONLY, VX_MEMORY_TYPE_HOST));
     STATUS_ERROR_CHECK(vxCopyScalar((vx_scalar)parameters[7], &roi_type, VX_READ_ONLY, VX_MEMORY_TYPE_HOST));
@@ -146,6 +144,7 @@ static vx_status VX_CALLBACK initializeRotate(vx_node node, const vx_reference *
     data->roiType = (roi_type == 0) ? RpptRoiType::XYWH : RpptRoiType::LTRB;
     data->inputLayout = static_cast<vxTensorLayout>(input_layout);
     data->outputLayout = static_cast<vxTensorLayout>(output_layout);
+    data->interpolationType = static_cast<RpptInterpolationType>(interpolation_type);
 
     // Querying for input tensor
     data->pSrcDesc = new RpptDesc;
@@ -165,7 +164,7 @@ static vx_status VX_CALLBACK initializeRotate(vx_node node, const vx_reference *
     data->pDstDesc->offsetInBytes = 0;
     fillDescriptionPtrfromDims(data->pDstDesc, data->outputLayout, data->ouputTensorDims);
 
-    data->pAngle = static_cast<vx_float32 *>(malloc(sizeof(vx_float32) * data->pSrcDesc->n));
+    data->pAngle = static_cast<Rpp32f *>(malloc(sizeof(Rpp32f) * data->pSrcDesc->n));
     refreshRotate(node, parameters, num, data);
     STATUS_ERROR_CHECK(createRPPHandle(node, &data->handle, data->pSrcDesc->n, data->deviceType));
     STATUS_ERROR_CHECK(vxSetNodeAttribute(node, VX_NODE_LOCAL_DATA_PTR, &data, sizeof(data)));

@@ -27,7 +27,7 @@ struct SnowLocalData {
     Rpp32u deviceType;
     RppPtr_t pSrc;
     RppPtr_t pDst;
-    vx_float32 *pSnowValue;
+    Rpp32f *pSnowValue;
     RpptDescPtr pSrcDesc;
     RpptDescPtr pDstDesc;
     RpptROI *pSrcRoi;
@@ -36,18 +36,14 @@ struct SnowLocalData {
     vxTensorLayout outputLayout;
     size_t inputTensorDims[RPP_MAX_TENSOR_DIMS];
     size_t ouputTensorDims[RPP_MAX_TENSOR_DIMS];
-    RppiSize *srcDimensions; // TBR : Not present in tensor
-    RppiSize maxSrcDimensions;  // TBR : Not present in tensor
+    RppiSize *pSrcDimensions;
+    RppiSize maxSrcDimensions;
 };
 
 static vx_status VX_CALLBACK refreshSnow(vx_node node, const vx_reference *parameters, vx_uint32 num, SnowLocalData *data) {
     vx_status status = VX_SUCCESS;
-    STATUS_ERROR_CHECK(vxCopyArrayRange((vx_array)parameters[3], 0, data->inputTensorDims[0], sizeof(vx_float32), data->pSnowValue, VX_READ_ONLY, VX_MEMORY_TYPE_HOST));
-    for (int i = 0; i < data->inputTensorDims[0]; i++)
-        {
-            data->srcDimensions[i].width = data->pSrcDesc->w;
-            data->srcDimensions[i].height = data->pSrcDesc->h;
-        }
+    STATUS_ERROR_CHECK(vxCopyArrayRange((vx_array)parameters[3], 0, data->inputTensorDims[0], sizeof(Rpp32f), data->pSnowValue, VX_READ_ONLY, VX_MEMORY_TYPE_HOST));
+
     void *roi_tensor_ptr;
     if (data->deviceType == AGO_TARGET_AFFINITY_GPU) {
 #if ENABLE_OPENCL
@@ -63,6 +59,11 @@ static vx_status VX_CALLBACK refreshSnow(vx_node node, const vx_reference *param
         STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[2], VX_TENSOR_BUFFER_HOST, &data->pDst, sizeof(data->pDst)));
     }
     data->pSrcRoi = reinterpret_cast<RpptROI *>(roi_tensor_ptr);
+    // Fill width and height array with ROI data required by RPP batchPD kernels
+    for (int i = 0; i < data->inputTensorDims[0]; i++) {
+        data->pSrcDimensions[i].width = data->pSrcRoi[i].xywhROI.roiWidth;
+        data->pSrcDimensions[i].height = data->pSrcRoi[i].xywhROI.roiHeight;
+    }
     if ((data->inputLayout == 2 || data->inputLayout == 3)) { // For NFCHW and NFHWC formats
         unsigned num_of_frames = data->inputTensorDims[1]; // Num of frames 'F'
         for(int n = data->inputTensorDims[0] - 1; n >= 0; n--) {
@@ -125,17 +126,19 @@ static vx_status VX_CALLBACK processSnow(vx_node node, const vx_reference *param
 #if ENABLE_OPENCL
         return_status = VX_ERROR_NOT_IMPLEMENTED;
 #elif ENABLE_HIP
-        if (data->pDstDesc->c==1 )
-            rpp_status = rppi_snow_u8_pln1_batchPD_gpu(data->pSrc, data->srcDimensions, data->maxSrcDimensions, data->pDst, data->pSnowValue, data->pSrcDesc->n, data->handle->rppHandle);
-        else
-            rpp_status = rppi_snow_u8_pkd3_batchPD_gpu(data->pSrc, data->srcDimensions, data->maxSrcDimensions, data->pDst, data->pSnowValue, data->pSrcDesc->n, data->handle->rppHandle);
+        if (data->pSrcDesc->c == 1) {
+            rpp_status = rppi_snow_u8_pln1_batchPD_gpu(data->pSrc, data->pSrcDimensions, data->maxSrcDimensions, data->pDst, data->pSnowValue, data->pSrcDesc->n, data->handle->rppHandle);
+        } else {
+            rpp_status = rppi_snow_u8_pkd3_batchPD_gpu(data->pSrc, data->pSrcDimensions, data->maxSrcDimensions, data->pDst, data->pSnowValue, data->pSrcDesc->n, data->handle->rppHandle);
+        }
         return_status = (rpp_status == RPP_SUCCESS) ? VX_SUCCESS : VX_FAILURE;
 #endif
     } else if (data->deviceType == AGO_TARGET_AFFINITY_CPU) {
-        if (data->pDstDesc->c==1 )
-            rpp_status = rppi_snow_u8_pln1_batchPD_host(data->pSrc, data->srcDimensions, data->maxSrcDimensions, data->pDst, data->pSnowValue, data->pSrcDesc->n, data->handle->rppHandle);
-        else 
-            rpp_status = rppi_snow_u8_pkd3_batchPD_host(data->pSrc, data->srcDimensions, data->maxSrcDimensions, data->pDst, data->pSnowValue, data->pSrcDesc->n, data->handle->rppHandle);
+        if (data->pSrcDesc->c == 1) {
+            rpp_status = rppi_snow_u8_pln1_batchPD_host(data->pSrc, data->pSrcDimensions, data->maxSrcDimensions, data->pDst, data->pSnowValue, data->pSrcDesc->n, data->handle->rppHandle);
+        } else {
+            rpp_status = rppi_snow_u8_pkd3_batchPD_host(data->pSrc, data->pSrcDimensions, data->maxSrcDimensions, data->pDst, data->pSnowValue, data->pSrcDesc->n, data->handle->rppHandle);
+        }
         return_status = (rpp_status == RPP_SUCCESS) ? VX_SUCCESS : VX_FAILURE;
     }
     return return_status;
@@ -173,10 +176,8 @@ static vx_status VX_CALLBACK initializeSnow(vx_node node, const vx_reference *pa
     data->pDstDesc->offsetInBytes = 0;
     fillDescriptionPtrfromDims(data->pDstDesc, data->outputLayout, data->ouputTensorDims);
 
-    data->pSnowValue = static_cast<vx_float32 *>(malloc(sizeof(vx_float32) * data->pSrcDesc->n));
-    data->srcDimensions = static_cast<RppiSize *>(malloc(sizeof(RppiSize) * data->pSrcDesc->n));
-
-
+    data->pSnowValue = static_cast<Rpp32f *>(malloc(sizeof(Rpp32f) * data->pSrcDesc->n));
+    data->pSrcDimensions = static_cast<RppiSize *>(malloc(sizeof(RppiSize) * data->pSrcDesc->n));
     data->maxSrcDimensions.height = data->pSrcDesc->h;
     data->maxSrcDimensions.width = data->pSrcDesc->w;
     refreshSnow(node, parameters, num, data);
@@ -189,7 +190,7 @@ static vx_status VX_CALLBACK uninitializeSnow(vx_node node, const vx_reference *
     SnowLocalData *data;
     STATUS_ERROR_CHECK(vxQueryNode(node, VX_NODE_LOCAL_DATA_PTR, &data, sizeof(data)));
     if (data->pSnowValue != nullptr) free(data->pSnowValue);
-    free(data->srcDimensions);
+    if (data->pSrcDimensions != nullptr) free(data->pSrcDimensions);
     delete(data->pSrcDesc);
     delete(data->pDstDesc);
     STATUS_ERROR_CHECK(releaseRPPHandle(node, data->handle, data->deviceType));

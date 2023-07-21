@@ -112,19 +112,18 @@ static vx_status VX_CALLBACK validateJitter(vx_node node, const vx_reference par
 
 static vx_status VX_CALLBACK processJitter(vx_node node, const vx_reference *parameters, vx_uint32 num) {
     RppStatus rpp_status = RPP_SUCCESS;
-    vx_status return_status = VX_SUCCESS;
-
+    vx_status return_status = VX_ERROR_NOT_IMPLEMENTED;
     JitterLocalData *data = NULL;
     STATUS_ERROR_CHECK(vxQueryNode(node, VX_NODE_LOCAL_DATA_PTR, &data, sizeof(data)));
     refreshJitter(node, parameters, num, data);
     // rppt_jitter is not available in RPP TOT, will be enabled once support is added
     /* if (data->deviceType == AGO_TARGET_AFFINITY_GPU) {
 #if ENABLE_HIP
-        // rpp_status = rppt_jitter_gpu(data->pSrc, data->pSrcDesc, data->pDst, data->pDstDesc, data->pKernelSize, data->seed, data->roiPtr, data->roiType, data->handle->rppHandle);
+        rpp_status = rppt_jitter_gpu(data->pSrc, data->pSrcDesc, data->pDst, data->pDstDesc, data->pKernelSize, data->seed, data->roiPtr, data->roiType, data->handle->rppHandle);
         return_status = (rpp_status == RPP_SUCCESS) ? VX_SUCCESS : VX_FAILURE;
 #endif
     } else if (data->deviceType == AGO_TARGET_AFFINITY_CPU) {
-        // rpp_status = rppt_jitter_host(data->pSrc, data->pSrcDesc, data->pDst, data->pDstDesc, data->pKernelSize, data->seed, data->roiPtr, data->roiType, data->handle->rppHandle);
+        rpp_status = rppt_jitter_host(data->pSrc, data->pSrcDesc, data->pDst, data->pDstDesc, data->pKernelSize, data->seed, data->roiPtr, data->roiType, data->handle->rppHandle);
         return_status = (rpp_status == RPP_SUCCESS) ? VX_SUCCESS : VX_FAILURE;
     } */
     return return_status;
