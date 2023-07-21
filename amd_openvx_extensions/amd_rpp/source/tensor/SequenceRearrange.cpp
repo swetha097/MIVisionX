@@ -26,10 +26,10 @@ struct SequenceRearrangeLocalData {
     vxRppHandle *handle;
     RppPtr_t pSrc;
     RppPtr_t pDst;
-    vx_uint32 deviceType;
-    vx_uint32 newSequenceLength;
-    vx_uint32 sequenceLength;
-    vx_uint32 *pNewOrder;
+    Rpp32u deviceType;
+    Rpp32u newSequenceLength;
+    Rpp32u sequenceLength;
+    Rpp32u *pNewOrder;
     vxTensorLayout layout;
     RpptDescPtr pSrcDesc;
     RpptDescPtr pDstDesc;
@@ -41,7 +41,7 @@ struct SequenceRearrangeLocalData {
 
 static vx_status VX_CALLBACK refreshSequenceRearrange(vx_node node, const vx_reference *parameters, vx_uint32 num, SequenceRearrangeLocalData *data) {
     vx_status status = VX_SUCCESS;
-    STATUS_ERROR_CHECK(vxCopyArrayRange((vx_array)parameters[2], 0, data->newSequenceLength, sizeof(vx_uint32), data->pNewOrder, VX_READ_ONLY, VX_MEMORY_TYPE_HOST));
+    STATUS_ERROR_CHECK(vxCopyArrayRange((vx_array)parameters[2], 0, data->newSequenceLength, sizeof(Rpp32u), data->pNewOrder, VX_READ_ONLY, VX_MEMORY_TYPE_HOST));
     if (data->deviceType == AGO_TARGET_AFFINITY_GPU) {
 #if ENABLE_OPENCL
         STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[0], VX_TENSOR_BUFFER_OPENCL, &data->pClSrc, sizeof(data->pClSrc)));
@@ -98,7 +98,7 @@ static vx_status VX_CALLBACK processSequenceRearrange(vx_node node, const vx_ref
     if (data->deviceType == AGO_TARGET_AFFINITY_GPU) {
 #if ENABLE_OPENCL
         cl_command_queue handle = data->handle->cmdq;
-        for (int sequence_cnt = 0; sequence_cnt < data->pSrcDesc->n; sequence_cnt++) {
+        for (unsigned sequence_cnt = 0; sequence_cnt < data->pSrcDesc->n; sequence_cnt++) {
             unsigned src_sequence_start_address = sequence_cnt * data->pSrcDesc->strides.nStride * data->sequenceLength;
             unsigned dst_sequence_start_address = sequence_cnt * data->pDstDesc->strides.nStride * data->newSequenceLength;
             for (unsigned dst_index = 0; dst_index < data->newSequenceLength; dst_index++) {
@@ -112,7 +112,7 @@ static vx_status VX_CALLBACK processSequenceRearrange(vx_node node, const vx_ref
             }
         }
 #elif ENABLE_HIP
-        for (int sequence_cnt = 0; sequence_cnt < data->pSrcDesc->n; sequence_cnt++) {
+        for (unsigned sequence_cnt = 0; sequence_cnt < data->pSrcDesc->n; sequence_cnt++) {
             unsigned src_sequence_start_address = sequence_cnt * data->pSrcDesc->strides.nStride * data->sequenceLength;
             unsigned dst_sequence_start_address = sequence_cnt * data->pDstDesc->strides.nStride * data->newSequenceLength;
             for (unsigned dst_index = 0; dst_index < (data->newSequenceLength); dst_index++) {
@@ -128,7 +128,7 @@ static vx_status VX_CALLBACK processSequenceRearrange(vx_node node, const vx_ref
         }
 #endif
     } else if (data->deviceType == AGO_TARGET_AFFINITY_CPU) {
-        for (int sequence_cnt = 0; sequence_cnt < data->pSrcDesc->n; sequence_cnt++) {
+        for (unsigned sequence_cnt = 0; sequence_cnt < data->pSrcDesc->n; sequence_cnt++) {
             unsigned src_sequence_start_address = sequence_cnt * data->pSrcDesc->strides.nStride * data->sequenceLength;
             unsigned dst_sequence_start_address = sequence_cnt * data->pDstDesc->strides.nStride * data->newSequenceLength;
             for (unsigned dst_index = 0; dst_index < (data->newSequenceLength); dst_index++) {
@@ -175,7 +175,7 @@ static vx_status VX_CALLBACK initializeSequenceRearrange(vx_node node, const vx_
 
     data->pDstDesc->n = out_tensor_dims[0];
     data->newSequenceLength = out_tensor_dims[1];
-    data->pNewOrder = static_cast<vx_uint32 *>(malloc(sizeof(vx_uint32) * data->newSequenceLength));
+    data->pNewOrder = static_cast<Rpp32u *>(malloc(sizeof(Rpp32u) * data->newSequenceLength));
     refreshSequenceRearrange(node, parameters, num, data);
     STATUS_ERROR_CHECK(createRPPHandle(node, &data->handle, data->pSrcDesc->n, data->deviceType));
     STATUS_ERROR_CHECK(vxSetNodeAttribute(node, VX_NODE_LOCAL_DATA_PTR, &data, sizeof(data)));
