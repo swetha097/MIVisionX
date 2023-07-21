@@ -263,22 +263,13 @@ rocalJpegFileSource(
 
 
         INFO("Internal buffer size width = "+ TOSTR(width)+ " height = "+ TOSTR(height) + " depth = "+ TOSTR(num_of_planes))
-        RocalTensorlayout tensor_format = RocalTensorlayout::NHWC;
-        RocalTensorDataType tensor_data_type = RocalTensorDataType::UINT8;
-        unsigned num_of_dims = 4;
-        std::vector<size_t> dims;
-        if(rocal_color_format == ROCAL_COLOR_U8) {
-            tensor_format = RocalTensorlayout::NCHW;
-            dims = {context->user_batch_size(),num_of_planes, height, width};
-        }
-        else {
-            dims = {context->user_batch_size(), height, width, num_of_planes};
-        }
+
+        auto [tensor_layout, dims] = convert_color_format_to_layout(rocal_color_format, context->user_batch_size(), height, width, num_of_planes);
         auto info  = TensorInfo(std::move(dims),
                                      context->master_graph->mem_type(),
                                      RocalTensorDataType::UINT8);
         info.set_color_format(color_format);
-        info.set_tensor_layout(tensor_format);
+        info.set_tensor_layout(tensor_layout);
         info.set_max_shape();
         output = context->master_graph->create_loader_output_tensor(info);
         auto cpu_num_threads = context->master_graph->calculate_cpu_num_threads(1);
@@ -1744,7 +1735,7 @@ rocalJpegTFRecordSourceSingleShard(
     }
     return output;
 }
-/*
+
 RocalTensor  ROCAL_API_CALL
 rocalRawTFRecordSource(
         RocalContext p_context,
@@ -1782,7 +1773,7 @@ rocalRawTFRecordSource(
         }
 
         auto [color_format, num_of_planes] = convert_color_format(rocal_color_format);
-        auto [tensor_layout, dims] = convert_color_format_to_layout(rocal_color_format, context->user_batch_size(), height, width, num_of_planes);
+        auto [tensor_layout, dims] = convert_color_format_to_layout(rocal_color_format, context->user_batch_size(), out_height, out_width, num_of_planes);
         auto info  = TensorInfo(std::move(dims),
                                      context->master_graph->mem_type(),
                                      RocalTensorDataType::UINT8);
@@ -1851,7 +1842,7 @@ rocalRawTFRecordSourceSingleShard(
         auto [color_format, num_of_planes] = convert_color_format(rocal_color_format);
         INFO("Internal buffer size width = "+ TOSTR(out_width)+ " height = "+ TOSTR(out_height) + " depth = "+ TOSTR(num_of_planes))
 
-        auto [tensor_layout, dims] = convert_color_format_to_layout(rocal_color_format, context->user_batch_size(), height, width, num_of_planes);
+        auto [tensor_layout, dims] = convert_color_format_to_layout(rocal_color_format, context->user_batch_size(), out_height, out_width, num_of_planes);
         auto info  = TensorInfo(std::move(dims),
                                      context->master_graph->mem_type(),
                                      RocalTensorDataType::UINT8);
@@ -1883,7 +1874,7 @@ rocalRawTFRecordSourceSingleShard(
     }
     return output;
 }
-*/
+
 RocalTensor  ROCAL_API_CALL
 rocalFusedJpegCropSingleShard(
         RocalContext p_context,
@@ -2461,9 +2452,9 @@ rocalVideoFileResizeSingleShard(
     }
     return resize_output;
 }
-/*
+
 // loader for CFAR10 raw data: Can be used for other raw data loaders as well
-RocalImage  ROCAL_API_CALL
+RocalTensor  ROCAL_API_CALL
 rocalRawCIFAR10Source(
                  RocalContext p_context,
                  const char* source_path,
@@ -2474,7 +2465,7 @@ rocalRawCIFAR10Source(
                  const char* filename_prefix,
                  bool loop )
 {
-    Image* output = nullptr;
+    Tensor* output = nullptr;
     auto context = static_cast<Context*>(p_context);
     try
     {
@@ -2493,12 +2484,14 @@ rocalRawCIFAR10Source(
 
         INFO("Internal buffer size width = "+ TOSTR(width)+ " height = "+ TOSTR(height) + " depth = "+ TOSTR(num_of_planes))
 
-        auto info = ImageInfo(width, height,
-                              context->user_batch_size(),
-                              num_of_planes,
-                              context->master_graph->mem_type(),
-                              color_format );
-        output = context->master_graph->create_loader_output_image(info);
+        auto [tensor_layout, dims] = convert_color_format_to_layout(rocal_color_format, context->user_batch_size(), height, width, num_of_planes);
+        auto info  = TensorInfo(std::move(dims),
+                                     context->master_graph->mem_type(),
+                                     RocalTensorDataType::UINT8);
+        info.set_color_format(color_format);
+        info.set_tensor_layout(tensor_layout);
+        info.set_max_shape();
+        output = context->master_graph->create_loader_output_tensor(info);
 
         context->master_graph->add_node<Cifar10LoaderNode>({}, {output})->init(source_path, "",
                                                                              StorageType::UNCOMPRESSED_BINARY_DATA,
@@ -2509,7 +2502,7 @@ rocalRawCIFAR10Source(
 
         if(is_output)
         {
-            auto actual_output = context->master_graph->create_image(info, is_output);
+            auto actual_output = context->master_graph->create_tensor(info, is_output);
             context->master_graph->add_node<CopyNode>({output}, {actual_output});
         }
 
@@ -2521,7 +2514,7 @@ rocalRawCIFAR10Source(
     }
     return output;
 }
-*/
+
 
 RocalStatus ROCAL_API_CALL
 rocalResetLoaders(RocalContext p_context)
