@@ -38,9 +38,9 @@ class ROCALGenericIterator(object):
         self.batch_size = pipeline._batch_size
         if self.loader._name is None:
             self.loader._name = self.loader._reader
-        self.labels_size = ((self.batch_size*self.loader._numOfClasses) if (self.loader._oneHotEncoding == True) else self.batch_size)
+        self.labels_size = ((self.batch_size * self.loader._num_classes) if self.loader._one_hot_encoding else self.batch_size)
         self.output_list = self.dimensions = self.dtype = None
-        self.len = b.getRemainingImages(self.loader._handle)//self.batch_size # iteration length
+        self.len = b.getRemainingImages(self.loader._handle) // self.batch_size # iteration length
 
     def next(self):
         return self.__next__()
@@ -58,19 +58,19 @@ class ROCALGenericIterator(object):
                 self.dimensions = self.output_tensor_list[i].dimensions()
                 if self.device == "cpu":
                     self.dtype = self.output_tensor_list[i].dtype()
-                    self.out = np.empty(self.dimensions, dtype = self.dtype)
+                    self.output = np.empty(self.dimensions, dtype = self.dtype)
                     self.labels = np.empty(self.labels_size, dtype = self.dtype)
                 else:
                     self.dtype = self.output_tensor_list[i].dtype()
                     with cp.cuda.Device(device = self.device_id):
-                        self.out = cp.empty(self.dimensions, dtype = self.dtype)
+                        self.output = cp.empty(self.dimensions, dtype = self.dtype)
                         self.labels = cp.empty(self.labels_size, dtype = self.dtype)
 
                 if self.device == "cpu":
-                    self.output_tensor_list[i].copy_data_numpy(self.out)
+                    self.output_tensor_list[i].copy_data_numpy(self.output)
                 else:
-                    self.output_tensor_list[i].copy_data_cupy(self.out.data.ptr)
-                self.output_list.append(self.out)
+                    self.output_tensor_list[i].copy_data_cupy(self.output.data.ptr)
+                self.output_list.append(self.output)
         else:
             for i in range(len(self.output_tensor_list)):
                 if self.device == "cpu":
@@ -79,14 +79,14 @@ class ROCALGenericIterator(object):
                     self.output_tensor_list[i].copy_data_cupy(self.output_list[i].data.ptr)
                 
         if(self.loader._name == "labelReader"):
-            if(self.loader._oneHotEncoding == True):
+            if(self.loader._one_hot_encoding == True):
                 self.loader.getOneHotEncodedLabels(self.labels, self.device)
-                self.labels_tensor = self.labels.reshape(-1, self.batch_size, self.loader._numOfClasses)
+                self.labels_tensor = self.labels.reshape(-1, self.batch_size, self.loader._num_classes)
             else:
                 if self.display:
-                    for i in range(self.batch_size):
-                        img = (self.out)
-                        draw_patches(img[i], i, 0)
+                    for output in self.output_tensor_list:
+                        for i in range(self.batch_size):
+                            draw_patches(output[i], i, 0)
                 self.labels = self.loader.getImageLabels()
                 if self.device == "cpu":
                     self.labels_tensor = self.labels.astype(dtype = np.int_)

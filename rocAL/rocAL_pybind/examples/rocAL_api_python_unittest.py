@@ -139,8 +139,8 @@ def main():
                 images,
                 resize_width=resize_w,
                 resize_height=resize_h,
-                rocal_tensor_layout=tensor_layout,
-                rocal_tensor_output_type=tensor_dtype,
+                rocal_tensor_output_layout=tensor_layout,
+                rocal_tensor_output_datatype=tensor_dtype,
                 scaling_mode=scaling_mode,
                 interpolation_type=interpolation_type)
         elif augmentation_name == "rotate":
@@ -149,57 +149,57 @@ def main():
                 angle=45.0,
                 dest_width=640,
                 dest_height=480,
-                rocal_tensor_layout=tensor_layout,
-                rocal_tensor_output_type=tensor_dtype,
+                rocal_tensor_output_layout=tensor_layout,
+                rocal_tensor_output_datatype=tensor_dtype,
                 interpolation_type=interpolation_type)
         elif augmentation_name == "brightness":
             output = fn.brightness(
                 images,
                 alpha=1.9,
                 beta=20.0,
-                rocal_tensor_layout=tensor_layout,
-                rocal_tensor_output_type=tensor_dtype)
+                rocal_tensor_output_layout=tensor_layout,
+                rocal_tensor_output_datatype=tensor_dtype)
         elif augmentation_name == "gamma_correction":
             output = fn.gamma_correction(
                 images,
-                rocal_tensor_layout=tensor_layout,
-                rocal_tensor_output_type=tensor_dtype)
+                rocal_tensor_output_layout=tensor_layout,
+                rocal_tensor_output_datatype=tensor_dtype)
         elif augmentation_name == "contrast":
             output = fn.contrast(
                 images,
-                min_contrast=30.0,
-                max_contrast=80.0,
-                rocal_tensor_layout=tensor_layout,
-                rocal_tensor_output_type=tensor_dtype)
+                contrast_factor=30.0,
+                contrast_center=80.0,
+                rocal_tensor_output_layout=tensor_layout,
+                rocal_tensor_output_datatype=tensor_dtype)
         elif augmentation_name == "flip":
             output = fn.flip(
                 images,
                 h_flip=1,
-                rocal_tensor_layout=tensor_layout,
-                rocal_tensor_output_type=tensor_dtype)
+                rocal_tensor_output_layout=tensor_layout,
+                rocal_tensor_output_datatype=tensor_dtype)
         elif augmentation_name == "blur":
             output = fn.blur(
                 images,
                 s_dev=5,
-                rocal_tensor_layout=tensor_layout,
-                rocal_tensor_output_type=tensor_dtype)
+                rocal_tensor_output_layout=tensor_layout,
+                rocal_tensor_output_datatype=tensor_dtype)
         elif augmentation_name == "warp_affine":
             output = fn.warp_affine(images, dest_height=480, dest_width=640, x0=1.0, x1=1.0, y0=0.5, y1=0.5, o0=7.0, o1=7.0,
-                                    rocal_tensor_layout=tensor_layout, rocal_tensor_output_type=tensor_dtype, interpolation_type=types.NEAREST_NEIGHBOR_INTERPOLATION)
+                                    rocal_tensor_output_layout=tensor_layout, rocal_tensor_output_datatype=tensor_dtype, interpolation_type=types.NEAREST_NEIGHBOR_INTERPOLATION)
         elif augmentation_name == "fish_eye":
             output = fn.fish_eye(images,
-                                 rocal_tensor_layout=tensor_layout,
-                                 rocal_tensor_output_type=tensor_dtype)
+                                 rocal_tensor_output_layout=tensor_layout,
+                                 rocal_tensor_output_datatype=tensor_dtype)
         elif augmentation_name == "vignette":
             output = fn.vignette(images,
-                                 rocal_tensor_layout=tensor_layout,
-                                 rocal_tensor_output_type=tensor_dtype)
+                                 rocal_tensor_output_layout=tensor_layout,
+                                 rocal_tensor_output_datatype=tensor_dtype)
         elif augmentation_name == "jitter":
             output = fn.jitter(
                 images,
                 kernel_size=3,
-                rocal_tensor_layout=tensor_layout,
-                rocal_tensor_output_type=tensor_dtype)
+                rocal_tensor_output_layout=tensor_layout,
+                rocal_tensor_output_datatype=tensor_dtype)
         elif augmentation_name == "snp_noise":
             output = fn.snp_noise(
                 images,
@@ -208,14 +208,14 @@ def main():
                 noise_val=0.2,
                 salt_val=0.5,
                 seed=0,
-                rocal_tensor_layout=tensor_layout,
-                rocal_tensor_output_type=tensor_dtype)
+                rocal_tensor_output_layout=tensor_layout,
+                rocal_tensor_output_datatype=tensor_dtype)
         elif augmentation_name == "snow":
             output = fn.snow(
                 images,
                 snow=0.2,
-                rocal_tensor_layout=tensor_layout,
-                rocal_tensor_output_type=tensor_dtype)
+                rocal_tensor_output_layout=tensor_layout,
+                rocal_tensor_output_datatype=tensor_dtype)
         elif augmentation_name == "rain":
             output = fn.rain(
                 images,
@@ -223,35 +223,35 @@ def main():
                 rain_width=2,
                 rain_height=16,
                 rain_transparency=0.25,
-                rocal_tensor_layout=tensor_layout,
-                rocal_tensor_output_type=tensor_dtype)
+                rocal_tensor_output_layout=tensor_layout,
+                rocal_tensor_output_datatype=tensor_dtype)
         elif augmentation_name == "fog":
             output = fn.fog(
                 images,
-                rocal_tensor_layout=tensor_layout,
-                rocal_tensor_output_type=tensor_dtype)
+                rocal_tensor_output_layout=tensor_layout,
+                rocal_tensor_output_datatype=tensor_dtype)
         elif augmentation_name == "pixelate":
             output = fn.pixelate(images,
-                                 rocal_tensor_layout=tensor_layout,
-                                 rocal_tensor_output_type=tensor_dtype)
+                                 rocal_tensor_output_layout=tensor_layout,
+                                 rocal_tensor_output_datatype=tensor_dtype)
         elif augmentation_name == "exposure":
             output = fn.exposure(
                 images,
                 exposure=1.0,
-                rocal_tensor_layout=tensor_layout,
-                rocal_tensor_output_type=tensor_dtype)
+                rocal_tensor_output_layout=tensor_layout,
+                rocal_tensor_output_datatype=tensor_dtype)
         elif augmentation_name == "hue":
             output = fn.hue(
                 images,
                 hue=150.0,
-                rocal_tensor_layout=tensor_layout,
-                rocal_tensor_output_type=tensor_dtype)
+                rocal_tensor_output_layout=tensor_layout,
+                rocal_tensor_output_datatype=tensor_dtype)
         elif augmentation_name == "saturation":
             output = fn.saturation(
                 images,
                 saturation=0.3,
-                rocal_tensor_layout=tensor_layout,
-                rocal_tensor_output_type=tensor_dtype)
+                rocal_tensor_output_layout=tensor_layout,
+                rocal_tensor_output_datatype=tensor_dtype)
         elif augmentation_name == "color_twist":
             output = fn.color_twist(
                 images,
@@ -259,8 +259,8 @@ def main():
                 contrast=10.0,
                 hue=100.0,
                 saturation=0.25,
-                rocal_tensor_layout=tensor_layout,
-                rocal_tensor_output_type=tensor_dtype)
+                rocal_tensor_output_layout=tensor_layout,
+                rocal_tensor_output_datatype=tensor_dtype)
         elif augmentation_name == "crop":
             output = fn.crop(
                 images,
@@ -268,12 +268,12 @@ def main():
                 crop_pos_x=0.0,
                 crop_pos_y=0.0,
                 crop_pos_z=0.0,
-                rocal_tensor_layout=tensor_layout,
-                rocal_tensor_output_type=tensor_dtype)
+                rocal_tensor_output_layout=tensor_layout,
+                rocal_tensor_output_datatype=tensor_dtype)
         elif augmentation_name == "crop_mirror_normalize":
             output = fn.crop_mirror_normalize(images,
-                                              rocal_tensor_layout=tensor_layout,
-                                              rocal_tensor_output_type=tensor_dtype,
+                                              rocal_tensor_output_layout=tensor_layout,
+                                              rocal_tensor_output_datatype=tensor_dtype,
                                               crop=(224, 224),
                                               crop_pos_x=0.0,
                                               crop_pos_y=0.0,
@@ -282,8 +282,8 @@ def main():
                                               mirror=0)
         elif augmentation_name == "resize_mirror_normalize":
             output = fn.resize_mirror_normalize(images,
-                                                rocal_tensor_layout=tensor_layout,
-                                                rocal_tensor_output_type=tensor_dtype,
+                                                rocal_tensor_output_layout=tensor_layout,
+                                                rocal_tensor_output_datatype=tensor_dtype,
                                                 resize_min=1344,
                                                 resize_max=1344,
                                                 mean=[0, 0, 0],
@@ -291,23 +291,23 @@ def main():
         elif augmentation_name == "nop":
             output = fn.nop(
                 images,
-                rocal_tensor_layout=tensor_layout,
-                rocal_tensor_output_type=tensor_dtype)
+                rocal_tensor_output_layout=tensor_layout,
+                rocal_tensor_output_datatype=tensor_dtype)
         elif augmentation_name == "centre_crop":
             output = fn.centre_crop(images,
-                                    rocal_tensor_layout=tensor_layout,
-                                    rocal_tensor_output_type=tensor_dtype)
+                                    rocal_tensor_output_layout=tensor_layout,
+                                    rocal_tensor_output_datatype=tensor_dtype)
         elif augmentation_name == "color_temp":
             output = fn.color_temp(
                 images,
                 adjustment_value=70,
-                rocal_tensor_layout=tensor_layout,
-                rocal_tensor_output_type=tensor_dtype)
+                rocal_tensor_output_layout=tensor_layout,
+                rocal_tensor_output_datatype=tensor_dtype)
         elif augmentation_name == "copy":
             output = fn.copy(
                 images,
-                rocal_tensor_layout=tensor_layout,
-                rocal_tensor_output_type=tensor_dtype)
+                rocal_tensor_output_layout=tensor_layout,
+                rocal_tensor_output_datatype=tensor_dtype)
         elif augmentation_name == "resize_crop_mirror":
             output = fn.resize_crop_mirror(
                 images,
@@ -315,29 +315,29 @@ def main():
                 resize_width=400,
                 crop_h=200,
                 crop_w=200,
-                rocal_tensor_layout=tensor_layout,
-                rocal_tensor_output_type=tensor_dtype)
+                rocal_tensor_output_layout=tensor_layout,
+                rocal_tensor_output_datatype=tensor_dtype)
         elif augmentation_name == "lens_correction":
             output = fn.lens_correction(
                 images,
                 strength=2.9,
                 zoom=1.2,
-                rocal_tensor_layout=tensor_layout,
-                rocal_tensor_output_type=tensor_dtype)
+                rocal_tensor_output_layout=tensor_layout,
+                rocal_tensor_output_datatype=tensor_dtype)
         elif augmentation_name == "blend":
             output1 = fn.rotate(
                 images,
                 angle=45.0,
                 dest_width=640,
                 dest_height=480,
-                rocal_tensor_layout=tensor_layout,
-                rocal_tensor_output_type=tensor_dtype)
+                rocal_tensor_output_layout=tensor_layout,
+                rocal_tensor_output_datatype=tensor_dtype)
             output = fn.blend(
                 images,
                 output1,
                 ratio=0.5,
-                rocal_tensor_layout=tensor_layout,
-                rocal_tensor_output_type=tensor_dtype)
+                rocal_tensor_output_layout=tensor_layout,
+                rocal_tensor_output_datatype=tensor_dtype)
         elif augmentation_name == "resize_crop":
             output = fn.resize_crop(
                 images,
@@ -347,14 +347,14 @@ def main():
                 crop_aspect_ratio=1.2,
                 x_drift=0.6,
                 y_drift=0.4,
-                rocal_tensor_layout=tensor_layout,
-                rocal_tensor_output_type=tensor_dtype)
+                rocal_tensor_output_layout=tensor_layout,
+                rocal_tensor_output_datatype=tensor_dtype)
         elif augmentation_name == "center_crop":
             output = fn.center_crop(
                 images,
                 crop=[2, 224, 224],
-                rocal_tensor_layout=tensor_layout,
-                rocal_tensor_output_type=tensor_dtype)
+                rocal_tensor_output_layout=tensor_layout,
+                rocal_tensor_output_datatype=tensor_dtype)
 
         if output_set == 0:
             pipe.setOutputs(output)

@@ -5,8 +5,8 @@ import datetime
 import logging
 
 def compare_pixels(img1, img2, aug_name, width, height, image_offset = 0):
-    pixel_difference = [0,0,0,0,0,0]
-    if'rgb' in aug_name:
+    pixel_difference = [0, 0, 0, 0, 0, 0]
+    if 'rgb' in aug_name:
         pixels1 = img1.load()
         pixels2 = img2.load()
         total_valid_pixel_count = width * height * 3
@@ -14,9 +14,9 @@ def compare_pixels(img1, img2, aug_name, width, height, image_offset = 0):
             for ht in range(height):
                 ht = ht + image_offset
                 if pixels1[wt,ht] != pixels2[wt,ht]:
-                    r = abs(pixels1[wt,ht][0]-pixels2[wt,ht][0])
-                    g = abs(pixels1[wt,ht][1]-pixels2[wt,ht][1])
-                    b = abs(pixels1[wt,ht][2]-pixels2[wt,ht][2])
+                    r = abs(pixels1[wt,ht][0] - pixels2[wt,ht][0])
+                    g = abs(pixels1[wt,ht][1] - pixels2[wt,ht][1])
+                    b = abs(pixels1[wt,ht][2] - pixels2[wt,ht][2])
                     if(r > 4):
                         r = 5
                     if(g > 4):
@@ -129,7 +129,7 @@ def main():
                     logging.info("PASSED")
                 else:
                     failed_case_list.append(golden_file_path)
-                    failed_case_count=failed_case_count+1
+                    failed_case_count = failed_case_count+1
                     logging.info("FAILED")
                     logging.info("Printing pixel mismatch %s",pixeldiff)
                     logging.info("Mismatach percentage %0.2f", mismatch_percentage)
