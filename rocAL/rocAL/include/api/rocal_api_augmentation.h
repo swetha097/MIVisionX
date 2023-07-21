@@ -228,7 +228,7 @@ extern "C" RocalTensor ROCAL_API_CALL rocalGammaFixed(RocalContext context, Roca
 /// \return
 extern "C" RocalTensor ROCAL_API_CALL rocalContrast(RocalContext context, RocalTensor input,
                                                     bool is_output,
-                                                    RocalFloatParam min = NULL, RocalFloatParam max = NULL,
+                                                    RocalFloatParam contrast_factor = NULL, RocalFloatParam contrast_center = NULL,
                                                     RocalTensorLayout rocal_tensor_output_layout = ROCAL_NHWC,
                                                     RocalTensorOutputType rocal_tensor_output_datatype = ROCAL_UINT8);
 
@@ -242,7 +242,7 @@ extern "C" RocalTensor ROCAL_API_CALL rocalContrast(RocalContext context, RocalT
 /// \return
 extern "C" RocalTensor ROCAL_API_CALL rocalContrastFixed(RocalContext context, RocalTensor input,
                                                          bool is_output,
-                                                         float min = NULL, float max = NULL,
+                                                         float contrast_factor = 1.0f, float contrast_center = 0.5f,
                                                          RocalTensorLayout rocal_tensor_output_layout = ROCAL_NHWC,
                                                          RocalTensorOutputType rocal_tensor_output_datatype = ROCAL_UINT8);
 

@@ -1509,8 +1509,8 @@ rocalContrast(
         RocalContext p_context,
         RocalTensor p_input,
         bool is_output,
-        RocalFloatParam p_min,
-        RocalFloatParam p_max,
+        RocalFloatParam p_contrast_factor,
+        RocalFloatParam p_contrast_center,
         RocalTensorLayout rocal_tensor_output_layout,
         RocalTensorOutputType rocal_tensor_output_datatype) {
     Tensor* output = nullptr;
@@ -1521,8 +1521,8 @@ rocalContrast(
 
     auto context = static_cast<Context*>(p_context);
     auto input = static_cast<Tensor*>(p_input);
-    auto min = static_cast<FloatParam*>(p_min);
-    auto max = static_cast<FloatParam*>(p_max);
+    auto contrast_factor = static_cast<FloatParam*>(p_contrast_factor);
+    auto contrast_center = static_cast<FloatParam*>(p_contrast_center);
     try {
         RocalTensorlayout op_tensorLayout = (RocalTensorlayout)rocal_tensor_output_layout;
         RocalTensorDataType op_tensorDataType = (RocalTensorDataType)rocal_tensor_output_datatype;
@@ -1530,7 +1530,7 @@ rocalContrast(
         output_info.set_tensor_layout(op_tensorLayout);
         output_info.set_data_type(op_tensorDataType);
         output = context->master_graph->create_tensor(output_info, is_output);
-        context->master_graph->add_node<ContrastNode>({input}, {output})->init(min, max);
+        context->master_graph->add_node<ContrastNode>({input}, {output})->init(contrast_factor, contrast_center);
     } catch(const std::exception& e) {
         context->capture_error(e.what());
         ERR(e.what())
@@ -1543,8 +1543,8 @@ rocalContrastFixed(
         RocalContext p_context,
         RocalTensor p_input,
         bool is_output,
-        float min,
-        float max,
+        float contrast_factor,
+        float contrast_center,
         RocalTensorLayout rocal_tensor_output_layout,
         RocalTensorOutputType rocal_tensor_output_datatype) {
     Tensor* output = nullptr;
@@ -1562,7 +1562,7 @@ rocalContrastFixed(
         output_info.set_tensor_layout(op_tensorLayout);
         output_info.set_data_type(op_tensorDataType);
         output = context->master_graph->create_tensor(output_info, is_output);
-        context->master_graph->add_node<ContrastNode>({input}, {output})->init(min, max);
+        context->master_graph->add_node<ContrastNode>({input}, {output})->init(contrast_factor, contrast_center);
     } catch(const std::exception& e) {
         context->capture_error(e.what());
         ERR(e.what())
