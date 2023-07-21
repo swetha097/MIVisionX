@@ -22,6 +22,7 @@ import rocal_pybind as b
 import amd.rocal.types as types
 import numpy as np
 import cupy as cp
+import torch
 import ctypes
 import functools
 import inspect
@@ -101,10 +102,10 @@ class Pipeline(object):
                  rocal_cpu=False, max_streams=-1, default_cuda_stream_priority=0, tensor_layout = types.NCHW, reverse_channels = False, mean = None, std = None, tensor_dtype=types.FLOAT, output_memory_type = types.CPU_MEMORY):
         if(rocal_cpu):
             self._handle = b.rocalCreate(
-                batch_size, types.CPU, device_id, num_threads, prefetch_queue_depth, types.FLOAT)
+                batch_size, types.CPU, device_id, num_threads, prefetch_queue_depth, tensor_dtype)
         else:
             self._handle = b.rocalCreate(
-                batch_size, types.GPU, device_id, num_threads, prefetch_queue_depth, types.FLOAT)
+                batch_size, types.GPU, device_id, num_threads, prefetch_queue_depth, tensor_dtype)
 
         if(b.getStatus(self._handle) == types.OK):
             print("Pipeline has been created succesfully")
@@ -140,8 +141,8 @@ class Pipeline(object):
         self._BoxEncoder = None
         self._BoxIOUMatcher = None
         self._encode_tensor = None
-        self._numOfClasses = None
-        self._oneHotEncoding = False
+        self._num_classes = None
+        self._one_hot_encoding = False
         self._castLabels = False
         self._current_pipeline = None
         self._reader = None
@@ -176,17 +177,16 @@ class Pipeline(object):
     def getOneHotEncodedLabels(self, array, device):
         if device == "cpu":
             if (isinstance(array, np.ndarray)):
-                b.getOneHotEncodedLabels(self._handle, array.ctypes.data_as(ctypes.c_void_p), self._numOfClasses, 0)
-            else: #torch tensor
-                return b.getOneHotEncodedLabels(self._handle, ctypes.c_void_p(array.data_ptr()), self._numOfClasses, 0)
+                b.getOneHotEncodedLabels(self._handle, array.ctypes.data_as(ctypes.c_void_p), self._num_classes, 0)
+            elif (isinstance(array, torch.Tensor)):
+                return b.getOneHotEncodedLabels(self._handle, ctypes.c_void_p(array.data_ptr()), self._num_classes, 0)
         else:
             if (isinstance(array, cp.ndarray)):
-                b.getCupyOneHotEncodedLabels(self._handle, array.data.ptr, self._numOfClasses, 1)
-            else: #torch tensor
-                return b.getOneHotEncodedLabels(self._handle, ctypes.c_void_p(array.data_ptr()), self._numOfClasses, 1)
+                b.getCupyOneHotEncodedLabels(self._handle, array.data.ptr, self._num_classes, 1)
+            elif (isinstance(array, torch.Tensor)):
+                return b.getOneHotEncodedLabels(self._handle, ctypes.c_void_p(array.data_ptr()), self._num_classes, 1)
 
     def setOutputs(self, *output_list):
-        self._output_list_length = len(output_list)
         b.setOutputImages(self._handle, len(output_list), output_list)
 
     def __enter__(self):
@@ -223,9 +223,6 @@ class Pipeline(object):
     def getFloatValue(self, param):
         return b.getFloatValue(param)
 
-    def getImageNameLen(self, array):
-        return b.getImageNameLen(self._handle, array)
-
     def getImageName(self, array_len):
         return b.getImageName(self._handle, array_len)
 
@@ -260,7 +257,6 @@ class Pipeline(object):
         return b.getRemainingImages(self._handle)
 
     def rocalRelease(self):
-        print('Coming to rocalRelease')
         return b.rocalRelease(self._handle)
 
     def rocalResetLoaders(self):
@@ -412,12 +408,12 @@ def pipeline_def(fn=None, **pipeline_kwargs):
             with pipe:
                 pipe_outputs = func(*args, **fn_kwargs)
                 if isinstance(pipe_outputs, tuple):
-                    po = pipe_outputs
+                    outputs = pipe_outputs
                 elif pipe_outputs is None:
-                    po = ()
+                    outputs = ()
                 else:
-                    po = (pipe_outputs, )
-                pipe.setOutputs(*po)
+                    outputs = (pipe_outputs, )
+                pipe.setOutputs(*outputs)
             return pipe
 
         # Add `is_pipeline_def` attribute to the function marked as `@pipeline_def`

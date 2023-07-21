@@ -70,7 +70,7 @@ namespace rocal{
     }
 
     template<typename T>
-    void copy_data_numpy_wrapper(rocalTensor& output_tensor, T array) {
+    void copy_data_numpy_wrapper(rocalTensor& output_tensor, py::array_t<T> array) {
         auto buf = array.request();
         T *ptr = (T *)buf.ptr;
         output_tensor.copy_data((void *)ptr, RocalOutputMemType::ROCAL_MEMCPY_HOST);
@@ -403,15 +403,9 @@ namespace rocal{
                 Copies the ring buffer data to python buffer pointers.
                 )code"
             )
-            .def("copy_data_numpy", [](rocalTensor& output_tensor, py::array_t<unsigned char> array) {
-                copy_data_numpy_wrapper(output_tensor, array);
-            }, py::return_value_policy::reference)
-            .def("copy_data_numpy", [](rocalTensor& output_tensor, py::array_t<float> array) {
-                copy_data_numpy_wrapper(output_tensor, array);
-            }, py::return_value_policy::reference)
-            .def("copy_data_numpy", [](rocalTensor& output_tensor, py::array_t<float16> array) {
-                copy_data_numpy_wrapper(output_tensor, array);
-            }, py::return_value_policy::reference)
+            .def("copy_data_numpy", &copy_data_numpy_wrapper<u_char>, py::return_value_policy::reference)
+            .def("copy_data_numpy", &copy_data_numpy_wrapper<float>, py::return_value_policy::reference)
+            .def("copy_data_numpy", &copy_data_numpy_wrapper<half>, py::return_value_policy::reference)
             .def("copy_data_cupy", [](rocalTensor& output_tensor, long array) {
                 if(output_tensor.data_type() == RocalTensorOutputType::ROCAL_FP32)
                     copy_data_cupy_wrapper_f32(output_tensor, array);

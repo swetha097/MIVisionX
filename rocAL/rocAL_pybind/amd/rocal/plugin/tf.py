@@ -75,9 +75,9 @@ class ROCALGenericIteratorDetection(object):
             data_type="float16"
         
         if(types.NHWC == self.tensor_format):
-            self.out = np.zeros(( self.bs*self.n, int(self.h/self.bs), self.w, self.p), dtype = data_type)
+            self.output = np.zeros(( self.bs*self.n, int(self.h/self.bs), self.w, self.p), dtype = data_type)
         else: 
-            self.out = np.zeros(( self.bs*self.n, self.p, int(self.h/self.bs), self.w), dtype = data_type)
+            self.output = np.zeros(( self.bs*self.n, self.p, int(self.h/self.bs), self.w), dtype = data_type)
                 
     def next(self):
         return self.__next__()
@@ -97,9 +97,9 @@ class ROCALGenericIteratorDetection(object):
             raise StopIteration
         
         if(types.NCHW == self.tensor_format):
-            self.loader.copyToExternalTensorNCHW(self.out, self.multiplier, self.offset, self.reverse_channels, int(self.tensor_dtype))
+            self.loader.copyToExternalTensorNCHW(self.output, self.multiplier, self.offset, self.reverse_channels, int(self.tensor_dtype))
         else:
-            self.loader.copyToExternalTensorNHWC(self.out, self.multiplier, self.offset, self.reverse_channels, int(self.tensor_dtype))
+            self.loader.copyToExternalTensorNHWC(self.output, self.multiplier, self.offset, self.reverse_channels, int(self.tensor_dtype))
 
         if(self.loader._name == "TFRecordReaderDetection"):
             self.bbox_list =[]
@@ -149,22 +149,22 @@ class ROCALGenericIteratorDetection(object):
             self.num_bboxes_arr = np.array(self.num_bboxes_list)
 
             if self.tensor_dtype == types.FLOAT:
-                return self.out.astype(np.float32), self.res, self.l, self.num_bboxes_arr
+                return self.output.astype(np.float32), self.res, self.l, self.num_bboxes_arr
             elif self.tensor_dtype == types.FLOAT16:
-                return self.out.astype(np.float16), self.res, self.l, self.num_bboxes_arr
+                return self.output.astype(np.float16), self.res, self.l, self.num_bboxes_arr
         elif (self.loader._name == "TFRecordReaderClassification"):
-            if(self.loader._oneHotEncoding == True):
-                self.labels = np.zeros((self.bs)*(self.loader._numOfClasses),dtype = "int32")
+            if(self.loader._one_hot_encoding == True):
+                self.labels = np.zeros((self.bs)*(self.loader._num_classes),dtype = "int32")
                 self.loader.getOneHotEncodedLabels(self.labels, device="cpu")
-                self.labels = np.reshape(self.labels, (-1, self.bs, self.loader._numOfClasses))
+                self.labels = np.reshape(self.labels, (-1, self.bs, self.loader._num_classes))
             else:
                 self.labels = np.zeros((self.bs),dtype = "int32")
                 self.loader.getImageLabels(self.labels)
 
             if self.tensor_dtype == types.FLOAT:
-                return self.out.astype(np.float32), self.labels
+                return self.output.astype(np.float32), self.labels
             elif self.tensor_dtype == types.TensorDataType.FLOAT16:
-                return self.out.astype(np.float16), self.labels
+                return self.output.astype(np.float16), self.labels
 
     def reset(self):
         b.rocalResetLoaders(self.loader._handle)

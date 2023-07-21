@@ -59,7 +59,7 @@ class ROCALVideoIterator(object):
         self.iter_num = 0
         self.sequence_length = sequence_length
         print("____________REMAINING IMAGES____________:", self.rim)
-        self.out = self.dimensions = self.dtype = None
+        self.output = self.dimensions = self.dtype = None
 
     def next(self):
         return self.__next__()
@@ -74,13 +74,13 @@ class ROCALVideoIterator(object):
             self.output_tensor_list = self.loader.getOutputTensors()
         self.iter_num +=1
         #Copy output from buffer to numpy array
-        if self.out is None:
+        if self.output is None:
             self.dimensions = self.output_tensor_list[0].dimensions()
             self.dtype = self.output_tensor_list[0].dtype()
             self.layout = self.output_tensor_list[0].layout()
-            self.out = np.empty((self.dimensions[0]*self.dimensions[1], self.dimensions[2], self.dimensions[3], self.dimensions[4]), dtype = self.dtype)
-        self.output_tensor_list[0].copy_data_numpy(self.out)
-        img = torch.from_numpy(self.out)
+            self.output = np.empty((self.dimensions[0]*self.dimensions[1], self.dimensions[2], self.dimensions[3], self.dimensions[4]), dtype = self.dtype)
+        self.output_tensor_list[0].copy_data_numpy(self.output)
+        img = torch.from_numpy(self.output)
         #Display Frames in a video sequence
         if self.display:
             for batch_i in range(self.batch_size):
@@ -132,8 +132,8 @@ def main():
                               dtype=types.FLOAT, initial_fill=16, pad_last_batch=True, name="Reader")
         crop_size = (512,960)
         output_images = fn.crop_mirror_normalize(images,
-                                            rocal_tensor_layout = tensor_format,
-                                            rocal_tensor_output_type = tensor_dtype,
+                                            rocal_tensor_output_layout=tensor_format,
+                                            rocal_tensor_output_datatype=tensor_dtype,
                                             crop=crop_size,
                                             mean=[0, 0, 0],
                                             std=[1, 1, 1])
