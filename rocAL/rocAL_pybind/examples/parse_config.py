@@ -83,6 +83,8 @@ def parse_args():
 
     # rocAL_api_python_unittest.py related options
     python_unit_test = parser.add_argument_group('python-unittest', 'python-unittest-related options')
+    python_unit_test.add_argument('--reader-type', '-r', type=str, default="file",
+                        help='Reader used for reading and decoding the images')
     python_unit_test.add_argument('--augmentation-name', '-aug_name', type=str, default="resize",
                         help='refer python unit test for all augmentation names ')
     python_unit_test.add_argument('--file-name', '-f', type=str, default="",

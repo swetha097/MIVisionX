@@ -40,6 +40,7 @@ class ROCALGenericIterator(object):
             self.loader._name = self.loader._reader
         self.labels_size = ((self.batch_size * self.loader._num_classes) if self.loader._one_hot_encoding else self.batch_size)
         self.output_list = self.dimensions = self.dtype = None
+        self.labels_tensor = None
         self.len = b.getRemainingImages(self.loader._handle) // self.batch_size # iteration length
 
     def next(self):
@@ -94,7 +95,7 @@ class ROCALGenericIterator(object):
                     with cp.cuda.Device(device = self.device_id):
                         self.labels_tensor = self.labels.astype(dtype = cp.int_)
 
-            return self.output_list, self.labels_tensor
+        return self.output_list, self.labels_tensor
 
     def reset(self):
         b.rocalResetLoaders(self.loader._handle)
