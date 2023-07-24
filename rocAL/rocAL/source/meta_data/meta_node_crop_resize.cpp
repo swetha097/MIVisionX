@@ -37,12 +37,11 @@ void CropResizeMetaNode::update_parameters(pMetaDataBatch input_meta_data, pMeta
         _batch_size = input_meta_data->size();
     }
     _meta_crop_param = _node->get_crop_param();    
-    _dst_width = _node->get_dst_width();
-    _dst_height = _node->get_dst_height();
     _x1 = _meta_crop_param->x1_arr;
     _y1 = _meta_crop_param->y1_arr;
     _x2 = _meta_crop_param->x2_arr;
     _y2 = _meta_crop_param->y2_arr;
+    auto input_roi = _meta_crop_param->in_roi;
     vxCopyArrayRange((vx_array)_x1, 0, _batch_size, sizeof(uint),_x1_val.data(), VX_READ_ONLY, VX_MEMORY_TYPE_HOST);
     vxCopyArrayRange((vx_array)_y1, 0, _batch_size, sizeof(uint),_y1_val.data(), VX_READ_ONLY, VX_MEMORY_TYPE_HOST);
     vxCopyArrayRange((vx_array)_x2, 0, _batch_size, sizeof(uint),_x2_val.data(), VX_READ_ONLY, VX_MEMORY_TYPE_HOST);
@@ -60,10 +59,10 @@ void CropResizeMetaNode::update_parameters(pMetaDataBatch input_meta_data, pMeta
         _crop_w = _x2_val[i] - _x1_val[i];
         _crop_h = _y2_val[i] - _y1_val[i];
         //TBD
-        crop_box.l = _x1_val[i];
-        crop_box.t = _y1_val[i];
-        crop_box.r = _x1_val[i]+_crop_w;
-        crop_box.b = _y1_val[i]+_crop_h;
+        crop_box.l = (_x1_val[i]);
+        crop_box.t = (_y1_val[i]);
+        crop_box.r = (_x1_val[i]+_crop_w);
+        crop_box.b = (_y1_val[i]+_crop_h);
         for(uint j = 0; j < bb_count; j++)
         {
             BoundingBoxCord box = coords_buf[j];
