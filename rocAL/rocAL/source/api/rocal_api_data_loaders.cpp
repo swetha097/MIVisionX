@@ -2533,3 +2533,170 @@ rocalResetLoaders(RocalContext p_context)
     }
     return ROCAL_OK;
 }
+
+RocalTensor  ROCAL_API_CALL
+rocalAudioFileSourceSingleShard(
+        RocalContext p_context,
+        const char* source_path,
+        const char* source_file_list_path,
+        unsigned shard_id,
+        unsigned shard_count,
+        bool is_output,
+        bool shuffle,
+        bool loop,
+        bool downmix,
+        unsigned max_frames,
+        unsigned max_channels,
+        unsigned storage_type,
+        bool stick_to_shard,
+        int shard_size) {
+    rocalTensor* output = nullptr;
+    auto context = static_cast<Context*>(p_context);
+    try {
+        if(shard_count < 1 )
+            THROW("Shard count should be bigger than 0")
+
+        if(shard_id >= shard_count)
+            THROW("Shard id should be smaller than shard count")
+        auto [max_frames, max_channels] = evaluate_audio_data_set(StorageType::FILE_SYSTEM, DecoderType::SNDFILE,
+                                                       source_path, "");
+        INFO("Internal buffer size for audio frames = "+ TOSTR(max_frames))
+
+        RocalTensorDataType tensor_data_type = RocalTensorDataType::FP32;
+        std::vector<size_t> dims = {context->user_batch_size(), max_frames, max_channels};
+        auto info  = rocalTensorInfo(std::vector<size_t>(std::move(dims)),
+                                     context->master_graph->mem_type(),
+                                     tensor_data_type);
+        info.set_max_shape();
+        output = context->master_graph->create_loader_output_tensor(info);
+        output->reset_audio_sample_rate();
+        auto cpu_num_threads = context->master_graph->calculate_cpu_num_threads(shard_count);
+        context->master_graph->add_node<AudioLoaderSingleShardNode>({}, {output})->init(shard_id, shard_count, cpu_num_threads,
+                                                                                        source_path,
+                                                                                        source_file_list_path,
+                                                                                        StorageType(storage_type),
+                                                                                        DecoderType::SNDFILE,
+                                                                                        shuffle,
+                                                                                        loop,
+                                                                                        context->user_batch_size(),
+                                                                                        context->master_graph->mem_type(),
+                                                                                        context->master_graph->meta_data_reader(),
+                                                                                        context->master_graph->last_batch_policy(),
+                                                                                        context->master_graph->last_batch_padded(),
+                                                                                        stick_to_shard,
+                                                                                        shard_size);
+        context->master_graph->set_loop(loop);
+        /*  Commenting out this peice of code in this PR - Next PR will contain augmentations & this code will be uncommented
+        if(downmix)
+        {
+            rocalTensorInfo output_info = info;
+            std::vector<size_t> output_dims;
+            output_dims.resize(3);
+            output_dims.at(0) = context->user_batch_size();
+            output_dims.at(1) = info.dims()[1];
+            output_dims.at(2) = 1;
+            output_info.set_dims(output_dims);
+            output_info.set_tensor_layout(RocalTensorlayout::NONE);
+            output_info.set_max_shape();
+            auto downmixed_output = context->master_graph->create_tensor(output_info, false);
+            std::shared_ptr<DownmixNode> downmix_node = context->master_graph->add_node<DownmixNode>({output}, {downmixed_output});
+            if(is_output)
+            {
+                auto actual_output = context->master_graph->create_tensor(output_info, is_output);
+                context->master_graph->add_node<CopyNode>({downmixed_output}, {actual_output}); // Have to add copy tensor node
+                output = downmixed_output;
+            }
+        }
+        
+        else 
+        { */
+            if(is_output)
+            {
+                auto actual_output = context->master_graph->create_tensor(info, is_output);
+                context->master_graph->add_node<CopyNode>({output}, {actual_output});
+            }
+        // } 
+
+    }
+    catch(const std::exception& e) {
+        context->capture_error(e.what());
+        std::cerr << e.what() << '\n';
+    }
+    return output;
+}
+
+RocalTensor  ROCAL_API_CALL
+rocalAudioFileSource(
+        RocalContext p_context,
+        const char* source_path,
+        const char* source_file_list_path,
+        unsigned internal_shard_count,
+        bool is_output,
+        bool shuffle,
+        bool loop,
+        bool downmix,
+        unsigned max_frames,
+        unsigned max_channels) {
+    rocalTensor* output = nullptr;
+    auto context = static_cast<Context*>(p_context);
+    try {
+        auto [max_frames, max_channels] = evaluate_audio_data_set(StorageType::FILE_SYSTEM, DecoderType::SNDFILE,
+                                                       source_path, "");
+        INFO("Internal buffer size for audio frames = "+ TOSTR(max_frames))
+
+        RocalTensorDataType tensor_data_type = RocalTensorDataType::FP32;
+        std::vector<size_t> dims = {context->user_batch_size(), max_frames, max_channels};
+        auto info  = rocalTensorInfo(std::vector<size_t>(std::move(dims)),
+                                context->master_graph->mem_type(),
+                                tensor_data_type);
+        info.set_max_shape();
+        output = context->master_graph->create_loader_output_tensor(info);
+        output->reset_audio_sample_rate();
+        auto cpu_num_threads = context->master_graph->calculate_cpu_num_threads(shard_count);
+        context->master_graph->add_node<AudioLoaderNode>({}, {output})->init(internal_shard_count, cpu_num_threads,
+                                                                             source_path,
+                                                                             source_file_list_path
+                                                                             StorageType::FILE_SYSTEM,
+                                                                             DecoderType::SNDFILE,
+                                                                             shuffle,
+                                                                             loop,
+                                                                             context->user_batch_size(),
+                                                                             context->master_graph->mem_type(),
+                                                                             context->master_graph->meta_data_reader());
+        context->master_graph->set_loop(loop);
+        /*  Commenting out this peice of code in this PR - Next PR will contain augmentations & this code will be uncommented
+        if(downmix)
+        {
+            // For the resize node, user can create an image with a different width and height
+            rocalTensorInfo output_info = info;
+            std::vector<size_t> output_dims;
+            output_dims.resize(3);
+            output_dims.at(0) = context->user_batch_size();
+            output_dims.at(1) = info.dims()[1];
+            output_dims.at(2) = 1;
+            output_info.set_dims(output_dims);
+            output_info.set_tensor_layout(RocalTensorlayout::NONE);
+            auto downmixed_output = context->master_graph->create_tensor(output_info, false);
+            std::shared_ptr<DownmixNode> downmix_node = context->master_graph->add_node<DownmixNode>({output}, {downmixed_output});
+            if(is_output)
+            {
+                auto actual_output = context->master_graph->create_tensor(output_info, is_output);
+                context->master_graph->add_node<CopyNode>({downmixed_output}, {actual_output});
+                output = downmixed_output;
+            }
+        }
+        else
+        { */
+            if(is_output)
+            {
+                auto actual_output = context->master_graph->create_tensor(info, is_output);
+                context->master_graph->add_node<CopyNode>({output}, {actual_output});
+            }
+        // } 
+    }
+    catch(const std::exception& e) {
+        context->capture_error(e.what());
+        std::cerr << e.what() << '\n';
+    }
+    return output;
+}
