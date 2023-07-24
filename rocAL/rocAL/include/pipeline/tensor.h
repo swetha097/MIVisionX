@@ -178,6 +178,7 @@ public:
     RocalTensorDataType data_type() const { return _data_type; }
     RocalTensorlayout layout() const { return _layout; }
     RocalROI *get_roi() const { return (RocalROI *)_roi_buf; }
+    std::shared_ptr<std::vector<float>> get_sample_rate() const { return _sample_rate; }
     RocalColorFormat color_format() const { return _color_format; }
     Type type() const { return _type; }
     uint64_t data_type_size() {
@@ -204,6 +205,8 @@ private:
     uint64_t _data_size = 0;
     std::vector<size_t> _max_shape;  //!< stores the the width and height dimensions in the tensor
     void reset_tensor_roi_buffers();
+    std::shared_ptr<std::vector<float>> _sample_rate;
+    void reallocate_tensor_sample_rate_buffers();
     bool _is_image = false;
     bool _is_metadata = false;
     size_t _channels = 3;   //!< stores the channel dimensions in the tensor
@@ -231,6 +234,7 @@ public:
     unsigned copy_data(hipStream_t stream, void* host_memory, bool sync);
 #endif
     unsigned copy_data(void* user_buffer, RocalOutputMemType external_mem_type) override;
+    unsigned copy_data(void* user_buffer, uint max_x1, uint max_y1);
     //! Default destructor
     /*! Releases the OpenVX Tensor object */
     ~Tensor();
@@ -240,6 +244,8 @@ public:
     int create(vx_context context);
     void update_tensor_roi(const std::vector<uint32_t>& width, const std::vector<uint32_t>& height);
     void reset_tensor_roi() { _info.reset_tensor_roi_buffers(); }
+    void update_audio_tensor_sample_rate(const std::vector<float>& sample_rate);
+    void reset_audio_sample_rate() { _info.reallocate_tensor_sample_rate_buffers(); }
     // create_from_handle() no internal memory allocation is done here since
     // tensor's handle should be swapped with external buffers before usage
     int create_from_handle(vx_context context);

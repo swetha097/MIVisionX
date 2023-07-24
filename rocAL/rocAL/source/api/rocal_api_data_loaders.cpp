@@ -34,12 +34,30 @@ THE SOFTWARE.
 #include "node_image_loader_single_shard.h"
 #include "node_cifar10_loader.h"
 #include "image_source_evaluator.h"
+#include "node_audio_loader.h"
+#include "node_audio_loader_single_shard.h"
+#include "audio_source_evaluator.h"
 #include "node_copy.h"
 #include "node_fused_jpeg_crop.h"
 #include "node_fused_jpeg_crop_single_shard.h"
 #include "node_resize.h"
 
 namespace filesys = boost::filesystem;
+
+std::tuple<unsigned, unsigned>
+evaluate_audio_data_set(StorageType storage_type,
+                        DecoderType decoder_type, const std::string &source_path, const std::string &json_path)
+{
+    AudioSourceEvaluator source_evaluator;
+    if(source_evaluator.create(ReaderConfig(storage_type, source_path, json_path), DecoderConfig(decoder_type)) != AudioSourceEvaluatorStatus::OK)
+        THROW("Initializing file source input evaluator failed ")
+    auto max_samples = source_evaluator.max_samples();
+    auto max_channels = source_evaluator.max_channels();
+    if(max_samples == 0 || max_channels  == 0)
+        THROW("Cannot find size of the audio files or files cannot be accessed")
+    LOG("Maximum input audio dimension [ "+ TOSTR(max_samples) + " x " + TOSTR(max_channels)+" ] for audio's in "+source_path)
+    return std::make_tuple(max_samples, max_channels);
+};
 
 std::tuple<unsigned, unsigned>
 evaluate_image_data_set(RocalImageSizeEvaluationPolicy decode_size_policy, StorageType storage_type,
@@ -2550,7 +2568,7 @@ rocalAudioFileSourceSingleShard(
         unsigned storage_type,
         bool stick_to_shard,
         int shard_size) {
-    rocalTensor* output = nullptr;
+    Tensor* output = nullptr;
     auto context = static_cast<Context*>(p_context);
     try {
         if(shard_count < 1 )
@@ -2564,7 +2582,7 @@ rocalAudioFileSourceSingleShard(
 
         RocalTensorDataType tensor_data_type = RocalTensorDataType::FP32;
         std::vector<size_t> dims = {context->user_batch_size(), max_frames, max_channels};
-        auto info  = rocalTensorInfo(std::vector<size_t>(std::move(dims)),
+        auto info  = TensorInfo(std::vector<size_t>(std::move(dims)),
                                      context->master_graph->mem_type(),
                                      tensor_data_type);
         info.set_max_shape();
@@ -2580,16 +2598,13 @@ rocalAudioFileSourceSingleShard(
                                                                                         loop,
                                                                                         context->user_batch_size(),
                                                                                         context->master_graph->mem_type(),
-                                                                                        context->master_graph->meta_data_reader(),
-                                                                                        context->master_graph->last_batch_policy(),
-                                                                                        context->master_graph->last_batch_padded(),
-                                                                                        stick_to_shard,
-                                                                                        shard_size);
+                                                                                        context->master_graph->meta_data_reader()
+                                                                                        );
         context->master_graph->set_loop(loop);
         /*  Commenting out this peice of code in this PR - Next PR will contain augmentations & this code will be uncommented
         if(downmix)
         {
-            rocalTensorInfo output_info = info;
+            TensorInfo output_info = info;
             std::vector<size_t> output_dims;
             output_dims.resize(3);
             output_dims.at(0) = context->user_batch_size();
@@ -2637,7 +2652,7 @@ rocalAudioFileSource(
         bool downmix,
         unsigned max_frames,
         unsigned max_channels) {
-    rocalTensor* output = nullptr;
+    Tensor* output = nullptr;
     auto context = static_cast<Context*>(p_context);
     try {
         auto [max_frames, max_channels] = evaluate_audio_data_set(StorageType::FILE_SYSTEM, DecoderType::SNDFILE,
@@ -2646,16 +2661,16 @@ rocalAudioFileSource(
 
         RocalTensorDataType tensor_data_type = RocalTensorDataType::FP32;
         std::vector<size_t> dims = {context->user_batch_size(), max_frames, max_channels};
-        auto info  = rocalTensorInfo(std::vector<size_t>(std::move(dims)),
+        auto info  = TensorInfo(std::vector<size_t>(std::move(dims)),
                                 context->master_graph->mem_type(),
                                 tensor_data_type);
         info.set_max_shape();
         output = context->master_graph->create_loader_output_tensor(info);
         output->reset_audio_sample_rate();
-        auto cpu_num_threads = context->master_graph->calculate_cpu_num_threads(shard_count);
+        auto cpu_num_threads = context->master_graph->calculate_cpu_num_threads(internal_shard_count);
         context->master_graph->add_node<AudioLoaderNode>({}, {output})->init(internal_shard_count, cpu_num_threads,
                                                                              source_path,
-                                                                             source_file_list_path
+                                                                             source_file_list_path,
                                                                              StorageType::FILE_SYSTEM,
                                                                              DecoderType::SNDFILE,
                                                                              shuffle,
@@ -2668,7 +2683,7 @@ rocalAudioFileSource(
         if(downmix)
         {
             // For the resize node, user can create an image with a different width and height
-            rocalTensorInfo output_info = info;
+            TensorInfo output_info = info;
             std::vector<size_t> output_dims;
             output_dims.resize(3);
             output_dims.at(0) = context->user_batch_size();

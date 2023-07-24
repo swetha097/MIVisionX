@@ -47,12 +47,12 @@ AudioLoaderSharded::~AudioLoaderSharded() {
     _loaders.clear();
 }
 
-size_t AudioLoaderSharded::last_batch_padded_size() {
-    size_t sum = 0;
-    for(auto& loader: _loaders)
-        sum += loader->last_batch_padded_size();
-    return sum;
-}
+// size_t AudioLoaderSharded::last_batch_padded_size() {
+//     size_t sum = 0;
+//     for(auto& loader: _loaders)
+//         sum += loader->last_batch_padded_size();
+//     return sum;
+// }
 
 void
 AudioLoaderSharded::fast_forward_through_empty_loaders() {
@@ -123,7 +123,7 @@ void AudioLoaderSharded::shut_down() {
         _loaders[i]->shut_down();
 }
 
-void AudioLoaderSharded::set_output(rocalTensor* output_tensor) {
+void AudioLoaderSharded::set_output(Tensor* output_tensor) {
     _output_tensor = output_tensor;
 }
 
@@ -134,12 +134,13 @@ size_t AudioLoaderSharded::remaining_count() {
     return sum;
 }
 
-void AudioLoaderSharded::reset() {
-    for(auto& loader: _loaders) {
-        loader->reset();
-        loader->last_batch_padded_size();
-    }
-}
+// void AudioLoaderSharded::reset() {
+//     for(auto& loader: _loaders) {
+//         loader->reset();
+//         loader->last_batch_padded_size();
+//     }
+// }
+
 void AudioLoaderSharded::increment_loader_idx() {
     _loader_idx = (_loader_idx + 1)%_shard_count;
 }
