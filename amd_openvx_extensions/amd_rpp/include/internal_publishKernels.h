@@ -108,7 +108,7 @@ vx_status Resizetensor_Register(vx_context);
 vx_status RotatebatchPD_Register(vx_context);
 vx_status SaturationbatchPD_Register(vx_context);
 vx_status ScalebatchPD_Register(vx_context);
-vx_status SequenceRearrangeImage_Register(vx_context);
+vx_status SequenceRearrangebatchPD_Register(vx_context);
 vx_status SnowbatchPD_Register(vx_context);
 vx_status SobelbatchPD_Register(vx_context);
 vx_status SubtractbatchPD_Register(vx_context);
@@ -210,7 +210,7 @@ vx_status SequenceRearrange_Register(vx_context);
 #define VX_KERNEL_RPP_CROPPD_NAME   							"org.rpp.CropPD"
 #define VX_KERNEL_RPP_RESIZECROPMIRRORPD_NAME      				"org.rpp.ResizeCropMirrorPD"
 #define VX_KERNEL_RPP_RESIZEMIRRORNORMALIZETENSOR_NAME        	"org.rpp.ResizeMirrorNormalizeTensor"
-#define VX_KERNEL_RPP_SEQUENCEREARRANGEIMAGE_NAME               "org.rpp.SequenceRearrangeImage"
+#define VX_KERNEL_RPP_SEQUENCEREARRANGEBATCHPD_NAME             "org.rpp.SequenceRearrangebatchPD"
 #define VX_KERNEL_RPP_RESIZETENSOR_NAME      					"org.rpp.Resizetensor"
 
 //tensor

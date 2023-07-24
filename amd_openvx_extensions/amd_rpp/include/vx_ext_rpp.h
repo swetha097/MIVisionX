@@ -968,7 +968,7 @@ extern "C"
 	 * \ingroup group_amd_rpp
 	 * @note - TBD
 	 */
-	SHARED_PUBLIC vx_node VX_API_CALL vxExtrppNode_SequenceRearrangeImage(vx_graph graph, vx_image pSrc, vx_image pDst, vx_array newOrder, vx_uint32 newSequenceLength, vx_uint32 sequenceLength, vx_uint32 sequenceCount);
+	SHARED_PUBLIC vx_node VX_API_CALL vxExtrppNode_SequenceRearrangebatchPD(vx_graph graph, vx_image pSrc, vx_image pDst, vx_array newOrder, vx_uint32 newSequenceLength, vx_uint32 sequenceLength, vx_uint32 sequenceCount);
 
 	/*!
 	 * \brief [Graph] Creates a RPP Resize Tensor function node.
