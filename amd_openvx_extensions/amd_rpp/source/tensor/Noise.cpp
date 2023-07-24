@@ -29,8 +29,8 @@ struct NoiseLocalData {
     RppPtr_t pDst;
     Rpp32f *pNoiseProb;
     Rpp32f *pSaltProb;
-    Rpp32f *pNoiseValue;
     Rpp32f *pSaltValue;
+    Rpp32f *pPepperValue;
     Rpp32u seed;
     RpptDescPtr pSrcDesc;
     RpptDescPtr pDstDesc;
@@ -46,8 +46,8 @@ static vx_status VX_CALLBACK refreshNoise(vx_node node, const vx_reference *para
     vx_status status = VX_SUCCESS;
     STATUS_ERROR_CHECK(vxCopyArrayRange((vx_array)parameters[3], 0, data->inputTensorDims[0], sizeof(Rpp32f), data->pNoiseProb, VX_READ_ONLY, VX_MEMORY_TYPE_HOST));
     STATUS_ERROR_CHECK(vxCopyArrayRange((vx_array)parameters[4], 0, data->inputTensorDims[0], sizeof(Rpp32f), data->pSaltProb, VX_READ_ONLY, VX_MEMORY_TYPE_HOST));
-    STATUS_ERROR_CHECK(vxCopyArrayRange((vx_array)parameters[5], 0, data->inputTensorDims[0], sizeof(Rpp32f), data->pNoiseValue, VX_READ_ONLY, VX_MEMORY_TYPE_HOST));
-    STATUS_ERROR_CHECK(vxCopyArrayRange((vx_array)parameters[6], 0, data->inputTensorDims[0], sizeof(Rpp32f), data->pSaltValue, VX_READ_ONLY, VX_MEMORY_TYPE_HOST));
+    STATUS_ERROR_CHECK(vxCopyArrayRange((vx_array)parameters[5], 0, data->inputTensorDims[0], sizeof(Rpp32f), data->pSaltValue, VX_READ_ONLY, VX_MEMORY_TYPE_HOST));
+    STATUS_ERROR_CHECK(vxCopyArrayRange((vx_array)parameters[6], 0, data->inputTensorDims[0], sizeof(Rpp32f), data->pPepperValue, VX_READ_ONLY, VX_MEMORY_TYPE_HOST));
 
     void *roi_tensor_ptr;
     if (data->deviceType == AGO_TARGET_AFFINITY_GPU) {
@@ -71,8 +71,8 @@ static vx_status VX_CALLBACK refreshNoise(vx_node node, const vx_reference *para
             for (unsigned f = 0; f < num_of_frames; f++) {
                 data->pNoiseProb[index + f] = data->pNoiseProb[n];
                 data->pSaltProb[index + f] = data->pSaltProb[n];
-                data->pNoiseValue[index + f] = data->pNoiseValue[n];
                 data->pSaltValue[index + f] = data->pSaltValue[n];
+                data->pPepperValue[index + f] = data->pPepperValue[n];
                 data->pSrcRoi[index + f].xywhROI.xy.x = data->pSrcRoi[n].xywhROI.xy.x;
                 data->pSrcRoi[index + f].xywhROI.xy.y = data->pSrcRoi[n].xywhROI.xy.y;
                 data->pSrcRoi[index + f].xywhROI.roiWidth = data->pSrcRoi[n].xywhROI.roiWidth;
@@ -134,11 +134,11 @@ static vx_status VX_CALLBACK processNoise(vx_node node, const vx_reference *para
 #if ENABLE_OPENCL
         return_status = VX_ERROR_NOT_IMPLEMENTED;
 #elif ENABLE_HIP
-        rpp_status = rppt_salt_and_pepper_noise_gpu(data->pSrc, data->pSrcDesc, data->pDst, data->pDstDesc, data->pNoiseProb, data->pSaltProb, data->pNoiseValue, data->pSaltValue, data->seed, data->pSrcRoi, data->roiType, data->handle->rppHandle);
+        rpp_status = rppt_salt_and_pepper_noise_gpu(data->pSrc, data->pSrcDesc, data->pDst, data->pDstDesc, data->pNoiseProb, data->pSaltProb, data->pSaltValue, data->pPepperValue, data->seed, data->pSrcRoi, data->roiType, data->handle->rppHandle);
         return_status = (rpp_status == RPP_SUCCESS) ? VX_SUCCESS : VX_FAILURE;
 #endif
     } else if (data->deviceType == AGO_TARGET_AFFINITY_CPU) {
-        rpp_status = rppt_salt_and_pepper_noise_host(data->pSrc, data->pSrcDesc, data->pDst, data->pDstDesc, data->pNoiseProb, data->pSaltProb, data->pNoiseValue, data->pSaltValue, data->seed, data->pSrcRoi, data->roiType, data->handle->rppHandle);
+        rpp_status = rppt_salt_and_pepper_noise_host(data->pSrc, data->pSrcDesc, data->pDst, data->pDstDesc, data->pNoiseProb, data->pSaltProb, data->pSaltValue, data->pPepperValue, data->seed, data->pSrcRoi, data->roiType, data->handle->rppHandle);
         return_status = (rpp_status == RPP_SUCCESS) ? VX_SUCCESS : VX_FAILURE;
     }
     return return_status;
@@ -179,8 +179,8 @@ static vx_status VX_CALLBACK initializeNoise(vx_node node, const vx_reference *p
 
     data->pNoiseProb = static_cast<Rpp32f *>(malloc(sizeof(Rpp32f) * data->pSrcDesc->n));
     data->pSaltProb = static_cast<Rpp32f *>(malloc(sizeof(Rpp32f) * data->pSrcDesc->n));
-    data->pNoiseValue = static_cast<Rpp32f *>(malloc(sizeof(Rpp32f) * data->pSrcDesc->n));
     data->pSaltValue = static_cast<Rpp32f *>(malloc(sizeof(Rpp32f) * data->pSrcDesc->n));
+    data->pPepperValue = static_cast<Rpp32f *>(malloc(sizeof(Rpp32f) * data->pSrcDesc->n));
     refreshNoise(node, parameters, num, data);
     STATUS_ERROR_CHECK(createRPPHandle(node, &data->handle, data->pSrcDesc->n, data->deviceType));
     STATUS_ERROR_CHECK(vxSetNodeAttribute(node, VX_NODE_LOCAL_DATA_PTR, &data, sizeof(data)));
@@ -192,8 +192,8 @@ static vx_status VX_CALLBACK uninitializeNoise(vx_node node, const vx_reference 
     STATUS_ERROR_CHECK(vxQueryNode(node, VX_NODE_LOCAL_DATA_PTR, &data, sizeof(data)));
     if (data->pNoiseProb != nullptr)  free(data->pNoiseProb);
     if (data->pSaltProb != nullptr)  free(data->pSaltProb);
-    if (data->pNoiseValue != nullptr)  free(data->pNoiseValue);
     if (data->pSaltValue != nullptr)  free(data->pSaltValue);
+    if (data->pPepperValue != nullptr)  free(data->pPepperValue);
     delete(data->pSrcDesc);
     delete(data->pDstDesc);
     STATUS_ERROR_CHECK(releaseRPPHandle(node, data->handle, data->deviceType));
