@@ -29,7 +29,7 @@ class AudioLoaderNode: public Node {
 public:
     /// \param device_resources shard count from user
     /// internal_shard_count number of loader/decoders are created and each shard is loaded and decoded using separate and independent resources increasing the parallelism and performance.
-    AudioLoaderNode(rocalTensor *output, void* device_resources);
+    AudioLoaderNode(Tensor *output, void* device_resources);
     ~AudioLoaderNode() override;
     AudioLoaderNode() = delete;
     /// \param internal_shard_count Defines the amount of parallelism user wants for the load and decode process to be handled internally.

@@ -32,7 +32,6 @@ AudioReadAndDecode::timing() {
     Timing t;
     t.audio_decode_time = _decode_time.get_timing();
     t.audio_read_time = _file_load_time.get_timing();
-    t.shuffle_time = _reader->get_shuffle_time();
     return t;
 }
 
@@ -82,10 +81,10 @@ AudioReadAndDecode::count() {
     return _reader->count_items();
 }
 
-size_t
-AudioReadAndDecode::last_batch_padded_size() {
-    return _reader->last_batch_padded_size();
-}
+// size_t
+// AudioReadAndDecode::last_batch_padded_size() {
+//     return _reader->last_batch_padded_size();
+// }
 
 LoaderModuleStatus
 AudioReadAndDecode::load(float* buff,
