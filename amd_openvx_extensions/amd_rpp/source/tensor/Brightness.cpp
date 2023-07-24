@@ -70,7 +70,6 @@ static vx_status VX_CALLBACK refreshBrightness(vx_node node, const vx_reference 
             }
         }
     }
-
     return status;
 }
 

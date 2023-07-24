@@ -78,7 +78,6 @@ static vx_status VX_CALLBACK refreshCropMirrorNormalize(vx_node node, const vx_r
             }
         }
     }
-
     return status;
 }
 
