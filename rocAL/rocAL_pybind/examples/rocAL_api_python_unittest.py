@@ -165,7 +165,8 @@ def main():
             }
             inputs = fn.readers.tfrecord(data_path, featureKeyMap, features, reader_type=0)
             jpegs = inputs["image/encoded"]
-            images = fn.decoders.image(jpegs, user_feature_key_map=featureKeyMap, output_type=types.RGB, path=data_path,
+            images = fn.decoders.image(jpegs, user_feature_key_map=featureKeyMap,
+                output_type=color_format, path=data_path,
                 max_decoded_width=max_width,
                 max_decoded_height=max_height,
                 shard_id=0,
@@ -198,7 +199,7 @@ def main():
                 'image/object/bbox/ymax': tf.io.VarLenFeature(dtype=tf.float32),
                 'image/filename': tf.io.FixedLenFeature((), tf.string, "")
             }
-            inputs = fn.readers.tfrecord(path=data_path, index_path = "", reader_type=1, user_feature_key_map=featureKeyMap)
+            inputs = fn.readers.tfrecord(path=data_path, reader_type=1, features=features, user_feature_key_map=featureKeyMap)
             jpegs = inputs["image/encoded"]
             _ = inputs["image/class/label"]
             images = fn.decoders.image_random_crop(jpegs,user_feature_key_map=featureKeyMap,
