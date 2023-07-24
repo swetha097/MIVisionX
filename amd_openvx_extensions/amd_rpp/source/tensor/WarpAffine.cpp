@@ -21,6 +21,7 @@ THE SOFTWARE.
 */
 
 #include "internal_publishKernels.h"
+#define AFFINE_MATRIX_SIZE 6
 
 struct WarpAffineLocalData {
     vxRppHandle *handle;
@@ -41,7 +42,7 @@ struct WarpAffineLocalData {
 
 static vx_status VX_CALLBACK refreshWarpAffine(vx_node node, const vx_reference *parameters, vx_uint32 num, WarpAffineLocalData *data) {
     vx_status status = VX_SUCCESS;
-    STATUS_ERROR_CHECK(vxCopyArrayRange((vx_array)parameters[3], 0, data->inputTensorDims[0] * 6, sizeof(Rpp32f), data->pAffine, VX_READ_ONLY, VX_MEMORY_TYPE_HOST));
+    STATUS_ERROR_CHECK(vxCopyArrayRange((vx_array)parameters[3], 0, data->inputTensorDims[0] * AFFINE_MATRIX_SIZE, sizeof(Rpp32f), data->pAffine, VX_READ_ONLY, VX_MEMORY_TYPE_HOST));
 
     void *roi_tensor_ptr;
     if (data->deviceType == AGO_TARGET_AFFINITY_GPU) {
@@ -63,8 +64,8 @@ static vx_status VX_CALLBACK refreshWarpAffine(vx_node node, const vx_reference 
         for (unsigned n = data->inputTensorDims[0] - 1; n >= 0; n--) {
             unsigned index = n * num_of_frames;
             for (unsigned f = 0; f < num_of_frames; f++) {
-                int var = (index * 6) + f;
-                int var2 = n * 6;
+                int var = (index * AFFINE_MATRIX_SIZE) + f;
+                int var2 = n * AFFINE_MATRIX_SIZE;
                 data->pAffine[var] = data->pAffine[var2];
                 data->pAffine[var + 1] = data->pAffine[var2 + 1];
                 data->pAffine[var + 2] = data->pAffine[var2 + 2];
@@ -173,7 +174,7 @@ static vx_status VX_CALLBACK initializeWarpAffine(vx_node node, const vx_referen
     data->pDstDesc->offsetInBytes = 0;
     fillDescriptionPtrfromDims(data->pDstDesc, data->outputLayout, data->ouputTensorDims);
 
-    data->pAffine = static_cast<Rpp32f *>(malloc(sizeof(Rpp32f) * 6 * data->pSrcDesc->n));
+    data->pAffine = static_cast<Rpp32f *>(malloc(sizeof(Rpp32f) * AFFINE_MATRIX_SIZE * data->pSrcDesc->n));
     refreshWarpAffine(node, parameters, num, data);
     STATUS_ERROR_CHECK(createRPPHandle(node, &data->handle, data->pSrcDesc->n, data->deviceType));
     STATUS_ERROR_CHECK(vxSetNodeAttribute(node, VX_NODE_LOCAL_DATA_PTR, &data, sizeof(data)));
