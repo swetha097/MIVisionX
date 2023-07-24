@@ -54,7 +54,6 @@ public:
             std::vector<uint32_t> &roi_samples,
             std::vector<uint32_t> &roi_channels,
             std::vector<float> &actual_sample_rates);
-    size_t last_batch_padded_size();
     //! returns timing info or other status information
     Timing timing();
 private:
@@ -69,7 +68,7 @@ private:
     std::vector<size_t> _original_channels;
     std::vector<float> _original_sample_rates;
     TimingDBG _file_load_time, _decode_time;
-    size_t _batch_size;
+    size_t _batch_size, _num_threads;
     DecoderConfig _decoder_config;
     std::string _input_path;
 };

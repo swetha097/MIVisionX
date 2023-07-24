@@ -23,7 +23,7 @@ THE SOFTWARE.
 #include "node_audio_loader.h"
 #include "exception.h"
 
-AudioLoaderNode::AudioLoaderNode(rocalTensor *output, void* device_resources):
+AudioLoaderNode::AudioLoaderNode(Tensor *output, void* device_resources):
         Node({}, {output}) {
     _loader_module = std::make_shared<AudioLoaderSharded>(device_resources);
 }
