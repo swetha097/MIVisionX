@@ -981,9 +981,11 @@ extern "C"
 	/*! \brief [Graph] Creates a RPP Brightness function node.
 	 * \ingroup group_amd_rpp
 	 * \param [in] graph The handle to the graph.
-	 * \param [in] pSrc The input tensor data.
+	 * \param [in] pSrc The input tensor in <tt>\ref VX_TYPE_UINT8<tt> or <tt>\ref VX_TYPE_FLOAT32<tt> or 
+	 * <tt>\ref VX_TYPE_FLOAT16<tt> or <tt>\ref VX_TYPE_INT8<tt> format data.
 	 * \param [in] pSrcRoi The input tensor of batch size in <tt>unsigned int<tt> containing the roi values for the input in xywh/ltrb format.
-	 * \param [out] pDst The output tensor data.
+	 * \param [out] pDst The output tensor in <tt>\ref VX_TYPE_UINT8<tt> or <tt>\ref VX_TYPE_FLOAT32<tt> or 
+	 * <tt>\ref VX_TYPE_FLOAT16<tt> or <tt>\ref VX_TYPE_INT8<tt> format data.
 	 * \param [in] pAlpha The input array in <tt>\ref VX_TYPE_FLOAT32<tt> format containing the alpha data.
 	 * \param [in] pBeta The input array in <tt>\ref VX_TYPE_FLOAT32<tt> format containing the beta data.
 	 * \param [in] inputLayout The input layout in <tt>\ref VX_TYPE_INT32<tt> denotes the layout of input tensor.
@@ -1009,12 +1011,14 @@ extern "C"
 	/*! \brief [Graph] Creates a RPP CropMirrorNormalize function node.
 	 * \ingroup group_amd_rpp
 	 * \param [in] graph The handle to the graph.
-	 * \param [in] pSrc The input tensor data.
+	 * \param [in] pSrc The input tensor in <tt>\ref VX_TYPE_UINT8<tt> or <tt>\ref VX_TYPE_FLOAT32<tt> or 
+	 * <tt>\ref VX_TYPE_FLOAT16<tt> or <tt>\ref VX_TYPE_INT8<tt> format data.
 	 * \param [in] pSrcRoi The input tensor of batch size in <tt>unsigned int<tt> containing the roi values for the input in xywh/ltrb format.
-	 * \param [out] pDst The output tensor data.
+	 * \param [out] pDst The output tensor in <tt>\ref VX_TYPE_UINT8<tt> or <tt>\ref VX_TYPE_FLOAT32<tt> or 
+	 * <tt>\ref VX_TYPE_FLOAT16<tt> or <tt>\ref VX_TYPE_INT8<tt> format data.
 	 * \param [in] pMultiplier The input array in <tt>\ref VX_TYPE_FLOAT32<tt> format containing the multiplier data.
 	 * \param [in] pOffset The input array in <tt>\ref VX_TYPE_FLOAT32<tt> format containing the offset data.
-	 * \param [in] pOffset The input array in <tt>\ref VX_TYPE_INT32<tt> format containing the flip data.
+	 * \param [in] pMirror The input array in <tt>\ref VX_TYPE_INT32<tt> format containing the flip data.
 	 * \param [in] inputLayout The input layout in <tt>\ref VX_TYPE_INT32<tt> denotes the layout of input tensor.
 	 * \param [in] outputLayout The output layout in <tt>\ref VX_TYPE_INT32<tt> denotes the layout of output tensor.
 	 * \param [in] roiType The type of roi <tt>\ref VX_TYPE_INT32<tt> denotes whether source roi is of XYWH/LTRB type.
@@ -1035,12 +1039,14 @@ extern "C"
 	 */
 	SHARED_PUBLIC vx_node VX_API_CALL vxRppNop(vx_graph graph, vx_tensor pSrc, vx_tensor pDst);
 
-	/*! \brief [Graph] Creates a RPP vxRppResize function node.
+	/*! \brief [Graph] Creates a RPP Resize function node.
 	 * \ingroup group_amd_rpp
 	 * \param [in] graph The handle to the graph.
-	 * \param [in] pSrc The input tensor data.
+	 * \param [in] pSrc The input tensor in <tt>\ref VX_TYPE_UINT8<tt> or <tt>\ref VX_TYPE_FLOAT32<tt> or 
+	 * <tt>\ref VX_TYPE_FLOAT16<tt> or <tt>\ref VX_TYPE_INT8<tt> format data.
 	 * \param [in] pSrcRoi The input tensor of batch size in <tt>unsigned int<tt> containing the roi values for the input in xywh/ltrb format.
-	 * \param [out] pDst The output tensor data.
+	 * \param [out] pDst The output tensor in <tt>\ref VX_TYPE_UINT8<tt> or <tt>\ref VX_TYPE_FLOAT32<tt> or 
+	 * <tt>\ref VX_TYPE_FLOAT16<tt> or <tt>\ref VX_TYPE_INT8<tt> format data.
 	 * \param [in] pDstWidth The input array in <tt>\ref VX_TYPE_UINT32<tt> format containing the output width data.
 	 * \param [in] pDstHeight The input array in <tt>\ref VX_TYPE_UINT32<tt> format containing the output height data.
 	 * \param [in] interpolationType The resize interpolation type in <tt>\ref VX_TYPE_INT32<tt> format containing the type of interpolation.
@@ -1057,8 +1063,8 @@ extern "C"
 	 * \brief [Graph] Creates a Tensor SequenceRearrange function node.
 	 * \ingroup group_amd_rpp
 	 * \param [in] graph The handle to the graph.
-	 * \param [in] pSrc The input tensor data.
-	 * \param [out] pDst The output tensor data.
+	 * \param [in] pSrc The input tensor in <tt>\ref VX_TYPE_UINT8<tt> format data.
+	 * \param [out] pDst The output tensor in <tt>\ref VX_TYPE_UINT8<tt> format data.
 	 * \param [in] pNewOrder The rearrange order in <tt>\ref VX_TYPE_UINT32<tt> containing the order in which frames are copied.
 	 * \param [in] layout The layout in <tt>\ref VX_TYPE_INT32<tt> denotes the layout of input and output tensor.
 	 * \return <tt> vx_node</tt>.
