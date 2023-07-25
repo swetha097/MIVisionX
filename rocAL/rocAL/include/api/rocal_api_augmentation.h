@@ -72,6 +72,7 @@ extern "C" RocalTensor  ROCAL_API_CALL rocalResize(RocalContext context, RocalTe
 /// using it directly. This option allows certain optimizations to be achieved.
 /// \param p_mirror Parameter to enable horizontal flip for output image.
 /// \return
+
 extern "C" RocalTensor ROCAL_API_CALL rocalResizeMirrorNormalize(
     RocalContext p_context, RocalTensor p_input, unsigned dest_width,
     unsigned dest_height, std::vector<float> &mean, std::vector<float> &std_dev,
@@ -742,7 +743,7 @@ extern "C" RocalTensor  ROCAL_API_CALL rocalResizeCropMirrorFixed(RocalContext c
                                                                    RocalIntParam mirror,
                                                                    RocalTensorLayout rocal_tensor_output_layout = ROCAL_NHWC,
                                                                    RocalTensorOutputType rocal_tensor_output_datatype = ROCAL_UINT8);
-        
+
 extern "C" RocalTensor  ROCAL_API_CALL rocalResizeCropMirror(RocalContext context, RocalTensor input,
                                                               unsigned dest_width, unsigned dest_height,
                                                               bool is_output, RocalFloatParam crop_height = NULL,
@@ -799,5 +800,17 @@ extern "C" RocalTensor ROCAL_API_CALL rocalPreEmphasisFilter(RocalContext p_cont
                                                              bool is_output,
                                                              RocalFloatParam p_preemph_coeff = NULL,
                                                              RocalAudioBorderType preemph_border_type = RocalAudioBorderType::CLAMP);
+
+/// Accepts F32 audio buffers and returns start index and length of non silent region in audio buffer
+/// \param context
+/// \param input
+
+extern "C" std::pair<RocalTensor, RocalTensor> ROCAL_API_CALL rocalNonSilentRegion(RocalContext context,
+                                                                                   RocalTensor input,
+                                                                                   bool is_output,
+                                                                                   float cutoff_db,
+                                                                                   float reference_power,
+                                                                                   int reset_interval,
+                                                                                   int window_length);
 
 #endif //MIVISIONX_ROCAL_API_AUGMENTATION_H

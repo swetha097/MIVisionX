@@ -155,6 +155,7 @@ vx_status Snow_Register(vx_context);
 vx_status Vignette_Register(vx_context);
 vx_status WarpAffine_Register(vx_context);
 vx_status PreemphasisFilter_Register(vx_context);
+vx_status NonSilentRegion_Register(vx_context);
 
 // kernel names
 #define VX_KERNEL_RPP_NOPBATCHPD_NAME                   "org.rpp.NopbatchPD"
