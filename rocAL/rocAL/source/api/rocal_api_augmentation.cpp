@@ -455,7 +455,6 @@ rocalCropResize(
 
         // For the nodes that user provides the output size the dimension of all the images after this node will be fixed and equal to that size
         output->reset_tensor_roi();
-
         std::shared_ptr<CropResizeNode> crop_resize_node =  context->master_graph->add_node<CropResizeNode>({input}, {output});
         crop_resize_node->init(area, aspect_ratio, x_center_drift, y_center_drift);
         // if (context->master_graph->meta_data_graph())

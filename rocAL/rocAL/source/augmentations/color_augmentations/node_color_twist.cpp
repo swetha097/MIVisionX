@@ -43,7 +43,7 @@ void ColorTwistNode::create_node() {
 
     vx_status status;
     if((status = vxGetStatus((vx_reference)_node)) != VX_SUCCESS)
-        THROW("Adding the Colortwist (vxRppColotTwsit) node failed: "+ TOSTR(status))
+        THROW("Adding the Colortwist (vxRppColotTwist) node failed: "+ TOSTR(status))
 }
 
 void ColorTwistNode::init(float alpha, float beta, float hue, float sat) {

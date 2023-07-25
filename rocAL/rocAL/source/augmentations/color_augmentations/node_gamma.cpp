@@ -40,7 +40,7 @@ void GammaNode::create_node() {
 
     vx_status status;
     if((status = vxGetStatus((vx_reference)_node)) != VX_SUCCESS)
-        THROW("Adding the gamma (vxRppGamma) node failed: "+ TOSTR(status))
+        THROW("Adding the gamma (vxRppGammaCorrection) node failed: "+ TOSTR(status))
 }
 
 void GammaNode::init(float shift) {

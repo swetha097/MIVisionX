@@ -67,10 +67,8 @@ void ResizeMirrorNormalizeNode::create_node()
     if(status != 0)
         THROW(" vxAddArrayItems failed in the resize_mirror_normalize node (vxRppCropMirrorNormalize)  node: "+ TOSTR(status) + "  "+ TOSTR(status))
 
-
     std::vector<uint32_t> dst_roi_width(_batch_size,_outputs[0]->info().max_shape()[0]);
     std::vector<uint32_t> dst_roi_height(_batch_size, _outputs[0]->info().max_shape()[1]);
-
     _dst_roi_width = vxCreateArray(vxGetContext((vx_reference)_graph->get()), VX_TYPE_UINT32, _batch_size);
     _dst_roi_height = vxCreateArray(vxGetContext((vx_reference)_graph->get()), VX_TYPE_UINT32, _batch_size);
 
@@ -81,10 +79,9 @@ void ResizeMirrorNormalizeNode::create_node()
         THROW(" vxAddArrayItems failed in the resize mirror normalize (vxRppResizeMirrorNormalize) node: "+ TOSTR(width_status) + "  "+ TOSTR(height_status));
 
     vx_scalar interpolation_vx = vxCreateScalar(vxGetContext((vx_reference)_graph->get()), VX_TYPE_INT32, &_interpolation_type);
-//    _node = vxRppResizeMirrorNormalize(_graph->get(), _inputs[0]->handle(),
-//                                              _src_tensor_roi, _outputs[0]->handle(), _dst_roi_width, _dst_roi_height,
-//                                              interpolation_vx, _mean_vx_array, _std_dev_vx_array, _mirror.default_array(),
-//                                              _input_layout, _output_layout,  _input_layout, _roi_type);
+   _node = vxRppResizeMirrorNormalize(_graph->get(), _inputs[0]->handle(), _src_tensor_roi, _outputs[0]->handle(),
+                                      _dst_roi_width, _dst_roi_height, interpolation_vx, _mean_vx_array, _std_dev_vx_array,
+                                      _mirror.default_array(), _input_layout, _output_layout, _roi_type);
     if((status = vxGetStatus((vx_reference)_node)) != VX_SUCCESS)
         THROW("Adding the resize (vxRppResizeMirrorNormalize) node failed: "+ TOSTR(status))
 }
