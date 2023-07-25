@@ -107,10 +107,10 @@ def lens_correction(*inputs, strength=None, zoom=None,
     return (len_corrected_image)
 
 
-def blur(*inputs, s_dev=None, rocal_tensor_output_layout=types.NHWC, rocal_tensor_output_datatype=types.UINT8):
-    s_dev = b.createIntParameter(s_dev) if isinstance(s_dev, int) else s_dev
+def blur(*inputs, kernel_size=None, rocal_tensor_output_layout=types.NHWC, rocal_tensor_output_datatype=types.UINT8):
+    kernel_size = b.createIntParameter(kernel_size) if isinstance(kernel_size, int) else kernel_size
     # pybind call arguments
-    kwargs_pybind = {"input_image": inputs[0], "is_output": False, "s_dev": s_dev,
+    kwargs_pybind = {"input_image": inputs[0], "is_output": False, "kernel_size": kernel_size,
                      "rocal_tensor_output_layout": rocal_tensor_output_layout, "rocal_tensor_output_datatype": rocal_tensor_output_datatype}
     blur_image = b.Blur(Pipeline._current_pipeline._handle, *(kwargs_pybind.values()))
     return (blur_image)
