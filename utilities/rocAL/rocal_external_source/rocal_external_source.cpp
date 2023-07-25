@@ -384,6 +384,7 @@ int main(int argc, const char **argv) {
             unsigned char *out_buffer;
             if(output_tensor_list->at(idx)->info().data_type() == RocalTensorDataType::FP32)
             {
+              std::cerr << "\n float32";
                 float * out_f_buffer;
                 if(output_tensor_list->at(idx)->info().mem_type() == RocalMemType::HIP)
                 {
@@ -399,6 +400,7 @@ int main(int argc, const char **argv) {
             }
             if(output_tensor_list->at(idx)->info().data_type() == RocalTensorDataType::FP16)
             {
+              std::cerr << "\n floqt16";
                 half * out_f16_buffer;
                 if(output_tensor_list->at(idx)->info().mem_type() == RocalMemType::HIP)
                 {
@@ -414,6 +416,7 @@ int main(int argc, const char **argv) {
             }
             else
             {
+              std::cerr << "\n uchar";
                 if(output_tensor_list->at(idx)->info().mem_type() == RocalMemType::HIP)
                 {
                     out_buffer = (unsigned char *)malloc(output_tensor_list->at(idx)->info().data_size());

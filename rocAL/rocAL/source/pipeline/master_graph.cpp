@@ -591,6 +591,7 @@ MasterGraph::to_tensor(void *out_ptr, RocalTensorlayout format, float multiplier
 #elif ENABLE_HIP
     if(output_tensor_info.mem_type() == RocalMemType::HIP)
     {
+        std::cerr << "\n Comes to if #ENABLE_HIP";
         unsigned int fp16 = (output_data_type == RocalTensorDataType::FP16);
 
         auto output_buffers =_ring_buffer.get_read_buffers();
@@ -618,6 +619,9 @@ MasterGraph::to_tensor(void *out_ptr, RocalTensorlayout format, float multiplier
         if(output_mem_type == RocalOutputMemType::ROCAL_MEMCPY_GPU)
         {
             unsigned int fp16 = (output_data_type == RocalTensorDataType::FP16);
+            float multiplier[3] = {multiplier0, multiplier1, multiplier2 };
+            float offset[3] = {offset0, offset1, offset2 };
+            size_t dest_buf_offset_start = 0;
 
             auto output_buffers =_ring_buffer.get_read_buffers();
             unsigned dest_buf_offset = 0;

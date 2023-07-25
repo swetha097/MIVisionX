@@ -370,5 +370,8 @@ int Tensor::swap_handle(void *handle) {
     // Updating the buffer pointer as well,
     // user might want to copy directly using it
     _mem_handle = handle;
+    float* array = (float*)handle;
+    for (uint i=0;i<10;i++)
+        std::cerr << "\n value in swap_hnadle: " << array[i];
     return 0;
 }
