@@ -402,7 +402,6 @@ rocalSaturationFixed(
     return output;
 }
 
-
 RocalTensor ROCAL_API_CALL
 rocalCropResize(
         RocalContext p_context,
@@ -421,13 +420,17 @@ rocalCropResize(
         RocalTensorLayout rocal_tensor_output_layout,
         RocalTensorOutputType rocal_tensor_output_datatype) {
     Tensor* output = nullptr;
+    if ((p_context == nullptr) || (p_input == nullptr)) {
+        ERR("Invalid ROCAL context or invalid input tensor")
+        return output;
+    }
+
     auto context = static_cast<Context*>(p_context);
     auto input = static_cast<Tensor*>(p_input);
     auto area = static_cast<FloatParam*>(p_area);
     auto aspect_ratio = static_cast<FloatParam*>(p_aspect_ratio);
     auto x_center_drift = static_cast<FloatParam*>(p_x_center_drift);
     auto y_center_drift = static_cast<FloatParam*>(p_y_center_drift);
-
     try {
         if((dest_width | dest_height | resize_longer | resize_shorter) == 0)
             THROW("Atleast one size 'dest_width' or 'dest_height' or 'resize_shorter' or 'resize_longer' must be specified")
@@ -524,7 +527,7 @@ rocalCropResize(
         //     context->master_graph->meta_add_node<ResizeMetaNode,ResizeNode>(resize_node);
     } catch(const std::exception& e) {
         context->capture_error(e.what());
-        ERR(e.what());
+        ERR(e.what())
     }
     return output;
 }
@@ -547,9 +550,13 @@ rocalCropResizeFixed(
         RocalTensorLayout rocal_tensor_output_layout,
         RocalTensorOutputType rocal_tensor_output_datatype) {
     Tensor* output = nullptr;
+    if ((p_context == nullptr) || (p_input == nullptr)) {
+        ERR("Invalid ROCAL context or invalid input tensor")
+        return output;
+    }
+
     auto context = static_cast<Context*>(p_context);
     auto input = static_cast<Tensor*>(p_input);
-
     try {
         if((dest_width | dest_height | resize_longer | resize_shorter) == 0)
             THROW("Atleast one size 'dest_width' or 'dest_height' or 'resize_shorter' or 'resize_longer' must be specified")
@@ -646,7 +653,7 @@ rocalCropResizeFixed(
         //     context->master_graph->meta_add_node<ResizeMetaNode,ResizeNode>(resize_node);
     } catch(const std::exception& e) {
         context->capture_error(e.what());
-        ERR(e.what());
+        ERR(e.what())
     }
     return output;
 }
@@ -874,7 +881,7 @@ ROCAL_API_CALL rocalResizeMirrorNormalize(RocalContext p_context,
         //     context->master_graph->meta_add_node<ResizeMirrorNormalizeMetaNode,ResizeMirrorNormalizeNode>(rmn_node);
     } catch(const std::exception& e) {
         context->capture_error(e.what());
-        ERR(e.what());
+        ERR(e.what())
     }
     return output;
 }
