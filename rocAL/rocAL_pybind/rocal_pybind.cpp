@@ -388,16 +388,9 @@ namespace rocal{
                 )code"
             )
             .def(
-            "copy_data", [](rocalTensor &output_tensor, py::object p, bool copy_to_gpu=false) {
+            "copy_data", [](rocalTensor &output_tensor, py::object p, RocalOutputMemType external_mem_type) {
                 auto ptr = ctypes_void_ptr(p);
-                if(copy_to_gpu)
-                    output_tensor.copy_data(ptr, RocalOutputMemType::ROCAL_MEMCPY_GPU);
-                else {
-                    if(output_tensor.backend() == RocalTensorBackend::ROCAL_CPU)
-                        output_tensor.copy_data(ptr, RocalOutputMemType::ROCAL_MEMCPY_HOST);
-                    else
-                        output_tensor.copy_data(ptr, RocalOutputMemType::ROCAL_MEMCPY_GPU);
-                }
+                output_tensor.copy_data((void *)ptr, external_mem_type);
             },
                 R"code(
                 Copies the ring buffer data to python buffer pointers.
@@ -604,7 +597,9 @@ namespace rocal{
         m.def("getSeed", &rocalGetSeed);
         m.def("createIntUniformRand", &rocalCreateIntUniformRand, py::return_value_policy::reference);
         m.def("createFloatUniformRand", &rocalCreateFloatUniformRand, py::return_value_policy::reference);
-        m.def("createIntRand", &rocalCreateIntRand, py::return_value_policy::reference);
+        m.def("createIntRand", [](std::vector<int> values, std::vector<double> frequencies){
+            return rocalCreateIntRand(values.data(), frequencies.data(), values.size());
+        }, py::return_value_policy::reference);
         m.def("createFloatRand", &rocalCreateFloatRand, py::return_value_policy::reference);
         m.def("createIntParameter", &rocalCreateIntParameter, py::return_value_policy::reference);
         m.def("createFloatParameter", &rocalCreateFloatParameter, py::return_value_policy::reference);
@@ -748,8 +743,8 @@ namespace rocal{
         //     py::return_value_policy::reference);
         m.def("Resize",&rocalResize, 
             py::return_value_policy::reference);
-        // m.def("ResizeMirrorNormalize", &rocalResizeMirrorNormalize,
-        //     py::return_value_policy::reference);
+        m.def("ResizeMirrorNormalize", &rocalResizeMirrorNormalize,
+            py::return_value_policy::reference);
         m.def("ResizeCropMirrorFixed",&rocalResizeCropMirrorFixed,
             py::return_value_policy::reference);
         m.def("CropResize",&rocalCropResize,
