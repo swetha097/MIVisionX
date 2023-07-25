@@ -55,7 +55,7 @@ public:
     //! Returns the name of the latest file opened
     std::string id() override { return _last_id;};
 
-    std::string file_path() override {return _last_file_path; };
+    std::string file_path() override { return _last_file_name; };
 
     unsigned count_items() override;
 
