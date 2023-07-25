@@ -48,8 +48,8 @@ private:
     std::shared_ptr<RocalCropParam> _crop_param;
     vx_array _dst_roi_width, _dst_roi_height;
     ParameterVX<int> _mirror;
-    constexpr static int MIRROR_RANGE [2] =  {0, 1};
-    void * _crop_coordinates;
+    constexpr static int MIRROR_RANGE[2] = {0, 1};
+    void *_crop_coordinates;
     vx_tensor _crop_tensor;
     int _interpolation_type;
 };

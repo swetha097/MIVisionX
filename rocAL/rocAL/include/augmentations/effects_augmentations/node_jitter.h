@@ -37,5 +37,5 @@ protected:
 private:
     ParameterVX<int> _kernel_size;
     int _seed;
-    constexpr static int KERNEL_SIZE[2] =  {2, 5};
+    constexpr static int KERNEL_SIZE[2] = {2, 5};
 };
