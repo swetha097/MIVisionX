@@ -63,8 +63,8 @@ vx_size tensor_data_size(RocalTensorDataType data_type) {
             return sizeof(vx_uint32);
         case RocalTensorDataType::INT32:
             return sizeof(vx_int32);
-        case RocalTensorDataType::FP64:
-            return sizeof(vx_float64);
+        case RocalTensorDataType::INT8:
+            return sizeof(vx_int8);
         default:
             throw std::runtime_error("tensor data_type not valid");
     }
@@ -79,8 +79,8 @@ vx_enum interpret_tensor_data_type(RocalTensorDataType data_type) {
             return VX_TYPE_FLOAT16;
         case RocalTensorDataType::UINT8:
             return VX_TYPE_UINT8;
-        case RocalTensorDataType::FP64:
-            return VX_TYPE_FLOAT64;
+        case RocalTensorDataType::INT8:
+            return VX_TYPE_INT8;
         case RocalTensorDataType::INT32:
             return VX_TYPE_INT32;
         case RocalTensorDataType::UINT32:
@@ -278,8 +278,10 @@ Tensor::~Tensor() {
 
 Tensor::Tensor(const TensorInfo &tensor_info)
     : _info(tensor_info) {
+    std::cerr << "Before the Tensor::Tensor (const TensorInfo &)";
     _info._type = TensorInfo::Type::UNKNOWN;
     _mem_handle = nullptr;
+    std::cerr << "After the Tensor::Tensor (const TensorInfo &)";
 }
 
 int Tensor::create_virtual(vx_context context, vx_graph graph) {
