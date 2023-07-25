@@ -126,7 +126,9 @@ size_t ExternalSourceReader::read_data(unsigned char* buf, size_t read_size) {
         increment_read_ptr();
         if (size > read_size)
           THROW("Requested size doesn't match the actual size for file read")
+        std::cerr << "Before memcpy";
         memcpy(buf, static_cast<void *>(file_data_ptr), size);
+        std::cerr << "After memcpy";
         return size;
     }
 }

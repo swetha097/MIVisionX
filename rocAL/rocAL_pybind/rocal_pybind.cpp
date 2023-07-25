@@ -93,6 +93,23 @@ namespace rocal
         return py::bytes(s);
     }
 
+    py::object wrapperRocalExternalSourceFeedInput(
+        RocalContext context, std::vector<std::string> input_images_names,
+        std::vector<int> labels, py::list arrays,
+        std::vector<unsigned> roi_width, std::vector<unsigned> roi_height,
+        unsigned int max_width, unsigned int max_height, int channels,
+        RocalExtSourceMode mode, RocalTensorLayout layout, bool eos) {
+        size_t numArrays = py::len(arrays);
+        std::vector<unsigned char *> uchar_arrays;
+        for (size_t i = 0; i < numArrays; i++) {
+            py::array_t<unsigned char> arr(arrays[i]);
+            py::buffer_info buf = arr.request();
+            uchar_arrays.push_back(static_cast<unsigned char *>(buf.ptr));
+        }
+        int status = rocalExternalSourceFeedInput(context, input_images_names, labels, uchar_arrays, roi_width, roi_height, max_width, max_height, channels, mode, layout, eos);
+        return py::cast<py::none>(Py_None);
+    }
+
     py::object wrapper_tensor(RocalContext context, py::object p,
                                 RocalTensorLayout tensor_format, RocalTensorOutputType tensor_output_type, float multiplier0,
                                 float multiplier1, float multiplier2, float offset0,
@@ -507,6 +524,7 @@ namespace rocal
             py::return_value_policy::reference);
         m.def("ExternalSourceFeedInput",&rocalExternalSourceFeedInput,
             py::return_value_policy::reference);
+        m.def("ExternalSourceFeedInputWrapper",&wrapperRocalExternalSourceFeedInput);
         m.def("Resize",&rocalResize, "Resizes the image ",py::return_value_policy::reference);
         m.def("ColorTwist",&rocalColorTwist, py::return_value_policy::reference);
         m.def("rocalResetLoaders", &rocalResetLoaders);

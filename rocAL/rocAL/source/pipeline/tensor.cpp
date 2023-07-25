@@ -315,10 +315,8 @@ unsigned rocalTensor::copy_data(void *user_buffer) {
         if ((status = hipMemcpyDtoD((void *)user_buffer, _mem_handle, _info.data_size())))
             THROW("copy_data::hipMemcpyDtoH failed: " + TOSTR(status))
     } else if (_info._mem_type == RocalMemType::HOST) {
-        // copy from host to device
-        hipError_t status;
-        if ((status = hipMemcpyHtoD((void *)user_buffer, _mem_handle, _info.data_size())))
-            THROW("copy_data::hipMemcpyHtoD failed: " + TOSTR(status))
+        memcpy(user_buffer, _mem_handle, _info.data_size());
+        unsigned char* float_ptr = (unsigned char*)_mem_handle;
     }
 #else
     if (_info._mem_type == RocalMemType::HOST)
@@ -338,5 +336,8 @@ int rocalTensor::swap_handle(void *handle) {
     // Updating the buffer pointer as well,
     // user might want to copy directly using it
     _mem_handle = handle;
+    float* array = (float*)handle;
+    for (uint i=0;i<10;i++)
+        std::cerr << "\n value in swap_hnadle: " << array[i];
     return 0;
 }
