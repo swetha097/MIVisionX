@@ -329,7 +329,7 @@ def main():
                 rocal_tensor_output_layout=tensor_layout,
                 rocal_tensor_output_datatype=tensor_dtype)
         elif augmentation_name == "warp_affine":
-            output = fn.warp_affine(images, dest_height=480, dest_width=640, x0=1.0, x1=1.0, y0=0.5, y1=0.5, o0=7.0, o1=7.0,
+            output = fn.warp_affine(images, dest_height=480, dest_width=640, transform_matrix=[1.0, 1.0, 0.5, 0.5, 7.0, 7.0],
                                     rocal_tensor_output_layout=tensor_layout, rocal_tensor_output_datatype=tensor_dtype, interpolation_type=types.NEAREST_NEIGHBOR_INTERPOLATION)
         elif augmentation_name == "fish_eye":
             output = fn.fish_eye(images,
@@ -426,13 +426,20 @@ def main():
                                               std=[1, 1, 1],
                                               mirror=0)
         elif augmentation_name == "resize_mirror_normalize":
-            output = fn.resize_mirror_normalize(images,
-                                                rocal_tensor_output_layout=tensor_layout,
-                                                rocal_tensor_output_datatype=tensor_dtype,
-                                                resize_min=1344,
-                                                resize_max=1344,
-                                                mean=[0, 0, 0],
-                                                std=[1, 1, 1])
+            resize_w = 400
+            resize_h = 400
+            if (scaling_mode == types.SCALING_MODE_STRETCH):
+                resize_h = 480
+            output = fn.resize_mirror_normalize(
+                images,
+                resize_width=resize_w,
+                resize_height=resize_h,
+                rocal_tensor_output_layout=tensor_layout,
+                rocal_tensor_output_datatype=tensor_dtype,
+                scaling_mode=scaling_mode,
+                interpolation_type=interpolation_type,
+                mean=[0, 0, 0],
+                std=[1, 1, 1])
         elif augmentation_name == "nop":
             output = fn.nop(
                 images,
