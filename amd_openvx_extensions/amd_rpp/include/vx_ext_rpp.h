@@ -1570,6 +1570,11 @@ extern "C"
 	TODO: Add the params
 	*/
 	SHARED_PUBLIC vx_node VX_API_CALL vxExtRppNonSilentRegion(vx_graph graph, vx_tensor pSrc, vx_tensor pSrcRoi, vx_tensor pDst1, vx_tensor pDst2, vx_scalar cutOffDB, vx_scalar referencePower, vx_scalar windowLength, vx_scalar resetInterval);
+
+	/*
+	TODO: Add the params
+	*/
+	extern "C" SHARED_PUBLIC vx_node VX_API_CALL vxExtRppSlice(vx_graph graph, vx_tensor pSrc, vx_tensor srcDims, vx_tensor pDst, vx_tensor dstDims, vx_tensor anchor, vx_tensor shape, vx_array fillValue, vx_scalar axes, vx_scalar normalizedAnchor, vx_scalar normalizedShape, vx_scalar policy);
 #ifdef __cplusplus
 }
 #endif
