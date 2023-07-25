@@ -116,7 +116,6 @@ bool operator==(const TensorInfo &rhs, const TensorInfo &lhs) {
 
 
 void TensorInfo::reset_tensor_roi_buffers() {
-    std::cerr << "Called reset tenbsor roi";
     if(!_roi_buf) {
         size_t roi_size = (_layout == RocalTensorlayout::NFCHW || _layout == RocalTensorlayout::NFHWC) ? _dims[0] * _dims[1] : _batch_size; // For Sequences pre allocating the ROI to N * F to replicate in OpenVX extensions
         allocate_host_or_pinned_mem((void **)&_roi_buf, roi_size * 4 * sizeof(unsigned), _mem_type);
@@ -165,7 +164,6 @@ TensorInfo::TensorInfo(std::vector<size_t> dims,
 }
 
 TensorInfo::TensorInfo(const TensorInfo &other) {
-    std::cerr << "\n Tensor Info constructor called";
     _type = other._type;
     _num_of_dims = other._num_of_dims;
     _dims = other._dims;
@@ -173,26 +171,19 @@ TensorInfo::TensorInfo(const TensorInfo &other) {
     _batch_size = other._batch_size;
     _mem_type = other._mem_type;
     _roi_type = other._roi_type;
-    std::cerr << "\n Tensor Info 1";
     _data_type = other._data_type;
     _layout = other._layout;
     _color_format = other._color_format;
     _data_type_size = other._data_type_size;
-    std::cerr << "\n Tensor Info 2";
     _data_size = other._data_size;
     _max_shape = other._max_shape;
     _is_image = other._is_image;
     _is_metadata = other._is_metadata;
-    std::cerr << "\n Tensor Info 3";
     _channels = other._channels;
-    std::cerr << "\n Tensor Info 4";
     if(!other.is_metadata()) {  // For Metadata ROI buffer is not required
-        std::cerr << " \n Its not meta-data";
         allocate_host_or_pinned_mem(&_roi_buf, _batch_size * 4 * sizeof(unsigned), _mem_type);
-        std::cerr << "\n Is issue in memcpy";
         memcpy((void *)_roi_buf, (const void *)other.get_roi(), _batch_size * 4 * sizeof(unsigned));
     }
-    std::cerr << "\n tensor info 5";
 }
 
 TensorInfo::~TensorInfo() {
@@ -286,10 +277,8 @@ Tensor::~Tensor() {
 }
 
 Tensor::Tensor(const TensorInfo &tensor_info) : _info(tensor_info) {
-    std::cerr << "Before the Tensor::Tensor (const TensorInfo &)";
     _info._type = TensorInfo::Type::UNKNOWN;
     _mem_handle = nullptr;
-    std::cerr << "After the Tensor::Tensor (const TensorInfo &)";
 }
 
 int Tensor::create_virtual(vx_context context, vx_graph graph) {
