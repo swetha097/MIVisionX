@@ -21,14 +21,19 @@ THE SOFTWARE.
 */
 
 #pragma once
+
 #include "node.h"
 #include "graph.h"
 
-class FisheyeNode : public Node {
+
+class FisheyeNode : public Node
+{
 public:
     FisheyeNode(const std::vector<Tensor *> &inputs, const std::vector<Tensor *> &outputs);
     FisheyeNode() = delete;
+
 protected:
     void create_node() override;
     void update_node() override;
+private:
 };

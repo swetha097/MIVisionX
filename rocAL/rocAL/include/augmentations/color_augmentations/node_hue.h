@@ -25,7 +25,9 @@ THE SOFTWARE.
 #include "parameter_factory.h"
 #include "parameter_vx.h"
 
-class HueNode : public Node {
+
+class HueNode : public Node
+{
 public:
     HueNode(const std::vector<Tensor *> &inputs, const std::vector<Tensor *> &outputs);
     HueNode() = delete;
@@ -36,5 +38,5 @@ protected:
     void update_node() override;
 private:
     ParameterVX<float> _hue;
-    constexpr static float HUE_RANGE[2] = {-359.0, 359.0};
+    constexpr static float HUE_RANGE [2] = {-359.0, 359.0};
 };

@@ -21,11 +21,13 @@ THE SOFTWARE.
 */
 
 #pragma once
+
 #include "node.h"
 #include "parameter_factory.h"
 #include "parameter_vx.h"
 
-class SnowNode : public Node {
+class SnowNode : public Node
+{
 public:
     SnowNode(const std::vector<Tensor *> &inputs, const std::vector<Tensor *> &outputs);
     SnowNode() = delete;
@@ -36,5 +38,5 @@ protected:
     void update_node() override;
 private:
     ParameterVX<float> _shift;
-    constexpr static float SNOW_VALUE_RANGE[2] = {0.1, 0.8};
+    constexpr static float SNOW_VALUE_RANGE [2] = {0.1, 0.8};
 };

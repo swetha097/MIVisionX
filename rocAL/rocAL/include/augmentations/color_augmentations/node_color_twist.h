@@ -36,9 +36,14 @@ protected:
     void create_node() override;
     void update_node() override;
 private:
-    ParameterVX<float> _alpha, _beta, _hue, _sat;
-    constexpr static float ALPHA_RANGE[2] = {0.1, 1.95};
-    constexpr static float BETA_RANGE[2] = {0.1, 25.0};
-    constexpr static float HUE_RANGE[2] = {5.0, 170.0};
-    constexpr static float SAT_RANGE[2] = {0.1, 0.4};
+
+    ParameterVX<float> _alpha;
+    ParameterVX<float> _beta;
+    ParameterVX<float> _hue;
+    ParameterVX<float> _sat;
+
+    constexpr static float   ALPHA_RANGE [2] = {0.1, 1.95};
+    constexpr static float   BETA_RANGE [2] = {0.1, 25.0};
+    constexpr static float   HUE_RANGE [2] = {5.0, 170.0};
+    constexpr static float   SAT_RANGE [2] = {0.1, 0.4};
 };
