@@ -64,7 +64,7 @@ def draw_patches(img, idx, device):
         img = cv2.cvtColor(img, cv2.COLOR_RGB2BGR)
     else:
         img = cv2.cvtColor(img, cv2.COLOR_GRAY2BGR)
-    cv2.imwrite(args.file_name + ".png", img, [cv2.IMWRITE_PNG_COMPRESSION, 9])
+    cv2.imwrite(args.output_file_name + ".png", img, [cv2.IMWRITE_PNG_COMPRESSION, 9])
 
 
 def main():
@@ -325,7 +325,7 @@ def main():
         elif augmentation_name == "blur":
             output = fn.blur(
                 images,
-                s_dev=5,
+                kernel_size=5,
                 rocal_tensor_output_layout=tensor_layout,
                 rocal_tensor_output_datatype=tensor_dtype)
         elif augmentation_name == "warp_affine":
