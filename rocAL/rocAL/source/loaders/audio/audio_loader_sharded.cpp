@@ -134,12 +134,12 @@ size_t AudioLoaderSharded::remaining_count() {
     return sum;
 }
 
-// void AudioLoaderSharded::reset() {
-//     for(auto& loader: _loaders) {
-//         loader->reset();
-//         loader->last_batch_padded_size();
-//     }
-// }
+void AudioLoaderSharded::reset() {
+    for(auto& loader: _loaders) {
+        loader->reset();
+        // loader->last_batch_padded_size();
+    }
+}
 
 void AudioLoaderSharded::increment_loader_idx() {
     _loader_idx = (_loader_idx + 1)%_shard_count;
