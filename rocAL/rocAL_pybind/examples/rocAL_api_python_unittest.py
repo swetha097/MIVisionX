@@ -27,6 +27,7 @@ import amd.rocal.fn as fn
 import amd.rocal.types as types
 from parse_config import parse_args
 import os
+import sys
 import cv2
 import cupy as cp
 
@@ -92,6 +93,7 @@ def main():
         interpolation_type = types.LINEAR_INTERPOLATION
     if augmentation_name in ["hue", "saturation", "color_twist"] and color_format == types.GRAY:
         print("Not a valid option! Exiting!")
+        sys.exit(0)
 
     try:
         path = "OUTPUT_IMAGES_PYTHON/NEW_API/FILE_READER/" + args.augmentation_name
@@ -275,8 +277,8 @@ def main():
                                               rocal_tensor_output_layout=tensor_layout,
                                               rocal_tensor_output_datatype=tensor_dtype,
                                               crop=(224, 224),
-                                              crop_pos_x=0.0,
-                                              crop_pos_y=0.0,
+                                              crop_pos_x=0.5,
+                                              crop_pos_y=0.5,
                                               mean=[0, 0, 0],
                                               std=[1, 1, 1],
                                               mirror=0)
