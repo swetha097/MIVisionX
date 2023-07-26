@@ -666,7 +666,7 @@ def vignette(*inputs, vignette=0.5, rocal_tensor_output_layout=types.NHWC,
 
 
 def crop_mirror_normalize(*inputs, crop=[0, 0], crop_pos_x=0.5, crop_pos_y=0.5,
-                          crop_w=0, crop_h=0, mean=[0.0], std=[1.0], mirror=1, rocal_tensor_output_layout=types.NHWC, rocal_tensor_output_datatype=types.FLOAT):
+                          crop_w=0, crop_h=0, mean=[0.0], std=[1.0], mirror=1, rocal_tensor_output_layout=types.NHWC, rocal_tensor_output_datatype=types.UINT8):
     """
     inputs - the input image passed to the augmentation
 
