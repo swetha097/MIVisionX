@@ -1574,7 +1574,13 @@ extern "C"
 	/*
 	TODO: Add the params
 	*/
-	extern "C" SHARED_PUBLIC vx_node VX_API_CALL vxExtRppSlice(vx_graph graph, vx_tensor pSrc, vx_tensor srcDims, vx_tensor pDst, vx_tensor dstDims, vx_tensor anchor, vx_tensor shape, vx_array fillValue, vx_scalar axes, vx_scalar normalizedAnchor, vx_scalar normalizedShape, vx_scalar policy);
+	SHARED_PUBLIC vx_node VX_API_CALL vxExtRppSlice(vx_graph graph, vx_tensor pSrc, vx_tensor srcDims, vx_tensor pDst, vx_tensor dstDims, vx_tensor anchor, vx_tensor shape, vx_array fillValue, vx_scalar axes, vx_scalar normalizedAnchor, vx_scalar normalizedShape, vx_scalar policy);
+
+	/*
+	TODO: Add the params
+	*/
+	SHARED_PUBLIC vx_node VX_API_CALL vxExtRppSpectrogram(vx_graph graph, vx_tensor pSrc, vx_tensor pSrcLength, vx_tensor pDst, vx_tensor pDstDims, vx_array windowFn, vx_scalar centerWindow, vx_scalar reflectPadding, vx_scalar spectrogramLayout,
+                                                          vx_scalar power, vx_scalar nfft, vx_scalar windowLength, vx_scalar windowStep);
 #ifdef __cplusplus
 }
 #endif
