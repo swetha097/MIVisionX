@@ -51,10 +51,8 @@ void RotateMetaNode::update_parameters(pMetaDataBatch input_meta_data, pMetaData
         Labels bb_labels;
         BoundingBoxCord dest_image;
         dest_image.l = dest_image.t = 0;
-        // dest_image.r = _dst_width;
-        // dest_image.b = _dst_height;
-        dest_image.r = input_roi[i].x2;
-        dest_image.b = input_roi[i].y2;
+        dest_image.r = _dst_width;
+        dest_image.b = _dst_height;
         std::cerr<<"dest_image.l "<<dest_image.l<<"  "<<dest_image.t<<" "<<dest_image.r<<" "<<dest_image.b;
         for(uint j = 0; j < bb_count; j++)
         {
@@ -93,10 +91,10 @@ void RotateMetaNode::update_parameters(pMetaDataBatch input_meta_data, pMetaData
             box.b = std::max(y1, std::max(y2, std::max(y3, y4)));
             if (BBoxIntersectionOverUnion(box, dest_image) >= _iou_threshold)
             {
-                // box.l = std::max(dest_image.l, box.l);
-                // box.t = std::max(dest_image.t, box.t);
-                // box.r = std::min(dest_image.r, box.r);
-                // box.b = std::min(dest_image.b, box.b);
+                box.l = std::max(dest_image.l, box.l);
+                box.t = std::max(dest_image.t, box.t);
+                box.r = std::min(dest_image.r, box.r);
+                box.b = std::min(dest_image.b, box.b);
                 bb_coords.push_back(box);
                 bb_labels.push_back(labels_buf[j]);
             }

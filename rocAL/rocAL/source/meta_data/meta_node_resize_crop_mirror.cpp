@@ -38,8 +38,6 @@ void ResizeCropMirrorMetaNode::update_parameters(pMetaDataBatch input_meta_data,
         _batch_size = input_meta_data->size();
     }
     _meta_crop_param = _node->get_crop_param();    
-    _dst_width = _node->get_dst_width();
-    _dst_height = _node->get_dst_height();
     _mirror = _node->get_mirror();
     _x1 = _meta_crop_param->x1_arr;
     _y1 = _meta_crop_param->y1_arr;

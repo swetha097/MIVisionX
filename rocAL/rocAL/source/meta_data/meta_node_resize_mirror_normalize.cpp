@@ -38,21 +38,18 @@ void ResizeMirrorNormalizeMetaNode::update_parameters(pMetaDataBatch input_meta_
         _batch_size = input_meta_data->size();
     }
     _mirror = _node->return_mirror();
-    _src_width = _node->get_src_width();
-    _src_height = _node->get_src_height();
+    auto input_roi = _node->get_src_roi();
     _dst_width = _node->get_dst_width();
     _dst_height = _node->get_dst_height();
 
     vxCopyArrayRange((vx_array)_mirror, 0, _batch_size, sizeof(uint), _mirror_val.data(), VX_READ_ONLY, VX_MEMORY_TYPE_HOST);
-    vxCopyArrayRange((vx_array)_src_width, 0, _batch_size, sizeof(uint), _src_width_val.data(), VX_READ_ONLY, VX_MEMORY_TYPE_HOST);
-    vxCopyArrayRange((vx_array)_src_height, 0, _batch_size, sizeof(uint), _src_height_val.data(), VX_READ_ONLY, VX_MEMORY_TYPE_HOST);
     vxCopyArrayRange((vx_array)_dst_width, 0, _batch_size, sizeof(uint), _dst_width_val.data(), VX_READ_ONLY, VX_MEMORY_TYPE_HOST);
     vxCopyArrayRange((vx_array)_dst_height, 0, _batch_size, sizeof(uint), _dst_height_val.data(), VX_READ_ONLY, VX_MEMORY_TYPE_HOST);
 
     for (int i = 0; i < _batch_size; i++)
     {
-        _dst_to_src_width_ratio = _dst_width_val[i] / float(_src_width_val[i]);
-        _dst_to_src_height_ratio = _dst_height_val[i] / float(_src_height_val[i]);
+        _dst_to_src_width_ratio = _dst_width_val[i] / float(input_roi[i].x2);
+        _dst_to_src_height_ratio = _dst_height_val[i] / float(input_roi[i].y2);
         auto bb_count = input_meta_data->get_labels_batch()[i].size();
         BoundingBoxCords coords_buf = input_meta_data->get_bb_cords_batch()[i];
         std::cerr<<"\n coords_buf "<<coords_buf[0].r<< "  "<<coords_buf[0].b;
@@ -76,10 +73,10 @@ void ResizeMirrorNormalizeMetaNode::update_parameters(pMetaDataBatch input_meta_
                     mask_data_ptr[idx + 1] = mask_data_ptr[idx + 1] * _dst_to_src_height_ratio;
                 }
             }
-        }
         output_meta_data->get_mask_cords_batch()[i] = input_meta_data->get_mask_cords_batch()[i];
         output_meta_data->get_mask_polygons_count_batch()[i] = input_meta_data->get_mask_polygons_count_batch()[i];
         output_meta_data->get_mask_vertices_count_batch()[i] = input_meta_data->get_mask_vertices_count_batch()[i];
+        }
 
         for (uint j = 0; j < bb_count; j++)
         {
