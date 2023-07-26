@@ -996,7 +996,7 @@ extern "C"
 	 * \returns A node reference <tt>\ref vx_node</tt>. Any possible errors preventing a
 	 * successful creation should be checked using <tt>\ref vxGetStatus</tt>.
 	 */
-	SHARED_PUBLIC vx_node VX_API_CALL vxRppBrightness(vx_graph graph, vx_tensor pSrc, vx_tensor pSrcRoi, vx_tensor pDst, vx_array pAlpha, vx_array pBeta, vx_scalar inputLayout, vx_scalar outputLayout, vx_scalar roiType);
+	SHARED_PUBLIC vx_node VX_API_CALL vxExtRppBrightness(vx_graph graph, vx_tensor pSrc, vx_tensor pSrcRoi, vx_tensor pDst, vx_array pAlpha, vx_array pBeta, vx_scalar inputLayout, vx_scalar outputLayout, vx_scalar roiType);
 
 	/*! \brief [Graph] Creates a RPP Copy function node.
 	 * \ingroup group_amd_rpp
@@ -1007,7 +1007,7 @@ extern "C"
 	 * \returns A node reference <tt>\ref vx_node</tt>. Any possible errors preventing a
 	 * successful creation should be checked using <tt>\ref vxGetStatus</tt>.
 	 */
-	SHARED_PUBLIC vx_node VX_API_CALL vxRppCopy(vx_graph graph, vx_tensor pSrc, vx_tensor pDst);
+	SHARED_PUBLIC vx_node VX_API_CALL vxExtRppCopy(vx_graph graph, vx_tensor pSrc, vx_tensor pDst);
 
 	/*! \brief [Graph] Creates a RPP CropMirrorNormalize function node.
 	 * \ingroup group_amd_rpp
@@ -1027,7 +1027,7 @@ extern "C"
 	 * \returns A node reference <tt>\ref vx_node</tt>. Any possible errors preventing a
 	 * successful creation should be checked using <tt>\ref vxGetStatus</tt>.
 	 */
-	SHARED_PUBLIC vx_node VX_API_CALL vxRppCropMirrorNormalize(vx_graph graph, vx_tensor pSrc, vx_tensor pSrcRoi, vx_tensor pDst, vx_array pMultiplier, vx_array pOffset, vx_array pFlip, vx_scalar inputLayout, vx_scalar outputLayout, vx_scalar roiType);
+	SHARED_PUBLIC vx_node VX_API_CALL vxExtRppCropMirrorNormalize(vx_graph graph, vx_tensor pSrc, vx_tensor pSrcRoi, vx_tensor pDst, vx_array pMultiplier, vx_array pOffset, vx_array pFlip, vx_scalar inputLayout, vx_scalar outputLayout, vx_scalar roiType);
 
 	/*! \brief [Graph] Creates a RPP Nop function node.
 	 * \ingroup group_amd_rpp
@@ -1038,7 +1038,7 @@ extern "C"
 	 * \returns A node reference <tt>\ref vx_node</tt>. Any possible errors preventing a
 	 * successful creation should be checked using <tt>\ref vxGetStatus</tt>.
 	 */
-	SHARED_PUBLIC vx_node VX_API_CALL vxRppNop(vx_graph graph, vx_tensor pSrc, vx_tensor pDst);
+	SHARED_PUBLIC vx_node VX_API_CALL vxExtRppNop(vx_graph graph, vx_tensor pSrc, vx_tensor pDst);
 
 	/*! \brief [Graph] Creates a RPP Resize function node.
 	 * \ingroup group_amd_rpp
@@ -1058,7 +1058,7 @@ extern "C"
 	 * \returns A node reference <tt>\ref vx_node</tt>. Any possible errors preventing a
 	 * successful creation should be checked using <tt>\ref vxGetStatus</tt>.
 	 */
-	SHARED_PUBLIC vx_node VX_API_CALL vxRppResize(vx_graph graph, vx_tensor pSrc, vx_tensor pSrcRoi, vx_tensor pDst, vx_array pDstWidth, vx_array pDstHeight, vx_scalar interpolationType, vx_scalar inputLayout, vx_scalar outputLayout, vx_scalar roiType);
+	SHARED_PUBLIC vx_node VX_API_CALL vxExtRppResize(vx_graph graph, vx_tensor pSrc, vx_tensor pSrcRoi, vx_tensor pDst, vx_array pDstWidth, vx_array pDstHeight, vx_scalar interpolationType, vx_scalar inputLayout, vx_scalar outputLayout, vx_scalar roiType);
 
 	/*!
 	 * \brief [Graph] Creates a Tensor SequenceRearrange function node.
@@ -1072,7 +1072,7 @@ extern "C"
 	 * \returns A node reference <tt>\ref vx_node</tt>. Any possible errors preventing a
 	 * successful creation should be checked using <tt>\ref vxGetStatus</tt>.
 	 */
-	SHARED_PUBLIC vx_node VX_API_CALL vxRppSequenceRearrange(vx_graph graph, vx_tensor pSrc, vx_tensor pDst, vx_array pNewOrder, vx_scalar layout);
+	SHARED_PUBLIC vx_node VX_API_CALL vxExtRppSequenceRearrange(vx_graph graph, vx_tensor pSrc, vx_tensor pDst, vx_array pNewOrder, vx_scalar layout);
 #ifdef __cplusplus
 }
 #endif
