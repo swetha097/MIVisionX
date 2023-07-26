@@ -81,9 +81,6 @@ public:
     TensorInfo(std::vector<size_t> dims, RocalMemType mem_type,
                     RocalTensorDataType data_type);
 
-    //! Copy constructor
-    TensorInfo(const TensorInfo& info);
-    ~TensorInfo();
     // Setting properties required for Image / Video
     void set_roi_type(RocalROIType roi_type) { _roi_type = roi_type; }
     void set_data_type(RocalTensorDataType data_type) {
@@ -105,7 +102,7 @@ public:
             dims_mapping = {0, 1, 3, 4, 2};
         } else {
             THROW("Invalid layout conversion")
-        }   
+        }
         for(unsigned i = 0; i < _num_of_dims; i++)
             new_dims[i] = _dims.at(dims_mapping[i]);
     }
@@ -177,7 +174,7 @@ public:
     RocalROIType roi_type() const { return _roi_type; }
     RocalTensorDataType data_type() const { return _data_type; }
     RocalTensorlayout layout() const { return _layout; }
-    RocalROI *get_roi() const { return (RocalROI *)_roi_buf; }
+    RocalROI *get_roi() const { return (RocalROI *)_roi.get(); }
     std::shared_ptr<std::vector<float>> get_sample_rate() const { return _sample_rate; }
     RocalColorFormat color_format() const { return _color_format; }
     Type type() const { return _type; }
@@ -200,7 +197,8 @@ private:
     RocalTensorDataType _data_type = RocalTensorDataType::FP32;  //!< tensor data type
     RocalTensorlayout _layout = RocalTensorlayout::NONE;     //!< layout of the tensor
     RocalColorFormat _color_format;  //!< color format of the image
-    void *_roi_buf = nullptr;
+    unsigned *_roi_buf = nullptr;
+    std::shared_ptr<unsigned> _roi;
     uint64_t _data_type_size = tensor_data_size(_data_type);
     uint64_t _data_size = 0;
     std::vector<size_t> _max_shape;  //!< stores the the width and height dimensions in the tensor
@@ -263,10 +261,10 @@ public:
     RocalROICords *get_roi() override { return (RocalROICords *)_info.get_roi(); }
     std::vector<size_t> shape() override { return _info.max_shape(); }
     RocalImageColor color_format() const { return (RocalImageColor)_info.color_format(); }
-    RocalTensorBackend backend() override { 
+    RocalTensorBackend backend() override {
         return (_info.mem_type() == RocalMemType::HOST ? ROCAL_CPU : ROCAL_GPU);
     }
-    
+
 private:
     vx_tensor _vx_handle = nullptr;  //!< The OpenVX tensor
     void* _mem_handle = nullptr;  //!< Pointer to the tensor's internal buffer (opencl or host)
