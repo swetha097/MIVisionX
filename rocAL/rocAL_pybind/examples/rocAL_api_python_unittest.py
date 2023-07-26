@@ -422,11 +422,10 @@ def main():
                                               rocal_tensor_output_layout=tensor_layout,
                                               rocal_tensor_output_datatype=tensor_dtype,
                                               crop=(224, 224),
-                                              crop_pos_x=0.5,
-                                              crop_pos_y=0.5,
-                                              mean=[0, 0, 0],
-                                              std=[1, 1, 1],
-                                              mirror=0)
+                                              crop_pos_x=0.0,
+                                              crop_pos_y=0.0,
+                                              mean=[128, 128, 128],
+                                              std=[1.2, 1.2, 1.2])
         elif augmentation_name == "resize_mirror_normalize":
             resize_w = 400
             resize_h = 400
