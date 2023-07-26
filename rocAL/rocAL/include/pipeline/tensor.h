@@ -224,6 +224,7 @@ public:
         auto deleter = [&](unsigned *ptr) {};   // Empty destructor used, since memory is handled by the pipeline
         _roi.reset(roi_ptr, deleter);
     }
+    void swap_roi_ptr(std::shared_ptr<unsigned> &ptr) { _roi.swap(ptr); }
     void copy_roi(void *roi_buffer) {
         if(_roi != nullptr && roi_buffer != nullptr)
             memcpy((void *)roi_buffer, (const void *)_roi.get(), _batch_size * sizeof(RocalROI));
@@ -291,6 +292,7 @@ public:
     void set_roi(unsigned *roi_ptr) { _info.set_roi_ptr(roi_ptr); }
     void copy_roi(void *roi_buffer) { _info.copy_roi(roi_buffer); }
     vx_tensor get_roi_tensor() { return _vx_roi_handle; }
+    void swap_tensor_roi(std::shared_ptr<unsigned> &roi_ptr) { _info.swap_roi_ptr(roi_ptr); }
     // create_from_handle() no internal memory allocation is done here since
     // tensor's handle should be swapped with external buffers before usage
     int create_from_handle(vx_context context);
