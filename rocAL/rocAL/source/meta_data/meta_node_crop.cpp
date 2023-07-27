@@ -40,8 +40,7 @@ void CropMetaNode::update_parameters(pMetaDataBatch input_meta_data, pMetaDataBa
     _crop_height = _meta_crop_param->croph_arr;
     _x1 = _meta_crop_param->x1_arr;
     _y1 = _meta_crop_param->y1_arr;
-    // _input_width_val = _meta_crop_param->in_width;   TODO - Commenting for now to be replaced with ROI
-    // _input_height_val = _meta_crop_param->in_height;
+    auto input_roi = _meta_crop_param->in_roi;
     vxCopyArrayRange((vx_array)_crop_width, 0, _batch_size, sizeof(uint),_crop_width_val.data(), VX_READ_ONLY, VX_MEMORY_TYPE_HOST);
     vxCopyArrayRange((vx_array)_crop_height, 0, _batch_size, sizeof(uint),_crop_height_val.data(), VX_READ_ONLY, VX_MEMORY_TYPE_HOST);
     vxCopyArrayRange((vx_array)_x1, 0, _batch_size, sizeof(uint),_x1_val.data(), VX_READ_ONLY, VX_MEMORY_TYPE_HOST);
@@ -55,10 +54,10 @@ void CropMetaNode::update_parameters(pMetaDataBatch input_meta_data, pMetaDataBa
         BoundingBoxCord temp_box;
         Labels bb_labels;
         BoundingBoxCord crop_box;
-        crop_box.l = (float)_x1_val[i]/_input_width_val[i];
-        crop_box.t = (float)_y1_val[i]/_input_height_val[i];
-        crop_box.r = (float)(_x1_val[i] + _crop_width_val[i])/_input_width_val[i];
-        crop_box.b = (float)(_y1_val[i] + _crop_height_val[i])/_input_height_val[i];
+        crop_box.l = static_cast<float>(_x1_val[i]) / input_roi[i].x2;
+        crop_box.t = static_cast<float>(_y1_val[i]) / input_roi[i].y2;
+        crop_box.r = static_cast<float>((_x1_val[i]) + _crop_width_val[i]) / input_roi[i].x2;
+        crop_box.b = static_cast<float>((_y1_val[i]) + _crop_height_val[i]) / input_roi[i].y2;
 
         for(uint j = 0; j < bb_count; j++)
         {
