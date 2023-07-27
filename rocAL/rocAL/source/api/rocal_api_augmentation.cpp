@@ -1163,10 +1163,10 @@ rocalSnPNoise(
         RocalContext p_context,
         RocalTensor p_input,
         bool is_output,
-        RocalFloatParam noise_prob,
-        RocalFloatParam salt_prob,
-        RocalFloatParam salt_val,
-        RocalFloatParam pepper_val,
+        RocalFloatParam p_noise_prob,
+        RocalFloatParam p_salt_prob,
+        RocalFloatParam p_salt_val,
+        RocalFloatParam p_pepper_val,
         int seed,
         RocalTensorLayout rocal_tensor_output_layout,
         RocalTensorOutputType rocal_tensor_output_datatype) {
@@ -1178,10 +1178,10 @@ rocalSnPNoise(
 
     auto context = static_cast<Context*>(p_context);
     auto input = static_cast<Tensor*>(p_input);
-    auto noise_probability = static_cast<FloatParam*>(noise_prob);
-    auto salt_probability = static_cast<FloatParam*>(salt_prob);
-    auto noise_value = static_cast<FloatParam*>(noise_val);
-    auto salt_value = static_cast<FloatParam*>(salt_val);
+    auto noise_probability = static_cast<FloatParam*>(p_noise_prob);
+    auto salt_probability = static_cast<FloatParam*>(p_salt_prob);
+    auto salt_value = static_cast<FloatParam*>(p_salt_val);
+    auto pepper_value = static_cast<FloatParam*>(p_pepper_val);
     try {
         RocalTensorlayout op_tensor_layout = static_cast<RocalTensorlayout>(rocal_tensor_output_layout);
         RocalTensorDataType op_tensor_datatype = static_cast<RocalTensorDataType>(rocal_tensor_output_datatype);
@@ -1189,7 +1189,7 @@ rocalSnPNoise(
         output_info.set_tensor_layout(op_tensor_layout);
         output_info.set_data_type(op_tensor_datatype);
         output = context->master_graph->create_tensor(output_info, is_output);
-        context->master_graph->add_node<SnPNoiseNode>({input}, {output})->init(noise_probability, salt_probability, noise_value ,salt_value,seed);
+        context->master_graph->add_node<SnPNoiseNode>({input}, {output})->init(noise_probability, salt_probability, salt_value, pepper_value, seed);
     } catch(const std::exception& e) {
         context->capture_error(e.what());
         ERR(e.what())
@@ -1224,7 +1224,7 @@ rocalSnPNoiseFixed(
         output_info.set_tensor_layout(op_tensor_layout);
         output_info.set_data_type(op_tensor_datatype);
         output = context->master_graph->create_tensor(output_info, is_output);
-        context->master_graph->add_node<SnPNoiseNode>({input}, {output})->init(noise_prob, salt_prob, noise_val ,salt_val,seed);
+        context->master_graph->add_node<SnPNoiseNode>({input}, {output})->init(noise_prob, salt_prob, salt_val, pepper_val, seed);
     } catch(const std::exception& e) {
         context->capture_error(e.what());
         ERR(e.what())

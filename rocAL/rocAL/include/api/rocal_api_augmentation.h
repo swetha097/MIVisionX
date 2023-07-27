@@ -227,7 +227,7 @@ extern "C" RocalTensor ROCAL_API_CALL rocalContrast(RocalContext context, RocalT
 /// \param is_output
 /// \return
 extern "C" RocalTensor ROCAL_API_CALL rocalContrastFixed(RocalContext context, RocalTensor input,
-                                                         float contrast_factor = 1.0f, float contrast_center = 0.5f,
+                                                         float contrast_factor, float contrast_center,
                                                          bool is_output,
                                                          RocalTensorLayout rocal_tensor_output_layout = ROCAL_NHWC,
                                                          RocalTensorOutputType rocal_tensor_output_datatype = ROCAL_UINT8);
