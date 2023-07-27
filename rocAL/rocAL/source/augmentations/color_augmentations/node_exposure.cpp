@@ -26,7 +26,7 @@ THE SOFTWARE.
 
 ExposureNode::ExposureNode(const std::vector<Tensor *> &inputs, const std::vector<Tensor *> &outputs) :
         Node(inputs, outputs),
-        _shift(SHIFT_RANGE[0], SHIFT_RANGE[1]) { }
+        _shift(SHIFT_RANGE[0], SHIFT_RANGE[1]) {}
 
 void ExposureNode::create_node() {
     if(_node)

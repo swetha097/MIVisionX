@@ -37,7 +37,6 @@ void RandomCropNode::create_node()
 
     _crop_param->create_array(_graph);
     create_crop_tensor(_crop_tensor, &_crop_coordinates);
-    
     _node = vxRppCrop(_graph->get(), _inputs[0]->handle(), _crop_tensor, _outputs[0]->handle(),
                        _input_layout, _output_layout, _roi_type);
     vx_status status;
@@ -64,8 +63,6 @@ void RandomCropNode::update_node()
         crop_dims[i].y2 = crop_h_dims[i];
     }
 }
-
-void RandomCropNode::init(float crop_area_factor, float crop_aspect_ratio, float x_drift, float y_drift) { }    // Is this required?
 
 void RandomCropNode::init(FloatParam *crop_area_factor, FloatParam *crop_aspect_ratio, FloatParam *x_drift, FloatParam *y_drift, int num_of_attempts) {
     _crop_param->set_x_drift_factor(core(x_drift));

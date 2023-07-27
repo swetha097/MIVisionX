@@ -27,7 +27,7 @@ THE SOFTWARE.
 #include "exception.h"
 
 ResizeMirrorNormalizeNode::ResizeMirrorNormalizeNode(const std::vector<Tensor *> &inputs, const std::vector<Tensor *> &outputs) :
-        Node(inputs, outputs), _mirror(_mirror_range[0], _mirror_range[1]) { }
+        Node(inputs, outputs), _mirror(_mirror_range[0], _mirror_range[1]) {}
 
 void ResizeMirrorNormalizeNode::create_node()
 {
@@ -63,7 +63,7 @@ void ResizeMirrorNormalizeNode::create_node()
     vx_status mean_status = VX_SUCCESS;
     mean_status |= vxAddArrayItems(_mean_vx_array, mean_std_array_size, mean_vec.data(), sizeof(vx_float32));
     mean_status |= vxAddArrayItems(_std_dev_vx_array, mean_std_array_size, std_dev_vec.data(), sizeof(vx_float32));
-    _mirror.create_array(_graph , VX_TYPE_UINT32, _batch_size);
+    _mirror.create_array(_graph, VX_TYPE_UINT32, _batch_size);
     if(status != 0)
         THROW(" vxAddArrayItems failed in the resize_mirror_normalize node (vxRppCropMirrorNormalize)  node: "+ TOSTR(status) + "  "+ TOSTR(status))
 

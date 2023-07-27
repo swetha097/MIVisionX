@@ -25,9 +25,7 @@ THE SOFTWARE.
 #include "exception.h"
 
 PixelateNode::PixelateNode(const std::vector<Tensor *> &inputs, const std::vector<Tensor *> &outputs) :
-        Node(inputs, outputs)
-{
-}
+        Node(inputs, outputs) {}
 
 void PixelateNode::create_node() {
     if(_node)
@@ -40,6 +38,5 @@ void PixelateNode::create_node() {
         THROW("Adding the pixelate (vxRppPixelate) node failed: "+ TOSTR(status))
 }
 
-void PixelateNode::update_node() {
-}
+void PixelateNode::update_node() {}
 

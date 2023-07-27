@@ -29,7 +29,7 @@ ColorTwistNode::ColorTwistNode(const std::vector<Tensor *> &inputs,const std::ve
         _alpha(ALPHA_RANGE[0], ALPHA_RANGE[1]),
         _beta (BETA_RANGE[0], BETA_RANGE[1]),
         _hue(HUE_RANGE[0], HUE_RANGE[1]),
-        _sat(SAT_RANGE[0], SAT_RANGE[1]) { }
+        _sat(SAT_RANGE[0], SAT_RANGE[1]) {}
 
 void ColorTwistNode::create_node() {
     if(_node)

@@ -27,7 +27,7 @@ THE SOFTWARE.
 
 RotateNode::RotateNode(const std::vector<Tensor *> &inputs, const std::vector<Tensor *> &outputs) :
         Node(inputs, outputs),
-        _angle(ROTATE_ANGLE_RANGE[0], ROTATE_ANGLE_RANGE[1]) { }
+        _angle(ROTATE_ANGLE_RANGE[0], ROTATE_ANGLE_RANGE[1]) {}
 
 void RotateNode::create_node() {
     if(_node)

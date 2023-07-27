@@ -27,8 +27,7 @@ THE SOFTWARE.
 #include "graph.h"
 #include "rocal_api_types.h"
 
-class RotateNode : public Node
-{
+class RotateNode : public Node {
 public:
     RotateNode(const std::vector<Tensor *> &inputs, const std::vector<Tensor *> &outputs);
     RotateNode() = delete;
@@ -39,7 +38,6 @@ public:
     vx_array get_src_width() { return _src_roi_width; }
     vx_array get_src_height() { return _src_roi_height; }
     vx_array get_angle() { return _angle.default_array(); }
-
 protected:
     void create_node() override;
     void update_node() override;

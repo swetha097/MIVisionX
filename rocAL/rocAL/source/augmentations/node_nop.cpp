@@ -25,7 +25,7 @@ THE SOFTWARE.
 #include "exception.h"
 
 NopNode::NopNode(const std::vector<Tensor *> &inputs, const std::vector<Tensor *> &outputs) :
-        Node(inputs, outputs) { }
+        Node(inputs, outputs) {}
 
 void NopNode::create_node() {
     if(_node)
@@ -39,4 +39,4 @@ void NopNode::create_node() {
 
 }
 
-void NopNode::update_node() { }
+void NopNode::update_node() {}

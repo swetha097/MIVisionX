@@ -27,15 +27,13 @@ THE SOFTWARE.
 
 SnowNode::SnowNode(const std::vector<Tensor *> &inputs, const std::vector<Tensor *> &outputs) :
         Node(inputs, outputs),
-        _shift(SNOW_VALUE_RANGE[0], SNOW_VALUE_RANGE[1])
-{
-}
+        _shift(SNOW_VALUE_RANGE[0], SNOW_VALUE_RANGE[1]) {}
 
 void SnowNode::create_node() {
     if(_node)
         return;
 
-    _shift.create_array(_graph , VX_TYPE_FLOAT32, _batch_size);
+    _shift.create_array(_graph, VX_TYPE_FLOAT32, _batch_size);
     _node = vxRppSnow(_graph->get(), _inputs[0]->handle(), _src_tensor_roi, _outputs[0]->handle(), _shift.default_array(), _input_layout, _output_layout, _roi_type);
 
     vx_status status;

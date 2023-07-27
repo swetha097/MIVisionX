@@ -26,13 +26,13 @@ THE SOFTWARE.
 
 ColorTemperatureNode::ColorTemperatureNode(const std::vector<Tensor *> &inputs, const std::vector<Tensor *> &outputs) :
         Node(inputs, outputs),
-        _adj_value_param(ADJUSTMENT_RANGE[0], ADJUSTMENT_RANGE[1]) { }
+        _adj_value_param(ADJUSTMENT_RANGE[0], ADJUSTMENT_RANGE[1]) {}
 
 void ColorTemperatureNode::create_node() {
     if(_node)
         return;
 
-    _adj_value_param.create_array(_graph , VX_TYPE_UINT32, _batch_size);
+    _adj_value_param.create_array(_graph, VX_TYPE_UINT32, _batch_size);
     _node = vxRppColorTemperature(_graph->get(), _inputs[0]->handle(), _src_tensor_roi, _outputs[0]->handle(), _adj_value_param.default_array(), _input_layout, _output_layout, _roi_type);
 
     vx_status status;

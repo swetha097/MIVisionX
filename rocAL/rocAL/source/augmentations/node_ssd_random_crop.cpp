@@ -82,7 +82,7 @@ void SSDRandomCropNode::update_node()
 {
     _crop_param->set_image_dimensions(_inputs[0]->info().get_roi());
     _crop_param->update_array();
-    RocalROI *crop_dims = (RocalROI *)_crop_coordinates;  // ROI to be cropped from source
+    RocalROI *crop_dims = static_cast<RocalROI *>(_crop_coordinates);  // ROI to be cropped from source
     std::random_device rd;
     std::mt19937 gen(rd());
     std::uniform_int_distribution<> dis(0, 6);

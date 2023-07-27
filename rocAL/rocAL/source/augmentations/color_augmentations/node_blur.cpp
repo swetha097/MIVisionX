@@ -26,13 +26,13 @@ THE SOFTWARE.
 
 BlurNode::BlurNode(const std::vector<Tensor *> &inputs, const std::vector<Tensor *> &outputs) :
         Node(inputs, outputs),
-        _kernel_size(KERNEL_SIZE_RANGE[0], KERNEL_SIZE_RANGE[1]) { }
+        _kernel_size(KERNEL_SIZE_RANGE[0], KERNEL_SIZE_RANGE[1]) {}
 
 void BlurNode::create_node() {
     if(_node)
         return;
 
-    _kernel_size.create_array(_graph , VX_TYPE_FLOAT32, _batch_size);
+    _kernel_size.create_array(_graph, VX_TYPE_FLOAT32, _batch_size);
     _node = vxRppBlur(_graph->get(), _inputs[0]->handle(), _src_tensor_roi, _outputs[0]->handle(), _kernel_size.default_array(), _input_layout, _output_layout, _roi_type);
 
     vx_status status;
@@ -44,8 +44,8 @@ void BlurNode::init(int kernel_size) {
     _kernel_size.set_param(kernel_size);
 }
 
-void BlurNode::init(IntParam *kernel_size) {
-    _kernel_size.set_param(core(kernel_size));
+void BlurNode::init(IntParam *kernel_size_param) {
+    _kernel_size.set_param(core(kernel_size_param));
 }
 
 void BlurNode::update_node() {

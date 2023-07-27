@@ -32,7 +32,7 @@ WarpAffineNode::WarpAffineNode(const std::vector<Tensor *> &inputs, const std::v
         _y0(COEFFICIENT_RANGE_0[0], COEFFICIENT_RANGE_0[1]),
         _y1(COEFFICIENT_RANGE_1[0], COEFFICIENT_RANGE_1[1]),
         _o0(COEFFICIENT_RANGE_OFFSET[0], COEFFICIENT_RANGE_OFFSET[1]),
-        _o1(COEFFICIENT_RANGE_OFFSET[0], COEFFICIENT_RANGE_OFFSET[1]) { }
+        _o1(COEFFICIENT_RANGE_OFFSET[0], COEFFICIENT_RANGE_OFFSET[1]) {}
 
 void WarpAffineNode::create_node() {
     if(_node)

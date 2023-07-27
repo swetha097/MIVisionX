@@ -26,7 +26,7 @@ THE SOFTWARE.
 
 GammaNode::GammaNode(const std::vector<Tensor *> &inputs, const std::vector<Tensor *> &outputs) :
         Node(inputs, outputs),
-        _shift(SHIFT_RANGE[0], SHIFT_RANGE[1]) { }
+        _shift(SHIFT_RANGE[0], SHIFT_RANGE[1]) {}
 
 void GammaNode::create_node() {
     if(_node)
@@ -35,7 +35,7 @@ void GammaNode::create_node() {
     if(_outputs.empty() || _inputs.empty())
         THROW("Uninitialized input/output arguments")
 
-    _shift.create_array(_graph , VX_TYPE_FLOAT32, _batch_size);
+    _shift.create_array(_graph, VX_TYPE_FLOAT32, _batch_size);
     _node = vxRppGammaCorrection(_graph->get(), _inputs[0]->handle(), _src_tensor_roi, _outputs[0]->handle(), _shift.default_array(), _input_layout, _output_layout, _roi_type);
 
     vx_status status;

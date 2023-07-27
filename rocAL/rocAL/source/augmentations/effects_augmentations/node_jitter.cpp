@@ -27,9 +27,7 @@ THE SOFTWARE.
 
 JitterNode::JitterNode(const std::vector<Tensor *> &inputs, const std::vector<Tensor *> &outputs) :
         Node(inputs, outputs),
-        _kernel_size(KERNEL_SIZE[0], KERNEL_SIZE[1])
-{
-}
+        _kernel_size(KERNEL_SIZE[0], KERNEL_SIZE[1]) {}
 
 void JitterNode::create_node() {
     if(_node)
