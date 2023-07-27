@@ -29,6 +29,31 @@ THE SOFTWARE.
 #include "rocal_api.h"
 #include "image_source_evaluator.h"
 
+auto modify_dims_width_and_height = [](RocalTensorlayout tensor_layout, std::vector<size_t> &dims, 
+                                    size_t width, size_t height) {
+    switch(tensor_layout) {
+        case RocalTensorlayout::NHWC: {
+            dims[1] = height;
+            dims[2] = width;
+            return;
+        }
+        case RocalTensorlayout::NCHW:
+        case RocalTensorlayout::NFHWC: {
+            dims[2] = height;
+            dims[3] = width;
+            return;   
+        }
+        case RocalTensorlayout::NFCHW: {
+            dims[3] = height;
+            dims[4] = width;
+            return;
+        }
+        default: {
+            THROW("Invalid layout type specified")
+        }
+    }
+};
+
 RocalTensor  ROCAL_API_CALL
 rocalSequenceRearrange(RocalContext p_context,
                        RocalTensor p_input,
@@ -89,25 +114,13 @@ rocalRotate(
         }
         RocalTensorlayout op_tensor_layout = static_cast<RocalTensorlayout>(rocal_tensor_output_layout);
         RocalTensorDataType op_tensor_datatype = static_cast<RocalTensorDataType>(rocal_tensor_output_datatype);
-
-        // For the rotate node, user can create a tensor with a different width and height
         TensorInfo output_info = input->info();
         output_info.set_tensor_layout(op_tensor_layout);
         output_info.set_data_type(op_tensor_datatype);
+        
+        // For the rotate node, user can create a tensor with a different width and height
         std::vector<size_t> out_dims = output_info.dims();
-        if(op_tensor_layout == RocalTensorlayout::NHWC) {
-            out_dims[1] = dest_height;
-            out_dims[2] = dest_width;
-        } else if(op_tensor_layout == RocalTensorlayout::NCHW) {
-            out_dims[2] = dest_height;
-            out_dims[3] = dest_width;
-        } else if(op_tensor_layout == RocalTensorlayout::NFHWC) {
-            out_dims[2] = dest_height;
-            out_dims[3] = dest_width;
-        } else if(op_tensor_layout == RocalTensorlayout::NFCHW) {
-            out_dims[3] = dest_height;
-            out_dims[4] = dest_width;
-        }
+        modify_dims_width_and_height(op_tensor_layout, out_dims, dest_width, dest_height);
         output_info.set_dims(out_dims);
         output = context->master_graph->create_tensor(output_info, is_output);
         output->reset_tensor_roi();
@@ -148,25 +161,13 @@ rocalRotateFixed(
         }
         RocalTensorlayout op_tensor_layout = static_cast<RocalTensorlayout>(rocal_tensor_output_layout);
         RocalTensorDataType op_tensor_datatype = static_cast<RocalTensorDataType>(rocal_tensor_output_datatype);
-
-        // For the rotate node, user can create an image with a different width and height
         TensorInfo output_info = input->info();
         output_info.set_tensor_layout(op_tensor_layout);
         output_info.set_data_type(op_tensor_datatype);
+
+        // For the rotate node, user can create an image with a different width and height
         std::vector<size_t> out_dims = output_info.dims();
-        if(op_tensor_layout == RocalTensorlayout::NHWC) {
-            out_dims[1] = dest_height;
-            out_dims[2] = dest_width;
-        } else if(op_tensor_layout == RocalTensorlayout::NCHW) {
-            out_dims[2] = dest_height;
-            out_dims[3] = dest_width;
-        } else if(op_tensor_layout == RocalTensorlayout::NFHWC) {
-            out_dims[2] = dest_height;
-            out_dims[3] = dest_width;
-        } else if(op_tensor_layout == RocalTensorlayout::NFCHW) {
-            out_dims[3] = dest_height;
-            out_dims[4] = dest_width;
-        }
+        modify_dims_width_and_height(op_tensor_layout, out_dims, dest_width, dest_height);
         output_info.set_dims(out_dims);
         output = context->master_graph->create_tensor(output_info, is_output);
         output->reset_tensor_roi();
@@ -432,24 +433,13 @@ rocalCropResize(
 
         RocalTensorlayout op_tensor_layout = static_cast<RocalTensorlayout>(rocal_tensor_output_layout);
         RocalTensorDataType op_tensor_datatype = static_cast<RocalTensorDataType>(rocal_tensor_output_datatype);
-        // For the crop resize node, user can create an image with a different width and height
         TensorInfo output_info = input->info();
         output_info.set_tensor_layout(op_tensor_layout);
         output_info.set_data_type(op_tensor_datatype);
+
+        // For the crop resize node, user can create an image with a different width and height
         std::vector<size_t> out_dims = output_info.dims();
-        if(op_tensor_layout == RocalTensorlayout::NHWC) {
-            out_dims[1] = dest_height;
-            out_dims[2] = dest_width;
-        } else if(op_tensor_layout == RocalTensorlayout::NCHW) {
-            out_dims[2] = dest_height;
-            out_dims[3] = dest_width;
-        } else if(op_tensor_layout == RocalTensorlayout::NFHWC) {
-            out_dims[2] = dest_height;
-            out_dims[3] = dest_width;
-        } else if(op_tensor_layout == RocalTensorlayout::NFCHW) {
-            out_dims[3] = dest_height;
-            out_dims[4] = dest_width;
-        }
+        modify_dims_width_and_height(op_tensor_layout, out_dims, dest_width, dest_height);
         output_info.set_dims(out_dims);
         output = context->master_graph->create_tensor(output_info, is_output);
 
@@ -492,25 +482,13 @@ rocalCropResizeFixed(
         
         RocalTensorlayout op_tensor_layout = static_cast<RocalTensorlayout>(rocal_tensor_output_layout);
         RocalTensorDataType op_tensor_datatype = static_cast<RocalTensorDataType>(rocal_tensor_output_datatype);
-
-        // For the crop resize node, user can create an image with a different width and height
         TensorInfo output_info = input->info();
         output_info.set_tensor_layout(op_tensor_layout);
         output_info.set_data_type(op_tensor_datatype);
+
+        // For the crop resize node, user can create an image with a different width and height
         std::vector<size_t> out_dims = output_info.dims();
-        if(op_tensor_layout == RocalTensorlayout::NHWC) {
-            out_dims[1] = dest_height;
-            out_dims[2] = dest_width;
-        } else if(op_tensor_layout == RocalTensorlayout::NCHW) {
-            out_dims[2] = dest_height;
-            out_dims[3] = dest_width;
-        } else if(op_tensor_layout == RocalTensorlayout::NFHWC) {
-            out_dims[2] = dest_height;
-            out_dims[3] = dest_width;
-        } else if(op_tensor_layout == RocalTensorlayout::NFCHW) {
-            out_dims[3] = dest_height;
-            out_dims[4] = dest_width;
-        }
+        modify_dims_width_and_height(op_tensor_layout, out_dims, dest_width, dest_height);   
         output_info.set_dims(out_dims);
         output = context->master_graph->create_tensor(output_info, is_output);
 
@@ -615,19 +593,7 @@ rocalResize(
         output_info.set_tensor_layout(op_tensor_layout);
         output_info.set_data_type(op_tensor_datatype);
         std::vector<size_t> out_dims = output_info.dims();
-        if(op_tensor_layout == RocalTensorlayout::NHWC) {
-            out_dims[1] = max_out_height;
-            out_dims[2] = max_out_width;
-        } else if(op_tensor_layout == RocalTensorlayout::NCHW) {
-            out_dims[2] = max_out_height;
-            out_dims[3] = max_out_width;
-        } else if(op_tensor_layout == RocalTensorlayout::NFHWC) {
-            out_dims[2] = max_out_height;
-            out_dims[3] = max_out_width;
-        } else if(op_tensor_layout == RocalTensorlayout::NFCHW) {
-            out_dims[3] = max_out_height;
-            out_dims[4] = max_out_width;
-        }
+        modify_dims_width_and_height(op_tensor_layout, out_dims, max_out_width, max_out_height);
         output_info.set_dims(out_dims);
         output = context->master_graph->create_tensor(output_info, is_output);
         output->reset_tensor_roi();
@@ -729,19 +695,7 @@ ROCAL_API_CALL rocalResizeMirrorNormalize(RocalContext p_context,
         output_info.set_tensor_layout(op_tensor_layout);
         output_info.set_data_type(op_tensor_datatype);
         std::vector<size_t> out_dims = output_info.dims();
-        if(op_tensor_layout == RocalTensorlayout::NHWC) {
-            out_dims[1] = max_out_height;
-            out_dims[2] = max_out_width;
-        } else if(op_tensor_layout == RocalTensorlayout::NCHW) {
-            out_dims[2] = max_out_height;
-            out_dims[3] = max_out_width;
-        } else if(op_tensor_layout == RocalTensorlayout::NFHWC) {
-            out_dims[2] = max_out_height;
-            out_dims[3] = max_out_width;
-        } else if(op_tensor_layout == RocalTensorlayout::NFCHW) {
-            out_dims[3] = max_out_height;
-            out_dims[4] = max_out_width;
-        }
+        modify_dims_width_and_height(op_tensor_layout, out_dims, max_out_width, max_out_height);
         output_info.set_dims(out_dims);
         output = context->master_graph->create_tensor(output_info, is_output);
         output->reset_tensor_roi();
@@ -984,25 +938,13 @@ rocalWarpAffine(
         }
         RocalTensorlayout op_tensor_layout = static_cast<RocalTensorlayout>(rocal_tensor_output_layout);
         RocalTensorDataType op_tensor_datatype = static_cast<RocalTensorDataType>(rocal_tensor_output_datatype);
-
-        // For the warp affine node, user can create an image with a different width and height
         TensorInfo output_info = input->info();
         output_info.set_tensor_layout(op_tensor_layout);
         output_info.set_data_type(op_tensor_datatype);
+
+        // For the warp affine node, user can create an image with a different width and height
         std::vector<size_t> out_dims = output_info.dims();
-        if(op_tensor_layout == RocalTensorlayout::NHWC) {
-            out_dims[1] = dest_height;
-            out_dims[2] = dest_width;
-        } else if(op_tensor_layout == RocalTensorlayout::NCHW) {
-            out_dims[2] = dest_height;
-            out_dims[3] = dest_width;
-        } else if(op_tensor_layout == RocalTensorlayout::NFHWC) {
-            out_dims[2] = dest_height;
-            out_dims[3] = dest_width;
-        } else if(op_tensor_layout == RocalTensorlayout::NFCHW) {
-            out_dims[3] = dest_height;
-            out_dims[4] = dest_width;
-        }
+        modify_dims_width_and_height(op_tensor_layout, out_dims, dest_width, dest_height);
         output_info.set_dims(out_dims);
         output = context->master_graph->create_tensor(output_info, is_output);
         output->reset_tensor_roi();
@@ -1041,25 +983,13 @@ rocalWarpAffineFixed(
         }
         RocalTensorlayout op_tensor_layout = static_cast<RocalTensorlayout>(rocal_tensor_output_layout);
         RocalTensorDataType op_tensor_datatype = static_cast<RocalTensorDataType>(rocal_tensor_output_datatype);
-
-        // For the warp affine node, user can create an image with a different width and height
         TensorInfo output_info = input->info();
         output_info.set_tensor_layout(op_tensor_layout);
         output_info.set_data_type(op_tensor_datatype);
+
+        // For the warp affine node, user can create an image with a different width and height
         std::vector<size_t> out_dims = output_info.dims();
-        if(op_tensor_layout == RocalTensorlayout::NHWC) {
-            out_dims[1] = dest_height;
-            out_dims[2] = dest_width;
-        } else if(op_tensor_layout == RocalTensorlayout::NCHW) {
-            out_dims[2] = dest_height;
-            out_dims[3] = dest_width;
-        } else if(op_tensor_layout == RocalTensorlayout::NFHWC) {
-            out_dims[2] = dest_height;
-            out_dims[3] = dest_width;
-        } else if(op_tensor_layout == RocalTensorlayout::NFCHW) {
-            out_dims[3] = dest_height;
-            out_dims[4] = dest_width;
-        }
+        modify_dims_width_and_height(op_tensor_layout, out_dims, dest_width, dest_height);
         output_info.set_dims(out_dims);
         output = context->master_graph->create_tensor(output_info, is_output);
         output->reset_tensor_roi();
@@ -1920,7 +1850,7 @@ rocalColorTwistFixed(
 
 RocalTensor ROCAL_API_CALL 
 rocalCropMirrorNormalize(RocalContext p_context, RocalTensor p_input, unsigned crop_height,
-                         unsigned crop_width,float start_x, float start_y, std::vector<float> &mean,
+                         unsigned crop_width, float start_x, float start_y, std::vector<float> &mean,
                          std::vector<float> &std_dev, bool is_output, RocalIntParam p_mirror, 
                          RocalTensorLayout rocal_tensor_output_layout,
                          RocalTensorOutputType rocal_tensor_output_datatype) {
@@ -1943,19 +1873,7 @@ rocalCropMirrorNormalize(RocalContext p_context, RocalTensor p_input, unsigned c
         
         // For the crop mirror normalize resize node, user can create an image with a different width and height
         std::vector<size_t> out_dims = output_info.dims();
-        if(op_tensor_layout == RocalTensorlayout::NHWC) {
-            out_dims[1] = crop_height;
-            out_dims[2] = crop_width;
-        } else if(op_tensor_layout == RocalTensorlayout::NCHW) {
-            out_dims[2] = crop_height;
-            out_dims[3] = crop_width;
-        } else if(op_tensor_layout == RocalTensorlayout::NFHWC) {
-            out_dims[2] = crop_height;
-            out_dims[3] = crop_width;
-        } else if(op_tensor_layout == RocalTensorlayout::NFCHW) {
-            out_dims[3] = crop_height;
-            out_dims[4] = crop_width;
-        }
+        modify_dims_width_and_height(op_tensor_layout, out_dims, crop_width, crop_height);
         output_info.set_dims(out_dims);
         output = context->master_graph->create_tensor(output_info, is_output);
         std::shared_ptr<CropMirrorNormalizeNode> cmn_node =  context->master_graph->add_node<CropMirrorNormalizeNode>({input}, {output});
@@ -2044,19 +1962,7 @@ rocalCropFixed(
         
         // For the crop node, user can create an tensor with a different width and height
         std::vector<size_t> out_dims = output_info.dims();
-        if(op_tensor_layout == RocalTensorlayout::NHWC) {
-            out_dims[1] = crop_height;
-            out_dims[2] = crop_width;
-        } else if(op_tensor_layout == RocalTensorlayout::NCHW) {
-            out_dims[2] = crop_height;
-            out_dims[3] = crop_width;
-        } else if(op_tensor_layout == RocalTensorlayout::NFHWC) {
-            out_dims[2] = crop_height;
-            out_dims[3] = crop_width;
-        } else if(op_tensor_layout == RocalTensorlayout::NFCHW) {
-            out_dims[3] = crop_height;
-            out_dims[4] = crop_width;
-        }
+        modify_dims_width_and_height(op_tensor_layout, out_dims, crop_width, crop_height);
         output_info.set_dims(out_dims);
         output = context->master_graph->create_tensor(output_info, is_output);
         output->reset_tensor_roi();
@@ -2100,19 +2006,7 @@ rocalCropCenterFixed(
         
         // For the crop node, user can create an tensor with a different width and height
         std::vector<size_t> out_dims = output_info.dims();
-        if(op_tensor_layout == RocalTensorlayout::NHWC) {
-            out_dims[1] = crop_height;
-            out_dims[2] = crop_width;
-        } else if(op_tensor_layout == RocalTensorlayout::NCHW) {
-            out_dims[2] = crop_height;
-            out_dims[3] = crop_width;
-        } else if(op_tensor_layout == RocalTensorlayout::NFHWC) {
-            out_dims[2] = crop_height;
-            out_dims[3] = crop_width;
-        } else if(op_tensor_layout == RocalTensorlayout::NFCHW) {
-            out_dims[3] = crop_height;
-            out_dims[4] = crop_width;
-        }
+        modify_dims_width_and_height(op_tensor_layout, out_dims, crop_width, crop_height);
         output_info.set_dims(out_dims);
         output = context->master_graph->create_tensor(output_info, is_output);
         output->reset_tensor_roi();
@@ -2156,20 +2050,10 @@ rocalResizeCropMirrorFixed(
         TensorInfo output_info = input->info();
         output_info.set_tensor_layout(op_tensor_layout);
         output_info.set_data_type(op_tensor_datatype);
+
+        // For the resize_crop_mirror node, user can create an image with a different width and height
         std::vector<size_t> out_dims = output_info.dims();
-        if(op_tensor_layout == RocalTensorlayout::NHWC) {
-            out_dims[1] = dest_height;
-            out_dims[2] = dest_width;
-        } else if(op_tensor_layout == RocalTensorlayout::NCHW) {
-            out_dims[2] = dest_height;
-            out_dims[3] = dest_width;
-        } else if(op_tensor_layout == RocalTensorlayout::NFHWC) {
-            out_dims[2] = dest_height;
-            out_dims[3] = dest_width;
-        } else if(op_tensor_layout == RocalTensorlayout::NFCHW) {
-            out_dims[3] = dest_height;
-            out_dims[4] = dest_width;
-        }
+        modify_dims_width_and_height(op_tensor_layout, out_dims, dest_width, dest_height);
         output_info.set_dims(out_dims);
         output = context->master_graph->create_tensor(output_info, is_output);
         output->reset_tensor_roi();
@@ -2203,26 +2087,16 @@ RocalTensor  ROCAL_API_CALL rocalResizeCropMirror(RocalContext p_context, RocalT
     try {
         if(dest_width == 0 || dest_height == 0)
             THROW("Crop Mirror node needs tp receive non-zero destination dimensions")
-        // For the resize node, user can create an image with a different width and height
+
         RocalTensorlayout op_tensor_layout = static_cast<RocalTensorlayout>(rocal_tensor_output_layout);
         RocalTensorDataType op_tensor_datatype = static_cast<RocalTensorDataType>(rocal_tensor_output_datatype);  
         TensorInfo output_info = input->info();
         output_info.set_tensor_layout(op_tensor_layout);
         output_info.set_data_type(op_tensor_datatype);
+        
+        // For the resize_crop_mirror node, user can create an image with a different width and height
         std::vector<size_t> out_dims = output_info.dims();
-        if(op_tensor_layout == RocalTensorlayout::NHWC) {
-            out_dims[1] = dest_height;
-            out_dims[2] = dest_width;
-        } else if(op_tensor_layout == RocalTensorlayout::NCHW) {
-            out_dims[2] = dest_height;
-            out_dims[3] = dest_width;
-        } else if(op_tensor_layout == RocalTensorlayout::NFHWC) {
-            out_dims[2] = dest_height;
-            out_dims[3] = dest_width;
-        } else if(op_tensor_layout == RocalTensorlayout::NFCHW) {
-            out_dims[3] = dest_height;
-            out_dims[4] = dest_width;
-        }
+        modify_dims_width_and_height(op_tensor_layout, out_dims, dest_width, dest_height);
         output_info.set_dims(out_dims);
         output = context->master_graph->create_tensor(output_info, is_output);
         std::shared_ptr<ResizeCropMirrorNode> rcm_node =  context->master_graph->add_node<ResizeCropMirrorNode>({input}, {output});
