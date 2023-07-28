@@ -78,18 +78,14 @@ class ROCALGenericIterator(object):
         self.offset = offset
         self.reverse_channels = reverse_channels
         self.tensor_dtype = tensor_dtype or self.loader._tensor_dtype
-        print("self.tensor_dtype", self.tensor_dtype)
         self.device = device
-        print("device is the pytorch.py :: ", self.device)
         self.device_id = device_id
         self.out = None
-        print("self.device", self.device)
         self.len = b.getRemainingImages(self.loader._handle)
         self.index = 0
         self.eos = False
         self.batch_size = pipeline._batch_size
         self.num_batches = self.loader._external_source.n // self.batch_size if self.loader._external_source.n % self.batch_size == 0 else (self.loader._external_source.n // self.batch_size + 1)
-        print("self.num_batches", self.num_batches)
 
     def next(self):
         return self.__next__()
@@ -97,9 +93,7 @@ class ROCALGenericIterator(object):
     def __next__(self):
 
         if (self.loader._external_source_operator):
-            print("ESOOOOO")
             if (self.index + 1) == self.num_batches:
-                print("EOS is true")
                 self.eos = True
             if (self.index + 1) <= self.num_batches:
                 if self.loader._external_source_mode == types.EXTSOURCE_FNAME:
@@ -117,7 +111,6 @@ class ROCALGenericIterator(object):
                         "rocal_tensor_layout":types.NCHW,
                         "eos":self.eos }
                     b.ExternalSourceFeedInput(*(kwargs_pybind.values()))
-                    print("out of ExternalSourceFeedInput mode 0")
                 if self.loader._external_source_mode == types.EXTSOURCE_RAW_COMPRESSED:
                     data_loader_source = next(self.loader._external_source)
                     kwargs_pybind = {
@@ -135,7 +128,6 @@ class ROCALGenericIterator(object):
                         "eos":self.eos } # Check the Mode your passing
                     b.ExternalSourceFeedInputWrapper(*(kwargs_pybind.values()))
                 if self.loader._external_source_mode == types.EXTSOURCE_RAW_UNCOMPRESSED:
-                    print("External Source Mode 2 called in __next__")
                     data_loader_source = next(self.loader._external_source)
                     kwargs_pybind = {
                         "handle":self.loader._handle,
@@ -161,14 +153,9 @@ class ROCALGenericIterator(object):
         #From init
         self.augmentation_count = len(self.output_tensor_list)
         self.w = self.output_tensor_list[0].batch_width()
-        print("self.w", self.w)
         self.h = self.output_tensor_list[0].batch_height()
-        print("self.h",self.h)
         self.batch_size = self.output_tensor_list[0].batch_size()
         self.color_format = self.output_tensor_list[0].color_format()
-        print("here 2")
-        print("self.tensor_dtyp", self.tensor_dtype)
-        print("self.tensor_forma", self.tensor_format)
         if self.out is None:
             if self.tensor_format == types.NCHW:
                 if self.device == "cpu":
@@ -208,13 +195,9 @@ class ROCALGenericIterator(object):
                     elif self.tensor_dtype == types.UINT8:
                         self.out = torch.empty((self.batch_size, self.h, self.w, self.color_format), dtype=torch.uint8, device=torch_gpu_device)
                     self.labels_tensor = torch.empty(self.batch_size, dtype = torch.int32, device = torch_gpu_device)
-        print("here 3")
         self.index = self.index + 1
-        print(" print - somes to before copyToExternalTensor ")
 
         self.output_tensor_list[0].copy_data(ctypes.c_void_p(self.out.data_ptr()))
-        # self.loader.copyToExternalTensor(
-        #     self.out, self.multiplier, self.offset, self.reverse_channels, self.tensor_format, self.tensor_dtype)
         # self.labels = self.loader.rocalGetImageLabels()
         # self.labels_tensor = self.labels_tensor.copy_(torch.from_numpy(self.labels)).long()
         if self.tensor_dtype == types.FLOAT or self.tensor_dtype == types.UINT8:
@@ -304,8 +287,6 @@ class ROCALClassificationIterator(ROCALGenericIterator):
                  last_batch_padded=False,
                  tensor_dtype=None):
         pipe = pipelines
-        print("tensor_dtype in pytorch.py", tensor_dtype)
-        print("tensor_dtype or pipe._tensor_dtype", tensor_dtype or pipe._tensor_dtype)
         super(ROCALClassificationIterator, self).__init__(pipe, tensor_layout = pipe._tensor_layout, tensor_dtype = tensor_dtype or pipe._tensor_dtype,
                                                             multiplier=pipe._multiplier, offset=pipe._offset, device=device, device_id=device_id,  )
 
