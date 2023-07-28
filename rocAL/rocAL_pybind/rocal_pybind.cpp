@@ -111,6 +111,8 @@ namespace rocal{
             py::buffer_info buf = arr.request();
             uchar_arrays.push_back(static_cast<unsigned char *>(buf.ptr));
         }
+        // for (auto x:roi_height)
+        //     std::cerr << "\n Pybind: roi_height " << x;
         int status = rocalExternalSourceFeedInput(context, input_images_names, labels, uchar_arrays, roi_width, roi_height, max_width, max_height, channels, mode, layout, eos);
         return py::cast<py::none>(Py_None);
     }
