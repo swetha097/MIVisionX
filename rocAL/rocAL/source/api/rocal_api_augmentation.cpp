@@ -2110,7 +2110,7 @@ RocalTensor  ROCAL_API_CALL rocalResizeCropMirror(
     return output;
 }
 
-extern "C" RocalTensor ROCAL_API_CALL
+RocalTensor ROCAL_API_CALL
 rocalRandomCrop(
         RocalContext p_context,
         RocalTensor p_input,
