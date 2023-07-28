@@ -98,7 +98,6 @@ rocalRotate(
         RocalResizeInterpolationType interpolation_type,
         RocalTensorLayout rocal_tensor_output_layout,
         RocalTensorOutputType rocal_tensor_output_datatype) {
-
     Tensor* output = nullptr;
     if ((p_context == nullptr) || (p_input == nullptr)) {
         ERR("Invalid ROCAL context or invalid input image")
@@ -607,21 +606,22 @@ rocalResize(
 }
 
 RocalTensor  ROCAL_API_CALL
-ROCAL_API_CALL rocalResizeMirrorNormalize(RocalContext p_context, 
-                                          RocalTensor p_input,
-                                          unsigned dest_width,
-                                          unsigned dest_height,
-                                          std::vector<float> &mean,
-                                          std::vector<float> &std_dev,
-                                          bool is_output,
-                                          RocalResizeScalingMode scaling_mode,
-                                          std::vector<unsigned> max_size,
-                                          unsigned resize_shorter,
-                                          unsigned resize_longer,
-                                          RocalResizeInterpolationType interpolation_type,
-                                          RocalIntParam p_mirror,
-                                          RocalTensorLayout rocal_tensor_output_layout,
-                                          RocalTensorOutputType rocal_tensor_output_datatype) {
+ROCAL_API_CALL rocalResizeMirrorNormalize(
+        RocalContext p_context,
+        RocalTensor p_input,
+        unsigned dest_width,
+        unsigned dest_height,
+        std::vector<float> &mean,
+        std::vector<float> &std_dev,
+        bool is_output,
+        RocalResizeScalingMode scaling_mode,
+        std::vector<unsigned> max_size,
+        unsigned resize_shorter,
+        unsigned resize_longer,
+        RocalResizeInterpolationType interpolation_type,
+        RocalIntParam p_mirror,
+        RocalTensorLayout rocal_tensor_output_layout,
+        RocalTensorOutputType rocal_tensor_output_datatype) {
     if(!p_context || !p_input || dest_width == 0 || dest_height == 0 )
         THROW("Null values passed as input")
     Tensor* output = nullptr;
@@ -2067,12 +2067,13 @@ rocalResizeCropMirrorFixed(
     return output;
 }
 
-RocalTensor  ROCAL_API_CALL rocalResizeCropMirror(RocalContext p_context, RocalTensor p_input,
-                                                   unsigned dest_width, unsigned dest_height,
-                                                   bool is_output, RocalFloatParam p_crop_height,
-                                                   RocalFloatParam p_crop_width, RocalIntParam p_mirror,
-                                                   RocalTensorLayout rocal_tensor_output_layout,
-                                                   RocalTensorOutputType rocal_tensor_output_datatype) {
+RocalTensor  ROCAL_API_CALL rocalResizeCropMirror(
+        RocalContext p_context, RocalTensor p_input,
+        unsigned dest_width, unsigned dest_height,
+        bool is_output, RocalFloatParam p_crop_height,
+        RocalFloatParam p_crop_width, RocalIntParam p_mirror,
+        RocalTensorLayout rocal_tensor_output_layout,
+        RocalTensorOutputType rocal_tensor_output_datatype) {
     Tensor* output = nullptr;
     if ((p_context == nullptr) || (p_input == nullptr)) {
         ERR("Invalid ROCAL context or invalid input image")
