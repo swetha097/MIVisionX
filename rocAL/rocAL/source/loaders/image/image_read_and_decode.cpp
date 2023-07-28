@@ -27,6 +27,7 @@ THE SOFTWARE.
 #include "decoder_factory.h"
 #include "image_read_and_decode.h"
 #include "external_source_reader.h"
+#include <opencv2/opencv.hpp>
 
 std::tuple<Decoder::ColorFormat, unsigned >
 interpret_color_format(RocalColorFormat color_format )
@@ -153,6 +154,14 @@ ImageReadAndDecode::set_batch_random_bbox_crop_coords(std::vector<std::vector<fl
     _crop_coords_batch = crop_coords;
 }
 
+inline void saveRGBImage(const unsigned char* imageData, int width, int height, const std::string& filename) {
+    // Create a cv::Mat object from the image data
+    cv::Mat rgbImage(height, width, CV_8UC3, (void*)imageData);
+    // Save the image to the specified file
+    cv::imwrite(filename + "output_image.png", rgbImage);
+    std::cerr << "\n Dumped Images";
+}
+
 LoaderModuleStatus
 ImageReadAndDecode::load(unsigned char* buff,
                          std::vector<std::string>& names,
@@ -177,10 +186,12 @@ ImageReadAndDecode::load(unsigned char* buff,
     const Decoder::ColorFormat decoder_color_format = std::get<0>(ret);
     const unsigned output_planes = std::get<1>(ret);
     const bool keep_original = decoder_keep_original;
+    std::cerr << "\n max_decoded_width" << max_decoded_width;
+    std::cerr << "\n max_decoded_height" << max_decoded_height;
     const size_t image_size = max_decoded_width * max_decoded_height * output_planes * sizeof(unsigned char);
     bool is_external_source = (_storage_type == StorageType::EXTERNAL_FILE_SOURCE);
     bool skip_decode = false;
-
+    unsigned count_inc = 0;
     // Decode with the height and size equal to a single image
     // File read is done serially since I/O parallelization does not work very well.
     _file_load_time.start();// Debug timing
@@ -228,6 +239,7 @@ ImageReadAndDecode::load(unsigned char* buff,
 
                 _image_names[file_counter] = _reader->id();
                 ext_reader->get_dims(file_counter, width, height, channels);
+                // saveRGBImage(read_ptr, width, height, std::to_string(fsize));
                 names[file_counter] = _image_names[file_counter];
                 roi_width[file_counter] = width;
                 roi_height[file_counter] = height;
@@ -318,6 +330,8 @@ ImageReadAndDecode::load(unsigned char* buff,
             }
             _original_height[i] = original_height;
             _original_width[i] = original_width;
+            std::cerr << "\n original_width" << original_width;
+            std::cerr << "\n original_height" << original_height;
             // decode the image and get the actual decoded image width and height
             size_t scaledw, scaledh;
             if (_decoder[i]->is_partial_decoder()) {
@@ -337,6 +351,8 @@ ImageReadAndDecode::load(unsigned char* buff,
             }
             _actual_decoded_width[i] = scaledw;
             _actual_decoded_height[i] = scaledh;
+            // Plot the _decompressed_buff_ptrs[i] using opencv
+            // saveRGBImage(_decompressed_buff_ptrs[i], max_decoded_width, max_decoded_height, std::to_string(_compressed_image_size[i]));
         }
         for (size_t i = 0; i < _batch_size; i++) {
             names[i] = _image_names[i];

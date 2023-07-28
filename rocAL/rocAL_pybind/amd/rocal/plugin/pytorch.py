@@ -89,6 +89,7 @@ class ROCALGenericIterator(object):
         self.eos = False
         self.batch_size = pipeline._batch_size
         self.num_batches = self.loader._external_source.n // self.batch_size if self.loader._external_source.n % self.batch_size == 0 else (self.loader._external_source.n // self.batch_size + 1)
+        print("self.num_batches", self.num_batches)
 
     def next(self):
         return self.__next__()
@@ -118,13 +119,14 @@ class ROCALGenericIterator(object):
                     b.ExternalSourceFeedInput(*(kwargs_pybind.values()))
                     print("out of ExternalSourceFeedInput mode 0")
                 if self.loader._external_source_mode == types.EXTSOURCE_RAW_COMPRESSED:
+                    data_loader_source = next(self.loader._external_source)
                     kwargs_pybind = {
                         "handle":self.loader._handle,
                         "source_input_images":[],
-                        "labels":next(self.loader._external_source)[1],
-                        "input_batch_buffer":next(self.loader._external_source)[0],
+                        "labels":data_loader_source[1],
+                        "input_batch_buffer":data_loader_source[0],
                         "roi_width":[],
-                        "roi_height":next(self.loader._external_source)[2], 
+                        "roi_height":data_loader_source[2], 
                         "decoded_width":self.loader._external_source_user_given_width, 
                         "decoded_height":self.loader._external_source_user_given_height, 
                         "channels":3,
@@ -133,6 +135,7 @@ class ROCALGenericIterator(object):
                         "eos":self.eos } # Check the Mode your passing
                     b.ExternalSourceFeedInputWrapper(*(kwargs_pybind.values()))
                 if self.loader._external_source_mode == types.EXTSOURCE_RAW_UNCOMPRESSED:
+                    print("External Source Mode 2 called in __next__")
                     data_loader_source = next(self.loader._external_source)
                     kwargs_pybind = {
                         "handle":self.loader._handle,
@@ -150,8 +153,6 @@ class ROCALGenericIterator(object):
                         "eos":self.eos } # Check the Mode your passing
                     b.ExternalSourceFeedInputWrapper(*(kwargs_pybind.values()))
 
-        if (b.isEmpty(self.loader._handle)):
-            raise StopIteration
         if self.loader.rocalRun() != 0:
             raise StopIteration
 
@@ -160,7 +161,9 @@ class ROCALGenericIterator(object):
         #From init
         self.augmentation_count = len(self.output_tensor_list)
         self.w = self.output_tensor_list[0].batch_width()
+        print("self.w", self.w)
         self.h = self.output_tensor_list[0].batch_height()
+        print("self.h",self.h)
         self.batch_size = self.output_tensor_list[0].batch_size()
         self.color_format = self.output_tensor_list[0].color_format()
         print("here 2")

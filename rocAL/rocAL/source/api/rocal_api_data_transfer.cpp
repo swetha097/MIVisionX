@@ -23,6 +23,7 @@ THE SOFTWARE.
 #include "commons.h"
 #include "context.h"
 #include "rocal_api.h"
+#include <opencv2/opencv.hpp>
 #if ENABLE_OPENCL
 #include "CL/cl.h"
 #endif
@@ -67,6 +68,14 @@ rocalToTensor(RocalContext p_context, void *out_ptr, RocalTensorlayout tensor_fo
     return ROCAL_OK;
 }
 
+inline void saveRGBImage(const unsigned char* imageData, int width, int height, const std::string& filename) {
+    // Create a cv::Mat object from the image data
+    cv::Mat rgbImage(height, width, CV_8UC3, (void*)imageData);
+    // Save the image to the specified file
+    cv::imwrite(filename + "output_image_transfer.png", rgbImage);
+    std::cerr << "\n Dumped Images";
+}
+
 RocalStatus ROCAL_API_CALL
 rocalExternalSourceFeedInput(
         RocalContext p_context,
@@ -87,9 +96,17 @@ rocalExternalSourceFeedInput(
     {
         ExternalFileMode external_file_mode = (ExternalFileMode) mode;
         RocalTensorlayout format = (RocalTensorlayout) layout;
+        // std::cerr << "\n Comes to Transfer start ";
         context->master_graph->feed_external_input(input_images_names, labels, input_buffer,
                                                     roi_width, roi_height, max_width, max_height, channels,
                                                     external_file_mode, format, eos);
+        // const size_t image_size = max_width * max_height * 3 * sizeof(unsigned char);
+        // std::cerr << "\n Comes to Transfer end ";
+        // for(uint i = 0; i < roi_width.size(); i++)
+        // {
+        //     auto image_row_ptr = input_buffer[i];
+        //     saveRGBImage(image_row_ptr, max_width, max_height, std::to_string(i));
+        // }
     }
     catch(const std::exception& e)
     {

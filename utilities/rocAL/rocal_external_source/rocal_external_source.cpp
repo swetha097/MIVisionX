@@ -168,7 +168,7 @@ int main(int argc, const char **argv) {
   }
   if (mode != 0) {
     if (mode == 1) {
-      // Mode 1 is Raw uncompressed
+      // Mode 1 is Raw compressed
       // srcsize_height and srcsize_width resized based on total file count
       srcsize_height.resize(file_names.size());
       srcsize_width.resize(file_names.size());

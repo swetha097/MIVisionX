@@ -24,6 +24,7 @@ THE SOFTWARE.
 #include <algorithm>
 #include "external_source_reader.h"
 #include <boost/filesystem.hpp>
+#include <opencv2/opencv.hpp>
 
 namespace filesys = boost::filesystem;
 
@@ -111,6 +112,14 @@ size_t ExternalSourceReader::open() {
     return _current_file_size;
 }
 
+inline void saveRGBImage(const unsigned char* imageData, int width, int height, const std::string& filename) {
+    // Create a cv::Mat object from the image data
+    cv::Mat rgbImage(height, width, CV_8UC3, (void*)imageData);
+    // Save the image to the specified file
+    cv::imwrite(filename + "output_image_external_soure_reader.png", rgbImage);
+    std::cerr << "\n Dumped Images";
+}
+
 size_t ExternalSourceReader::read_data(unsigned char* buf, size_t read_size) {
     if (_file_mode == ExternalFileMode::FILENAME) {
         if(!_current_fPtr)
@@ -122,13 +131,17 @@ size_t ExternalSourceReader::read_data(unsigned char* buf, size_t read_size) {
         return actual_read_size;
     } else {
         unsigned char *file_data_ptr = std::get<0>(_file_data[_curr_file_idx]);
+        // saveRGBImage(file_data_ptr, std::get<2>(_file_data[_curr_file_idx]), std::get<3>(_file_data[_curr_file_idx]), std::to_string(_current_file_size+1));
         size_t size = _current_file_size;
-        increment_read_ptr();
+        
         if (size > read_size)
           THROW("Requested size doesn't match the actual size for file read")
         std::cerr << "Before memcpy";
-        memcpy(buf, static_cast<void *>(file_data_ptr), size);
+        std::cerr << "\n std::get<1>(_file_data[_curr_file_idx]" <<_current_file_size;
+        memcpy(static_cast<void *>(buf), static_cast<void *>(file_data_ptr), size);
+        // saveRGBImage(buf, std::get<2>(_file_data[_curr_file_idx]), std::get<3>(_file_data[_curr_file_idx]), std::to_string(_current_file_size));
         std::cerr << "After memcpy";
+        increment_read_ptr();
         return size;
     }
 }
