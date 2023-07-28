@@ -8,8 +8,6 @@ from amd.rocal.pipeline import Pipeline
 from amd.rocal.plugin.pytorch import ROCALClassificationIterator
 import amd.rocal.fn as fn
 import amd.rocal.types as types
-from turbojpeg import TurboJPEG
-import imageio
 import cv2
 
 def main():
@@ -26,8 +24,6 @@ def main():
         image = cv2.cvtColor(image, cv2.COLOR_RGB2BGR)
         cv2.imwrite(str(idx)+"_"+"train"+".png", image)
 
-    # using default library installation    
-    jpeg = TurboJPEG()
     #Define the Data Source for all image samples
     class ExternalInputIteratorMode2(object):
         def __init__(self, batch_size):
@@ -36,8 +32,6 @@ def main():
             self.files = []
             self.maxHeight = self.maxWidth = 0
             import os, glob
-            # for filename in os.listdir(os.getcwd()):
-            # for filename in glob.glob('*.jpeg'):
             for filename in glob.glob(os.path.join(self.images_dir, '*.jpg')):
                 self.files.append(filename)
             shuffle(self.files)
@@ -83,7 +77,6 @@ def main():
                 batch_of_numpy.append(self.out_image[x])
                 labels.append(1)
                 self.i = (self.i + 1) % self.n
-                # draw_patches(batch_of_numpy[x], x, "cpu")
             return (batch_of_numpy, labels, roi_height, roi_width, self.maxHeight, self.maxWidth)
 
 

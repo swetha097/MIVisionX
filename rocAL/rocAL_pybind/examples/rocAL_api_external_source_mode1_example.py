@@ -1,7 +1,6 @@
 import types
 import collections
 import numpy as np
-from random import shuffle
 from amd.rocal.pipeline import Pipeline
 from amd.rocal.plugin.pytorch import ROCALClassificationIterator
 import amd.rocal.fn as fn
@@ -11,7 +10,6 @@ def main():
 
     batch_size = 5
     data_dir = "/media/MIVisionX-data/rocal_data/coco/coco_10_img/train_10images_2017/" # Pass a directory
-    # data_dir = "/media/MIVisionX-data/rocal_data/images_jpg/labels_folder/0/"
     device = "cpu"
     def draw_patches(img, idx, device):
     #image is expected as a tensor, bboxes as numpy
@@ -29,11 +27,8 @@ def main():
             self.batch_size = batch_size
             self.files = []
             import os, glob
-            # for filename in os.listdir(os.getcwd()):
-            # for filename in glob.glob('*.jpeg'):
             for filename in glob.glob(os.path.join(self.images_dir, '*.jpg')):
                 self.files.append(filename)
-            # shuffle(self.files)
 
         def __iter__(self):
             self.i = 0
@@ -46,16 +41,12 @@ def main():
             batch = []
             labels = []
             srcsize_height = []
-            print("CALL NEXT")
             for x in range(self.batch_size):
-                print("x: ", x)
                 jpeg_filename = self.files[self.i]
                 label = 1
                 f = open(jpeg_filename, 'rb')
                 numpy_buffer = np.frombuffer(f.read(), dtype = np.uint8)
                 batch.append(numpy_buffer)
-                print("jpeg_filename", jpeg_filename)
-                print("len(batch[x]", len(numpy_buffer))
                 srcsize_height.append(len(numpy_buffer))
                 labels.append(1)
                 self.i = (self.i + 1) % self.n
