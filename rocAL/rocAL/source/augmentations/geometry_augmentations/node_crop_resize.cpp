@@ -67,7 +67,7 @@ void CropResizeNode::update_node() {
     auto y1 = _crop_param->get_y1_arr_val();
     auto x2 = _crop_param->get_croph_arr_val();
     auto y2 = _crop_param->get_cropw_arr_val();
-    RocalROI *crop_dims = static_cast<RocalROI *>_crop_coordinates;
+    RocalROI *crop_dims = static_cast<RocalROI *>(_crop_coordinates);
     for(unsigned i = 0; i < _batch_size; i++) {
         crop_dims[i].x1 = x1[i];
         crop_dims[i].y1 = y1[i];

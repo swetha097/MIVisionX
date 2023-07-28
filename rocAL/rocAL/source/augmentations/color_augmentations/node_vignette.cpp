@@ -37,7 +37,7 @@ void VignetteNode::create_node() {
 
     vx_status status;
     if((status = vxGetStatus((vx_reference)_node)) != VX_SUCCESS)
-        THROW("Adding the vignette (vxRppVignette) node failed: "+ TOSTR(status))
+        THROW("Adding the vignette (vxRppVignette) node failed: " + TOSTR(status))
 }
 
 void VignetteNode::init(float sdev) {

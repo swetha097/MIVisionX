@@ -77,7 +77,7 @@ void CropMirrorNormalizeNode::create_node() {
     status |= vxAddArrayItems(_offset_vx_array, multiplier_offset_array_size, offset_vec.data(), sizeof(vx_float32));
     _mirror.create_array(_graph, VX_TYPE_UINT32, _batch_size);
     if(status != 0)
-        THROW(" vxAddArrayItems failed in the crop_mirror_normalize node (vxRppCropMirrorNormalize)  node: "+ TOSTR(status) + "  "+ TOSTR(status))   
+        THROW(" vxAddArrayItems failed in the crop_mirror_normalize node (vxRppCropMirrorNormalize)  node: " + TOSTR(status) + "  " + TOSTR(status))   
     create_crop_tensor(_crop_tensor, &_crop_coordinates);
     
     _node = vxRppCropMirrorNormalize(_graph->get(), _inputs[0]->handle(), _crop_tensor, _outputs[0]->handle(),
@@ -97,7 +97,7 @@ void CropMirrorNormalizeNode::update_node() {
     // Obtain the crop coordinates and update the roi
     auto x1 = _crop_param->get_x1_arr_val();
     auto y1 = _crop_param->get_y1_arr_val();
-    RocalROI *src_roi = static_cast<RocalROI *>_crop_coordinates;
+    RocalROI *src_roi = static_cast<RocalROI *>(_crop_coordinates);
     for(unsigned i = 0; i < _batch_size; i++) {
         src_roi[i].x1 = x1[i];
         src_roi[i].y1 = y1[i];

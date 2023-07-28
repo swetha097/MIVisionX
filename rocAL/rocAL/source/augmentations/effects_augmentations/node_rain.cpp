@@ -43,7 +43,7 @@ void RainNode::create_node() {
     
     vx_status status;
     if((status = vxGetStatus((vx_reference)_node)) != VX_SUCCESS)
-        THROW("Adding the rain (vxRppRain) node failed: "+ TOSTR(status))
+        THROW("Adding the rain (vxRppRain) node failed: " + TOSTR(status))
 }
 
 void RainNode::init(float rain_value, int rain_width, int rain_height, float rain_transparency) {

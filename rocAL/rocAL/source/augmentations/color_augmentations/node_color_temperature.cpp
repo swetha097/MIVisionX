@@ -37,7 +37,7 @@ void ColorTemperatureNode::create_node() {
 
     vx_status status;
     if((status = vxGetStatus((vx_reference)_node)) != VX_SUCCESS)
-        THROW("Adding the ColorTemperature (vxRppColorTemperature) node failed: "+ TOSTR(status))
+        THROW("Adding the ColorTemperature (vxRppColorTemperature) node failed: " + TOSTR(status))
 }
 
 void ColorTemperatureNode::init(int adjustment) {

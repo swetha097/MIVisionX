@@ -37,7 +37,7 @@ void SaturationNode::create_node() {
 
     vx_status status;
     if((status = vxGetStatus((vx_reference)_node)) != VX_SUCCESS)
-        THROW("Adding the saturation (vxRppSaturation) node failed: "+ TOSTR(status))
+        THROW("Adding the saturation (vxRppSaturation) node failed: " + TOSTR(status))
 }
 
 void SaturationNode::init(float saturation) {

@@ -38,7 +38,7 @@ void HueNode::create_node() {
 
     vx_status status;
     if((status = vxGetStatus((vx_reference)_node)) != VX_SUCCESS)
-        THROW("Adding the hue (vxRppHue) node failed: "+ TOSTR(status))
+        THROW("Adding the hue (vxRppHue) node failed: " + TOSTR(status))
 }
 
 void HueNode::init(float hue) {

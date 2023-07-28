@@ -40,7 +40,7 @@ void BlendNode::create_node() {
 
     vx_status status;
     if((status = vxGetStatus((vx_reference)_node)) != VX_SUCCESS)
-        THROW("Adding the Blend (vxRppBlend) node failed: "+ TOSTR(status))
+        THROW("Adding the Blend (vxRppBlend) node failed: " + TOSTR(status))
 }
 
 void BlendNode::init(float ratio) {

@@ -37,7 +37,7 @@ void FogNode::create_node() {
 
     vx_status status;
     if((status = vxGetStatus((vx_reference)_node)) != VX_SUCCESS)
-        THROW("Adding the fog (vxRppFog) node failed: "+ TOSTR(status))
+        THROW("Adding the fog (vxRppFog) node failed: " + TOSTR(status))
 }
 
 void FogNode::init(float fog_param) {

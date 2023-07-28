@@ -35,7 +35,7 @@ void PixelateNode::create_node() {
 
     vx_status status;
     if((status = vxGetStatus((vx_reference)_node)) != VX_SUCCESS)
-        THROW("Adding the pixelate (vxRppPixelate) node failed: "+ TOSTR(status))
+        THROW("Adding the pixelate (vxRppPixelate) node failed: " + TOSTR(status))
 }
 
 void PixelateNode::update_node() {}

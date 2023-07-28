@@ -39,7 +39,7 @@ void ContrastNode::create_node() {
 
     vx_status status;
     if((status = vxGetStatus((vx_reference)_node)) != VX_SUCCESS)
-        THROW("Adding the contrast (vxRppContrast) node failed: "+ TOSTR(status))
+        THROW("Adding the contrast (vxRppContrast) node failed: " + TOSTR(status))
 }
 
 void ContrastNode::init(float contrast_factor, float contrast_center) {
