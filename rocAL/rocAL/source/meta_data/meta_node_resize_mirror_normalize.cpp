@@ -52,12 +52,9 @@ void ResizeMirrorNormalizeMetaNode::update_parameters(pMetaDataBatch input_meta_
     {
         _dst_to_src_width_ratio = float(output_roi[i].x2) / float(input_roi[i].x2);
         _dst_to_src_height_ratio = float(output_roi[i].y2) / float(input_roi[i].y2);
-        std::cerr<<"_dst_width_val[i] / float(input_roi[i].x2 "<<float(output_roi[i].x2) <<"  "<< float(input_roi[i].x2);
-        std::cerr<<"_dst_width_val[i] / float(input_roi[i].x2 "<<float(output_roi[i].y2) <<"  "<< float(input_roi[i].y2);
 
         auto bb_count = input_meta_data->get_labels_batch()[i].size();
         BoundingBoxCords coords_buf = input_meta_data->get_bb_cords_batch()[i];
-        std::cerr<<"\n coords_buf "<<coords_buf[0].r<< "  "<<coords_buf[0].b;
         Labels labels_buf = input_meta_data->get_labels_batch()[i];        
         BoundingBoxCords bb_coords;
         Labels bb_labels;
@@ -69,7 +66,7 @@ void ResizeMirrorNormalizeMetaNode::update_parameters(pMetaDataBatch input_meta_
             {
                 if(_mirror_val[i] == 1)
                 {
-                    mask_data_ptr[idx] = _dst_width_val[i] - (mask_data_ptr[idx] * _dst_to_src_width_ratio) - 1;
+                    mask_data_ptr[idx] = output_roi[i].x2 - (mask_data_ptr[idx] * _dst_to_src_width_ratio) - 1;
                     mask_data_ptr[idx + 1] = mask_data_ptr[idx + 1] * _dst_to_src_height_ratio;
                 }
                 else
@@ -93,8 +90,8 @@ void ResizeMirrorNormalizeMetaNode::update_parameters(pMetaDataBatch input_meta_
             {
                 auto l = coords_buf[j].l;
                 auto r = coords_buf[j].r;
-                coords_buf[j].l = _dst_width_val[i] - r - 1;
-                coords_buf[j].r = _dst_width_val[i] - l - 1;
+                coords_buf[j].l = output_roi[i].x2 - r - 1;
+                coords_buf[j].r = output_roi[i].x2 - l - 1;
             }
             bb_coords.push_back(coords_buf[j]);
             bb_labels.push_back(labels_buf[j]);
