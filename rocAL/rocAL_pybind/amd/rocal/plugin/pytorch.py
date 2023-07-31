@@ -26,6 +26,7 @@ import ctypes
 
 class ROCALGenericIterator(object):
     def __init__(self, pipeline, tensor_layout=types.NCHW, reverse_channels=False, multiplier=[1.0, 1.0, 1.0], offset=[0.0, 0.0, 0.0], tensor_dtype=types.FLOAT, device="cpu", device_id=0, display=False):
+        print("in init")
         self.loader = pipeline
         self.tensor_format = tensor_layout
         self.multiplier = multiplier
@@ -47,15 +48,20 @@ class ROCALGenericIterator(object):
         return self.__next__()
 
     def __next__(self):
+        print("in next")
         if self.loader.rocalRun() != 0:
+            print("rocALRUn!=0")
             raise StopIteration
         else:
+            print("got the output tensor list")
             self.output_tensor_list = self.loader.getOutputTensors()
-
+        print("self.output_list", self.output_list)
         if self.output_list is None:
+            print("The list")
             self.output_list = []
             for i in range(len(self.output_tensor_list)):
                 self.dimensions = self.output_tensor_list[i].dimensions()
+                print("self.dimesnions",self.dimensions)
                 if self.device == "cpu":
                     self.torch_dtype = self.output_tensor_list[i].dtype()
                     self.output = torch.empty(self.dimensions, dtype = getattr(torch, self.torch_dtype))
@@ -125,7 +131,7 @@ class ROCALGenericIterator(object):
                         draw_patches(img[i], i, 0)
                 self.labels = self.loader.getImageLabels()
                 self.labels_tensor = self.labels_tensor.copy_(torch.from_numpy(self.labels)).long()
-
+            print(self.output_list)
             return self.output_list, self.labels_tensor
 
     def reset(self):
@@ -138,7 +144,8 @@ class ROCALGenericIterator(object):
         return self.len
 
     def __del__(self):
-        b.rocalRelease(self.loader._handle)
+        print("In rocALRelease")
+        # b.rocalRelease(self.loader._handle)
 
 
 class ROCALClassificationIterator(ROCALGenericIterator):
