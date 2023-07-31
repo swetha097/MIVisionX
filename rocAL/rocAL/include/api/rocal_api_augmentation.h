@@ -811,4 +811,6 @@ extern "C" RocalTensor ROCAL_API_CALL rocalSSDRandomCrop(  RocalContext context,
 // /// \param dest_height The output height
 // /// \return Returns a new image that keeps the result.
 
+
+
 #endif //MIVISIONX_ROCAL_API_AUGMENTATION_H
