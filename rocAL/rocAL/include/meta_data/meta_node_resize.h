@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2019 - 2023 Advanced Micro Devices, Inc. All rights reserved.
+Copyright (c) 2019 - 2020 Advanced Micro Devices, Inc. All rights reserved.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -23,23 +23,21 @@ THE SOFTWARE.
 #pragma once
 #include <set>
 #include <memory>
-#include <algorithm>
 #include "bounding_box_graph.h"
 #include "meta_data.h"
 #include "node.h"
-#include "node_flip.h"
+#include "node_resize.h"
 #include "parameter_vx.h"
-
-class FlipMetaNode:public MetaNode
+class ResizeMetaNode:public MetaNode
 {
     public:
-        FlipMetaNode() {};
+        ResizeMetaNode() {};
         void update_parameters(pMetaDataBatch input_meta_data, pMetaDataBatch output_meta_data) override;
-        std::shared_ptr<FlipNode> _node = nullptr;
+        std::shared_ptr<ResizeNode> _node = nullptr;
     private:
         void initialize();
-        vx_array _src_width, _src_height;
-        std::vector<uint> _src_width_val, _src_height_val;
-        vx_array _h_flag, _v_flag;
-        std::vector<int> _h_flag_val, _v_flag_val;
+        vx_array _src_width, _src_height,_dst_width, _dst_height;
+        std::vector<uint> _src_width_val, _src_height_val, _dst_width_val, _dst_height_val;
+        // unsigned int _dst_width, _dst_height;
+        float _dst_to_src_width_ratio, _dst_to_src_height_ratio;
 };

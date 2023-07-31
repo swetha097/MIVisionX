@@ -577,6 +577,7 @@ namespace rocal{
         m.def("caffe2Reader", &rocalCreateCaffe2LMDBLabelReader, py::return_value_policy::reference);
         m.def("caffeReaderDetection", &rocalCreateCaffeLMDBReaderDetection, py::return_value_policy::reference);
         m.def("caffe2ReaderDetection", &rocalCreateCaffe2LMDBReaderDetection, py::return_value_policy::reference);
+        m.def("mxnetReader", &rocalCreateMXNetReader, py::return_value_policy::reference);
         m.def("isEmpty", &rocalIsEmpty);
         m.def("getStatus", rocalGetStatus);
         m.def("rocalGetErrorMessage", &rocalGetErrorMessage);
@@ -698,43 +699,45 @@ namespace rocal{
         }
         );
         // rocal_api_data_loaders.h
-        // m.def("COCO_ImageDecoderSlice", &rocalJpegCOCOFileSourcePartial,"Reads file from the source given and decodes it according to the policy",
-        //     py::return_value_policy::reference);
-        //  m.def("COCO_ImageDecoderSliceShard", &rocalJpegCOCOFileSourcePartialSingleShard,"Reads file from the source given and decodes it according to the policy",
-        //     py::return_value_policy::reference);
+        m.def("COCO_ImageDecoderSlice", &rocalJpegCOCOFileSourcePartial,"Reads file from the source given and decodes it according to the policy",
+            py::return_value_policy::reference);
+         m.def("COCO_ImageDecoderSliceShard", &rocalJpegCOCOFileSourcePartialSingleShard,"Reads file from the source given and decodes it according to the policy",
+            py::return_value_policy::reference);
         m.def("ImageDecoder", &rocalJpegFileSource, "Reads file from the source given and decodes it according to the policy",
             py::return_value_policy::reference);
         m.def("ImageDecoderShard", &rocalJpegFileSourceSingleShard, "Reads file from the source given and decodes it according to the shard id and number of shards",
             py::return_value_policy::reference);
-        // m.def("COCO_ImageDecoder", &rocalJpegCOCOFileSource,"Reads file from the source given and decodes it according to the policy",
-        //     py::return_value_policy::reference);
-        // m.def("COCO_ImageDecoderShard", &rocalJpegCOCOFileSourceSingleShard,"Reads file from the source given and decodes it according to the shard id and number of shards",
-        //     py::return_value_policy::reference);
-        // m.def("TF_ImageDecoder", &rocalJpegTFRecordSource,"Reads file from the source given and decodes it according to the policy only for TFRecords",
-        //     py::return_value_policy::reference);
-        // m.def("Caffe_ImageDecoder", &rocalJpegCaffeLMDBRecordSource,"Reads file from the source given and decodes it according to the policy only for TFRecords",
-        //     py::return_value_policy::reference);
-        // m.def("Caffe_ImageDecoderShard", &rocalJpegCaffeLMDBRecordSourceSingleShard, "Reads file from the source given and decodes it according to the shard id and number of shards",
-        //     py::return_value_policy::reference);
-        // m.def("Caffe_ImageDecoderPartialShard", &rocalJpegCaffeLMDBRecordSourcePartialSingleShard);
-        // m.def("Caffe2_ImageDecoder", &rocalJpegCaffe2LMDBRecordSource,"Reads file from the source given and decodes it according to the policy only for TFRecords",
-        //     py::return_value_policy::reference);
-        // m.def("Caffe2_ImageDecoderShard", &rocalJpegCaffe2LMDBRecordSourceSingleShard,"Reads file from the source given and decodes it according to the shard id and number of shards",
-        //     py::return_value_policy::reference);
-        // m.def("Caffe2_ImageDecoderPartialShard", &rocalJpegCaffe2LMDBRecordSourcePartialSingleShard);
-        // m.def("FusedDecoderCrop", &rocalFusedJpegCrop,"Reads file from the source and decodes them partially to output random crops",
-        //     py::return_value_policy::reference);
-        // m.def("FusedDecoderCropShard", &rocalFusedJpegCropSingleShard,"Reads file from the source and decodes them partially to output random crops",
-        //     py::return_value_policy::reference);
-        // m.def("TF_ImageDecoderRaw", &rocalRawTFRecordSource,"Reads file from the source given and decodes it according to the policy only for TFRecords",
-        //       py::return_value_policy::reference);
-        // m.def("Cifar10Decoder", &rocalRawCIFAR10Source,"Reads file from the source given and decodes it according to the policy only for TFRecords",
-        //       py::return_value_policy::reference);
-        m.def("VideoDecoder", &rocalVideoFileSource, "Reads videos from the source given and decodes it according to the policy only for videos as inputs",
+        m.def("COCO_ImageDecoder", &rocalJpegCOCOFileSource,"Reads file from the source given and decodes it according to the policy",
+            py::return_value_policy::reference);
+        m.def("COCO_ImageDecoderShard", &rocalJpegCOCOFileSourceSingleShard,"Reads file from the source given and decodes it according to the shard id and number of shards",
+            py::return_value_policy::reference);
+        m.def("TF_ImageDecoder", &rocalJpegTFRecordSource,"Reads file from the source given and decodes it according to the policy only for TFRecords",
+            py::return_value_policy::reference);
+        m.def("Caffe_ImageDecoder", &rocalJpegCaffeLMDBRecordSource,"Reads file from the source given and decodes it according to the policy only for TFRecords",
+            py::return_value_policy::reference);
+        m.def("Caffe_ImageDecoderShard", &rocalJpegCaffeLMDBRecordSourceSingleShard, "Reads file from the source given and decodes it according to the shard id and number of shards",
+            py::return_value_policy::reference);
+        m.def("Caffe_ImageDecoderPartialShard", &rocalJpegCaffeLMDBRecordSourcePartialSingleShard);
+        m.def("Caffe2_ImageDecoder", &rocalJpegCaffe2LMDBRecordSource,"Reads file from the source given and decodes it according to the policy only for TFRecords",
+            py::return_value_policy::reference);
+        m.def("Caffe2_ImageDecoderShard", &rocalJpegCaffe2LMDBRecordSourceSingleShard,"Reads file from the source given and decodes it according to the shard id and number of shards",
+            py::return_value_policy::reference);
+        m.def("Caffe2_ImageDecoderPartialShard", &rocalJpegCaffe2LMDBRecordSourcePartialSingleShard);
+        m.def("FusedDecoderCrop", &rocalFusedJpegCrop,"Reads file from the source and decodes them partially to output random crops",
+            py::return_value_policy::reference);
+        m.def("FusedDecoderCropShard", &rocalFusedJpegCropSingleShard,"Reads file from the source and decodes them partially to output random crops",
+            py::return_value_policy::reference);
+        m.def("TF_ImageDecoderRaw", &rocalRawTFRecordSource,"Reads file from the source given and decodes it according to the policy only for TFRecords",
+              py::return_value_policy::reference);
+        m.def("Cifar10Decoder", &rocalRawCIFAR10Source,"Reads file from the source given and decodes it according to the policy only for TFRecords",
+              py::return_value_policy::reference);
+        m.def("VideoDecoder", &rocalVideoFileSource, "Reads videos from the source given and decodes it according to the policy only for Videos as inputs",
             py::return_value_policy::reference);
         m.def("VideoDecoderResize", &rocalVideoFileResize, "Reads videos from the source given and decodes it according to the policy only for videos as inputs. Resizes the decoded frames to the dest width and height.",
             py::return_value_policy::reference);
         m.def("SequenceReader", &rocalSequenceReader, "Creates JPEG image reader and decoder. Reads [Frames] sequences from a directory representing a collection of streams.",
+            py::return_value_policy::reference);
+        m.def("mxnetDecoder", &rocalMXNetRecordSourceSingleShard, "Reads file from the source given and decodes it according to the policy only for mxnet records",
             py::return_value_policy::reference);
         m.def("rocalResetLoaders", &rocalResetLoaders);
         m.def("VideoMetaDataReader", &rocalCreateVideoLabelReader, py::return_value_policy::reference);
