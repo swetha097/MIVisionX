@@ -26,7 +26,6 @@ import ctypes
 
 class ROCALGenericIterator(object):
     def __init__(self, pipeline, tensor_layout=types.NCHW, reverse_channels=False, multiplier=[1.0, 1.0, 1.0], offset=[0.0, 0.0, 0.0], tensor_dtype=types.FLOAT, device="cpu", device_id=0, display=False):
-        print("in init")
         self.loader = pipeline
         self.tensor_format = tensor_layout
         self.multiplier = multiplier
@@ -41,22 +40,16 @@ class ROCALGenericIterator(object):
         self.output_memory_type = self.loader._output_memory_type
         self.len = b.getRemainingImages(self.loader._handle)
         self.display = display
-        print("out init")
 
     def next(self):
         return self.__next__()
 
     def __next__(self):
-        print("in next")
         if self.loader.rocalRun() != 0:
-            print("rocALRUn!=0")
             raise StopIteration
         else:
-            print("got the output tensor list")
             self.output_tensor_list = self.loader.getOutputTensors()
-        print("self.output_list", self.output_list)
         if self.output_list is None:
-            print("The list")
             self.output_list = []
             for i in range(len(self.output_tensor_list)):
                 self.dimensions = self.output_tensor_list[i].dimensions()
@@ -135,8 +128,8 @@ class ROCALGenericIterator(object):
                     for i in range(self.bs):
                         img = (self.output)
                         draw_patches(img[i], i, 0)
-                self.labels = self.loader.getImageLabels()
-                self.labels_tensor = self.labels_tensor.copy_(torch.from_numpy(self.labels)).long()
+                # self.labels = self.loader.getImageLabels() # TODO: To uncomment it when meta-data support is added for audio
+                # self.labels_tensor = self.labels_tensor.copy_(torch.from_numpy(self.labels)).long()
             print(self.output_list)
             return self.output_list, self.labels_tensor
 
@@ -151,7 +144,7 @@ class ROCALGenericIterator(object):
 
     def __del__(self):
         print("In rocALRelease")
-        # b.rocalRelease(self.loader._handle)
+        b.rocalRelease(self.loader._handle)
 
 
 class ROCALClassificationIterator(ROCALGenericIterator):
