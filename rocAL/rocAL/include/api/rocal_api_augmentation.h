@@ -793,4 +793,11 @@ extern "C" RocalTensor ROCAL_API_CALL rocalSSDRandomCrop(RocalContext context, R
 // /// \param dest_height The output height
 // /// \return Returns a new image that keeps the result.
 
+extern "C" RocalTensor ROCAL_API_CALL rocalPreEmphasisFilter(RocalContext p_context,
+                                                             RocalTensor p_input,
+                                                             RocalTensorOutputType rocal_tensor_output_type,
+                                                             bool is_output,
+                                                             RocalFloatParam p_preemph_coeff = NULL,
+                                                             RocalAudioBorderType preemph_border_type = RocalAudioBorderType::CLAMP);
+
 #endif //MIVISIONX_ROCAL_API_AUGMENTATION_H
