@@ -22,7 +22,8 @@ def draw_patches(img, idx, device):
     import cv2
     image = img.detach().numpy()
     audio_data = image.flatten()
-    label = idx.cpu().detach().numpy()
+    label = idx
+    # label = idx.cpu().detach().numpy() #TODO: Uncomment after the meta-data is enabled
     print("label: ", label)
     # Saving the array in a text file
     file = open("results/rocal_data_new"+str(label)+".txt", "w+")
@@ -53,14 +54,14 @@ def main():
     num_threads = 1
     device_id = 0
     random_seed = random.SystemRandom().randint(0, 2**32 - 1)
-    crop=300
+    crop = 300
     local_rank = 0
     world_size = 1
     print("*********************************************************************")
     audio_pipeline = Pipeline(batch_size=batch_size, num_threads=num_threads, device_id=device_id, seed=random_seed, rocal_cpu=_rali_cpu)
     with audio_pipeline:
         # audio_decode = fn.decoders.audio(audio, file_root=data_path, downmix=True, shard_id=0, num_shards=2,random_shuffle=True)
-        audio_decode = fn.decoders.audio(file_root=data_path, file_list_path=file_list, downmix=True, shard_id=0, num_shards=2, storage_type=9, stick_to_shard=False)
+        audio_decode = fn.decoders.audio(file_root=data_path, file_list_path=" ", downmix=False, shard_id=0, num_shards=2, storage_type=0, stick_to_shard=False)
         audio_pipeline.setOutputs(audio_decode)
     audio_pipeline.build()
     audioIteratorPipeline = ROCALClassificationIterator(audio_pipeline, auto_reset=True)
@@ -70,12 +71,14 @@ def main():
         torch.set_printoptions(threshold=5000, profile="full", edgeitems=100)
         for i , it in enumerate(audioIteratorPipeline):
             print("************************************** i *************************************",i)
-            # print(it)
-            for img, label, roi in zip(it[0],it[1],it[2]):
-                print("label", label)
-                print("roi", roi)
-                print("img",img)
-                draw_patches(img, label, "cpu")
+            for x in range(len(it[0])):
+                for img, label in zip(it[0][x],it[1]):
+                    print("label", label)
+                    # print("roi", roi)
+                    print("cnt", cnt)
+                    print("img", img)
+                    draw_patches(img, cnt, "cpu")
+                    cnt+=1
         print("EPOCH DONE", e)
 if __name__ == '__main__':
     main()
