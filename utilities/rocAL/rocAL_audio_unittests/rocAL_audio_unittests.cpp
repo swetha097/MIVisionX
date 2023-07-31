@@ -150,7 +150,7 @@ int test(int test_case, const char *path, float sample_rate, int downmix, unsign
             output = rocalPreEmphasisFilter(handle, input1, tensorOutputType, true);
             std::cerr<<"\n Calls rocalPreEmphasisFilter ";
         }
-        // break;
+        break;
         // case 2:
         // {
         //     RocalTensorLayout tensorLayout; // = RocalTensorLayout::None;
