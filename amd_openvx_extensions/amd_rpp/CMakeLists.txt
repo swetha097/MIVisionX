@@ -159,6 +159,7 @@ list(APPEND SOURCES
         source/tensor/Snow.cpp
         source/tensor/Vignette.cpp
         source/tensor/WarpAffine.cpp
+        source/tensor/PreemphasisFilter.cpp
         source/kernel_rpp.cpp
         source/internal_publishKernels.cpp
     )
