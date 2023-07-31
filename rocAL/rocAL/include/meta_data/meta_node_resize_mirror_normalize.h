@@ -21,22 +21,22 @@ THE SOFTWARE.
 */
 
 #pragma once
-#include <list>
-#include "circular_buffer.h"
+#include <set>
+#include <memory>
+#include "bounding_box_graph.h"
 #include "meta_data.h"
-#include "parameter_factory.h"
 #include "node.h"
-#include "meta_node.h"
-#include "randombboxcrop_meta_data_reader.h"
-
-class MetaDataGraph
+#include "node_resize_mirror_normalize.h"
+#include "parameter_vx.h"
+class ResizeMirrorNormalizeMetaNode:public MetaNode
 {
-public:
-    virtual ~MetaDataGraph()= default;
-    virtual void process(pMetaDataBatch input_meta_data, pMetaDataBatch output_meta_data) = 0;
-    virtual void update_meta_data(pMetaDataBatch meta_data, decoded_sample_info decoded_image_info) = 0;
-    virtual void update_random_bbox_meta_data(pMetaDataBatch input_meta_data, pMetaDataBatch output_meta_data, decoded_sample_info decoded_image_info,crop_image_info crop_image_info) = 0;
-    virtual void update_box_encoder_meta_data(std::vector<float> *anchors, pMetaDataBatch full_batch_meta_data , float criteria, bool offset , float scale, std::vector<float> &means, std::vector<float> &stds, float *encoded_boxes_data, int *encoded_labels_data) = 0;
-    std::list<std::shared_ptr<MetaNode>> _meta_nodes;
+    public:
+        ResizeMirrorNormalizeMetaNode() {};
+        void update_parameters(pMetaDataBatch input_meta_data, pMetaDataBatch output_meta_data) override;
+        std::shared_ptr<ResizeMirrorNormalizeNode> _node = nullptr;
+    private:
+        void initialize();
+        vx_array _src_width, _src_height, _dst_width, _dst_height, _mirror;
+        std::vector<uint> _src_width_val, _src_height_val, _dst_width_val, _dst_height_val, _mirror_val;
+        float _dst_to_src_width_ratio, _dst_to_src_height_ratio;
 };
-

@@ -1007,6 +1007,10 @@ void MasterGraph::output_routine()
                     {
                         _meta_data_graph->update_random_bbox_meta_data(_augmented_meta_data, output_meta_data, decode_sample_info, crop_image_info);
                     }
+                    else
+                    {
+                        _meta_data_graph->update_meta_data(_augmented_meta_data, decode_sample_info);
+                    }
                     _meta_data_graph->process(_augmented_meta_data, output_meta_data);
                 }
             }
