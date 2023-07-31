@@ -27,21 +27,16 @@ THE SOFTWARE.
 #include "parameter_vx.h"
 #include "rocal_api_types.h"
 
-class PreemphasisFilterNode : public Node
-{
+class PreemphasisFilterNode : public Node {
 public:
     PreemphasisFilterNode(const std::vector<Tensor *> &inputs, const std::vector<Tensor *> &outputs);
     PreemphasisFilterNode() = delete;
     void init(FloatParam* preemph_coeff, RocalAudioBorderType preemph_border);
-
 protected:
     void create_node() override;
     void update_node() override;
 private:
-    vx_array _src_samples_size_array;
-    std::vector<int> _src_samples_size;
     ParameterVX<float> _preemph_coeff;
-    constexpr static float PREEMPH_COEFF_RANGE [2] = {0.97, 0.97}; // 0.97 is the default value set in DALI
+    constexpr static float PREEMPH_COEFF_RANGE [2] = {0.97, 0.97};
     RocalAudioBorderType _preemph_border;
-    std::vector<unsigned> _dst_roi_width_vec, _dst_roi_height_vec;
 };

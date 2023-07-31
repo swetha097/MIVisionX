@@ -26,55 +26,26 @@ THE SOFTWARE.
 
 PreemphasisFilterNode::PreemphasisFilterNode(const std::vector<Tensor *> &inputs, const std::vector<Tensor *> &outputs) :
         Node(inputs, outputs),
-        _preemph_coeff(PREEMPH_COEFF_RANGE[0], PREEMPH_COEFF_RANGE[1])
-{
-}
+        _preemph_coeff(PREEMPH_COEFF_RANGE[0], PREEMPH_COEFF_RANGE[1]) { }
 
-void PreemphasisFilterNode::create_node()
-{
+void PreemphasisFilterNode::create_node() {
     if(_node)
         return;
-    _src_samples_size.resize(_batch_size);
-    // _src_samples_size_array = vxCreateArray(vxGetContext((vx_reference)_graph->get()), VX_TYPE_INT32, _batch_size);
     _preemph_coeff.create_array(_graph , VX_TYPE_FLOAT32, _batch_size);
     vx_status status = VX_SUCCESS;
-    // status |= vxAddArrayItems(_src_samples_size_array, _batch_size, _src_samples_size.data(), sizeof(vx_int32));
     if(status != 0)
         THROW(" vxAddArrayItems failed in the PreemphasisFilter node node: "+ TOSTR(status) + "  "+ TOSTR(status))
-
-    vx_scalar border_type = vxCreateScalar(vxGetContext((vx_reference)_graph->get()),VX_TYPE_UINT32,&_preemph_border);
-    _node = vxExtRppPreemphasisFilter(_graph->get(), _inputs[0]->handle(), _outputs[0]->handle(), _src_tensor_roi, _dst_tensor_roi, _preemph_coeff.default_array(), border_type, _batch_size);
-
+    vx_scalar border_type = vxCreateScalar(vxGetContext((vx_reference)_graph->get()), VX_TYPE_UINT32, &_preemph_border);
+    _node = vxExtRppPreemphasisFilter(_graph->get(), _inputs[0]->handle(), _outputs[0]->handle(), _src_tensor_roi, _dst_tensor_roi, _preemph_coeff.default_array(), border_type);
     if((status = vxGetStatus((vx_reference)_node)) != VX_SUCCESS)
-        THROW("Adding the copy (vxExtrppNode_ToDecibels) node failed: "+ TOSTR(status))
-
+        THROW("Adding the vxExtrppNode_PreemphasisFilter node failed: "+ TOSTR(status))
 }
 
-void PreemphasisFilterNode::update_node()
-{
-    auto audio_roi = _inputs[0]->info().get_roi();
-    auto output_audio_roi = _outputs[0]->info().get_roi();
-    for (uint i=0; i < _batch_size; i++)
-    {
-        // Calculating size = frames * channel
-        _src_samples_size[i] = audio_roi[i].x1 * audio_roi[i].y1;
-        _dst_roi_width_vec[i] = audio_roi[i].x1;
-        _dst_roi_height_vec[i] = audio_roi[i].y1;
-        // std::cerr << "\n In PreEmphasis Filter : " <<"\n audio_roi[i].x1" << _src_samples_size[i]<< "\n audio_roi[i].y1" << audio_roi[i].y1;
-        // std::cerr << "\n In PreEmphasis Filter : " << "\n output_audio_roi[i].x1 : " << output_audio_roi[i].x1;
-    }
-    // vx_status src_roi_status;
-    // src_roi_status = vxCopyArrayRange((vx_array)_src_samples_size_array, 0, _batch_size, sizeof(vx_uint32), _src_samples_size.data(), VX_WRITE_ONLY, VX_MEMORY_TYPE_HOST);
-    // if(src_roi_status != 0)
-    //     THROW(" Failed calling vxCopyArrayRange for src / dst roi status : "+ TOSTR(src_roi_status))
+void PreemphasisFilterNode::update_node() {
      _preemph_coeff.update_array();
-    // _outputs[0]->update_tensor_roi(_dst_roi_width_vec, _dst_roi_height_vec);
 }
 
-void PreemphasisFilterNode::init(FloatParam* preemph_coeff, RocalAudioBorderType preemph_border)
-{
+void PreemphasisFilterNode::init(FloatParam* preemph_coeff, RocalAudioBorderType preemph_border) {
     _preemph_coeff.set_param(core(preemph_coeff));
     _preemph_border = preemph_border;
-    _dst_roi_width_vec.resize(_batch_size);
-    _dst_roi_height_vec.resize(_batch_size);
 }
