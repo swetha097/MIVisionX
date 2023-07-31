@@ -2704,6 +2704,33 @@ VX_API_ENTRY vx_node VX_API_CALL vxExtRppNormalize(vx_graph graph, vx_tensor pSr
     return node;
 }
 
+VX_API_ENTRY vx_node VX_API_CALL vxExtRppResample(vx_graph graph, vx_tensor pSrc, vx_tensor pDst, vx_tensor srcDims, vx_tensor dstDims,
+                                                  vx_tensor outRateTensor, vx_array inRateTensor, 
+                                                  vx_scalar quality,  vx_uint32 nbatchSize, vx_scalar maxDstWidth)
+{
+    vx_node node = NULL;
+    vx_context context = vxGetContext((vx_reference)graph);
+    if (vxGetStatus((vx_reference)context) == VX_SUCCESS)
+    {
+        vx_uint32 devType = getGraphAffinity(graph);
+        vx_scalar deviceType = vxCreateScalar(vxGetContext((vx_reference)graph), VX_TYPE_UINT32, &devType);
+        vx_scalar NBATCHSIZE = vxCreateScalar(vxGetContext((vx_reference)graph), VX_TYPE_UINT32, &nbatchSize);
+        vx_reference params[] = {
+            (vx_reference)pSrc,
+            (vx_reference)pDst,
+            (vx_reference)srcDims,
+            (vx_reference)dstDims,
+            (vx_reference)outRateTensor,
+            (vx_reference)inRateTensor,
+            (vx_reference)quality,
+            (vx_reference)maxDstWidth,
+            (vx_reference)NBATCHSIZE,
+            (vx_reference)deviceType};
+        node = createNode(graph, VX_KERNEL_RPP_RESAMPLE, params, 10);
+    }
+    return node;
+}
+
 RpptDataType getRpptDataType(vx_enum vxDataType) {
     switch(vxDataType) {
         case vx_type_e::VX_TYPE_FLOAT32:

@@ -62,3 +62,4 @@ THE SOFTWARE.
 #include "node_mel_filter_bank.h"
 #include "node_to_decibels.h"
 #include "node_normalize.h"
+#include "node_resample.h"

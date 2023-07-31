@@ -794,6 +794,10 @@ extern "C" RocalTensor ROCAL_API_CALL rocalSSDRandomCrop(RocalContext context, R
 // /// \param dest_height The output height
 // /// \return Returns a new image that keeps the result.
 
+/// Accepts F32 audio buffers
+/// \param context
+/// \param input
+/// \return
 extern "C" RocalTensor ROCAL_API_CALL rocalPreEmphasisFilter(RocalContext p_context,
                                                              RocalTensor p_input,
                                                              RocalTensorOutputType rocal_tensor_output_type,
@@ -804,7 +808,7 @@ extern "C" RocalTensor ROCAL_API_CALL rocalPreEmphasisFilter(RocalContext p_cont
 /// Accepts F32 audio buffers and returns start index and length of non silent region in audio buffer
 /// \param context
 /// \param input
-
+/// \return
 extern "C" std::pair<RocalTensor, RocalTensor> ROCAL_API_CALL rocalNonSilentRegion(RocalContext context,
                                                                                    RocalTensor input,
                                                                                    bool is_output,
@@ -816,7 +820,7 @@ extern "C" std::pair<RocalTensor, RocalTensor> ROCAL_API_CALL rocalNonSilentRegi
 /// Accepts F32 audio buffers
 /// \param context
 /// \param input
-
+/// \return
 extern "C" RocalTensor ROCAL_API_CALL rocalSlice(RocalContext p_context,
                                                  RocalTensor p_input,
                                                  bool is_output,
@@ -832,7 +836,7 @@ extern "C" RocalTensor ROCAL_API_CALL rocalSlice(RocalContext p_context,
 /// Accepts F32 audio buffers
 /// \param context
 /// \param input
-
+/// \return
 extern "C" RocalTensor ROCAL_API_CALL rocalSpectrogram(RocalContext p_context,
                                                        RocalTensor p_input,
                                                        bool is_output,
@@ -849,7 +853,7 @@ extern "C" RocalTensor ROCAL_API_CALL rocalSpectrogram(RocalContext p_context,
 /// Accepts F32 audio buffers
 /// \param context
 /// \param input
-
+/// \return
 extern "C"  RocalTensor ROCAL_API_CALL rocalMelFilterBank(RocalContext p_context,
                                                           RocalTensor p_input,
                                                           bool is_output,
@@ -864,7 +868,7 @@ extern "C"  RocalTensor ROCAL_API_CALL rocalMelFilterBank(RocalContext p_context
 /// Accepts F32 audio buffers
 /// \param context
 /// \param input
-
+/// \return
 extern "C" RocalTensor ROCAL_API_CALL rocalToDecibels(RocalContext p_context,
                                                       RocalTensor p_input,
                                                       bool is_output,
@@ -876,7 +880,7 @@ extern "C" RocalTensor ROCAL_API_CALL rocalToDecibels(RocalContext p_context,
 /// Accepts F32 audio buffers
 /// \param context
 /// \param input
-
+/// \return
 extern "C" RocalTensor ROCAL_API_CALL rocalNormalize(RocalContext p_context,
                                                      RocalTensor p_input,
                                                      bool is_output,
@@ -887,4 +891,14 @@ extern "C" RocalTensor ROCAL_API_CALL rocalNormalize(RocalContext p_context,
                                                      int ddof, float epsilon,
                                                      RocalTensorOutputType rocal_tensor_output_type);
 
+/// Accepts F32 audio buffers
+/// \param context
+/// \param input
+/// \return
+extern "C" RocalTensor ROCAL_API_CALL rocalResample(RocalContext p_context,
+                                                    RocalTensor p_input,
+                                                    RocalTensor p_input_resample_rate,
+                                                    RocalTensorOutputType rocal_tensor_output_type,
+                                                    bool is_output,
+                                                    float sample_hint);
 #endif //MIVISIONX_ROCAL_API_AUGMENTATION_H

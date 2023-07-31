@@ -162,6 +162,7 @@ vx_status Spectrogram_Register(vx_context);
 vx_status MelFilterBank_Register(vx_context);
 vx_status ToDecibels_Register(vx_context);
 vx_status Normalize_Register(vx_context);
+vx_status Resample_Register(vx_context);
 
 // kernel names
 #define VX_KERNEL_RPP_NOPBATCHPD_NAME                   "org.rpp.NopbatchPD"
@@ -287,4 +288,6 @@ vx_status Normalize_Register(vx_context);
 #define VX_KERNEL_RPP_MELFILTERBANK_NAME                        "org.rpp.MelFilterBank"
 #define VX_KERNEL_RPP_TODECIBELS_NAME                           "org.rpp.ToDecibels"
 #define VX_KERNEL_RPP_NORMALIZE_NAME                            "org.rpp.Normalize"
+#define VX_KERNEL_RPP_RESAMPLE_NAME                             "org.rpp.Resample"
+
 #endif //_AMDVX_EXT__PUBLISH_KERNELS_H_
