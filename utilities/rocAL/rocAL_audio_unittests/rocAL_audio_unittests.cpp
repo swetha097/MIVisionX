@@ -114,7 +114,6 @@ int test(int test_case, const char *path, float sample_rate, int downmix, unsign
 
     RocalMetaData metadata_output;
     // MetaData reader for input file_list which has file seperated by labels
-    // metadata_output = rocalCreateCOCOReader(handle, json_path, true, false);
 
     // if (METADATA) { // To uncomment later when meta-data reader for audio is added
     //     std::cerr << "META DATA READER";
@@ -247,7 +246,7 @@ int test(int test_case, const char *path, float sample_rate, int downmix, unsign
         if (rocalRun(handle) != 0) {
             break;
         }
-        std::vector<float> audio_op;\
+        std::vector<float> audio_op;
         output_tensor_list = rocalGetOutputTensors(handle);
         std::cerr<<"\n *****************************Audio output**********************************\n";
         for(int idx = 0; idx < output_tensor_list->size(); idx++)
