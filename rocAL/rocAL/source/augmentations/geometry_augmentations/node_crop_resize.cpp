@@ -44,15 +44,15 @@ void CropResizeNode::create_node()
     width_status = vxAddArrayItems(_dst_roi_width, _batch_size, dst_roi_width.data(), sizeof(vx_uint32));
     height_status = vxAddArrayItems(_dst_roi_height, _batch_size, dst_roi_height.data(), sizeof(vx_uint32));
     if(width_status != 0 || height_status != 0)
-        THROW(" vxAddArrayItems failed in the crop resize node (vxRppResizeCrop)  node: "+ TOSTR(width_status) + "  "+ TOSTR(height_status))
+        THROW(" vxAddArrayItems failed in the crop resize node (vxExtRppResizeCrop)  node: "+ TOSTR(width_status) + "  "+ TOSTR(height_status))
 
     create_crop_tensor(_crop_tensor, &_crop_coordinates);
-    _node = vxRppResizeCrop(_graph->get(), _inputs[0]->handle(), _src_tensor_roi, _crop_tensor, _outputs[0]->handle(),
-                            _dst_roi_width, _dst_roi_height, _input_layout, _output_layout, _roi_type);
+    _node = vxExtRppResizeCrop(_graph->get(), _inputs[0]->handle(), _src_tensor_roi, _crop_tensor, _outputs[0]->handle(),
+                               _dst_roi_width, _dst_roi_height, _input_layout, _output_layout, _roi_type);
 
     vx_status status;
     if((status = vxGetStatus((vx_reference)_node)) != VX_SUCCESS)
-        THROW("Error adding the crop resize node (vxRppResizeCrop) failed: " + TOSTR(status))
+        THROW("Error adding the crop resize node (vxExtRppResizeCrop) failed: " + TOSTR(status))
 }
 
 void CropResizeNode::update_node() {

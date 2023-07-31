@@ -46,16 +46,16 @@ void ResizeCropMirrorNode::create_node() {
     width_status = vxAddArrayItems(_dst_roi_width, _batch_size, dst_roi_width.data(), sizeof(vx_uint32));
     height_status = vxAddArrayItems(_dst_roi_height, _batch_size, dst_roi_height.data(), sizeof(vx_uint32));
     if(width_status != 0 || height_status != 0)
-        THROW(" vxAddArrayItems failed in the crop resize node (vxRppResizeCropMirror)  node: "+ TOSTR(width_status) + "  "+ TOSTR(height_status))
+        THROW(" vxAddArrayItems failed in the crop resize node (vxExtRppResizeCropMirror)  node: "+ TOSTR(width_status) + "  "+ TOSTR(height_status))
     _mirror.create_array(_graph, VX_TYPE_UINT32, _batch_size);
     create_crop_tensor(_crop_tensor, &_crop_coordinates);
     vx_scalar interpolation_vx = vxCreateScalar(vxGetContext((vx_reference)_graph->get()), VX_TYPE_INT32, &_interpolation_type);
-    _node = vxRppResizeCropMirror(_graph->get(), _inputs[0]->handle(), _crop_tensor, _outputs[0]->handle(), _dst_roi_width, 
-                                  _dst_roi_height, _mirror.default_array(), interpolation_vx, _input_layout, _output_layout, _roi_type);
+    _node = vxExtRppResizeCropMirror(_graph->get(), _inputs[0]->handle(), _crop_tensor, _outputs[0]->handle(), _dst_roi_width, 
+                                     _dst_roi_height, _mirror.default_array(), interpolation_vx, _input_layout, _output_layout, _roi_type);
 
     vx_status status;
     if((status = vxGetStatus((vx_reference)_node)) != VX_SUCCESS)
-        THROW("Error adding the resize crop mirror node (vxRppResizeCropMirror) failed: " + TOSTR(status))
+        THROW("Error adding the resize crop mirror node (vxExtRppResizeCropMirror) failed: " + TOSTR(status))
 }
 
 void ResizeCropMirrorNode::update_node() {

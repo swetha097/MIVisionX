@@ -65,7 +65,7 @@ void ResizeMirrorNormalizeNode::create_node()
     mean_status |= vxAddArrayItems(_std_dev_vx_array, mean_std_array_size, std_dev_vec.data(), sizeof(vx_float32));
     _mirror.create_array(_graph, VX_TYPE_UINT32, _batch_size);
     if(mean_status != 0)
-        THROW(" vxAddArrayItems failed in the resize_mirror_normalize node (vxRppResizeMirrorNormalize)  node: " + TOSTR(mean_status) + "  " + TOSTR(mean_status))
+        THROW(" vxAddArrayItems failed in the resize_mirror_normalize node (vxExtRppResizeMirrorNormalize)  node: " + TOSTR(mean_status) + "  " + TOSTR(mean_status))
 
     std::vector<uint32_t> dst_roi_width(_batch_size,_outputs[0]->info().max_shape()[0]);
     std::vector<uint32_t> dst_roi_height(_batch_size, _outputs[0]->info().max_shape()[1]);
@@ -76,14 +76,14 @@ void ResizeMirrorNormalizeNode::create_node()
     width_status = vxAddArrayItems(_dst_roi_width, _batch_size, dst_roi_width.data(), sizeof(vx_uint32));
     height_status = vxAddArrayItems(_dst_roi_height, _batch_size, dst_roi_height.data(), sizeof(vx_uint32));
     if(width_status != 0 || height_status != 0)
-        THROW(" vxAddArrayItems failed in the resize mirror normalize (vxRppResizeMirrorNormalize) node: "+ TOSTR(width_status) + "  "+ TOSTR(height_status));
+        THROW(" vxAddArrayItems failed in the resize mirror normalize (vxExtRppResizeMirrorNormalize) node: "+ TOSTR(width_status) + "  "+ TOSTR(height_status));
 
     vx_scalar interpolation_vx = vxCreateScalar(vxGetContext((vx_reference)_graph->get()), VX_TYPE_INT32, &_interpolation_type);
-   _node = vxRppResizeMirrorNormalize(_graph->get(), _inputs[0]->handle(), _src_tensor_roi, _outputs[0]->handle(),
-                                      _dst_roi_width, _dst_roi_height, interpolation_vx, _mean_vx_array, _std_dev_vx_array,
-                                      _mirror.default_array(), _input_layout, _output_layout, _roi_type);
+   _node = vxExtRppResizeMirrorNormalize(_graph->get(), _inputs[0]->handle(), _src_tensor_roi, _outputs[0]->handle(),
+                                         _dst_roi_width, _dst_roi_height, interpolation_vx, _mean_vx_array, _std_dev_vx_array,
+                                         _mirror.default_array(), _input_layout, _output_layout, _roi_type);
     if((status = vxGetStatus((vx_reference)_node)) != VX_SUCCESS)
-        THROW("Adding the resize_mirror_normalize (vxRppResizeMirrorNormalize) node failed: " + TOSTR(status))
+        THROW("Adding the resize_mirror_normalize (vxExtRppResizeMirrorNormalize) node failed: " + TOSTR(status))
 }
 
 void ResizeMirrorNormalizeNode::update_node()

@@ -37,11 +37,11 @@ void RandomCropNode::create_node()
 
     _crop_param->create_array(_graph);
     create_crop_tensor(_crop_tensor, &_crop_coordinates);
-    _node = vxRppCrop(_graph->get(), _inputs[0]->handle(), _crop_tensor, _outputs[0]->handle(),
-                       _input_layout, _output_layout, _roi_type);
+    _node = vxExtRppCrop(_graph->get(), _inputs[0]->handle(), _crop_tensor, _outputs[0]->handle(),
+                         _input_layout, _output_layout, _roi_type);
     vx_status status;
     if((status = vxGetStatus((vx_reference)_node)) != VX_SUCCESS)
-        THROW("Error adding the random crop node (vxRppCrop) failed: " + TOSTR(status))
+        THROW("Error adding the random crop node (vxExtRppCrop) failed: " + TOSTR(status))
 }
 
 void RandomCropNode::update_node()
