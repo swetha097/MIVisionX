@@ -119,7 +119,7 @@ rocalRotate(
         
         // For the rotate node, user can create a tensor with a different width and height
         std::vector<size_t> out_dims = output_info.dims();
-        modify_dims_width_and_height(op_tensor_layout, out_dims, dest_width, dest_height);
+        modify_dims_width_and_height(output_info.layout(), out_dims, dest_width, dest_height);
         output_info.set_dims(out_dims);
         output = context->master_graph->create_tensor(output_info, is_output);
         output->reset_tensor_roi();
@@ -165,7 +165,7 @@ rocalRotateFixed(
 
         // For the rotate node, user can create an image with a different width and height
         std::vector<size_t> out_dims = output_info.dims();
-        modify_dims_width_and_height(op_tensor_layout, out_dims, dest_width, dest_height);
+        modify_dims_width_and_height(output_info.layout(), out_dims, dest_width, dest_height);
         output_info.set_dims(out_dims);
         output = context->master_graph->create_tensor(output_info, is_output);
         output->reset_tensor_roi();
@@ -406,7 +406,7 @@ rocalCropResize(
 
         // For the crop resize node, user can create an image with a different width and height
         std::vector<size_t> out_dims = output_info.dims();
-        modify_dims_width_and_height(op_tensor_layout, out_dims, dest_width, dest_height);
+        modify_dims_width_and_height(output_info.layout(), out_dims, dest_width, dest_height);
         output_info.set_dims(out_dims);
         output = context->master_graph->create_tensor(output_info, is_output);
 
@@ -455,7 +455,7 @@ rocalCropResizeFixed(
 
         // For the crop resize node, user can create an image with a different width and height
         std::vector<size_t> out_dims = output_info.dims();
-        modify_dims_width_and_height(op_tensor_layout, out_dims, dest_width, dest_height);   
+        modify_dims_width_and_height(output_info.layout(), out_dims, dest_width, dest_height);   
         output_info.set_dims(out_dims);
         output = context->master_graph->create_tensor(output_info, is_output);
 
@@ -560,7 +560,7 @@ rocalResize(
         output_info.set_tensor_layout(op_tensor_layout);
         output_info.set_data_type(op_tensor_datatype);
         std::vector<size_t> out_dims = output_info.dims();
-        modify_dims_width_and_height(op_tensor_layout, out_dims, max_out_width, max_out_height);
+        modify_dims_width_and_height(output_info.layout(), out_dims, max_out_width, max_out_height);
         output_info.set_dims(out_dims);
         output = context->master_graph->create_tensor(output_info, is_output);
         output->reset_tensor_roi();
@@ -663,7 +663,7 @@ ROCAL_API_CALL rocalResizeMirrorNormalize(
         output_info.set_tensor_layout(op_tensor_layout);
         output_info.set_data_type(op_tensor_datatype);
         std::vector<size_t> out_dims = output_info.dims();
-        modify_dims_width_and_height(op_tensor_layout, out_dims, max_out_width, max_out_height);
+        modify_dims_width_and_height(output_info.layout(), out_dims, max_out_width, max_out_height);
         output_info.set_dims(out_dims);
         output = context->master_graph->create_tensor(output_info, is_output);
         output->reset_tensor_roi();
@@ -912,7 +912,7 @@ rocalWarpAffine(
 
         // For the warp affine node, user can create an image with a different width and height
         std::vector<size_t> out_dims = output_info.dims();
-        modify_dims_width_and_height(op_tensor_layout, out_dims, dest_width, dest_height);
+        modify_dims_width_and_height(output_info.layout(), out_dims, dest_width, dest_height);
         output_info.set_dims(out_dims);
         output = context->master_graph->create_tensor(output_info, is_output);
         output->reset_tensor_roi();
@@ -957,7 +957,7 @@ rocalWarpAffineFixed(
 
         // For the warp affine node, user can create an image with a different width and height
         std::vector<size_t> out_dims = output_info.dims();
-        modify_dims_width_and_height(op_tensor_layout, out_dims, dest_width, dest_height);
+        modify_dims_width_and_height(output_info.layout(), out_dims, dest_width, dest_height);
         output_info.set_dims(out_dims);
         output = context->master_graph->create_tensor(output_info, is_output);
         output->reset_tensor_roi();
@@ -1841,7 +1841,7 @@ rocalCropMirrorNormalize(RocalContext p_context, RocalTensor p_input, unsigned c
         
         // For the crop mirror normalize resize node, user can create an image with a different width and height
         std::vector<size_t> out_dims = output_info.dims();
-        modify_dims_width_and_height(op_tensor_layout, out_dims, crop_width, crop_height);
+        modify_dims_width_and_height(output_info.layout(), out_dims, crop_width, crop_height);
         output_info.set_dims(out_dims);
         output = context->master_graph->create_tensor(output_info, is_output);
         std::shared_ptr<CropMirrorNormalizeNode> cmn_node =  context->master_graph->add_node<CropMirrorNormalizeNode>({input}, {output});
@@ -1930,7 +1930,7 @@ rocalCropFixed(
         
         // For the crop node, user can create an tensor with a different width and height
         std::vector<size_t> out_dims = output_info.dims();
-        modify_dims_width_and_height(op_tensor_layout, out_dims, crop_width, crop_height);
+        modify_dims_width_and_height(output_info.layout(), out_dims, crop_width, crop_height);
         output_info.set_dims(out_dims);
         output = context->master_graph->create_tensor(output_info, is_output);
         output->reset_tensor_roi();
@@ -1974,7 +1974,7 @@ rocalCropCenterFixed(
         
         // For the crop node, user can create an tensor with a different width and height
         std::vector<size_t> out_dims = output_info.dims();
-        modify_dims_width_and_height(op_tensor_layout, out_dims, crop_width, crop_height);
+        modify_dims_width_and_height(output_info.layout(), out_dims, crop_width, crop_height);
         output_info.set_dims(out_dims);
         output = context->master_graph->create_tensor(output_info, is_output);
         output->reset_tensor_roi();
@@ -2021,7 +2021,7 @@ rocalResizeCropMirrorFixed(
 
         // For the resize_crop_mirror node, user can create an image with a different width and height
         std::vector<size_t> out_dims = output_info.dims();
-        modify_dims_width_and_height(op_tensor_layout, out_dims, dest_width, dest_height);
+        modify_dims_width_and_height(output_info.layout(), out_dims, dest_width, dest_height);
         output_info.set_dims(out_dims);
         output = context->master_graph->create_tensor(output_info, is_output);
         output->reset_tensor_roi();
@@ -2065,7 +2065,7 @@ RocalTensor  ROCAL_API_CALL rocalResizeCropMirror(
         
         // For the resize_crop_mirror node, user can create an image with a different width and height
         std::vector<size_t> out_dims = output_info.dims();
-        modify_dims_width_and_height(op_tensor_layout, out_dims, dest_width, dest_height);
+        modify_dims_width_and_height(output_info.layout(), out_dims, dest_width, dest_height);
         output_info.set_dims(out_dims);
         output = context->master_graph->create_tensor(output_info, is_output);
         std::shared_ptr<ResizeCropMirrorNode> rcm_node =  context->master_graph->add_node<ResizeCropMirrorNode>({input}, {output});
