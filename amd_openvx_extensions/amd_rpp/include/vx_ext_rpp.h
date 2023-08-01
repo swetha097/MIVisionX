@@ -1586,6 +1586,11 @@ extern "C"
 	TODO: Add the params
 	*/
 	SHARED_PUBLIC vx_node VX_API_CALL vxExtRppMelFilterBank(vx_graph graph, vx_tensor pSrc, vx_tensor pSrcDims, vx_tensor pDst, vx_tensor pDstDims, vx_scalar freqHigh, vx_scalar freqLow, vx_scalar melFormula, vx_scalar nfilter, vx_scalar normalize, vx_scalar sampleRate);
+
+	/*
+	TODO: Add the params
+	*/
+	SHARED_PUBLIC vx_node VX_API_CALL vxExtRppToDecibels(vx_graph graph, vx_tensor pSrc, vx_tensor pSrcDims, vx_tensor pDst, vx_tensor pDstDims, vx_scalar cutOffDB, vx_scalar multiplier, vx_scalar referenceMagnitude);
 #ifdef __cplusplus
 }
 #endif
