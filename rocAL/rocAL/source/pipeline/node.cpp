@@ -21,7 +21,7 @@ THE SOFTWARE.
 */
 
 #include "node.h"
-Node::~Node() 
+Node::~Node()
 {
     if (!_src_tensor_roi) vxReleaseTensor(&_src_tensor_roi);
     if (!_dst_tensor_roi) vxReleaseTensor(&_dst_tensor_roi);
