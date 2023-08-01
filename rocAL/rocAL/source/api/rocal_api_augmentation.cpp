@@ -180,37 +180,6 @@ rocalRotateFixed(
     }
     return output;
 }
-/* TO be removed - Flip
-RocalImage ROCAL_API_CALL
-rocalFlip(
-        RocalContext p_context,
-        RocalImage p_input,
-        RocalFlipAxis axis,
-        bool is_output)
-{
-    Image* output = nullptr;
-    if ((p_context == nullptr) || (p_input == nullptr)) {
-        ERR("Invalid ROCAL context or invalid input image")
-        return output;
-    }
-
-    auto context = static_cast<Context*>(p_context);
-    auto input = static_cast<Image*>(p_input);
-    try
-    {
-        output = context->master_graph->create_image(input->info(), is_output);
-        std::shared_ptr<FlipNode> flip_node =  context->master_graph->add_node<FlipNode>({input}, {output});
-        if (context->master_graph->meta_data_graph())
-            context->master_graph->meta_add_node<FlipMetaNode,FlipNode>(flip_node);
-    }
-    catch(const std::exception& e)
-    {
-        context->capture_error(e.what());
-        ERR(e.what())
-    }
-    return output;
-}
-*/
 
 RocalTensor ROCAL_API_CALL
 rocalGamma(
