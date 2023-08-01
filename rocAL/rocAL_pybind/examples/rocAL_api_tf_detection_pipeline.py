@@ -25,6 +25,7 @@ import tensorflow as tf
 import amd.rocal.fn as fn
 import numpy as np
 import os
+import cupy as cp
 from parse_config import parse_args
 
 def get_onehot(image_labels_array, num_classes):
@@ -43,13 +44,12 @@ def get_weights(num_bboxes):
     weights_array = np.zeros(num_bboxes)
     for pos in list(range(num_bboxes)):
         np.put(weights_array, pos, 1)
-
     return weights_array
 
-def draw_patches(img, idx, bboxes):
-    #image is expected as a tensor, bboxes as numpy
+def draw_patches(img, idx, bboxes, device_type):
     import cv2
-    # image = img.detach().numpy()
+    if device_type == "gpu":
+        img = cp.asnumpy(img)
     image = img.transpose([0, 1, 2])
     image = cv2.cvtColor(image, cv2.COLOR_RGB2BGR)
     image = cv2.normalize(image, None, alpha = 0, beta = 255, norm_type = cv2.NORM_MINMAX, dtype = cv2.CV_32F)
@@ -69,6 +69,7 @@ def main():
     image_path = args.image_dataset_path
     num_classes = 91
     rocal_cpu = False if args.rocal_gpu else True
+    device = "cpu" if rocal_cpu else "gpu"
     batch_size = args.batch_size
     num_threads = args.num_threads
     tf_record_reader_type = 1
@@ -84,8 +85,8 @@ def main():
     }
     try:
         path= "OUTPUT_IMAGES_PYTHON/NEW_API/TF_READER/DETECTION"
-        isExist = os.path.exists(path)
-        if not isExist:
+        is_exist = os.path.exists(path)
+        if not is_exist:
             os.makedirs(path)
     except OSError as error:
         print(error)
@@ -114,12 +115,10 @@ def main():
         resized = fn.resize(decoded_images, resize_width=300, resize_height=300)
         pipe.setOutputs(resized)
     pipe.build()
-    imageIterator = ROCALIterator(pipe)
+    image_iterator = ROCALIterator(pipe, device=device)
 
     cnt = 0
-    for i, ([images_array], bboxes_array, labels_array, num_bboxes_array) in enumerate(imageIterator, 0):
-        print(images_array.shape)
-        # images_array = np.transpose(images_array, [0, 2, 3, 1])
+    for i, (images_array, bboxes_array, labels_array, num_bboxes_array) in enumerate(image_iterator, 0):
         print("ROCAL augmentation pipeline - Processing batch %d....." % i)
 
         for element in list(range(batch_size)):
@@ -139,10 +138,10 @@ def main():
             processed_tensors = (features_dict, labels_dict)
             if args.print_tensor:
                 print("\nPROCESSED_TENSORS:\n", processed_tensors)
-            draw_patches(images_array[element],cnt,bboxes_array[element])
+            draw_patches(images_array[element], cnt, bboxes_array[element], device)
         print("\n\nPrinted first batch with", (batch_size), "images!")
         break
-    imageIterator.reset()
+    image_iterator.reset()
 
     print("###############################################    TF DETECTION    ###############################################")
     print("###############################################    SUCCESS         ###############################################")
