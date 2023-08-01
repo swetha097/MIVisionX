@@ -39,14 +39,14 @@ def coco(annotations_file='', ltrb=True, masks=False, ratio=False,
     return (meta_data, labels, bboxes)
 
 
-def file(file_root, file_filters=None):
+def file(file_root, file_list='', file_filters=None):
     Pipeline._current_pipeline._reader = "labelReader"
     # Output
     labels = []
     if file_filters is None:
         file_filters = ["*.jpg", "*.jpeg", "*.png", "*.bmp", "*.tif", "*.tiff", "*.pnm", "*.ppm", "*.pgm", "*.pbm", "*.jp2", "*.webp"]
-    kwargs_pybind = {"source_path": file_root}
-    label_reader_meta_data = b.labelReader(Pipeline._current_pipeline._handle, *(kwargs_pybind.values()))
+        kwargs_pybind = {"source_path": file_root, "file_list":file_list}
+        label_reader_meta_data = b.labelReader(Pipeline._current_pipeline._handle ,*(kwargs_pybind.values()))
     return (label_reader_meta_data, labels)
 
 
