@@ -50,7 +50,7 @@ void WarpAffineNode::create_node() {
     vx_status status;
     _affine_array = vxCreateArray(vxGetContext((vx_reference)_graph->get()), VX_TYPE_FLOAT32, _batch_size * 6);
     status = vxAddArrayItems(_affine_array,_batch_size * 6, _affine.data(), sizeof(vx_float32));
-    vx_scalar interpolation_vx = vxCreateScalar(vxGetContext((vx_reference)_graph->get()),VX_TYPE_UINT32,&_interpolation_type);
+    vx_scalar interpolation_vx = vxCreateScalar(vxGetContext((vx_reference)_graph->get()), VX_TYPE_INT32, &_interpolation_type);
     _node = vxExtRppWarpAffine(_graph->get(), _inputs[0]->handle(), _src_tensor_roi, _outputs[0]->handle(), _affine_array,
                                interpolation_vx, _input_layout, _output_layout, _roi_type);
     if((status = vxGetStatus((vx_reference)_node)) != VX_SUCCESS)
@@ -72,25 +72,25 @@ void WarpAffineNode::update_affine_array() {
         THROW(" vxCopyArrayRange failed in the WarpAffine(vxExtRppWarpAffinePD) node: "+ TOSTR(affine_status))
 }
 
-void WarpAffineNode::init(float x0, float x1, float y0, float y1, float o0, float o1, int interpolation_type) {
+void WarpAffineNode::init(float x0, float x1, float y0, float y1, float o0, float o1, RocalResizeInterpolationType interpolation_type) {
     _x0.set_param(x0);
     _x1.set_param(x1);
     _y0.set_param(y0);
     _y1.set_param(y1);
     _o0.set_param(o0);
     _o1.set_param(o1);
-    _interpolation_type = interpolation_type;
+    _interpolation_type = static_cast<int>(interpolation_type);
 }
 
-void WarpAffineNode::init(FloatParam* x0, FloatParam* x1, FloatParam* y0, FloatParam* y1, FloatParam* o0, FloatParam* o1, int interpolation_type)
-{
+void WarpAffineNode::init(FloatParam* x0, FloatParam* x1, FloatParam* y0, FloatParam* y1, 
+                          FloatParam* o0, FloatParam* o1, RocalResizeInterpolationType interpolation_type) {
     _x0.set_param(core(x0));
     _x1.set_param(core(x1));
     _y0.set_param(core(y0));
     _y1.set_param(core(y1));
     _o0.set_param(core(o0));
     _o1.set_param(core(o1));
-    _interpolation_type = interpolation_type;
+    _interpolation_type = static_cast<int>(interpolation_type);
 }
 
 void WarpAffineNode::update_node() {

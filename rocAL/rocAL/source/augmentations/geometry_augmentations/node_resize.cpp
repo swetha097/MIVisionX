@@ -44,8 +44,8 @@ void ResizeNode::create_node() {
      if(width_status != 0 || height_status != 0)
         THROW("vxAddArrayItems failed in the resize (vxExtRppResize) node: " + TOSTR(width_status) + "  " + TOSTR(height_status));
 
-    vx_scalar interpolation_vx = vxCreateScalar(vxGetContext((vx_reference)_graph->get()),VX_TYPE_INT32,&_interpolation_type);
-   _node = vxExtRppResize(_graph->get(), _inputs[0]->handle(), _src_tensor_roi, _outputs[0]->handle(), _dst_roi_width, 
+    vx_scalar interpolation_vx = vxCreateScalar(vxGetContext((vx_reference)_graph->get()), VX_TYPE_INT32, &_interpolation_type);
+    _node = vxExtRppResize(_graph->get(), _inputs[0]->handle(), _src_tensor_roi, _outputs[0]->handle(), _dst_roi_width, 
                           _dst_roi_height, interpolation_vx, _input_layout, _output_layout, _roi_type);
 
     vx_status status;
