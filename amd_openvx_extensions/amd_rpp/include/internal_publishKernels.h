@@ -279,5 +279,8 @@ vx_status MelFilterBank_Register(vx_context);
 #define VX_KERNEL_RPP_VIGNETTE_NAME                             "org.rpp.Vignette"
 #define VX_KERNEL_RPP_WARPAFFINE_NAME                           "org.rpp.WarpAffine"
 #define VX_KERNEL_RPP_PREEMPHASISFILTER_NAME                    "org.rpp.PreemphasisFilter"
-
+#define VX_KERNEL_RPP_NONSILENTREGION_NAME                      "org.rpp.NonSilentRegion"
+#define VX_KERNEL_RPP_SLICE_NAME                                "org.rpp.Slice"
+#define VX_KERNEL_RPP_SPECTROGRAM_NAME                          "org.rpp.Spectrogram"
+#define VX_KERNEL_RPP_MELFILTERBANK_NAME                        "org.rpp.MelFilterBank"
 #endif //_AMDVX_EXT__PUBLISH_KERNELS_H_
