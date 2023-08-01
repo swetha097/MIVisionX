@@ -62,28 +62,28 @@ static vx_status VX_CALLBACK validateSequenceRearrange(vx_node node, const vx_re
     vx_enum scalar_type;
     STATUS_ERROR_CHECK(vxQueryScalar((vx_scalar)parameters[3], VX_SCALAR_TYPE, &scalar_type, sizeof(scalar_type)));
     if (scalar_type != VX_TYPE_INT32)
-        return ERRMSG(VX_ERROR_INVALID_TYPE, "validate: Paramter: #3 type=%d (must be size)\n", scalar_type);
+        return ERRMSG(VX_ERROR_INVALID_TYPE, "validate: Parameter: #3 type=%d (must be size)\n", scalar_type);
     STATUS_ERROR_CHECK(vxQueryScalar((vx_scalar)parameters[4], VX_SCALAR_TYPE, &scalar_type, sizeof(scalar_type)));
     if (scalar_type != VX_TYPE_UINT32)
-        return ERRMSG(VX_ERROR_INVALID_TYPE, "validate: Paramter: #4 type=%d (must be size)\n", scalar_type);
+        return ERRMSG(VX_ERROR_INVALID_TYPE, "validate: Parameter: #4 type=%d (must be size)\n", scalar_type);
 
-    // Check for input parameters
+    // Check for input tensor
     size_t num_tensor_dims;
     STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[0], VX_TENSOR_NUMBER_OF_DIMS, &num_tensor_dims, sizeof(num_tensor_dims)));
-    if(num_tensor_dims != 5) return ERRMSG(VX_ERROR_INVALID_DIMENSION, "validate: SequenceRearrange: tensor: #0 dimensions=%lu (must be equal to 5)\n", num_tensor_dims);
+    if (num_tensor_dims != 5) return ERRMSG(VX_ERROR_INVALID_DIMENSION, "validate: SequenceRearrange: tensor: #0 dimensions=%lu (must be equal to 5)\n", num_tensor_dims);
 
-    // Check for output parameters
+    // Check for output tensor
     vx_uint8 tensor_fixed_point_position;
     size_t tensor_dims[RPP_MAX_TENSOR_DIMS];
-    vx_enum tensor_type;
+    vx_enum tensor_dtype;
     STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[1], VX_TENSOR_NUMBER_OF_DIMS, &num_tensor_dims, sizeof(num_tensor_dims)));
-    if(num_tensor_dims != 5) return ERRMSG(VX_ERROR_INVALID_DIMENSION, "validate: SequenceRearrange: tensor: #1 dimensions=%lu (must be equal to 5)\n", num_tensor_dims);
+    if (num_tensor_dims != 5) return ERRMSG(VX_ERROR_INVALID_DIMENSION, "validate: SequenceRearrange: tensor: #1 dimensions=%lu (must be equal to 5)\n", num_tensor_dims);
     STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[1], VX_TENSOR_DIMS, &tensor_dims, sizeof(tensor_dims)));
-    STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[1], VX_TENSOR_DATA_TYPE, &tensor_type, sizeof(tensor_type)));
+    STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[1], VX_TENSOR_DATA_TYPE, &tensor_dtype, sizeof(tensor_dtype)));
     STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[1], VX_TENSOR_FIXED_POINT_POSITION, &tensor_fixed_point_position, sizeof(tensor_fixed_point_position)));
     STATUS_ERROR_CHECK(vxSetMetaFormatAttribute(metas[1], VX_TENSOR_NUMBER_OF_DIMS, &num_tensor_dims, sizeof(num_tensor_dims)));
     STATUS_ERROR_CHECK(vxSetMetaFormatAttribute(metas[1], VX_TENSOR_DIMS, &tensor_dims, sizeof(tensor_dims)));
-    STATUS_ERROR_CHECK(vxSetMetaFormatAttribute(metas[1], VX_TENSOR_DATA_TYPE, &tensor_type, sizeof(tensor_type)));
+    STATUS_ERROR_CHECK(vxSetMetaFormatAttribute(metas[1], VX_TENSOR_DATA_TYPE, &tensor_dtype, sizeof(tensor_dtype)));
     STATUS_ERROR_CHECK(vxSetMetaFormatAttribute(metas[1], VX_TENSOR_FIXED_POINT_POSITION, &tensor_fixed_point_position, sizeof(tensor_fixed_point_position)));
 
     return status;
@@ -186,7 +186,7 @@ static vx_status VX_CALLBACK initializeSequenceRearrange(vx_node node, const vx_
 static vx_status VX_CALLBACK uninitializeSequenceRearrange(vx_node node, const vx_reference *parameters, vx_uint32 num) {
     SequenceRearrangeLocalData *data;
     STATUS_ERROR_CHECK(vxQueryNode(node, VX_NODE_LOCAL_DATA_PTR, &data, sizeof(data)));
-    if(data->pNewOrder) free(data->pNewOrder);
+    if (data->pNewOrder) free(data->pNewOrder);
     delete(data->pSrcDesc);
     delete(data->pDstDesc);
     STATUS_ERROR_CHECK(releaseRPPHandle(node, data->handle, data->deviceType));
@@ -195,7 +195,7 @@ static vx_status VX_CALLBACK uninitializeSequenceRearrange(vx_node node, const v
 }
 
 //! \brief The kernel target support callback.
-// TODO::currently the node is setting the same affinity as context. This needs to change when we have hubrid modes in the same graph
+// TODO::currently the node is setting the same affinity as context. This needs to change when we have hybrid modes in the same graph
 static vx_status VX_CALLBACK query_target_support(vx_graph graph, vx_node node,
                                                   vx_bool use_opencl_1_2,              // [input]  false: OpenCL driver is 2.0+; true: OpenCL driver is 1.2
                                                   vx_uint32 &supported_target_affinity // [output] must be set to AGO_TARGET_AFFINITY_CPU or AGO_TARGET_AFFINITY_GPU or (AGO_TARGET_AFFINITY_CPU | AGO_TARGET_AFFINITY_GPU)
@@ -229,7 +229,6 @@ vx_status SequenceRearrange_Register(vx_context context) {
     AgoTargetAffinityInfo affinity;
     vxQueryContext(context, VX_CONTEXT_ATTRIBUTE_AMD_AFFINITY, &affinity, sizeof(affinity));
 #if ENABLE_OPENCL || ENABLE_HIP
-    // enable OpenCL buffer access since the kernel_f callback uses OpenCL buffers instead of host accessible buffers
     vx_bool enableBufferAccess = vx_true_e;
     if (affinity.device_type == AGO_TARGET_AFFINITY_GPU)
         STATUS_ERROR_CHECK(vxSetKernelAttribute(kernel, VX_KERNEL_ATTRIBUTE_AMD_GPU_BUFFER_ACCESS_ENABLE, &enableBufferAccess, sizeof(enableBufferAccess)));

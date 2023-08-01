@@ -22,13 +22,12 @@ THE SOFTWARE.
 
 #include "internal_publishKernels.h"
 
-struct BrightnessLocalData {
+struct FogLocalData {
     vxRppHandle *handle;
     Rpp32u deviceType;
     RppPtr_t pSrc;
     RppPtr_t pDst;
-    Rpp32f *pAlpha;
-    Rpp32f *pBeta;
+    Rpp32f *pFogValue;
     RpptDescPtr pSrcDesc;
     RpptDescPtr pDstDesc;
     RpptROI *pSrcRoi;
@@ -37,12 +36,13 @@ struct BrightnessLocalData {
     vxTensorLayout outputLayout;
     size_t inputTensorDims[RPP_MAX_TENSOR_DIMS];
     size_t ouputTensorDims[RPP_MAX_TENSOR_DIMS];
+    RppiSize *pSrcDimensions;
+    RppiSize maxSrcDimensions;
 };
 
-static vx_status VX_CALLBACK refreshBrightness(vx_node node, const vx_reference *parameters, vx_uint32 num, BrightnessLocalData *data) {
+static vx_status VX_CALLBACK refreshFog(vx_node node, const vx_reference *parameters, vx_uint32 num, FogLocalData *data) {
     vx_status status = VX_SUCCESS;
-    STATUS_ERROR_CHECK(vxCopyArrayRange((vx_array)parameters[3], 0, data->inputTensorDims[0], sizeof(Rpp32f), data->pAlpha, VX_READ_ONLY, VX_MEMORY_TYPE_HOST));
-    STATUS_ERROR_CHECK(vxCopyArrayRange((vx_array)parameters[4], 0, data->inputTensorDims[0], sizeof(Rpp32f), data->pBeta, VX_READ_ONLY, VX_MEMORY_TYPE_HOST));
+    STATUS_ERROR_CHECK(vxCopyArrayRange((vx_array)parameters[3], 0, data->inputTensorDims[0], sizeof(Rpp32f), data->pFogValue, VX_READ_ONLY, VX_MEMORY_TYPE_HOST));
 
     void *roi_tensor_ptr;
     if (data->deviceType == AGO_TARGET_AFFINITY_GPU) {
@@ -59,23 +59,30 @@ static vx_status VX_CALLBACK refreshBrightness(vx_node node, const vx_reference 
         STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[2], VX_TENSOR_BUFFER_HOST, &data->pDst, sizeof(data->pDst)));
     }
     data->pSrcRoi = reinterpret_cast<RpptROI *>(roi_tensor_ptr);
+    // Fill width and height array with ROI data required by RPP batchPD kernels
+    for (unsigned i = 0; i < data->inputTensorDims[0]; i++) {
+        data->pSrcDimensions[i].width = data->pSrcRoi[i].xywhROI.roiWidth;
+        data->pSrcDimensions[i].height = data->pSrcRoi[i].xywhROI.roiHeight;
+    }
     if (data->inputLayout == vxTensorLayout::VX_NFHWC || data->inputLayout == vxTensorLayout::VX_NFCHW) {
         unsigned num_of_frames = data->inputTensorDims[1]; // Num of frames 'F'
         for (unsigned n = data->inputTensorDims[0] - 1; n >= 0; n--) {
             unsigned index = n * num_of_frames;
             for (unsigned f = 0; f < num_of_frames; f++) {
-                data->pAlpha[index + f] = data->pAlpha[n];
-                data->pBeta[index + f] = data->pBeta[n];
-                data->pSrcRoi[index + f].xywhROI = data->pSrcRoi[n].xywhROI;
+                data->pFogValue[index + f] = data->pFogValue[n];
+                data->pSrcDimensions[index + f] = data->pSrcDimensions[n];
             }
         }
     }
     return status;
 }
 
-static vx_status VX_CALLBACK validateBrightness(vx_node node, const vx_reference parameters[], vx_uint32 num, vx_meta_format metas[]) {
+static vx_status VX_CALLBACK validateFog(vx_node node, const vx_reference parameters[], vx_uint32 num, vx_meta_format metas[]) {
     vx_status status = VX_SUCCESS;
     vx_enum scalar_type;
+    STATUS_ERROR_CHECK(vxQueryScalar((vx_scalar)parameters[4], VX_SCALAR_TYPE, &scalar_type, sizeof(scalar_type)));
+    if (scalar_type != VX_TYPE_INT32)
+        return ERRMSG(VX_ERROR_INVALID_TYPE, "validate: Parameter: #4 type=%d (must be size)\n", scalar_type);
     STATUS_ERROR_CHECK(vxQueryScalar((vx_scalar)parameters[5], VX_SCALAR_TYPE, &scalar_type, sizeof(scalar_type)));
     if (scalar_type != VX_TYPE_INT32)
         return ERRMSG(VX_ERROR_INVALID_TYPE, "validate: Parameter: #5 type=%d (must be size)\n", scalar_type);
@@ -83,23 +90,21 @@ static vx_status VX_CALLBACK validateBrightness(vx_node node, const vx_reference
     if (scalar_type != VX_TYPE_INT32)
         return ERRMSG(VX_ERROR_INVALID_TYPE, "validate: Parameter: #6 type=%d (must be size)\n", scalar_type);
     STATUS_ERROR_CHECK(vxQueryScalar((vx_scalar)parameters[7], VX_SCALAR_TYPE, &scalar_type, sizeof(scalar_type)));
-    if (scalar_type != VX_TYPE_INT32)
-        return ERRMSG(VX_ERROR_INVALID_TYPE, "validate: Parameter: #7 type=%d (must be size)\n", scalar_type);
-    STATUS_ERROR_CHECK(vxQueryScalar((vx_scalar)parameters[8], VX_SCALAR_TYPE, &scalar_type, sizeof(scalar_type)));
     if (scalar_type != VX_TYPE_UINT32)
-        return ERRMSG(VX_ERROR_INVALID_TYPE, "validate: Parameter: #8 type=%d (must be size)\n", scalar_type);
+        return ERRMSG(VX_ERROR_INVALID_TYPE, "validate: Parameter: #7 type=%d (must be size)\n", scalar_type);
 
     // Check for input tensor
     size_t num_tensor_dims;
     STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[0], VX_TENSOR_NUMBER_OF_DIMS, &num_tensor_dims, sizeof(num_tensor_dims)));
-    if(num_tensor_dims < 4) return ERRMSG(VX_ERROR_INVALID_DIMENSION, "validate: Brightness: tensor: #0 dimensions=%lu (must be greater than or equal to 4)\n", num_tensor_dims);
+    if (num_tensor_dims < 4)
+        return ERRMSG(VX_ERROR_INVALID_DIMENSION, "validate: Fog: tensor: #0 dimensions=%lu (must be greater than or equal to 4)\n", num_tensor_dims);
 
     // Check for output tensor
     vx_uint8 tensor_fixed_point_position;
     size_t tensor_dims[RPP_MAX_TENSOR_DIMS];
     vx_enum tensor_dtype;
     STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[2], VX_TENSOR_NUMBER_OF_DIMS, &num_tensor_dims, sizeof(num_tensor_dims)));
-    if(num_tensor_dims < 4) return ERRMSG(VX_ERROR_INVALID_DIMENSION, "validate: Brightness: tensor: #2 dimensions=%lu (must be greater than or equal to 4)\n", num_tensor_dims);
+    if (num_tensor_dims < 4) return ERRMSG(VX_ERROR_INVALID_DIMENSION, "validate: Fog: tensor: #2 dimensions=%lu (must be greater than or equal to 4)\n", num_tensor_dims);
     STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[2], VX_TENSOR_DIMS, &tensor_dims, sizeof(tensor_dims)));
     STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[2], VX_TENSOR_DATA_TYPE, &tensor_dtype, sizeof(tensor_dtype)));
     STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[2], VX_TENSOR_FIXED_POINT_POSITION, &tensor_fixed_point_position, sizeof(tensor_fixed_point_position)));
@@ -110,36 +115,45 @@ static vx_status VX_CALLBACK validateBrightness(vx_node node, const vx_reference
     return status;
 }
 
-static vx_status VX_CALLBACK processBrightness(vx_node node, const vx_reference *parameters, vx_uint32 num) {
+static vx_status VX_CALLBACK processFog(vx_node node, const vx_reference *parameters, vx_uint32 num) {
     RppStatus rpp_status = RPP_SUCCESS;
     vx_status return_status = VX_SUCCESS;
-    BrightnessLocalData *data = NULL;
+
+    FogLocalData *data = NULL;
     STATUS_ERROR_CHECK(vxQueryNode(node, VX_NODE_LOCAL_DATA_PTR, &data, sizeof(data)));
-    refreshBrightness(node, parameters, num, data);
+    refreshFog(node, parameters, num, data);
     if (data->deviceType == AGO_TARGET_AFFINITY_GPU) {
 #if ENABLE_OPENCL
         return_status = VX_ERROR_NOT_IMPLEMENTED;
 #elif ENABLE_HIP
-        rpp_status = rppt_brightness_gpu(data->pSrc, data->pSrcDesc, data->pDst, data->pDstDesc,  data->pAlpha, data->pBeta, data->pSrcRoi, data->roiType, data->handle->rppHandle);
+        if (data->pSrcDesc->c == 1) { 
+            rpp_status = rppi_fog_u8_pln1_batchPD_gpu(data->pSrc, data->pSrcDimensions, data->maxSrcDimensions, data->pDst, data->pFogValue, data->pSrcDesc->n, data->handle->rppHandle);
+        } else { 
+            rpp_status = rppi_fog_u8_pkd3_batchPD_gpu(data->pSrc, data->pSrcDimensions, data->maxSrcDimensions, data->pDst, data->pFogValue, data->pSrcDesc->n, data->handle->rppHandle);
+        }
         return_status = (rpp_status == RPP_SUCCESS) ? VX_SUCCESS : VX_FAILURE;
 #endif
     } else if (data->deviceType == AGO_TARGET_AFFINITY_CPU) {
-        rpp_status = rppt_brightness_host(data->pSrc, data->pSrcDesc, data->pDst, data->pDstDesc, data->pAlpha, data->pBeta, data->pSrcRoi, data->roiType, data->handle->rppHandle);
+        if (data->pSrcDesc->c == 1) { 
+            rpp_status = rppi_fog_u8_pln1_batchPD_host(data->pSrc, data->pSrcDimensions, data->maxSrcDimensions, data->pDst, data->pFogValue, data->pSrcDesc->n, data->handle->rppHandle);
+        } else { 
+            rpp_status = rppi_fog_u8_pkd3_batchPD_host(data->pSrc, data->pSrcDimensions, data->maxSrcDimensions, data->pDst, data->pFogValue, data->pSrcDesc->n, data->handle->rppHandle);
+        }
         return_status = (rpp_status == RPP_SUCCESS) ? VX_SUCCESS : VX_FAILURE;
     }
     return return_status;
 }
 
-static vx_status VX_CALLBACK initializeBrightness(vx_node node, const vx_reference *parameters, vx_uint32 num) {
-    BrightnessLocalData *data = new BrightnessLocalData;
-    memset(data, 0, sizeof(BrightnessLocalData));
+static vx_status VX_CALLBACK initializeFog(vx_node node, const vx_reference *parameters, vx_uint32 num) {
+    FogLocalData *data = new FogLocalData;
+    memset(data, 0, sizeof(FogLocalData));
 
     vx_enum input_tensor_dtype, output_tensor_dtype;
     int roi_type, input_layout, output_layout;
-    STATUS_ERROR_CHECK(vxCopyScalar((vx_scalar)parameters[5], &input_layout, VX_READ_ONLY, VX_MEMORY_TYPE_HOST));
-    STATUS_ERROR_CHECK(vxCopyScalar((vx_scalar)parameters[6], &output_layout, VX_READ_ONLY, VX_MEMORY_TYPE_HOST));
-    STATUS_ERROR_CHECK(vxCopyScalar((vx_scalar)parameters[7], &roi_type, VX_READ_ONLY, VX_MEMORY_TYPE_HOST));
-    STATUS_ERROR_CHECK(vxCopyScalar((vx_scalar)parameters[8], &data->deviceType, VX_READ_ONLY, VX_MEMORY_TYPE_HOST));
+    STATUS_ERROR_CHECK(vxCopyScalar((vx_scalar)parameters[4], &input_layout, VX_READ_ONLY, VX_MEMORY_TYPE_HOST));
+    STATUS_ERROR_CHECK(vxCopyScalar((vx_scalar)parameters[5], &output_layout, VX_READ_ONLY, VX_MEMORY_TYPE_HOST));
+    STATUS_ERROR_CHECK(vxCopyScalar((vx_scalar)parameters[6], &roi_type, VX_READ_ONLY, VX_MEMORY_TYPE_HOST));
+    STATUS_ERROR_CHECK(vxCopyScalar((vx_scalar)parameters[7], &data->deviceType, VX_READ_ONLY, VX_MEMORY_TYPE_HOST));
     data->roiType = (roi_type == 0) ? RpptRoiType::XYWH : RpptRoiType::LTRB;
     data->inputLayout = static_cast<vxTensorLayout>(input_layout);
     data->outputLayout = static_cast<vxTensorLayout>(output_layout);
@@ -162,19 +176,21 @@ static vx_status VX_CALLBACK initializeBrightness(vx_node node, const vx_referen
     data->pDstDesc->offsetInBytes = 0;
     fillDescriptionPtrfromDims(data->pDstDesc, data->outputLayout, data->ouputTensorDims);
 
-    data->pAlpha = static_cast<Rpp32f *>(malloc(sizeof(Rpp32f) * data->pSrcDesc->n));
-    data->pBeta = static_cast<Rpp32f *>(malloc(sizeof(Rpp32f) * data->pSrcDesc->n));
-    refreshBrightness(node, parameters, num, data);
+    data->maxSrcDimensions.height = data->pSrcDesc->h;
+    data->maxSrcDimensions.width = data->pSrcDesc->w;
+    data->pSrcDimensions = static_cast<RppiSize *>(malloc(sizeof(RppiSize) * data->pSrcDesc->n));
+    data->pFogValue = static_cast<Rpp32f *>(malloc(sizeof(Rpp32f) * data->pSrcDesc->n));
+    refreshFog(node, parameters, num, data);
     STATUS_ERROR_CHECK(createRPPHandle(node, &data->handle, data->pSrcDesc->n, data->deviceType));
     STATUS_ERROR_CHECK(vxSetNodeAttribute(node, VX_NODE_LOCAL_DATA_PTR, &data, sizeof(data)));
     return VX_SUCCESS;
 }
 
-static vx_status VX_CALLBACK uninitializeBrightness(vx_node node, const vx_reference *parameters, vx_uint32 num) {
-    BrightnessLocalData *data;
+static vx_status VX_CALLBACK uninitializeFog(vx_node node, const vx_reference *parameters, vx_uint32 num) {
+    FogLocalData *data;
     STATUS_ERROR_CHECK(vxQueryNode(node, VX_NODE_LOCAL_DATA_PTR, &data, sizeof(data)));
-    if (data->pAlpha != nullptr) free(data->pAlpha);
-    if (data->pBeta != nullptr) free(data->pBeta);
+    if (data->pFogValue != nullptr)  free(data->pFogValue);
+    if (data->pSrcDimensions != nullptr) free(data->pSrcDimensions);
     delete(data->pSrcDesc);
     delete(data->pDstDesc);
     STATUS_ERROR_CHECK(releaseRPPHandle(node, data->handle, data->deviceType));
@@ -199,16 +215,16 @@ static vx_status VX_CALLBACK query_target_support(vx_graph graph, vx_node node,
     return VX_SUCCESS;
 }
 
-vx_status Brightness_Register(vx_context context) {
+vx_status Fog_Register(vx_context context) {
     vx_status status = VX_SUCCESS;
     // Add kernel to the context with callbacks
-    vx_kernel kernel = vxAddUserKernel(context, "org.rpp.Brightness",
-                                       VX_KERNEL_RPP_BRIGHTNESS,
-                                       processBrightness,
-                                       9,
-                                       validateBrightness,
-                                       initializeBrightness,
-                                       uninitializeBrightness);
+    vx_kernel kernel = vxAddUserKernel(context, "org.rpp.Fog",
+                                       VX_KERNEL_RPP_FOG,
+                                       processFog,
+                                       8,
+                                       validateFog,
+                                       initializeFog,
+                                       uninitializeFog);
     ERROR_CHECK_OBJECT(kernel);
     AgoTargetAffinityInfo affinity;
     vxQueryContext(context, VX_CONTEXT_ATTRIBUTE_AMD_AFFINITY, &affinity, sizeof(affinity));
@@ -227,11 +243,10 @@ vx_status Brightness_Register(vx_context context) {
         PARAM_ERROR_CHECK(vxAddParameterToKernel(kernel, 1, VX_INPUT, VX_TYPE_TENSOR, VX_PARAMETER_STATE_REQUIRED));
         PARAM_ERROR_CHECK(vxAddParameterToKernel(kernel, 2, VX_OUTPUT, VX_TYPE_TENSOR, VX_PARAMETER_STATE_REQUIRED));
         PARAM_ERROR_CHECK(vxAddParameterToKernel(kernel, 3, VX_INPUT, VX_TYPE_ARRAY, VX_PARAMETER_STATE_REQUIRED));
-        PARAM_ERROR_CHECK(vxAddParameterToKernel(kernel, 4, VX_INPUT, VX_TYPE_ARRAY, VX_PARAMETER_STATE_REQUIRED));
+        PARAM_ERROR_CHECK(vxAddParameterToKernel(kernel, 4, VX_INPUT, VX_TYPE_SCALAR, VX_PARAMETER_STATE_REQUIRED));
         PARAM_ERROR_CHECK(vxAddParameterToKernel(kernel, 5, VX_INPUT, VX_TYPE_SCALAR, VX_PARAMETER_STATE_REQUIRED));
         PARAM_ERROR_CHECK(vxAddParameterToKernel(kernel, 6, VX_INPUT, VX_TYPE_SCALAR, VX_PARAMETER_STATE_REQUIRED));
         PARAM_ERROR_CHECK(vxAddParameterToKernel(kernel, 7, VX_INPUT, VX_TYPE_SCALAR, VX_PARAMETER_STATE_REQUIRED));
-        PARAM_ERROR_CHECK(vxAddParameterToKernel(kernel, 8, VX_INPUT, VX_TYPE_SCALAR, VX_PARAMETER_STATE_REQUIRED));
         PARAM_ERROR_CHECK(vxFinalizeKernel(kernel));
     }
     if (status != VX_SUCCESS) {
