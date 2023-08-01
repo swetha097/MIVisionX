@@ -53,7 +53,6 @@ class ROCALGenericIterator(object):
             self.output_list = []
             for i in range(len(self.output_tensor_list)):
                 self.dimensions = self.output_tensor_list[i].dimensions()
-                print("self.dimesnions",self.dimensions)
                 if self.device == "cpu":
                     self.torch_dtype = self.output_tensor_list[i].dtype()
                     self.output = torch.empty(self.dimensions, dtype = getattr(torch, self.torch_dtype))
@@ -130,7 +129,6 @@ class ROCALGenericIterator(object):
                         draw_patches(img[i], i, 0)
                 # self.labels = self.loader.getImageLabels() # TODO: To uncomment it when meta-data support is added for audio
                 # self.labels_tensor = self.labels_tensor.copy_(torch.from_numpy(self.labels)).long()
-            print(self.output_list)
             return self.output_list, self.labels_tensor
 
     def reset(self):
