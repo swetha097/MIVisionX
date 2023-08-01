@@ -31,6 +31,7 @@ THE SOFTWARE.
 #include "caffe_lmdb_record_reader.h"
 #include "caffe2_lmdb_record_reader.h"
 #include "mxnet_recordio_reader.h"
+#include "file_list_reader.h"
 
 std::shared_ptr<Reader> create_reader(ReaderConfig config) {
     switch(config.type()) {
@@ -95,6 +96,14 @@ std::shared_ptr<Reader> create_reader(ReaderConfig config) {
             auto ret = std::make_shared<MXNetRecordIOReader>();
             if(ret->initialize(config) != Reader::Status::OK)
                 throw std::runtime_error("MXNetRecordIOReader cannot access the storage");
+            return ret;
+        }
+        break;
+        case StorageType ::FILE_LIST_SYSTEM:
+        {
+            auto ret = std::make_shared<FileListReader>();
+            if(ret->initialize(config) != Reader::Status::OK)
+                throw std::runtime_error("File List  cannot access the storage");
             return ret;
         }
         break;

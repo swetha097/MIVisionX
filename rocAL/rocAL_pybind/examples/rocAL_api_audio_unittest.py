@@ -3,27 +3,21 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 import random
-import numpy as np
 from amd.rocal.plugin.pytorch import ROCALClassificationIterator
 import torch
-# torch.set_printoptions(threshold=10_000)
-np.set_printoptions(threshold=1000, edgeitems=10000)
 from amd.rocal.pipeline import Pipeline
 import amd.rocal.fn as fn
-import amd.rocal.types as types
-import math
-# import rocal_pybind.tensor
 import sys
-import cv2
 import matplotlib.pyplot as plt
 import os
+
 def draw_patches(img, idx, device):
     #image is expected as a tensor, bboxes as numpy
     import cv2
     image = img.detach().numpy()
     audio_data = image.flatten()
-    label = idx
-    # label = idx.cpu().detach().numpy() #TODO: Uncomment after the meta-data is enabled
+    # label = idx
+    label = idx.cpu().detach().numpy() #TODO: Uncomment after the meta-data is enabled
     print("label: ", label)
     # Saving the array in a text file
     file = open("results/rocal_data_new"+str(label)+".txt", "w+")
@@ -54,14 +48,14 @@ def main():
     num_threads = 1
     device_id = 0
     random_seed = random.SystemRandom().randint(0, 2**32 - 1)
-    crop = 300
-    local_rank = 0
-    world_size = 1
     print("*********************************************************************")
     audio_pipeline = Pipeline(batch_size=batch_size, num_threads=num_threads, device_id=device_id, seed=random_seed, rocal_cpu=_rali_cpu)
     with audio_pipeline:
-        # audio_decode = fn.decoders.audio(audio, file_root=data_path, downmix=True, shard_id=0, num_shards=2,random_shuffle=True)
-        audio_decode = fn.decoders.audio(file_root=data_path, file_list_path=" ", downmix=False, shard_id=0, num_shards=2, storage_type=0, stick_to_shard=False)
+        audio, label = fn.readers.file(
+            file_root=data_path,
+            file_list=file_list,
+            )
+        audio_decode = fn.decoders.audio(audio, file_root=data_path, file_list_path=file_list, downmix=False, shard_id=0, num_shards=2, storage_type=9, stick_to_shard=False)
         audio_pipeline.setOutputs(audio_decode)
     audio_pipeline.build()
     audioIteratorPipeline = ROCALClassificationIterator(audio_pipeline, auto_reset=True)
@@ -77,7 +71,7 @@ def main():
                     # print("roi", roi)
                     print("cnt", cnt)
                     print("img", img)
-                    draw_patches(img, cnt, "cpu")
+                    draw_patches(img, label, "cpu")
                     cnt+=1
         print("EPOCH DONE", e)
 if __name__ == '__main__':
