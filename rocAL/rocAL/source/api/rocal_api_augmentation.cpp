@@ -947,7 +947,7 @@ rocalWarpAffine(
         output_info.set_dims(out_dims);
         output = context->master_graph->create_tensor(output_info, is_output);
         output->reset_tensor_roi();
-        context->master_graph->add_node<WarpAffineNode>({input}, {output})->init(x0, x1, y0, y1, o0, o1, static_cast<int>(interpolation_type));
+        context->master_graph->add_node<WarpAffineNode>({input}, {output})->init(x0, x1, y0, y1, o0, o1, interpolation_type);
     } catch(const std::exception& e) {
         context->capture_error(e.what());
         ERR(e.what())
@@ -992,7 +992,7 @@ rocalWarpAffineFixed(
         output_info.set_dims(out_dims);
         output = context->master_graph->create_tensor(output_info, is_output);
         output->reset_tensor_roi();
-        context->master_graph->add_node<WarpAffineNode>({input}, {output})->init(x0, x1, y0, y1, o0, o1, static_cast<int>(interpolation_type));
+        context->master_graph->add_node<WarpAffineNode>({input}, {output})->init(x0, x1, y0, y1, o0, o1, interpolation_type);
     } catch(const std::exception& e) {
         context->capture_error(e.what());
         ERR(e.what())
