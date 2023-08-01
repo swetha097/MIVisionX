@@ -46,6 +46,7 @@ enum class StorageType
     SEQUENCE_FILE_SYSTEM = 6,
     MXNET_RECORDIO = 7,
     VIDEO_FILE_SYSTEM = 8,
+    FILE_LIST_SYSTEM = 9,
 };
 
 struct ReaderConfig
