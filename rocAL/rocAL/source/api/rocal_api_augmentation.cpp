@@ -2396,3 +2396,35 @@ rocalNop(RocalContext p_context,
     }
     return output;
 }
+
+RocalTensor ROCAL_API_CALL
+rocalPreEmphasisFilter(RocalContext p_context,
+                       RocalTensor p_input,
+                       RocalTensorOutputType rocal_tensor_output_datatype,
+                       bool is_output,
+                       RocalFloatParam p_preemph_coeff,
+                       RocalAudioBorderType preemph_border_type) {
+    if(!p_context || !p_input)
+        THROW("Null values passed as input")
+    Tensor* output = nullptr;
+    auto context = static_cast<Context*>(p_context);
+    auto input = static_cast<Tensor*>(p_input);
+    auto preemph_coeff = static_cast<FloatParam*>(p_preemph_coeff);
+    RocalTensorDataType op_tensorDataType;
+    try {
+        RocalTensorDataType op_tensorDataType = (RocalTensorDataType)rocal_tensor_output_datatype;
+        TensorInfo output_info = input->info();
+        output_info.set_tensor_layout(RocalTensorlayout::NONE);
+        output_info.set_data_type(op_tensorDataType);
+
+        output = context->master_graph->create_tensor(output_info, is_output);
+        output->reset_tensor_roi();
+        context->master_graph->add_node<PreemphasisFilterNode>({input}, {output})->init(preemph_coeff, preemph_border_type);
+
+    }
+    catch(const std::exception& e) {
+        context->capture_error(e.what());
+        ERR(e.what())
+    }
+    return output;
+}

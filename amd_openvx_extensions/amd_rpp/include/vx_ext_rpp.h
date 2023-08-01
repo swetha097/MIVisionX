@@ -164,6 +164,7 @@ extern "C" SHARED_PUBLIC vx_node VX_API_CALL vxRppGlitch(vx_graph graph, vx_tens
 extern "C" SHARED_PUBLIC vx_node VX_API_CALL vxRppNoise(vx_graph graph, vx_tensor pSrc, vx_tensor pSrcRoi, vx_tensor pDst, vx_array pNoiseProb, vx_array pSaltProb, vx_array pNoiseValue, vx_array pSaltValue, vx_scalar seed, vx_scalar inputLayout, vx_scalar outputLayout, vx_scalar roiType);
 extern "C" SHARED_PUBLIC vx_node VX_API_CALL vxRppResizeCrop(vx_graph graph, vx_tensor pSrc, vx_tensor pSrcRoi,vx_tensor pCropTensor, vx_tensor pDst, vx_array pDstBatchWidth, vx_array pDstBatchHeight, vx_scalar inputLayout, vx_scalar outputLayout, vx_scalar roiType);
 extern "C" SHARED_PUBLIC vx_node VX_API_CALL vxRppSequenceRearrange(vx_graph graph,vx_tensor pSrc,vx_tensor pDst, vx_array pNewOrder, vx_scalar layout);
+extern "C" SHARED_PUBLIC vx_node VX_API_CALL vxExtrppNode_PreemphasisFilter(vx_graph graph, vx_tensor pSrc, vx_tensor pDst, vx_tensor srcSamplesSize, vx_tensor dstSamplesSize, vx_array preemphCoeff, vx_scalar borderType);
 
 #ifdef __cplusplus
 }
