@@ -111,7 +111,7 @@ void ImageReadAndDecode::feed_external_input(std::vector<std::string> input_imag
     image_size.reserve(roi_height.size());
     for(unsigned int i = 0; i < roi_height.size(); i++) {
         if (mode == ExternalFileMode::RAWDATA_UNCOMPRESSED)
-            image_size[i] = (roi_width[i] * roi_height[i] * channels);
+            image_size[i] = (max_width * max_height * channels);
         else if (mode == ExternalFileMode::RAWDATA_COMPRESSED)
             image_size[i] = roi_height[i];
     }
