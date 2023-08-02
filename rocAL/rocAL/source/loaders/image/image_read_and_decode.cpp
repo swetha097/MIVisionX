@@ -118,9 +118,10 @@ void ImageReadAndDecode::feed_external_input(std::vector<std::string> input_imag
     }
     if(mode == ExternalFileMode::FILENAME)
         _reader->feed_file_names(input_images_names, input_images_names.size(), eos);
-    else if(mode == ExternalFileMode::RAWDATA_COMPRESSED || mode == ExternalFileMode::RAWDATA_UNCOMPRESSED)
-        _reader->feed_data(input_buffer, image_size, mode, eos, max_width, max_height, channels);
-
+    else if(mode == ExternalFileMode::RAWDATA_COMPRESSED)
+        _reader->feed_data(input_buffer, image_size, mode, eos, {}, {}, max_width, max_height, channels);
+    else if (mode == ExternalFileMode::RAWDATA_UNCOMPRESSED)
+        _reader->feed_data(input_buffer, image_size, mode, eos, roi_width, roi_height, max_width, max_height, channels);   
 }
 
 void
@@ -215,6 +216,7 @@ ImageReadAndDecode::load(unsigned char* buff,
         if (ext_reader->mode() == ExternalFileMode::RAWDATA_UNCOMPRESSED) {
             while ((file_counter != _batch_size) && _reader->count_items() > 0) {
                 int width, height, channels;
+                unsigned rwidth, rheight;
                 auto read_ptr = buff + image_size * file_counter;
                 size_t fsize = _reader->open();
                 if (fsize == 0) {
@@ -227,10 +229,10 @@ ImageReadAndDecode::load(unsigned char* buff,
                     LOG("Reader read less than requested bytes of size: " + _actual_read_size[file_counter]);
 
                 _image_names[file_counter] = _reader->id();
-                ext_reader->get_dims(file_counter, width, height, channels);
+                ext_reader->get_dims(file_counter, width, height, channels, rwidth, rheight);
                 names[file_counter] = _image_names[file_counter];
-                roi_width[file_counter] = width;
-                roi_height[file_counter] = height;
+                roi_width[file_counter] = rwidth;
+                roi_height[file_counter] = rheight;
                 actual_width[file_counter] = width;
                 actual_height[file_counter] = height;
                 _reader->close();

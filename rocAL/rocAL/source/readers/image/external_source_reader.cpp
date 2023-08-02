@@ -94,11 +94,11 @@ size_t ExternalSourceReader::open() {
               return 0;
           }
           fseek(_current_fPtr, 0 , SEEK_SET); // Take the file pointer back to the start
-          _file_data[_curr_file_idx] = std::make_tuple((unsigned char *)next_file_name.data(), (size_t)_current_file_size, 0, 0, 0);
+          _file_data[_curr_file_idx] = std::make_tuple((unsigned char *)next_file_name.data(), (size_t)_current_file_size, 0, 0, 0, 0, 0);
           increment_read_ptr();
         }
     } else {
-        std::tuple<unsigned char*, size_t, int, int, int> image;
+        std::tuple<unsigned char*, size_t, int, int, int, unsigned, unsigned> image;
         bool ret = pop_file_data(image);
         if (_end_of_sequence && !ret)
         {
@@ -131,11 +131,13 @@ size_t ExternalSourceReader::read_data(unsigned char* buf, size_t read_size) {
     }
 }
 
-void ExternalSourceReader::get_dims(int cur_idx, int& width, int& height, int& channels) {
+void ExternalSourceReader::get_dims(int cur_idx, int& width, int& height, int& channels, unsigned& roi_width, unsigned& roi_height) {
     if (cur_idx >= 0) {
       width = std::get<2>(_file_data[cur_idx]);
       height = std::get<3>(_file_data[cur_idx]);
       channels = std::get<4>(_file_data[cur_idx]);
+      roi_width = std::get<5>(_file_data[cur_idx]);
+      roi_height = std::get<6>(_file_data[cur_idx]);
     }
 }
 
@@ -190,7 +192,7 @@ bool ExternalSourceReader::pop_file_name(std::string& file_name) {
       return false;
 }
 
-void ExternalSourceReader::push_file_data(std::tuple<unsigned char*, size_t, int, int, int>& image) {
+void ExternalSourceReader::push_file_data(std::tuple<unsigned char*, size_t, int, int, int, unsigned, unsigned>& image) {
     std::unique_lock<std::mutex> lock(_lock);
     _images_data_queue.push(image);
     lock.unlock();
@@ -198,7 +200,7 @@ void ExternalSourceReader::push_file_data(std::tuple<unsigned char*, size_t, int
     _wait_for_input.notify_all();
 }
 
-bool ExternalSourceReader::pop_file_data(std::tuple<unsigned char*,  size_t, int, int, int>& image) {
+bool ExternalSourceReader::pop_file_data(std::tuple<unsigned char*,  size_t, int, int, int, unsigned, unsigned>& image) {
     std::unique_lock<std::mutex> lock(_lock);
     if(_images_data_queue.empty() && !_end_of_sequence)
         _wait_for_input.wait(lock);
@@ -217,9 +219,9 @@ void ExternalSourceReader::feed_file_names(const std::vector<std::string>& file_
     _end_of_sequence = eos;
 }
 
-void ExternalSourceReader::feed_data(const std::vector<unsigned char *>& images, const std::vector<size_t>& image_size, ExternalFileMode mode, bool eos, int width, int height, int channels) {
+void ExternalSourceReader::feed_data(const std::vector<unsigned char *>& images, const std::vector<size_t>& image_size, ExternalFileMode mode, bool eos, const std::vector<unsigned> roi_width, const std::vector<unsigned> roi_height, int width, int height, int channels) {
     for (unsigned n = 0; n < images.size(); n++) {
-        std::tuple<unsigned char*, size_t, int, int, int> image =  std::make_tuple(images[n], image_size[n], width, height, channels);
+        std::tuple<unsigned char*, size_t, int, int, int,unsigned,unsigned> image =  std::make_tuple(images[n], image_size[n], width, height, channels,roi_width[n],roi_height[n]);
         push_file_data(image);
     }
     _end_of_sequence = eos;

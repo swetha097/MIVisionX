@@ -68,13 +68,13 @@ public:
     void feed_file_names(const std::vector<std::string>& file_names, size_t num_images, bool eos = false) override;
 
     //! receive next set of file data from external source
-    void feed_data(const std::vector<unsigned char *>& images, const std::vector<size_t>& image_size, ExternalFileMode mode, bool eos = false, int width = 0, int height = 0, int channels = 0) override;
+    void feed_data(const std::vector<unsigned char *>& images, const std::vector<size_t>& image_size, ExternalFileMode mode, bool eos = false, const std::vector<unsigned> roi_width = {}, const std::vector<unsigned> roi_height = {}, int width = 0, int height = 0, int channels = 0) override;
 
     // mode(): returs the mode for the reader
     ExternalFileMode mode() { return _file_mode; }
 
     // get image_dims
-    void get_dims(int cur_idx, int& width, int& height, int& channels);
+    void get_dims(int cur_idx, int& width, int& height, int& channels, unsigned& roi_width, unsigned& roi_height);
 
 
 private:
@@ -82,8 +82,8 @@ private:
     std::string _folder_path;
     std::queue<std::string> _file_names_queue;
     std::vector<size_t> _file_sizes;
-    std::vector<std::tuple<unsigned char*, size_t, int, int, int>> _file_data;
-    std::queue<std::tuple<unsigned char*, size_t, int, int, int>> _images_data_queue;
+    std::vector<std::tuple<unsigned char*, size_t, int, int, int, unsigned, unsigned>> _file_data;
+    std::queue<std::tuple<unsigned char*, size_t, int, int, int, unsigned, unsigned>> _images_data_queue;
     std::mutex _lock;
     std::condition_variable _wait_for_input;
 
@@ -107,8 +107,8 @@ private:
     //!< _file_count_all_shards total_number of files in to figure out the max_batch_size (usually needed for distributed training).
     void push_file_name(const std::string& image_name);
     bool pop_file_name(std::string& file_name);
-    void push_file_data(std::tuple<unsigned char*, size_t, int, int, int>& image);
-    bool pop_file_data(std::tuple<unsigned char*, size_t, int, int, int>& image);
+    void push_file_data(std::tuple<unsigned char*, size_t, int, int, int, unsigned, unsigned>& image);
+    bool pop_file_data(std::tuple<unsigned char*, size_t, int, int, int, unsigned, unsigned>& image);
     size_t  _file_count_all_shards;
     void increment_read_ptr();
     int release();
