@@ -220,9 +220,16 @@ void ExternalSourceReader::feed_file_names(const std::vector<std::string>& file_
 }
 
 void ExternalSourceReader::feed_data(const std::vector<unsigned char *>& images, const std::vector<size_t>& image_size, ExternalFileMode mode, bool eos, const std::vector<unsigned> roi_width, const std::vector<unsigned> roi_height, int width, int height, int channels) {
-    for (unsigned n = 0; n < images.size(); n++) {
-        std::tuple<unsigned char*, size_t, int, int, int,unsigned,unsigned> image =  std::make_tuple(images[n], image_size[n], width, height, channels,roi_width[n],roi_height[n]);
-        push_file_data(image);
+    if (mode == ExternalFileMode::RAWDATA_COMPRESSED) {
+        for (unsigned n = 0; n < images.size(); n++) {
+            std::tuple<unsigned char*, size_t, int, int, int,unsigned,unsigned> image =  std::make_tuple(images[n], image_size[n], width, height, channels,0,0);
+            push_file_data(image);
+        }
+    } else {
+        for (unsigned n = 0; n < images.size(); n++) {
+            std::tuple<unsigned char*, size_t, int, int, int,unsigned,unsigned> image =  std::make_tuple(images[n], image_size[n], width, height, channels,roi_width[n],roi_height[n]);
+            push_file_data(image);
+        }
     }
     _end_of_sequence = eos;
 }
