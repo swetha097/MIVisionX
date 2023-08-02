@@ -439,28 +439,20 @@ void RingBuffer::increment_write_ptr()
 
 void RingBuffer::set_meta_data(ImageNameBatch names, pMetaDataBatch meta_data)
 {
-    std::cerr << "\n Into the set_meta_data call";
     if(meta_data == nullptr)
     {
-        std::cerr << "\n meta_data = nullptr";
         _last_image_meta_data = std::move(std::make_pair(std::move(names), pMetaDataBatch()));
     }
     else
     {
-        std::cerr << "\n This is the else part";
         _last_image_meta_data = std::move(std::make_pair(std::move(names), meta_data));
-        std::cerr << "\n After _last_image_meta_data = std::move(std::make_pair(std::move(names), meta_data)); ";
         if(!_box_encoder_gpu)
         {   
-            std::cerr << "\n After 1";
             auto actual_buffer_size = meta_data->get_buffer_size();
-            std::cerr << "\n After 2";
             for(unsigned i = 0; i < actual_buffer_size.size(); i++)
             {
-                std::cerr << "\n After 3";
                 if(actual_buffer_size[i] > _meta_data_sub_buffer_size[_write_ptr][i])
                     rellocate_meta_data_buffer(_host_meta_data_buffers[_write_ptr][i], actual_buffer_size[i], i);
-                std::cerr << "\n After 4";
             }
             meta_data->copy_data(_host_meta_data_buffers[_write_ptr]);
         }
@@ -469,15 +461,11 @@ void RingBuffer::set_meta_data(ImageNameBatch names, pMetaDataBatch meta_data)
 
 void RingBuffer::rellocate_meta_data_buffer(void * buffer, size_t buffer_size, unsigned buff_idx)
 {
-    std::cerr << "\n Rellocate meta data buffer";
-    std::cerr << "\n _meta_data_sub_buffer_size[_write_ptr][buff_idx]: " << _meta_data_sub_buffer_size[_write_ptr][buff_idx] ;
-    std::cerr << "buffer_size :: " << buffer_size;
     void *new_ptr = realloc(buffer, buffer_size);
     if(buffer == nullptr)
         THROW("Metadata ring buffer reallocation failed")
     _host_meta_data_buffers[_write_ptr][buff_idx] = new_ptr;
     _meta_data_sub_buffer_size[_write_ptr][buff_idx] = buffer_size;
-    std::cerr << "\n _meta_data_sub_buffer_size[_write_ptr][buff_idx]: " << _meta_data_sub_buffer_size[_write_ptr][buff_idx] ;
 }
 
 MetaDataNamePair& RingBuffer::get_meta_data()
