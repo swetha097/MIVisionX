@@ -7,6 +7,7 @@ from amd.rocal.plugin.pytorch import ROCALClassificationIterator
 import torch
 from amd.rocal.pipeline import Pipeline
 import amd.rocal.fn as fn
+import amd.rocal.types as types
 import sys
 import matplotlib.pyplot as plt
 import os
@@ -55,7 +56,27 @@ def main():
             file_list=file_list,
             )
         audio_decode = fn.decoders.audio(audio, file_root=data_path, file_list_path=file_list, downmix=False, shard_id=0, num_shards=2, storage_type=9, stick_to_shard=False)
-        audio_pipeline.setOutputs(audio_decode)
+        # begin, length = fn.nonsilent_region(audio_decode, cutoff_db=-60)
+        # trim_silence = fn.slice(
+        #     audio_decode,
+        #     anchor=[begin],
+        #     shape=[length],
+        #     normalized_anchor=False,
+        #     normalized_shape=False,
+        #     axes=[0],
+        #     rocal_tensor_output_type = types.FLOAT)
+        spec = fn.spectrogram(
+            audio_decode,
+            nfft=512,
+            window_length=320,
+            window_step=160,
+            rocal_tensor_output_type = types.FLOAT)
+        mel = fn.mel_filter_bank(
+            spec,
+            sample_rate=16000,
+            nfilter=80,
+        )
+        audio_pipeline.setOutputs(mel)
     audio_pipeline.build()
     audioIteratorPipeline = ROCALClassificationIterator(audio_pipeline, auto_reset=True)
     cnt = 0

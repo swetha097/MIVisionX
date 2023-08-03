@@ -2263,14 +2263,22 @@ rocalNonSilentRegion(RocalContext p_context,
     try {
         RocalTensorDataType tensor_data_type = RocalTensorDataType::INT32;
         unsigned number_of_dims = 4;
-        std::vector<size_t> dims(number_of_dims, 1);
-        dims.at(0) = context->user_batch_size();
-        auto info = TensorInfo(dims,
+        std::vector<size_t> dims1(number_of_dims, 1);
+        dims1.at(0) = context->user_batch_size();
+        auto info1 = TensorInfo(std::vector<size_t>(std::move(dims1)),
                                context->master_graph->mem_type(),
                                tensor_data_type);
-        info.set_tensor_layout(RocalTensorlayout::NONE);
-        output1 = context->master_graph->create_tensor(info, is_output);
-        output2 = context->master_graph->create_tensor(info, is_output);
+        info1.set_tensor_layout(RocalTensorlayout::NONE);
+
+        std::vector<size_t> dims2(number_of_dims, 1);
+        dims2.at(0) = context->user_batch_size();
+        auto info2 = TensorInfo(std::vector<size_t>(std::move(dims2)),
+                               context->master_graph->mem_type(),
+                               tensor_data_type);
+        info2.set_tensor_layout(RocalTensorlayout::NONE);
+
+        output1 = context->master_graph->create_tensor(info1, is_output);
+        output2 = context->master_graph->create_tensor(info2, is_output);
         output_tensors.push_back(output1);
         output_tensors.push_back(output2);
         context->master_graph->add_node<NonSilentRegionNode>({input}, {output1, output2})->init(cutoff_db, reference_power, window_length, reset_interval);

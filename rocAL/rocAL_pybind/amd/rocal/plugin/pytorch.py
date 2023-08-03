@@ -71,7 +71,7 @@ class ROCALGenericIterator(object):
         else:
             for i in range(len(self.output_tensor_list)):
                 self.output_tensor_list[i].copy_data(ctypes.c_void_p(self.output_list[i].data_ptr()), self.output_memory_type)
-        
+
         if ((self.loader._name == "Caffe2ReaderDetection") or (self.loader._name == "CaffeReaderDetection")):
             self.bbox_list = []  # Empty list for bboxes
             self.labels_list = []  # Empty list of labels
@@ -123,8 +123,8 @@ class ROCALGenericIterator(object):
                     for i in range(self.batch_size):
                         img = (self.output)
                         draw_patches(img[i], i, 0)
-                self.labels = self.loader.getImageLabels()
-                self.labels_tensor = self.labels_tensor.copy_(torch.from_numpy(self.labels)).long()
+                self.labels = []#self.loader.getImageLabels()
+                self.labels_tensor = np.zeros((self.batch_size), dtype="int32") #self.labels_tensor.copy_(torch.from_numpy(self.labels)).long()
             print(self.output_list)
             return self.output_list, self.labels_tensor
 
