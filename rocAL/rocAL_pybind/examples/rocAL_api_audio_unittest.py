@@ -11,6 +11,7 @@ import amd.rocal.types as types
 import sys
 import matplotlib.pyplot as plt
 import os
+import numpy as np
 
 def draw_patches(img, idx, device):
     #image is expected as a tensor, bboxes as numpy
@@ -65,18 +66,26 @@ def main():
             normalized_shape=False,
             axes=[0],
             rocal_tensor_output_type = types.FLOAT)
-        # spec = fn.spectrogram(
-        #     audio_decode,
-        #     nfft=512,
-        #     window_length=320,
-        #     window_step=160,
-        #     rocal_tensor_output_type = types.FLOAT)
-        # mel = fn.mel_filter_bank(
-        #     spec,
-        #     sample_rate=16000,
-        #     nfilter=80,
-        # )
-        audio_pipeline.setOutputs(trim_silence)
+        spec = fn.spectrogram(
+            audio_decode,
+            nfft=512,
+            window_length=320,
+            window_step=160,
+            rocal_tensor_output_type = types.FLOAT)
+        mel = fn.mel_filter_bank(
+            spec,
+            sample_rate=16000,
+            nfilter=80,
+        )
+        to_decibels = fn.to_decibels(
+            mel,
+            multiplier=np.log(10),
+            reference=1.0,
+            cutoff_db=np.log(1e-20),
+            rocal_tensor_output_type=types.FLOAT,
+        )
+        normalize_audio = fn.normalize(to_decibels, axes=[1])
+        audio_pipeline.setOutputs(normalize_audio)
     audio_pipeline.build()
     audioIteratorPipeline = ROCALClassificationIterator(audio_pipeline, auto_reset=True)
     cnt = 0

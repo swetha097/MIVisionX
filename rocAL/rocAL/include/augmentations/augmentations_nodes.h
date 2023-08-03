@@ -60,3 +60,5 @@ THE SOFTWARE.
 #include "node_slice.h"
 #include "node_spectrogram.h"
 #include "node_mel_filter_bank.h"
+#include "node_to_decibels.h"
+#include "node_normalize.h"
