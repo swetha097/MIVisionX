@@ -113,12 +113,12 @@ def main():
                                                       random_area=[0.1, 1.0],
                                                       num_attempts=100,path = image_path)
         resized = fn.resize(decoded_images, resize_width=300, resize_height=300)
-        pipe.setOutputs(resized)
+        pipe.set_outputs(resized)
     pipe.build()
     image_iterator = ROCALIterator(pipe, device=device)
 
     cnt = 0
-    for i, (images_array, bboxes_array, labels_array, num_bboxes_array) in enumerate(image_iterator, 0):
+    for i, ([images_array], bboxes_array, labels_array, num_bboxes_array) in enumerate(image_iterator, 0):
         print("ROCAL augmentation pipeline - Processing batch %d....." % i)
 
         for element in list(range(batch_size)):

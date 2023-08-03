@@ -28,7 +28,6 @@ import amd.rocal.types as types
 import numpy as np
 from parse_config import parse_args
 
-
 class ROCALVideoIterator(object):
     """
     ROCALVideoIterator for pyTorch.
@@ -141,7 +140,7 @@ def main():
                                                  crop=crop_size,
                                                  mean=[0, 0, 0],
                                                  std=[1, 1, 1])
-        pipe.setOutputs(output_images)
+        pipe.set_outputs(output_images)
     # Build the pipeline
     pipe.build()
     # Dataloader

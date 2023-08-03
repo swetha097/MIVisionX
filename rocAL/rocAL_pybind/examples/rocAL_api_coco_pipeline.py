@@ -65,7 +65,6 @@ class ROCALCOCOIterator(object):
         self.bs = self.loader._batch_size
         self.num_anchors = num_anchors
         self.output_list = self.dimensions = self.torch_dtype = None
-        print('check init')
         self.display = display
 
         #Image id of a batch of images
@@ -80,12 +79,11 @@ class ROCALCOCOIterator(object):
         return self.__next__()
 
     def __next__(self):
-        if self.loader.rocalRun() != 0:
+        if self.loader.rocal_run() != 0:
             raise StopIteration
         else:
-            self.output_tensor_list = self.loader.getOutputTensors()
+            self.output_tensor_list = self.loader.get_output_tensors()
 
-        print("check nxt ")
         if self.output_list is None:
             self.output_list = []
             for i in range(len(self.output_tensor_list)):
@@ -104,24 +102,23 @@ class ROCALCOCOIterator(object):
             for i in range(len(self.output_tensor_list)):
                 self.output_tensor_list[i].copy_data(ctypes.c_void_p(self.output_list[i].data_ptr()), self.output_memory_type)
         
-        self.labels = self.loader.getBoundingBoxLabels()
-            # 1D bboxes array in a batch
-        self.bboxes = self.loader.getBoundingBoxCords()
+        self.labels = self.loader.get_bounding_box_labels()
+        # 1D bboxes array in a batch
+        self.bboxes = self.loader.get_bounding_box_cords()
         image_id_tensor = torch.tensor(self.image_id)
         image_size_tensor = torch.tensor(self.img_size).view(-1, self.bs, 2)
-        self.loader.getImageId(self.image_id)
+        self.loader.get_image_id(self.image_id)
 
         for i in range(self.bs):
             if self.display:
                 img = self.output
-                print("draw_path ",i)
                 draw_patches(img[i], self.image_id[i],
                              self.bboxes[i], self.device)
 
         return (self.output), self.bboxes, self.labels, image_id_tensor, image_size_tensor
 
     def reset(self):
-        self.loader.rocalResetLoaders()
+        self.loader.rocal_reset_loaders()
 
     def __iter__(self):
         return self
@@ -141,8 +138,6 @@ def draw_patches(img, idx, bboxes, device):
         _, htot, wtot = img.shape
 
     image = cv2.cvtColor(image, cv2.COLOR_RGB2BGR)
-    print(bboxes)
-    print(type(bboxes))
     bboxes = np.reshape(bboxes, (-1, 4))
 
     for (l, t, r, b) in bboxes:
@@ -203,11 +198,10 @@ def main():
                                                   mirror=flip_coin,
                                                   rocal_tensor_output_datatype=types.UINT8,
                                                   rocal_tensor_output_layout=types.NHWC)
-        pipe.setOutputs(cmn_images)
+        pipe.set_outputs(cmn_images)
     # Build the pipeline
     pipe.build()
     # Dataloader
-    print("check before iterator")
     if(args.rocal_gpu):
         data_loader = ROCALCOCOIterator(
             pipe, multiplier=pipe._multiplier, offset=pipe._offset, display=display, tensor_layout=tensor_format, tensor_dtype=tensor_dtype, device="cuda")
