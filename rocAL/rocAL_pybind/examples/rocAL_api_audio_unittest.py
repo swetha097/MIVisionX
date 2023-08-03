@@ -59,7 +59,6 @@ def main():
     print("*********************************************************************")
     audio_pipeline = Pipeline(batch_size=batch_size, num_threads=num_threads, device_id=device_id, seed=random_seed, rocal_cpu=_rali_cpu)
     with audio_pipeline:
-        # audio_decode = fn.decoders.audio(audio, file_root=data_path, downmix=True, shard_id=0, num_shards=2,random_shuffle=True)
         audio_decode = fn.decoders.audio(file_root=data_path, file_list_path="", downmix=False, shard_id=0, num_shards=2, storage_type=0, stick_to_shard=False)
         audio_pipeline.setOutputs(audio_decode)
     audio_pipeline.build()
@@ -73,7 +72,6 @@ def main():
             for x in range(len(it[0])):
                 for img, label in zip(it[0][x],it[1]):
                     print("label", label)
-                    # print("roi", roi)
                     print("cnt", cnt)
                     print("img", img)
                     draw_patches(img, cnt, "cpu")
