@@ -43,10 +43,10 @@ class ROCALGenericIterator(object):
         return self.__next__()
 
     def __next__(self):
-        if(b.isEmpty(self.loader._handle)):
+        if self.loader.rocal_run() != 0:
             raise StopIteration
         else:
-            self.output_tensor_list = self.loader.getOutputTensors()
+            self.output_tensor_list = self.loader.get_output_tensors()
 
         if self.output is None:
             self.dimensions = self.output_tensor_list[0].dimensions()
@@ -64,12 +64,12 @@ class ROCALGenericIterator(object):
             self.bboxes_label_count = np.zeros(self.bs, dtype="int32")
             self.loader.rocalGetBoundingBoxCount(self.bboxes_label_count)
             # 1D labels array in a batch
-            self.labels = self.loader.rocalGetBoundingBoxLabels()
+            self.labels = self.loader.get_bounding_box_labels()
             # 1D bboxes array in a batch
-            self.bboxes = self.loader.rocalGetBoundingBoxCords()
-            #Image sizes of a batch
-            self.img_size = np.zeros((self.bs * 2),dtype = "int32")
-            self.loader.getImgSizes(self.img_size)
+            self.bboxes = self.loader.get_bounding_box_cords()
+            # Image sizes of a batch
+            self.img_size = np.zeros((self.batch_size * 2), dtype="int32")
+            self.loader.get_img_sizes(self.img_size)
 
             count =0
             sum_count=0
@@ -107,15 +107,15 @@ class ROCALGenericIterator(object):
             return self.output, self.bb_padded, self.labels_padded
 
         else:
-            if(self.loader._one_hot_encoding == True):
-                self.loader.getOneHotEncodedLabels(self.labels, self.device)
-                self.labels_tensor = self.labels.reshape(-1, self.bs, self.loader._num_classes)
+            if self.loader._one_hot_encoding:
+                self.loader.get_one_hot_encoded_labels(self.labels_tensor, self.device)
+                self.labels_tensor = self.labels_tensor.reshape(-1, self.batch_size, self.loader._num_classes)
             else:
                 if self.display:
                     for i in range(self.bs):
                         img = (self.output)
                         draw_patches(img[i], i, 0)
-                self.labels = self.loader.getImageLabels()
+                self.labels = self.loader.get_image_labels()
                 self.labels_tensor = self.labels_tensor.copy_(torch.from_numpy(self.labels)).long()
 
             return self.output, self.labels_tensor
