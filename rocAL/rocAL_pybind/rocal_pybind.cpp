@@ -553,12 +553,17 @@ namespace rocal{
             .value("HARDWARE_DECODE", ROCAL_HW_DECODE)
             .value("SOFTWARE_DECODE", ROCAL_SW_DECODE)
             .export_values();
-        py::enum_<RocalDecoderType>(types_m, "RocalDecoderType",  "Rocal Decoder Type")
+        py::enum_<RocalDecoderType>(types_m, "RocalDecoderType", "Rocal Decoder Type")
             .value("DECODER_TJPEG", ROCAL_DECODER_TJPEG)
             .value("DECODER_OPENCV", ROCAL_DECODER_OPENCV)
             .value("DECODER_HW_JEPG", ROCAL_DECODER_HW_JPEG)
             .value("DECODER_VIDEO_FFMPEG_SW", ROCAL_DECODER_VIDEO_FFMPEG_SW)
             .value("DECODER_VIDEO_FFMPEG_HW", ROCAL_DECODER_VIDEO_FFMPEG_HW)
+            .export_values();
+        py::enum_<RocalAudioBorderType>(types_m,"RocalAudioBorderType", "Rocal Audio Border Type")
+            .value("ZERO",ZERO)
+            .value("CLAMP",CLAMP)
+            .value("REFLECT",REFLECT)
             .export_values();
         // rocal_api_info.h
         m.def("getRemainingImages", &rocalGetRemainingImages);
@@ -817,6 +822,8 @@ namespace rocal{
         m.def("ColorTemp", &rocalColorTemp,
             py::return_value_policy::reference);
         m.def("LensCorrection", &rocalLensCorrection,
+            py::return_value_policy::reference);
+        m.def("PreEmphasisFilter", &rocalPreEmphasisFilter, 
             py::return_value_policy::reference);
     }
 }

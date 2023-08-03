@@ -56,7 +56,8 @@ def main():
             file_list=file_list,
             )
         audio_decode = fn.decoders.audio(audio, file_root=data_path, file_list_path=file_list, downmix=False, shard_id=0, num_shards=2, storage_type=9, stick_to_shard=False)
-        audio_pipeline.setOutputs(audio_decode)
+        pre_emphasis_filter = fn.preemphasis_filter(audio_decode)
+        audio_pipeline.setOutputs(pre_emphasis_filter)
     audio_pipeline.build()
     audioIteratorPipeline = ROCALClassificationIterator(audio_pipeline, auto_reset=True)
     cnt = 0
