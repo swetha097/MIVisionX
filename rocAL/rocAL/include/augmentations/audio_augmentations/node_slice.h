@@ -40,10 +40,9 @@ private:
     vx_array  _fill_values_array;
     float * _anchor_array , *_shape_array;
     Tensor *_anchor, *_shape;
-    std::vector<unsigned int> _output_width_vector, _output_height_vector;
     std::vector<float> _fill_values, _fill_values_vec, _anchor_vec, _shape_vec;
     bool _normalized_anchor = false, _normalized_shape = false;
     RocalOutOfBoundsPolicy _policy = RocalOutOfBoundsPolicy::ERROR;
-    unsigned _number_of_dims, _total_dims;
+    unsigned _dims_stride;
     int _axis_mask = 0;
 };

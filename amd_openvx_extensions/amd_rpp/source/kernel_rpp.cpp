@@ -2584,7 +2584,7 @@ VX_API_ENTRY vx_node VX_API_CALL vxExtRppNonSilentRegion(vx_graph graph, vx_tens
 }
 
 VX_API_ENTRY vx_node VX_API_CALL vxExtRppSlice(vx_graph graph, vx_tensor pSrc, vx_tensor srcDims, vx_tensor pDst, vx_tensor dstDims, vx_tensor anchor, vx_tensor shape, vx_array fillValue,
-                                               vx_scalar axes, vx_scalar normalizedAnchor, vx_scalar normalizedShape, vx_scalar policy)
+                                               vx_scalar axes, vx_scalar normalizedAnchor, vx_scalar normalizedShape, vx_scalar policy, vx_scalar dimsStride)
 {
     vx_node node = NULL;
     vx_context context = vxGetContext((vx_reference)graph);
@@ -2604,8 +2604,9 @@ VX_API_ENTRY vx_node VX_API_CALL vxExtRppSlice(vx_graph graph, vx_tensor pSrc, v
             (vx_reference)normalizedAnchor,
             (vx_reference)normalizedShape,
             (vx_reference)policy,
+            (vx_reference)dimsStride,
             (vx_reference)deviceType};
-        node = createNode(graph, VX_KERNEL_RPP_SLICE, params, 12);
+        node = createNode(graph, VX_KERNEL_RPP_SLICE, params, 13);
     }
     return node;
 }

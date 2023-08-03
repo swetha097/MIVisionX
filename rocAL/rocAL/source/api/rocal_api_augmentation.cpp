@@ -2225,12 +2225,11 @@ rocalPreEmphasisFilter(RocalContext p_context,
     auto context = static_cast<Context*>(p_context);
     auto input = static_cast<Tensor*>(p_input);
     auto preemph_coeff = static_cast<FloatParam*>(p_preemph_coeff);
-    RocalTensorDataType op_tensorDataType;
     try {
-        RocalTensorDataType op_tensorDataType = (RocalTensorDataType)rocal_tensor_output_datatype;
+        RocalTensorDataType op_tensor_data_type = (RocalTensorDataType)rocal_tensor_output_datatype;
         TensorInfo output_info = input->info();
         output_info.set_tensor_layout(RocalTensorlayout::NONE);
-        output_info.set_data_type(op_tensorDataType);
+        output_info.set_data_type(op_tensor_data_type);
 
         output = context->master_graph->create_tensor(output_info, is_output);
         output->reset_tensor_roi();
@@ -2347,9 +2346,7 @@ rocalSpectrogram(
     }
     auto context = static_cast<Context*>(p_context);
     auto input = static_cast<Tensor*>(p_input);
-    RocalTensorDataType op_tensorDataType;
     try {
-        int layout = 0;
         RocalTensorDataType op_tensor_data_type = (RocalTensorDataType)rocal_tensor_output_datatype;
         std::vector<size_t> max_dims = input->info().max_shape();
         TensorInfo output_info = input->info();
