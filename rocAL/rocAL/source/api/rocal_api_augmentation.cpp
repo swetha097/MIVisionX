@@ -433,8 +433,8 @@ rocalCropResizeFixed(
         float aspect_ratio,
         float x_center_drift,
         float y_center_drift,
-        RocalTensorLayout rocal_tensor_output_layout,
-        RocalTensorOutputType rocal_tensor_output_datatype) {
+        RocalTensorLayout output_layout,
+        RocalTensorOutputType output_datatype) {
     Tensor* output = nullptr;
     if ((p_context == nullptr) || (p_input == nullptr)) {
         ERR("Invalid ROCAL context or invalid input tensor")
@@ -447,15 +447,15 @@ rocalCropResizeFixed(
         if(dest_width == 0 || dest_height == 0)
             THROW("CropResize node needs tp receive non-zero destination dimensions")
 
-        RocalTensorlayout op_tensor_layout = static_cast<RocalTensorlayout>(rocal_tensor_output_layout);
-        RocalTensorDataType op_tensor_datatype = static_cast<RocalTensorDataType>(rocal_tensor_output_datatype);
+        RocalTensorlayout op_tensor_layout = static_cast<RocalTensorlayout>(output_layout);
+        RocalTensorDataType op_tensor_datatype = static_cast<RocalTensorDataType>(output_datatype);
         TensorInfo output_info = input->info();
         output_info.set_tensor_layout(op_tensor_layout);
         output_info.set_data_type(op_tensor_datatype);
 
         // For the crop resize node, user can create an image with a different width and height
         std::vector<size_t> out_dims = output_info.dims();
-        modify_dims_width_and_height(op_tensor_layout, out_dims, dest_width, dest_height);
+        modify_dims_width_and_height(output_info.layout(), out_dims, dest_width, dest_height);
         output_info.set_dims(out_dims);
         output = context->master_graph->create_tensor(output_info, is_output);
 

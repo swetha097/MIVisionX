@@ -736,13 +736,13 @@ extern "C" RocalTensor  ROCAL_API_CALL rocalCropCenterFixed(RocalContext context
                                                             RocalTensorOutputType rocal_tensor_output_datatype = ROCAL_UINT8);
 
 extern "C" RocalTensor  ROCAL_API_CALL rocalResizeCropMirrorFixed(RocalContext context, RocalTensor input,
-                                                                   unsigned dest_width, unsigned dest_height,
-                                                                   bool is_output,
-                                                                   unsigned crop_h,
-                                                                   unsigned crop_w,
-                                                                   RocalIntParam mirror,
-                                                                   RocalTensorLayout rocal_tensor_output_layout = ROCAL_NHWC,
-                                                                   RocalTensorOutputType rocal_tensor_output_datatype = ROCAL_UINT8);
+                                                                  unsigned dest_width, unsigned dest_height,
+                                                                  bool is_output,
+                                                                  unsigned crop_h,
+                                                                  unsigned crop_w,
+                                                                  RocalIntParam mirror,
+                                                                  RocalTensorLayout output_layout = ROCAL_NONE,
+                                                                  RocalTensorOutputType output_datatype = ROCAL_UINT8);
 
 extern "C" RocalTensor  ROCAL_API_CALL rocalResizeCropMirror(RocalContext context, RocalTensor input,
                                                               unsigned dest_width, unsigned dest_height,
