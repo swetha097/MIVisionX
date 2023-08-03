@@ -47,8 +47,8 @@ void CropMetaNode::update_parameters(pMetaDataBatch input_meta_data, pMetaDataBa
     vxCopyArrayRange((vx_array)_y1, 0, _batch_size, sizeof(uint),_y1_val.data(), VX_READ_ONLY, VX_MEMORY_TYPE_HOST);
     for(int i = 0; i < _batch_size; i++)
     {
-        float _dst_to_src_width_ratio = _crop_width_val[i] / float(input_roi[i].x2);
-        float _dst_to_src_height_ratio = _crop_height_val[i] / float(input_roi[i].y2);
+        float _dst_to_src_width_ratio = _crop_width_val[i] / static_cast<float>(input_roi[i].x2);
+        float _dst_to_src_height_ratio = _crop_height_val[i] / static_cast<float>(input_roi[i].y2);
 
         auto bb_count = input_meta_data->get_labels_batch()[i].size();
         Labels labels_buf = input_meta_data->get_labels_batch()[i];

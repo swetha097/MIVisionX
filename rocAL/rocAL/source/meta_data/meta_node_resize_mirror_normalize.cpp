@@ -24,10 +24,6 @@ THE SOFTWARE.
 
 void ResizeMirrorNormalizeMetaNode::initialize()
 {
-    _src_height_val.resize(_batch_size);
-    _src_width_val.resize(_batch_size);
-    _dst_width_val.resize(_batch_size);
-    _dst_height_val.resize(_batch_size);
     _mirror_val.resize(_batch_size);
 }
 void ResizeMirrorNormalizeMetaNode::update_parameters(pMetaDataBatch input_meta_data, pMetaDataBatch output_meta_data)
@@ -44,8 +40,8 @@ void ResizeMirrorNormalizeMetaNode::update_parameters(pMetaDataBatch input_meta_
 
     for (int i = 0; i < _batch_size; i++)
     {
-        _dst_to_src_width_ratio = float(output_roi[i].x2) / float(input_roi[i].x2);
-        _dst_to_src_height_ratio = float(output_roi[i].y2) / float(input_roi[i].y2);
+        _dst_to_src_width_ratio = static_cast<float>(output_roi[i].x2) / static_cast<float>(input_roi[i].x2);
+        _dst_to_src_height_ratio = static_cast<float>(output_roi[i].y2) / static_cast<float>(input_roi[i].y2);
 
         auto bb_count = input_meta_data->get_labels_batch()[i].size();
         BoundingBoxCords coords_buf = input_meta_data->get_bb_cords_batch()[i];
@@ -83,8 +79,7 @@ void ResizeMirrorNormalizeMetaNode::update_parameters(pMetaDataBatch input_meta_
             if(_mirror_val[i] == 1)
             {
                 auto l = coords_buf[j].l;
-                auto r = coords_buf[j].r;
-                coords_buf[j].l = output_roi[i].x2 - r - 1;
+                coords_buf[j].l = output_roi[i].x2 - coords_buf[j].r - 1;
                 coords_buf[j].r = output_roi[i].x2 - l - 1;
             }
             bb_coords.push_back(coords_buf[j]);
