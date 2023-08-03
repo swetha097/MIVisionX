@@ -47,7 +47,6 @@ SCALING_MODES = {
     3: types.SCALING_MODE_NOT_LARGER
 }
 
-
 def draw_patches(img, idx, device):
     # image is expected as a tensor, bboxes as numpy
     args = parse_args()
@@ -511,7 +510,7 @@ def main():
                 rocal_tensor_output_datatype=tensor_dtype)
 
         if output_set == 0:
-            pipe.setOutputs(output)
+            pipe.set_outputs(output)
     # build the pipeline
     pipe.build()
     # Dataloader

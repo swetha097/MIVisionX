@@ -23,7 +23,6 @@ import cupy as cp
 import rocal_pybind as b
 import amd.rocal.types as types
 
-
 class ROCALGenericImageIterator(object):
     def __init__(self, pipeline):
         self.loader = pipeline
@@ -34,10 +33,9 @@ class ROCALGenericImageIterator(object):
         return self.__next__()
 
     def __next__(self):
-        if self.loader.rocalRun() != 0:
+        if self.loader.rocal_run() != 0:
             raise StopIteration
-        else:
-            self.output_tensor_list = self.loader.getOutputTensors()
+        self.output_tensor_list = self.loader.get_output_tensors()
 
         if self.output_list is None:
             self.output_list = []
@@ -79,10 +77,10 @@ class ROCALGenericIteratorDetection(object):
         return self.__next__()
 
     def __next__(self):
-        if self.loader.rocalRun() != 0:
+        if self.loader.rocal_run() != 0:
             raise StopIteration
         else:
-            self.output_tensor_list = self.loader.getOutputTensors()
+            self.output_tensor_list = self.loader.get_output_tensors()
 
         if self.output_list is None:
             self.output_list = []
@@ -108,17 +106,15 @@ class ROCALGenericIteratorDetection(object):
             self.label_list = []
             self.num_bboxes_list = []
             # Count of labels/ bboxes in a batch
-            self.count_batch = self.loader.getBoundingBoxCount()
+            self.count_batch = self.loader.get_bounding_box_count()
             # 1D labels array in a batch
-            self.labels = self.loader.getBoundingBoxLabels()
+            self.labels = self.loader.get_bounding_box_labels()
             # 1D bboxes array in a batch
-            self.bboxes = self.loader.getBoundingBoxCords()
+            self.bboxes = self.loader.get_bounding_box_cords()
             # 1D Image sizes array of image in a batch
             self.img_size = np.zeros((self.bs * 2), dtype="int32")
             self.num_bboxes_list = [len(box) for box in self.bboxes]
-            self.loader.getImgSizes(self.img_size)
-            count = 0  # number of bboxes per image
-            sum_count = 0  # sum of the no. of the bboxes
+            self.loader.get_img_sizes(self.img_size)
             for i in range(self.bs):
                 self.label_2d_numpy = self.labels[i]
                 self.label_2d_numpy = np.reshape(self.label_2d_numpy, (-1, 1)).tolist()
@@ -129,22 +125,18 @@ class ROCALGenericIteratorDetection(object):
 
             self.target = self.bbox_list
             self.target1 = self.label_list
-            max_cols = max([len(row)
-                           for batch in self.target for row in batch])
+            max_cols = max([len(row) for batch in self.target for row in batch])
             # max_rows = max([len(batch) for batch in self.target])
             max_rows = 100
             bb_padded = [batch + [[0] * (max_cols)] * (max_rows - len(batch)) for batch in self.target]
-            bb_padded_1 = [row + [0] * (max_cols - len(row))
-                           for batch in bb_padded for row in batch]
+            bb_padded_1 = [row + [0] * (max_cols - len(row)) for batch in bb_padded for row in batch]
             arr = np.asarray(bb_padded_1)
             self.res = np.reshape(arr, (-1, max_rows, max_cols))
-            max_cols = max([len(row)
-                           for batch in self.target1 for row in batch])
+            max_cols = max([len(row) for batch in self.target1 for row in batch])
             # max_rows = max([len(batch) for batch in self.target1])
             max_rows = 100
             lab_padded = [batch + [[0] * (max_cols)] * (max_rows - len(batch)) for batch in self.target1]
-            lab_padded_1 = [row + [0] * (max_cols - len(row))
-                            for batch in lab_padded for row in batch]
+            lab_padded_1 = [row + [0] * (max_cols - len(row)) for batch in lab_padded for row in batch]
             labarr = np.asarray(lab_padded_1)
             self.l = np.reshape(labarr, (-1, max_rows, max_cols))
             self.num_bboxes_arr = np.array(self.num_bboxes_list)
@@ -154,14 +146,14 @@ class ROCALGenericIteratorDetection(object):
             if (self.loader._one_hot_encoding == True):
                 if self.device == "cpu":
                     self.labels = np.zeros((self.bs)*(self.loader._num_classes), dtype="int32")
-                    self.loader.getOneHotEncodedLabels(self.labels, device="cpu")
+                    self.loader.get_one_hot_encoded_labels(self.labels, device="cpu")
                     self.labels = np.reshape(self.labels, (-1, self.bs, self.loader._num_classes))
                 else:
                     self.labels = cp.zeros((self.bs)*(self.loader._num_classes), dtype="int32")
-                    self.loader.getOneHotEncodedLabels(self.labels, device="gpu")
+                    self.loader.get_one_hot_encoded_labels(self.labels, device="gpu")
                     self.labels = cp.reshape(self.labels, (-1, self.bs, self.loader._num_classes))
             else:
-                self.labels = self.loader.getImageLabels()
+                self.labels = self.loader.get_image_labels()
 
             return self.output_list, self.labels
 
