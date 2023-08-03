@@ -6,7 +6,6 @@ import random
 import numpy as np
 from amd.rocal.plugin.pytorch import ROCALClassificationIterator
 import torch
-# torch.set_printoptions(threshold=10_000)
 np.set_printoptions(threshold=1000, edgeitems=10000)
 from amd.rocal.pipeline import Pipeline
 import amd.rocal.fn as fn
