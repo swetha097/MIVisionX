@@ -553,7 +553,7 @@ namespace rocal{
             .value("HARDWARE_DECODE", ROCAL_HW_DECODE)
             .value("SOFTWARE_DECODE", ROCAL_SW_DECODE)
             .export_values();
-        py::enum_<RocalDecoderType>(types_m, "RocalDecoderType",  "Rocal Decoder Type")
+        py::enum_<RocalDecoderType>(types_m, "RocalDecoderType", "Rocal Decoder Type")
             .value("DECODER_TJPEG", ROCAL_DECODER_TJPEG)
             .value("DECODER_OPENCV", ROCAL_DECODER_OPENCV)
             .value("DECODER_HW_JEPG", ROCAL_DECODER_HW_JPEG)
@@ -835,6 +835,8 @@ namespace rocal{
         m.def("ColorTemp", &rocalColorTemp,
             py::return_value_policy::reference);
         m.def("LensCorrection", &rocalLensCorrection,
+            py::return_value_policy::reference);
+        m.def("PreEmphasisFilter", &rocalPreEmphasisFilter,
             py::return_value_policy::reference);
         m.def("NonSilentRegion", &rocalNonSilentRegion,"Performs leading and trailing silence detection in an audio buffer",
             py::return_value_policy::reference);
