@@ -25,7 +25,7 @@ import amd.rocal.types as types
 import ctypes
 
 class ROCALGenericIterator(object):
-    def __init__(self, pipeline, tensor_layout=types.NCHW, reverse_channels=False, multiplier=[1.0, 1.0, 1.0], offset=[0.0, 0.0, 0.0], tensor_dtype=types.FLOAT, device="cpu", device_id=0, display=False):
+    def __init__(self, pipeline, tensor_layout=types.NCHW, reverse_channels=False, multiplier=[1.0, 1.0, 1.0], offset=[0.0, 0.0, 0.0], tensor_dtype=types.FLOAT, device="cpu", device_id=0, display=False, size = -1, auto_reset=False):
         self.loader = pipeline
         self.tensor_format = tensor_layout
         self.multiplier = multiplier
@@ -44,16 +44,22 @@ class ROCALGenericIterator(object):
         self.last_batch_policy = self.loader._last_batch_policy
         if self.loader._name is None:
             self.loader._name = self.loader._reader
+        self.shard_size = size
+        self.auto_reset = auto_reset
+        self.batch_count = 0
 
     def next(self):
         return self.__next__()
 
     def __next__(self):
-        if self.loader.rocalRun() != 0:
+        if self.loader.rocalRun() != 0 and self.shard_size < 0:
+            if self.auto_reset:
+                self.reset()
             raise StopIteration
         else:
             self.output_tensor_list = self.loader.getOutputTensors()
-        self.last_batch_size = self.batch_size - b.getLastBatchPaddedSize(self.loader._handle)
+        self.batch_count += self.batch_size
+        self.last_batch_size = self.batch_size - b.getLastBatchPaddedSize(self.loader._handle) #Every Time the padded size is going to differ
         if self.output_list is None:
             self.output_list = []
             for i in range(len(self.output_tensor_list)):
@@ -136,6 +142,7 @@ class ROCALGenericIterator(object):
                 return self.output_list, self.labels_tensor
 
     def reset(self):
+        self.batch_count = 0
         b.rocalResetLoaders(self.loader._handle)
 
     def __iter__(self):
@@ -210,7 +217,7 @@ class ROCALClassificationIterator(ROCALGenericIterator):
 
     def __init__(self,
                  pipelines,
-                 size=0,
+                 size=-1,
                  auto_reset=False,
                  fill_last_batch=True,
                  dynamic_shape=False,
@@ -220,7 +227,7 @@ class ROCALClassificationIterator(ROCALGenericIterator):
                  device_id=0,):
         pipe = pipelines
         super(ROCALClassificationIterator, self).__init__(pipe, tensor_layout=pipe._tensor_layout, tensor_dtype=pipe._tensor_dtype,
-                                                          multiplier=pipe._multiplier, offset=pipe._offset, display=display, device=device, device_id=device_id)
+                                                          multiplier=pipe._multiplier, offset=pipe._offset, display=display, device=device, device_id=device_id, size = size, auto_reset = auto_reset)
 
 
 def draw_patches(img, idx, bboxes):
