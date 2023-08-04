@@ -90,7 +90,7 @@ namespace rocal{
         float16 *ptr = (float16 *)array;
         output_tensor.copy_data(static_cast<void *>(ptr), RocalOutputMemType::ROCAL_MEMCPY_GPU);
     }
-    
+
     py::object wrapper_image_name_length(RocalContext context, py::array_t<int> array)
     {
         auto buf = array.request();
@@ -114,7 +114,7 @@ namespace rocal{
     }
 
     /*
-    // Commenting out the block as we no more use wrappers. Will remove this block in the upcoming PRs 
+    // Commenting out the block as we no more use wrappers. Will remove this block in the upcoming PRs
     py::object wrapper_copy_to_output(RocalContext context, py::array_t<unsigned char> array)
     {
         auto buf = array.request();
@@ -352,12 +352,41 @@ namespace rocal{
                 )code"
             )
             .def(
+                "num_of_dims",
+                [](rocalTensor &output_tensor)
+                {
+                    return output_tensor.num_of_dims();
+                },
+                R"code(
+                Returns a tensor data's total number of dimensions.
+                ex: 3 in case of audio, 4 in case of an image, 5 in case of video
+                )code"
+            )
+            .def(
                 "batch_size",
                 [](rocalTensor &output_tensor) {
                     return output_tensor.dims().at(0);
                 },
                 R"code(
                 Returns a tensor batch size.
+                )code"
+            )
+            .def(
+                "get_rois",
+                [](rocalTensor &output_tensor)
+                {
+                    return py::array(py::buffer_info(
+                            (int *)(output_tensor.get_roi()),
+                            sizeof(int),
+                            py::format_descriptor< int>::format(),
+                            1,
+                            {output_tensor.dims().at(0) * 4},
+                            {sizeof(int) }));
+                },
+                R"code(
+                Returns a tensor ROI
+                ex : width, height in case of an image data
+                ex : samples , channels in case of an audio data
                 )code"
             )
             .def("layout", [](rocalTensor &output_tensor) {
@@ -390,6 +419,13 @@ namespace rocal{
                 Copies the ring buffer data to python buffer pointers.
                 )code"
             )
+            .def(
+            "copy_data", [](rocalTensor &output_tensor, py::object p, uint max_x1, uint max_y1) {
+                auto ptr = ctypes_void_ptr(p);
+                output_tensor.copy_data(static_cast<void *>(ptr), max_x1, max_y1);
+            },
+            py::return_value_policy::reference
+            )
             .def("copy_data_numpy", &copy_data_numpy_wrapper<u_char>, py::return_value_policy::reference)
             .def("copy_data_numpy", &copy_data_numpy_wrapper<float>, py::return_value_policy::reference)
             .def("copy_data_numpy", &copy_data_numpy_wrapper<half>, py::return_value_policy::reference)
@@ -399,7 +435,7 @@ namespace rocal{
                 if(output_tensor.data_type() == RocalTensorOutputType::ROCAL_FP16)
                     copy_data_cupy_wrapper_f16(output_tensor, array);
                 if(output_tensor.data_type() == RocalTensorOutputType::ROCAL_UINT8)
-                    copy_data_cupy_wrapper_u8(output_tensor, array);                
+                    copy_data_cupy_wrapper_u8(output_tensor, array);
             }, py::return_value_policy::reference)
             .def(
                 "at",
@@ -564,6 +600,19 @@ namespace rocal{
             .value("LAST_BATCH_DROP",ROCAL_LAST_BATCH_DROP)
             .value("LAST_BATCH_PARTIAL",ROCAL_LAST_BATCH_PARTIAL)
             .export_values();
+        py::enum_<RocalSpectrogramLayout>(types_m,"RocalSpectrogramLayout", "Rocal Audio Spectrogram Layout")
+            .value("FT",FT)
+            .value("TF",TF)
+            .export_values();
+        py::enum_<RocalMelScaleFormula>(types_m,"RocalMelScaleFormula", "Rocal Audio Mel Formula")
+            .value("SLANEY",SLANEY)
+            .value("HTK",HTK)
+            .export_values();
+        py::enum_<RocalOutOfBoundsPolicy>(types_m,"RocalOutOfBoundsPolicy", "Rocal Audio Out Of Bounds Policy")
+            .value("PAD",PAD)
+            .value("TRIMTOSHAPE",TRIMTOSHAPE)
+            .value("ERROR",ERROR)
+            .export_values();
         // rocal_api_info.h
         m.def("getRemainingImages", &rocalGetRemainingImages, py::return_value_policy::reference);
         m.def("getLastBatchPaddedSize", &rocalGetLastBatchPaddedSize, py::return_value_policy::reference);
@@ -622,7 +671,7 @@ namespace rocal{
             unsigned int size_of_tensor_list = output_tensor_list->size();
             for (uint i = 0; i < size_of_tensor_list; i++)
                 list.append(output_tensor_list->at(i));
-            return list; 
+            return list;
         });
         m.def("getBoundingBoxCount", &rocalGetBoundingBoxCount);
         m.def("getImageLabels", [](RocalContext context) {
@@ -753,7 +802,7 @@ namespace rocal{
         // rocal_api_augmentation.h
         // m.def("SSDRandomCrop", &rocalSSDRandomCrop,
         //     py::return_value_policy::reference);
-        m.def("Resize", &rocalResize, 
+        m.def("Resize", &rocalResize,
             py::return_value_policy::reference);
         m.def("ResizeMirrorNormalize", &rocalResizeMirrorNormalize,
             py::return_value_policy::reference);
@@ -823,7 +872,19 @@ namespace rocal{
             py::return_value_policy::reference);
         m.def("LensCorrection", &rocalLensCorrection,
             py::return_value_policy::reference);
-        m.def("PreEmphasisFilter", &rocalPreEmphasisFilter, 
+        m.def("PreEmphasisFilter", &rocalPreEmphasisFilter,
+            py::return_value_policy::reference);
+        m.def("NonSilentRegion", &rocalNonSilentRegion,"Performs leading and trailing silence detection in an audio buffer",
+            py::return_value_policy::reference);
+        m.def("audioSlice", &rocalSlice,"The slice can be specified by proving the start and end coordinates, or start coordinates and shape of the slice. Both coordinates and shapes can be provided in absolute or relative terms",
+            py::return_value_policy::reference);
+        m.def("audioNormalize", &rocalNormalize,"Normalizes the input by removing the mean and dividing by the standard deviation",
+            py::return_value_policy::reference);
+        m.def("Spectrogram", &rocalSpectrogram, "Produces a spectrogram from a 1D signal (for example, audio)",
+            py::return_value_policy::reference);
+        m.def("MelFilterBank", &rocalMelFilterBank, "Converts a spectrogram to a mel spectrogram by applying a bank of triangular filters",
+            py::return_value_policy::reference);
+        m.def("ToDecibels", &rocalToDecibels, "Converts to Decibels",
             py::return_value_policy::reference);
     }
 }

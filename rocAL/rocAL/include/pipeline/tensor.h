@@ -102,7 +102,7 @@ public:
             dims_mapping = {0, 1, 3, 4, 2};
         } else {
             THROW("Invalid layout conversion")
-        }   
+        }
         for(unsigned i = 0; i < _num_of_dims; i++)
             new_dims[i] = _dims.at(dims_mapping[i]);
     }
@@ -186,9 +186,9 @@ public:
     bool is_image() const { return _is_image; }
     void set_metadata() { _is_metadata = true; }
     bool is_metadata() const { return _is_metadata; }
-    void set_roi_ptr(unsigned *roi_ptr) { 
+    void set_roi_ptr(unsigned *roi_ptr) {
         auto deleter = [&](unsigned *ptr) {};   // Empty destructor used, since memory is handled by the pipeline
-        _roi.reset(roi_ptr, deleter); 
+        _roi.reset(roi_ptr, deleter);
     }
     void copy_roi(void *roi_buffer) {
         if(_roi != nullptr && roi_buffer != nullptr)
@@ -272,10 +272,10 @@ public:
     RocalROICords *get_roi() override { return (RocalROICords *)_info.get_roi(); }
     std::vector<size_t> shape() override { return _info.max_shape(); }
     RocalImageColor color_format() const { return (RocalImageColor)_info.color_format(); }
-    RocalTensorBackend backend() override { 
+    RocalTensorBackend backend() override {
         return (_info.mem_type() == RocalMemType::HOST ? ROCAL_CPU : ROCAL_GPU);
     }
-    
+
 private:
     vx_tensor _vx_handle = nullptr;  //!< The OpenVX tensor
     void* _mem_handle = nullptr;  //!< Pointer to the tensor's internal buffer (opencl or host)

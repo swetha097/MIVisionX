@@ -72,6 +72,7 @@ extern "C" RocalTensor  ROCAL_API_CALL rocalResize(RocalContext context, RocalTe
 /// using it directly. This option allows certain optimizations to be achieved.
 /// \param p_mirror Parameter to enable horizontal flip for output image.
 /// \return
+
 extern "C" RocalTensor ROCAL_API_CALL rocalResizeMirrorNormalize(
     RocalContext p_context, RocalTensor p_input, unsigned dest_width,
     unsigned dest_height, std::vector<float> &mean, std::vector<float> &std_dev,
@@ -742,7 +743,7 @@ extern "C" RocalTensor  ROCAL_API_CALL rocalResizeCropMirrorFixed(RocalContext c
                                                                    RocalIntParam mirror,
                                                                    RocalTensorLayout output_layout = ROCAL_NONE,
                                                                    RocalTensorOutputType output_datatype = ROCAL_UINT8);
-        
+
 extern "C" RocalTensor  ROCAL_API_CALL rocalResizeCropMirror(RocalContext context, RocalTensor input,
                                                               unsigned dest_width, unsigned dest_height,
                                                               bool is_output, RocalFloatParam crop_height = NULL,
@@ -799,5 +800,91 @@ extern "C" RocalTensor ROCAL_API_CALL rocalPreEmphasisFilter(RocalContext p_cont
                                                              bool is_output,
                                                              RocalFloatParam p_preemph_coeff = NULL,
                                                              RocalAudioBorderType preemph_border_type = RocalAudioBorderType::CLAMP);
+
+/// Accepts F32 audio buffers and returns start index and length of non silent region in audio buffer
+/// \param context
+/// \param input
+
+extern "C" std::pair<RocalTensor, RocalTensor> ROCAL_API_CALL rocalNonSilentRegion(RocalContext context,
+                                                                                   RocalTensor input,
+                                                                                   bool is_output,
+                                                                                   float cutoff_db,
+                                                                                   float reference_power,
+                                                                                   int reset_interval,
+                                                                                   int window_length);
+
+/// Accepts F32 audio buffers
+/// \param context
+/// \param input
+
+extern "C" RocalTensor ROCAL_API_CALL rocalSlice(RocalContext p_context,
+                                                 RocalTensor p_input,
+                                                 bool is_output,
+                                                 RocalTensor anchor_tensor,
+                                                 RocalTensor shape_tensor,
+                                                 std::vector<float> fill_values,
+                                                 std::vector<unsigned> axes,
+                                                 bool normalized_anchor,
+                                                 bool normalized_shape,
+                                                 RocalOutOfBoundsPolicy policy,
+                                                 RocalTensorOutputType rocal_tensor_output_type);
+
+/// Accepts F32 audio buffers
+/// \param context
+/// \param input
+
+extern "C" RocalTensor ROCAL_API_CALL rocalSpectrogram(RocalContext p_context,
+                                                       RocalTensor p_input,
+                                                       bool is_output,
+                                                       std::vector<float> &window_fn,
+                                                       bool center_windows,
+                                                       bool reflect_padding,
+                                                       RocalSpectrogramLayout spectrogram_layout,
+                                                       int power,
+                                                       int nfft,
+                                                       int window_length,
+                                                       int window_step,
+                                                       RocalTensorOutputType rocal_tensor_output_type);
+
+/// Accepts F32 audio buffers
+/// \param context
+/// \param input
+
+extern "C"  RocalTensor ROCAL_API_CALL rocalMelFilterBank(RocalContext p_context,
+                                                          RocalTensor p_input,
+                                                          bool is_output,
+                                                          float freq_high,
+                                                          float freq_low,
+                                                          RocalMelScaleFormula mel_formula,
+                                                          int nfilter,
+                                                          bool normalize,
+                                                          float sample_rate,
+                                                          RocalTensorOutputType rocal_tensor_output_datatype);
+
+/// Accepts F32 audio buffers
+/// \param context
+/// \param input
+
+extern "C" RocalTensor ROCAL_API_CALL rocalToDecibels(RocalContext p_context,
+                                                      RocalTensor p_input,
+                                                      bool is_output,
+                                                      float cutoff_db,
+                                                      float multiplier,
+                                                      float reference_magnitude,
+                                                      RocalTensorOutputType rocal_tensor_output_type);
+
+/// Accepts F32 audio buffers
+/// \param context
+/// \param input
+
+extern "C" RocalTensor ROCAL_API_CALL rocalNormalize(RocalContext p_context,
+                                                     RocalTensor p_input,
+                                                     bool is_output,
+                                                     bool batch,
+                                                     std::vector<int> axes,
+                                                     float mean, float std_dev,
+                                                     float scale, float shift,
+                                                     int ddof, float epsilon,
+                                                     RocalTensorOutputType rocal_tensor_output_type);
 
 #endif //MIVISIONX_ROCAL_API_AUGMENTATION_H
