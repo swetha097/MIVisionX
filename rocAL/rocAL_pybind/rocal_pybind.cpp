@@ -69,28 +69,6 @@ namespace rocal{
         return ptr;
     }
 
-    template<typename T>
-    void copy_data_numpy_wrapper(rocalTensor& output_tensor, py::array_t<T> array) {
-        auto buf = array.request();
-        T *ptr = static_cast<T  *>(buf.ptr);
-        output_tensor.copy_data(static_cast<void *>(ptr), RocalOutputMemType::ROCAL_MEMCPY_HOST);
-    }
-
-    void copy_data_cupy_wrapper_u8(rocalTensor& output_tensor, long array) {
-        unsigned char *ptr = (unsigned char *)array;
-        output_tensor.copy_data(static_cast<void *>(ptr), RocalOutputMemType::ROCAL_MEMCPY_GPU);
-    }
-
-    void copy_data_cupy_wrapper_f32(rocalTensor& output_tensor, long array) {
-        float *ptr = (float *)array;
-        output_tensor.copy_data(static_cast<void *>(ptr), RocalOutputMemType::ROCAL_MEMCPY_GPU);
-    }
-
-    void copy_data_cupy_wrapper_f16(rocalTensor& output_tensor, long array) {
-        float16 *ptr = (float16 *)array;
-        output_tensor.copy_data(static_cast<void *>(ptr), RocalOutputMemType::ROCAL_MEMCPY_GPU);
-    }
-    
     py::object wrapper_image_name_length(RocalContext context, py::array_t<int> array)
     {
         auto buf = array.request();
@@ -396,17 +374,23 @@ namespace rocal{
                 Copies the ring buffer data to python buffer pointers.
                 )code"
             )
-            .def("copy_data_numpy", &copy_data_numpy_wrapper<u_char>, py::return_value_policy::reference)
-            .def("copy_data_numpy", &copy_data_numpy_wrapper<float>, py::return_value_policy::reference)
-            .def("copy_data_numpy", &copy_data_numpy_wrapper<half>, py::return_value_policy::reference)
-            .def("copy_data_cupy", [](rocalTensor& output_tensor, long array) {
-                if(output_tensor.data_type() == RocalTensorOutputType::ROCAL_FP32)
-                    copy_data_cupy_wrapper_f32(output_tensor, array);
-                if(output_tensor.data_type() == RocalTensorOutputType::ROCAL_FP16)
-                    copy_data_cupy_wrapper_f16(output_tensor, array);
-                if(output_tensor.data_type() == RocalTensorOutputType::ROCAL_UINT8)
-                    copy_data_cupy_wrapper_u8(output_tensor, array);                
-            }, py::return_value_policy::reference)
+            .def(
+            "copy_data", [](rocalTensor& output_tensor, py::array array) {
+                auto buf = array.request();
+                output_tensor.copy_data(static_cast<void *>(buf.ptr), RocalOutputMemType::ROCAL_MEMCPY_HOST);               
+            },  py::return_value_policy::reference,
+                R"code(
+                Copies the ring buffer data to numpy arrays.
+                )code"
+            )
+            .def(
+            "copy_data", [](rocalTensor& output_tensor, long array) {
+                output_tensor.copy_data((void *)array, RocalOutputMemType::ROCAL_MEMCPY_GPU);               
+            },  py::return_value_policy::reference,
+                R"code(
+                Copies the ring buffer data to cupy arrays.
+                )code"
+            )
             .def(
                 "at",
                 [](rocalTensor &output_tensor, uint idx) {

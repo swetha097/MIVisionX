@@ -45,7 +45,7 @@ class ROCALGenericImageIterator(object):
         else:
             self.output_tensor_list = self.loader.get_output_tensors()
 
-        self.output_tensor_list[0].copy_data_numpy(self.out_image)
+        self.output_tensor_list[0].copy_data(self.out_image)
         return self.out_image , self.out_tensor
 
     def reset(self):

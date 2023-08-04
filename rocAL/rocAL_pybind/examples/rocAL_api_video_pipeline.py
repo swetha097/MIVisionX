@@ -81,7 +81,7 @@ class ROCALVideoIterator(object):
             self.layout = self.output_tensor_list[0].layout()
             self.output = np.empty(
                 (self.dimensions[0]*self.dimensions[1], self.dimensions[2], self.dimensions[3], self.dimensions[4]), dtype=self.dtype)
-        self.output_tensor_list[0].copy_data_numpy(self.output)
+        self.output_tensor_list[0].copy_data(self.output)
         img = torch.from_numpy(self.output)
         # Display Frames in a video sequence
         if self.display:

@@ -68,16 +68,16 @@ class ROCALGenericIterator(object):
                         self.labels = cp.empty(self.labels_size, dtype=self.dtype)
 
                 if self.device == "cpu":
-                    self.output_tensor_list[i].copy_data_numpy(self.output)
+                    self.output_tensor_list[i].copy_data(self.output)
                 else:
-                    self.output_tensor_list[i].copy_data_cupy(self.output.data.ptr)
+                    self.output_tensor_list[i].copy_data(self.output.data.ptr)
                 self.output_list.append(self.output)
         else:
             for i in range(len(self.output_tensor_list)):
                 if self.device == "cpu":
-                    self.output_tensor_list[i].copy_data_numpy(self.output_list[i])
+                    self.output_tensor_list[i].copy_data(self.output_list[i])
                 else:
-                    self.output_tensor_list[i].copy_data_cupy(self.output_list[i].data.ptr)
+                    self.output_tensor_list[i].copy_data(self.output_list[i].data.ptr)
 
         if (self.loader._name == "labelReader"):
             if (self.loader._one_hot_encoding == True):
