@@ -67,7 +67,6 @@ class ROCALVideoIterator(object):
     def __next__(self):
         if (self.loader.is_empty()):
             raise StopIteration
-
         if self.loader.rocal_run() != 0:
             raise StopIteration
         self.output_tensor_list = self.loader.get_output_tensors()

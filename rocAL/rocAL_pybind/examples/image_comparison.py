@@ -28,7 +28,6 @@ def compare_pixels(img1, img2, aug_name, width, height, image_offset = 0):
                         diff_val = abs(pixels1[wt,ht][ch]-pixels2[wt,ht][ch])
                         diff_val = min(diff_val, 5)
                         pixel_difference[diff_val] += 1
-
             else:
                 pixel_difference[0] += channel
     return pixel_difference, total_valid_pixel_count
