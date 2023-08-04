@@ -117,8 +117,7 @@ def fog(*inputs, fog=0.5, rocal_tensor_output_layout=types.NHWC, rocal_tensor_ou
     return (fog_image)
 
 
-def brightness(*inputs, alpha=None, beta=None,
-               rocal_tensor_output_layout=types.NHWC, rocal_tensor_output_datatype=types.UINT8):
+def brightness(*inputs, alpha=None, beta=None, rocal_tensor_output_layout=types.NHWC, rocal_tensor_output_datatype=types.UINT8):
     """
     inputs - the input image passed to the augmentation
     
@@ -160,8 +159,7 @@ def brightness_fixed(*inputs, alpha=1.0, beta=0.0,
     return (brightness_image)
 
 
-def lens_correction(*inputs, strength=None, zoom=None,
-                    rocal_tensor_output_layout=types.NHWC, rocal_tensor_output_datatype=types.UINT8):
+def lens_correction(*inputs, strength=None, zoom=None, rocal_tensor_output_layout=types.NHWC, rocal_tensor_output_datatype=types.UINT8):
     """
     inputs - the input image passed to the augmentation
     
@@ -201,8 +199,7 @@ def blur(*inputs, kernel_size=None, rocal_tensor_output_layout=types.NHWC, rocal
     return (blur_image)
 
 
-def contrast(*inputs, contrast_factor=None, contrast_center=None,
-             rocal_tensor_output_layout=types.NHWC, rocal_tensor_output_datatype=types.UINT8):
+def contrast(*inputs, contrast_factor=None, contrast_center=None, rocal_tensor_output_layout=types.NHWC, rocal_tensor_output_datatype=types.UINT8):
     """
     inputs - the input image passed to the augmentation
     
@@ -224,8 +221,7 @@ def contrast(*inputs, contrast_factor=None, contrast_center=None,
     return (contrast_image)
 
 
-def flip(*inputs, h_flip=0, v_flip=0,
-         rocal_tensor_output_layout=types.NHWC, rocal_tensor_output_datatype=types.UINT8):
+def flip(*inputs, h_flip=0, v_flip=0, rocal_tensor_output_layout=types.NHWC, rocal_tensor_output_datatype=types.UINT8):
     """
     inputs - the input image passed to the augmentation
     
@@ -564,8 +560,7 @@ def rotate(*inputs, angle=None, dest_width=0, dest_height=0, interpolation_type=
     return (rotated_image)
 
 
-def saturation(*inputs, saturation=1.0, rocal_tensor_output_layout=types.NHWC,
-               rocal_tensor_output_datatype=types.UINT8):
+def saturation(*inputs, saturation=1.0, rocal_tensor_output_layout=types.NHWC, rocal_tensor_output_datatype=types.UINT8):
     """
     inputs - the input image passed to the augmentation
     
@@ -646,8 +641,7 @@ def warp_affine(*inputs, dest_width=0, dest_height=0, transform_matrix=[0, 0, 0,
     return (warp_affine_output)
 
 
-def vignette(*inputs, vignette=0.5, rocal_tensor_output_layout=types.NHWC,
-             rocal_tensor_output_datatype=types.UINT8):
+def vignette(*inputs, vignette=0.5, rocal_tensor_output_layout=types.NHWC, rocal_tensor_output_datatype=types.UINT8):
     """
     inputs - the input image passed to the augmentation
     
@@ -922,8 +916,7 @@ def box_encoder(*inputs, anchors, criteria=0.5, means=None,
     return (box_encoder, [])
 
 
-def color_temp(*inputs, adjustment_value=50, rocal_tensor_output_layout=types.NHWC,
-               rocal_tensor_output_datatype=types.UINT8):
+def color_temp(*inputs, adjustment_value=50, rocal_tensor_output_layout=types.NHWC, rocal_tensor_output_datatype=types.UINT8):
     """
     inputs - the input image passed to the augmentation
     

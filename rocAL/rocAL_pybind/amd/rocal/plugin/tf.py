@@ -23,37 +23,6 @@ import cupy as cp
 import rocal_pybind as b
 import amd.rocal.types as types
 
-class ROCALGenericImageIterator(object):
-    def __init__(self, pipeline):
-        self.loader = pipeline
-        self.w = b.getOutputWidth(self.loader._handle)
-        self.h = b.getOutputHeight(self.loader._handle)
-        self.n = b.getOutputImageCount(self.loader._handle)
-        color_format = b.getOutputColorFormat(self.loader._handle)
-        self.p = (1 if (color_format == int(types.GRAY)) else 3)
-        height = self.h*self.n
-        self.out_tensor = None
-        self.out_image = np.zeros((height, self.w, self.p), dtype = "uint8")
-        self.bs = pipeline._batch_size
-
-    def next(self):
-        return self.__next__()
-
-    def __next__(self):
-        if self.loader.rocal_run() != 0:
-            raise StopIteration
-        else:
-            self.output_tensor_list = self.loader.get_output_tensors()
-
-        self.output_tensor_list[0].copy_data(self.out_image)
-        return self.out_image , self.out_tensor
-
-    def reset(self):
-        b.rocalResetLoaders(self.loader._handle)
-
-    def __iter__(self):
-        return self
-
 class ROCALGenericIteratorDetection(object):
     def __init__(self, pipeline, tensor_layout = types.NCHW, reverse_channels = False, multiplier = None, offset = None, tensor_dtype=types.FLOAT, device = None, device_id = 0):
         self.loader = pipeline
@@ -101,10 +70,7 @@ class ROCALGenericIteratorDetection(object):
             self.reset()
             raise StopIteration
         
-        if(types.NCHW == self.tensor_format):
-            self.loader.copyToExternalTensorNCHW(self.out, self.multiplier, self.offset, self.reverse_channels, int(self.tensor_dtype))
-        else:
-            self.output_tensor_list = self.loader.get_output_tensors()
+        self.output_tensor_list = self.loader.get_output_tensors()
 
         if(self.loader._name == "TFRecordReaderDetection"):
             self.bbox_list =[]
@@ -203,21 +169,3 @@ class ROCALIterator(ROCALGenericIteratorDetection):
         pipe = pipelines
         super(ROCALIterator, self).__init__(pipe, tensor_layout = pipe._tensor_layout, tensor_dtype = pipe._tensor_dtype,
                                                             multiplier=pipe._multiplier, offset=pipe._offset, device=device, device_id=device_id)
-
-
-
-class ROCAL_iterator(ROCALGenericImageIterator):
-    """
-    ROCAL iterator for classification tasks for PyTorch. It returns 2 outputs
-    (data and label) in the form of PyTorch's Tensor.
-
-    """
-    def __init__(self,
-                 pipelines,
-                 size = 0,
-                 auto_reset=False,
-                 fill_last_batch=True,
-                 dynamic_shape=False,
-                 last_batch_padded=False):
-        pipe = pipelines
-        super(ROCAL_iterator, self).__init__(pipe)

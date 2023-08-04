@@ -570,7 +570,7 @@ namespace rocal{
         // rocal_api_meta_data.h
         m.def("randomBBoxCrop", &rocalRandomBBoxCrop);
         m.def("boxEncoder", &rocalBoxEncoder);
-        // m.def("BoxIOUMatcher", &rocalBoxIOUMatcher);
+        // m.def("BoxIOUMatcher", &rocalBoxIOUMatcher);  // Will be enabled when IOU matcher changes are introduced in C++
         m.def("getImgSizes", [](RocalContext context, py::array_t<int> array) {
             auto buf = array.request();
             int* ptr = static_cast<int *>(buf.ptr);
@@ -682,6 +682,7 @@ namespace rocal{
         }
         );
         // rocal_api_data_loaders.h
+        // Will be enabled when the other decoders are implemented in C++
         // m.def("COCO_ImageDecoderSlice", &rocalJpegCOCOFileSourcePartial,"Reads file from the source given and decodes it according to the policy",
         //     py::return_value_policy::reference);
         //  m.def("COCO_ImageDecoderSliceShard", &rocalJpegCOCOFileSourcePartialSingleShard,"Reads file from the source given and decodes it according to the policy",

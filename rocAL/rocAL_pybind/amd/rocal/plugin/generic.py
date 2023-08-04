@@ -50,8 +50,7 @@ class ROCALGenericIterator(object):
 
         if self.loader.rocal_run() != 0:
             raise StopIteration
-        else:
-            self.output_tensor_list = self.loader.get_output_tensors()
+        self.output_tensor_list = self.loader.get_output_tensors()
 
         if self.output_list is None:  # Checking if output_list is empty and initializing the buffers
             self.output_list = []
@@ -87,7 +86,7 @@ class ROCALGenericIterator(object):
                 if self.display:
                     for output in self.output_tensor_list:
                         for i in range(self.batch_size):
-                            draw_patches(output[i], i, 0)
+                            draw_patches(output[i], i)
                 self.labels = self.loader.get_image_labels()
                 if self.device == "cpu":
                     self.labels_tensor = self.labels.astype(dtype=np.int_)
@@ -159,6 +158,12 @@ class ROCALClassificationIterator(ROCALGenericIterator):
                  the next epoch. If set to False next epoch will end sooner as data from
                  it was consumed but dropped. If set to True next epoch would be the
                  same length as the first one.
+    display : bool, optional, default = False
+                 Whether the images should be saved as png files for display.
+    device : str, optional, default = "cpu"
+                 Whether to use CPU or GPU backend for the dataloader.
+    device_id : int, optional, default = 0
+                 Device ID of the GPU being used for the training loader.
 
     Example
     -------
@@ -184,8 +189,8 @@ class ROCALClassificationIterator(ROCALGenericIterator):
                                                           multiplier=pipe._multiplier, offset=pipe._offset, display=display, device=device, device_id=device_id)
 
 
-def draw_patches(img, idx, bboxes):
-    # image is expected as a tensor, bboxes as numpy
+def draw_patches(img, idx):
+    # image is expected as an array
     import cv2
     img = img.cpu()
     image = img.detach().numpy()

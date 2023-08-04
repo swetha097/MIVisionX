@@ -71,8 +71,7 @@ class ROCALVideoIterator(object):
 
         if self.loader.rocal_run() != 0:
             raise StopIteration
-        else:
-            self.output_tensor_list = self.loader.get_output_tensors()
+        self.output_tensor_list = self.loader.get_output_tensors()
         self.iter_num += 1
         # Copy output from buffer to numpy array
         if self.output is None:
@@ -103,9 +102,9 @@ def draw_frames(img, batch_idx, iter_idx, layout):
     # image is expected as a tensor, bboxes as numpy
     import cv2
     image = img.detach().numpy()
-    # print('Shape is:',img.shape)
     if layout == 'NFCHW':
         image = image.transpose([1, 2, 0])
+    image = image.astype('uint8')
     image = cv2.cvtColor(image, cv2.COLOR_RGB2BGR)
     import os
     if not os.path.exists("OUTPUT_IMAGES_PYTHON/NEW_API/VIDEO_READER"):
@@ -168,3 +167,4 @@ def main():
 
 if __name__ == '__main__':
     main()
+

@@ -282,13 +282,11 @@ class Pipeline(object):
         A list of `rocalTensorList` objects for respective pipeline outputs.
         """
         try:
-            print("getRemainingImages :", self.get_remaining_images())
             if self.get_remaining_images() > 0:
                 self.rocal_run()
                 return b.getOutputTensors(self._handle)
         except:
-                print("Raise stop iter")
-                raise StopIteration
+            raise StopIteration
 
 
 def _discriminate_args(func, **func_kwargs):
