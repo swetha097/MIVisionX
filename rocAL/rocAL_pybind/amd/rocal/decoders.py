@@ -107,7 +107,7 @@ def image(*inputs, user_feature_key_map=None, path='', file_root='', annotations
             "max_width": max_decoded_width,
             "max_height": max_decoded_height,
             "dec_type": decoder_type}
-        decoded_image = b.ImageDecoderShard(Pipeline._current_pipeline._handle, *(kwargs_pybind.values()))
+        decoded_image = b.imageDecoderShard(Pipeline._current_pipeline._handle, *(kwargs_pybind.values()))
 
     return (decoded_image)
 

@@ -23,10 +23,11 @@ import cupy as cp
 import rocal_pybind as b
 import amd.rocal.types as types
 
+
 class ROCALGenericIteratorDetection(object):
-    def __init__(self, pipeline, tensor_layout = types.NCHW, reverse_channels = False, multiplier = None, offset = None, tensor_dtype=types.FLOAT, device = None, device_id = 0):
+    def __init__(self, pipeline, tensor_layout=types.NCHW, reverse_channels=False, multiplier=None, offset=None, tensor_dtype=types.FLOAT, device=None, device_id=0):
         self.loader = pipeline
-        self.tensor_format =tensor_layout
+        self.tensor_format = tensor_layout
         self.multiplier = multiplier or [1.0, 1.0, 1.0]
         self.offset = offset or [0.0, 0.0, 0.0]
         self.device = device
@@ -40,25 +41,25 @@ class ROCALGenericIteratorDetection(object):
         if self.loader._name is None:
             self.loader._name = self.loader._reader
         color_format = b.getOutputColorFormat(self.loader._handle)
-        self.p = (1 if (color_format == int(types.GRAY)) else 3)
+        self.p = 1 if (color_format == int(types.GRAY)) else 3
         if self.tensor_dtype == types.FLOAT:
             data_type="float32"
         elif self.tensor_dtype == types.FLOAT16:
-            data_type="float16"
-        
-        if(types.NHWC == self.tensor_format):
+            data_type = "float16"
+
+        if types.NHWC == self.tensor_format:
             if self.device == "cpu":
-                self.out = np.zeros((self.bs*self.n, int(self.h/self.bs), self.w, self.p), dtype = data_type)
+                self.out = np.zeros((self.bs * self.n, int(self.h / self.bs), self.w, self.p), dtype=data_type)
             else:
                 with cp.cuda.Device(device=self.device_id):
-                    self.out = cp.zeros((self.bs*self.n, int(self.h/self.bs), self.w, self.p), dtype = data_type)
+                    self.out = cp.zeros((self.bs * self.n, int(self.h / self.bs), self.w, self.p), dtype=data_type)
         else:
             if self.device == "cpu":
-                self.out = np.zeros((self.bs*self.n, self.p, int(self.h/self.bs), self.w), dtype = data_type)
+                self.out = np.zeros((self.bs * self.n, self.p, int(self.h / self.bs), self.w), dtype=data_type)
             else:
                 with cp.cuda.Device(device=self.device_id):
-                    self.out = cp.zeros((self.bs*self.n, self.p, int(self.h/self.bs), self.w), dtype = data_type)
-                
+                    self.out = cp.zeros((self.bs * self.n, self.p, int(self.h / self.bs), self.w), dtype=data_type)
+
     def next(self):
         return self.__next__()
 
@@ -69,14 +70,14 @@ class ROCALGenericIteratorDetection(object):
         if self.loader.run() != 0:
             self.reset()
             raise StopIteration
-        
+
         self.output_tensor_list = self.loader.get_output_tensors()
 
-        if(self.loader._name == "TFRecordReaderDetection"):
-            self.bbox_list =[]
-            self.label_list=[]
-            self.num_bboxes_list=[]
-            #Count of labels/ bboxes in a batch
+        if self.loader._name == "TFRecordReaderDetection":
+            self.bbox_list = []
+            self.label_list = []
+            self.num_bboxes_list = []
+            # Count of labels/ bboxes in a batch
             self.bboxes_label_count = np.zeros(self.bs, dtype="int32")
             self.count_batch = self.loader.get_bounding_box_count(self.bboxes_label_count)
             self.num_bboxes_list = self.bboxes_label_count.tolist()
@@ -86,20 +87,20 @@ class ROCALGenericIteratorDetection(object):
             # 1D bboxes array in a batch
             self.bboxes = np.zeros((self.count_batch * 4), dtype="float32")
             self.loader.get_bounding_box_cords(self.bboxes)
-            #1D Image sizes array of image in a batch
-            self.img_size = np.zeros((self.bs * 2),dtype="int32")
+            # 1D Image sizes array of image in a batch
+            self.img_size = np.zeros((self.bs * 2), dtype="int32")
             self.loader.get_img_sizes(self.img_size)
             count = 0  # number of bboxes per image
             sum_count = 0  # sum of the no. of the bboxes
             for i in range(self.bs):
                 count = self.bboxes_label_count[i]
-                self.label_2d_numpy = (self.labels[sum_count : sum_count+count])
+                self.label_2d_numpy = self.labels[sum_count : sum_count + count]
                 self.label_2d_numpy = np.reshape(self.label_2d_numpy, (-1, 1)).tolist()
-                self.bb_2d_numpy = (self.bboxes[sum_count*4 : (sum_count+count)*4])
+                self.bb_2d_numpy = self.bboxes[sum_count * 4 : (sum_count + count) * 4]
                 self.bb_2d_numpy = np.reshape(self.bb_2d_numpy, (-1, 4)).tolist()
                 self.label_list.append(self.label_2d_numpy)
                 self.bbox_list.append(self.bb_2d_numpy)
-                sum_count = sum_count +count
+                sum_count = sum_count + count
 
             self.target = self.bbox_list
             self.target1 = self.label_list
@@ -107,14 +108,14 @@ class ROCALGenericIteratorDetection(object):
             # max_rows = max([len(batch) for batch in self.target])
             max_rows = 100
             bb_padded = [batch + [[0] * (max_cols)] * (max_rows - len(batch)) for batch in self.target]
-            bb_padded_1=[row + [0] * (max_cols - len(row)) for batch in bb_padded for row in batch]
+            bb_padded_1 = [row + [0] * (max_cols - len(row)) for batch in bb_padded for row in batch]
             arr = np.asarray(bb_padded_1)
             self.res = np.reshape(arr, (-1, max_rows, max_cols))
             max_cols = max([len(row) for batch in self.target1 for row in batch])
             # max_rows = max([len(batch) for batch in self.target1])
             max_rows = 100
             lab_padded = [batch + [[0] * (max_cols)] * (max_rows - len(batch)) for batch in self.target1]
-            lab_padded_1=[row + [0] * (max_cols - len(row)) for batch in lab_padded for row in batch]
+            lab_padded_1 = [row + [0] * (max_cols - len(row)) for batch in lab_padded for row in batch]
             labarr = np.asarray(lab_padded_1)
             self.l = np.reshape(labarr, (-1, max_rows, max_cols))
             self.num_bboxes_arr = np.array(self.num_bboxes_list)
@@ -123,8 +124,8 @@ class ROCALGenericIteratorDetection(object):
                 return self.out.astype(np.float32), self.res, self.l, self.num_bboxes_arr
             elif self.tensor_dtype == types.FLOAT16:
                 return self.out.astype(np.float16), self.res, self.l, self.num_bboxes_arr
-        elif (self.loader._name == "TFRecordReaderClassification"):
-            if(self.loader._one_hot_encoding == True):
+        elif self.loader._name == "TFRecordReaderClassification":
+            if self.loader._one_hot_encoding == True:
                 self.labels = np.zeros((self.bs) * (self.loader._num_classes), dtype="int32")
                 self.loader.get_one_hot_encoded_labels(self.labels, device="cpu")
                 self.labels = np.reshape(self.labels, (-1, self.bs, self.loader._num_classes))
@@ -159,7 +160,7 @@ class ROCALIterator(ROCALGenericIteratorDetection):
     """
     def __init__(self,
                  pipelines,
-                 size = 0,
+                 size=0,
                  auto_reset=False,
                  fill_last_batch=True,
                  dynamic_shape=False,
@@ -167,5 +168,5 @@ class ROCALIterator(ROCALGenericIteratorDetection):
                  device="cpu",
                  device_id=0):
         pipe = pipelines
-        super(ROCALIterator, self).__init__(pipe, tensor_layout = pipe._tensor_layout, tensor_dtype = pipe._tensor_dtype,
+        super(ROCALIterator, self).__init__(pipe, tensor_layout=pipe._tensor_layout, tensor_dtype=pipe._tensor_dtype,
                                                             multiplier=pipe._multiplier, offset=pipe._offset, device=device, device_id=device_id)

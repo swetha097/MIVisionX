@@ -41,13 +41,12 @@ class ROCALGenericIterator(object):
         self.labels_size = ((self.batch_size * self.loader._num_classes) if self.loader._one_hot_encoding else self.batch_size)
         self.output_list = self.dimensions = self.dtype = None
         self.labels_tensor = None
-        self.len = b.getRemainingImages(self.loader._handle) // self.batch_size  # iteration length
+        self.iterator_length = b.getRemainingImages(self.loader._handle) // self.batch_size  # iteration length
 
     def next(self):
         return self.__next__()
 
     def __next__(self):
-
         if self.loader.rocal_run() != 0:
             raise StopIteration
         self.output_tensor_list = self.loader.get_output_tensors()
@@ -78,8 +77,8 @@ class ROCALGenericIterator(object):
                 else:
                     self.output_tensor_list[i].copy_data(self.output_list[i].data.ptr)
 
-        if (self.loader._name == "labelReader"):
-            if (self.loader._one_hot_encoding == True):
+        if self.loader._name == "labelReader":
+            if self.loader._one_hot_encoding == True:
                 self.loader.get_one_hot_encoded_labels(self.labels, self.device)
                 self.labels_tensor = self.labels.reshape(-1, self.batch_size, self.loader._num_classes)
             else:
@@ -103,7 +102,7 @@ class ROCALGenericIterator(object):
         return self
 
     def __len__(self):
-        return self.len
+        return self.iterator_length
 
     def __del__(self):
         b.rocalRelease(self.loader._handle)

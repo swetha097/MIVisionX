@@ -136,10 +136,10 @@ def video(*inputs, sequence_length, additional_decode_surfaces=2, bytes_per_samp
     #Output
     videos = []
     kwargs_pybind_reader = {"source_path": file_root,"sequence_length":sequence_length,"frame_step":step,"frame_stride":stride,"file_list_frame_num":file_list_frame_num} #VideoMetaDataReader
-    b.VideoMetaDataReader(Pipeline._current_pipeline._handle ,*(kwargs_pybind_reader.values()))
+    b.videoMetaDataReader(Pipeline._current_pipeline._handle ,*(kwargs_pybind_reader.values()))
     kwargs_pybind_decoder = {"source_path": file_root,"color_format":image_type,"decoder_mode":decoder_mode,"shard_count":num_shards,"sequence_length":sequence_length,"shuffle":random_shuffle ,"is_output":False,"loop":False, "frame_step":step,"frame_stride":stride, "file_list_frame_num":file_list_frame_num } #VideoDecoder
 
-    videos = b.VideoDecoder(Pipeline._current_pipeline._handle ,*(kwargs_pybind_decoder.values()))
+    videos = b.videoDecoder(Pipeline._current_pipeline._handle ,*(kwargs_pybind_decoder.values()))
     return (videos)
 
 def video_resize(*inputs, sequence_length, resize_width, resize_height, additional_decode_surfaces=2,
@@ -156,14 +156,14 @@ def video_resize(*inputs, sequence_length, resize_width, resize_height, addition
     #Output
     videos = []
     kwargs_pybind_reader = {"source_path": file_root,"sequence_length":sequence_length,"frame_step":step,"frame_stride":stride,"file_list_frame_num":file_list_frame_num} #VideoMetaDataReader
-    meta_data = b.VideoMetaDataReader(Pipeline._current_pipeline._handle ,*(kwargs_pybind_reader.values()))
+    meta_data = b.videoMetaDataReader(Pipeline._current_pipeline._handle ,*(kwargs_pybind_reader.values()))
     kwargs_pybind_decoder = {"source_path": file_root, "color_format":image_type, "decoder_mode":decoder_mode, "shard_count":num_shards,
                             "sequence_length":sequence_length, "resize_width":resize_width, "resize_height":resize_height,
                             "shuffle":random_shuffle , "is_output":False, "loop":False, "frame_step":step,"frame_stride":stride,
                             "file_list_frame_num":file_list_frame_num, "scaling_mode":scaling_mode ,"max_size":max_size,
                             "resize_shorter": resize_shorter, "resize_longer": resize_longer,"interpolation_type": interpolation_type }
 
-    videos = b.VideoDecoderResize(Pipeline._current_pipeline._handle ,*(kwargs_pybind_decoder.values()))
+    videos = b.videoDecoderResize(Pipeline._current_pipeline._handle ,*(kwargs_pybind_decoder.values()))
     return (videos, meta_data)
 
 def sequence_reader(*inputs, file_root, sequence_length, bytes_per_sample_hint=0, dont_use_mmap=False,
@@ -175,5 +175,5 @@ def sequence_reader(*inputs, file_root, sequence_length, bytes_per_sample_hint=0
     Pipeline._current_pipeline._reader = "SequenceReader"
     #Output
     kwargs_pybind = {"source_path": file_root,"color_format":image_type, "shard_count":num_shards, "sequence_length":sequence_length, "is_output":False, "shuffle":random_shuffle, "loop":False, "frame_step":step,"frame_stride":stride}
-    frames = b.SequenceReader(Pipeline._current_pipeline._handle ,*(kwargs_pybind.values()))
+    frames = b.sequenceReader(Pipeline._current_pipeline._handle ,*(kwargs_pybind.values()))
     return (frames)

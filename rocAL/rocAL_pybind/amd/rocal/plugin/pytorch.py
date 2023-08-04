@@ -36,7 +36,7 @@ class ROCALGenericIterator(object):
         self.device_id = device_id
         self.batch_size = self.loader._batch_size
         self.output = self.dimensions = self.torch_dtype = None
-        self.len = b.getRemainingImages(self.loader._handle)
+        self.iterator_length = b.getRemainingImages(self.loader._handle)
         self.display = display
 
     def next(self):
@@ -52,8 +52,8 @@ class ROCALGenericIterator(object):
             self.dimensions = self.output_tensor_list[0].dimensions()
             torch_gpu_device = torch.device('cuda', self.device_id)
             self.torch_dtype = self.output_tensor_list[0].dtype()
-            self.output = torch.empty((self.dimensions[0], self.dimensions[1], self.dimensions[2], self.dimensions[3],), dtype = getattr(torch, self.torch_dtype), device = torch_gpu_device)
-            self.labels_tensor = torch.empty(self.dimensions[0], dtype = torch.int32, device = torch_gpu_device)
+            self.output = torch.empty((self.dimensions[0], self.dimensions[1], self.dimensions[2], self.dimensions[3],), dtype=getattr(torch, self.torch_dtype), device=torch_gpu_device)
+            self.labels_tensor = torch.empty(self.dimensions[0], dtype=torch.int32, device=torch_gpu_device)
 
         self.output_tensor_list[0].copy_data(ctypes.c_void_p(self.output.data_ptr()))
         if((self.loader._name == "Caffe2ReaderDetection") or (self.loader._name == "CaffeReaderDetection")):
@@ -71,21 +71,21 @@ class ROCALGenericIterator(object):
             self.img_size = np.zeros((self.batch_size * 2), dtype="int32")
             self.loader.get_img_sizes(self.img_size)
 
-            count =0
-            sum_count=0
+            count = 0
+            sum_count = 0
             for i in range(self.bs):
                 count = self.bboxes_label_count[i]
 
-                self.label_2d_numpy = (self.labels[sum_count : sum_count+count])
+                self.label_2d_numpy = self.labels[sum_count : sum_count + count]
                 self.label_2d_numpy = np.reshape(self.label_2d_numpy, (-1, 1)).tolist()
-                self.bb_2d_numpy = (self.bboxes[sum_count*4 : (sum_count+count)*4])
+                self.bb_2d_numpy = self.bboxes[sum_count * 4 : (sum_count + count) * 4]
                 self.bb_2d_numpy = np.reshape(self.bb_2d_numpy, (-1, 4)).tolist()
 
                 self.lis_lab.append(self.label_2d_numpy)
                 self.lis.append(self.bb_2d_numpy)
 
                 if self.display:
-                    img = (self.output)
+                    img = self.output
                     draw_patches(img[i], i, self.bb_2d_numpy)
 
                 sum_count = sum_count + count
@@ -113,7 +113,7 @@ class ROCALGenericIterator(object):
             else:
                 if self.display:
                     for i in range(self.bs):
-                        img = (self.output)
+                        img = self.output
                         draw_patches(img[i], i, 0)
                 self.labels = self.loader.get_image_labels()
                 self.labels_tensor = self.labels_tensor.copy_(torch.from_numpy(self.labels)).long()
@@ -127,7 +127,7 @@ class ROCALGenericIterator(object):
         return self
 
     def __len__(self):
-        return self.len
+        return self.iterator_length
 
     def __del__(self):
         b.rocalRelease(self.loader._handle)
@@ -193,7 +193,7 @@ class ROCALClassificationIterator(ROCALGenericIterator):
     """
     def __init__(self,
                  pipelines,
-                 size = 0,
+                 size=0,
                  auto_reset=False,
                  fill_last_batch=True,
                  dynamic_shape=False,
@@ -202,8 +202,7 @@ class ROCALClassificationIterator(ROCALGenericIterator):
                  device="cpu",
                  device_id=0,):
         pipe = pipelines
-        super(ROCALClassificationIterator, self).__init__(pipe, tensor_layout = pipe._tensor_layout, tensor_dtype = pipe._tensor_dtype,
-                                                          multiplier = pipe._multiplier, offset = pipe._offset, display = display, device = device, device_id = device_id)
+        super(ROCALClassificationIterator, self).__init__(pipe, tensor_layout=pipe._tensor_layout, tensor_dtype=pipe._tensor_dtype, multiplier=pipe._multiplier, offset=pipe._offset, display=display, device=device, device_id=device_id)
 
 
 
