@@ -132,7 +132,6 @@ static vx_status VX_CALLBACK processNormalize(vx_node node, const vx_reference *
         return_status = (rpp_status == RPP_SUCCESS) ? VX_SUCCESS : VX_FAILURE;
 #endif
     } else if (data->deviceType == AGO_TARGET_AFFINITY_CPU) {
-        refreshNormalize(node, parameters, num, data);
         rpp_status = rppt_normalize_audio_host(data->pSrc, data->pSrcDesc, data->pDst, data->pDstDesc, data->pSamples, data->pChannels, data->axisMask, data->mean,
                                                data->stdDev, data->scale, data->shift, data->epsilon, data->ddof, data->numOfDims, data->handle->rppHandle);
         return_status = (rpp_status == RPP_SUCCESS) ? VX_SUCCESS : VX_FAILURE;
