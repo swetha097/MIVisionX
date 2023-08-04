@@ -153,6 +153,7 @@ class Pipeline(object):
         self._define_graph_set = False
         self._last_batch_policy = last_batch_policy
         self.last_batch_padded = last_batch_padded
+        self.shard_size = -1
         self.setSeed(self._seed)
 
     def build(self):

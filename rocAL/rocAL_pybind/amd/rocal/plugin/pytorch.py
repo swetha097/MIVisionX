@@ -44,7 +44,7 @@ class ROCALGenericIterator(object):
         self.last_batch_policy = self.loader._last_batch_policy
         if self.loader._name is None:
             self.loader._name = self.loader._reader
-        self.shard_size = size
+        self.shard_size = self.loader._shard_size or size
         self.auto_reset = auto_reset
         self.batch_count = 0
 
@@ -56,6 +56,10 @@ class ROCALGenericIterator(object):
             if self.auto_reset:
                 self.reset()
             raise StopIteration
+        elif self.shard_size > 0 and self.batch_count >= self.shard_size :
+            if self.auto_reset:
+                self.reset()
+            raise StopIteration
         else:
             self.output_tensor_list = self.loader.getOutputTensors()
         self.batch_count += self.batch_size
@@ -64,7 +68,7 @@ class ROCALGenericIterator(object):
             self.output_list = []
             for i in range(len(self.output_tensor_list)):
                 self.dimensions = self.output_tensor_list[i].dimensions()
-                print("self.dimesnions",self.dimensions)
+                # print("self.dimesnions",self.dimensions)
                 if self.device == "cpu":
                     self.torch_dtype = self.output_tensor_list[i].dtype()
                     self.output = torch.empty(self.dimensions, dtype = getattr(torch, self.torch_dtype))

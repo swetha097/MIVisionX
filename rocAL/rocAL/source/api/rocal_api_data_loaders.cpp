@@ -2649,7 +2649,9 @@ rocalAudioFileSourceSingleShard(
                                                                                         context->master_graph->mem_type(),
                                                                                         context->master_graph->meta_data_reader(),
                                                                                         context->master_graph->last_batch_policy(),
-                                                                                        context->master_graph->last_batch_padded()
+                                                                                        context->master_graph->last_batch_padded(),
+                                                                                        stick_to_shard,
+                                                                                        shard_size
                                                                                         );
         context->master_graph->set_loop(loop);
 
@@ -2678,7 +2680,9 @@ rocalAudioFileSource(
         bool loop,
         bool downmix,
         unsigned max_frames,
-        unsigned max_channels) {
+        unsigned max_channels,
+        bool stick_to_shard,
+        int shard_size) {
     Tensor* output = nullptr;
     auto context = static_cast<Context*>(p_context);
     try {
@@ -2706,7 +2710,9 @@ rocalAudioFileSource(
                                                                              context->master_graph->mem_type(),
                                                                              context->master_graph->meta_data_reader(),
                                                                              context->master_graph->last_batch_policy(),
-                                                                             context->master_graph->last_batch_padded());
+                                                                             context->master_graph->last_batch_padded(),
+                                                                             stick_to_shard,
+                                                                             shard_size);
         context->master_graph->set_loop(loop);
         /*  Commenting out this peice of code in this PR - Next PR will contain augmentations & this code will be uncommented
         if(downmix)

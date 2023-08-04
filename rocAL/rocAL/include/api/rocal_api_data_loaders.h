@@ -759,6 +759,8 @@ extern "C"  RocalTensor  ROCAL_API_CALL rocalJpegCaffe2LMDBRecordSourcePartialSi
 /// \param downmix If set to True, downmix all input channels to mono. If downmixing is turned on, the decoder output is 1D. If downmixing is turned off, it produces 2D output with interleaved channels.
 /// \param max_frames The maximum frames of the decoded audio.
 /// \param max_channels The maximum channels of the decoded audio.
+/// \param stick_to_shard Determines weather or not the dataset when sharded should stick to a single shards dataset or considered in a round robin fashion.
+/// \param shard_size Provides the data-size of the shard for an iterator
 /// \return Reference to the output audio
 extern "C"  RocalTensor  ROCAL_API_CALL rocalAudioFileSource(RocalContext context,
                                                             const char* source_path,
@@ -769,7 +771,9 @@ extern "C"  RocalTensor  ROCAL_API_CALL rocalAudioFileSource(RocalContext contex
                                                             bool loop = false,
                                                             bool downmix = false,
                                                             unsigned max_frames = 1,
-                                                            unsigned max_channels = 1);
+                                                            unsigned max_channels = 1,
+                                                            bool stick_to_shard = false,
+                                                            int shard_size = -1);
 
 /// Creates Audio file reader and decoder. It allocates the resources and objects required to read and decode audio files stored on the file systems. It has internal sharding capability to load/decode in parallel is user wants.
 /// If the files are not in standard audio compression formats they will be ignored.
@@ -786,7 +790,7 @@ extern "C"  RocalTensor  ROCAL_API_CALL rocalAudioFileSource(RocalContext contex
 /// \param max_channels The maximum channels of the decoded audio.
 /// \param storage_type Determines the storage type
 /// \param stick_to_shard Determines weather or not the dataset when sharded should stick to a single shards dataset or considered in a round robin fashion.
-/// \param shard_size Provides the size of the shard for an iterator 
+/// \param shard_size Provides the data-size of the shard for an iterator 
 /// \return Reference to the output audio
 extern "C"  RocalTensor  ROCAL_API_CALL rocalAudioFileSourceSingleShard(RocalContext p_context,
                                                                         const char* source_path,

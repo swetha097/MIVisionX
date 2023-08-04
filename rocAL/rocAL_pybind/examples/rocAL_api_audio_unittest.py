@@ -14,12 +14,9 @@ import os
 
 def draw_patches(img, idx, device):
     #image is expected as a tensor, bboxes as numpy
-    import cv2
     image = img.detach().numpy()
     audio_data = image.flatten()
-    # label = idx
     label = idx.cpu().detach().numpy() #TODO: Uncomment after the meta-data is enabled
-    # print("label: ", label)
     # Saving the array in a text file
     file = open("results/rocal_data_new"+str(label)+".txt", "w+")
     content = str(audio_data)
@@ -56,13 +53,13 @@ def main():
             file_root=data_path,
             file_list=file_list,
             )
-        audio_decode = fn.decoders.audio(audio, file_root=data_path, file_list_path=file_list, downmix=False, shard_id=0, num_shards=4, storage_type=9, stick_to_shard=False)
+        audio_decode = fn.decoders.audio(audio, file_root=data_path, file_list_path=file_list, downmix=False, shard_id=0, num_shards=2, storage_type=9, stick_to_shard=False, shard_size=-1)
         pre_emphasis_filter = fn.preemphasis_filter(audio_decode)
         audio_pipeline.setOutputs(pre_emphasis_filter)
     audio_pipeline.build()
     audioIteratorPipeline = ROCALClassificationIterator(audio_pipeline, auto_reset=True)
     cnt = 0
-    for e in range(1):
+    for e in range(2):
         print("Epoch :: ", e)
         torch.set_printoptions(threshold=5000, profile="full", edgeitems=100)
         for i , it in enumerate(audioIteratorPipeline):
