@@ -28,7 +28,6 @@ import amd.rocal.types as types
 import numpy as np
 from parse_config import parse_args
 
-
 class ROCALVideoIterator(object):
     """
     ROCALVideoIterator for pyTorch.
