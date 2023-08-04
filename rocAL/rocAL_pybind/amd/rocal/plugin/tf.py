@@ -46,11 +46,11 @@ class ROCALGenericImageIterator(object):
                 self.dtype = self.output_tensor_list[i].dtype()
                 self.output = np.empty(self.dimensions, dtype = self.dtype)
 
-                self.output_tensor_list[i].copy_data_numpy(self.output)
+                self.output_tensor_list[i].copy_data(self.output)
                 self.output_list.append(self.output)
         else:
             for i in range(len(self.output_tensor_list)):
-                self.output_tensor_list[i].copy_data_numpy(self.output_list[i])
+                self.output_tensor_list[i].copy_data(self.output_list[i])
         return self.output_list
 
     def reset(self):
@@ -91,14 +91,17 @@ class ROCALGenericIteratorDetection(object):
                 self.dtype = self.output_tensor_list[i].dtype()
                 if self.device == "cpu":
                     self.output = np.empty(self.dimensions, dtype = self.dtype)
-                    self.output_tensor_list[i].copy_data_numpy(self.output)
+                    self.output_tensor_list[i].copy_data(self.output)
                 else:
                     self.output = cp.empty(self.dimensions, dtype = self.dtype)
-                    self.output_tensor_list[i].copy_data_cupy(self.output.data.ptr) 
+                    self.output_tensor_list[i].copy_data(self.output.data.ptr) 
                 self.output_list.append(self.output)
         else:
             for i in range(len(self.output_tensor_list)):
-                self.output_tensor_list[i].copy_data_numpy(self.output_list[i])
+                if self.device == "cpu":
+                    self.output_tensor_list[i].copy_data(self.output_list[i])
+                else:
+                    self.output_tensor_list[i].copy_data(self.output_list[i].data.ptr)                
 
         if (self.loader._name == "TFRecordReaderDetection"):
             self.bbox_list = []
