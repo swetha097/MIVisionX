@@ -56,7 +56,7 @@ public:
     std::vector<size_t> get_sequence_start_frame_number() override;
     std::vector<std::vector<float>> get_sequence_frame_timestamps() override;
     void shut_down() override;
-
+    size_t last_batch_padded_size() override;
 private:
     bool is_out_of_data();
     void de_init();
@@ -87,5 +87,7 @@ private:
     std::vector<std::vector<std::vector<float>>> _sequence_frame_timestamps_vec;
     crop_image_info _crop_img_info;
     size_t _max_tensor_width, _max_tensor_height;
+    RocalBatchPolicy _last_batch_policy;
+    bool last_batch_padded;
 };
 #endif

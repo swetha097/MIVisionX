@@ -86,4 +86,9 @@ extern "C" const char* ROCAL_API_CALL rocalGetErrorMessage(RocalContext rocal_co
 /// \return The timing info associated with recent execution.
 extern "C" TimingInfo ROCAL_API_CALL rocalGetTimingInfo(RocalContext rocal_context);
 
+///
+/// \param rocal_context
+/// \return The number of images yet to be processed
+extern "C"  size_t  ROCAL_API_CALL rocalGetLastBatchPaddedSize(RocalContext rocal_context);
+
 #endif //MIVISIONX_ROCAL_API_INFO_H

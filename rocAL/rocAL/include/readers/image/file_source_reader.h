@@ -66,6 +66,8 @@ public:
 
     FileSourceReader();
 
+    size_t last_batch_padded_size() override;
+
 private:
     //! opens the folder containnig the images
     Reader::Status open_folder();
@@ -100,5 +102,7 @@ private:
     std::shared_ptr<MetaDataReader> _meta_data_reader = nullptr;
     void replicate_last_image_to_fill_last_shard();
     void replicate_last_batch_to_pad_partial_shard();
+    std::pair<RocalBatchPolicy, bool>  _last_batch_info;
+    size_t _last_batch_padded_size = 0;
 };
 

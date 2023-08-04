@@ -141,6 +141,12 @@ void VideoReadAndDecode::decode_sequence(size_t sequence_index)
     }
 }
 
+size_t
+VideoReadAndDecode::last_batch_padded_size()
+{
+    return 0;
+}
+
 LoaderModuleStatus
 VideoReadAndDecode::load(unsigned char *buff,
                          std::vector<std::string> &names,

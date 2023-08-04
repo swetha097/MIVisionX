@@ -115,6 +115,15 @@ typedef struct
     unsigned x1, y1, x2, y2;
 } RocalROI;
 
+/*! \brief Last Batch Policies
+ *
+ * currently supports following formats
+ */
+enum RocalBatchPolicy {
+    BATCH_FILL = 0,
+    DROP,
+    PARTIAL
+};
 struct Timing
 {
     // The following timings are accumulated timing not just the most recent activity

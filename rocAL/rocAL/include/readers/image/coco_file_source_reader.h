@@ -68,6 +68,8 @@ public:
 
     COCOFileSourceReader();
 
+    size_t last_batch_padded_size() override { return 0; }
+
 private:
     std::shared_ptr<MetaDataReader> _meta_data_reader = nullptr;
     //! opens the folder containnig the images

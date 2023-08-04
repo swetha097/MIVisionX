@@ -62,5 +62,6 @@ public:
     virtual unsigned count_items() = 0;
 
     virtual ~VideoReader() = default;
+
 };
 #endif

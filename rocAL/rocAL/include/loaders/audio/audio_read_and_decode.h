@@ -56,6 +56,7 @@ public:
             std::vector<float> &actual_sample_rates);
     //! returns timing info or other status information
     Timing timing();
+    size_t last_batch_padded_size();
 private:
     std::vector<std::shared_ptr<AudioDecoder>> _decoder;
     std::shared_ptr<Reader> _reader;

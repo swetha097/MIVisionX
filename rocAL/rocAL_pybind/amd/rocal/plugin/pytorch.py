@@ -40,6 +40,8 @@ class ROCALGenericIterator(object):
         self.output_memory_type = self.loader._output_memory_type
         self.len = b.getRemainingImages(self.loader._handle)
         self.display = display
+        self.last_batch_padded_size = b.getLastBatchPaddedSize(self.loader._handle)
+        self.last_batch_policy = self.loader._last_batch_policy
         if self.loader._name is None:
             self.loader._name = self.loader._reader
 
@@ -51,6 +53,7 @@ class ROCALGenericIterator(object):
             raise StopIteration
         else:
             self.output_tensor_list = self.loader.getOutputTensors()
+        self.last_batch_size = self.batch_size - b.getLastBatchPaddedSize(self.loader._handle)
         if self.output_list is None:
             self.output_list = []
             for i in range(len(self.output_tensor_list)):
@@ -111,8 +114,10 @@ class ROCALGenericIterator(object):
             self.labels_padded = [batch + [[0] * (max_cols1)] * (max_rows1 - len(batch)) for batch in self.labels_list]
             self.labels_padded = torch.LongTensor([row + [0] * (max_cols1 - len(row)) for batch in self.labels_padded for row in batch])
             self.labels_padded = self.labels_padded.view(-1, max_rows1, max_cols1)
-
-            return self.output_list, self.bb_padded, self.labels_padded
+            if (self.last_batch_policy is (types.LAST_BATCH_PARTIAL)) and b.getRemainingImages(self.loader._handle) <= 0 : # Check this condition 
+                return [inner_list[0:self.last_batch_size,:] for inner_list in self.output_list], self.bb_padded[0:self.last_batch_size], self.labels_padded[0:self.last_batch_size]
+            else:
+                return self.output_list, self.bb_padded, self.labels_padded
 
         else:
             if self.loader._one_hot_encoding:
@@ -125,8 +130,10 @@ class ROCALGenericIterator(object):
                         draw_patches(img[i], i, 0)
                 self.labels = self.loader.getImageLabels()
                 self.labels_tensor = self.labels_tensor.copy_(torch.from_numpy(self.labels)).long()
-            print(self.output_list)
-            return self.output_list, self.labels_tensor
+            if (self.last_batch_policy is (types.LAST_BATCH_PARTIAL)) and b.getRemainingImages(self.loader._handle) <= 0 : #Check this condition
+                return [inner_list[0:self.last_batch_size,:] for inner_list in self.output_list], self.labels_tensor[0:self.last_batch_size]
+            else:
+                return self.output_list, self.labels_tensor
 
     def reset(self):
         b.rocalResetLoaders(self.loader._handle)

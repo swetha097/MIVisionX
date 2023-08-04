@@ -101,10 +101,12 @@ MasterGraph::~MasterGraph()
     release();
 }
 
-MasterGraph::MasterGraph(size_t batch_size, RocalAffinity affinity, size_t cpu_thread_count, int gpu_id, size_t prefetch_queue_depth, RocalTensorDataType output_tensor_data_type):
+MasterGraph::MasterGraph(size_t batch_size, RocalAffinity affinity, size_t cpu_thread_count, int gpu_id, size_t prefetch_queue_depth, RocalTensorDataType output_tensor_data_type, RocalBatchPolicy last_batch_policy, bool last_batch_padded):
         _ring_buffer(prefetch_queue_depth),
         _graph(nullptr),
         _affinity(affinity),
+        _last_batch_policy(last_batch_policy),
+        _last_batch_padded(last_batch_padded),
         _cpu_num_threads(cpu_thread_count),
         _gpu_id(gpu_id),
         _convert_time("Conversion Time", DBG_TIMING),
@@ -475,6 +477,21 @@ RocalMemType
 MasterGraph::mem_type()
 {
     return _mem_type;
+}
+
+RocalBatchPolicy
+MasterGraph::last_batch_policy() {
+    return _last_batch_policy;
+}
+
+bool
+MasterGraph::last_batch_padded() {
+    return _last_batch_padded;
+}
+
+uint 
+MasterGraph::last_batch_size() {
+    return _loader_module->last_batch_padded_size();
 }
 
 Timing
@@ -949,6 +966,10 @@ void MasterGraph::output_routine()
     try {
         while (_processing)
         {
+             if (_loader_module->remaining_count() <= (_is_sequence_reader_output ? _sequence_batch_size : _user_batch_size))
+            {
+                _final_batch_padded_size = _loader_module->last_batch_padded_size();
+            }
             if (_loader_module->remaining_count() < (_is_sequence_reader_output ? _sequence_batch_size : _user_batch_size))
             {
                 // If the internal process routine ,output_routine(), has finished processing all the images, and last

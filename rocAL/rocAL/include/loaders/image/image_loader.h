@@ -52,6 +52,7 @@ public:
     crop_image_info get_crop_image_info() override;
     void set_prefetch_queue_depth(size_t prefetch_queue_depth)  override;
     void shut_down() override;
+    size_t last_batch_padded_size() override;
 private:
     bool is_out_of_data();
     void de_init();
@@ -85,5 +86,7 @@ private:
     bool _decoder_keep_original = false;
     int _device_id;
     size_t _max_tensor_width, _max_tensor_height;
+    RocalBatchPolicy _last_batch_policy;
+    bool last_batch_padded;
 };
 
