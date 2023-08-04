@@ -38,7 +38,7 @@ class ROCALGenericIterator(object):
         self.labels_size = ((self.batch_size * self.loader._num_classes) if self.loader._one_hot_encoding else self.batch_size)
         self.output_list = None
         self.output_memory_type = self.loader._output_memory_type
-        self.len = b.getRemainingImages(self.loader._handle)
+        self.iterator_length = b.getRemainingImages(self.loader._handle)
         self.display = display
         if self.loader._name is None:
             self.loader._name = self.loader._reader
@@ -58,13 +58,13 @@ class ROCALGenericIterator(object):
                 dimensions = self.output_tensor_list[i].dimensions()
                 if self.device == "cpu":
                     torch_dtype = self.output_tensor_list[i].dtype()
-                    output = torch.empty(dimensions, dtype = getattr(torch, torch_dtype))
-                    self.labels_tensor = torch.empty(self.labels_size, dtype = getattr(torch, torch_dtype))
+                    output = torch.empty(dimensions, dtype=getattr(torch, torch_dtype))
+                    self.labels_tensor = torch.empty(self.labels_size, dtype=getattr(torch, torch_dtype))
                 else:
                     torch_gpu_device = torch.device('cuda', self.device_id)
                     torch_dtype = self.output_tensor_list[i].dtype()
-                    output = torch.empty(dimensions, dtype = getattr(torch, torch_dtype), device=torch_gpu_device)
-                    self.labels_tensor = torch.empty(self.labels_size, dtype = getattr(torch, torch_dtype), device=torch_gpu_device)
+                    output = torch.empty(dimensions, dtype=getattr(torch, torch_dtype), device=torch_gpu_device)
+                    self.labels_tensor = torch.empty(self.labels_size, dtype=getattr(torch, torch_dtype), device=torch_gpu_device)
 
                 self.output_tensor_list[i].copy_data(ctypes.c_void_p(output.data_ptr()), self.output_memory_type)
                 self.output_list.append(output)
@@ -94,7 +94,7 @@ class ROCALGenericIterator(object):
 
                 if self.display:
                     for output in self.output_list:
-                        img = (output)
+                        img = output
                         draw_patches(img[i], i, self.bb_2d_numpy)
 
 
@@ -120,7 +120,7 @@ class ROCALGenericIterator(object):
                 if self.display:
                     for i in range(self.batch_size):
                         img = (self.output_list[0])
-                        draw_patches(img[i], i, 0)
+                        draw_patches(img[i], i, [])
                 self.labels = self.loader.get_image_labels()
                 self.labels_tensor = self.labels_tensor.copy_(torch.from_numpy(self.labels)).long()
 
@@ -133,7 +133,7 @@ class ROCALGenericIterator(object):
         return self
 
     def __len__(self):
-        return self.len
+        return self.iterator_length
 
     def __del__(self):
         b.rocalRelease(self.loader._handle)
@@ -197,7 +197,6 @@ class ROCALClassificationIterator(ROCALGenericIterator):
     fill_last_batch = True, last_batch_padded = True   -> last batch = [7, 7], next iteration will return [1, 2]
     fill_last_batch = True, last_batch_padded = False  -> last batch = [7, 1], next iteration will return [2, 3]
     """
-
     def __init__(self,
                  pipelines,
                  size=0,

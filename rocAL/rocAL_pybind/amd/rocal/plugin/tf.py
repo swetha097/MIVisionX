@@ -57,11 +57,13 @@ class ROCALGenericImageIterator(object):
     def __iter__(self):
         return self
 
+    def __del__(self):
+        b.rocalRelease(self.loader._handle)
 
 class ROCALGenericIteratorDetection(object):
     def __init__(self, pipeline, tensor_layout=types.NCHW, reverse_channels=False, multiplier=None, offset=None, tensor_dtype=types.FLOAT, device=None, device_id=0):
         self.loader = pipeline
-        self.tensor_format =tensor_layout
+        self.tensor_format = tensor_layout
         self.multiplier = multiplier or [1.0, 1.0, 1.0]
         self.offset = offset or [0.0, 0.0, 0.0]
         self.device = device
@@ -72,15 +74,14 @@ class ROCALGenericIteratorDetection(object):
         self.output_list = self.dimensions = self.dtype = None
         if self.loader._name is None:
             self.loader._name = self.loader._reader
-    
+
     def next(self):
         return self.__next__()
 
     def __next__(self):
         if self.loader.rocal_run() != 0:
             raise StopIteration
-        else:
-            self.output_tensor_list = self.loader.get_output_tensors()
+        self.output_tensor_list = self.loader.get_output_tensors()
 
         if self.output_list is None:
             self.output_list = []
@@ -88,10 +89,10 @@ class ROCALGenericIteratorDetection(object):
                 self.dimensions = self.output_tensor_list[i].dimensions()
                 self.dtype = self.output_tensor_list[i].dtype()
                 if self.device == "cpu":
-                    self.output = np.empty(self.dimensions, dtype = self.dtype)
+                    self.output = np.empty(self.dimensions, dtype=self.dtype)
                     self.output_tensor_list[i].copy_data(self.output)
                 else:
-                    self.output = cp.empty(self.dimensions, dtype = self.dtype)
+                    self.output = cp.empty(self.dimensions, dtype=self.dtype)
                     self.output_tensor_list[i].copy_data(self.output.data.ptr) 
                 self.output_list.append(self.output)
         else:
@@ -101,7 +102,7 @@ class ROCALGenericIteratorDetection(object):
                 else:
                     self.output_tensor_list[i].copy_data(self.output_list[i].data.ptr)                
 
-        if (self.loader._name == "TFRecordReaderDetection"):
+        if self.loader._name == "TFRecordReaderDetection":
             self.bbox_list = []
             self.label_list = []
             self.num_bboxes_list = []
@@ -116,10 +117,8 @@ class ROCALGenericIteratorDetection(object):
             self.num_bboxes_list = [len(box) for box in self.bboxes]
             self.loader.get_img_sizes(self.img_size)
             for i in range(self.bs):
-                self.label_2d_numpy = self.labels[i]
-                self.label_2d_numpy = np.reshape(self.label_2d_numpy, (-1, 1)).tolist()
-                self.bb_2d_numpy = (self.bboxes[i])
-                self.bb_2d_numpy = np.reshape(self.bb_2d_numpy, (-1, 4)).tolist()
+                self.label_2d_numpy = np.reshape(self.labels[i], (-1, 1)).tolist()
+                self.bb_2d_numpy = np.reshape(self.bboxes[i], (-1, 4)).tolist()
                 self.label_list.append(self.label_2d_numpy)
                 self.bbox_list.append(self.bb_2d_numpy)
 
@@ -145,11 +144,11 @@ class ROCALGenericIteratorDetection(object):
         elif (self.loader._name == "TFRecordReaderClassification"):
             if (self.loader._one_hot_encoding == True):
                 if self.device == "cpu":
-                    self.labels = np.zeros((self.bs)*(self.loader._num_classes), dtype="int32")
+                    self.labels = np.zeros((self.bs) * (self.loader._num_classes), dtype="int32")
                     self.loader.get_one_hot_encoded_labels(self.labels, device="cpu")
                     self.labels = np.reshape(self.labels, (-1, self.bs, self.loader._num_classes))
                 else:
-                    self.labels = cp.zeros((self.bs)*(self.loader._num_classes), dtype="int32")
+                    self.labels = cp.zeros((self.bs) * (self.loader._num_classes), dtype="int32")
                     self.loader.get_one_hot_encoded_labels(self.labels, device="gpu")
                     self.labels = cp.reshape(self.labels, (-1, self.bs, self.loader._num_classes))
             else:
@@ -179,7 +178,6 @@ class ROCALIterator(ROCALGenericIteratorDetection):
 
 
     """
-
     def __init__(self,
                  pipelines,
                  size=0,
@@ -192,8 +190,6 @@ class ROCALIterator(ROCALGenericIteratorDetection):
         pipe = pipelines
         super(ROCALIterator, self).__init__(pipe, tensor_layout=pipe._tensor_layout, tensor_dtype=pipe._tensor_dtype,
                                                             multiplier=pipe._multiplier, offset=pipe._offset, device=device, device_id=device_id)
-
-
 
 class ROCAL_iterator(ROCALGenericImageIterator):
     """
