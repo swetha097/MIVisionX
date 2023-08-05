@@ -80,6 +80,84 @@ int64_t MasterGraph::find_pixel(std::vector<int> start, std::vector<int> foregro
     return start[id] + (val - foreground_count[id]);
 }
 
+void MergeRow(int* in1, int* in2,int* out1,int* out2, int n) {
+    int bg_label = -1;
+    int prev1 = bg_label;
+    int prev2 = bg_label;
+    
+    for (int64_t i = 0, in_offset = 0, out_offset = 0; i < n; i++,
+        in_offset += 1, out_offset += 1) {
+        int& o1 = out1[out_offset];
+        int& o2 = out2[out_offset];
+        if (o1 != prev1 || o2 != prev2) {
+            if (o1 != bg_label) {
+                if (in1[in_offset] == in2[in_offset]) {
+                    if (o1 < o2) {
+                        o2 = o1;            
+                    } else {
+                        o1 = o2;
+                    }
+                }
+            }
+            prev1 = o1;
+            prev2 = o2;
+        }
+    }
+}
+
+void LabelRow(int* in_row,int* label_base,int* out_row, int length) {
+    int curr_label = 0;
+    int bg_label = -1;
+    int prev = 0;
+    for (int i = 0; i < length; i++) {
+        if (in_row[i] != prev) {
+            if (in_row[i] != 0) {
+                curr_label = out_row + i - label_base;
+            } else {
+                curr_label = bg_label;
+            }
+        }
+        out_row[i] = curr_label;
+        prev = in_row[i];
+    }
+}
+
+rocalTensorList*  MasterGraph::get_random_work(rocalTensorList* input) {
+    SeededRNG<std::mt19937, 4> rngs(_user_batch_size);
+    for (unsigned int id = 0; id < _user_batch_size; id++) {
+        int *in_mask_buffer = (int *)(input->at(id)->buffer());
+        std::set<int> unique_labels; 
+        int prev_label = 0;
+        auto buffer_size = input->at(id)->info().dims().at(0) * input->at(id)->info().dims().at(1);
+        for (unsigned int i = 0; i < buffer_size; i++) {
+            if (prev_label != in_mask_buffer[i]) {
+                if (unique_labels.find(in_mask_buffer[i]) != unique_labels.end())
+                    unique_labels.insert(in_mask_buffer[i]);
+            }
+            prev_label = in_mask_buffer[i];
+        }
+        auto dist = std::uniform_int_distribution<int64_t>(0, unique_labels.size() - 1);
+        auto rng = rngs[id];
+        auto it = next(unique_labels.begin(), dist(rng));
+        int label_selected = (*it);
+        int* out_mask_buffer = (int*)malloc(buffer_size*sizeof(int));
+        int width = input->at(id)->info().dims().at(0);
+        int height = input->at(id)->info().dims().at(1);
+        int* in_row = in_mask_buffer;
+        int* out_row = out_mask_buffer;
+        for (int i = 0; i < height; i ++) {
+            LabelRow(in_row,in_mask_buffer,out_row, width);
+            if (i>=1) {
+                MergeRow(in_row-width,in_row,out_row-width,out_row,width);
+            }
+            in_row += width;
+            out_row += width;
+        }
+        free(out_mask_buffer);
+    }
+    return input;
+}
+
 rocalTensorList*  MasterGraph::get_random_mask_pixel(rocalTensorList* input)
 {
     SeededRNG<std::mt19937, 4> rngs(_user_batch_size);

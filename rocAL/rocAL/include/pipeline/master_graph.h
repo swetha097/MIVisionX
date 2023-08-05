@@ -95,6 +95,7 @@ public:
                                               std::vector<std::vector<int>> &sel_vertices_counts,
                                               std::vector<std::vector<int>> &sel_mask_ids,
                                               bool reindex_mask);
+    rocalTensorList *  get_random_work(rocalTensorList* input);
     rocalTensorList * labels_meta_data();
     rocalTensorList * bbox_labels_meta_data();
     rocalTensorList * bbox_meta_data();
