@@ -2489,8 +2489,7 @@ rocalResample(RocalContext p_context,
                 RocalTensor p_input_resample_rate,
                 RocalTensorOutputType rocal_tensor_output_datatype,
                 bool is_output,
-                float sample_hint)
-{
+                float sample_hint) {
     if(!p_context || !p_input_resample_rate || !p_input)
         THROW("Null values passed as input")
     Tensor* resampled_output = nullptr;
@@ -2498,8 +2497,7 @@ rocalResample(RocalContext p_context,
     auto input = static_cast<Tensor*>(p_input);
     auto input_resample_rate = static_cast<Tensor*>(p_input_resample_rate);
     RocalTensorDataType op_tensorDataType;
-    try
-    {
+    try {
         int layout=0;
         TensorInfo output_info = input->info();
         RocalTensorDataType op_tensorDataType = (RocalTensorDataType)rocal_tensor_output_datatype;
@@ -2513,11 +2511,10 @@ rocalResample(RocalContext p_context,
             output_info.set_dims(dims);
         }
         resampled_output = context->master_graph->create_tensor(output_info, is_output);
-        // resampled_output->reset_tensor_roi();
+        resampled_output->reset_tensor_roi();
         context->master_graph->add_node<ResampleNode>({input}, {resampled_output})->init(input_resample_rate, 50.0);
     }
-    catch(const std::exception& e)
-    {
+    catch(const std::exception& e) {
         context->capture_error(e.what());
         ERR(e.what())
     }

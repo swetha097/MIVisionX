@@ -28,7 +28,6 @@ struct ResampleLocalData
 {
     vxRppHandle *handle;
     Rpp32u deviceType;
-    Rpp32u nbatchSize;
     RppPtr_t pSrc;
     RppPtr_t pDst;
     float quality;
@@ -63,7 +62,7 @@ void update_destination_roi(const vx_reference *parameters, ResampleLocalData *d
     data->roi_ptr_dst = (RpptROI *)data->roi_tensor_ptr_dst;
     data->roi_ptr_src = (RpptROI *)data->roi_tensor_ptr_src;
     float _scale_ratio;
-    for(unsigned i = 0; i < data->nbatchSize; i++) {
+    for(unsigned i = 0; i < data->src_desc_ptr->n; i++) {
         if (data->inRateTensor[i]!=0)
             _scale_ratio = data->outRateTensor[i] / (float)data->inRateTensor[i];
         else
@@ -76,7 +75,7 @@ void update_destination_roi(const vx_reference *parameters, ResampleLocalData *d
 static vx_status VX_CALLBACK refreshResample(vx_node node, const vx_reference *parameters, vx_uint32 num, ResampleLocalData *data)
 {
     vx_status status = VX_SUCCESS;
-    STATUS_ERROR_CHECK(vxCopyArrayRange((vx_array)parameters[5], 0, data->nbatchSize, sizeof(float), data->inRateTensor, VX_READ_ONLY, VX_MEMORY_TYPE_HOST));
+    STATUS_ERROR_CHECK(vxCopyArrayRange((vx_array)parameters[5], 0, data->src_desc_ptr->n, sizeof(float), data->inRateTensor, VX_READ_ONLY, VX_MEMORY_TYPE_HOST));
     STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[4], VX_TENSOR_BUFFER_HOST, &data->outRateTensor, sizeof(data->outRateTensor)));
 
     if (data->deviceType == AGO_TARGET_AFFINITY_GPU)
@@ -102,7 +101,7 @@ static vx_status VX_CALLBACK refreshResample(vx_node node, const vx_reference *p
         }
     }
     data->roi_ptr_src = (RpptROI *)data->roi_tensor_ptr_src;
-    for (uint i = 0; i < data->nbatchSize ; i++) {
+    for (uint i = 0; i < data->src_desc_ptr->n ; i++) {
         data->sampleArray[i] = data->roi_ptr_src[i].xywhROI.xy.x;
         data->sampleChannels[i] = data->roi_ptr_src[i].xywhROI.xy.y;
     }
@@ -115,18 +114,15 @@ static vx_status VX_CALLBACK validateResample(vx_node node, const vx_reference p
     vx_status status = VX_SUCCESS;
     vx_enum scalar_type;
 
+    STATUS_ERROR_CHECK(vxQueryScalar((vx_scalar)parameters[6], VX_SCALAR_TYPE, &scalar_type, sizeof(scalar_type)));
+    if (scalar_type != VX_TYPE_FLOAT32)
+        return ERRMSG(VX_ERROR_INVALID_TYPE, "validate: Paramter: #6 type=%d (must be size)\n", scalar_type);
     STATUS_ERROR_CHECK(vxQueryScalar((vx_scalar)parameters[7], VX_SCALAR_TYPE, &scalar_type, sizeof(scalar_type)));
     if (scalar_type != VX_TYPE_UINT32)
         return ERRMSG(VX_ERROR_INVALID_TYPE, "validate: Paramter: #7 type=%d (must be size)\n", scalar_type);
     STATUS_ERROR_CHECK(vxQueryScalar((vx_scalar)parameters[8], VX_SCALAR_TYPE, &scalar_type, sizeof(scalar_type)));
     if (scalar_type != VX_TYPE_UINT32)
         return ERRMSG(VX_ERROR_INVALID_TYPE, "validate: Paramter: #8 type=%d (must be size)\n", scalar_type);
-    STATUS_ERROR_CHECK(vxQueryScalar((vx_scalar)parameters[9], VX_SCALAR_TYPE, &scalar_type, sizeof(scalar_type)));
-    if (scalar_type != VX_TYPE_UINT32)
-        return ERRMSG(VX_ERROR_INVALID_TYPE, "validate: Paramter: #9 type=%d (must be size)\n", scalar_type);
-    STATUS_ERROR_CHECK(vxQueryScalar((vx_scalar)parameters[6], VX_SCALAR_TYPE, &scalar_type, sizeof(scalar_type)));
-    if (scalar_type != VX_TYPE_FLOAT32)
-        return ERRMSG(VX_ERROR_INVALID_TYPE, "validate: Paramter: #6 type=%d (must be size)\n", scalar_type);
 
     // Check for output parameters
     vx_tensor output;
@@ -180,8 +176,7 @@ static vx_status VX_CALLBACK initializeResample(vx_node node, const vx_reference
     memset(data, 0, sizeof(*data));
     STATUS_ERROR_CHECK(vxReadScalarValue((vx_scalar)parameters[6], &data->quality));
     STATUS_ERROR_CHECK(vxReadScalarValue((vx_scalar)parameters[7], &data->maxDstWidth));
-    STATUS_ERROR_CHECK(vxReadScalarValue((vx_scalar)parameters[8], &data->nbatchSize));
-    STATUS_ERROR_CHECK(vxCopyScalar((vx_scalar)parameters[9], &data->deviceType, VX_READ_ONLY, VX_MEMORY_TYPE_HOST));
+    STATUS_ERROR_CHECK(vxCopyScalar((vx_scalar)parameters[8], &data->deviceType, VX_READ_ONLY, VX_MEMORY_TYPE_HOST));
 
     // Querying for input tensor
     data->src_desc_ptr = &data->srcDesc;
@@ -271,7 +266,7 @@ vx_status Resample_Register(vx_context context)
     vx_kernel kernel = vxAddUserKernel(context, "org.rpp.Resample",
                                        VX_KERNEL_RPP_RESAMPLE,
                                        processResample,
-                                       10,
+                                       9,
                                        validateResample,
                                        initializeResample,
                                        uninitializeResample);
@@ -300,7 +295,6 @@ vx_status Resample_Register(vx_context context)
         PARAM_ERROR_CHECK(vxAddParameterToKernel(kernel, 6, VX_INPUT, VX_TYPE_SCALAR, VX_PARAMETER_STATE_REQUIRED));
         PARAM_ERROR_CHECK(vxAddParameterToKernel(kernel, 7, VX_INPUT, VX_TYPE_SCALAR, VX_PARAMETER_STATE_REQUIRED));
         PARAM_ERROR_CHECK(vxAddParameterToKernel(kernel, 8, VX_INPUT, VX_TYPE_SCALAR, VX_PARAMETER_STATE_REQUIRED));
-        PARAM_ERROR_CHECK(vxAddParameterToKernel(kernel, 9, VX_INPUT, VX_TYPE_SCALAR, VX_PARAMETER_STATE_REQUIRED));
         PARAM_ERROR_CHECK(vxFinalizeKernel(kernel));
     }
     if (status != VX_SUCCESS)

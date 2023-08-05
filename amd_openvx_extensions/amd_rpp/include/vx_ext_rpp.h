@@ -1600,7 +1600,7 @@ extern "C"
 	/*
 	TODO: Add the params
 	*/
-	SHARED_PUBLIC vx_node VX_API_CALL vxExtRppResample(vx_graph graph, vx_tensor pSrc, vx_tensor pDst, vx_tensor srcDims, vx_tensor dstDims, vx_tensor outRateTensor,  vx_array inRateTensor, vx_scalar quality,  vx_uint32 nbatchSize, vx_scalar maxDstWidth);
+	SHARED_PUBLIC vx_node VX_API_CALL vxExtRppResample(vx_graph graph, vx_tensor pSrc, vx_tensor pDst, vx_tensor srcDims, vx_tensor dstDims, vx_tensor outRateTensor, vx_array inRateTensor, vx_scalar quality, vx_scalar maxDstWidth);
 
 #ifdef __cplusplus
 }

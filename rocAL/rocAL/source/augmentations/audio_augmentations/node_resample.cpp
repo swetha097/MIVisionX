@@ -38,7 +38,7 @@ void ResampleNode::create_node() {
     vx_scalar quality = vxCreateScalar(vxGetContext((vx_reference)_graph->get()), VX_TYPE_FLOAT32, &_quality);
     vx_scalar _max_dst_width_scalar = vxCreateScalar(vxGetContext((vx_reference)_graph->get()), VX_TYPE_UINT32, &_max_dst_width);
     _node = vxExtRppResample(_graph->get(), _inputs[0]->handle(), _outputs[0]->handle(), _src_tensor_roi, _dst_tensor_roi, _resample_rate->handle(), 
-                             _src_sample_rate_array, quality, _batch_size, _max_dst_width_scalar);
+                             _src_sample_rate_array, quality, _max_dst_width_scalar);
     if((status = vxGetStatus((vx_reference)_node)) != VX_SUCCESS) 
         THROW("Adding the copy (vxExtRppResample) node failed: "+ TOSTR(status))
 }
