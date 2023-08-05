@@ -358,12 +358,41 @@ namespace rocal{
                 )code"
             )
             .def(
+                "num_of_dims",
+                [](rocalTensor &output_tensor)
+                {
+                    return output_tensor.num_of_dims();
+                },
+                R"code(
+                Returns a tensor data's total number of dimensions.
+                ex: 3 in case of audio, 4 in case of an image, 5 in case of video
+                )code"
+            )
+            .def(
                 "batch_size",
                 [](rocalTensor &output_tensor) {
                     return output_tensor.dims().at(0);
                 },
                 R"code(
                 Returns a tensor batch size.
+                )code"
+            )
+            .def(
+                "get_rois",
+                [](rocalTensor &output_tensor)
+                {
+                    return py::array(py::buffer_info(
+                            (int *)(output_tensor.get_roi()),
+                            sizeof(int),
+                            py::format_descriptor< int>::format(),
+                            1,
+                            {output_tensor.dims().at(0) * 4},
+                            {sizeof(int) }));
+                },
+                R"code(
+                Returns a tensor ROI
+                ex : width, height in case of an image data
+                ex : samples , channels in case of an audio data
                 )code"
             )
             .def("layout", [](rocalTensor &output_tensor) {
@@ -395,6 +424,13 @@ namespace rocal{
                 R"code(
                 Copies the ring buffer data to python buffer pointers.
                 )code"
+            )
+            .def(
+            "copy_data", [](rocalTensor &output_tensor, py::object p, uint max_x1, uint max_y1) {
+                auto ptr = ctypes_void_ptr(p);
+                output_tensor.copy_data(static_cast<void *>(ptr), max_x1, max_y1);
+            },
+            py::return_value_policy::reference
             )
             .def("copy_data_numpy", &copy_data_numpy_wrapper<u_char>, py::return_value_policy::reference)
             .def("copy_data_numpy", &copy_data_numpy_wrapper<float>, py::return_value_policy::reference)
