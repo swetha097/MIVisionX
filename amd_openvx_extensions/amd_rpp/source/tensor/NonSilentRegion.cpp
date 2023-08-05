@@ -33,6 +33,7 @@ struct NonSilentRegionLocalData {
     Rpp32s windowLength;
     Rpp32s resetInterval;
     RpptDescPtr pSrcDesc;
+    RpptROI *pSrcRoi;
     Rpp32s *pSrcLength;
     size_t inputTensorDims[RPP_MAX_TENSOR_DIMS];
     size_t ouputTensorDims[RPP_MAX_TENSOR_DIMS];
@@ -56,9 +57,9 @@ static vx_status VX_CALLBACK refreshNonSilentRegion(vx_node node, const vx_refer
         STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[2], VX_TENSOR_BUFFER_HOST, &data->pDst1, sizeof(data->pDst1)));
         STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[3], VX_TENSOR_BUFFER_HOST, &data->pDst2, sizeof(data->pDst2)));
     }
-    RpptROI *srcRoi = reinterpret_cast<RpptROI *>(roi_tensor_ptr);
+    data->pSrcRoi = reinterpret_cast<RpptROI *>(roi_tensor_ptr);
     for (unsigned i = 0; i < data->inputTensorDims[0]; i++)
-        data->pSrcLength[i] = static_cast<int>(srcRoi[i].xywhROI.xy.x);
+        data->pSrcLength[i] = static_cast<int>(data->pSrcRoi[i].xywhROI.xy.x);
 
     return status;
 }
@@ -122,8 +123,7 @@ static vx_status VX_CALLBACK processNonSilentRegion(vx_node node, const vx_refer
 #if ENABLE_OPENCL
         return_status = VX_ERROR_NOT_IMPLEMENTED;
 #elif ENABLE_HIP
-        // rpp_status = rppt_non_silent_region_detection_gpu(data->pSrc, pSrcDesc, data->pSrcLength, data->pDst1, data->pDst2, data->cutOffDB, data->windowLength, data->referencePower, data->resetInterval, data->handle->rppHandle);
-        return_status = (rpp_status == RPP_SUCCESS) ? VX_SUCCESS : VX_FAILURE;
+        return_status = VX_ERROR_NOT_IMPLEMENTED;
 #endif
     } else if (data->deviceType == AGO_TARGET_AFFINITY_CPU) {
         rpp_status = rppt_non_silent_region_detection_host(data->pSrc, data->pSrcDesc, data->pSrcLength, data->pDst1, data->pDst2, data->cutOffDB, data->windowLength, data->referencePower, data->resetInterval, data->handle->rppHandle);
@@ -137,7 +137,7 @@ static vx_status VX_CALLBACK processNonSilentRegion(vx_node node, const vx_refer
 
 static vx_status VX_CALLBACK initializeNonSilentRegion(vx_node node, const vx_reference *parameters, vx_uint32 num) {
     NonSilentRegionLocalData *data = new NonSilentRegionLocalData;
-    memset(data, 0, sizeof(*data));
+    memset(data, 0, sizeof(NonSilentRegionLocalData));
 
     vx_enum input_tensor_datatype;
     STATUS_ERROR_CHECK(vxReadScalarValue((vx_scalar)parameters[4], &data->cutOffDB));
@@ -153,16 +153,7 @@ static vx_status VX_CALLBACK initializeNonSilentRegion(vx_node node, const vx_re
     STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[0], VX_TENSOR_DATA_TYPE, &input_tensor_datatype, sizeof(input_tensor_datatype)));
     data->pSrcDesc->dataType = getRpptDataType(input_tensor_datatype);
     data->pSrcDesc->offsetInBytes = 0;
-
-    // fill dims and strides in srcDescPtr
-    data->pSrcDesc->n = data->inputTensorDims[0];
-    data->pSrcDesc->h = data->inputTensorDims[2];
-    data->pSrcDesc->w = data->inputTensorDims[1];
-    data->pSrcDesc->c = 1;
-    data->pSrcDesc->strides.nStride = data->pSrcDesc->c * data->pSrcDesc->w * data->pSrcDesc->h;
-    data->pSrcDesc->strides.hStride = data->pSrcDesc->c * data->pSrcDesc->w;
-    data->pSrcDesc->strides.wStride = data->pSrcDesc->c;
-    data->pSrcDesc->strides.cStride = 1;
+    fillAudioDescriptionPtrFromDims(data->pSrcDesc, data->inputTensorDims);
 
     data->pSrcDesc->numDims = 4;
     data->pSrcLength = static_cast<int *>(calloc(data->pSrcDesc->n, sizeof(int)));
