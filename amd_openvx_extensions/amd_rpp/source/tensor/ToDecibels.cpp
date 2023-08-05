@@ -32,6 +32,8 @@ struct ToDecibelsLocalData {
     Rpp32f referenceMagnitude;
     RpptDescPtr pSrcDesc;
     RpptDescPtr pDstDesc;
+    RpptROI *pSrcRoi;
+    RpptROI *pDstRoi;
     RpptImagePatch *pSrcDims;
     size_t inputTensorDims[RPP_MAX_TENSOR_DIMS];
     size_t outputTensorDims[RPP_MAX_TENSOR_DIMS];
@@ -63,9 +65,9 @@ static vx_status VX_CALLBACK refreshToDecibels(vx_node node, const vx_reference 
         STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[2], VX_TENSOR_BUFFER_HOST, &data->pDst, sizeof(data->pDst)));
         STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[3], VX_TENSOR_BUFFER_HOST, &roi_tensor_ptr_dst, sizeof(roi_tensor_ptr_dst)));
     }
-    RpptROI *src_roi = reinterpret_cast<RpptROI *>(roi_tensor_ptr_src);
-    RpptROI *dst_roi = reinterpret_cast<RpptROI *>(roi_tensor_ptr_dst);
-    copy_src_dims_and_update_dst_roi(data, src_roi, dst_roi);
+    data->pSrcRoi = reinterpret_cast<RpptROI *>(roi_tensor_ptr_src);
+    data->pDstRoi = reinterpret_cast<RpptROI *>(roi_tensor_ptr_dst);
+    copy_src_dims_and_update_dst_roi(data, data->pSrcRoi, data->pDstRoi);
     return status;
 }
 
@@ -111,9 +113,10 @@ static vx_status VX_CALLBACK processToDecibels(vx_node node, const vx_reference 
     STATUS_ERROR_CHECK(vxQueryNode(node, VX_NODE_LOCAL_DATA_PTR, &data, sizeof(data)));
     refreshToDecibels(node, parameters, num, data);
     if (data->deviceType == AGO_TARGET_AFFINITY_GPU) {
-#if ENABLE_HIP
-        // rpp_status = rppt_to_decibels_gpu(data->pSrc, data->pSrcDesc, data->pDst, data->pDstDesc, data->pSrcDims, data->cutOffDB, data->multiplier, data->referenceMagnitude, data->handle->rppHandle);
-        return_status = (rpp_status == RPP_SUCCESS) ? VX_SUCCESS : VX_FAILURE;
+#if ENABLE_OPENCL
+        return_status = VX_ERROR_NOT_IMPLEMENTED;
+#elif ENABLE_HIP
+        return_status = VX_ERROR_NOT_IMPLEMENTED;
 #endif
     } else if (data->deviceType == AGO_TARGET_AFFINITY_CPU) {
         rpp_status = rppt_to_decibels_host(data->pSrc, data->pSrcDesc, data->pDst, data->pDstDesc, data->pSrcDims, data->cutOffDB, data->multiplier, data->referenceMagnitude, data->handle->rppHandle);
@@ -124,7 +127,7 @@ static vx_status VX_CALLBACK processToDecibels(vx_node node, const vx_reference 
 
 static vx_status VX_CALLBACK initializeToDecibels(vx_node node, const vx_reference *parameters, vx_uint32 num) {
     ToDecibelsLocalData *data = new ToDecibelsLocalData;
-    memset(data, 0, sizeof(*data));
+    memset(data, 0, sizeof(ToDecibelsLocalData));
 
     vx_enum input_tensor_datatype, output_tensor_datatype;
     STATUS_ERROR_CHECK(vxReadScalarValue((vx_scalar)parameters[4], &data->cutOffDB));
@@ -139,6 +142,7 @@ static vx_status VX_CALLBACK initializeToDecibels(vx_node node, const vx_referen
     STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[0], VX_TENSOR_DATA_TYPE, &input_tensor_datatype, sizeof(input_tensor_datatype)));
     data->pSrcDesc->dataType = getRpptDataType(input_tensor_datatype);
     data->pSrcDesc->offsetInBytes = 0;
+    fillAudioDescriptionPtrFromDims(data->pSrcDesc, data->inputTensorDims);
 
     // Querying for output tensor
     data->pDstDesc = new RpptDesc;
@@ -147,28 +151,7 @@ static vx_status VX_CALLBACK initializeToDecibels(vx_node node, const vx_referen
     STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[2],VX_TENSOR_DATA_TYPE, &output_tensor_datatype, sizeof(output_tensor_datatype)));
     data->pDstDesc->dataType = getRpptDataType(output_tensor_datatype);
     data->pDstDesc->offsetInBytes = 0;
-
-    // source_description_ptr
-    data->pSrcDesc->n = data->inputTensorDims[0];
-    data->pSrcDesc->h = data->inputTensorDims[2];
-    data->pSrcDesc->w = data->inputTensorDims[1];
-    data->pSrcDesc->c = 1;
-    data->pSrcDesc->strides.nStride = data->pSrcDesc->c * data->pSrcDesc->w * data->pSrcDesc->h;
-    data->pSrcDesc->strides.hStride = data->pSrcDesc->c * data->pSrcDesc->w;
-    data->pSrcDesc->strides.wStride = data->pSrcDesc->c;
-    data->pSrcDesc->strides.cStride = 1;
-    data->pSrcDesc->numDims = 4;
-
-    // destination_description_ptr
-    data->pDstDesc->n = data->outputTensorDims[0];
-    data->pDstDesc->w = data->outputTensorDims[1];
-    data->pDstDesc->h = data->outputTensorDims[2];
-    data->pDstDesc->c = 1;
-    data->pDstDesc->strides.nStride = data->pDstDesc->c * data->pDstDesc->w * data->pDstDesc->h;
-    data->pDstDesc->strides.hStride = data->pDstDesc->c * data->pDstDesc->w;
-    data->pDstDesc->strides.wStride = data->pDstDesc->c;
-    data->pDstDesc->strides.cStride = 1;
-    data->pDstDesc->numDims = 4;
+    fillAudioDescriptionPtrFromDims(data->pDstDesc, data->outputTensorDims);
 
     data->pSrcDims = static_cast<RpptImagePatch *>(calloc(data->pSrcDesc->n, sizeof(RpptImagePatch)));
     refreshToDecibels(node, parameters, num, data);
@@ -180,10 +163,10 @@ static vx_status VX_CALLBACK initializeToDecibels(vx_node node, const vx_referen
 static vx_status VX_CALLBACK uninitializeToDecibels(vx_node node, const vx_reference *parameters, vx_uint32 num) {
     ToDecibelsLocalData *data;
     STATUS_ERROR_CHECK(vxQueryNode(node, VX_NODE_LOCAL_DATA_PTR, &data, sizeof(data)));
-    STATUS_ERROR_CHECK(releaseRPPHandle(node, data->handle, data->deviceType));
-    free(data->pSrcDims);
+    if(data->pSrcDims != nullptr) free(data->pSrcDims);
     delete(data->pSrcDesc);
     delete(data->pDstDesc);
+    STATUS_ERROR_CHECK(releaseRPPHandle(node, data->handle, data->deviceType));
     delete(data);
     return VX_SUCCESS;
 }
