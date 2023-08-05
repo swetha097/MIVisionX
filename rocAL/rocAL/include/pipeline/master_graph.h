@@ -101,6 +101,7 @@ public:
     bool last_batch_padded();
     uint last_batch_size();
     void release();
+    vx_context get_vx_context() { return _context; }
     template <typename T>
     std::shared_ptr<T> add_node(const std::vector<Tensor *> &inputs, const std::vector<Tensor *> &outputs);
     template <typename T, typename M> std::shared_ptr<T> meta_add_node(std::shared_ptr<M> node);

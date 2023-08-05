@@ -185,6 +185,7 @@ if(${BUILD_ROCAL})
                 ../../amd_openvx_extensions/amd_rpp/include/
                 ../../amd_openvx_extensions/amd_media/include/
                 ./include/api/
+                ./include/augmentations/arithmetic_augmentations/
                 ./include/augmentations/audio_augmentations/
                 ./include/augmentations/color_augmentations/
                 ./include/augmentations/effects_augmentations/
@@ -203,6 +204,7 @@ if(${BUILD_ROCAL})
                 ./include/readers/image/
                 ./include/readers/video/
                 ./include/pipeline/
+                ./include/common/
                 include
                 )
 

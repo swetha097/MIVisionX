@@ -1596,11 +1596,18 @@ extern "C"
 	TODO: Add the params
 	*/
 	SHARED_PUBLIC vx_node VX_API_CALL vxExtRppNormalize(vx_graph graph, vx_tensor pSrc, vx_tensor pSrcDims, vx_tensor pDst, vx_tensor pDstDims, vx_scalar axisMask, vx_scalar mean, vx_scalar stdDev, vx_scalar scale, vx_scalar shift, vx_scalar epsilon, vx_scalar ddof, vx_uint32 numOfDims);
-
 	/*
 	TODO: Add the params
 	*/
 	SHARED_PUBLIC vx_node VX_API_CALL vxExtRppResample(vx_graph graph, vx_tensor pSrc, vx_tensor pDst, vx_tensor srcDims, vx_tensor dstDims, vx_tensor outRateTensor, vx_array inRateTensor, vx_scalar quality, vx_scalar maxDstWidth);
+	/*
+	TODO: Add the params
+	*/
+	SHARED_PUBLIC vx_node VX_API_CALL vxExtRppTensorMulScalar(vx_graph graph, vx_tensor pSrc, vx_tensor pDst, vx_scalar scalar_value, vx_uint32 nbatchSize);
+		/*
+	TODO: Add the params
+	*/
+	SHARED_PUBLIC vx_node VX_API_CALL vxExtRppTensorAddTensor(vx_graph graph, vx_tensor pSrc1, vx_tensor pSrc2, vx_tensor pDst, vx_tensor srcRoi, vx_tensor dstRoi, vx_uint32 nbatchSize);
 
 #ifdef __cplusplus
 }

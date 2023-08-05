@@ -342,6 +342,32 @@ namespace rocal{
             .def_readwrite("process_time", &TimingInfo::process_time)
             .def_readwrite("transfer_time", &TimingInfo::transfer_time);
         py::class_<rocalTensor>(m, "rocalTensor")
+            .def( // TODO: Swetha - Add rmul, add, radd
+                "__mul__",
+                [](rocalTensor *output_tensor, uint scalar)
+                {
+                    std::cerr << "HERE in __MUL__ in rocal_pybind unit dtype";
+                    return output_tensor;
+                },
+                R"code(
+                Returns a tensor
+                Adds a node for arithmetic operation
+                )code", py::return_value_policy::reference
+            )
+            .def(
+                "__mul__",
+                [](rocalTensor *output_tensor, float scalar)
+                {
+                    std::cerr << "HERE in __MUL__ in rocal_pybind for float -----------------";
+                    py::object fn_module = py::module::import("amd.rocal.fn");
+                    auto fn_function_call = fn_module.attr("tensor_mul_scalar_float")(output_tensor, "scalar"_a=scalar).cast<RocalTensor>();
+                    return fn_function_call;
+                },
+                R"code(
+                Returns a tensor
+                Adds a node for arithmetic operation
+                )code", py::return_value_policy::reference
+            )
             .def(
                 "max_shape",
                 [](rocalTensor &output_tensor) {
@@ -885,6 +911,16 @@ namespace rocal{
         m.def("MelFilterBank", &rocalMelFilterBank, "Converts a spectrogram to a mel spectrogram by applying a bank of triangular filters",
             py::return_value_policy::reference);
         m.def("ToDecibels", &rocalToDecibels, "Converts to Decibels",
+            py::return_value_policy::reference);
+        m.def("Resample", &rocalResample, "Resamples the audio",
+            py::return_value_policy::reference);
+        m.def("NormalDistribution", &rocalNormalDistribution, "Generates random numbers following a normal distribution",
+            py::return_value_policy::reference);
+        m.def("UniformDistribution", &rocalUniformDistribution, "Generates random numbers following a uniform distribution",
+            py::return_value_policy::reference);
+        m.def("TensorMulScalar", &rocalTensorMulScalar, "Multiplies a given Tensor Value with Scalar - Arithmetic Operation",
+            py::return_value_policy::reference);
+        m.def("TensorAddTensor", &rocalTensorAddTensor, "Adds a given Tensor with another Tensor - Arithmetic Operation",
             py::return_value_policy::reference);
     }
 }

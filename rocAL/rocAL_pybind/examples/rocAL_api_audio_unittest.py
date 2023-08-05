@@ -49,6 +49,7 @@ def main():
     batch_size = int(sys.argv[4])
     num_threads = 1
     device_id = 0
+    resample = 16000.00
     random_seed = random.SystemRandom().randint(0, 2**32 - 1)
     print("*********************************************************************")
     audio_pipeline = Pipeline(batch_size=batch_size, num_threads=num_threads, device_id=device_id, seed=random_seed, rocal_cpu=_rocal_cpu, last_batch_policy=types.LAST_BATCH_FILL, last_batch_padded=True)
@@ -58,8 +59,10 @@ def main():
             file_list=file_list,
             )
         audio_decode = fn.decoders.audio(audio, file_root=data_path, file_list_path=file_list, downmix=False, shard_id=0, num_shards=2, storage_type=9, stick_to_shard=False, shard_size=-1)
-        pre_emphasis_filter = fn.preemphasis_filter(audio_decode)
-        begin, length = fn.nonsilent_region(audio_decode, cutoff_db=-60)
+        uniform_distribution_resample = fn.random.uniform(audio_decode, range=[0.8,1.15])
+        resampled_rate = uniform_distribution_resample * resample
+        resample_output = fn.resample(audio_decode, resample_rate=resampled_rate, resample_hint=1.15 * 258160, )
+        begin, length = fn.nonsilent_region(resample_output, cutoff_db=-60)
         trim_silence = fn.slice(
             audio_decode,
             anchor=[begin],
@@ -67,13 +70,14 @@ def main():
             normalized_anchor=False,
             normalized_shape=False,
             axes=[0],
-            rocal_tensor_output_type = types.FLOAT)
+            rocal_tensor_output_type=types.FLOAT)
+        pre_emphasis_filter = fn.preemphasis_filter(trim_silence)
         spec = fn.spectrogram(
-            audio_decode,
+            pre_emphasis_filter,
             nfft=512,
             window_length=320,
             window_step=160,
-            rocal_tensor_output_type = types.FLOAT)
+            rocal_tensor_output_type=types.FLOAT)
         mel = fn.mel_filter_bank(
             spec,
             sample_rate=16000,
@@ -98,7 +102,7 @@ def main():
             for audio, label, roi in zip(it[0], it[1], it[2]):
                 print("label: ", label)
                 print("roi: ", roi)
-                # print("audio: ", audio)
+                print("audio: ", audio)
                 draw_patches(audio, label, "cpu")
         print("EPOCH DONE", e)
 if __name__ == '__main__':
