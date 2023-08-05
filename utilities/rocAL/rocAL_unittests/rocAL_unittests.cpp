@@ -202,7 +202,7 @@ int test(int test_case, int reader_type, int pipeline_type, const char *path, co
                 input1 = rocalJpegCOCOFileSource(handle, path, json_path, color_format, num_threads, false, true, false);
             else
                 input1 = rocalJpegCOCOFileSource(handle, path, json_path, color_format, num_threads, true, true, false, ROCAL_USE_MAX_SIZE_RESTRICTED, decode_max_width, decode_max_height);
-            rocalSetRandomPixelMaskConfig(handle,true);
+            //rocalSetRandomPixelMaskConfig(handle,true);
         }
         break;
         case 3: //coco detection partial
@@ -465,6 +465,7 @@ int test(int test_case, int reader_type, int pipeline_type, const char *path, co
                     }
                     std::cerr << std::endl;
                 }
+                /*
                 for(int i = 0; i < bbox_labels->size(); i++)
                 {
                     int * labels_buffer = (int *)(bbox_labels->at(i)->buffer());
@@ -477,6 +478,7 @@ int test(int test_case, int reader_type, int pipeline_type, const char *path, co
                     for(int j = 0, j4 = 0; j < bbox_coords->at(i)->info().dims().at(0); j++, j4 = j * 4)
                         std::cerr << bbox_buffer[j4] << " " << bbox_buffer[j4 + 1] << " " << bbox_buffer[j4 + 2] << " " << bbox_buffer[j4 + 3] << "\n";
                 }
+                */
             }
             break;
             case 4: //detection + segmentation + Polygons pipeline
