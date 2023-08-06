@@ -149,7 +149,9 @@ private:
     rocalTensorList _mask_tensor_list;
     rocalTensorList _random_mask_pixel_list;
     rocalTensorList _select_mask_polygon_list;
+    rocalTensorList _random_object_bbox_list;
     std::vector<unsigned> output_random_mask_pixel;
+    std::vector<std::vector<unsigned>> output_random_object_bbox;
     std::vector<std::vector<float>> output_select_mask_polygon;
     std::vector<std::vector<unsigned>> _labels_tensor_dims;
     std::vector<std::vector<unsigned>> _bbox_tensor_dims;
