@@ -53,6 +53,13 @@ using half_float::half;
 #include <rocal_hip_kernels.h>
 #endif
 
+enum RandomObjectBBoxFormat
+{
+    OUT_BOX = 0,
+    OUT_ANCHORSHAPE = 1,
+    OUT_STARTEND = 2,
+};
+
 static void VX_CALLBACK log_callback(vx_context context, vx_reference ref, vx_status status, const vx_char* string)
 {
     size_t len = strnlen(string, MAX_STRING_LENGTH);
@@ -84,13 +91,6 @@ void MergeRow(int* in1, int* in2,int* out1,int* out2, int n) {
     int bg_label = -1;
     int prev1 = bg_label;
     int prev2 = bg_label;
-    /*
-    std::cout << "Before slice" << std::endl;
-    for (int64_t i = 0; i < n; i++)
-    {
-        std::cout << out1[i] << "\t" << out2[i] << std::endl;
-    }
-    */
     for (int64_t i = 0, in_offset = 0, out_offset = 0; i < n; i++,
         in_offset += 1, out_offset += 1) {
         int& o1 = out1[out_offset];
@@ -119,27 +119,14 @@ void MergeRow(int* in1, int* in2,int* out1,int* out2, int n) {
             }
             prev1 = o1;
             prev2 = o2;
-        } else {
-            //std::cout << "Prev else:" << o1 << "\t" << o2 << std::endl;  
         }
-        
     }
-    /*
-    std::cout << "After slice" << std::endl;
-    for (int64_t i = 0; i < n; i++)
-    {
-        std::cout << out1[i] << "\t" << out2[i] << std::endl;
-    }
-    */
 }
 
 void FilterByLabel(int* in_row, int* out_row, int64_t N, int label) {
-  //std::cout << "Filter by labels\n";
-  for (int64_t i = 0; i < N; i++) {
-    out_row[i] = in_row[i] == label;
-    //std::cout << out_row[i] << "\t";
-  }
-  //std::cout << "\n";
+    for (int64_t i = 0; i < N; i++) {
+        out_row[i] = in_row[i] == label;
+    }
 }
 
 int CompactRows(int* in, int64_t height, int64_t width) {
@@ -164,15 +151,7 @@ int CompactRows(int* in, int64_t height, int64_t width) {
                 j++;
             }
         }
-        // std::cout << "Compact row 1:\n" << std::endl;
-        // for (int j = 0; j < width; j++) {
-        //     std::cout << in_row[j] << "\t";
-        // }
-        // std::cout << "\n";
     }
-    // for (auto s : labelmap) {
-    //     std::cout << "labelmap:" << s.first << "\t" << s.second << "\n";
-    // }
     for (int i = 0; i < height; i++) {
         int j = 0;
         int* in_row = in + (i * width);
@@ -188,17 +167,12 @@ int CompactRows(int* in, int64_t height, int64_t width) {
                 j++;
             }
         }
-        // std::cout << "\nCompact row 2:\n" << std::endl;
-        // for (int j = 0; j < width; j++) {
-        //     std::cout << in_row[j] << "\t";
-        // }
     }
     return counter;
     
 }
 
 void LabelRow(int* in_row,int* label_base,int* out_row, int length) {
-    //std::cout << "Label row\n";
     int curr_label = -1;
     int bg_label = -1;
     int prev = 0;
@@ -212,17 +186,15 @@ void LabelRow(int* in_row,int* label_base,int* out_row, int length) {
         }
         out_row[i] = curr_label;
         prev = in_row[i];
-        //std::cout << out_row[i] << "\t";
     }
-    //std::cout << "\n";
 }
 
 bool hit(std::vector<uint32_t>& hits, unsigned idx) {    
-  uint32_t flag = (1u << (idx&31));
-  uint32_t &h = hits[idx >> 5];
-  bool ret = h & flag;
-  h |= flag;
-  return ret;
+    uint32_t flag = (1u << (idx&31));
+    uint32_t &h = hits[idx >> 5];
+    bool ret = h & flag;
+    h |= flag;
+    return ret;
 }
 
 void GetLabelBoundingBoxes(std::vector<std::vector<std::pair<int,int>>> &boxes,
@@ -231,138 +203,96 @@ void GetLabelBoundingBoxes(std::vector<std::vector<std::pair<int,int>>> &boxes,
                            int* in,
                            std::vector<int> origin,
                            int width) {
-  //std::cout << "GetLabelBoundingBoxes 1" << std::endl;
-  for (auto &mask : hits) {
-    //std::cout << "Mask\n";
-    mask = 0u;  // mark all labels as not found in this row
-    //std::cout << mask << "\t";
-  }
-  //std::cout << "\nOrigin:";
-//   for (auto o : origin) {
-//     std::cout << o << std::endl;
-//   }
-//   std::cout << "\n\n";
-  int ndim = 2;
-
-  const unsigned nboxes = ranges.size();
-  int background = -1;
-  //std::cout << "Nboxes:" << nboxes << "\t" << width << std::endl;
-  for (int64_t i = 0; i < width; i++) {
-    if (in[i] != background) {
-      // We make a "hole" in the label indices for the background.
-      int skip_bg = (background >= 0 && in[i] >= background);
-      unsigned idx = static_cast<unsigned>(in[i]) - skip_bg;
-      //std::cout << "IDX:" << idx << std::endl;
-      // deliberate use of unsigned overflow to detect negative labels as out-of-range
-      if (idx < nboxes) {
-        if (!hit(hits, idx)) {
-          ranges[idx].first = i;
-          //std::cout << "Ranges low" << ranges[idx].first << std::endl;
-        }
-        ranges[idx].second = i;
-        //std::cout << "Ranges high" << ranges[idx].second << std::endl;
-      }
+    for (auto &mask : hits) {
+        mask = 0u;  // mark all labels as not found in this row
     }
-  }
-//   std::cout << "Boxes print" << std::endl;
-//   for (int i = 0; i < boxes.size(); i++) {
-//     std::cout << boxes[i].empty() << std::endl;
-//   }
-
-  std::pair<int,int> lo = std::make_pair(0,0);
-  std::pair<int,int> hi = std::make_pair(0,0);
   
-  lo.first = origin[0];
-  hi.first = origin[0]+1;
-  lo.second = origin[1];
-  hi.second = origin[1]+1;
+    int ndim = 2;
 
-  const int d = 1;
-
-  //std::cout << "Hits count:" << hits.size() << std::endl;
-  for (int word = 0; word < hits.size(); word++) {
-    uint32_t mask = hits[word];
-    //std::cout << "Mask word:" << mask << std::endl;
-    int i = 32 * word;
-    while (mask) {
-      if ((mask & 0xffu) == 0) {  // skip 8 labels if not set
-        mask >>= 8;
-        i += 8;
-        continue;
-      }
-      if (mask & 1) {  // label found? mark it
-        lo.second = ranges[i].first + origin[d];
-        hi.second = (ranges[i].second + origin[d] + 1);  // one past the index found in this function
-        if (boxes[i].empty()) {
-          // empty box - create a new one
-          boxes[i].push_back(lo);
-          boxes[i].push_back(hi);
-        } else {
-          // expand existing
-          boxes[i][0] = min(boxes[i][0], lo);
-          boxes[i][1] = max(boxes[i][1], hi);
+    const unsigned nboxes = ranges.size();
+    int background = -1;
+    for (int64_t i = 0; i < width; i++) {
+        if (in[i] != background) {
+            // We make a "hole" in the label indices for the background.
+            int skip_bg = (background >= 0 && in[i] >= background);
+            unsigned idx = static_cast<unsigned>(in[i]) - skip_bg;
+            // deliberate use of unsigned overflow to detect negative labels as out-of-range
+            if (idx < nboxes) {
+                if (!hit(hits, idx)) {
+                    ranges[idx].first = i;
+                }
+                ranges[idx].second = i;
+            }
         }
-      }
-      mask >>= 1;
-      i++;  // skip one label
     }
-  }
-//   std::cout << "Boxes:" << boxes.size() << std::endl;
-//   for (auto box : boxes) {
-//     std::cout << "ok2:" << box.size() << std::endl;
-//     for (auto p : box) {
-//         std::cout << "ok1:" << p.first << "\t" << p.second << std::endl;
-//     }
-//   }
+
+    std::pair<int,int> lo = std::make_pair(0,0);
+    std::pair<int,int> hi = std::make_pair(0,0);
+    
+    lo.first = origin[0];
+    hi.first = origin[0]+1;
+    lo.second = origin[1];
+    hi.second = origin[1]+1;
+
+    const int d = 1;
+
+    for (int word = 0; word < hits.size(); word++) {
+        uint32_t mask = hits[word];
+        int i = 32 * word;
+        while (mask) {
+            if ((mask & 0xffu) == 0) {  // skip 8 labels if not set
+                mask >>= 8;
+                i += 8;
+                continue;
+            }
+            if (mask & 1) {  // label found? mark it
+                lo.second = ranges[i].first + origin[d];
+                hi.second = (ranges[i].second + origin[d] + 1);  // one past the index found in this function
+                if (boxes[i].empty()) {
+                    // empty box - create a new one
+                    boxes[i].push_back(lo);
+                    boxes[i].push_back(hi);
+                } else {
+                    // expand existing
+                    boxes[i][0] = min(boxes[i][0], lo);
+                    boxes[i][1] = max(boxes[i][1], hi);
+                }
+            }
+            mask >>= 1;
+            i++;  // skip one label
+        }
+    }
 }
 
 rocalTensorList*  MasterGraph::get_random_work(rocalTensorList* input) {
     std::cout << "get_random_work" << std::endl;
     SeededRNG<std::mt19937, 4> rngs(_user_batch_size);
+    std::vector<std::vector<int>> output(_user_batch_size,std::vector<int> (4, 0));
     for (unsigned int id = 0; id < _user_batch_size; id++) {
-        std::cout << "Filter" << std::endl;
         int *in_mask_buffer = (int *)(input->at(id)->buffer());
-        //int in_mask_buffer[] = {4, 0, 4, 4,1, 2, 2, 1,0, 4, 1, 0,4, 4, 0, 4};
         std::set<int> unique_labels; 
         int prev_label = 0;
         unsigned int buffer_size = input->at(id)->info().dims().at(0) * input->at(id)->info().dims().at(1);
-        //unsigned int buffer_size = 16;
         for (unsigned int i = 0; i < buffer_size; i++) {
             if (prev_label != in_mask_buffer[i] && in_mask_buffer[i] != 0) {
                 if (unique_labels.find(in_mask_buffer[i]) == unique_labels.end()) {
                     unique_labels.insert(in_mask_buffer[i]);
-                    //std::cout << in_mask_buffer[i] << "\t";
                 }
             }
             prev_label = in_mask_buffer[i];
         }
-        // std::cout << "\nUnique labels" << std::endl;
-        // for (auto a : unique_labels) {
-        //     std::cout << a << "\t";
-        // }
-        // std::cout << "\n";
-        // std::cout << "Row:" << input->at(id)->info().dims().at(0) << std::endl;
-        // std::cout << "cols:" << input->at(id)->info().dims().at(1) << std::endl;
-        // std::cout << "Buffer size : " <<  buffer_size << std::endl;
         auto dist = std::uniform_int_distribution<int64_t>(0, unique_labels.size() - 1);
         auto rng = rngs[id];
         auto it = next(unique_labels.begin(), dist(rng));
-        //std::cout << "ok1" << std::endl;
         int label_selected = (*it);
-        //int label_selected = 4;
-        //std::cout << "Label selected:" << label_selected << std::endl;
         int* in_filtered_buffer = (int*)malloc(buffer_size*sizeof(int));
         int* out_mask_buffer = (int*)malloc(buffer_size*sizeof(int));
         FilterByLabel(in_mask_buffer,in_filtered_buffer,buffer_size,label_selected);
         int height = input->at(id)->info().dims().at(0);
         int width = input->at(id)->info().dims().at(1);
-        //int height = 4;
-        //int width = 4;
         int* in_filtered_row = in_filtered_buffer;
         int* out_row = out_mask_buffer;
-        std::cout << "Label row and merge row" << std::endl;
         for (int i = 0; i < height; i ++) {
-            std::cout << "Label row and merge row Height:" << i << std::endl;
             LabelRow(in_filtered_row,out_mask_buffer,out_row, width);
             if (i>=1) {
                 MergeRow(in_filtered_row-width,in_filtered_row,out_row-width,out_row,width);
@@ -371,7 +301,6 @@ rocalTensorList*  MasterGraph::get_random_work(rocalTensorList* input) {
             out_row += width;
         }
         int nbox = CompactRows(out_mask_buffer,height,width);
-        std::cout << "nbox:" << nbox << std::endl; 
         std::vector<std::vector<std::pair<int,int>>> boxes;
         std::vector<std::pair<int,int>> ranges;
         std::vector<uint32_t> hits;
@@ -380,19 +309,44 @@ rocalTensorList*  MasterGraph::get_random_work(rocalTensorList* input) {
         hits.resize((nbox / 32 + !!(nbox % 32)));
         out_row = out_mask_buffer;
         for (int i = 0; i < height; i++) {
-            std::cout << "GetLabelBoundingBoxes height" << i << std::endl;
             GetLabelBoundingBoxes(boxes,ranges,hits,out_row, std::vector<int>{i,0}, width); 
             out_row += width;   
-        }     
-        std::cout << "Boxes:" << boxes.size() << std::endl;
-        for (auto box : boxes) {
-            std::cout << "ok2:" << box.size() << std::endl;
-            for (auto p : box) {
-                std::cout << "ok1:" << p.first << "\t" << p.second << std::endl;
-            }
-        }  
+        }
+        std::uniform_int_distribution<int> dist_nbox(0, nbox-1);
+        auto pick_box_id = dist_nbox(rng);
+        auto pick_box = boxes[pick_box_id];
+        auto format = RandomObjectBBoxFormat::OUT_STARTEND;
+        switch (format) {
+            case RandomObjectBBoxFormat::OUT_BOX:
+                output[id][0] = pick_box[0].first;
+                output[id][2] = pick_box[1].first;
+                output[id][1] = pick_box[0].second;
+                output[id][3] = pick_box[1].second;
+                break;
+            case RandomObjectBBoxFormat::OUT_ANCHORSHAPE:
+                output[id][0] = pick_box[0].first;
+                output[id][2] = pick_box[1].first - pick_box[0].first;
+                output[id][1] = pick_box[0].second;
+                output[id][3] = pick_box[1].second - pick_box[0].second;
+                break;
+            case RandomObjectBBoxFormat::OUT_STARTEND:
+                output[id][0] = pick_box[0].first;
+                output[id][2] = pick_box[1].first;
+                output[id][1] = pick_box[0].second;
+                output[id][3] = pick_box[1].second;
+                break;
+            default:
+                assert(!"Unreachable code");
+        }
         free(in_filtered_buffer);
         free(out_mask_buffer);
+    }
+    for (auto o1 : output) {
+        std::cout << "Box output" << std::endl;
+        for (auto o2 : o1) {
+            std::cout << o2 << "\t";
+        }
+        std::cout << "\n";
     }
     std::vector<int> output_random_mask_pixel = {1,2,1,2};
     auto random_data_buffers = (unsigned int *)output_random_mask_pixel.data(); // Get bbox buffer from ring buffer
