@@ -37,8 +37,6 @@ struct NormalizeLocalData {
     Rpp32u numOfDims;
     RpptDescPtr pSrcDesc;
     RpptDescPtr pDstDesc;
-    RpptROI *pSrcRoi;
-    RpptROI *pDstRoi;
     Rpp32s *pSamples;
     Rpp32s *pChannels;
     size_t inputTensorDims[RPP_MAX_TENSOR_DIMS];
@@ -71,9 +69,9 @@ static vx_status VX_CALLBACK refreshNormalize(vx_node node, const vx_reference *
         STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[2], VX_TENSOR_BUFFER_HOST, &data->pDst, sizeof(data->pDst)));
         STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[3], VX_TENSOR_BUFFER_HOST, &roi_tensor_ptr_dst, sizeof(roi_tensor_ptr_dst)));
     }
-    data->pSrcRoi = reinterpret_cast<RpptROI *>(roi_tensor_ptr_src);
-    data->pDstRoi = reinterpret_cast<RpptROI *>(roi_tensor_ptr_dst);
-    copy_src_dims_and_update_dst_roi(data, data->pSrcRoi, data->pDstRoi);
+    RpptROI *src_roi = reinterpret_cast<RpptROI *>(roi_tensor_ptr_src);
+    RpptROI *dst_roi = reinterpret_cast<RpptROI *>(roi_tensor_ptr_dst);
+    copy_src_dims_and_update_dst_roi(data, src_roi, dst_roi);
     return status;
 }
 
