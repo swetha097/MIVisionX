@@ -108,9 +108,9 @@ class ROCALGenericIteratorDetection(object):
             raise StopIteration
         
         if(types.NCHW == self.tensor_format):
-            self.loader.copyToExternalTensorNCHW(self.output, self.multiplier, self.offset, self.reverse_channels, int(self.tensor_dtype))
+            self.loader.copyToExternalTensorNCHW(self.out, self.multiplier, self.offset, self.reverse_channels, int(self.tensor_dtype))
         else:
-            self.loader.copyToExternalTensorNHWC(self.output, self.multiplier, self.offset, self.reverse_channels, int(self.tensor_dtype))
+            self.loader.copyToExternalTensorNHWC(self.out, self.multiplier, self.offset, self.reverse_channels, int(self.tensor_dtype))
 
         if(self.loader._name == "TFRecordReaderDetection"):
             self.bbox_list =[]
@@ -118,17 +118,17 @@ class ROCALGenericIteratorDetection(object):
             self.num_bboxes_list=[]
             #Count of labels/ bboxes in a batch
             self.bboxes_label_count = np.zeros(self.bs, dtype="int32")
-            self.count_batch = self.loader.getBoundingBoxCount(self.bboxes_label_count)
+            self.count_batch = self.loader.GetBoundingBoxCount(self.bboxes_label_count)
             self.num_bboxes_list = self.bboxes_label_count.tolist()
             # 1D labels array in a batch
             self.labels = np.zeros(self.count_batch, dtype="int32")
-            self.loader.getBBLabels(self.labels)
+            self.loader.GetBBLabels(self.labels)
             # 1D bboxes array in a batch
             self.bboxes = np.zeros((self.count_batch*4), dtype="float32")
-            self.loader.getBBCords(self.bboxes)
+            self.loader.GetBBCords(self.bboxes)
             #1D Image sizes array of image in a batch
             self.img_size = np.zeros((self.bs * 2),dtype = "int32")
-            self.loader.getImgSizes(self.img_size)
+            self.loader.GetImgSizes(self.img_size)
             count =0 # number of bboxes per image
             sum_count=0 # sum of the no. of the bboxes
             for i in range(self.bs):
@@ -160,22 +160,22 @@ class ROCALGenericIteratorDetection(object):
             self.num_bboxes_arr = np.array(self.num_bboxes_list)
 
             if self.tensor_dtype == types.FLOAT:
-                return self.output.astype(np.float32), self.res, self.l, self.num_bboxes_arr
+                return self.out.astype(np.float32), self.res, self.l, self.num_bboxes_arr
             elif self.tensor_dtype == types.FLOAT16:
-                return self.output.astype(np.float16), self.res, self.l, self.num_bboxes_arr
+                return self.out.astype(np.float16), self.res, self.l, self.num_bboxes_arr
         elif (self.loader._name == "TFRecordReaderClassification"):
-            if(self.loader._one_hot_encoding == True):
-                self.labels = np.zeros((self.bs)*(self.loader._num_classes),dtype = "int32")
-                self.loader.getOneHotEncodedLabels(self.labels, device="cpu")
-                self.labels = np.reshape(self.labels, (-1, self.bs, self.loader._num_classes))
+            if(self.loader._oneHotEncoding == True):
+                self.labels = np.zeros((self.bs)*(self.loader._numOfClasses),dtype = "int32")
+                self.loader.GetOneHotEncodedLabels(self.labels, device="cpu")
+                self.labels = np.reshape(self.labels, (-1, self.bs, self.loader._numOfClasses))
             else:
                 self.labels = np.zeros((self.bs),dtype = "int32")
                 self.loader.getImageLabels(self.labels)
 
             if self.tensor_dtype == types.FLOAT:
-                return self.output.astype(np.float32), self.labels
+                return self.out.astype(np.float32), self.labels
             elif self.tensor_dtype == types.TensorDataType.FLOAT16:
-                return self.output.astype(np.float16), self.labels
+                return self.out.astype(np.float16), self.labels
 
     def reset(self):
         b.rocalResetLoaders(self.loader._handle)
