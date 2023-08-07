@@ -256,7 +256,6 @@ void GetLabelBoundingBoxes(std::vector<std::vector<std::pair<unsigned,unsigned>>
 }
 
 rocalTensorList*  MasterGraph::get_random_object_bbox(rocalTensorList* input, RandomObjectBBoxFormat format) {
-    std::cout << "get_random_work" << std::endl;
     SeededRNG<std::mt19937, 4> rngs(_user_batch_size);
     if (output_random_object_bbox.size() != 0) {
         for (int i  = 0; i < _user_batch_size; i++) {
@@ -337,14 +336,6 @@ rocalTensorList*  MasterGraph::get_random_object_bbox(rocalTensorList* input, Ra
         free(in_filtered_buffer);
         free(out_mask_buffer);
     }
-    for (auto o1 : output_random_object_bbox) {
-        std::cout << "Box output" << std::endl;
-        for (auto o2 : o1) {
-            std::cout << o2 << "\t";
-        }
-        std::cout << "\n";
-    }
-    std::cout << "\n\n";
     // Get bbox buffer from ring buffer
     auto random_tensor_dims = {(size_t)4};
     for(unsigned i = 0; i < _user_batch_size; i++)
@@ -360,15 +351,6 @@ rocalTensorList*  MasterGraph::get_random_object_bbox(rocalTensorList* input, Ra
 rocalTensorList*  MasterGraph::get_random_mask_pixel(rocalTensorList* input)
 {
     SeededRNG<std::mt19937, 4> rngs(_user_batch_size);
-    //std::vector<std::vector<int>> output;
-    auto meta_data_buffers = (unsigned char *)_ring_buffer.get_meta_read_buffers()[2]; // Get bbox buffer from ring buffer
-    auto mask_tensor_dims = _ring_buffer.get_meta_data_info().mask_cords_dims();
-    for(unsigned i = 0; i < _mask_tensor_list.size(); i++)
-    {
-        _mask_tensor_list[i]->set_dims(mask_tensor_dims[i]);
-        _mask_tensor_list[i]->set_mem_handle((void *)meta_data_buffers);
-        meta_data_buffers += _mask_tensor_list[i]->info().data_size();
-    }
     output_random_mask_pixel.clear();
     output_random_mask_pixel.resize(_user_batch_size* 2);
     if (_is_random_mask_pixel_foreground == false) {
@@ -385,7 +367,6 @@ rocalTensorList*  MasterGraph::get_random_mask_pixel(rocalTensorList* input)
     else
     {
         if (_is_random_mask_pixel_threshold) {
-            std::cout << "ok1" << std::endl;
             #pragma omp parallel for num_threads(_user_batch_size)
             for (int i = 0; i < _user_batch_size; i++) {
                 std::vector<int> start;
@@ -408,13 +389,11 @@ rocalTensorList*  MasterGraph::get_random_mask_pixel(rocalTensorList* input)
                         }
                     }
                 }
-                std::cout << "Count" << count << std::endl;
                 if (count != 0) {
                     auto dist = std::uniform_int_distribution<int64_t>(0, count - 1);
                     auto flat_idx = find_pixel(start,foreground_count,dist(rng),count);
                     int j = 0;
                     for (auto d: dims) {
-                        std::cout << "Enters dims" << std::endl;
                         output_random_mask_pixel[i*2+j] = (flat_idx / d);
                         flat_idx = flat_idx % d;
                         j++;
@@ -426,7 +405,6 @@ rocalTensorList*  MasterGraph::get_random_mask_pixel(rocalTensorList* input)
                 }
             }
         } else {
-            std::cout << "ok2" << std::endl;
             #pragma omp parallel for num_threads(_user_batch_size)
             for (int i = 0; i < _user_batch_size; i++) {
                 std::vector<int> start;
@@ -466,11 +444,6 @@ rocalTensorList*  MasterGraph::get_random_mask_pixel(rocalTensorList* input)
             }
         }
     }
-    std::cout << "pixelwise output:" << output_random_mask_pixel.size() << std::endl;
-    for (auto o1 : output_random_mask_pixel) {
-        std::cout << o1 << "\t";
-    }
-    std::cout << "\n\n";
 
     auto random_data_buffers = (unsigned int *)output_random_mask_pixel.data(); // Get bbox buffer from ring buffer
     auto random_tensor_dims = {(size_t)2};
