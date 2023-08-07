@@ -497,12 +497,12 @@ namespace rocal{
             py::return_value_policy::reference);
         m.def("tfImageDecoder", &rocalJpegTFRecordSource,"Reads file from the source given and decodes it according to the policy only for TFRecords",
             py::return_value_policy::reference);
-        m.def("caffeImageDecoder", &rocalJpegCaffeLMDBRecordSource,"Reads file from the source given and decodes it according to the policy only for TFRecords",
+        m.def("caffeImageDecoder", &rocalJpegCaffeLMDBRecordSource,"Reads file from the source given and decodes it according to the policy",
             py::return_value_policy::reference);
         m.def("caffeImageDecoderShard", &rocalJpegCaffeLMDBRecordSourceSingleShard, "Reads file from the source given and decodes it according to the shard id and number of shards",
             py::return_value_policy::reference);
         m.def("caffeImageDecoderPartialShard", &rocalJpegCaffeLMDBRecordSourcePartialSingleShard, py::return_value_policy::reference);
-        m.def("caffe2ImageDecoder", &rocalJpegCaffe2LMDBRecordSource,"Reads file from the source given and decodes it according to the policy only for TFRecords",
+        m.def("caffe2ImageDecoder", &rocalJpegCaffe2LMDBRecordSource,"Reads file from the source given and decodes it according to the policy",
             py::return_value_policy::reference);
         m.def("caffe2ImageDecoderShard", &rocalJpegCaffe2LMDBRecordSourceSingleShard,"Reads file from the source given and decodes it according to the shard id and number of shards",
             py::return_value_policy::reference);
@@ -513,13 +513,15 @@ namespace rocal{
             py::return_value_policy::reference);
         m.def("tfImageDecoderRaw", &rocalRawTFRecordSource,"Reads file from the source given and decodes it according to the policy only for TFRecords",
               py::return_value_policy::reference);
-        m.def("cifar10Decoder", &rocalRawCIFAR10Source,"Reads file from the source given and decodes it according to the policy only for TFRecords",
+        m.def("cifar10Decoder", &rocalRawCIFAR10Source,"Reads file from the source given and decodes it according to the policy",
               py::return_value_policy::reference);
         m.def("videoDecoder", &rocalVideoFileSource, "Reads videos from the source given and decodes it according to the policy only for videos as inputs",
             py::return_value_policy::reference);
         m.def("videoDecoderResize", &rocalVideoFileResize, "Reads videos from the source given and decodes it according to the policy only for videos as inputs. Resizes the decoded frames to the dest width and height.",
             py::return_value_policy::reference);
         m.def("sequenceReader", &rocalSequenceReader, "Creates JPEG image reader and decoder. Reads [Frames] sequences from a directory representing a collection of streams.",
+            py::return_value_policy::reference);
+        m.def("mxnetDecoder", &rocalMXNetRecordSourceSingleShard, "Reads file from the source given and decodes it according to the policy only for mxnet records",
             py::return_value_policy::reference);
         m.def("rocalResetLoaders", &rocalResetLoaders);
         m.def("videoMetaDataReader", &rocalCreateVideoLabelReader, py::return_value_policy::reference);

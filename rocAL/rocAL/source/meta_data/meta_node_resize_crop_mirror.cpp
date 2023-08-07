@@ -44,7 +44,7 @@ void ResizeCropMirrorMetaNode::update_parameters(pMetaDataBatch input_meta_data,
     _x1 = _meta_crop_param->x1_arr;
     _y1 = _meta_crop_param->y1_arr;
     _x2 = _meta_crop_param->x2_arr;
-    _y2 = _meta_crop_param->y2_arr;    
+    _y2 = _meta_crop_param->y2_arr;
     vxCopyArrayRange((vx_array)_x1, 0, _batch_size, sizeof(uint),_x1_val.data(), VX_READ_ONLY, VX_MEMORY_TYPE_HOST);
     vxCopyArrayRange((vx_array)_y1, 0, _batch_size, sizeof(uint),_y1_val.data(), VX_READ_ONLY, VX_MEMORY_TYPE_HOST);
     vxCopyArrayRange((vx_array)_x2, 0, _batch_size, sizeof(uint),_x2_val.data(), VX_READ_ONLY, VX_MEMORY_TYPE_HOST);
@@ -68,7 +68,7 @@ void ResizeCropMirrorMetaNode::update_parameters(pMetaDataBatch input_meta_data,
         crop_box.r = _x2_val[i] ;
         crop_box.b = _y2_val[i];
         for(uint j = 0; j < bb_count; j++)
-        {            
+        {
             if (BBoxIntersectionOverUnion(box_coords_buf[j], crop_box) >= _iou_threshold)
             {
                 float xA = std::max(crop_box.l, box_coords_buf[j].l);
@@ -94,8 +94,8 @@ void ResizeCropMirrorMetaNode::update_parameters(pMetaDataBatch input_meta_data,
         {
             temp_box.l = 0;
             temp_box.t = 0;
-	        temp_box.r = _crop_w;
-	        temp_box.b = _crop_h;
+            temp_box.r = _crop_w;
+            temp_box.b = _crop_h;
             bb_coords.push_back(temp_box);
             bb_labels.push_back(0);
         }

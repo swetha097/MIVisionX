@@ -114,11 +114,12 @@ class ROCALGenericIteratorDetection(object):
             self.bboxes = self.loader.get_bounding_box_cords()
             # 1D Image sizes array of image in a batch
             self.img_size = np.zeros((self.bs * 2), dtype="int32")
-            self.num_bboxes_list = [len(box) for box in self.bboxes]
+            self.num_bboxes_list = []
             self.loader.get_img_sizes(self.img_size)
             for i in range(self.bs):
                 self.label_2d_numpy = np.reshape(self.labels[i], (-1, 1)).tolist()
                 self.bb_2d_numpy = np.reshape(self.bboxes[i], (-1, 4)).tolist()
+                self.num_bboxes_list.append(len(self.bboxes[i]))
                 self.label_list.append(self.label_2d_numpy)
                 self.bbox_list.append(self.bb_2d_numpy)
 
