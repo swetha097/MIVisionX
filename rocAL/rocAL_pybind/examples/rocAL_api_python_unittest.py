@@ -83,8 +83,8 @@ def main():
     random_seed = args.seed
     local_rank = args.local_rank
     world_size = args.world_size
-    interpolation_type = INTERPOLATION_TYPES[args.interpolation_type]
-    scaling_mode = SCALING_MODES[args.scaling_mode]
+    interpolation_type = INTERPOLATION_TYPES[args.resize_interpolation_type]
+    scaling_mode = SCALING_MODES[args.resize_scaling_mode]
     if (scaling_mode != types.SCALING_MODE_DEFAULT and interpolation_type !=
             types.LINEAR_INTERPOLATION):
         interpolation_type = types.LINEAR_INTERPOLATION
