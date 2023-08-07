@@ -21,17 +21,9 @@ THE SOFTWARE.
 */
 
 #include "meta_node_resize.h"
-void ResizeMetaNode::initialize()
-{
-    _src_height_val.resize(_batch_size);
-    _src_width_val.resize(_batch_size);
-    _dst_width_val.resize(_batch_size);
-    _dst_height_val.resize(_batch_size);
-}
+
 void ResizeMetaNode::update_parameters(pMetaDataBatch input_meta_data, pMetaDataBatch output_meta_data)
 {
-    initialize();
-    std::cerr<<"\n check metanode update parameters ";
     if(_batch_size != input_meta_data->size())
     {
         _batch_size = input_meta_data->size();
@@ -40,8 +32,8 @@ void ResizeMetaNode::update_parameters(pMetaDataBatch input_meta_data, pMetaData
     auto output_roi = _node->get_dst_roi();
     for (int i = 0; i < _batch_size; i++)
     {
-        _dst_to_src_width_ratio = float(output_roi[i].x2) / float(input_roi[i].x2);
-        _dst_to_src_height_ratio = float(output_roi[i].y2) / float(input_roi[i].y2);
+        _dst_to_src_width_ratio = static_cast<float>(output_roi[i].x2) / static_cast<float>(input_roi[i].x2);
+        _dst_to_src_height_ratio = static_cast<float>(output_roi[i].y2) / static_cast<float>(input_roi[i].y2);
         unsigned bb_count = input_meta_data->get_labels_batch()[i].size();
         BoundingBoxCords coords_buf = input_meta_data->get_bb_cords_batch()[i];
         Labels labels_buf = input_meta_data->get_labels_batch()[i];   

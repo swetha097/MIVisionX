@@ -273,7 +273,7 @@ ROCAL_API_CALL rocalGetOneHotImageLabels(RocalContext p_context, void* buf, int 
 
     for(uint i = 0; i < meta_data_batch_size; i++)
     {
-        int label_index =  labels_buf[i];
+        int label_index = labels_buf[i];
         if (label_index >0 && label_index<= numOfClasses )
         {
         one_hot_encoded[(i*numOfClasses)+label_index-1]=1;
