@@ -131,6 +131,17 @@ private:
     void notify_user_thread();
     /// no_more_processed_data() is logically linked to the notify_user_thread() and is used to tell the user they've already consumed all the processed images
     bool no_more_processed_data();
+    void merge_row(int* in1, int* in2,int* out1,int* out2, unsigned n);
+    void filter_by_label(int* in_row, int* out_row, unsigned N, int label);
+    int compact_rows(int* in, unsigned height, unsigned width);
+    void label_row(int* in_row,int* label_base,int* out_row, unsigned length);
+    void get_label_boundingboxes(std::vector<std::vector<std::pair<unsigned,unsigned>>> &boxes,
+                                std::vector<std::pair<unsigned,unsigned>> ranges,
+                                std::vector<unsigned> hits,
+                                int* in,
+                                std::vector<unsigned> origin,
+                                unsigned width);
+    bool hit(std::vector<unsigned>& hits, unsigned idx);
     RingBuffer _ring_buffer;//!< The queue that keeps the images that have benn processed by the internal thread (_output_thread) asynchronous to the user's thread
     MetaDataBatch* _augmented_meta_data = nullptr;//!< The output of the meta_data_graph,
     CropCordBatch* _random_bbox_crop_cords_data = nullptr;

@@ -80,7 +80,7 @@ int64_t MasterGraph::find_pixel(std::vector<int> start, std::vector<int> foregro
     return start[id] + (val - foreground_count[id]);
 }
 
-void MergeRow(int* in1, int* in2,int* out1,int* out2, unsigned n) {
+void MasterGraph::merge_row(int* in1, int* in2,int* out1,int* out2, unsigned n) {
     int bg_label = -1;
     int prev1 = bg_label;
     int prev2 = bg_label;
@@ -115,13 +115,13 @@ void MergeRow(int* in1, int* in2,int* out1,int* out2, unsigned n) {
     }
 }
 
-void FilterByLabel(int* in_row, int* out_row, unsigned N, int label) {
+void MasterGraph::filter_by_label(int* in_row, int* out_row, unsigned N, int label) {
     for (unsigned i = 0; i < N; i++) {
         out_row[i] = in_row[i] == label;
     }
 }
 
-int CompactRows(int* in, unsigned height, unsigned width) {
+int MasterGraph::compact_rows(int* in, unsigned height, unsigned width) {
     std::map<int,int> labelmap;
     int counter = 0;
     for (unsigned i = 0; i < height; i++) {
@@ -163,7 +163,7 @@ int CompactRows(int* in, unsigned height, unsigned width) {
     return counter;
 }
 
-void LabelRow(int* in_row,int* label_base,int* out_row, unsigned length) {
+void MasterGraph::label_row(int* in_row,int* label_base,int* out_row, unsigned length) {
     int curr_label = -1;
     int bg_label = -1;
     int prev = 0;
@@ -180,7 +180,7 @@ void LabelRow(int* in_row,int* label_base,int* out_row, unsigned length) {
     }
 }
 
-bool hit(std::vector<unsigned>& hits, unsigned idx) {    
+bool MasterGraph::hit(std::vector<unsigned>& hits, unsigned idx) {    
     unsigned flag = (1u << (idx&31));
     unsigned &h = hits[idx >> 5];
     bool ret = h & flag;
@@ -188,12 +188,12 @@ bool hit(std::vector<unsigned>& hits, unsigned idx) {
     return ret;
 }
 
-void GetLabelBoundingBoxes(std::vector<std::vector<std::pair<unsigned,unsigned>>> &boxes,
-                           std::vector<std::pair<unsigned,unsigned>> ranges,
-                           std::vector<unsigned> hits,
-                           int* in,
-                           std::vector<unsigned> origin,
-                           unsigned width) {
+void MasterGraph::get_label_boundingboxes(std::vector<std::vector<std::pair<unsigned,unsigned>>> &boxes,
+                                        std::vector<std::pair<unsigned,unsigned>> ranges,
+                                        std::vector<unsigned> hits,
+                                        int* in,
+                                        std::vector<unsigned> origin,
+                                        unsigned width) {
     for (auto &mask : hits) {
         mask = 0u;  // mark all labels as not found in this row
     }
@@ -283,20 +283,20 @@ rocalTensorList*  MasterGraph::get_random_object_bbox(rocalTensorList* input, Ra
         int label_selected = (*it);
         int* in_filtered_buffer = (int*)malloc(buffer_size * sizeof(int));
         int* out_mask_buffer = (int*)malloc(buffer_size * sizeof(int));
-        FilterByLabel(in_mask_buffer, in_filtered_buffer, buffer_size, label_selected);
+        filter_by_label(in_mask_buffer, in_filtered_buffer, buffer_size, label_selected);
         unsigned height = input->at(id)->info().dims().at(0);
         unsigned width = input->at(id)->info().dims().at(1);
         int* in_filtered_row = in_filtered_buffer;
         int* out_row = out_mask_buffer;
         for (unsigned i = 0; i < height; i ++) {
-            LabelRow(in_filtered_row, out_mask_buffer, out_row, width);
+            label_row(in_filtered_row, out_mask_buffer, out_row, width);
             if (i >= 1) {
-                MergeRow(in_filtered_row-width, in_filtered_row, out_row-width, out_row, width);
+                merge_row(in_filtered_row-width, in_filtered_row, out_row-width, out_row, width);
             }
             in_filtered_row += width;
             out_row += width;
         }
-        int nbox = CompactRows(out_mask_buffer, height, width);
+        int nbox = compact_rows(out_mask_buffer, height, width);
         std::vector<std::vector<std::pair<unsigned,unsigned>>> boxes;
         std::vector<std::pair<unsigned,unsigned>> ranges;
         std::vector<unsigned> hits;
@@ -305,7 +305,7 @@ rocalTensorList*  MasterGraph::get_random_object_bbox(rocalTensorList* input, Ra
         hits.resize((nbox / 32 + !!(nbox % 32)));
         out_row = out_mask_buffer;
         for (unsigned i = 0; i < height; i++) {
-            GetLabelBoundingBoxes(boxes, ranges, hits, out_row, std::vector<unsigned>{i,0}, width); 
+            get_label_boundingboxes(boxes, ranges, hits, out_row, std::vector<unsigned>{i,0}, width); 
             out_row += width;   
         }
         std::uniform_int_distribution<int> dist_nbox(0, nbox-1);
