@@ -319,11 +319,11 @@ class ROCALAudioIterator(object):
         self.device_id = device_id
         self.output = None
         self.len = b.getRemainingImages(self.loader._handle)
-        # self.last_batch_policy = self.loader._last_batch_policy #commented for now
+
+        self.last_batch_policy = self.loader._last_batch_policy
         self.shard_size = size
         self.auto_reset = auto_reset
         self.batch_count = 0
-        self.audio_length = None
         self.samples = None
         self.channels = None
         self.max_shape = None
@@ -333,30 +333,43 @@ class ROCALAudioIterator(object):
         return self.__next__()
 
     def __next__(self):
-        if self.loader.rocalRun() != 0:
+        if self.loader.rocalRun() != 0 and self.shard_size < 0:
+            if self.auto_reset:
+                self.reset()
+            raise StopIteration
+
+        elif self.shard_size > 0 and self.batch_count >= self.shard_size :
+            if self.auto_reset:
+                self.reset()
             raise StopIteration
         else:
             self.output_tensor_list = self.loader.getOutputTensors()
 
+        self.last_batch_padded_size = b.getLastBatchPaddedSize(self.loader._handle)
+        self.last_batch_size = self.batch_size - self.last_batch_padded_size
         self.batch_count = self.batch_count + self.batch_size
         self.num_of_dims = self.output_tensor_list[0].num_of_dims()
         if self.num_of_dims == 3:
-            self.batch_size = self.output_tensor_list[0].batch_size() if self.batch_size is None else self.batch_size
             self.max_shape = self.output_tensor_list[0].max_shape() if self.max_shape is None else self.max_shape
             self.channels = self.max_shape[0]
             self.samples = self.max_shape[1]
-            roi = self.output_tensor_list[0].get_rois().reshape(self.batch_size, 4)
-            max_x1 = np.max(roi[..., 0:1])
-            max_y1 = np.max(roi[..., 1:2])
-            self.output = torch.empty((self.batch_size, max_y1, max_x1), dtype=torch.float32)
+            roi = self.output_tensor_list[0].get_rois().reshape(self.batch_size,4)
+            max_x1 = np.max(roi[...,0:1])
+            max_y1 = np.max(roi[...,1:2])
+            self.output = torch.empty((self.batch_size, max_y1, max_x1,), dtype=torch.float32)
 
             self.labels = self.loader.getImageLabels()
             self.labels_tensor = torch.from_numpy(self.labels).type(torch.LongTensor)
 
-            self.output_tensor_list[0].copy_data(ctypes.c_void_p(self.output.data_ptr()), max_y1, max_x1) #Copy only for only the max_samples * max_channels per batch
-            return self.output, self.labels_tensor, torch.tensor(roi[..., 0:2])
+            if (self.last_batch_policy is (types.LAST_BATCH_PARTIAL)) and b.getRemainingImages(self.loader._handle) <= 0 :
+                self.output_tensor_list[0].copy_data(ctypes.c_void_p(self.output.data_ptr()), max_y1, max_x1)
+                return self.output[0:self.last_batch_size,:], self.labels_tensor[0:self.last_batch_size], torch.tensor(self.output_tensor_list[0].get_rois().reshape(self.batch_size,4)[...,0:2][0:self.last_batch_size,:])
+            else:
+                self.output_tensor_list[0].copy_data(ctypes.c_void_p(self.output.data_ptr()), max_y1, max_x1)
+                return self.output, self.labels_tensor, torch.tensor(self.output_tensor_list[0].get_rois().reshape(self.batch_size,4)[...,0:2])
 
     def reset(self):
+        self.batch_count = 0
         b.rocalResetLoaders(self.loader._handle)
 
     def __iter__(self):

@@ -37,8 +37,6 @@ void UniformDistributionNode::create_node() {
   _stride[0] = sizeof(float);
   _stride[1] = _stride[0] * _outputs[0]->info().dims()[0];
   _stride[2] = _stride[1] * _outputs[0]->info().dims()[1];
-  vx_status status;
-
   for (uint i = 0; i < _batch_size; i++) {
     update_param();
     _uniform_distribution_array[i] = _dist_uniform(_rngs[i]);
