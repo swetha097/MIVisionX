@@ -2496,19 +2496,21 @@ rocalResample(RocalContext p_context,
     auto context = static_cast<Context*>(p_context);
     auto input = static_cast<Tensor*>(p_input);
     auto input_resample_rate = static_cast<Tensor*>(p_input_resample_rate);
-    RocalTensorDataType op_tensorDataType;
+    RocalTensorDataType op_tensor_data_type;
     try {
-        int layout=0;
         TensorInfo output_info = input->info();
-        RocalTensorDataType op_tensorDataType = (RocalTensorDataType)rocal_tensor_output_datatype;
+        op_tensor_data_type = (RocalTensorDataType)rocal_tensor_output_datatype;
         output_info.set_tensor_layout(RocalTensorlayout::NONE);
-        output_info.set_data_type(op_tensorDataType);
+        output_info.set_data_type(op_tensor_data_type);
         if(sample_hint > 0) {
             std::vector<size_t> max_dims = output_info.max_shape();
             std::vector<size_t> dims = output_info.dims();
             dims[1] = std::ceil(sample_hint);
             dims[2] = max_dims[1];
             output_info.set_dims(dims);
+        }
+        else {
+            THROW("Please pass a valid resample hint")
         }
         resampled_output = context->master_graph->create_tensor(output_info, is_output);
         resampled_output->reset_tensor_roi();
@@ -2531,13 +2533,13 @@ RocalTensor rocalTensorMulScalar(RocalContext p_context,
     Tensor* output = nullptr;
     auto context = static_cast<Context*>(p_context);
     auto input = static_cast<Tensor*>(p_input);
-    RocalTensorDataType op_tensorDataType;
+    RocalTensorDataType op_tensor_data_type;
     try {
         std::cerr << "Here in Op overl";
-         RocalTensorDataType op_tensorDataType = (RocalTensorDataType)rocal_tensor_output_type;
+        op_tensor_data_type = (RocalTensorDataType)rocal_tensor_output_type;
         TensorInfo output_info = input->info();
         output_info.set_tensor_layout(RocalTensorlayout::NONE);
-        output_info.set_data_type(op_tensorDataType);
+        output_info.set_data_type(op_tensor_data_type);
         output = context->master_graph->create_tensor(output_info, is_output);
         context->master_graph->add_node<TensorMulScalarNode>({input}, {output})->init(scalar);
     }
@@ -2559,13 +2561,11 @@ RocalTensor rocalTensorAddTensor(RocalContext p_context,
     auto context = static_cast<Context*>(p_context);
     auto input1 = static_cast<Tensor*>(p_input1);
     auto input2 = static_cast<Tensor*>(p_input2);
-    RocalTensorlayout op_tensorLayout;
-    RocalTensorDataType op_tensorDataType;
+    RocalTensorDataType op_tensor_data_type;
     try {
-        int layout=0;
-        RocalTensorDataType op_tensorDataType = (RocalTensorDataType)rocal_tensor_output_datatype;
+        op_tensor_data_type = (RocalTensorDataType)rocal_tensor_output_datatype;
         TensorInfo output_info = input1->info();
-        output_info.set_data_type(op_tensorDataType);
+        output_info.set_data_type(op_tensor_data_type);
         output_info.set_tensor_layout(RocalTensorlayout::NONE);
         output = context->master_graph->create_tensor(output_info, is_output);
         context->master_graph->add_node<TensorAddTensorNode>({input1,input2}, {output})->init();

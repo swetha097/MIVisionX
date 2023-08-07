@@ -71,7 +71,10 @@ def main():
             normalized_shape=False,
             axes=[0],
             rocal_tensor_output_type=types.FLOAT)
-        pre_emphasis_filter = fn.preemphasis_filter(trim_silence)
+        normal_distribution = fn.random.normal(audio_decode, mean=0.0, stddev=0.0000001)
+        newAudio = normal_distribution * 0.00001
+        dist_audio = trim_silence + newAudio
+        pre_emphasis_filter = fn.preemphasis_filter(dist_audio)
         spec = fn.spectrogram(
             pre_emphasis_filter,
             nfft=512,
