@@ -36,21 +36,19 @@ void ResampleNode::create_node() {
     if(status != 0 ) 
         THROW("vxAddArrayItems for _src_sample_rate_array failed in the Resample Node (vxExtRppResample) :" + TOSTR(status))
     vx_scalar quality = vxCreateScalar(vxGetContext((vx_reference)_graph->get()), VX_TYPE_FLOAT32, &_quality);
-    vx_scalar _max_dst_width_scalar = vxCreateScalar(vxGetContext((vx_reference)_graph->get()), VX_TYPE_UINT32, &_max_dst_width);
-    _node = vxExtRppResample(_graph->get(), _inputs[0]->handle(), _outputs[0]->handle(), _src_tensor_roi, _dst_tensor_roi, _resample_rate->handle(), 
-                             _src_sample_rate_array, quality, _max_dst_width_scalar);
+    _node = vxExtRppResample(_graph->get(), _inputs[0]->handle(), _outputs[0]->handle(), _src_tensor_roi, _dst_tensor_roi, 
+                            _resample_rate->handle(), _src_sample_rate_array, quality);
     if((status = vxGetStatus((vx_reference)_node)) != VX_SUCCESS) 
         THROW("Adding the copy (vxExtRppResample) node failed: "+ TOSTR(status))
 }
 
 void ResampleNode::update_node() {
-    vx_status src_roi_status = vxCopyArrayRange((vx_array)_src_sample_rate_array, 0, _batch_size , sizeof(vx_float32), _inputs[0]->info().get_sample_rate()->data(), VX_WRITE_ONLY, VX_MEMORY_TYPE_HOST);
-    if((src_roi_status) != 0) 
-        THROW(" Failed calling vxCopyArrayRange with status in Resample Node (vxExtRppResample) :" + TOSTR(src_roi_status) )
+    vx_status status = vxCopyArrayRange((vx_array)_src_sample_rate_array, 0, _batch_size , sizeof(vx_float32), _inputs[0]->info().get_sample_rate()->data(), VX_WRITE_ONLY, VX_MEMORY_TYPE_HOST);
+    if((status) != 0) 
+        THROW(" Failed calling vxCopyArrayRange for _src_sample_rate_array with status in Resample Node (vxExtRppResample) :" + TOSTR(status) )
 }
 
 void ResampleNode::init(Tensor* resample_rate, float quality) {
     _resample_rate = resample_rate;
     _quality = quality;
-    _max_dst_width = 0;
 }

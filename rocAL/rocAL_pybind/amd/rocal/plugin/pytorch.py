@@ -345,7 +345,6 @@ class ROCALAudioIterator(object):
             self.max_shape = self.output_tensor_list[0].max_shape() if self.max_shape is None else self.max_shape
             self.channels = self.max_shape[0]
             self.samples = self.max_shape[1]
-            self.audio_length = self.channels * self.samples if self.audio_length is None else self.audio_length
             roi = self.output_tensor_list[0].get_rois().reshape(self.batch_size, 4)
             max_x1 = np.max(roi[..., 0:1])
             max_y1 = np.max(roi[..., 1:2])
@@ -354,7 +353,7 @@ class ROCALAudioIterator(object):
             self.labels = self.loader.getImageLabels()
             self.labels_tensor = torch.from_numpy(self.labels).type(torch.LongTensor)
 
-            self.output_tensor_list[0].copy_data(ctypes.c_void_p(self.output.data_ptr()), max_y1, max_x1)
+            self.output_tensor_list[0].copy_data(ctypes.c_void_p(self.output.data_ptr()), max_y1, max_x1) #Copy only for only the max_samples * max_channels per batch
             return self.output, self.labels_tensor, torch.tensor(roi[..., 0:2])
 
     def reset(self):

@@ -2705,8 +2705,7 @@ VX_API_ENTRY vx_node VX_API_CALL vxExtRppNormalize(vx_graph graph, vx_tensor pSr
 }
 
 VX_API_ENTRY vx_node VX_API_CALL vxExtRppResample(vx_graph graph, vx_tensor pSrc, vx_tensor pDst, vx_tensor srcDims, vx_tensor dstDims,
-                                                  vx_tensor outRateTensor, vx_array inRateTensor, 
-                                                  vx_scalar quality, vx_scalar maxDstWidth)
+                                                  vx_tensor outRateTensor, vx_array inRateTensor, vx_scalar quality)
 {
     vx_node node = NULL;
     vx_context context = vxGetContext((vx_reference)graph);
@@ -2722,9 +2721,8 @@ VX_API_ENTRY vx_node VX_API_CALL vxExtRppResample(vx_graph graph, vx_tensor pSrc
             (vx_reference)outRateTensor,
             (vx_reference)inRateTensor,
             (vx_reference)quality,
-            (vx_reference)maxDstWidth,
             (vx_reference)deviceType};
-        node = createNode(graph, VX_KERNEL_RPP_RESAMPLE, params, 9);
+        node = createNode(graph, VX_KERNEL_RPP_RESAMPLE, params, 8);
     }
     return node;
 }

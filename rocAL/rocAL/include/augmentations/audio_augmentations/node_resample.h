@@ -36,8 +36,6 @@ protected:
 private:
     Tensor* _resample_rate;
     float _quality;
-    uint _max_dst_width;
-    vx_scalar _max_dst_width_scalar;
     vx_array _src_sample_rate_array;
     std::vector<unsigned> _src_frames, _src_channels;
 
