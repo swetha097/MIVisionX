@@ -31,11 +31,6 @@ public:
     FlipNode() = delete;
     void init(int h_flag, int v_flag);
     void init(IntParam *h_flag_param, IntParam *v_flag_param);
-    unsigned int get_dst_width() { return _outputs[0]->info().max_shape()[0]; }
-    unsigned int get_dst_height() { return _outputs[0]->info().max_shape()[1]; }
-    vx_array get_src_width() { return _src_roi_width; }
-    RocalROI *get_src_roi() { return _outputs[0]->info().get_roi(); }
-    vx_array get_src_height() { return _src_roi_height; }
     vx_array get_horizontal_flip() { return _horizontal.default_array(); }
     vx_array get_vertical_flip() { return _vertical.default_array(); }
 protected:
