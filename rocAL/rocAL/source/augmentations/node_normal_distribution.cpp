@@ -51,7 +51,7 @@ void NormalDistributionNode::update_node() {
     _normal_distribution_array[i] = _dist_normal(_rngs[i]);
     }
     if(status != 0)
-        THROW("ERROR: vxCopyArrayRange failed in the pad node (vxExtrppNode_Slice)  node: "+ TOSTR(status))
+        THROW("ERROR: vxCopyArrayRange failed in the Normal Distribution Node: "+ TOSTR(status))
 }
 
 void NormalDistributionNode::update_param() {
