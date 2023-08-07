@@ -202,7 +202,7 @@ int test(int test_case, int reader_type, int pipeline_type, const char *path, co
                 input1 = rocalJpegCOCOFileSource(handle, path, json_path, color_format, num_threads, false, true, false);
             else
                 input1 = rocalJpegCOCOFileSource(handle, path, json_path, color_format, num_threads, true, true, false, ROCAL_USE_MAX_SIZE_RESTRICTED, decode_max_width, decode_max_height);
-            //rocalSetRandomPixelMaskConfig(handle,true);
+            rocalSetRandomPixelMaskConfig(handle,true);
         }
         break;
         case 3: //coco detection partial
@@ -460,6 +460,16 @@ int test(int test_case, int reader_type, int pipeline_type, const char *path, co
                 for(int i =0; i < bbox_labels->size(); i++) {
                     unsigned int *mask_buffer = (unsigned int *)(output->at(i)->buffer());
                     int mask_size = output->at(i)->info().dims().at(0);
+                    for (int j = 0; j < mask_size; j++) {
+                        std::cerr << mask_buffer[j] << "\t";
+                    }
+                    std::cerr << std::endl;
+                }
+                std::cout << "\n>>>>> RANDOM OBJECT BBOX:" << std::endl;
+                RocalTensorList output_bbox = RocalRandomObjectBBox(handle, RocalRandomObjectBBoxFormat::ROCAL_OUT_BOX);
+                for(int i =0; i < bbox_labels->size(); i++) {
+                    unsigned int *mask_buffer = (unsigned int *)(output_bbox->at(i)->buffer());
+                    int mask_size = output_bbox->at(i)->info().dims().at(0);
                     for (int j = 0; j < mask_size; j++) {
                         std::cerr << mask_buffer[j] << "\t";
                     }

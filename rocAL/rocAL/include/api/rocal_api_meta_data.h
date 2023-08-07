@@ -109,7 +109,7 @@ extern "C" void ROCAL_API_CALL rocalGetImageName(RocalContext rocal_context,  ch
 
 extern "C" void ROCAL_API_CALL rocalSetRandomPixelMaskConfig(RocalContext p_context, bool is_foreground=false, unsigned int value=0, bool is_threshold=true);
 
-
+extern "C" RocalTensorList ROCAL_API_CALL RocalRandomObjectBBox(RocalContext p_context, RocalRandomObjectBBoxFormat format);
 ///
 /// \param rocal_context
 /// \param buf user buffer provided to be filled with output image names for images in the output batch.

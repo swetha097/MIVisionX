@@ -43,6 +43,7 @@ THE SOFTWARE.
 #include "box_encoder_hip.h"
 #endif
 #include "randombboxcrop_meta_data_reader.h"
+#include "seedRNG.h"
 #define MAX_STRING_LENGTH 100
 #define MAX_OBJECTS 50 // Max number of objects/image in COCO dataset is 93
 #define BBOX_COUNT 4
@@ -95,7 +96,7 @@ public:
                                               std::vector<std::vector<int>> &sel_vertices_counts,
                                               std::vector<std::vector<int>> &sel_mask_ids,
                                               bool reindex_mask);
-    rocalTensorList *  get_random_work(rocalTensorList* input);
+    rocalTensorList * get_random_object_bbox(rocalTensorList* input, RandomObjectBBoxFormat format);
     rocalTensorList * labels_meta_data();
     rocalTensorList * bbox_labels_meta_data();
     rocalTensorList * bbox_meta_data();

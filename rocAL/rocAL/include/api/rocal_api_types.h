@@ -82,6 +82,13 @@ enum RocalFlipAxis
     ROCAL_FLIP_VERTICAL = 1
 };
 
+enum RocalRandomObjectBBoxFormat
+{
+    ROCAL_OUT_BOX = 0,
+    ROCAL_OUT_ANCHORSHAPE = 1,
+    ROCAL_OUT_STARTEND = 2,
+};
+
 enum RocalImageSizeEvaluationPolicy
 {
     ROCAL_USE_MAX_SIZE = 0,
