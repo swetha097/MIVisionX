@@ -57,9 +57,9 @@ static vx_status VX_CALLBACK refreshNonSilentRegion(vx_node node, const vx_refer
         STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[2], VX_TENSOR_BUFFER_HOST, &data->pDst1, sizeof(data->pDst1)));
         STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[3], VX_TENSOR_BUFFER_HOST, &data->pDst2, sizeof(data->pDst2)));
     }
-    data->pSrcRoi = reinterpret_cast<RpptROI *>(roi_tensor_ptr);
+    RpptROI *src_roi = reinterpret_cast<RpptROI *>(roi_tensor_ptr);
     for (unsigned i = 0; i < data->inputTensorDims[0]; i++)
-        data->pSrcLength[i] = static_cast<int>(data->pSrcRoi[i].xywhROI.xy.x);
+        data->pSrcLength[i] = static_cast<int>(src_roi[i].xywhROI.xy.x);
 
     return status;
 }

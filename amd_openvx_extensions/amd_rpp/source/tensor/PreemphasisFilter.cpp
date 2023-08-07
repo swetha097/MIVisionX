@@ -36,8 +36,6 @@ struct PreemphasisFilterLocalData
     vx_float32 magnitudeReference;
     RpptDescPtr pSrcDesc;
     RpptDescPtr pDstDesc;
-    RpptROI *pSrcRoi;
-    RpptROI *pDstRoi;
     Rpp32u *sampleSize;
     size_t inputTensorDims[NUM_OF_DIMS];
     size_t outputTensorDims[NUM_OF_DIMS];
@@ -51,10 +49,10 @@ struct PreemphasisFilterLocalData
 #endif
 };
 
-void update_destination_roi(const vx_reference *parameters, PreemphasisFilterLocalData *data) {
+void update_destination_roi(const vx_reference *parameters, PreemphasisFilterLocalData *data, RpptROI *src_roi, RpptROI *dst_roi) {
     for (uint i=0; i < data->pSrcDesc->n; i++) {
-        data->pDstRoi[i].xywhROI.xy.x = data->pSrcRoi[i].xywhROI.xy.x;
-        data->pDstRoi[i].xywhROI.xy.y = data->pSrcRoi[i].xywhROI.xy.y;
+        dst_roi.xywhROI.xy.x = src_roi.xywhROI.xy.x;
+        dst_roi.xywhROI.xy.y = src_roi.xywhROI.xy.y;
     }
 }
 
@@ -81,12 +79,12 @@ static vx_status VX_CALLBACK refreshPreemphasisFilter(vx_node node, const vx_ref
         STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[2], VX_TENSOR_BUFFER_HOST, &roi_tensor_ptr_src, sizeof(roi_tensor_ptr_src)));
         STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[3], VX_TENSOR_BUFFER_HOST, &roi_tensor_ptr_dst, sizeof(roi_tensor_ptr_dst)));
     }
-        data->pSrcRoi = reinterpret_cast<RpptROI *>(roi_tensor_ptr_src);
-        data->pDstRoi = reinterpret_cast<RpptROI *>(roi_tensor_ptr_dst);
+        RpptROI *src_roi = reinterpret_cast<RpptROI *>(roi_tensor_ptr_src);
+        RpptROI *dst_roi = reinterpret_cast<RpptROI *>(roi_tensor_ptr_dst);
         // TODO: Can we remove this for loop and move the calculation of number of samples inside the update_destination_roi ?
         for(int n =  data->inputTensorDims[0] - 1; n >= 0; n--)
-            data->sampleSize[n] = data->pSrcRoi[n].xywhROI.xy.x * data->pSrcRoi[n].xywhROI.xy.y;
-        update_destination_roi(parameters, data);
+            data->sampleSize[n] = src_roi[n].xywhROI.xy.x * src_roi[n].xywhROI.xy.y;
+        update_destination_roi(parameters, data, src_roi, dst_roi);
     return status;
 }
 
