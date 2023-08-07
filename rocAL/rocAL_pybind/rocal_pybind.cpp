@@ -342,15 +342,15 @@ namespace rocal{
             .def_readwrite("process_time", &TimingInfo::process_time)
             .def_readwrite("transfer_time", &TimingInfo::transfer_time);
         py::class_<rocalTensor>(m, "rocalTensor")
-            .def( // TODO: Swetha - Add rmul, add, radd
-                "__mul__",
-                [](rocalTensor *output_tensor, uint scalar)
+            .def(
+                "__add__",
+                [](rocalTensor *output_tensor, rocalTensor *output_tensor1)
                 {
-                    std::cerr << "HERE in __MUL__ in rocal_pybind unit dtype";
-                    return output_tensor;
+                    py::object fn_module = py::module::import("amd.rocal.fn");
+                    auto fn_function_call = fn_module.attr("tensor_add_tensor_float")(output_tensor, output_tensor1).cast<RocalTensor>();
+                    return fn_function_call;
                 },
                 R"code(
-                Returns a tensor
                 Adds a node for arithmetic operation
                 )code", py::return_value_policy::reference
             )
@@ -358,7 +358,6 @@ namespace rocal{
                 "__mul__",
                 [](rocalTensor *output_tensor, float scalar)
                 {
-                    std::cerr << "HERE in __MUL__ in rocal_pybind for float -----------------";
                     py::object fn_module = py::module::import("amd.rocal.fn");
                     auto fn_function_call = fn_module.attr("tensor_mul_scalar_float")(output_tensor, "scalar"_a=scalar).cast<RocalTensor>();
                     return fn_function_call;
