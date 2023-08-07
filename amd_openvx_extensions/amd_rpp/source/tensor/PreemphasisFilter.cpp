@@ -51,8 +51,8 @@ struct PreemphasisFilterLocalData
 
 void update_destination_roi(const vx_reference *parameters, PreemphasisFilterLocalData *data, RpptROI *src_roi, RpptROI *dst_roi) {
     for (uint i=0; i < data->pSrcDesc->n; i++) {
-        dst_roi.xywhROI.xy.x = src_roi.xywhROI.xy.x;
-        dst_roi.xywhROI.xy.y = src_roi.xywhROI.xy.y;
+        dst_roi->xywhROI.xy.x = src_roi->xywhROI.xy.x;
+        dst_roi->xywhROI.xy.y = src_roi->xywhROI.xy.y;
     }
 }
 
