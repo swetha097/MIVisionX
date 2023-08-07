@@ -29,87 +29,55 @@ THE SOFTWARE.
 #include <immintrin.h>
 #endif
 
-#define NUM_OF_DIMS 5
 struct TensorAddTensorLocalData
 {
-    Rpp32u device_type;
+    Rpp32u deviceType;
     Rpp32u nbatchSize;
     RppPtr_t pSrc1;
     RppPtr_t pSrc2;
     RppPtr_t pDst;
     int *srcDims1;
     int *srcDims2;
-    void* roi_tensor_ptr_src;
-    RpptROI* roi_ptr_src;
-    void* roi_tensor_ptr_dst;
-    RpptROI* roi_ptr_dst;
-    RpptROI *roi_tensor_ptr1;
-    RpptROI *roi_tensor_ptr2;
-    size_t in_tensor_dims1[NUM_OF_DIMS];
-    size_t in_tensor_dims2[NUM_OF_DIMS];
-    size_t out_tensor_dims[NUM_OF_DIMS];
-    size_t tensor_size;
-    vx_enum in_tensor_type;
-    vx_enum out_tensor_type;
-#if ENABLE_HIP
-    void *pSrc_dev1;
-    void *pSrc_dev2;
-    void *pDst_dev;
-#endif
+    RpptROI* pSrcRoi;
+    RpptROI* pDstRoi;
+    size_t inputTensorDims1[RPP_MAX_TENSOR_DIMS];
+    size_t inputTensorDims2[RPP_MAX_TENSOR_DIMS];
+    vx_enum inTensorType;
+    vx_enum outTensorType;
 };
 
-void update_destination_roi(const vx_reference *parameters, TensorAddTensorLocalData *data)
-{
-    data->roi_ptr_dst = (RpptROI *)data->roi_tensor_ptr_dst;
-    data->roi_ptr_src = (RpptROI *)data->roi_tensor_ptr_src;
-    for (uint i=0; i < data->nbatchSize; i++)
-    {
-        data->roi_ptr_dst[i].xywhROI.xy.x = data->roi_ptr_src[i].xywhROI.xy.x;
-        data->roi_ptr_dst[i].xywhROI.xy.y = data->roi_ptr_src[i].xywhROI.xy.y;
+void update_destination_roi(const vx_reference *parameters, TensorAddTensorLocalData *data, void* roi_tensor_ptr_src, void* roi_tensor_ptr_dst) {
+    data->pDstRoi = (RpptROI *)roi_tensor_ptr_dst;
+    data->pSrcRoi = (RpptROI *)roi_tensor_ptr_src;
+    for (uint i = 0; i < data->nbatchSize; i++) {
+        data->pDstRoi[i].xywhROI.xy.x = data->pSrcRoi[i].xywhROI.xy.x;
+        data->pDstRoi[i].xywhROI.xy.y = data->pSrcRoi[i].xywhROI.xy.y;
     }
 }
 
-static vx_status VX_CALLBACK refreshTensorAddTensor(vx_node node, const vx_reference *parameters, vx_uint32 num, TensorAddTensorLocalData *data)
-{
-
+static vx_status VX_CALLBACK refreshTensorAddTensor(vx_node node, const vx_reference *parameters, vx_uint32 num, TensorAddTensorLocalData *data) {
     vx_status status = VX_SUCCESS;
 
-    if (data->device_type == AGO_TARGET_AFFINITY_GPU)
-    {
-#if ENABLE_HIP
-        STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[0], VX_TENSOR_BUFFER_HIP, &data->pSrc_dev1, sizeof(data->pSrc_dev1)));
-        STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[1], VX_TENSOR_BUFFER_HIP, &data->pSrc_dev2, sizeof(data->pSrc_dev2)));
-        STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[2], VX_TENSOR_BUFFER_HIP, &data->pDst_dev, sizeof(data->pDst_dev)));
-        STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[3], VX_TENSOR_BUFFER_HIP, &data->roi_tensor_ptr_src, sizeof(data->roi_tensor_ptr_src)));
-        STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[4], VX_TENSOR_BUFFER_HIP, &data->roi_tensor_ptr_dst, sizeof(data->roi_tensor_ptr_dst)));
-
+    void *roi_tensor_ptr_src, *roi_tensor_ptr_dst;
+    if (data->deviceType == AGO_TARGET_AFFINITY_GPU) {
+#if ENABLE_OPENCL
+        return VX_ERROR_NOT_IMPLEMENTED;
+#elif ENABLE_HIP
+         return VX_ERROR_NOT_IMPLEMENTED;
 #endif
     }
-    else if (data->device_type == AGO_TARGET_AFFINITY_CPU)
-    {
-        // std::cerr << "CPU";
-        if (data->in_tensor_type == vx_type_e::VX_TYPE_UINT8 && data->out_tensor_type == vx_type_e::VX_TYPE_UINT8)
-        {
-            STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[0], VX_TENSOR_BUFFER_HOST, &data->pSrc1, sizeof(data->pSrc1)));
-            STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[1], VX_TENSOR_BUFFER_HOST, &data->pSrc2, sizeof(data->pSrc2)));
-            STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[2], VX_TENSOR_BUFFER_HOST, &data->pDst, sizeof(data->pDst)));
-        }
-        else if (data->in_tensor_type == vx_type_e::VX_TYPE_FLOAT32 && data->out_tensor_type == vx_type_e::VX_TYPE_FLOAT32)
-        {
-            STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[0], VX_TENSOR_BUFFER_HOST, &data->pSrc1, sizeof(data->pSrc1)));
-            STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[1], VX_TENSOR_BUFFER_HOST, &data->pSrc2, sizeof(data->pSrc2)));
-            STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[2], VX_TENSOR_BUFFER_HOST, &data->pDst, sizeof(data->pDst)));
-        }
-        STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[3], VX_TENSOR_BUFFER_HOST, &data->roi_tensor_ptr_src, sizeof(data->roi_tensor_ptr_src)));
-        STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[4], VX_TENSOR_BUFFER_HOST, &data->roi_tensor_ptr_dst, sizeof(data->roi_tensor_ptr_dst)));
-
-        update_destination_roi(parameters, data);
+    else if (data->deviceType == AGO_TARGET_AFFINITY_CPU) {
+        STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[0], VX_TENSOR_BUFFER_HOST, &data->pSrc1, sizeof(data->pSrc1)));
+        STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[1], VX_TENSOR_BUFFER_HOST, &data->pSrc2, sizeof(data->pSrc2)));
+        STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[2], VX_TENSOR_BUFFER_HOST, &data->pDst, sizeof(data->pDst)));
+        STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[3], VX_TENSOR_BUFFER_HOST, &roi_tensor_ptr_src, sizeof(roi_tensor_ptr_src)));
+        STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[4], VX_TENSOR_BUFFER_HOST, &roi_tensor_ptr_dst, sizeof(roi_tensor_ptr_dst)));
+        update_destination_roi(parameters, data, roi_tensor_ptr_src, roi_tensor_ptr_dst);
     }
     return status;
 }
 
-static vx_status VX_CALLBACK validateTensorAddTensor(vx_node node, const vx_reference parameters[], vx_uint32 num, vx_meta_format metas[])
-{
+static vx_status VX_CALLBACK validateTensorAddTensor(vx_node node, const vx_reference parameters[], vx_uint32 num, vx_meta_format metas[]) {
     vx_status status = VX_SUCCESS;
     vx_enum scalar_type;
     STATUS_ERROR_CHECK(vxQueryScalar((vx_scalar)parameters[5], VX_SCALAR_TYPE, &scalar_type, sizeof(scalar_type)));
@@ -124,7 +92,7 @@ static vx_status VX_CALLBACK validateTensorAddTensor(vx_node node, const vx_refe
     vx_parameter output_param;
     size_t num_tensor_dims;
     vx_uint8 tensor_fixed_point_position;
-    size_t tensor_dims[NUM_OF_DIMS];
+    size_t tensor_dims[RPP_MAX_TENSOR_DIMS];
     vx_enum tensor_type;
     output_param = vxGetParameterByIndex(node, 2);
     STATUS_ERROR_CHECK(vxQueryParameter(output_param, VX_PARAMETER_ATTRIBUTE_REF, &output, sizeof(vx_tensor)));
@@ -141,44 +109,37 @@ static vx_status VX_CALLBACK validateTensorAddTensor(vx_node node, const vx_refe
     return status;
 }
 
-static vx_status VX_CALLBACK processTensorAddTensor(vx_node node, const vx_reference *parameters, vx_uint32 num)
-{
+static vx_status VX_CALLBACK processTensorAddTensor(vx_node node, const vx_reference *parameters, vx_uint32 num) {
     vx_status status = VX_SUCCESS;
     TensorAddTensorLocalData *data = NULL;
     STATUS_ERROR_CHECK(vxQueryNode(node, VX_NODE_LOCAL_DATA_PTR, &data, sizeof(data)));
 
-    if (data->device_type == AGO_TARGET_AFFINITY_GPU)
-    {
-#if ENABLE_HIP
-        refreshTensorAddTensor(node, parameters, num, data);
+    if (data->deviceType == AGO_TARGET_AFFINITY_GPU) {
+#if ENABLE_OPENCL
+        return VX_ERROR_NOT_IMPLEMENTED;
+#elif ENABLE_HIP
+        return VX_ERROR_NOT_IMPLEMENTED;
 #endif
     }
-    else if (data->device_type == AGO_TARGET_AFFINITY_CPU)
-    {
+    else if (data->deviceType == AGO_TARGET_AFFINITY_CPU) {
         refreshTensorAddTensor(node, parameters, num, data);
-        if (data->in_tensor_type == vx_type_e::VX_TYPE_FLOAT32 && data->out_tensor_type == vx_type_e::VX_TYPE_FLOAT32)
-        {
-            uint channels = 1; // for audio data
-            data->roi_ptr_src = (RpptROI *)data->roi_tensor_ptr_src;
-            size_t nStride = data->in_tensor_dims1[1] * data->in_tensor_dims1[2] * channels;
-
-            for (uint i = 0; i < data->nbatchSize; i++)
-            {
-                float *src1Temp = (float *)(data->pSrc1) + i * nStride;
-                float *src2Temp = (float *)(data->pSrc2) + i;
-                float *dstTemp = (float *)(data->pDst) + i * nStride;
-                uint height = data->roi_ptr_src[i].xywhROI.xy.y;
-                uint width = data->roi_ptr_src[i].xywhROI.xy.x;
+        if (data->inTensorType == vx_type_e::VX_TYPE_FLOAT32 && data->outTensorType == vx_type_e::VX_TYPE_FLOAT32) {
+            // data->pSrcRoi = (RpptROI *)data->roi_tensor_ptr_src;
+            size_t nStride = data->inputTensorDims1[1] * data->inputTensorDims1[2];
+            for (uint i = 0; i < data->nbatchSize; i++) {
+                float *src1Temp = static_cast<float *>(data->pSrc1) + i * nStride;
+                float *src2Temp = static_cast<float *>(data->pSrc2) + i;
+                float *dstTemp = static_cast<float *>(data->pDst) + i * nStride;
+                uint height = data->pSrcRoi[i].xywhROI.xy.y;
+                uint width = data->pSrcRoi[i].xywhROI.xy.x;
                 uint alignedWidth = (width / 8) * 8;
                 float additionFactor = src2Temp[0];
                 __m256 pSrc2 = _mm256_set1_ps(additionFactor);
-                for (uint row = 0; row < height; row++)
-                {
-                    float *srcPtr1Row = src1Temp + row * data->in_tensor_dims1[1];
-                    float *dstPtrRow = dstTemp + row * data->in_tensor_dims1[1];
+                for (uint row = 0; row < height; row++) {
+                    float *srcPtr1Row = src1Temp + row * data->inputTensorDims1[1];
+                    float *dstPtrRow = dstTemp + row * data->inputTensorDims1[1];
                     uint vectorLoopCount = 0;
-                    for(; vectorLoopCount < alignedWidth; vectorLoopCount += 8)
-                    {
+                    for(; vectorLoopCount < alignedWidth; vectorLoopCount += 8) {
                         __m256 pSrc1 = _mm256_loadu_ps(srcPtr1Row);
                         __m256 pDst = _mm256_add_ps(pSrc1, pSrc2);
                         _mm256_storeu_ps(dstPtrRow, pDst);
@@ -197,20 +158,19 @@ static vx_status VX_CALLBACK processTensorAddTensor(vx_node node, const vx_refer
 static vx_status VX_CALLBACK initializeTensorAddTensor(vx_node node, const vx_reference *parameters, vx_uint32 num)
 {
     TensorAddTensorLocalData *data = new TensorAddTensorLocalData;
-    memset(data, 0, sizeof(*data));
-    STATUS_ERROR_CHECK(vxCopyScalar((vx_scalar)parameters[6], &data->device_type, VX_READ_ONLY, VX_MEMORY_TYPE_HOST));
+    memset(data, 0, sizeof(TensorAddTensorLocalData));
+    STATUS_ERROR_CHECK(vxCopyScalar((vx_scalar)parameters[6], &data->deviceType, VX_READ_ONLY, VX_MEMORY_TYPE_HOST));
     STATUS_ERROR_CHECK(vxReadScalarValue((vx_scalar)parameters[5], &data->nbatchSize));
 
     vx_size num_of_dims1, num_of_dims2;
-    size_t tensor_dims1[NUM_OF_DIMS], tensor_dims2[NUM_OF_DIMS];
+    size_t tensor_dims1[RPP_MAX_TENSOR_DIMS], tensor_dims2[RPP_MAX_TENSOR_DIMS];
     STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[0], VX_TENSOR_NUMBER_OF_DIMS, &num_of_dims1, sizeof(vx_size)));
-    STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[0], VX_TENSOR_DIMS, &data->in_tensor_dims1, sizeof(vx_size) * num_of_dims1));
-    STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[0], VX_TENSOR_DATA_TYPE, &data->in_tensor_type, sizeof(data->in_tensor_type)));
+    STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[0], VX_TENSOR_DIMS, &data->inputTensorDims1, sizeof(vx_size) * num_of_dims1));
+    STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[0], VX_TENSOR_DATA_TYPE, &data->inTensorType, sizeof(data->inTensorType)));
     STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[1], VX_TENSOR_NUMBER_OF_DIMS, &num_of_dims2, sizeof(vx_size)));
-    STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[1], VX_TENSOR_DIMS, &data->in_tensor_dims2, sizeof(vx_size) * num_of_dims2));
-    STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[1], VX_TENSOR_DATA_TYPE, &data->in_tensor_type, sizeof(data->in_tensor_type)));
-    STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[2], VX_TENSOR_DATA_TYPE, &data->out_tensor_type, sizeof(data->out_tensor_type)));
-
+    STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[1], VX_TENSOR_DIMS, &data->inputTensorDims2, sizeof(vx_size) * num_of_dims2));
+    STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[1], VX_TENSOR_DATA_TYPE, &data->inTensorType, sizeof(data->inTensorType)));
+    STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[2], VX_TENSOR_DATA_TYPE, &data->outTensorType, sizeof(data->outTensorType)));
 
     refreshTensorAddTensor(node, parameters, num, data);
 
@@ -222,7 +182,7 @@ static vx_status VX_CALLBACK uninitializeTensorAddTensor(vx_node node, const vx_
 {
     TensorAddTensorLocalData *data;
     STATUS_ERROR_CHECK(vxQueryNode(node, VX_NODE_LOCAL_DATA_PTR, &data, sizeof(data)));
-    delete (data);
+    delete(data);
     return VX_SUCCESS;
 }
 
@@ -231,8 +191,7 @@ static vx_status VX_CALLBACK uninitializeTensorAddTensor(vx_node node, const vx_
 static vx_status VX_CALLBACK query_target_support(vx_graph graph, vx_node node,
                                                   vx_bool use_opencl_1_2,              // [input]  false: OpenCL driver is 2.0+; true: OpenCL driver is 1.2
                                                   vx_uint32 &supported_target_affinity // [output] must be set to AGO_TARGET_AFFINITY_CPU or AGO_TARGET_AFFINITY_GPU or (AGO_TARGET_AFFINITY_CPU | AGO_TARGET_AFFINITY_GPU)
-)
-{
+) {
     vx_context context = vxGetContext((vx_reference)graph);
     AgoTargetAffinityInfo affinity;
     vxQueryContext(context, VX_CONTEXT_ATTRIBUTE_AMD_AFFINITY, &affinity, sizeof(affinity));
@@ -240,7 +199,6 @@ static vx_status VX_CALLBACK query_target_support(vx_graph graph, vx_node node,
         supported_target_affinity = AGO_TARGET_AFFINITY_GPU;
     else
         supported_target_affinity = AGO_TARGET_AFFINITY_CPU;
-
     return VX_SUCCESS;
 }
 
