@@ -2459,9 +2459,8 @@ rocalNormalize(RocalContext p_context,
     auto context = static_cast<Context*>(p_context);
     auto input = static_cast<Tensor*>(p_input);
     try {
-        if(mean > 0.0f && std_dev > 0.0f && axes.size())
+        if((mean > 0.0f) && (std_dev > 0.0f) && (axes.size()))
             THROW("Axes must not be passed when both mean and standard deviation are specified")
-
         TensorInfo output_info = input->info();
         RocalTensorDataType op_tensor_data_type = (RocalTensorDataType)rocal_tensor_output_datatype;
         output_info.set_data_type(op_tensor_data_type);

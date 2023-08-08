@@ -58,8 +58,8 @@ void NormalizeNode::init(float mean, float std_dev, std::vector<int> axes, bool 
     _ddof = ddof;
     _epsilon = epsilon;
     _num_of_dims = _inputs[0]->info().num_of_dims() - 1;
-    if(_mean > 0.0f || _std_dev > 0.0f && !axes.size())
+    if(((_mean > 0.0f) || (_std_dev > 0.0f)) && (!axes.size()))
         std::iota(axes.begin(), axes.end(), 0);
-    for(int d = 0; d < axes.size(); d++)
+    for(unsigned d = 0; d < axes.size(); d++)
         _axis_mask |= (1 << axes[d]);
 }
