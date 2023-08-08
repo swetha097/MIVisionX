@@ -188,9 +188,6 @@ private:
     bool _processing;//!< Indicates if internal processing thread should keep processing or not
     const static unsigned SAMPLE_SIZE = sizeof(unsigned char);
     int _remaining_count;//!< Keeps the count of remaining tensors yet to be processed for the user,
-    size_t _final_batch_padded_size;
-    RocalBatchPolicy _last_batch_policy;
-    bool _last_batch_padded;
     bool _loop;//!< Indicates if user wants to indefinitely loops through tensors or not
     size_t _prefetch_queue_depth;
     bool _output_routine_finished_processing = false;
@@ -213,6 +210,9 @@ private:
     BoxEncoderGpu *_box_encoder_gpu = nullptr;
 #endif
     TimingDBG _rb_block_if_empty_time, _rb_block_if_full_time;
+    RocalBatchPolicy _last_batch_policy;
+    bool _last_batch_padded;
+    size_t _final_batch_padded_size;
 };
 
 template <typename T>
