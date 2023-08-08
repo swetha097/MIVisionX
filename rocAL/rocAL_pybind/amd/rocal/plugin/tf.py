@@ -105,9 +105,6 @@ class ROCALGenericIteratorDetection(object):
         if self.loader._name == "TFRecordReaderDetection":
             self.bbox_list = []
             self.label_list = []
-            self.num_bboxes_list = []
-            # Count of labels/ bboxes in a batch
-            self.count_batch = self.loader.get_bounding_box_count()
             # 1D labels array in a batch
             self.labels = self.loader.get_bounding_box_labels()
             # 1D bboxes array in a batch
