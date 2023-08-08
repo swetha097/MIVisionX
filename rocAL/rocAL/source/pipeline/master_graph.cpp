@@ -105,8 +105,6 @@ MasterGraph::MasterGraph(size_t batch_size, RocalAffinity affinity, size_t cpu_t
         _ring_buffer(prefetch_queue_depth),
         _graph(nullptr),
         _affinity(affinity),
-        _last_batch_policy(last_batch_policy),
-        _last_batch_padded(last_batch_padded),
         _cpu_num_threads(cpu_thread_count),
         _gpu_id(gpu_id),
         _convert_time("Conversion Time", DBG_TIMING),
@@ -128,7 +126,9 @@ MasterGraph::MasterGraph(size_t batch_size, RocalAffinity affinity, size_t cpu_t
         _box_encoder_gpu(nullptr),
 #endif
         _rb_block_if_empty_time("Ring Buffer Block IF Empty Time"),
-        _rb_block_if_full_time("Ring Buffer Block IF Full Time")
+        _rb_block_if_full_time("Ring Buffer Block IF Full Time"),
+        _last_batch_policy(last_batch_policy),
+        _last_batch_padded(last_batch_padded)
 {
     try {
         vx_status status;
