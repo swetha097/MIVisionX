@@ -2725,6 +2725,18 @@ void fillDescriptionPtrfromDims(RpptDescPtr &descPtr, vxTensorLayout layout, siz
     }
 }
 
+void fillAudioDescriptionPtrFromDims(RpptDescPtr &descPtr, size_t *tensorDims) {
+    descPtr->n = tensorDims[0];
+    descPtr->h = tensorDims[2];
+    descPtr->w = tensorDims[1];
+    descPtr->c = 1;
+    descPtr->strides.nStride = descPtr->c * descPtr->w * descPtr->h;
+    descPtr->strides.hStride = descPtr->c * descPtr->w;
+    descPtr->strides.wStride = descPtr->c;
+    descPtr->strides.cStride = 1;
+    descPtr->numDims = 4;
+}
+
 // utility functions
 vx_node createNode(vx_graph graph, vx_enum kernelEnum, vx_reference params[], vx_uint32 num)
 {
