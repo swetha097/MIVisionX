@@ -22,7 +22,6 @@ import rocal_pybind as b
 import amd.rocal.types as types
 import numpy as np
 import cupy as cp
-import torch
 import ctypes
 import functools
 import inspect
@@ -178,12 +177,12 @@ class Pipeline(object):
         if device == "cpu":
             if (isinstance(array, np.ndarray)):
                 b.getOneHotEncodedLabels(self._handle, array.ctypes.data_as(ctypes.c_void_p), self._num_classes, 0)
-            elif (isinstance(array, torch.Tensor)):
+            else: # torch tensor
                 return b.getOneHotEncodedLabels(self._handle, ctypes.c_void_p(array.data_ptr()), self._num_classes, 0)
         else:
             if (isinstance(array, cp.ndarray)):
                 b.getCupyOneHotEncodedLabels(self._handle, array.data.ptr, self._num_classes, 1)
-            elif (isinstance(array, torch.Tensor)):
+            else: # torch tensor
                 return b.getOneHotEncodedLabels(self._handle, ctypes.c_void_p(array.data_ptr()), self._num_classes, 1)
 
     def set_outputs(self, *output_list):
