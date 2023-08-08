@@ -123,8 +123,8 @@ class ROCALGenericIterator(object):
                     for i in range(self.batch_size):
                         img = (self.output)
                         draw_patches(img[i], i, 0)
-                self.labels = []#self.loader.getImageLabels()
-                self.labels_tensor = np.zeros((self.batch_size), dtype="int32") #self.labels_tensor.copy_(torch.from_numpy(self.labels)).long()
+                self.labels = self.loader.getImageLabels()
+                self.labels_tensor = self.labels_tensor.copy_(torch.from_numpy(self.labels)).long()
             print(self.output_list)
             return self.output_list, self.labels_tensor
 

@@ -29,7 +29,7 @@ THE SOFTWARE.
 #include "rocal_api.h"
 #include "image_source_evaluator.h"
 
-auto modify_dims_width_and_height = [](RocalTensorlayout tensor_layout, std::vector<size_t> &dims,
+auto modify_dims_width_and_height = [](RocalTensorlayout tensor_layout, std::vector<size_t> &dims, 
                                     size_t width, size_t height) {
     switch(tensor_layout) {
         case RocalTensorlayout::NHWC: {
@@ -41,7 +41,7 @@ auto modify_dims_width_and_height = [](RocalTensorlayout tensor_layout, std::vec
         case RocalTensorlayout::NFHWC: {
             dims[2] = height;
             dims[3] = width;
-            return;
+            return;   
         }
         case RocalTensorlayout::NFCHW: {
             dims[3] = height;
@@ -116,7 +116,7 @@ rocalRotate(
         TensorInfo output_info = input->info();
         output_info.set_tensor_layout(op_tensor_layout);
         output_info.set_data_type(op_tensor_datatype);
-
+        
         // For the rotate node, user can create a tensor with a different width and height
         std::vector<size_t> out_dims = output_info.dims();
         modify_dims_width_and_height(output_info.layout(), out_dims, dest_width, dest_height);
@@ -446,6 +446,7 @@ rocalCropResizeFixed(
     try {
         if(dest_width == 0 || dest_height == 0)
             THROW("CropResize node needs tp receive non-zero destination dimensions")
+        
         RocalTensorlayout op_tensor_layout = static_cast<RocalTensorlayout>(output_layout);
         RocalTensorDataType op_tensor_datatype = static_cast<RocalTensorDataType>(output_datatype);
         TensorInfo output_info = input->info();
@@ -454,8 +455,12 @@ rocalCropResizeFixed(
 
         // For the crop resize node, user can create an image with a different width and height
         std::vector<size_t> out_dims = output_info.dims();
-        modify_dims_width_and_height(output_info.layout(), out_dims, dest_width, dest_height);
+        modify_dims_width_and_height(output_info.layout(), out_dims, dest_width, dest_height);   
+        output_info.set_dims(out_dims);
+        output = context->master_graph->create_tensor(output_info, is_output);
+
         // user provides the output size and the dimension of all the images after this node will be fixed and equal to that size
+        output->reset_tensor_roi();
         std::shared_ptr<CropResizeNode> crop_resize_node =  context->master_graph->add_node<CropResizeNode>({input}, {output});
         crop_resize_node->init(area, aspect_ratio, x_center_drift, y_center_drift);
         if (context->master_graph->meta_data_graph())
@@ -572,7 +577,7 @@ rocalResize(
 }
 
 RocalTensor  ROCAL_API_CALL
-rocalResizeMirrorNormalize(
+ROCAL_API_CALL rocalResizeMirrorNormalize(
         RocalContext p_context,
         RocalTensor p_input,
         unsigned dest_width,
@@ -594,7 +599,7 @@ rocalResizeMirrorNormalize(
     auto context = static_cast<Context*>(p_context);
     auto input = static_cast<Tensor*>(p_input);
     auto mirror = static_cast<IntParam *>(p_mirror);
-
+    
     try {
         if((dest_width | dest_height | resize_longer | resize_shorter) == 0)
             THROW("Atleast one size 'dest_width' or 'dest_height' or 'resize_shorter' or 'resize_longer' must be specified")
@@ -1813,10 +1818,10 @@ rocalColorTwistFixed(
     return output;
 }
 
-RocalTensor ROCAL_API_CALL
+RocalTensor ROCAL_API_CALL 
 rocalCropMirrorNormalize(RocalContext p_context, RocalTensor p_input, unsigned crop_height,
                          unsigned crop_width, float start_x, float start_y, std::vector<float> &mean,
-                         std::vector<float> &std_dev, bool is_output, RocalIntParam p_mirror,
+                         std::vector<float> &std_dev, bool is_output, RocalIntParam p_mirror, 
                          RocalTensorLayout output_layout,
                          RocalTensorOutputType output_datatype) {
     Tensor* output = nullptr;
@@ -1835,7 +1840,7 @@ rocalCropMirrorNormalize(RocalContext p_context, RocalTensor p_input, unsigned c
         TensorInfo output_info = input->info();
         output_info.set_tensor_layout(op_tensor_layout);
         output_info.set_data_type(op_tensor_datatype);
-
+        
         // For the crop mirror normalize resize node, user can create an image with a different width and height
         std::vector<size_t> out_dims = output_info.dims();
         modify_dims_width_and_height(output_info.layout(), out_dims, crop_width, crop_height);
@@ -1862,7 +1867,7 @@ rocalCrop(
         RocalFloatParam p_crop_depth,
         RocalFloatParam p_crop_pox_x,
         RocalFloatParam p_crop_pos_y,
-        RocalFloatParam p_crop_pos_z,
+        RocalFloatParam p_crop_pos_z, 
         RocalTensorLayout output_layout,
         RocalTensorOutputType output_datatype) {
     Tensor* output = nullptr;
@@ -1924,7 +1929,7 @@ rocalCropFixed(
         TensorInfo output_info = input->info();
         output_info.set_tensor_layout(op_tensor_layout);
         output_info.set_data_type(op_tensor_datatype);
-
+        
         // For the crop node, user can create an tensor with a different width and height
         std::vector<size_t> out_dims = output_info.dims();
         modify_dims_width_and_height(output_info.layout(), out_dims, crop_width, crop_height);
@@ -1968,7 +1973,7 @@ rocalCropCenterFixed(
         TensorInfo output_info = input->info();
         output_info.set_tensor_layout(op_tensor_layout);
         output_info.set_data_type(op_tensor_datatype);
-
+        
         // For the crop node, user can create an tensor with a different width and height
         std::vector<size_t> out_dims = output_info.dims();
         modify_dims_width_and_height(output_info.layout(), out_dims, crop_width, crop_height);
@@ -2011,7 +2016,7 @@ rocalResizeCropMirrorFixed(
             THROW("Crop Mirror node needs tp receive non-zero destination dimensions")
 
         RocalTensorlayout op_tensor_layout = static_cast<RocalTensorlayout>(output_layout);
-        RocalTensorDataType op_tensor_datatype = static_cast<RocalTensorDataType>(output_datatype);
+        RocalTensorDataType op_tensor_datatype = static_cast<RocalTensorDataType>(output_datatype);  
         TensorInfo output_info = input->info();
         output_info.set_tensor_layout(op_tensor_layout);
         output_info.set_data_type(op_tensor_datatype);
@@ -2055,11 +2060,11 @@ RocalTensor  ROCAL_API_CALL rocalResizeCropMirror(
             THROW("Crop Mirror node needs tp receive non-zero destination dimensions")
 
         RocalTensorlayout op_tensor_layout = static_cast<RocalTensorlayout>(output_layout);
-        RocalTensorDataType op_tensor_datatype = static_cast<RocalTensorDataType>(output_datatype);
+        RocalTensorDataType op_tensor_datatype = static_cast<RocalTensorDataType>(output_datatype);  
         TensorInfo output_info = input->info();
         output_info.set_tensor_layout(op_tensor_layout);
         output_info.set_data_type(op_tensor_datatype);
-
+        
         // For the resize_crop_mirror node, user can create an image with a different width and height
         std::vector<size_t> out_dims = output_info.dims();
         modify_dims_width_and_height(output_info.layout(), out_dims, dest_width, dest_height);
@@ -2221,21 +2226,17 @@ rocalPreEmphasisFilter(RocalContext p_context,
     auto input = static_cast<Tensor*>(p_input);
     auto preemph_coeff = static_cast<FloatParam*>(p_preemph_coeff);
     try {
-        RocalTensorDataType op_tensor_data_type = (RocalTensorDataType)rocal_tensor_output_datatype;
+        RocalTensorDataType op_tensorDataType = (RocalTensorDataType)rocal_tensor_output_datatype;
         TensorInfo output_info = input->info();
-        output_info.set_tensor_layout(RocalTensorlayout::NONE);
-        output_info.set_data_type(op_tensor_data_type);
-
+        output_info.set_data_type(op_tensorDataType);
         output = context->master_graph->create_tensor(output_info, is_output);
         output->reset_tensor_roi();
         context->master_graph->add_node<PreemphasisFilterNode>({input}, {output})->init(preemph_coeff, preemph_border_type);
-
     }
     catch(const std::exception& e) {
         context->capture_error(e.what());
         ERR(e.what())
     }
-
     return output;
 }
 
@@ -2262,15 +2263,11 @@ rocalNonSilentRegion(RocalContext p_context,
         auto info1 = TensorInfo(std::vector<size_t>(std::move(dims1)),
                                context->master_graph->mem_type(),
                                tensor_data_type);
-        info1.set_tensor_layout(RocalTensorlayout::NONE);
-
         std::vector<size_t> dims2(number_of_dims, 1);
         dims2.at(0) = context->user_batch_size();
         auto info2 = TensorInfo(std::vector<size_t>(std::move(dims2)),
                                context->master_graph->mem_type(),
                                tensor_data_type);
-        info2.set_tensor_layout(RocalTensorlayout::NONE);
-
         output1 = context->master_graph->create_tensor(info1, is_output);
         output2 = context->master_graph->create_tensor(info2, is_output);
         output_tensors.push_back(output1);
@@ -2307,7 +2304,6 @@ rocalSlice(
     try {
         RocalTensorDataType op_tensor_data_type = (RocalTensorDataType)rocal_tensor_output_datatype;
         TensorInfo output_info = input->info();
-        output_info.set_tensor_layout(RocalTensorlayout::NONE);
         output_info.set_data_type(op_tensor_data_type);
         output = context->master_graph->create_tensor(output_info, is_output);
         output->reset_tensor_roi();
@@ -2360,13 +2356,11 @@ rocalSpectrogram(
             dims[2] = max_frame;
         }
         output_info.set_dims(dims);
-        output_info.set_tensor_layout(RocalTensorlayout::NONE);
         output_info.set_data_type(op_tensor_data_type);
         if(power != 1 || power != 2) {
             WRN("rocalSpectrogram power value can be 1 or 2 setting it to default 2")
             power = 2;
         }
-
         output = context->master_graph->create_tensor(output_info, is_output);
         output->reset_tensor_roi();
         context->master_graph->add_node<SpectrogramNode>({input}, {output})->init(center_windows, reflect_padding, spectrogram_layout,
@@ -2408,7 +2402,6 @@ rocalMelFilterBank(
         dims[1] = max_frame;
         dims[2] = nfilter;
         output_info.set_dims(dims);
-        output_info.set_tensor_layout(RocalTensorlayout::NONE);
         output_info.set_data_type(op_tensor_data_type);
         output = context->master_graph->create_tensor(output_info, is_output);
         context->master_graph->add_node<MelFilterBankNode>({input}, {output})->init(freq_high, freq_low, mel_formula,

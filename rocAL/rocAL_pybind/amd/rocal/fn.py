@@ -1079,7 +1079,7 @@ def slice(*inputs, anchor = [], shape = [], axes = [1, 0], axis_names = "WH", by
     slice_output = b.audioSlice(Pipeline._current_pipeline._handle ,*(kwargs_pybind.values()))
     return slice_output
 
-def spectrogram(*inputs, bytes_per_sample_hint = [0], center_windows = True, layout = types.FT, nfft = None, power = 2, reflect_padding = True, seed = -1, window_fn = [], window_length = 512, window_step = 256, rocal_tensor_layout = None, rocal_tensor_output_type = types.FLOAT) :
+def spectrogram(*inputs, bytes_per_sample_hint = [0], center_windows = True, layout = types.FT, nfft = None, power = 2, reflect_padding = True, seed = -1, window_fn = [], window_length = 512, window_step = 256, rocal_tensor_output_type = types.FLOAT) :
     '''
     Produces a spectrogram from a 1D signal (for example, audio).
 
