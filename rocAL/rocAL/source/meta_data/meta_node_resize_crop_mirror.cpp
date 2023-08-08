@@ -38,8 +38,6 @@ void ResizeCropMirrorMetaNode::update_parameters(pMetaDataBatch input_meta_data,
         _batch_size = input_meta_data->size();
     }
     _meta_crop_param = _node->get_crop_param();
-    auto input_roi = _node->get_src_roi();
-    auto output_roi = _node->get_dst_roi();
     _mirror = _node->get_mirror();
     _x1 = _meta_crop_param->x1_arr;
     _y1 = _meta_crop_param->y1_arr;
@@ -52,8 +50,6 @@ void ResizeCropMirrorMetaNode::update_parameters(pMetaDataBatch input_meta_data,
     vxCopyArrayRange((vx_array)_mirror, 0, _batch_size, sizeof(uint),_mirror_val.data(), VX_READ_ONLY, VX_MEMORY_TYPE_HOST);
     for(int i = 0; i < _batch_size; i++)
     {
-        _dst_to_src_width_ratio = static_cast<float>(output_roi[i].x2) / static_cast<float>(input_roi[i].x2);
-        _dst_to_src_height_ratio = static_cast<float>(output_roi[i].y2) / static_cast<float>(input_roi[i].y2);
         auto bb_count = input_meta_data->get_labels_batch()[i].size();
         Labels labels_buf = input_meta_data->get_labels_batch()[i];
         BoundingBoxCords box_coords_buf = input_meta_data->get_bb_cords_batch()[i];
@@ -61,8 +57,8 @@ void ResizeCropMirrorMetaNode::update_parameters(pMetaDataBatch input_meta_data,
         BoundingBoxCord temp_box;
         Labels bb_labels;
         BoundingBoxCord crop_box;
-        _crop_w = _x2_val[i] - _x1_val[i];
-        _crop_h = _y2_val[i] - _y1_val[i];
+        auto _crop_w = _x2_val[i] - _x1_val[i];
+        auto _crop_h = _y2_val[i] - _y1_val[i];
         crop_box.l = _x1_val[i];
         crop_box.t = _y1_val[i];
         crop_box.r = _x2_val[i] ;

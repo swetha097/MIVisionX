@@ -100,7 +100,7 @@ class ROCALGenericIteratorDetection(object):
                 if self.device == "cpu":
                     self.output_tensor_list[i].copy_data(self.output_list[i])
                 else:
-                    self.output_tensor_list[i].copy_data(self.output_list[i].data.ptr)                
+                    self.output_tensor_list[i].copy_data(self.output_list[i].data.ptr)
 
         if self.loader._name == "TFRecordReaderDetection":
             self.bbox_list = []

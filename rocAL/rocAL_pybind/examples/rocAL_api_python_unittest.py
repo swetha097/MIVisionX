@@ -152,7 +152,7 @@ def main():
                 'image/class/label':'image/class/label',
                 'image/filename':'image/filename'
             }
-            features={
+            features = {
                 'image/encoded':tf.io.FixedLenFeature((), tf.string, ""),
                 'image/class/label':tf.io.FixedLenFeature([1], tf.int64,  -1),
                 'image/filename':tf.io.FixedLenFeature((), tf.string, "")
@@ -183,7 +183,7 @@ def main():
                 'image/object/bbox/ymax': 'image/object/bbox/ymax',
                 'image/filename': 'image/filename'
             }
-            features={
+            features = {
                 'image/encoded': tf.io.FixedLenFeature((), tf.string, ""),
                 'image/class/label': tf.io.FixedLenFeature([1], tf.int64,  -1),
                 'image/class/text': tf.io.FixedLenFeature([], tf.string, ''),
@@ -229,7 +229,7 @@ def main():
                                        random_shuffle=False)
 
         elif reader_type == "caffe2_classification":
-            jpegs, _ = fn.readers.caffe2(path=data_path, bbox=False)
+            jpegs, _ = fn.readers.caffe2(path=data_path)
             images = fn.decoders.image(jpegs,
                                        path=data_path,
                                        device=decoder_device,

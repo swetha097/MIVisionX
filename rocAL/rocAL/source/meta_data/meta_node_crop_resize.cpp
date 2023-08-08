@@ -52,16 +52,16 @@ void CropResizeMetaNode::update_parameters(pMetaDataBatch input_meta_data, pMeta
 
     for(int i = 0; i < _batch_size; i++)
     {
-        _dst_to_src_width_ratio = static_cast<float>(output_roi[i].x2) / input_roi[i].x2;
-        _dst_to_src_height_ratio = static_cast<float>(output_roi[i].y2) / input_roi[i].y2;
+        float _dst_to_src_width_ratio = static_cast<float>(output_roi[i].x2) / input_roi[i].x2;
+        float _dst_to_src_height_ratio = static_cast<float>(output_roi[i].y2) / input_roi[i].y2;
         auto bb_count = input_meta_data->get_labels_batch()[i].size();
         Labels labels_buf = input_meta_data->get_labels_batch()[i];
         BoundingBoxCords coords_buf = input_meta_data->get_bb_cords_batch()[i];
         BoundingBoxCords bb_coords;
         Labels bb_labels;
         BoundingBoxCord crop_box;
-        _crop_w = _x2_val[i] - _x1_val[i];
-        _crop_h = _y2_val[i] - _y1_val[i];
+        auto _crop_w = _x2_val[i] - _x1_val[i];
+        auto _crop_h = _y2_val[i] - _y1_val[i];
         
         crop_box.l = _x1_val[i];
         crop_box.t = _y1_val[i];

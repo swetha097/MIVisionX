@@ -485,7 +485,7 @@ namespace rocal{
         // rocal_api_data_loaders.h
         m.def("cocoImageDecoderSlice", &rocalJpegCOCOFileSourcePartial,"Reads file from the source given and decodes it according to the policy",
             py::return_value_policy::reference);
-         m.def("cocoImageDecoderSliceShard", &rocalJpegCOCOFileSourcePartialSingleShard,"Reads file from the source given and decodes it according to the policy",
+        m.def("cocoImageDecoderSliceShard", &rocalJpegCOCOFileSourcePartialSingleShard,"Reads file from the source given and decodes it according to the policy",
             py::return_value_policy::reference);
         m.def("imageDecoder", &rocalJpegFileSource, "Reads file from the source given and decodes it according to the policy",
             py::return_value_policy::reference);
@@ -501,12 +501,14 @@ namespace rocal{
             py::return_value_policy::reference);
         m.def("caffeImageDecoderShard", &rocalJpegCaffeLMDBRecordSourceSingleShard, "Reads file from the source given and decodes it according to the shard id and number of shards",
             py::return_value_policy::reference);
-        m.def("caffeImageDecoderPartialShard", &rocalJpegCaffeLMDBRecordSourcePartialSingleShard, py::return_value_policy::reference);
+        m.def("caffeImageDecoderPartialShard", &rocalJpegCaffeLMDBRecordSourcePartialSingleShard, "Reads file from the source given and partially decodes it according to the shard id and number of shards",
+            py::return_value_policy::reference);
         m.def("caffe2ImageDecoder", &rocalJpegCaffe2LMDBRecordSource,"Reads file from the source given and decodes it according to the policy",
             py::return_value_policy::reference);
         m.def("caffe2ImageDecoderShard", &rocalJpegCaffe2LMDBRecordSourceSingleShard,"Reads file from the source given and decodes it according to the shard id and number of shards",
             py::return_value_policy::reference);
-        m.def("caffe2ImageDecoderPartialShard", &rocalJpegCaffe2LMDBRecordSourcePartialSingleShard, py::return_value_policy::reference);
+        m.def("caffe2ImageDecoderPartialShard", &rocalJpegCaffe2LMDBRecordSourcePartialSingleShard,"Reads file from the source given and partially decodes it according to the shard id and number of shards",
+            py::return_value_policy::reference);
         m.def("fusedDecoderCrop", &rocalFusedJpegCrop,"Reads file from the source and decodes them partially to output random crops",
             py::return_value_policy::reference);
         m.def("fusedDecoderCropShard", &rocalFusedJpegCropSingleShard,"Reads file from the source and decodes them partially to output random crops",

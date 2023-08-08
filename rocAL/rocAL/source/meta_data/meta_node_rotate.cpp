@@ -54,7 +54,7 @@ void RotateMetaNode::update_parameters(pMetaDataBatch input_meta_data, pMetaData
             BoundingBoxCord box;
             float src_bb_x, src_bb_y, bb_w, bb_h;
             float dest_cx, dest_cy, src_cx, src_cy;
-            float x1, y1, x2, y2, x3, y3, x4, y4, min_x, min_y, max_x, max_y;
+            float x1, y1, x2, y2, x3, y3, x4, y4, min_x, min_y;
             float rotate[4];
             float radian = RAD(_angle_val[i]);
             rotate[0] = rotate[3] = cos(radian);
@@ -79,22 +79,16 @@ void RotateMetaNode::update_parameters(pMetaDataBatch input_meta_data, pMetaData
             y4 = (rotate[2] * ((src_bb_x + bb_w) - src_cx)) + ( rotate[3] * ((src_bb_y + bb_h) - src_cy)) + dest_cy;
             min_x = std::min(x1, std::min(x2, std::min(x3, x4)));
             min_y = std::min(y1, std::min(y2, std::min(y3, y4)));
-            max_x = std::max(x1, std::max(x2, std::max(x3, x4)));
-            max_y = std::max(y1, std::max(y2, std::max(y3, y4)));
             box.l = std::min(0.0f, min_x);
             box.t = std::min(0.0f, min_y);
-            box.r = max_x;
-            box.b = max_y;
+            box.r = std::max(x1, std::max(x2, std::max(x3, x4)));
+            box.b = std::max(y1, std::max(y2, std::max(y3, y4)));
             if (BBoxIntersectionOverUnion(box, dest_image) >= _iou_threshold)
             {
-                float xA = std::max(dest_image.l, box.l);
-                float yA = std::max(dest_image.t, box.t);
-                float xB = std::min(dest_image.r, box.r);
-                float yB = std::min(dest_image.b, box.b);
-                box.l = xA;
-                box.t = yA;
-                box.r = xB;
-                box.b = yB;
+                box.l = std::max(dest_image.l, box.l);
+                box.t = std::max(dest_image.t, box.t);
+                box.r = std::min(dest_image.r, box.r);
+                box.b = std::min(dest_image.b, box.b);
                 bb_coords.push_back(box);
                 bb_labels.push_back(labels_buf[j]);
             }
