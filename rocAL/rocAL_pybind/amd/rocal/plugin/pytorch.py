@@ -305,7 +305,6 @@ class ROCALAudioIterator(object):
         self.shard_size = size
         self.auto_reset = auto_reset
         self.batch_count = 0
-        self.audio_length = None
         self.samples = None
         self.channels = None
         self.max_shape = None
@@ -323,11 +322,9 @@ class ROCALAudioIterator(object):
         self.batch_count = self.batch_count + self.batch_size
         self.num_of_dims = self.output_tensor_list[0].num_of_dims()
         if self.num_of_dims == 3:
-            self.batch_size = self.output_tensor_list[0].batch_size() if self.batch_size is None else self.batch_size
             self.max_shape = self.output_tensor_list[0].max_shape() if self.max_shape is None else self.max_shape
             self.channels = self.max_shape[0]
             self.samples = self.max_shape[1]
-            self.audio_length = self.channels * self.samples if self.audio_length is None else self.audio_length
             roi = self.output_tensor_list[0].get_rois().reshape(self.batch_size, 4)
             max_x1 = np.max(roi[..., 0:1])
             max_y1 = np.max(roi[..., 1:2])

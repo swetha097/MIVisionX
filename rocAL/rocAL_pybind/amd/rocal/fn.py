@@ -1036,7 +1036,7 @@ def preemphasis_filter(*inputs, border=types.CLAMP, preemph_coeff=0.97, rocal_te
     kwargs_pybind = {"input_audio0": inputs[0], "rocal_tensor_output_type" :rocal_tensor_output_type,
                      "is_output": False, "preemph_coeff": preemph_coeff_float_param,
                      "preemph_border_type": border}
-    preemphasis_output = b.PreEmphasisFilter(Pipeline._current_pipeline._handle ,*(kwargs_pybind.values()))
+    preemphasis_output = b.PreEmphasisFilter(Pipeline._current_pipeline._handle, *(kwargs_pybind.values()))
     return preemphasis_output
 
 def nonsilent_region(*inputs, rocal_tensor_output_type = types.FLOAT, bytes_per_sample_hint = [0], cutoff_db = -60, reference_power = 0.0, reset_interval = 8192, seed = -1, window_length = 2048):
@@ -1051,7 +1051,7 @@ def nonsilent_region(*inputs, rocal_tensor_output_type = types.FLOAT, bytes_per_
     """
     kwargs_pybind = {"input_audio0": inputs[0], "is_output": False, "cutoff_db": cutoff_db,
                      "reference_power": reference_power, "reset_interval": reset_interval, "window_length": window_length}
-    non_silent_region_output = b.NonSilentRegion(Pipeline._current_pipeline._handle ,*(kwargs_pybind.values()))
+    non_silent_region_output = b.NonSilentRegion(Pipeline._current_pipeline._handle, *(kwargs_pybind.values()))
     return non_silent_region_output
 
 def slice(*inputs, anchor = [], shape = [], axes = [1, 0], axis_names = "WH", bytes_per_sample_hint = [0], dtype = types.FLOAT, end = [], fill_values = [0.0], normalized_anchor = True, normalized_shape = True,  out_of_bounds_policy = types.ERROR, rel_end = [], rel_shape = [], rel_start = [], seed = -1, start = [] , rocal_tensor_output_type = types.FLOAT):
@@ -1076,7 +1076,7 @@ def slice(*inputs, anchor = [], shape = [], axes = [1, 0], axis_names = "WH", by
 
     kwargs_pybind = {"input_audio0": inputs[0], "is_output": False, "anchor": anchor[0], "shape": shape[0], "fill_values": fill_values, "axes": axes,
                      "normalized_anchor": normalized_anchor , "normalized_shape": normalized_shape, "out_of_bounds_policy": out_of_bounds_policy, "rocal_tensor_output_type": rocal_tensor_output_type}
-    slice_output = b.audioSlice(Pipeline._current_pipeline._handle ,*(kwargs_pybind.values()))
+    slice_output = b.audioSlice(Pipeline._current_pipeline._handle, *(kwargs_pybind.values()))
     return slice_output
 
 def spectrogram(*inputs, bytes_per_sample_hint = [0], center_windows = True, layout = types.FT, nfft = None, power = 2, reflect_padding = True, seed = -1, window_fn = [], window_length = 512, window_step = 256, rocal_tensor_output_type = types.FLOAT) :
@@ -1087,7 +1087,7 @@ def spectrogram(*inputs, bytes_per_sample_hint = [0], center_windows = True, lay
     '''
     kwargs_pybind = {"input_audio0": inputs[0], "is_output": False, "window_fn": window_fn, "center_windows": center_windows, "reflect_padding": reflect_padding,
                      "layout": layout, "power": power, "nfft": nfft, "window_length": window_length, "window_step": window_step, "rocal_tensor_output_type": rocal_tensor_output_type}
-    spectrogram_output = b.Spectrogram(Pipeline._current_pipeline._handle ,*(kwargs_pybind.values()))
+    spectrogram_output = b.Spectrogram(Pipeline._current_pipeline._handle, *(kwargs_pybind.values()))
     return spectrogram_output
 
 def mel_filter_bank(*inputs, bytes_per_sample_hint = [0], freq_high = 0.0, freq_low = 0.0, mel_formula = types.SLANEY, nfilter = 128, normalize = True, sample_rate = 44100.0, seed = -1, rocal_tensor_output_type = types.FLOAT):
@@ -1098,7 +1098,7 @@ def mel_filter_bank(*inputs, bytes_per_sample_hint = [0], freq_high = 0.0, freq_
     '''
     kwargs_pybind = {"input_audio0": inputs[0], "is_output": False, "freq_high": freq_high, "freq_low": freq_low, "mel_formula": mel_formula,
                      "nfilter": nfilter, "normalize": normalize, "sample_rate": sample_rate, "rocal_tensor_output_type": rocal_tensor_output_type}
-    mel_filter_bank_output = b.MelFilterBank(Pipeline._current_pipeline._handle ,*(kwargs_pybind.values()))
+    mel_filter_bank_output = b.MelFilterBank(Pipeline._current_pipeline._handle, *(kwargs_pybind.values()))
     return mel_filter_bank_output
 
 def to_decibels(*inputs, bytes_per_sample_hint = [0], cutoff_db = -200.0, multiplier = 10.0, reference = 0.0, seed = -1, rocal_tensor_output_type = types.FLOAT):
@@ -1111,7 +1111,7 @@ def to_decibels(*inputs, bytes_per_sample_hint = [0], cutoff_db = -200.0, multip
     out[i] = multiplier * log10( max(min_ratio, input[i] / reference) )
     '''
     kwargs_pybind = {"input_audio0": inputs[0], "is_output": False, "cutoff_DB": cutoff_db, "multiplier": multiplier, "reference_magnitude": reference, "rocal_tensor_output_type": rocal_tensor_output_type}
-    decibel_scale = b.ToDecibels(Pipeline._current_pipeline._handle ,*(kwargs_pybind.values()))
+    decibel_scale = b.ToDecibels(Pipeline._current_pipeline._handle, *(kwargs_pybind.values()))
     return decibel_scale
 
 def normalize(*inputs, axes = [], axis_names = "", batch = False, bytes_per_sample_hint = [0], ddof = 0, epsilon = 0.0, mean = 0.0, scale = 1.0, seed = -1, shift = 0.0, stddev = 0.0, rocal_tensor_output_type=types.FLOAT):
@@ -1128,5 +1128,5 @@ def normalize(*inputs, axes = [], axis_names = "", batch = False, bytes_per_samp
     '''
     kwargs_pybind = {"input_audio0": inputs[0], "is_output": False, "batch": batch, "axes": axes, "mean": mean, "stddev": stddev,
                      "scale": scale , "shift": shift, "ddof": ddof , "epsilon": epsilon, "rocal_tensor_output_type": rocal_tensor_output_type}
-    normalize_output = b.audioNormalize(Pipeline._current_pipeline._handle ,*(kwargs_pybind.values()))
+    normalize_output = b.audioNormalize(Pipeline._current_pipeline._handle, *(kwargs_pybind.values()))
     return normalize_output
