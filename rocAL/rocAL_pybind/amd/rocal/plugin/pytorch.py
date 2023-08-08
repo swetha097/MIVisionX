@@ -40,7 +40,6 @@ class ROCALGenericIterator(object):
         self.output_memory_type = self.loader._output_memory_type
         self.len = b.getRemainingImages(self.loader._handle)
         self.display = display
-        self.last_batch_padded_size = b.getLastBatchPaddedSize(self.loader._handle)
         self.last_batch_policy = self.loader._last_batch_policy
         if self.loader._name is None:
             self.loader._name = self.loader._reader
@@ -328,6 +327,10 @@ class ROCALAudioIterator(object):
         self.channels = None
         self.max_shape = None
         self.batch_size = self.loader._batch_size
+        self.output_list = self.torch_dtype = None
+        self.labels_size = self.batch_size
+        self.output_memory_type = self.loader._output_memory_type
+
 
     def next(self):
         return self.__next__()
@@ -345,28 +348,48 @@ class ROCALAudioIterator(object):
         else:
             self.output_tensor_list = self.loader.getOutputTensors()
 
-        self.last_batch_padded_size = b.getLastBatchPaddedSize(self.loader._handle)
-        self.last_batch_size = self.batch_size - self.last_batch_padded_size
+        self.last_batch_size = self.batch_size - b.getLastBatchPaddedSize(self.loader._handle)
         self.batch_count = self.batch_count + self.batch_size
         self.num_of_dims = self.output_tensor_list[0].num_of_dims()
-        if self.num_of_dims == 3:
-            self.max_shape = self.output_tensor_list[0].max_shape() if self.max_shape is None else self.max_shape
-            self.channels = self.max_shape[0]
-            self.samples = self.max_shape[1]
-            roi = self.output_tensor_list[0].get_rois().reshape(self.batch_size,4)
-            max_x1 = np.max(roi[...,0:1])
-            max_y1 = np.max(roi[...,1:2])
-            self.output = torch.empty((self.batch_size, max_y1, max_x1,), dtype=torch.float32)
 
-            self.labels = self.loader.getImageLabels()
-            self.labels_tensor = torch.from_numpy(self.labels).type(torch.LongTensor)
+        if self.output_list is None:
+            self.output_list = []
+            for i in range(len(self.output_tensor_list)):
+                roi = self.output_tensor_list[i].get_rois().reshape(self.batch_size,4)
+                max_x1, max_y1 = np.max(roi[...,0:1]), np.max(roi[...,1:2])
+                if self.device == "cpu":
+                    self.torch_dtype = self.output_tensor_list[i].dtype()
+                    self.output = torch.empty((self.batch_size, max_y1, max_x1), dtype = getattr(torch, self.torch_dtype))
+                    self.labels_tensor = torch.empty(self.labels_size, dtype = getattr(torch, self.torch_dtype))
+                else:
+                    torch_gpu_device = torch.device('cuda', self.device_id)
+                    self.torch_dtype = self.output_tensor_list[i].dtype()
+                    self.output = torch.empty((self.batch_size, max_y1, max_x1), dtype = getattr(torch, self.torch_dtype), device=torch_gpu_device)
+                    self.labels_tensor = torch.empty(self.labels_size, dtype = getattr(torch, self.torch_dtype), device=torch_gpu_device)
 
-            if (self.last_batch_policy is (types.LAST_BATCH_PARTIAL)) and b.getRemainingImages(self.loader._handle) <= 0 :
-                self.output_tensor_list[0].copy_data(ctypes.c_void_p(self.output.data_ptr()), max_y1, max_x1)
-                return self.output[0:self.last_batch_size,:], self.labels_tensor[0:self.last_batch_size], torch.tensor(self.output_tensor_list[0].get_rois().reshape(self.batch_size,4)[...,0:2][0:self.last_batch_size,:])
-            else:
-                self.output_tensor_list[0].copy_data(ctypes.c_void_p(self.output.data_ptr()), max_y1, max_x1)
-                return self.output, self.labels_tensor, torch.tensor(self.output_tensor_list[0].get_rois().reshape(self.batch_size,4)[...,0:2])
+                self.output_tensor_list[i].copy_data(ctypes.c_void_p(self.output.data_ptr()), self.output_memory_type)
+                self.output_list.append(self.output)
+        else:
+            for i in range(len(self.output_tensor_list)):
+                roi = self.output_tensor_list[i].get_rois().reshape(self.batch_size,4)
+                max_x1, max_y1 = np.max(roi[...,0:1]), np.max(roi[...,1:2])
+                if self.device == "cpu":
+                    self.torch_dtype = self.output_tensor_list[i].dtype()
+                    self.output = torch.empty((self.batch_size, max_y1, max_x1), dtype = getattr(torch, self.torch_dtype))
+                    self.labels_tensor = torch.empty(self.labels_size, dtype = getattr(torch, self.torch_dtype))
+                else:
+                    torch_gpu_device = torch.device('cuda', self.device_id)
+                    self.torch_dtype = self.output_tensor_list[i].dtype()
+                    self.output = torch.empty((self.batch_size, max_y1, max_x1), dtype = getattr(torch, self.torch_dtype), device=torch_gpu_device)
+                self.output_tensor_list[i].copy_data(ctypes.c_void_p(self.output_list[i].data_ptr()), self.output_memory_type)
+        self.labels = self.loader.getImageLabels()
+        self.labels_tensor = self.labels_tensor.copy_(torch.from_numpy(self.labels)).long()
+        if (self.last_batch_policy is (types.LAST_BATCH_PARTIAL)) and b.getRemainingImages(self.loader._handle) <= 0 :
+            return [inner_list[0:self.last_batch_size,:] for inner_list in self.output_list], self.labels_tensor[0:self.last_batch_size], torch.tensor(self.output_tensor_list[0].get_rois().reshape(self.batch_size,4)[...,0:2][0:self.last_batch_size,:])
+        else:
+            return self.output_list, self.labels_tensor, torch.tensor(self.output_tensor_list[0].get_rois().reshape(self.batch_size,4)[...,0:2])
+
+
 
     def reset(self):
         self.batch_count = 0
