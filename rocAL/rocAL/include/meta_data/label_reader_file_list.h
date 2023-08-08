@@ -27,8 +27,7 @@ THE SOFTWARE.
 #include "meta_data.h"
 #include "meta_data_reader.h"
 
-class LabelReaderFileList: public MetaDataReader
-{
+class LabelReaderFileList: public MetaDataReader {
 public :
     void init(const MetaDataConfig& cfg, pMetaDataBatch meta_data_batch) override;
     void lookup(const std::vector<std::string>& image_names) override;
@@ -40,7 +39,6 @@ public :
     const std::map<std::string, std::shared_ptr<MetaData>> & get_map_content() override { return _map_content;}
     LabelReaderFileList();
 private:
-    void read_files(const std::string& _path);
     bool exists(const std::string &image_name) override;
     void add(std::string image_name, int label);
     std::map<std::string, std::shared_ptr<MetaData>> _map_content;
