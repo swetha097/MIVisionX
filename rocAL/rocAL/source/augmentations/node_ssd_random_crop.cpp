@@ -208,7 +208,7 @@ SSDRandomCropNode::~SSDRandomCropNode() {
 #if ENABLE_HIP
         hipError_t err = hipHostFree(_crop_coordinates);
         if(err != hipSuccess)
-            std::cerr << "\n[ERR] hipFree failed  " << std::to_string(err) << "\n";
+            std::cerr << "\n[ERR] hipFree failed" << std::to_string(err) << "\n";
 #endif
     } else {
         free(_crop_coordinates);
