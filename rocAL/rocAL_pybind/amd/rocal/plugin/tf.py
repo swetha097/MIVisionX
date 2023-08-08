@@ -103,7 +103,8 @@ class ROCALGenericIteratorDetection(object):
                     self.output_tensor_list[i].copy_data(self.output_list[i].data.ptr)
 
         if self.loader._name == "TFRecordReaderDetection":
-            # Count of labels/ bboxes in a batch
+            self.bbox_list = []
+            self.label_list = []
             # 1D labels array in a batch
             self.labels = self.loader.get_bounding_box_labels()
             # 1D bboxes array in a batch
