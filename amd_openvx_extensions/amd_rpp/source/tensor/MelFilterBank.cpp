@@ -42,10 +42,10 @@ struct MelFilterBankLocalData {
 
 void copy_src_dims_and_update_dst_roi(MelFilterBankLocalData *data, RpptROI *src_roi, RpptROI *dst_roi) {
     for (unsigned i = 0; i < data->inputTensorDims[0]; i++) {
-       dst_roi[i].xywhROI.xy.x = src_roi[i].xywhROI.xy.x;
-       dst_roi[i].xywhROI.xy.y = data->nfilter;
        data->pSrcDims[i].width = src_roi[i].xywhROI.xy.x;
        data->pSrcDims[i].height = src_roi[i].xywhROI.xy.y;
+       dst_roi[i].xywhROI.xy.x = src_roi[i].xywhROI.xy.x;
+       dst_roi[i].xywhROI.xy.y = data->nfilter;
     }
 }
 
@@ -78,34 +78,34 @@ static vx_status VX_CALLBACK validateMelFilterBank(vx_node node, const vx_refere
     vx_enum scalar_type;
     STATUS_ERROR_CHECK(vxQueryScalar((vx_scalar)parameters[4], VX_SCALAR_TYPE, &scalar_type, sizeof(scalar_type)));
     if (scalar_type != VX_TYPE_FLOAT32)
-        return ERRMSG(VX_ERROR_INVALID_TYPE, "validate: Paramter: #4 type=%d (must be size)\n", scalar_type);
+        return ERRMSG(VX_ERROR_INVALID_TYPE, "validate: Parameter: #4 type=%d (must be size)\n", scalar_type);
     STATUS_ERROR_CHECK(vxQueryScalar((vx_scalar)parameters[5], VX_SCALAR_TYPE, &scalar_type, sizeof(scalar_type)));
     if (scalar_type != VX_TYPE_FLOAT32)
-        return ERRMSG(VX_ERROR_INVALID_TYPE, "validate: Paramter: #5 type=%d (must be size)\n", scalar_type);
+        return ERRMSG(VX_ERROR_INVALID_TYPE, "validate: Parameter: #5 type=%d (must be size)\n", scalar_type);
     STATUS_ERROR_CHECK(vxQueryScalar((vx_scalar)parameters[6], VX_SCALAR_TYPE, &scalar_type, sizeof(scalar_type)));
     if (scalar_type != VX_TYPE_UINT32)
-        return ERRMSG(VX_ERROR_INVALID_TYPE, "validate: Paramter: #6 type=%d (must be size)\n", scalar_type);
+        return ERRMSG(VX_ERROR_INVALID_TYPE, "validate: Parameter: #6 type=%d (must be size)\n", scalar_type);
     STATUS_ERROR_CHECK(vxQueryScalar((vx_scalar)parameters[7], VX_SCALAR_TYPE, &scalar_type, sizeof(scalar_type)));
     if (scalar_type != VX_TYPE_INT32)
-        return ERRMSG(VX_ERROR_INVALID_TYPE, "validate: Paramter: #7 type=%d (must be size)\n", scalar_type);
+        return ERRMSG(VX_ERROR_INVALID_TYPE, "validate: Parameter: #7 type=%d (must be size)\n", scalar_type);
     STATUS_ERROR_CHECK(vxQueryScalar((vx_scalar)parameters[8], VX_SCALAR_TYPE, &scalar_type, sizeof(scalar_type)));
     if (scalar_type != VX_TYPE_BOOL)
-        return ERRMSG(VX_ERROR_INVALID_TYPE, "validate: Paramter: #8 type=%d (must be size)\n", scalar_type);
+        return ERRMSG(VX_ERROR_INVALID_TYPE, "validate: Parameter: #8 type=%d (must be size)\n", scalar_type);
     STATUS_ERROR_CHECK(vxQueryScalar((vx_scalar)parameters[9], VX_SCALAR_TYPE, &scalar_type, sizeof(scalar_type)));
     if (scalar_type != VX_TYPE_FLOAT32)
-        return ERRMSG(VX_ERROR_INVALID_TYPE, "validate: Paramter: #9 type=%d (must be size)\n", scalar_type);
+        return ERRMSG(VX_ERROR_INVALID_TYPE, "validate: Parameter: #9 type=%d (must be size)\n", scalar_type);
 
     // Check for input parameters
     size_t num_tensor_dims;
     STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[0], VX_TENSOR_NUMBER_OF_DIMS, &num_tensor_dims, sizeof(num_tensor_dims)));
-    if(num_tensor_dims < 3) return ERRMSG(VX_ERROR_INVALID_DIMENSION, "validate: MelFilterBank: tensor: #0 dimensions=%lu (must be greater than or equal to 4)\n", num_tensor_dims);
+    if(num_tensor_dims < 3) return ERRMSG(VX_ERROR_INVALID_DIMENSION, "validate: MelFilterBank: tensor: #0 dimensions=%lu (must be greater than or equal to 3)\n", num_tensor_dims);
 
     // Check for output parameters
     vx_uint8 tensor_fixed_point_position;
     size_t tensor_dims[RPP_MAX_TENSOR_DIMS];
     vx_enum tensor_datatype;
     STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[2], VX_TENSOR_NUMBER_OF_DIMS, &num_tensor_dims, sizeof(num_tensor_dims)));
-    if(num_tensor_dims < 3) return ERRMSG(VX_ERROR_INVALID_DIMENSION, "validate: MelFilterBank: tensor: #2 dimensions=%lu (must be greater than or equal to 4)\n", num_tensor_dims);
+    if(num_tensor_dims < 3) return ERRMSG(VX_ERROR_INVALID_DIMENSION, "validate: MelFilterBank: tensor: #2 dimensions=%lu (must be greater than or equal to 3)\n", num_tensor_dims);
 
     STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[2], VX_TENSOR_DIMS, &tensor_dims, sizeof(tensor_dims)));
     STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[2], VX_TENSOR_DATA_TYPE, &tensor_datatype, sizeof(tensor_datatype)));
@@ -124,10 +124,10 @@ static vx_status VX_CALLBACK processMelFilterBank(vx_node node, const vx_referen
     STATUS_ERROR_CHECK(vxQueryNode(node, VX_NODE_LOCAL_DATA_PTR, &data, sizeof(data)));
     refreshMelFilterBank(node, parameters, num, data);
     if (data->deviceType == AGO_TARGET_AFFINITY_GPU) {
-#if ENABLE_HIP
-        // rpp_status = rppt_mel_filter_bank_gpu(data->pSrc, data->pSrcDesc, data->pDst, data->pDstDesc, data->pSrcDims, data->freqHigh, data->freqLow,
-        //                                       data->melFormula, data->nfilter, data->sampleRate, data->normalize, data->handle->rppHandle);
-        return_status = (rpp_status == RPP_SUCCESS) ? VX_SUCCESS : VX_FAILURE;
+#if ENABLE_OPENCL
+        return_status = VX_ERROR_NOT_IMPLEMENTED;
+#elif ENABLE_HIP
+        return_status = VX_ERROR_NOT_IMPLEMENTED;
 #endif
     } else if (data->deviceType == AGO_TARGET_AFFINITY_CPU) {
         rpp_status = rppt_mel_filter_bank_host(data->pSrc, data->pSrcDesc, data->pDst, data->pDstDesc, data->pSrcDims, data->freqHigh, data->freqLow,
@@ -139,7 +139,7 @@ static vx_status VX_CALLBACK processMelFilterBank(vx_node node, const vx_referen
 
 static vx_status VX_CALLBACK initializeMelFilterBank(vx_node node, const vx_reference *parameters, vx_uint32 num) {
     MelFilterBankLocalData *data = new MelFilterBankLocalData;
-    memset(data, 0, sizeof(*data));
+    memset(data, 0, sizeof(MelFilterBankLocalData));
 
     vx_enum input_tensor_datatype, output_tensor_datatype;
     int mel_formula;
@@ -159,6 +159,7 @@ static vx_status VX_CALLBACK initializeMelFilterBank(vx_node node, const vx_refe
     STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[0], VX_TENSOR_DATA_TYPE, &input_tensor_datatype, sizeof(input_tensor_datatype)));
     data->pSrcDesc->dataType = getRpptDataType(input_tensor_datatype);
     data->pSrcDesc->offsetInBytes = 0;
+    fillAudioDescriptionPtrFromDims(data->pSrcDesc, data->inputTensorDims);
 
     // Querying for output tensor
     data->pDstDesc = new RpptDesc;
@@ -167,28 +168,7 @@ static vx_status VX_CALLBACK initializeMelFilterBank(vx_node node, const vx_refe
     STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[2],VX_TENSOR_DATA_TYPE, &output_tensor_datatype, sizeof(output_tensor_datatype)));
     data->pDstDesc->dataType = getRpptDataType(output_tensor_datatype);
     data->pDstDesc->offsetInBytes = 0;
-
-    // source_description_ptr
-    data->pSrcDesc->n = data->inputTensorDims[0];
-    data->pSrcDesc->h = data->inputTensorDims[2];
-    data->pSrcDesc->w = data->inputTensorDims[1];
-    data->pSrcDesc->c = 1;
-    data->pSrcDesc->strides.nStride = data->pSrcDesc->c * data->pSrcDesc->w * data->pSrcDesc->h;
-    data->pSrcDesc->strides.hStride = data->pSrcDesc->c * data->pSrcDesc->w;
-    data->pSrcDesc->strides.wStride = data->pSrcDesc->c;
-    data->pSrcDesc->strides.cStride = 1;
-    data->pSrcDesc->numDims = 4;
-
-    // destination_description_ptr
-    data->pDstDesc->n = data->outputTensorDims[0];
-    data->pDstDesc->w = data->outputTensorDims[1];
-    data->pDstDesc->h = data->outputTensorDims[2];
-    data->pDstDesc->c = 1;
-    data->pDstDesc->strides.nStride = data->pDstDesc->c * data->pDstDesc->w * data->pDstDesc->h;
-    data->pDstDesc->strides.hStride = data->pDstDesc->c * data->pDstDesc->w;
-    data->pDstDesc->strides.wStride = data->pDstDesc->c;
-    data->pDstDesc->strides.cStride = 1;
-    data->pDstDesc->numDims = 4;
+    fillAudioDescriptionPtrFromDims(data->pDstDesc, data->outputTensorDims);
 
     data->pSrcDims = static_cast<RpptImagePatch *>(calloc(data->pSrcDesc->n, sizeof(RpptImagePatch)));
     refreshMelFilterBank(node, parameters, num, data);
