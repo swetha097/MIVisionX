@@ -37,8 +37,6 @@ struct SpectrogramLocalData {
     Rpp32s windowStep;
     RpptDescPtr pSrcDesc;
     RpptDescPtr pDstDesc;
-    RpptROI *pSrcRoi;
-    RpptROI *pDstRoi;
     Rpp32s *pSrcLength;
     Rpp32f *pWindowFn;
     size_t inputTensorDims[RPP_MAX_TENSOR_DIMS];

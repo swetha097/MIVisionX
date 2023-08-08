@@ -33,7 +33,6 @@ struct NonSilentRegionLocalData {
     Rpp32s windowLength;
     Rpp32s resetInterval;
     RpptDescPtr pSrcDesc;
-    RpptROI *pSrcRoi;
     Rpp32s *pSrcLength;
     size_t inputTensorDims[RPP_MAX_TENSOR_DIMS];
     size_t ouputTensorDims[RPP_MAX_TENSOR_DIMS];

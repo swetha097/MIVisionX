@@ -42,10 +42,10 @@ struct MelFilterBankLocalData {
 
 void copy_src_dims_and_update_dst_roi(MelFilterBankLocalData *data, RpptROI *src_roi, RpptROI *dst_roi) {
     for (unsigned i = 0; i < data->inputTensorDims[0]; i++) {
-       dst_roi[i].xywhROI.xy.x = src_roi[i].xywhROI.xy.x;
-       dst_roi[i].xywhROI.xy.y = data->nfilter;
        data->pSrcDims[i].width = src_roi[i].xywhROI.xy.x;
        data->pSrcDims[i].height = src_roi[i].xywhROI.xy.y;
+       dst_roi[i].xywhROI.xy.x = src_roi[i].xywhROI.xy.x;
+       dst_roi[i].xywhROI.xy.y = data->nfilter;
     }
 }
 
