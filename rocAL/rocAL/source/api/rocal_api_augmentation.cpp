@@ -2535,10 +2535,8 @@ RocalTensor rocalTensorMulScalar(RocalContext p_context,
     auto input = static_cast<Tensor*>(p_input);
     RocalTensorDataType op_tensor_data_type;
     try {
-        std::cerr << "Here in Op overl";
         op_tensor_data_type = (RocalTensorDataType)rocal_tensor_output_type;
         TensorInfo output_info = input->info();
-        output_info.set_tensor_layout(RocalTensorlayout::NONE);
         output_info.set_data_type(op_tensor_data_type);
         output = context->master_graph->create_tensor(output_info, is_output);
         context->master_graph->add_node<TensorMulScalarNode>({input}, {output})->init(scalar);
@@ -2566,7 +2564,6 @@ RocalTensor rocalTensorAddTensor(RocalContext p_context,
         op_tensor_data_type = (RocalTensorDataType)rocal_tensor_output_datatype;
         TensorInfo output_info = input1->info();
         output_info.set_data_type(op_tensor_data_type);
-        output_info.set_tensor_layout(RocalTensorlayout::NONE);
         output = context->master_graph->create_tensor(output_info, is_output);
         context->master_graph->add_node<TensorAddTensorNode>({input1,input2}, {output})->init();
     }
@@ -2598,7 +2595,6 @@ RocalTensor rocalUniformDistribution(RocalContext p_context,
         auto info  = TensorInfo(std::vector<size_t>(std::move(dims)),
                                      context->master_graph->mem_type(),
                                      tensor_data_type);
-        info.set_tensor_layout(RocalTensorlayout::NONE);
         output = context->master_graph->create_tensor(info, is_output);
         output->create_from_handle(context->master_graph->get_vx_context());
         context->master_graph->add_node<UniformDistributionNode>({input}, {output})->init(range);
@@ -2631,7 +2627,6 @@ RocalTensor rocalNormalDistribution(RocalContext p_context,
         auto info  = TensorInfo(std::vector<size_t>(std::move(dims)),
                                 context->master_graph->mem_type(),
                                 tensor_data_type);
-        info.set_tensor_layout(RocalTensorlayout::NONE);
         output = context->master_graph->create_tensor(info, is_output);
         output->create_from_handle(context->master_graph->get_vx_context());
         output->reset_tensor_roi();
