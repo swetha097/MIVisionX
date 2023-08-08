@@ -37,7 +37,7 @@ class BatchRNG {
    * lower probablity of collisions between seeds used to initialize RNGs in
    * different operators.
    */
-  BatchRNG(int64_t seed, int batch_size, int state_size = 4)
+  BatchRNG(int64_t seed = 1, int batch_size = 1, int state_size = 4)
       : seed_(seed) {
     std::seed_seq seq{seed_};
     std::vector<uint32_t> seeds(batch_size * state_size);

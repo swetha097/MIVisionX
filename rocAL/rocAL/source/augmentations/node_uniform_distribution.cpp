@@ -61,7 +61,7 @@ void UniformDistributionNode::init(std::vector<float> &range) {
   _max = range[1];
   _num_of_dims = _outputs[0]->info().num_of_dims();
   _uniform_distribution_array.resize(_batch_size);
-  BatchRNG<std::mt19937> _rng = {ParameterFactory::instance()->get_seed_from_seedsequence(), _batch_size};
+  BatchRNG<std::mt19937> _rng = {ParameterFactory::instance()->get_seed_from_seedsequence(), static_cast<int>(_batch_size)};
   _rngs = _rng;
   update_param();
 }

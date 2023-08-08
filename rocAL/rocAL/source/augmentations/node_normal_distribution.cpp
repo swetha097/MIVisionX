@@ -35,7 +35,6 @@ void NormalDistributionNode::create_node() {
     _stride[0] = sizeof(float);
     _stride[1] = _stride[0] * _outputs[0]->info().dims()[0];
     _stride[2] = _stride[1] * _outputs[0]->info().dims()[1];
-    vx_status status;
     for(uint i = 0; i < _batch_size; i++) {
     update_param();
     _normal_distribution_array[i] = _dist_normal(_rngs[i]);
@@ -45,13 +44,10 @@ void NormalDistributionNode::create_node() {
 }
 
 void NormalDistributionNode::update_node() {
-    vx_status status;
     for(uint i = 0; i < _batch_size; i++) {
     update_param();
     _normal_distribution_array[i] = _dist_normal(_rngs[i]);
     }
-    if(status != 0)
-        THROW("ERROR: vxCopyArrayRange failed in the Normal Distribution Node: "+ TOSTR(status))
 }
 
 void NormalDistributionNode::update_param() {
@@ -64,7 +60,7 @@ void NormalDistributionNode::init(float mean, float std_dev) {
     _std_dev = std_dev;
     _num_of_dims = _outputs[0]->info().num_of_dims();
     _normal_distribution_array.resize(_batch_size);
-    BatchRNG<std::mt19937> _rng = {ParameterFactory::instance()->get_seed_from_seedsequence(), _batch_size};
+    BatchRNG<std::mt19937> _rng = {ParameterFactory::instance()->get_seed_from_seedsequence(), static_cast<int>(_batch_size)};
     _rngs =_rng;
     update_param();
 }
