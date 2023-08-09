@@ -24,8 +24,7 @@ THE SOFTWARE.
 
 #include "audio_decoder.h"
 
-class SndFileDecoder : public AudioDecoder
-{
+class SndFileDecoder : public AudioDecoder {
 public:
     //! Default constructor
     SndFileDecoder();

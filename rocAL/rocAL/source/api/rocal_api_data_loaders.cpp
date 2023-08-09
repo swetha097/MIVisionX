@@ -50,12 +50,12 @@ evaluate_audio_data_set(StorageType storage_type,
 {
     AudioSourceEvaluator source_evaluator;
     if(source_evaluator.create(ReaderConfig(storage_type, source_path, json_path), DecoderConfig(decoder_type)) != AudioSourceEvaluatorStatus::OK)
-        THROW("Initializing file source input evaluator failed ")
+        THROW("Initializing file source input evaluator failed")
     auto max_samples = source_evaluator.max_samples();
     auto max_channels = source_evaluator.max_channels();
     if(max_samples == 0 || max_channels  == 0)
         THROW("Cannot find size of the audio files or files cannot be accessed")
-    LOG("Maximum input audio dimension [ "+ TOSTR(max_samples) + " x " + TOSTR(max_channels)+" ] for audio's in "+source_path)
+    LOG("Maximum input audio dimension [ " + TOSTR(max_samples) + " x " + TOSTR(max_channels)+ " ] for audio's in " + source_path)
     return std::make_tuple(max_samples, max_channels);
 };
 
@@ -80,7 +80,7 @@ evaluate_image_data_set(RocalImageSizeEvaluationPolicy decode_size_policy, Stora
     ImageSourceEvaluator source_evaluator;
     source_evaluator.set_size_evaluation_policy(translate_image_size_policy(decode_size_policy));
     if(source_evaluator.create(ReaderConfig(storage_type, source_path, json_path), DecoderConfig(decoder_type)) != ImageSourceEvaluatorStatus::OK)
-        THROW("Initializing file source input evaluator failed ")
+        THROW("Initializing file source input evaluator failed")
     auto max_width = source_evaluator.max_width();
     auto max_height = source_evaluator.max_height();
     if(max_width == 0 ||max_height == 0)
@@ -2336,7 +2336,7 @@ rocalVideoFileResizeSingleShard(
         if(sequence_length == 0)
             THROW("Sequence length passed should be bigger than 0")
 
-        if(shard_count < 1 )
+        if(shard_count < 1)
             THROW("Shard count should be bigger than 0")
 
         if(shard_id >= shard_count)
@@ -2568,7 +2568,7 @@ rocalAudioFileSourceSingleShard(
     Tensor* output = nullptr;
     auto context = static_cast<Context*>(p_context);
     try {
-        if(shard_count < 1 )
+        if(shard_count < 1)
             THROW("Shard count should be bigger than 0")
         if(shard_id >= shard_count)
             THROW("Shard id should be smaller than shard count")
@@ -2626,7 +2626,6 @@ rocalAudioFileSource(
         auto [max_frames, max_channels] = evaluate_audio_data_set(StorageType::FILE_SYSTEM, DecoderType::SNDFILE,
                                                        source_path, "");
         INFO("Internal buffer size for audio frames = " + TOSTR(max_frames))
-
         RocalTensorDataType tensor_data_type = RocalTensorDataType::FP32;
         std::vector<size_t> dims = {context->user_batch_size(), max_frames, max_channels};
         auto info  = TensorInfo(std::vector<size_t>(std::move(dims)),

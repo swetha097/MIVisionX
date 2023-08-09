@@ -80,7 +80,8 @@ private:
     std::map<std::string, unsigned int > _file_size;
     unsigned  _curr_file_idx;
     unsigned _current_file_size;
-    std::string _last_id, _last_file_name;
+    std::string _last_id;
+    std::string _last_file_name;
     unsigned int _last_file_size;
     size_t _shard_id = 0;
     size_t _shard_count = 1;// equivalent of batch size
