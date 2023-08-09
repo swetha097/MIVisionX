@@ -2556,7 +2556,6 @@ RocalTensor  ROCAL_API_CALL
 rocalAudioFileSourceSingleShard(
         RocalContext p_context,
         const char* source_path,
-        const char* source_file_list_path,
         unsigned shard_id,
         unsigned shard_count,
         bool is_output,
@@ -2565,19 +2564,16 @@ rocalAudioFileSourceSingleShard(
         bool downmix,
         unsigned max_frames,
         unsigned max_channels,
-        unsigned storage_type,
-        bool stick_to_shard,
-        int shard_size) {
+        unsigned storage_type) {
     Tensor* output = nullptr;
     auto context = static_cast<Context*>(p_context);
     try {
         if(shard_count < 1 )
             THROW("Shard count should be bigger than 0")
-
         if(shard_id >= shard_count)
             THROW("Shard id should be smaller than shard count")
         auto [max_frames, max_channels] = evaluate_audio_data_set(StorageType::FILE_SYSTEM, DecoderType::SNDFILE, source_path, "");
-        INFO("Internal buffer size for audio frames = "+ TOSTR(max_frames))
+        INFO("Internal buffer size for audio frames = " + TOSTR(max_frames))
         RocalTensorlayout tensor_layout = RocalTensorlayout::NONE;
         RocalTensorDataType tensor_data_type = RocalTensorDataType::FP32;
         std::vector<size_t> dims = {context->user_batch_size(), max_frames, max_channels};
@@ -2591,7 +2587,7 @@ rocalAudioFileSourceSingleShard(
         auto cpu_num_threads = context->master_graph->calculate_cpu_num_threads(shard_count);
         context->master_graph->add_node<AudioLoaderSingleShardNode>({}, {output})->init(shard_id, shard_count, cpu_num_threads,
                                                                                         source_path,
-                                                                                        source_file_list_path,
+                                                                                        "",
                                                                                         StorageType(storage_type),
                                                                                         DecoderType::SNDFILE,
                                                                                         shuffle,
@@ -2601,13 +2597,10 @@ rocalAudioFileSourceSingleShard(
                                                                                         context->master_graph->meta_data_reader()
                                                                                         );
         context->master_graph->set_loop(loop);
-
-        if(is_output)
-        {
+        if(is_output) {
             auto actual_output = context->master_graph->create_tensor(info, is_output);
             context->master_graph->add_node<CopyNode>({output}, {actual_output});
         }
-
     }
     catch(const std::exception& e) {
         context->capture_error(e.what());
@@ -2620,7 +2613,6 @@ RocalTensor  ROCAL_API_CALL
 rocalAudioFileSource(
         RocalContext p_context,
         const char* source_path,
-        const char* source_file_list_path,
         unsigned internal_shard_count,
         bool is_output,
         bool shuffle,
@@ -2633,7 +2625,7 @@ rocalAudioFileSource(
     try {
         auto [max_frames, max_channels] = evaluate_audio_data_set(StorageType::FILE_SYSTEM, DecoderType::SNDFILE,
                                                        source_path, "");
-        INFO("Internal buffer size for audio frames = "+ TOSTR(max_frames))
+        INFO("Internal buffer size for audio frames = " + TOSTR(max_frames))
 
         RocalTensorDataType tensor_data_type = RocalTensorDataType::FP32;
         std::vector<size_t> dims = {context->user_batch_size(), max_frames, max_channels};
@@ -2646,7 +2638,7 @@ rocalAudioFileSource(
         auto cpu_num_threads = context->master_graph->calculate_cpu_num_threads(internal_shard_count);
         context->master_graph->add_node<AudioLoaderNode>({}, {output})->init(internal_shard_count, cpu_num_threads,
                                                                              source_path,
-                                                                             source_file_list_path,
+                                                                             "",
                                                                              StorageType::FILE_SYSTEM,
                                                                              DecoderType::SNDFILE,
                                                                              shuffle,

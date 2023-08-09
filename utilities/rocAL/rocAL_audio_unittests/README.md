@@ -9,15 +9,16 @@ This application can be used to verify the functionality of the API offered by r
 * [OpenCV 3.4+](https://github.com/opencv/opencv/releases/tag/3.4.0)
 * Radeon Performance Primitives (RPP)
 
-### build
+### Build
   ````
   mkdir build
   cd build
   cmake ../
   make
   ````
-### running the application
+### Running the application
   ````
-Go to MIVisionX-tests/rocal-unittests
-sh run-rocal-unittests.sh
+./rocAL_audio_unittests
+
+Usage: ./rocAL_audio_unittests <audio-dataset-folder> <test_case> <sample-rate> <downmix> <max_frames> <max_channels> gpu=1/cpu=0
   ````
