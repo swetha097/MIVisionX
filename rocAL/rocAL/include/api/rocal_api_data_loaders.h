@@ -755,7 +755,7 @@ extern "C"  RocalTensor  ROCAL_API_CALL rocalJpegCaffe2LMDBRecordSourcePartialSi
 /// \param is_output Determines if the user wants the loaded audio to be part of the output or not.
 /// \param shuffle Determines if the user wants to shuffle the dataset or not.
 /// \param loop Determines if the user wants to indefinitely loops through audio or not.
-/// \param downmix If set to True, downmix all input channels to mono. If downmixing is turned on, the decoder output is 1D. If downmixing is turned off, it produces 2D output with interleaved channels.
+/// \param downmix If set to True, downmix all input channels to mono. If downmixing is turned on, the decoder output is 1D. If downmixing is turned off, it produces 2D output with interleaved channels incase of multichannel audio.
 /// \param max_frames The maximum frames of the decoded audio.
 /// \param max_channels The maximum channels of the decoded audio.
 /// \return Reference to the output audio
@@ -778,7 +778,7 @@ extern "C"  RocalTensor  ROCAL_API_CALL rocalAudioFileSource(RocalContext contex
 /// \param is_output Determines if the user wants the loaded audio to be part of the output or not.
 /// \param shuffle Determines if the user wants to shuffle the dataset or not.
 /// \param loop Determines if the user wants to indefinitely loops through audio or not.
-/// \param downmix If set to True, downmix all input channels to mono. If downmixing is turned on, the decoder output is 1D. If downmixing is turned off, it produces 2D output with interleaved channels.
+/// \param downmix If set to True, downmix all input channels to mono. If downmixing is turned on, the decoder output is 1D. If downmixing is turned off, it produces 2D output with interleaved channels incase of multichannel audio.
 /// \param max_frames The maximum frames of the decoded audio.
 /// \param max_channels The maximum channels of the decoded audio.
 /// \param storage_type Determines the storage type
