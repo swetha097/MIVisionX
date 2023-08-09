@@ -40,8 +40,6 @@ public:
     /// \param load_batch_count Defines the quantum count of the Audios to be loaded. It's usually equal to the user's batch size.
     /// \param mem_type Memory type, host or device
     /// \param meta_data_reader Determines the meta-data information
-    /// \param stick_to_shard Determines after each epoch if the pipeline advances to the next shard to increase the entropy of the data that is seen by this pipeline or not.
-    /// \param shard_size Number of samples in the shard for the wrapped pipeline. Providing -1 means that the iterator will work until StopIteration is raised from the inside of iterator.
     /// The loader will repeat Audios if necessary to be able to have Audios in multiples of the load_batch_count,
     /// for example if there are 10 Audios in the dataset and load_batch_count is 3, the loader repeats 2 Audios as if there are 12 Audios available.
     void init(unsigned shard_id, unsigned shard_count, unsigned cpu_num_threads, const std::string &source_path, const std::string &source_file_list,
