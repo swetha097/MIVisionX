@@ -38,6 +38,7 @@ class ROCALGenericImageIterator(object):
         self.output_tensor_list = self.loader.get_output_tensors()
 
         if self.output_list is None:
+            # Output list used to store pipeline outputs - can support multiple augmentation outputs
             self.output_list = []
             for i in range(len(self.output_tensor_list)):
                 self.dimensions = self.output_tensor_list[i].dimensions()
@@ -84,6 +85,7 @@ class ROCALGenericIteratorDetection(object):
         self.output_tensor_list = self.loader.get_output_tensors()
 
         if self.output_list is None:
+            # Output list used to store pipeline outputs - can support multiple augmentation outputs
             self.output_list = []
             for i in range(len(self.output_tensor_list)):
                 self.dimensions = self.output_tensor_list[i].dimensions()
