@@ -172,12 +172,12 @@ Reader::Status FileSourceReader::subfolder_reading()
             {
                 if(!_meta_data_reader || _meta_data_reader->exists(entry_path_id))
                 {
-                if(get_file_shard_id() != _shard_id )
-                {
-                    _file_count_all_shards++;
-                    incremenet_file_id();
-                    continue;
-                }
+                    if(get_file_shard_id() != _shard_id )
+                    {
+                        _file_count_all_shards++;
+                        incremenet_file_id();
+                        continue;
+                    }
                 _in_batch_read_count++;
                 _in_batch_read_count = (_in_batch_read_count%_batch_count == 0) ? 0 : _in_batch_read_count;
                 std::string file_path = entry_path;
