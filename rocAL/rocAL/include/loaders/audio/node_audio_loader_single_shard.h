@@ -27,7 +27,6 @@ THE SOFTWARE.
 
 class AudioLoaderSingleShardNode: public Node {
 public:
-
     AudioLoaderSingleShardNode(Tensor *output, void* device_resources);
     ~AudioLoaderSingleShardNode() override;
     /// \param user_shard_count shard count from user
@@ -52,5 +51,3 @@ protected:
 private:
     std::shared_ptr<AudioLoader> _loader_module = nullptr;
 };
-
-

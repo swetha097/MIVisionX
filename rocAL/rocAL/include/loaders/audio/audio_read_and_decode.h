@@ -30,8 +30,7 @@ THE SOFTWARE.
 #include "loader_module.h"
 #include "audio_decoder.h"
 
-class AudioReadAndDecode
-{
+class AudioReadAndDecode {
 public:
     AudioReadAndDecode();
     ~AudioReadAndDecode();
