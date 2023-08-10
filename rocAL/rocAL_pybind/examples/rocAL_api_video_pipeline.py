@@ -54,7 +54,7 @@ class ROCALVideoIterator(object):
         self.reverse_channels = reverse_channels
         self.tensor_dtype = tensor_dtype
         self.batch_size = self.loader._batch_size
-        self.rim = self.loader.getRemainingImages()
+        self.rim = self.loader.get_remaining_images()
         self.display = display
         self.iter_num = 0
         self.sequence_length = sequence_length
@@ -65,13 +65,12 @@ class ROCALVideoIterator(object):
         return self.__next__()
 
     def __next__(self):
-        if (self.loader.isEmpty()):
+        if (self.loader.is_empty()):
             raise StopIteration
 
-        if self.loader.rocalRun() != 0:
+        if self.loader.rocal_run() != 0:
             raise StopIteration
-        else:
-            self.output_tensor_list = self.loader.getOutputTensors()
+        self.output_tensor_list = self.loader.get_output_tensors()
         self.iter_num += 1
         # Copy output from buffer to numpy array
         if self.output is None:
@@ -89,13 +88,13 @@ class ROCALVideoIterator(object):
         return img
 
     def reset(self):
-        self.loader.rocalResetLoaders()
+        self.loader.rocal_reset_loaders()
 
     def __iter__(self):
         return self
 
     def __del__(self):
-        self.loader.rocalRelease()
+        self.loader.rocal_release()
 
 
 def draw_frames(img, batch_idx, iter_idx, layout):
@@ -118,7 +117,7 @@ def main():
     # Args
     args = parse_args()
     video_path = args.video_path
-    _rocal_cpu = False if args.rocal_gpu else True
+    rocal_cpu = False if args.rocal_gpu else True
     batch_size = args.batch_size
     user_sequence_length = args.sequence_length
     display = args.display
@@ -127,13 +126,13 @@ def main():
     tensor_format = types.NFHWC if args.NHWC else types.NFCHW
     tensor_dtype = types.FLOAT16 if args.fp16 else types.FLOAT
     # Create Pipeline instance
-    pipe = Pipeline(batch_size=batch_size, num_threads=num_threads, device_id=args.local_rank, seed=random_seed, rocal_cpu=_rocal_cpu,
-                    tensor_layout=tensor_format, tensor_dtype=tensor_dtype, output_memory_type=types.CPU_MEMORY if _rocal_cpu else types.GPU_MEMORY)
+    pipe = Pipeline(batch_size=batch_size, num_threads=num_threads, device_id=args.local_rank, seed=random_seed, rocal_cpu=rocal_cpu,
+                    tensor_layout=tensor_format, tensor_dtype=tensor_dtype, output_memory_type=types.CPU_MEMORY if rocal_cpu else types.GPU_MEMORY)
     # Use pipeline instance to make calls to reader, decoder & augmentation's
     with pipe:
         images = fn.readers.video(file_root=video_path, sequence_length=user_sequence_length,
-                              random_shuffle=False, image_type=types.RGB)
-        crop_size = (512,960)
+                                  random_shuffle=False, image_type=types.RGB)
+        crop_size = (512, 960)
         output_images = fn.crop_mirror_normalize(images,
                                                  rocal_tensor_output_layout=tensor_format,
                                                  rocal_tensor_output_datatype=tensor_dtype,
