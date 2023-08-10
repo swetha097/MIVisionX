@@ -52,4 +52,3 @@ private:
     size_t _prefetch_queue_depth;
     Tensor *_output_tensor;
 };
-

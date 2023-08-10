@@ -80,5 +80,3 @@ private:
     int _device_id;
     size_t _max_decoded_samples, _max_decoded_channels;
 };
-
-
