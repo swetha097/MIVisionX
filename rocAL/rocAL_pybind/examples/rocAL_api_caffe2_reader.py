@@ -27,20 +27,31 @@ import os
 from parse_config import parse_args
 
 
-def draw_patches(img, idx):
-    #image is expected as a tensor, bboxes as numpy
+def draw_patches(img, idx, bboxes=None):
+    # image is expected as a tensor, bboxes as tensors
     import cv2
     args = parse_args()
     if args.rocal_gpu:
         image = img.cpu().numpy()
     else:
         image = img.detach().numpy()
-    # image = image.transpose([1, 2, 0])
+    if not args.NHWC:
+        image = image.transpose([1, 2, 0])
     image = cv2.cvtColor(image, cv2.COLOR_RGB2BGR)
     if args.classification:
-        cv2.imwrite("OUTPUT_IMAGES_PYTHON/NEW_API/CAFFE2_READER/CLASSIFICATION/"+str(idx)+"_"+"train"+".png", image)
+        cv2.imwrite("OUTPUT_IMAGES_PYTHON/NEW_API/CAFFE2_READER/CLASSIFICATION/" +
+                    str(idx)+"_"+"train"+".png", image)
     else:
-        cv2.imwrite("OUTPUT_IMAGES_PYTHON/NEW_API/CAFFE2_READER/DETECTION/"+str(idx)+"_"+"train"+".png", image)
+        if bboxes is not None:
+            bboxes = bboxes.detach().numpy()
+            for (l, t, r, b) in bboxes:
+                loc_ = [l, t, r, b]
+                color = (255, 0, 0)
+                thickness = 2
+                image = cv2.rectangle(image, (int(loc_[0]), int(loc_[1])), (int(
+                    (loc_[2])), int((loc_[3]))), color, thickness)
+        cv2.imwrite("OUTPUT_IMAGES_PYTHON/NEW_API/CAFFE2_READER/DETECTION/" +
+                    str(idx)+"_"+"train"+".png", image)
 
 
 def main():
@@ -51,17 +62,18 @@ def main():
     batch_size = args.batch_size
     rocal_bbox = False if args.classification else True
     num_threads = args.num_threads
-    local_rank =  args.local_rank
+    local_rank = args.local_rank
     random_seed = args.seed
     display = True if args.display else False
     device = "gpu" if args.rocal_gpu else "cpu"
+    tensor_layout = types.NHWC if args.NHWC else types.NCHW
     num_classes = len(next(os.walk(image_path))[1])
     print("num_classes:: ", num_classes)
     try:
         if args.classification:
-            path= "OUTPUT_IMAGES_PYTHON/NEW_API/CAFFE2_READER/CLASSIFICATION/"
+            path = "OUTPUT_IMAGES_PYTHON/NEW_API/CAFFE2_READER/CLASSIFICATION/"
         else:
-            path= "OUTPUT_IMAGES_PYTHON/NEW_API/CAFFE2_READER/DETECTION/"
+            path = "OUTPUT_IMAGES_PYTHON/NEW_API/CAFFE2_READER/DETECTION/"
         isExist = os.path.exists(path)
         if not isExist:
             os.makedirs(path)
@@ -75,10 +87,10 @@ def main():
         else:
             jpegs, labels = fn.readers.caffe2(path=image_path, bbox=rocal_bbox)
         images = fn.decoders.image(jpegs, output_type=types.RGB, path=image_path, random_shuffle=True)
-        images = fn.resize(images, resize_width=224, resize_height=224)
+        images = fn.resize(images, resize_width=224, resize_height=224, rocal_tensor_output_layout=tensor_layout)
         pipe.set_outputs(images)
     pipe.build()
-    data_loader = ROCALClassificationIterator(pipe , display=0, device=device)
+    data_loader = ROCALClassificationIterator(pipe, display=0, device=device)
 
     # Training loop
     cnt = 0
@@ -92,7 +104,7 @@ def main():
                     print("Labels", labels)
                 for element in list(range(batch_size)):
                     cnt = cnt + 1
-                    draw_patches(image_batch[element],cnt)
+                    draw_patches(image_batch[element], cnt)
             data_loader.reset()
         else:
             for i, ([image_batch], bboxes, labels) in enumerate(data_loader, 0):  # Detection
@@ -104,11 +116,11 @@ def main():
                         print("Labels", labels)
                 for element in list(range(batch_size)):
                     cnt = cnt + 1
-                    draw_patches(image_batch[element],cnt)
+                    draw_patches(image_batch[element], cnt, bboxes[element])
             data_loader.reset()
 
     print("###############################################    CAFFE2 READER (CLASSIFCATION/ DETECTION)    ###############################################")
     print("###############################################    SUCCESS                                    ###############################################")
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()
