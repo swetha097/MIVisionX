@@ -111,7 +111,7 @@ public:
     }
     void set_max_shape() {
         if (_layout != RocalTensorlayout::NONE) {
-            _max_shape.resize(2);  // Since 2 values will be stored in the vector
+            if (!_max_shape.size()) _max_shape.resize(2);  // Since 2 values will be stored in the vector
             _is_image = true;
             if (_layout == RocalTensorlayout::NHWC) {
                 _max_shape[0] = _dims.at(2);
@@ -132,7 +132,7 @@ public:
             }
             reset_tensor_roi_buffers();
         } else if (!_is_metadata) {  // For audio
-            _max_shape.resize(2);       // Since 2 values will be stored in the vector
+            if (!_max_shape.size()) _max_shape.resize(2);       // Since 2 values will be stored in the vector
             _max_shape[0] = _dims.at(1);
             _max_shape[1] = _num_of_dims > 2 ? _dims.at(2) : 0;
         }
@@ -143,6 +143,10 @@ public:
             std::vector<size_t> new_dims(_num_of_dims, 0);
             get_modified_dims_from_layout(_layout, layout, new_dims);
             _dims = new_dims;
+            _strides[_num_of_dims - 1] = _data_type_size;
+            for (int i = _num_of_dims - 2; i >= 0; i--) {
+                _strides[i] = _strides[i + 1] * _dims[i + 1];
+            }
         }
         _layout = layout;
     }
@@ -158,6 +162,36 @@ public:
         } else {
             THROW("The size of number of dimensions does not match with the dimensions of existing tensor")
         }
+    }
+    void modify_dims_width_and_height(RocalTensorlayout layout, size_t width, size_t height) {
+        switch(_layout) {
+            case RocalTensorlayout::NHWC: {
+                _max_shape[1] = _dims[1] = height;
+                _max_shape[0] = _dims[2] = width;
+                break;
+            }
+            case RocalTensorlayout::NCHW:
+            case RocalTensorlayout::NFHWC: {
+                _max_shape[1] = _dims[2] = height;
+                _max_shape[0] = _dims[3] = width;
+                break;   
+            }
+            case RocalTensorlayout::NFCHW: {
+                _max_shape[1] = _dims[3] = height;
+                _max_shape[0] = _dims[4] = width;
+                break;
+            }
+            default: {
+                THROW("Invalid layout type specified")
+            }
+        }
+        _strides[_num_of_dims - 1] = _data_type_size;
+        for (int i = _num_of_dims - 2; i >= 0; i--) {
+            _strides[i] = _strides[i + 1] * _dims[i + 1];
+        }
+        _data_size = _strides[0] * _dims[0];
+        set_tensor_layout(layout);
+        reset_tensor_roi_buffers();
     }
     void set_color_format(RocalColorFormat color_format) {
         _color_format = color_format;
