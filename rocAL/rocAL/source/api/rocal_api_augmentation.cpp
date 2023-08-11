@@ -2213,12 +2213,13 @@ rocalNop(
 }
 
 RocalTensor ROCAL_API_CALL
-rocalPreEmphasisFilter(RocalContext p_context,
-                       RocalTensor p_input,
-                       RocalTensorOutputType rocal_tensor_output_datatype,
-                       bool is_output,
-                       RocalFloatParam p_preemph_coeff,
-                       RocalAudioBorderType preemph_border_type) {
+rocalPreEmphasisFilter(
+        RocalContext p_context,
+        RocalTensor p_input,
+        RocalTensorOutputType rocal_tensor_output_datatype,
+        bool is_output,
+        RocalFloatParam p_preemph_coeff,
+        RocalAudioBorderType preemph_border_type) {
     if(!p_context || !p_input)
         THROW("Null values passed as input")
     Tensor* output = nullptr;
@@ -2241,13 +2242,14 @@ rocalPreEmphasisFilter(RocalContext p_context,
 }
 
 std::pair<RocalTensor, RocalTensor> ROCAL_API_CALL
-rocalNonSilentRegion(RocalContext p_context,
-                     RocalTensor p_input,
-                     bool is_output,
-                     float cutoff_db,
-                     float reference_power,
-                     int reset_interval,
-                     int window_length) {
+rocalNonSilentRegion(
+        RocalContext p_context,
+        RocalTensor p_input,
+        bool is_output,
+        float cutoff_db,
+        float reference_power,
+        int reset_interval,
+        int window_length) {
     Tensor* output1 = nullptr;
     Tensor* output2 = nullptr;
     if ((p_context == nullptr) || (p_input == nullptr))
