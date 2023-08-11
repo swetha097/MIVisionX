@@ -181,8 +181,8 @@ static vx_status VX_CALLBACK initializeSlice(vx_node node, const vx_reference *p
     data->pDstDesc->offsetInBytes = 0;
     fillAudioDescriptionPtrFromDims(data->pDstDesc, data->outputTensorDims);
 
-    data->pSrcDims = static_cast<int *>(calloc(data->pSrcDesc->n * 2, sizeof(int)));
-    data->pFillValues = static_cast<float *>(calloc(data->pSrcDesc->n * data->dimsStride, sizeof(float)));
+    data->pSrcDims = new int[data->pSrcDesc->n * 2]; 
+    data->pFillValues = new float[data->pSrcDesc->n * data->dimsStride];
 
     refreshSlice(node, parameters, num, data);
     STATUS_ERROR_CHECK(createRPPHandle(node, &data->handle, data->pSrcDesc->n, data->deviceType));
@@ -194,8 +194,8 @@ static vx_status VX_CALLBACK uninitializeSlice(vx_node node, const vx_reference 
     SliceLocalData *data;
     STATUS_ERROR_CHECK(vxQueryNode(node, VX_NODE_LOCAL_DATA_PTR, &data, sizeof(data)));
     STATUS_ERROR_CHECK(releaseRPPHandle(node, data->handle, data->deviceType));
-    free(data->pSrcDims);
-    free(data->pFillValues);
+    delete(data->pSrcDims);
+    delete(data->pFillValues);
     delete(data->pSrcDesc);
     delete(data->pDstDesc);
     delete(data);
