@@ -185,8 +185,6 @@ int main(int argc, const char ** argv)
 
     // RocalTensor image4 = rocalColorTemp(handle, image0, true, color_temp_adj);
 
-    RocalTensor image5 = rocalWarpAffine(handle, image0, true);
-
     // RocalTensor image6 = rocalJitter(handle, image5, true);
 
     // rocalVignette(handle, image5, true);
@@ -236,8 +234,6 @@ int main(int argc, const char ** argv)
     cv::Mat mat_input(h, w, cv_color_format);
     cv::Mat mat_color;
     int col_counter = 0;
-    // if (display)
-    //     cv::namedWindow( "output", CV_WINDOW_AUTOSIZE );
 
     //adding heading to output display
     cv::Rect roi = Rect(0,0,w*number_of_cols,AMD_Epyc_Black_resize.rows);
@@ -264,7 +260,7 @@ int main(int argc, const char ** argv)
         rocalUpdateIntParameter(rocalGetIntValue(color_temp_adj)+color_temp_increment, color_temp_adj);
         auto ouput_tensor_list = rocalGetOutputTensors(handle);
         unsigned char* output = mat_input.data;
-        for (int i = 0; i < ouput_tensor_list->size(); i++)
+        for (uint i = 0; i < ouput_tensor_list->size(); i++)
         {
             ouput_tensor_list->at(i)->copy_data(output);
             output += ouput_tensor_list->at(i)->data_size();
@@ -290,7 +286,6 @@ int main(int argc, const char ** argv)
         cv::waitKey(1);
         col_counter = (col_counter+1)%number_of_cols;
     }
-    std::cerr<<"\n check 3";
     high_resolution_clock::time_point t2 = high_resolution_clock::now();
     auto dur = duration_cast<microseconds>( t2 - t1 ).count();
     auto rocal_timing = rocalGetTimingInfo(handle);
