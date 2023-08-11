@@ -186,8 +186,8 @@ static vx_status VX_CALLBACK initializeSpectrogram(vx_node node, const vx_refere
     data->pDstDesc->offsetInBytes = 0;
     fillAudioDescriptionPtrFromDims(data->pDstDesc, data->outputTensorDims);
 
-    data->pSrcLength = static_cast<int *>(calloc(data->pSrcDesc->n, sizeof(unsigned int)));
-    data->pWindowFn =  static_cast<float *>(calloc(data->windowLength, sizeof(float)));
+    data->pSrcLength = new int[data->pSrcDesc->n];
+    data->pWindowFn =  new float[data->windowLength];
 
     refreshSpectrogram(node, parameters, num, data);
     STATUS_ERROR_CHECK(vxCopyArrayRange((vx_array)parameters[4], 0, data->windowLength, sizeof(float), data->pWindowFn, VX_READ_ONLY, VX_MEMORY_TYPE_HOST));
@@ -199,8 +199,8 @@ static vx_status VX_CALLBACK initializeSpectrogram(vx_node node, const vx_refere
 static vx_status VX_CALLBACK uninitializeSpectrogram(vx_node node, const vx_reference *parameters, vx_uint32 num) {
     SpectrogramLocalData *data;
     STATUS_ERROR_CHECK(vxQueryNode(node, VX_NODE_LOCAL_DATA_PTR, &data, sizeof(data)));
-    if (data->pSrcLength != nullptr) free(data->pSrcLength);
-    if (data->pWindowFn != nullptr) free(data->pWindowFn);
+    delete(data->pSrcLength);
+    delete(data->pWindowFn);
     delete(data->pSrcDesc);
     delete(data->pDstDesc);
     STATUS_ERROR_CHECK(releaseRPPHandle(node, data->handle, data->deviceType));

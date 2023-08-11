@@ -152,7 +152,7 @@ static vx_status VX_CALLBACK initializeNonSilentRegion(vx_node node, const vx_re
     fillAudioDescriptionPtrFromDims(data->pSrcDesc, data->inputTensorDims);
 
     data->pSrcDesc->numDims = 4;
-    data->pSrcLength = static_cast<int *>(calloc(data->pSrcDesc->n, sizeof(int)));
+    data->pSrcLength = new int[data->pSrcDesc->n];
     refreshNonSilentRegion(node, parameters, num, data);
     STATUS_ERROR_CHECK(createRPPHandle(node, &data->handle, data->pSrcDesc->n, data->deviceType));
     STATUS_ERROR_CHECK(vxSetNodeAttribute(node, VX_NODE_LOCAL_DATA_PTR, &data, sizeof(data)));
@@ -162,7 +162,7 @@ static vx_status VX_CALLBACK initializeNonSilentRegion(vx_node node, const vx_re
 static vx_status VX_CALLBACK uninitializeNonSilentRegion(vx_node node, const vx_reference *parameters, vx_uint32 num) {
     NonSilentRegionLocalData *data;
     STATUS_ERROR_CHECK(vxQueryNode(node, VX_NODE_LOCAL_DATA_PTR, &data, sizeof(data)));
-    if (data->pSrcLength != nullptr) free(data->pSrcLength);
+    delete(data->pSrcLength);
     delete(data->pSrcDesc);
     STATUS_ERROR_CHECK(releaseRPPHandle(node, data->handle, data->deviceType));
     delete(data);

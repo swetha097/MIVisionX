@@ -151,7 +151,7 @@ static vx_status VX_CALLBACK initializeToDecibels(vx_node node, const vx_referen
     data->pDstDesc->offsetInBytes = 0;
     fillAudioDescriptionPtrFromDims(data->pDstDesc, data->outputTensorDims);
 
-    data->pSrcDims = static_cast<RpptImagePatch *>(calloc(data->pSrcDesc->n, sizeof(RpptImagePatch)));
+    data->pSrcDims = new RpptImagePatch[data->pSrcDesc->n];
     refreshToDecibels(node, parameters, num, data);
     STATUS_ERROR_CHECK(createRPPHandle(node, &data->handle, data->pSrcDesc->n, data->deviceType));
     STATUS_ERROR_CHECK(vxSetNodeAttribute(node, VX_NODE_LOCAL_DATA_PTR, &data, sizeof(data)));
@@ -161,7 +161,7 @@ static vx_status VX_CALLBACK initializeToDecibels(vx_node node, const vx_referen
 static vx_status VX_CALLBACK uninitializeToDecibels(vx_node node, const vx_reference *parameters, vx_uint32 num) {
     ToDecibelsLocalData *data;
     STATUS_ERROR_CHECK(vxQueryNode(node, VX_NODE_LOCAL_DATA_PTR, &data, sizeof(data)));
-    if(data->pSrcDims != nullptr) free(data->pSrcDims);
+    delete(data->pSrcDims);
     delete(data->pSrcDesc);
     delete(data->pDstDesc);
     STATUS_ERROR_CHECK(releaseRPPHandle(node, data->handle, data->deviceType));

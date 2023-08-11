@@ -2213,12 +2213,13 @@ rocalNop(
 }
 
 RocalTensor ROCAL_API_CALL
-rocalPreEmphasisFilter(RocalContext p_context,
-                       RocalTensor p_input,
-                       RocalTensorOutputType rocal_tensor_output_datatype,
-                       bool is_output,
-                       RocalFloatParam p_preemph_coeff,
-                       RocalAudioBorderType preemph_border_type) {
+rocalPreEmphasisFilter(
+        RocalContext p_context,
+        RocalTensor p_input,
+        RocalTensorOutputType output_datatype,
+        bool is_output,
+        RocalFloatParam p_preemph_coeff,
+        RocalAudioBorderType preemph_border_type) {
     if(!p_context || !p_input)
         THROW("Null values passed as input")
     Tensor* output = nullptr;
@@ -2226,7 +2227,7 @@ rocalPreEmphasisFilter(RocalContext p_context,
     auto input = static_cast<Tensor*>(p_input);
     auto preemph_coeff = static_cast<FloatParam*>(p_preemph_coeff);
     try {
-        RocalTensorDataType op_tensorDataType = (RocalTensorDataType)rocal_tensor_output_datatype;
+        RocalTensorDataType op_tensorDataType = (RocalTensorDataType)output_datatype;
         TensorInfo output_info = input->info();
         output_info.set_data_type(op_tensorDataType);
         output = context->master_graph->create_tensor(output_info, is_output);
@@ -2241,13 +2242,14 @@ rocalPreEmphasisFilter(RocalContext p_context,
 }
 
 std::pair<RocalTensor, RocalTensor> ROCAL_API_CALL
-rocalNonSilentRegion(RocalContext p_context,
-                     RocalTensor p_input,
-                     bool is_output,
-                     float cutoff_db,
-                     float reference_power,
-                     int reset_interval,
-                     int window_length) {
+rocalNonSilentRegion(
+        RocalContext p_context,
+        RocalTensor p_input,
+        bool is_output,
+        float cutoff_db,
+        float reference_power,
+        int reset_interval,
+        int window_length) {
     Tensor* output1 = nullptr;
     Tensor* output2 = nullptr;
     if ((p_context == nullptr) || (p_input == nullptr))
@@ -2293,7 +2295,7 @@ rocalSlice(
         bool normalized_anchor,
         bool normalized_shape,
         RocalOutOfBoundsPolicy policy,
-        RocalTensorOutputType rocal_tensor_output_datatype) {
+        RocalTensorOutputType output_datatype) {
     Tensor* output = nullptr;
     if ((p_context == nullptr) || (p_input == nullptr))
         ERR("Invalid ROCAL context or invalid input tensor")
@@ -2302,7 +2304,7 @@ rocalSlice(
     auto anchor = static_cast<Tensor*>(anchor_tensor);
     auto shape = static_cast<Tensor*>(shape_tensor);
     try {
-        RocalTensorDataType op_tensor_data_type = (RocalTensorDataType)rocal_tensor_output_datatype;
+        RocalTensorDataType op_tensor_data_type = (RocalTensorDataType)output_datatype;
         TensorInfo output_info = input->info();
         output_info.set_data_type(op_tensor_data_type);
         output = context->master_graph->create_tensor(output_info, is_output);
@@ -2329,7 +2331,7 @@ rocalSpectrogram(
         int nfft,
         int window_length,
         int window_step,
-        RocalTensorOutputType rocal_tensor_output_datatype) {
+        RocalTensorOutputType output_datatype) {
     Tensor* output = nullptr;
     if ((p_context == nullptr) || (p_input == nullptr)) {
         ERR("Invalid ROCAL context or invalid input tensor")
@@ -2338,7 +2340,7 @@ rocalSpectrogram(
     auto context = static_cast<Context*>(p_context);
     auto input = static_cast<Tensor*>(p_input);
     try {
-        RocalTensorDataType op_tensor_data_type = (RocalTensorDataType)rocal_tensor_output_datatype;
+        RocalTensorDataType op_tensor_data_type = (RocalTensorDataType)output_datatype;
         std::vector<size_t> max_dims = input->info().max_shape();
         TensorInfo output_info = input->info();
         int window_offset = 0;
@@ -2384,7 +2386,7 @@ rocalMelFilterBank(
         int nfilter,
         bool normalize,
         float sample_rate,
-        RocalTensorOutputType rocal_tensor_output_datatype) {
+        RocalTensorOutputType output_datatype) {
     Tensor* output = nullptr;
     if ((p_context == nullptr) || (p_input == nullptr)) {
         ERR("Invalid ROCAL context or invalid input tensor")
@@ -2393,7 +2395,7 @@ rocalMelFilterBank(
     auto context = static_cast<Context*>(p_context);
     auto input = static_cast<Tensor*>(p_input);
     try {
-        RocalTensorDataType op_tensor_data_type = (RocalTensorDataType)rocal_tensor_output_datatype;
+        RocalTensorDataType op_tensor_data_type = (RocalTensorDataType)output_datatype;
         TensorInfo output_info = input->info();
         std::vector<size_t> max_dims = output_info.max_shape();
         int max_frame = max_dims[0];
@@ -2414,13 +2416,14 @@ rocalMelFilterBank(
 }
 
 RocalTensor ROCAL_API_CALL
-rocalToDecibels(RocalContext p_context,
-                RocalTensor p_input,
-                bool is_output,
-                float cutoff_db,
-                float multiplier,
-                float reference_magnitude,
-                RocalTensorOutputType rocal_tensor_output_datatype) {
+rocalToDecibels(
+        RocalContext p_context,
+        RocalTensor p_input,
+        bool is_output,
+        float cutoff_db,
+        float multiplier,
+        float reference_magnitude,
+        RocalTensorOutputType output_datatype) {
     Tensor* output = nullptr;
     if ((p_context == nullptr) || (p_input == nullptr)) {
         ERR("Invalid ROCAL context or invalid input tensor")
@@ -2429,7 +2432,7 @@ rocalToDecibels(RocalContext p_context,
     auto context = static_cast<Context*>(p_context);
     auto input = static_cast<Tensor*>(p_input);
     try {
-        RocalTensorDataType op_tensor_data_type = (RocalTensorDataType)rocal_tensor_output_datatype;
+        RocalTensorDataType op_tensor_data_type = (RocalTensorDataType)output_datatype;
         TensorInfo output_info = input->info();
         output_info.set_data_type(op_tensor_data_type);
         output = context->master_graph->create_tensor(output_info, is_output);
@@ -2443,14 +2446,15 @@ rocalToDecibels(RocalContext p_context,
 }
 
 RocalTensor ROCAL_API_CALL
-rocalNormalize(RocalContext p_context,
-               RocalTensor p_input,
-               bool is_output, bool batch,
-               std::vector<int>axes,
-               float mean, float std_dev,
-               float scale, float shift,
-               int ddof, float epsilon,
-               RocalTensorOutputType rocal_tensor_output_datatype) {
+rocalNormalize(
+        RocalContext p_context,
+        RocalTensor p_input,
+        bool is_output, bool batch,
+        std::vector<int>axes,
+        float mean, float std_dev,
+        float scale, float shift,
+        int ddof, float epsilon,
+        RocalTensorOutputType output_datatype) {
     Tensor* output = nullptr;
     if ((p_context == nullptr) || (p_input == nullptr)) {
         ERR("Invalid ROCAL context or invalid input tensor")
@@ -2462,7 +2466,7 @@ rocalNormalize(RocalContext p_context,
         if((mean > 0.0f) && (std_dev > 0.0f) && (axes.size()))
             THROW("Axes must not be passed when both mean and standard deviation are specified")
         TensorInfo output_info = input->info();
-        RocalTensorDataType op_tensor_data_type = (RocalTensorDataType)rocal_tensor_output_datatype;
+        RocalTensorDataType op_tensor_data_type = (RocalTensorDataType)output_datatype;
         output_info.set_data_type(op_tensor_data_type);
         output = context->master_graph->create_tensor(output_info, is_output);
         output->reset_tensor_roi();
