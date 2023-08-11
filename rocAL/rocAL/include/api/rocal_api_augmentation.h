@@ -801,9 +801,17 @@ extern "C" RocalTensor ROCAL_API_CALL rocalPreEmphasisFilter(RocalContext p_cont
                                                              RocalFloatParam p_preemph_coeff = NULL,
                                                              RocalAudioBorderType preemph_border_type = RocalAudioBorderType::CLAMP);
 
-/// Accepts F32 audio buffers and returns start index and length of non silent region in audio buffer
-/// \param context
-/// \param input
+/*! \brief A
+ * \ingroup group_rocal_augmentations
+ * \param [in] p_context Rocal context
+ * \param [in] p_input Input Rocal tensor
+ * \param [in] is_output is the output tensor part of the graph output
+ * \param [in] cutoff_db threshold(dB) below which the signal is considered silent
+ * \param [in] reference_power reference power that is used to convert the signal to dB
+ * \param [in] window_length size of the sliding window used to calculate of the short-term power of the signal
+ * \param [in] reset_interval number of samples after which the moving mean average is recalculated to avoid loss of precision
+ * \return std::pair<RocalTensor, RocalTensor>
+ */
 
 extern "C" std::pair<RocalTensor, RocalTensor> ROCAL_API_CALL rocalNonSilentRegion(RocalContext context,
                                                                                    RocalTensor input,
@@ -813,9 +821,21 @@ extern "C" std::pair<RocalTensor, RocalTensor> ROCAL_API_CALL rocalNonSilentRegi
                                                                                    int reset_interval,
                                                                                    int window_length);
 
-/// Accepts F32 audio buffers
-/// \param context
-/// \param input
+/*! \brief A
+ * \ingroup group_rocal_augmentations
+ * \param [in] p_context Rocal context
+ * \param [in] p_input Input Rocal tensor
+ * \param [in] is_output is the output tensor part of the graph output
+ * \param [in] anchor_tensor anchor values used for specifying the starting indices of slice
+ * \param [in] shape_tensor shape values used for specifying the length of slice
+ * \param [in] fill_values fill values based on out of Bound policy
+ * \param [in] axes axes along which slice is needed
+ * \param [in] normalized_anchor determines whether the anchor positional input should be interpreted as normalized or as absolute coordinates
+ * \param [in] normalized_shape determines whether the shape positional input should be interpreted as normalized or as absolute coordinates
+ * \param [in] policy 
+ * \param [in] output_datatype the data type of the output tensor
+ * \return RocalTensor
+ */
 
 extern "C" RocalTensor ROCAL_API_CALL rocalSlice(RocalContext p_context,
                                                  RocalTensor p_input,
@@ -827,11 +847,24 @@ extern "C" RocalTensor ROCAL_API_CALL rocalSlice(RocalContext p_context,
                                                  bool normalized_anchor,
                                                  bool normalized_shape,
                                                  RocalOutOfBoundsPolicy policy,
-                                                 RocalTensorOutputType rocal_tensor_output_type);
+                                                 RocalTensorOutputType output_datatype);
 
-/// Accepts F32 audio buffers
-/// \param context
-/// \param input
+/*! \brief A
+ * \ingroup group_rocal_augmentations
+ * \param [in] p_context Rocal context
+ * \param [in] p_input Input Rocal tensor
+ * \param [in] is_output is the output tensor part of the graph output
+ * \param [in] window_fn values of the window function
+ * \param [in] center_windows boolean value to specify whether extracted windows should be padded so that the window function is centered at multiples of window_step
+ * \param [in] reflect_padding Indicates the padding policy when sampling outside the bounds of the audio data
+ * \param [in] spectrogram_layout output spectrogram layout
+ * \param [in] power Exponent of the magnitude of the spectrum
+ * \param [in] nfft Size of the FFT 
+ * \param [in] window_length Window size in number of samples
+ * \param [in] window_step Step betweeen the STFT windows in number of samples
+ * \param [in] output_datatype the data type of the output tensor
+ * \return RocalTensor
+ */
 
 extern "C" RocalTensor ROCAL_API_CALL rocalSpectrogram(RocalContext p_context,
                                                        RocalTensor p_input,
@@ -844,11 +877,22 @@ extern "C" RocalTensor ROCAL_API_CALL rocalSpectrogram(RocalContext p_context,
                                                        int nfft,
                                                        int window_length,
                                                        int window_step,
-                                                       RocalTensorOutputType rocal_tensor_output_type);
+                                                       RocalTensorOutputType output_datatype);
 
-/// Accepts F32 audio buffers
-/// \param context
-/// \param input
+/*! \brief A
+ * \ingroup group_rocal_augmentations
+ * \param [in] p_context Rocal context
+ * \param [in] p_input Input Rocal tensor
+ * \param [in] is_output is the output tensor part of the graph output
+ * \param [in] freq_high maximum frequency
+ * \param [in] freq_low minimum frequency
+ * \param [in] mel_formula formula used to convert frequencies from hertz to mel and from mel to hertz
+ * \param [in] nfilter number of mel filters
+ * \param [in] normalize boolean variable that determine whether to normalize weights / not
+ * \param [in] sample_rate sampling rate of the audio data
+ * \param [in] output_datatype the data type of the output tensor
+ * \return RocalTensor
+ */
 
 extern "C"  RocalTensor ROCAL_API_CALL rocalMelFilterBank(RocalContext p_context,
                                                           RocalTensor p_input,
@@ -859,6 +903,6 @@ extern "C"  RocalTensor ROCAL_API_CALL rocalMelFilterBank(RocalContext p_context
                                                           int nfilter,
                                                           bool normalize,
                                                           float sample_rate,
-                                                          RocalTensorOutputType rocal_tensor_output_datatype);
+                                                          RocalTensorOutputType output_datatype);
 
 #endif //MIVISIONX_ROCAL_API_AUGMENTATION_H
