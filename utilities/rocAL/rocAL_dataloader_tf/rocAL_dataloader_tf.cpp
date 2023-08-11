@@ -214,8 +214,8 @@ int main(int argc, const char ** argv)
         rocalGetImageName(handle,img_name);
         std::string imageNamesStr(img_name);
         int pos = 0;
+        int *labels_buffer = reinterpret_cast<int *>(labels->at(0)->buffer());
         for(int i = 0; i < inputBatchSize; i++) {
-            int *labels_buffer = reinterpret_cast<int *>(labels->at(i)->buffer());
             names[i] = imageNamesStr.substr(pos, ImageNameLen[i]);
             pos += ImageNameLen[i];
             std::cout << "\n name: " << names[i] << " label: "<< labels_buffer[i] << std::endl;
