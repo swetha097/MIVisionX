@@ -2697,9 +2697,8 @@ VX_API_ENTRY vx_node VX_API_CALL vxExtRppNormalize(vx_graph graph, vx_tensor pSr
             (vx_reference)shift,
             (vx_reference)epsilon,
             (vx_reference)ddof,
-            (vx_reference)numberOfDims,
             (vx_reference)deviceType};
-        node = createNode(graph, VX_KERNEL_RPP_NORMALIZE, params, 13);
+        node = createNode(graph, VX_KERNEL_RPP_NORMALIZE, params, 12);
     }
     return node;
 }

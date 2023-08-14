@@ -34,7 +34,6 @@ struct NormalizeLocalData {
     Rpp32f shift;
     Rpp32f epsilon;
     Rpp32s ddof;
-    Rpp32u numOfDims;
     RpptDescPtr pSrcDesc;
     RpptDescPtr pDstDesc;
     Rpp32s *pSamples;
@@ -133,7 +132,7 @@ static vx_status VX_CALLBACK processNormalize(vx_node node, const vx_reference *
 #endif
     } else if (data->deviceType == AGO_TARGET_AFFINITY_CPU) {
         rpp_status = rppt_normalize_audio_host(data->pSrc, data->pSrcDesc, data->pDst, data->pDstDesc, data->pSamples, data->pChannels, data->axisMask, data->mean,
-                                               data->stdDev, data->scale, data->shift, data->epsilon, data->ddof, data->numOfDims, data->handle->rppHandle);
+                                               data->stdDev, data->scale, data->shift, data->epsilon, data->ddof, data->handle->rppHandle);
         return_status = (rpp_status == RPP_SUCCESS) ? VX_SUCCESS : VX_FAILURE;
     }
     return return_status;
@@ -151,8 +150,7 @@ static vx_status VX_CALLBACK initializeNormalize(vx_node node, const vx_referenc
     STATUS_ERROR_CHECK(vxReadScalarValue((vx_scalar)parameters[8], &data->shift));
     STATUS_ERROR_CHECK(vxReadScalarValue((vx_scalar)parameters[9], &data->epsilon));
     STATUS_ERROR_CHECK(vxReadScalarValue((vx_scalar)parameters[10], &data->ddof));
-    STATUS_ERROR_CHECK(vxReadScalarValue((vx_scalar)parameters[11], &data->numOfDims));
-    STATUS_ERROR_CHECK(vxCopyScalar((vx_scalar)parameters[12], &data->deviceType, VX_READ_ONLY, VX_MEMORY_TYPE_HOST));
+    STATUS_ERROR_CHECK(vxCopyScalar((vx_scalar)parameters[11], &data->deviceType, VX_READ_ONLY, VX_MEMORY_TYPE_HOST));
 
     // Querying for input tensor
     data->pSrcDesc = new RpptDesc;
@@ -215,7 +213,7 @@ vx_status Normalize_Register(vx_context context) {
     vx_kernel kernel = vxAddUserKernel(context, "org.rpp.Normalize",
                                        VX_KERNEL_RPP_NORMALIZE,
                                        processNormalize,
-                                       13,
+                                       12,
                                        validateNormalize,
                                        initializeNormalize,
                                        uninitializeNormalize);
@@ -245,7 +243,6 @@ vx_status Normalize_Register(vx_context context) {
         PARAM_ERROR_CHECK(vxAddParameterToKernel(kernel, 9, VX_INPUT, VX_TYPE_SCALAR, VX_PARAMETER_STATE_REQUIRED));
         PARAM_ERROR_CHECK(vxAddParameterToKernel(kernel, 10, VX_INPUT, VX_TYPE_SCALAR, VX_PARAMETER_STATE_REQUIRED));
         PARAM_ERROR_CHECK(vxAddParameterToKernel(kernel, 11, VX_INPUT, VX_TYPE_SCALAR, VX_PARAMETER_STATE_REQUIRED));
-        PARAM_ERROR_CHECK(vxAddParameterToKernel(kernel, 12, VX_INPUT, VX_TYPE_SCALAR, VX_PARAMETER_STATE_REQUIRED));
         PARAM_ERROR_CHECK(vxFinalizeKernel(kernel));
     }
     if (status != VX_SUCCESS) {

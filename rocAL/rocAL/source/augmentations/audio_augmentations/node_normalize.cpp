@@ -39,7 +39,7 @@ void NormalizeNode::create_node() {
     vx_scalar ddof = vxCreateScalar(vxGetContext((vx_reference)_graph->get()), VX_TYPE_INT32, &_ddof);
     vx_scalar axis_mask = vxCreateScalar(vxGetContext((vx_reference)_graph->get()), VX_TYPE_INT32, &_axis_mask);
     _node = vxExtRppNormalize(_graph->get(), _inputs[0]->handle(), _src_tensor_roi, _outputs[0]->handle(), _dst_tensor_roi, axis_mask, mean, std_dev,
-                              scale, shift, epsilon, ddof, _num_of_dims);
+                              scale, shift, epsilon, ddof);
 
     vx_status status;
     if((status = vxGetStatus((vx_reference)_node)) != VX_SUCCESS)
@@ -57,7 +57,6 @@ void NormalizeNode::init(float mean, float std_dev, std::vector<int> axes, bool 
     _shift = shift;
     _ddof = ddof;
     _epsilon = epsilon;
-    _num_of_dims = _inputs[0]->info().num_of_dims() - 1;
     if(((_mean > 0.0f) || (_std_dev > 0.0f)) && (!axes.size()))
         std::iota(axes.begin(), axes.end(), 0);
     for(unsigned d = 0; d < axes.size(); d++)
