@@ -244,3 +244,107 @@ def draw_patches(img, idx, bboxes):
             cv2.imwrite("OUTPUT_IMAGES_PYTHON/PYTORCH/" + str(idx) + "_" + "train" + ".png", image * 255)
     else:
         cv2.imwrite("OUTPUT_IMAGES_PYTHON/PYTORCH/" + str(idx) + "_" + "train" + ".png", image * 255)
+
+class ROCALAudioIterator(object):
+    """
+    ROCAL iterator for audio tasks for PyTorch
+
+    Please keep in mind that Tensors returned by the iterator are
+    still owned by ROCAL. They are valid till the next iterator call.
+    If the content needs to be preserved please copy it to another tensor.
+
+    Parameters
+    ----------
+    pipelines : list of amd.rocalLI.pipeline.Pipeline
+                List of pipelines to use
+    size : int
+           Number of samples in the epoch (Usually the size of the dataset).
+    auto_reset : bool, optional, default = False
+                 Whether the iterator resets itself for the next epoch
+                 or it requires reset() to be called separately.
+    fill_last_batch : bool, optional, default = True
+                 Whether to fill the last batch with data up to 'self.batch_size'.
+                 The iterator would return the first integer multiple
+                 of self._num_gpus * self.batch_size entries which exceeds 'size'.
+                 Setting this flag to False will cause the iterator to return
+                 exactly 'size' entries.
+    dynamic_shape: bool, optional, default = False
+                 Whether the shape of the output of the RALI pipeline can
+                 change during execution. If True, the pytorch tensor will be resized accordingly
+                 if the shape of RALI returned tensors changes during execution.
+                 If False, the iterator will fail in case of change.
+    last_batch_padded : bool, optional, default = False
+                 Whether the last batch provided by RALI is padded with the last sample
+                 or it just wraps up. In the conjunction with `fill_last_batch` it tells
+                 if the iterator returning last batch with data only partially filled with
+                 data from the current epoch is dropping padding samples or samples from
+                 the next epoch. If set to False next epoch will end sooner as data from
+                 it was consumed but dropped. If set to True next epoch would be the
+                 same length as the first one.
+
+    Example
+    -------
+    With the data set [1,2,3,4,5,6,7] and the batch size 2:
+    fill_last_batch = False, last_batch_padded = True  -> last batch = [7], next iteration will return [1, 2]
+    fill_last_batch = False, last_batch_padded = False -> last batch = [7], next iteration will return [2, 3]
+    fill_last_batch = True, last_batch_padded = True   -> last batch = [7, 7], next iteration will return [1, 2]
+    fill_last_batch = True, last_batch_padded = False  -> last batch = [7, 1], next iteration will return [2, 3]
+    """
+    def __init__(self, pipeline, tensor_layout = types.NCHW, reverse_channels = False, multiplier = [1.0, 1.0, 1.0], offset = [0.0, 0.0, 0.0], tensor_dtype = types.FLOAT, size = -1, auto_reset = False, device = "cpu", device_id = 0):
+        self.loader = pipeline
+        self.tensor_format = tensor_layout
+        self.multiplier = multiplier
+        self.offset = offset
+        self.reverse_channels = reverse_channels
+        self.tensor_dtype = tensor_dtype
+        self.device = device
+        self.device_id = device_id
+        self.output = None
+        self.len = b.getRemainingImages(self.loader._handle)
+        # self.last_batch_policy = self.loader._last_batch_policy #commented for now
+        self.shard_size = size
+        self.auto_reset = auto_reset
+        self.batch_count = 0
+        self.samples = None
+        self.channels = None
+        self.max_shape = None
+        self.batch_size = self.loader._batch_size
+
+    def next(self):
+        return self.__next__()
+
+    def __next__(self):
+        if self.loader.rocalRun() != 0:
+            raise StopIteration
+        else:
+            self.output_tensor_list = self.loader.getOutputTensors()
+
+        self.batch_count = self.batch_count + self.batch_size
+        self.num_of_dims = self.output_tensor_list[0].num_of_dims()
+        if self.num_of_dims == 3:
+            self.max_shape = self.output_tensor_list[0].max_shape() if self.max_shape is None else self.max_shape
+            self.channels = self.max_shape[0]
+            self.samples = self.max_shape[1]
+            roi = self.output_tensor_list[0].get_rois().reshape(self.batch_size, 4)
+            max_x1 = np.max(roi[..., 0:1])
+            max_y1 = np.max(roi[..., 1:2])
+            self.output = torch.empty((self.batch_size, max_y1, max_x1), dtype=torch.float32)
+
+            self.labels = self.loader.getImageLabels()
+            self.labels_tensor = torch.from_numpy(self.labels).type(torch.LongTensor)
+
+            self.output_tensor_list[0].copy_data(ctypes.c_void_p(self.output.data_ptr()), max_y1, max_x1)
+            return self.output, self.labels_tensor, torch.tensor(roi[..., 0:2])
+
+    def reset(self):
+        b.rocalResetLoaders(self.loader._handle)
+
+    def __iter__(self):
+        return self
+
+    def __len__(self):
+        return self.len
+
+    def __del__(self):
+        print("Comes to rocALRelease")
+        b.rocalRelease(self.loader._handle)

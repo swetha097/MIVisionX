@@ -358,12 +358,41 @@ namespace rocal{
                 )code"
             )
             .def(
+                "num_of_dims",
+                [](rocalTensor &output_tensor)
+                {
+                    return output_tensor.num_of_dims();
+                },
+                R"code(
+                Returns a tensor data's total number of dimensions.
+                ex: 3 in case of audio, 4 in case of an image, 5 in case of video
+                )code"
+            )
+            .def(
                 "batch_size",
                 [](rocalTensor &output_tensor) {
                     return output_tensor.dims().at(0);
                 },
                 R"code(
                 Returns a tensor batch size.
+                )code"
+            )
+            .def(
+                "get_rois",
+                [](rocalTensor &output_tensor)
+                {
+                    return py::array(py::buffer_info(
+                            (int *)(output_tensor.get_roi()),
+                            sizeof(int),
+                            py::format_descriptor< int>::format(),
+                            1,
+                            {output_tensor.dims().at(0) * 4},
+                            {sizeof(int) }));
+                },
+                R"code(
+                Returns a tensor ROI
+                ex : width, height in case of an image data
+                ex : samples , channels in case of an audio data
                 )code"
             )
             .def("layout", [](rocalTensor &output_tensor) {
@@ -395,6 +424,13 @@ namespace rocal{
                 R"code(
                 Copies the ring buffer data to python buffer pointers.
                 )code"
+            )
+            .def(
+            "copy_data", [](rocalTensor &output_tensor, py::object p, uint max_x1, uint max_y1) {
+                auto ptr = ctypes_void_ptr(p);
+                output_tensor.copy_data(static_cast<void *>(ptr), max_x1, max_y1);
+            },
+            py::return_value_policy::reference
             )
             .def("copy_data_numpy", &copy_data_numpy_wrapper<u_char>, py::return_value_policy::reference)
             .def("copy_data_numpy", &copy_data_numpy_wrapper<float>, py::return_value_policy::reference)
@@ -842,9 +878,13 @@ namespace rocal{
             py::return_value_policy::reference);
         m.def("audioSlice", &rocalSlice,"The slice can be specified by proving the start and end coordinates, or start coordinates and shape of the slice. Both coordinates and shapes can be provided in absolute or relative terms",
             py::return_value_policy::reference);
+        m.def("audioNormalize", &rocalNormalize,"Normalizes the input by removing the mean and dividing by the standard deviation",
+            py::return_value_policy::reference);
         m.def("Spectrogram", &rocalSpectrogram, "Produces a spectrogram from a 1D signal (for example, audio)",
             py::return_value_policy::reference);
         m.def("MelFilterBank", &rocalMelFilterBank, "Converts a spectrogram to a mel spectrogram by applying a bank of triangular filters",
+            py::return_value_policy::reference);
+        m.def("ToDecibels", &rocalToDecibels, "Converts to Decibels",
             py::return_value_policy::reference);
     }
 }

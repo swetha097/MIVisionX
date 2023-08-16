@@ -905,4 +905,51 @@ extern "C"  RocalTensor ROCAL_API_CALL rocalMelFilterBank(RocalContext p_context
                                                           float sample_rate,
                                                           RocalTensorOutputType output_datatype);
 
+/*! \brief A
+ * \ingroup group_rocal_augmentations
+ * \param [in] p_context Rocal context
+ * \param [in] p_input Input Rocal tensor
+ * \param [in] is_output is the output tensor part of the graph output
+ * \param [in] cutoff_db minimum or cut-off ratio in dB
+ * \param [in] multiplier multiplier factor by which the logarithm is multiplied
+ * \param [in] reference_magnitude reference magnitude if not provided maximum value of input used as reference
+ * \param [in] output_datatype the data type of the output tensor
+ * \return RocalTensor
+ */
+
+extern "C" RocalTensor ROCAL_API_CALL rocalToDecibels(RocalContext p_context,
+                                                      RocalTensor p_input,
+                                                      bool is_output,
+                                                      float cutoff_db,
+                                                      float multiplier,
+                                                      float reference_magnitude,
+                                                      RocalTensorOutputType output_datatype);
+
+/*! \brief A
+ * \ingroup group_rocal_augmentations
+ * \param [in] p_context Rocal context
+ * \param [in] p_input Input Rocal tensor
+ * \param [in] is_output is the output tensor part of the graph output
+ * \param [in] batch boolean value for batch normalization
+ * \param [in] axis axis along which normalizdation to be done
+ * \param [in] mean mean value to be subtracted from input
+ * \param [in] std_dev standard deviation value to scale the input
+ * \param [in] scale scaling factor applied to output
+ * \param [in] shift shift value to which the mean will map in the output
+ * \param [in] ddof delta degrees of freedom for bessel’s correction
+ * \param [in] epsilon value that is added to the variance to avoid division by small number
+ * \param [in] output_datatype the data type of the output tensor
+ * \return RocalTensor
+ */
+
+extern "C" RocalTensor ROCAL_API_CALL rocalNormalize(RocalContext p_context,
+                                                     RocalTensor p_input,
+                                                     bool is_output,
+                                                     bool batch,
+                                                     std::vector<int> axes,
+                                                     float mean, float std_dev,
+                                                     float scale, float shift,
+                                                     int ddof, float epsilon,
+                                                     RocalTensorOutputType output_datatype);
+
 #endif //MIVISIONX_ROCAL_API_AUGMENTATION_H
