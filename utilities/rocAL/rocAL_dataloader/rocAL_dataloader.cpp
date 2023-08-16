@@ -194,16 +194,12 @@ int main(int argc, const char ** argv)
     std::vector<std::string> names;
     int image_name_length[inputBatchSize];
     names.resize(inputBatchSize);
-    
-
     int iter_cnt = 0;
-
     while (!rocalIsEmpty(handle) && (iter_cnt < 100))
     {
         if(rocalRun(handle) != 0)
             break;
-
-        rocalCopyToOutput(handle, mat_input.data, h*w*p);
+        rocalCopyToOutput(handle, mat_input.data, h * w * p);
         counter += inputBatchSize;
         RocalTensorList labels = rocalGetImageLabels(handle);
         unsigned img_name_size = rocalGetImageNameLen(handle, image_name_length);
