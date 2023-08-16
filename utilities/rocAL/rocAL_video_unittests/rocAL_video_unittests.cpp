@@ -312,8 +312,6 @@ int main(int argc, const char **argv)
         {
             int image_name_length[input_batch_size];
             RocalTensorList labels = rocalGetImageLabels(handle);
-
-
             int img_size = rocalGetImageNameLen(handle, image_name_length);
             char img_name[img_size];
             rocalGetImageName(handle, img_name);

@@ -245,12 +245,13 @@ int main(int argc, const char ** argv)
                     }
                 }
             }
-            cv::imwrite("output_for_cifar.png",mat_output);
+            cv::imshow("output",mat_output);
         }
         else
         {
-            cv::imwrite("output_for_cifar.png",mat_output);
+            cv::imshow("output",mat_output);
         }
+        cv::waitKey(1);
         col_counter = (col_counter+1)%number_of_cols;
     }
 
