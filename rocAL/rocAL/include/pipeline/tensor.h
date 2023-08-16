@@ -143,20 +143,14 @@ public:
             std::vector<size_t> new_dims(_num_of_dims, 0);
             get_modified_dims_from_layout(_layout, layout, new_dims);
             _dims = new_dims;
-            _strides[_num_of_dims - 1] = _data_type_size;
-            for (int i = _num_of_dims - 2; i >= 0; i--) {
-                _strides[i] = _strides[i + 1] * _dims[i + 1];
-            }
+            modify_strides();
         }
         _layout = layout;
     }
     void set_dims(std::vector<size_t>& new_dims) {
         if (_num_of_dims == new_dims.size()) {
             _dims = new_dims;
-            _strides[_num_of_dims - 1] = _data_type_size;
-            for (int i = _num_of_dims - 2; i >= 0; i--) {
-                _strides[i] = _strides[i + 1] * _dims[i + 1];
-            }
+            modify_strides();
             _data_size = _strides[0] * _dims[0];
             set_max_shape();
         } else {
@@ -185,13 +179,16 @@ public:
                 THROW("Invalid layout type specified")
             }
         }
+        modify_strides();
+        _data_size = _strides[0] * _dims[0];    // Modify data size wrt latest width and height
+        set_tensor_layout(layout);              // Modify the layout and dims based on the layout input
+        reset_tensor_roi_buffers();             // Reset ROI buffers to reflect the modified width and height
+    }
+    void modify_strides() {
         _strides[_num_of_dims - 1] = _data_type_size;
         for (int i = _num_of_dims - 2; i >= 0; i--) {
             _strides[i] = _strides[i + 1] * _dims[i + 1];
         }
-        _data_size = _strides[0] * _dims[0];
-        set_tensor_layout(layout);
-        reset_tensor_roi_buffers();
     }
     void set_color_format(RocalColorFormat color_format) {
         _color_format = color_format;
