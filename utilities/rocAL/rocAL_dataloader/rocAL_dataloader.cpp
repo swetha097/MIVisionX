@@ -64,7 +64,7 @@ int main(int argc, const char ** argv)
     int decode_width = 32;
     int decode_height = 32;
     int inputBatchSize = 4;
-    bool processing_device = 0;
+    bool processing_device = 1;
 
     if(argc >= argIdx+MIN_ARG_COUNT)
         processing_device = atoi(argv[++argIdx]);
