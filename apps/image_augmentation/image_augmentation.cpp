@@ -265,7 +265,6 @@ int main(int argc, const char ** argv)
             ouput_tensor_list->at(i)->copy_data(output);
             output += ouput_tensor_list->at(i)->data_size();
         }
-        // rocalCopyToOutput(handle, mat_input.data, h*w*p);
         counter += inputBatchSize;
         if(!display)
             continue;
@@ -274,14 +273,11 @@ int main(int argc, const char ** argv)
         if(color_format ==  RocalImageColor::ROCAL_COLOR_RGB24 )
         {
             cv::cvtColor(mat_output, mat_color, CV_RGB2BGR);
-            // cv::imshow("output",mat_color);
-            cv::imwrite("output.png",mat_color);
+            cv::imshow("output",mat_color);
         }
         else
         {
-            // cv::imshow("output",mat_output);
-            cv::imwrite("output.png",mat_output);
-
+            cv::imshow("output",mat_output);
         }
         cv::waitKey(1);
         col_counter = (col_counter+1)%number_of_cols;
