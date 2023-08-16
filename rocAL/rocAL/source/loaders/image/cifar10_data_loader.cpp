@@ -157,7 +157,6 @@ void CIFAR10DataLoader::set_random_bbox_data_reader(std::shared_ptr<RandomBBoxCr
 std::vector<std::vector<float>>
 CIFAR10DataLoader::get_batch_random_bbox_crop_coords()
 {
-    // Return the crop co-ordinates for a batch of images
     return _crop_coords_batch;
 }
 
