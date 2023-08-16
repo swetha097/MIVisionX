@@ -189,7 +189,7 @@ void SSDRandomCropNode::update_node()
         } else if(_inputs[0]->info().roi_type() == RocalROIType::LTRB) {
             crop_dims[i].x2 = (crop_box.r) * input_roi[i].x2;
             crop_dims[i].y2 = (crop_box.b) * input_roi[i].y2;
-    }
+        }
     }
     _outputs[0]->update_tensor_roi(_crop_width_val, _crop_height_val);
 }

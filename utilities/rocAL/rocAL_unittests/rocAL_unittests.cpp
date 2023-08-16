@@ -383,7 +383,7 @@ int test(int test_case, int reader_type, const char *path, const char *outName, 
         interpolation_type_name = get_interpolation_type(resize_interpolation_type, interpolation_type);
         scaling_node_name = get_scaling_mode(resize_scaling_mode, scale_mode);
         std::cerr<<" \n Interpolation_type_name " << interpolation_type_name;
-        std::cerr<<" \n Scaling_node_name " << scaling_node_name << "\n ";
+        std::cerr<<" \n Scaling_node_name " << scaling_node_name << std::endl;
         if (scale_mode != ROCAL_SCALING_MODE_DEFAULT && interpolation_type != ROCAL_LINEAR_INTERPOLATION) { // (Reference output available for bilinear interpolation for this  
             std::cerr<<" \n Running "<< scaling_node_name << " scaling mode with Bilinear interpolation for comparison \n";
             interpolation_type = ROCAL_LINEAR_INTERPOLATION;
