@@ -183,21 +183,19 @@ int main(int argc, const char ** argv)
         image2 = rocalBlurFixed(handle, image2, 17.25, (i == (aug_depth -1)) ? true:false );
     }
 
-    RocalTensor image4 = rocalColorTemp(handle, image0, false, color_temp_adj);
+    // RocalTensor image4 = rocalColorTemp(handle, image0, true, color_temp_adj);
 
-    RocalTensor image5 = rocalWarpAffine(handle, image4, false);
+    // RocalTensor image6 = rocalJitter(handle, image5, true);
 
-    RocalTensor image6 = rocalJitter(handle, image5, false);
+    // rocalVignette(handle, image5, true);
 
-    rocalVignette(handle, image6, true);
+    // RocalTensor image7 = rocalPixelate(handle, image0, true);
 
-    RocalTensor image7 = rocalPixelate(handle, image0, false);
+    RocalTensor image8 = rocalSnow(handle, image0, true);
 
-    RocalTensor image8 = rocalSnow(handle, image0, false);
+    RocalTensor image9 = rocalBlend(handle, image0, image8, true);
 
-    RocalTensor image9 = rocalBlend(handle, image7, image8, false);
-
-    RocalTensor image10 = rocalLensCorrection(handle, image9, false);
+    RocalTensor image10 = rocalLensCorrection(handle, image9, true);
 
     rocalExposure(handle, image10, true);
 
