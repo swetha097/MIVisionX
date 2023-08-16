@@ -214,11 +214,8 @@ int main(int argc, const char **argv)
     if (enable_sequence_rearrange)
     {
         std::cout << "\n>>>> ENABLE SEQUENCE REARRANGE\n";
-        std::vector<unsigned int> new_order = {0, 0, 1, 1, 0}; // The integers in new order should range only from 0 to sequence_length - 1
-        // std::vector<unsigned int> new_order(old_order, old_order + sizeof(old_order) / sizeof(old_order[0]));
-
-        unsigned new_sequence_length = sizeof(new_order) / sizeof(new_order[0]);
-        ouput_frames_per_sequence = new_sequence_length;
+        std::vector<unsigned> new_order = {0, 0, 1, 1, 0}; // The integers in new order should range only from 0 to sequence_length - 1
+        ouput_frames_per_sequence = new_order.size();
         input1 = rocalSequenceRearrange(handle, input1, new_order, true);
     }
     RocalIntParam color_temp_adj = rocalCreateIntParameter(0);
@@ -243,7 +240,7 @@ int main(int argc, const char **argv)
     /*>>>>>>>>>>>>>>>>>>> Diplay using OpenCV <<<<<<<<<<<<<<<<<*/
     if(save_frames)
         mkdir("output_frames", S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH); // Create directory in which images will be stored
-    int h = rocalGetAugmentationBranchCount(handle) * rocalGetOutputHeight(handle) * input_batch_size;
+    int h = rocalGetAugmentationBranchCount(handle) * rocalGetOutputHeight(handle) * input_batch_size * ouput_frames_per_sequence;
     int w = rocalGetOutputWidth(handle);
     int p = ((color_format == RocalImageColor::ROCAL_COLOR_RGB24) ? 3 : 1);
     int single_image_height = h / (input_batch_size * ouput_frames_per_sequence);
