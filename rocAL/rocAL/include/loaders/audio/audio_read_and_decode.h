@@ -30,15 +30,13 @@ THE SOFTWARE.
 #include "loader_module.h"
 #include "audio_decoder.h"
 
-class AudioReadAndDecode
-{
+class AudioReadAndDecode {
 public:
     AudioReadAndDecode();
     ~AudioReadAndDecode();
     size_t count();
     void reset();
     void create(ReaderConfig reader_config, DecoderConfig decoder_config, int batch_size, int device_id = 0);
-
     //! Loads a decompressed batch of audios into the buffer indicated by buff
     /// \param buff User's buffer provided to be filled with decoded audio samples
     /// \param names User's buffer provided to be filled with name of the audio files
