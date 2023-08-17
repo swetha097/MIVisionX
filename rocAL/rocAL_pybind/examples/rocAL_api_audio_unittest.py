@@ -48,8 +48,8 @@ def main():
     print("*********************************************************************")
     audio_pipeline = Pipeline(batch_size=batch_size, num_threads=num_threads, device_id=device_id, seed=random_seed, rocal_cpu=_rocal_cpu)
     with audio_pipeline:
-        audio_decode = fn.decoders.audio(file_root=data_path, file_list_path="", downmix=False, shard_id=0, num_shards=2, storage_type=0, stick_to_shard=False)
-        audio_pipeline.setOutputs(audio_decode)
+        audio_decode = fn.decoders.audio(file_root=data_path, file_list_path="", downmix=False, shard_id=0, num_shards=1, storage_type=0, stick_to_shard=False)
+        audio_pipeline.set_outputs(audio_decode)
     audio_pipeline.build()
     audioIteratorPipeline = ROCALClassificationIterator(audio_pipeline, auto_reset=True)
     cnt = 0
@@ -63,7 +63,7 @@ def main():
                     print("label", label)
                     print("cnt", cnt)
                     print("img", img)
-                    plot_1d_audio(img, cnt, "cpu")
+                    plot_1d_audio(img, cnt)
                     cnt+=1
         print("EPOCH DONE", epoch)
 if __name__ == '__main__':
