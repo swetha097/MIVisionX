@@ -31,13 +31,11 @@ struct PreemphasisFilterLocalData
     RppPtr_t pSrc;
     RppPtr_t pDst;
     vx_uint32 borderType;
-    Rpp32f *preemphCoeff;
+    Rpp32f *pPreemphCoeff;
     vx_float32 multiplier;
     vx_float32 magnitudeReference;
     RpptDescPtr pSrcDesc;
     RpptDescPtr pDstDesc;
-    RpptROI *pSrcRoi;
-    RpptROI *pDstRoi;
     Rpp32u *sampleSize;
     size_t inputTensorDims[NUM_OF_DIMS];
     size_t outputTensorDims[NUM_OF_DIMS];
@@ -51,17 +49,14 @@ struct PreemphasisFilterLocalData
 #endif
 };
 
-void update_destination_roi(const vx_reference *parameters, PreemphasisFilterLocalData *data) {
-    for (uint i=0; i < data->pSrcDesc->n; i++) {
-        data->pDstRoi[i].xywhROI.xy.x = data->pSrcRoi[i].xywhROI.xy.x;
-        data->pDstRoi[i].xywhROI.xy.y = data->pSrcRoi[i].xywhROI.xy.y;
-    }
+void update_destination_roi(const vx_reference *parameters, PreemphasisFilterLocalData *data, RpptROI *src_roi, RpptROI *dst_roi) {
+    memcpy(dst_roi, src_roi, data->pSrcDesc->n * sizeof(RpptROI));
 }
 
 static vx_status VX_CALLBACK refreshPreemphasisFilter(vx_node node, const vx_reference *parameters, vx_uint32 num, PreemphasisFilterLocalData *data) {
     vx_status status = VX_SUCCESS;
     void *roi_tensor_ptr_src, *roi_tensor_ptr_dst;
-    STATUS_ERROR_CHECK(vxCopyArrayRange((vx_array)parameters[4], 0, data->pSrcDesc->n, sizeof(float), data->preemphCoeff, VX_READ_ONLY, VX_MEMORY_TYPE_HOST));
+    STATUS_ERROR_CHECK(vxCopyArrayRange((vx_array)parameters[4], 0, data->pSrcDesc->n, sizeof(float), data->pPreemphCoeff, VX_READ_ONLY, VX_MEMORY_TYPE_HOST));
     if (data->deviceType == AGO_TARGET_AFFINITY_GPU)
     {
 #if ENABLE_OPENCL
@@ -81,12 +76,11 @@ static vx_status VX_CALLBACK refreshPreemphasisFilter(vx_node node, const vx_ref
         STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[2], VX_TENSOR_BUFFER_HOST, &roi_tensor_ptr_src, sizeof(roi_tensor_ptr_src)));
         STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[3], VX_TENSOR_BUFFER_HOST, &roi_tensor_ptr_dst, sizeof(roi_tensor_ptr_dst)));
     }
-        data->pSrcRoi = reinterpret_cast<RpptROI *>(roi_tensor_ptr_src);
-        data->pDstRoi = reinterpret_cast<RpptROI *>(roi_tensor_ptr_dst);
-        // TODO: Can we remove this for loop and move the calculation of number of samples inside the update_destination_roi ?
+        RpptROI *src_roi = reinterpret_cast<RpptROI *>(roi_tensor_ptr_src);
+        RpptROI *dst_roi = reinterpret_cast<RpptROI *>(roi_tensor_ptr_dst);
         for(int n =  data->inputTensorDims[0] - 1; n >= 0; n--)
-            data->sampleSize[n] = data->pSrcRoi[n].xywhROI.xy.x * data->pSrcRoi[n].xywhROI.xy.y;
-        update_destination_roi(parameters, data);
+            data->sampleSize[n] = src_roi[n].xywhROI.xy.x * src_roi[n].xywhROI.xy.y;
+        update_destination_roi(parameters, data, src_roi, dst_roi);
     return status;
 }
 
@@ -97,17 +91,21 @@ static vx_status VX_CALLBACK validatePreemphasisFilter(vx_node node, const vx_re
     if (scalar_type != VX_TYPE_UINT32)
         return ERRMSG(VX_ERROR_INVALID_TYPE, "validate: Paramter: #4 type=%d (must be size)\n", scalar_type);
 
-    // Check for output parameters
+    // Check for input parameters
     size_t num_tensor_dims;
+    STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[0], VX_TENSOR_NUMBER_OF_DIMS, &num_tensor_dims, sizeof(num_tensor_dims)));
+    if(num_tensor_dims < 3) return ERRMSG(VX_ERROR_INVALID_DIMENSION, "validate: PreemphasisFilter: tensor: #0 dimensions=%lu (must be greater than or equal to 3)\n", num_tensor_dims);
+
+    // Check for output parameters
     vx_uint8 tensor_fixed_point_position;
     size_t tensor_dims[RPP_MAX_TENSOR_DIMS];
     vx_enum tensor_datatype;
-    STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[2], VX_TENSOR_NUMBER_OF_DIMS, &num_tensor_dims, sizeof(num_tensor_dims)));
-    if(num_tensor_dims < 3) return ERRMSG(VX_ERROR_INVALID_DIMENSION, "validate: PreemphasisFilter: tensor: #2 dimensions=%lu (must be greater than or equal to 4)\n", num_tensor_dims);
+    STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[1], VX_TENSOR_NUMBER_OF_DIMS, &num_tensor_dims, sizeof(num_tensor_dims)));
+    if(num_tensor_dims < 3) return ERRMSG(VX_ERROR_INVALID_DIMENSION, "validate: PreemphasisFilter: tensor: #2 dimensions=%lu (must be greater than or equal to 3)\n", num_tensor_dims);
 
-    STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[2], VX_TENSOR_DIMS, &tensor_dims, sizeof(tensor_dims)));
-    STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[2], VX_TENSOR_DATA_TYPE, &tensor_datatype, sizeof(tensor_datatype)));
-    STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[2], VX_TENSOR_FIXED_POINT_POSITION, &tensor_fixed_point_position, sizeof(tensor_fixed_point_position)));
+    STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[1], VX_TENSOR_DIMS, &tensor_dims, sizeof(tensor_dims)));
+    STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[1], VX_TENSOR_DATA_TYPE, &tensor_datatype, sizeof(tensor_datatype)));
+    STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[1], VX_TENSOR_FIXED_POINT_POSITION, &tensor_fixed_point_position, sizeof(tensor_fixed_point_position)));
     STATUS_ERROR_CHECK(vxSetMetaFormatAttribute(metas[1], VX_TENSOR_NUMBER_OF_DIMS, &num_tensor_dims, sizeof(num_tensor_dims)));
     STATUS_ERROR_CHECK(vxSetMetaFormatAttribute(metas[1], VX_TENSOR_DIMS, &tensor_dims, sizeof(tensor_dims)));
     STATUS_ERROR_CHECK(vxSetMetaFormatAttribute(metas[1], VX_TENSOR_DATA_TYPE, &tensor_datatype, sizeof(tensor_datatype)));
@@ -132,7 +130,7 @@ static vx_status VX_CALLBACK processPreemphasisFilter(vx_node node, const vx_ref
     if (data->deviceType == AGO_TARGET_AFFINITY_CPU)
     {
         refreshPreemphasisFilter(node, parameters, num, data);
-        rpp_status = rppt_pre_emphasis_filter_host((float *)data->pSrc, data->pSrcDesc, (float *)data->pDst, data->pDstDesc, (Rpp32s*) data->sampleSize, data->preemphCoeff , RpptAudioBorderType(data->borderType), data->handle->rppHandle);
+        rpp_status = rppt_pre_emphasis_filter_host((float *)data->pSrc, data->pSrcDesc, (float *)data->pDst, data->pDstDesc, (Rpp32s*) data->sampleSize, data->pPreemphCoeff , RpptAudioBorderType(data->borderType), data->handle->rppHandle);
         return_status = (rpp_status == RPP_SUCCESS) ? VX_SUCCESS : VX_FAILURE;
     }
     return return_status;
@@ -165,7 +163,7 @@ static vx_status VX_CALLBACK initializePreemphasisFilter(vx_node node, const vx_
     fillAudioDescriptionPtrFromDims(data->pDstDesc, data->outputTensorDims);
 
     data->sampleSize = static_cast<unsigned int *>(calloc(data->pSrcDesc->n, sizeof(unsigned int)));
-    data->preemphCoeff = static_cast<float *>(calloc(data->pSrcDesc->n, sizeof(float)));
+    data->pPreemphCoeff = static_cast<float *>(calloc(data->pSrcDesc->n, sizeof(float)));
 
     refreshPreemphasisFilter(node, parameters, num, data);
     STATUS_ERROR_CHECK(createRPPHandle(node, &data->handle, data->pSrcDesc->n, data->deviceType));
@@ -177,7 +175,7 @@ static vx_status VX_CALLBACK uninitializePreemphasisFilter(vx_node node, const v
     PreemphasisFilterLocalData *data;
     STATUS_ERROR_CHECK(vxQueryNode(node, VX_NODE_LOCAL_DATA_PTR, &data, sizeof(data)));
     if (data->sampleSize != nullptr) free(data->sampleSize);
-    if (data->preemphCoeff != nullptr) free(data->preemphCoeff);
+    if (data->pPreemphCoeff != nullptr) free(data->pPreemphCoeff);
     delete(data->pSrcDesc);
     delete(data->pDstDesc);
     STATUS_ERROR_CHECK(releaseRPPHandle(node, data->handle, data->deviceType));
