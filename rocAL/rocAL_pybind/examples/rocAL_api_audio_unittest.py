@@ -61,7 +61,6 @@ def main():
             for x in range(len(it[0])):
                 for img, label in zip(it[0][x],it[1]):
                     print("label", label)
-                    # print("roi", roi)
                     print("cnt", cnt)
                     print("img", img)
                     plot_1d_audio(img, cnt, "cpu")
