@@ -50,12 +50,12 @@ evaluate_audio_data_set(StorageType storage_type,
 {
     AudioSourceEvaluator source_evaluator;
     if(source_evaluator.create(ReaderConfig(storage_type, source_path, json_path), DecoderConfig(decoder_type)) != AudioSourceEvaluatorStatus::OK)
-        THROW("Initializing file source input evaluator failed ")
+        THROW("Initializing file source input evaluator failed")
     auto max_samples = source_evaluator.max_samples();
     auto max_channels = source_evaluator.max_channels();
     if(max_samples == 0 || max_channels  == 0)
         THROW("Cannot find size of the audio files or files cannot be accessed")
-    LOG("Maximum input audio dimension [ "+ TOSTR(max_samples) + " x " + TOSTR(max_channels)+" ] for audio's in "+source_path)
+    LOG("Maximum input audio dimension [ " + TOSTR(max_samples) + " x " + TOSTR(max_channels)+ " ] for audio's in " + source_path)
     return std::make_tuple(max_samples, max_channels);
 };
 
@@ -80,10 +80,10 @@ evaluate_image_data_set(RocalImageSizeEvaluationPolicy decode_size_policy, Stora
     ImageSourceEvaluator source_evaluator;
     source_evaluator.set_size_evaluation_policy(translate_image_size_policy(decode_size_policy));
     if(source_evaluator.create(ReaderConfig(storage_type, source_path, json_path), DecoderConfig(decoder_type)) != ImageSourceEvaluatorStatus::OK)
-        THROW("Initializing file source input evaluator failed ")
+        THROW("Initializing file source input evaluator failed")
     auto max_width = source_evaluator.max_width();
     auto max_height = source_evaluator.max_height();
-    if(max_width == 0 ||max_height  == 0)
+    if(max_width == 0 ||max_height == 0)
         THROW("Cannot find size of the images or images cannot be accessed")
 
     LOG("Maximum input image dimension [ "+ TOSTR(max_width) + " x " + TOSTR(max_height)+" ] for images in "+source_path)
@@ -205,9 +205,9 @@ rocalJpegFileSourceSingleShard(
         INFO("Internal buffer size width = "+ TOSTR(width)+ " height = "+ TOSTR(height) + " depth = "+ TOSTR(num_of_planes))
 
         auto [tensor_layout, dims] = convert_color_format_to_layout(rocal_color_format, context->user_batch_size(), height, width, num_of_planes);
-        auto info  = TensorInfo(std::move(dims),
-                                     context->master_graph->mem_type(),
-                                     RocalTensorDataType::UINT8);
+        auto info = TensorInfo(std::move(dims),
+                               context->master_graph->mem_type(),
+                               RocalTensorDataType::UINT8);
         info.set_color_format(color_format);
         info.set_tensor_layout(tensor_layout);
         info.set_max_shape();
@@ -285,9 +285,9 @@ rocalJpegFileSource(
         INFO("Internal buffer size width = "+ TOSTR(width)+ " height = "+ TOSTR(height) + " depth = "+ TOSTR(num_of_planes))
         
         auto [tensor_layout, dims] = convert_color_format_to_layout(rocal_color_format, context->user_batch_size(), height, width, num_of_planes);
-        auto info  = TensorInfo(std::move(dims),
-                                     context->master_graph->mem_type(),
-                                     RocalTensorDataType::UINT8);
+        auto info = TensorInfo(std::move(dims),
+                               context->master_graph->mem_type(),
+                               RocalTensorDataType::UINT8);
         info.set_color_format(color_format);
         info.set_tensor_layout(tensor_layout);
         info.set_max_shape();
@@ -366,9 +366,9 @@ rocalSequenceReader(
 
         std::vector<size_t> dims = {context->user_batch_size(), sequence_length, height, 
                                     width, static_cast<unsigned>(num_of_planes)};
-        auto info  = TensorInfo(std::move(dims),
-                                     context->master_graph->mem_type(),
-                                     RocalTensorDataType::UINT8);
+        auto info = TensorInfo(std::move(dims),
+                               context->master_graph->mem_type(),
+                               RocalTensorDataType::UINT8);
         info.set_color_format(color_format);
         info.set_tensor_layout(RocalTensorlayout::NFHWC);
         info.set_sequence_batch_size(sequence_length);
@@ -452,9 +452,9 @@ rocalSequenceReaderSingleShard(
 
         std::vector<size_t> dims = {context->user_batch_size(), sequence_length, height, 
                                     width, static_cast<unsigned>(num_of_planes)};
-        auto info  = TensorInfo(std::move(dims),
-                                     context->master_graph->mem_type(),
-                                     RocalTensorDataType::UINT8);
+        auto info = TensorInfo(std::move(dims),
+                               context->master_graph->mem_type(),
+                               RocalTensorDataType::UINT8);
         info.set_color_format(color_format);
         info.set_tensor_layout(RocalTensorlayout::NFHWC);
         info.set_sequence_batch_size(sequence_length);
@@ -532,9 +532,9 @@ rocalJpegCaffe2LMDBRecordSource(
         INFO("Internal buffer size width = "+ TOSTR(width)+ " height = "+ TOSTR(height) + " depth = "+ TOSTR(num_of_planes))
 
         auto [tensor_layout, dims] = convert_color_format_to_layout(rocal_color_format, context->user_batch_size(), height, width, num_of_planes);
-        auto info  = TensorInfo(std::move(dims),
-                                     context->master_graph->mem_type(),
-                                     RocalTensorDataType::UINT8);
+        auto info = TensorInfo(std::move(dims),
+                               context->master_graph->mem_type(),
+                               RocalTensorDataType::UINT8);
         info.set_color_format(color_format);
         info.set_tensor_layout(tensor_layout);
         info.set_max_shape();
@@ -614,9 +614,9 @@ rocalJpegCaffe2LMDBRecordSourceSingleShard(
         INFO("Internal buffer size width = "+ TOSTR(width)+ " height = "+ TOSTR(height) + " depth = "+ TOSTR(num_of_planes))
 
         auto [tensor_layout, dims] = convert_color_format_to_layout(rocal_color_format, context->user_batch_size(), height, width, num_of_planes);
-        auto info  = TensorInfo(std::move(dims),
-                                     context->master_graph->mem_type(),
-                                     RocalTensorDataType::UINT8);
+        auto info = TensorInfo(std::move(dims),
+                               context->master_graph->mem_type(),
+                               RocalTensorDataType::UINT8);
         info.set_color_format(color_format);
         info.set_tensor_layout(tensor_layout);
         info.set_max_shape();
@@ -659,7 +659,7 @@ rocalJpegCaffeLMDBRecordSource(
         RocalImageSizeEvaluationPolicy decode_size_policy,
         unsigned max_width,
         unsigned max_height,
-        RocalDecoderType dec_type)  {
+        RocalDecoderType dec_type) {
     Tensor* output = nullptr;
     auto context = static_cast<Context*>(p_context);
     try {
@@ -690,9 +690,9 @@ rocalJpegCaffeLMDBRecordSource(
         INFO("Internal buffer size width = "+ TOSTR(width)+ " height = "+ TOSTR(height) + " depth = "+ TOSTR(num_of_planes))
 
        auto [tensor_layout, dims] = convert_color_format_to_layout(rocal_color_format, context->user_batch_size(), height, width, num_of_planes);
-        auto info  = TensorInfo(std::move(dims),
-                                     context->master_graph->mem_type(),
-                                     RocalTensorDataType::UINT8);
+        auto info = TensorInfo(std::move(dims),
+                               context->master_graph->mem_type(),
+                               RocalTensorDataType::UINT8);
         info.set_color_format(color_format);
         info.set_tensor_layout(tensor_layout);
         info.set_max_shape();
@@ -773,9 +773,9 @@ rocalJpegCaffeLMDBRecordSourceSingleShard(
         INFO("Internal buffer size width = "+ TOSTR(width)+ " height = "+ TOSTR(height) + " depth = "+ TOSTR(num_of_planes))
 
         auto [tensor_layout, dims] = convert_color_format_to_layout(rocal_color_format, context->user_batch_size(), height, width, num_of_planes);
-        auto info  = TensorInfo(std::move(dims),
-                                     context->master_graph->mem_type(),
-                                     RocalTensorDataType::UINT8);
+        auto info = TensorInfo(std::move(dims),
+                               context->master_graph->mem_type(),
+                               RocalTensorDataType::UINT8);
         info.set_color_format(color_format);
         info.set_tensor_layout(tensor_layout);
         info.set_max_shape();
@@ -852,9 +852,9 @@ rocalJpegCaffeLMDBRecordSourcePartialSingleShard(
         INFO("Internal buffer size width = "+ TOSTR(width)+ " height = "+ TOSTR(height) + " depth = "+ TOSTR(num_of_planes))
 
         auto [tensor_layout, dims] = convert_color_format_to_layout(rocal_color_format, context->user_batch_size(), height, width, num_of_planes);
-        auto info  = TensorInfo(std::move(dims),
-                                     context->master_graph->mem_type(),
-                                     RocalTensorDataType::UINT8);
+        auto info = TensorInfo(std::move(dims),
+                               context->master_graph->mem_type(),
+                               RocalTensorDataType::UINT8);
         info.set_color_format(color_format);
         info.set_tensor_layout(tensor_layout);
         info.set_max_shape();
@@ -932,9 +932,9 @@ rocalJpegCaffe2LMDBRecordSourcePartialSingleShard(
         INFO("Internal buffer size width = "+ TOSTR(width)+ " height = "+ TOSTR(height) + " depth = "+ TOSTR(num_of_planes))
 
         auto [tensor_layout, dims] = convert_color_format_to_layout(rocal_color_format, context->user_batch_size(), height, width, num_of_planes);
-        auto info  = TensorInfo(std::move(dims),
-                                     context->master_graph->mem_type(),
-                                     RocalTensorDataType::UINT8);
+        auto info = TensorInfo(std::move(dims),
+                               context->master_graph->mem_type(),
+                               RocalTensorDataType::UINT8);
         info.set_color_format(color_format);
         info.set_tensor_layout(tensor_layout);
         info.set_max_shape();
@@ -1010,9 +1010,9 @@ rocalMXNetRecordSource(
         INFO("Internal buffer size width = "+ TOSTR(width)+ " height = "+ TOSTR(height) + " depth = "+ TOSTR(num_of_planes))
 
         auto [tensor_layout, dims] = convert_color_format_to_layout(rocal_color_format, context->user_batch_size(), height, width, num_of_planes);
-        auto info  = TensorInfo(std::move(dims),
-                                     context->master_graph->mem_type(),
-                                     RocalTensorDataType::UINT8);
+        auto info = TensorInfo(std::move(dims),
+                               context->master_graph->mem_type(),
+                               RocalTensorDataType::UINT8);
         info.set_color_format(color_format);
         info.set_tensor_layout(tensor_layout);
         info.set_max_shape();
@@ -1092,9 +1092,9 @@ rocalMXNetRecordSource(
         INFO("Internal buffer size width = "+ TOSTR(width)+ " height = "+ TOSTR(height) + " depth = "+ TOSTR(num_of_planes))
 
         auto [tensor_layout, dims] = convert_color_format_to_layout(rocal_color_format, context->user_batch_size(), height, width, num_of_planes);
-        auto info  = TensorInfo(std::move(dims),
-                                     context->master_graph->mem_type(),
-                                     RocalTensorDataType::UINT8);
+        auto info = TensorInfo(std::move(dims),
+                               context->master_graph->mem_type(),
+                               RocalTensorDataType::UINT8);
         info.set_color_format(color_format);
         info.set_tensor_layout(tensor_layout);
         info.set_max_shape();
@@ -1178,9 +1178,9 @@ rocalMXNetRecordSourceSingleShard(
         INFO("Internal buffer size width = "+ TOSTR(width)+ " height = "+ TOSTR(height) + " depth = "+ TOSTR(num_of_planes))
 
         auto [tensor_layout, dims] = convert_color_format_to_layout(rocal_color_format, context->user_batch_size(), height, width, num_of_planes);
-        auto info  = TensorInfo(std::move(dims),
-                                     context->master_graph->mem_type(),
-                                     RocalTensorDataType::UINT8);
+        auto info = TensorInfo(std::move(dims),
+                               context->master_graph->mem_type(),
+                               RocalTensorDataType::UINT8);
         info.set_color_format(color_format);
         info.set_tensor_layout(tensor_layout);
         info.set_max_shape();
@@ -1253,9 +1253,9 @@ rocalJpegCOCOFileSource(
         INFO("Internal buffer size width = "+ TOSTR(width)+ " height = "+ TOSTR(height) + " depth = "+ TOSTR(num_of_planes))
 
         auto [tensor_layout, dims] = convert_color_format_to_layout(rocal_color_format, context->user_batch_size(), height, width, num_of_planes);
-        auto info  = TensorInfo(std::move(dims),
-                                     context->master_graph->mem_type(),
-                                     RocalTensorDataType::UINT8);
+        auto info = TensorInfo(std::move(dims),
+                               context->master_graph->mem_type(),
+                               RocalTensorDataType::UINT8);
         info.set_color_format(color_format);
         info.set_tensor_layout(tensor_layout);
         info.set_max_shape();
@@ -1334,9 +1334,9 @@ rocalJpegCOCOFileSourceSingleShard(
         INFO("Internal buffer size width = "+ TOSTR(width)+ " height = "+ TOSTR(height) + " depth = "+ TOSTR(num_of_planes))
 
         auto [tensor_layout, dims] = convert_color_format_to_layout(rocal_color_format, context->user_batch_size(), height, width, num_of_planes);
-        auto info  = TensorInfo(std::move(dims),
-                                     context->master_graph->mem_type(),
-                                     RocalTensorDataType::UINT8);
+        auto info = TensorInfo(std::move(dims),
+                               context->master_graph->mem_type(),
+                               RocalTensorDataType::UINT8);
         info.set_color_format(color_format);
         info.set_tensor_layout(tensor_layout);
         info.set_max_shape();
@@ -1387,7 +1387,7 @@ rocalFusedJpegCrop(
     try {
         bool use_input_dimension = (decode_size_policy == ROCAL_USE_USER_GIVEN_SIZE) || (decode_size_policy == ROCAL_USE_USER_GIVEN_SIZE_RESTRICTED);
 
-        if(internal_shard_count < 1 )
+        if(internal_shard_count < 1)
             THROW("Shard count should be bigger than 0")
 
         if(use_input_dimension && (max_width == 0 || max_height == 0))
@@ -1405,9 +1405,9 @@ rocalFusedJpegCrop(
         auto [color_format, num_of_planes] = convert_color_format(rocal_color_format);
 
         auto [tensor_layout, dims] = convert_color_format_to_layout(rocal_color_format, context->user_batch_size(), height, width, num_of_planes);
-        auto info  = TensorInfo(std::move(dims),
-                                     context->master_graph->mem_type(),
-                                     RocalTensorDataType::UINT8);
+        auto info = TensorInfo(std::move(dims),
+                               context->master_graph->mem_type(),
+                               RocalTensorDataType::UINT8);
         info.set_color_format(color_format);
         info.set_tensor_layout(tensor_layout);
         info.set_max_shape();
@@ -1480,9 +1480,9 @@ rocalJpegCOCOFileSourcePartial(
         INFO("Internal buffer size width = "+ TOSTR(width)+ " height = "+ TOSTR(height) + " depth = "+ TOSTR(num_of_planes))
 
         auto [tensor_layout, dims] = convert_color_format_to_layout(rocal_color_format, context->user_batch_size(), height, width, num_of_planes);
-        auto info  = TensorInfo(std::move(dims),
-                                     context->master_graph->mem_type(),
-                                     RocalTensorDataType::UINT8);
+        auto info = TensorInfo(std::move(dims),
+                               context->master_graph->mem_type(),
+                               RocalTensorDataType::UINT8);
         info.set_color_format(color_format);
         info.set_tensor_layout(tensor_layout);
         info.set_max_shape();
@@ -1559,9 +1559,9 @@ rocalJpegCOCOFileSourcePartialSingleShard(
         auto [color_format, num_of_planes] = convert_color_format(rocal_color_format);
 
         auto [tensor_layout, dims] = convert_color_format_to_layout(rocal_color_format, context->user_batch_size(), height, width, num_of_planes);
-        auto info  = TensorInfo(std::move(dims),
-                                     context->master_graph->mem_type(),
-                                     RocalTensorDataType::UINT8);
+        auto info = TensorInfo(std::move(dims),
+                               context->master_graph->mem_type(),
+                               RocalTensorDataType::UINT8);
         info.set_color_format(color_format);
         info.set_tensor_layout(tensor_layout);
         info.set_max_shape();
@@ -1644,9 +1644,9 @@ rocalJpegTFRecordSource(
         INFO("Internal buffer size width = "+ TOSTR(width)+ " height = "+ TOSTR(height) + " depth = "+ TOSTR(num_of_planes))
 
         auto [tensor_layout, dims] = convert_color_format_to_layout(rocal_color_format, context->user_batch_size(), height, width, num_of_planes);
-        auto info  = TensorInfo(std::move(dims),
-                                     context->master_graph->mem_type(),
-                                     RocalTensorDataType::UINT8);
+        auto info = TensorInfo(std::move(dims),
+                               context->master_graph->mem_type(),
+                               RocalTensorDataType::UINT8);
         info.set_color_format(color_format);
         info.set_tensor_layout(tensor_layout);
         info.set_max_shape();
@@ -1721,9 +1721,9 @@ rocalJpegTFRecordSourceSingleShard(
         INFO("Internal buffer size width = "+ TOSTR(width)+ " height = "+ TOSTR(height) + " depth = "+ TOSTR(num_of_planes))
 
         auto [tensor_layout, dims] = convert_color_format_to_layout(rocal_color_format, context->user_batch_size(), height, width, num_of_planes);
-        auto info  = TensorInfo(std::move(dims),
-                                     context->master_graph->mem_type(),
-                                     RocalTensorDataType::UINT8);
+        auto info = TensorInfo(std::move(dims),
+                               context->master_graph->mem_type(),
+                               RocalTensorDataType::UINT8);
         info.set_color_format(color_format);
         info.set_tensor_layout(tensor_layout);
         info.set_max_shape();
@@ -1794,9 +1794,9 @@ rocalRawTFRecordSource(
 
         auto [color_format, num_of_planes] = convert_color_format(rocal_color_format);
         auto [tensor_layout, dims] = convert_color_format_to_layout(rocal_color_format, context->user_batch_size(), out_height, out_width, num_of_planes);
-        auto info  = TensorInfo(std::move(dims),
-                                     context->master_graph->mem_type(),
-                                     RocalTensorDataType::UINT8);
+        auto info = TensorInfo(std::move(dims),
+                               context->master_graph->mem_type(),
+                               RocalTensorDataType::UINT8);
         info.set_color_format(color_format);
         info.set_tensor_layout(tensor_layout);
         info.set_max_shape();
@@ -1863,9 +1863,9 @@ rocalRawTFRecordSourceSingleShard(
         INFO("Internal buffer size width = "+ TOSTR(out_width)+ " height = "+ TOSTR(out_height) + " depth = "+ TOSTR(num_of_planes))
 
         auto [tensor_layout, dims] = convert_color_format_to_layout(rocal_color_format, context->user_batch_size(), out_height, out_width, num_of_planes);
-        auto info  = TensorInfo(std::move(dims),
-                                     context->master_graph->mem_type(),
-                                     RocalTensorDataType::UINT8);
+        auto info = TensorInfo(std::move(dims),
+                               context->master_graph->mem_type(),
+                               RocalTensorDataType::UINT8);
         info.set_color_format(color_format);
         info.set_tensor_layout(tensor_layout);
         info.set_max_shape();
@@ -1938,9 +1938,9 @@ rocalFusedJpegCropSingleShard(
         auto [color_format, num_of_planes] = convert_color_format(rocal_color_format);
 
         auto [tensor_layout, dims] = convert_color_format_to_layout(rocal_color_format, context->user_batch_size(), height, width, num_of_planes);
-        auto info  = TensorInfo(std::move(dims),
-                                     context->master_graph->mem_type(),
-                                     RocalTensorDataType::UINT8);
+        auto info = TensorInfo(std::move(dims),
+                               context->master_graph->mem_type(),
+                               RocalTensorDataType::UINT8);
         info.set_color_format(color_format);
         info.set_tensor_layout(tensor_layout);
         info.set_max_shape();
@@ -2011,9 +2011,9 @@ rocalVideoFileSource(
         
         auto [tensor_layout, dims] = convert_color_format_to_sequence_layout(rocal_color_format, context->user_batch_size(),
                                                                              video_prop.height, video_prop.width, num_of_planes, sequence_length);
-        auto info  = TensorInfo(std::move(dims),
-                                     context->master_graph->mem_type(),
-                                     RocalTensorDataType::UINT8);
+        auto info = TensorInfo(std::move(dims),
+                               context->master_graph->mem_type(),
+                               RocalTensorDataType::UINT8);
         info.set_color_format(color_format);
         info.set_tensor_layout(tensor_layout);
         info.set_max_shape();
@@ -2096,9 +2096,9 @@ rocalVideoFileSourceSingleShard(
         auto decoder_mode = convert_decoder_mode(rocal_decode_device);
         auto [tensor_layout, dims] = convert_color_format_to_sequence_layout(rocal_color_format, context->user_batch_size(),
                                                                              video_prop.height, video_prop.width, num_of_planes, sequence_length);
-        auto info  = TensorInfo(std::move(dims),
-                                     context->master_graph->mem_type(),
-                                     RocalTensorDataType::UINT8);
+        auto info = TensorInfo(std::move(dims),
+                               context->master_graph->mem_type(),
+                               RocalTensorDataType::UINT8);
         info.set_color_format(color_format);
         info.set_tensor_layout(tensor_layout);
         info.set_max_shape();
@@ -2184,9 +2184,9 @@ rocalVideoFileResize(
         auto decoder_mode = convert_decoder_mode(rocal_decode_device);
         auto [tensor_layout, dims] = convert_color_format_to_sequence_layout(rocal_color_format, context->user_batch_size(),
                                                                              video_prop.height, video_prop.width, num_of_planes, sequence_length);
-        auto info  = TensorInfo(std::move(dims),
-                                     context->master_graph->mem_type(),
-                                     RocalTensorDataType::UINT8);
+        auto info = TensorInfo(std::move(dims),
+                               context->master_graph->mem_type(),
+                               RocalTensorDataType::UINT8);
         info.set_color_format(color_format);
         info.set_tensor_layout(tensor_layout);
         info.set_max_shape();
@@ -2278,7 +2278,7 @@ rocalVideoFileResize(
             // For the nodes that user provides the output size the dimension of all the images after this node will be fixed and equal to that size
             resize_output->reset_tensor_roi();
 
-            std::shared_ptr<ResizeNode> resize_node =  context->master_graph->add_node<ResizeNode>({output}, {resize_output});
+            std::shared_ptr<ResizeNode> resize_node = context->master_graph->add_node<ResizeNode>({output}, {resize_output});
             resize_node->init(out_width, out_height, resize_scaling_mode, maximum_size, interpolation_type);
 
             if(is_output) {
@@ -2336,7 +2336,7 @@ rocalVideoFileResizeSingleShard(
         if(sequence_length == 0)
             THROW("Sequence length passed should be bigger than 0")
 
-        if(shard_count < 1 )
+        if(shard_count < 1)
             THROW("Shard count should be bigger than 0")
 
         if(shard_id >= shard_count)
@@ -2358,9 +2358,9 @@ rocalVideoFileResizeSingleShard(
         
         auto [tensor_layout, dims] = convert_color_format_to_sequence_layout(rocal_color_format, context->user_batch_size(),
                                                                              video_prop.height, video_prop.width, num_of_planes, sequence_length);
-        auto info  = TensorInfo(std::move(dims),
-                                     context->master_graph->mem_type(),
-                                     RocalTensorDataType::UINT8);
+        auto info = TensorInfo(std::move(dims),
+                               context->master_graph->mem_type(),
+                               RocalTensorDataType::UINT8);
         info.set_color_format(color_format);
         info.set_tensor_layout(tensor_layout);
         info.set_max_shape();
@@ -2450,7 +2450,7 @@ rocalVideoFileResizeSingleShard(
             // For the nodes that user provides the output size the dimension of all the images after this node will be fixed and equal to that size
             resize_output->reset_tensor_roi();
 
-            std::shared_ptr<ResizeNode> resize_node =  context->master_graph->add_node<ResizeNode>({output}, {resize_output});
+            std::shared_ptr<ResizeNode> resize_node = context->master_graph->add_node<ResizeNode>({output}, {resize_output});
             resize_node->init(out_width, out_height, resize_scaling_mode, maximum_size, interpolation_type);
 
             if(is_output) {
@@ -2505,9 +2505,9 @@ rocalRawCIFAR10Source(
         INFO("Internal buffer size width = "+ TOSTR(width)+ " height = "+ TOSTR(height) + " depth = "+ TOSTR(num_of_planes))
 
         auto [tensor_layout, dims] = convert_color_format_to_layout(rocal_color_format, context->user_batch_size(), height, width, num_of_planes);
-        auto info  = TensorInfo(std::move(dims),
-                                     context->master_graph->mem_type(),
-                                     RocalTensorDataType::UINT8);
+        auto info = TensorInfo(std::move(dims),
+                               context->master_graph->mem_type(),
+                               RocalTensorDataType::UINT8);
         info.set_color_format(color_format);
         info.set_tensor_layout(tensor_layout);
         info.set_max_shape();
@@ -2535,7 +2535,6 @@ rocalRawCIFAR10Source(
     return output;
 }
 
-
 RocalStatus ROCAL_API_CALL
 rocalResetLoaders(RocalContext p_context)
 {
@@ -2557,7 +2556,6 @@ RocalTensor  ROCAL_API_CALL
 rocalAudioFileSourceSingleShard(
         RocalContext p_context,
         const char* source_path,
-        const char* source_file_list_path,
         unsigned shard_id,
         unsigned shard_count,
         bool is_output,
@@ -2566,19 +2564,16 @@ rocalAudioFileSourceSingleShard(
         bool downmix,
         unsigned max_frames,
         unsigned max_channels,
-        unsigned storage_type,
-        bool stick_to_shard,
-        int shard_size) {
+        unsigned storage_type) {
     Tensor* output = nullptr;
     auto context = static_cast<Context*>(p_context);
     try {
-        if(shard_count < 1 )
+        if(shard_count < 1)
             THROW("Shard count should be bigger than 0")
-
         if(shard_id >= shard_count)
             THROW("Shard id should be smaller than shard count")
         auto [max_frames, max_channels] = evaluate_audio_data_set(StorageType::FILE_SYSTEM, DecoderType::SNDFILE, source_path, "");
-        INFO("Internal buffer size for audio frames = "+ TOSTR(max_frames))
+        INFO("Internal buffer size for audio frames = " + TOSTR(max_frames))
         RocalTensorlayout tensor_layout = RocalTensorlayout::NONE;
         RocalTensorDataType tensor_data_type = RocalTensorDataType::FP32;
         std::vector<size_t> dims = {context->user_batch_size(), max_frames, max_channels};
@@ -2592,7 +2587,7 @@ rocalAudioFileSourceSingleShard(
         auto cpu_num_threads = context->master_graph->calculate_cpu_num_threads(shard_count);
         context->master_graph->add_node<AudioLoaderSingleShardNode>({}, {output})->init(shard_id, shard_count, cpu_num_threads,
                                                                                         source_path,
-                                                                                        source_file_list_path,
+                                                                                        "",
                                                                                         StorageType(storage_type),
                                                                                         DecoderType::SNDFILE,
                                                                                         shuffle,
@@ -2602,13 +2597,10 @@ rocalAudioFileSourceSingleShard(
                                                                                         context->master_graph->meta_data_reader()
                                                                                         );
         context->master_graph->set_loop(loop);
-
-        if(is_output)
-        {
+        if(is_output) {
             auto actual_output = context->master_graph->create_tensor(info, is_output);
             context->master_graph->add_node<CopyNode>({output}, {actual_output});
         }
-
     }
     catch(const std::exception& e) {
         context->capture_error(e.what());
@@ -2621,7 +2613,6 @@ RocalTensor  ROCAL_API_CALL
 rocalAudioFileSource(
         RocalContext p_context,
         const char* source_path,
-        const char* source_file_list_path,
         unsigned internal_shard_count,
         bool is_output,
         bool shuffle,
@@ -2634,8 +2625,7 @@ rocalAudioFileSource(
     try {
         auto [max_frames, max_channels] = evaluate_audio_data_set(StorageType::FILE_SYSTEM, DecoderType::SNDFILE,
                                                        source_path, "");
-        INFO("Internal buffer size for audio frames = "+ TOSTR(max_frames))
-
+        INFO("Internal buffer size for audio frames = " + TOSTR(max_frames))
         RocalTensorDataType tensor_data_type = RocalTensorDataType::FP32;
         std::vector<size_t> dims = {context->user_batch_size(), max_frames, max_channels};
         auto info  = TensorInfo(std::vector<size_t>(std::move(dims)),
@@ -2647,7 +2637,7 @@ rocalAudioFileSource(
         auto cpu_num_threads = context->master_graph->calculate_cpu_num_threads(internal_shard_count);
         context->master_graph->add_node<AudioLoaderNode>({}, {output})->init(internal_shard_count, cpu_num_threads,
                                                                              source_path,
-                                                                             source_file_list_path,
+                                                                             "",
                                                                              StorageType::FILE_SYSTEM,
                                                                              DecoderType::SNDFILE,
                                                                              shuffle,

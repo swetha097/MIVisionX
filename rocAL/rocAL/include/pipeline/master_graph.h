@@ -37,8 +37,6 @@ THE SOFTWARE.
 #include "node_video_loader_single_shard.h"
 #include "node_audio_loader.h"
 #include "node_audio_loader_single_shard.h"
-#include "node_audio_loader.h"
-#include "node_audio_loader_single_shard.h"
 #include "node_cifar10_loader.h"
 #include "meta_data_reader.h"
 #include "meta_data_graph.h"
@@ -382,8 +380,7 @@ template<> inline std::shared_ptr<VideoLoaderSingleShardNode> MasterGraph::add_n
 /*
  * Explicit specialization for AudioLoaderNode
  */
-template<> inline std::shared_ptr<AudioLoaderNode> MasterGraph::add_node(const std::vector<Tensor*>& inputs, const std::vector<Tensor*>& outputs)
-{
+template<> inline std::shared_ptr<AudioLoaderNode> MasterGraph::add_node(const std::vector<Tensor*>& inputs, const std::vector<Tensor*>& outputs) {
     if(_loader_module)
         THROW("A loader already exists, cannot have more than one loader")
     auto node = std::make_shared<AudioLoaderNode>(outputs[0], _device.resources());
@@ -396,8 +393,7 @@ template<> inline std::shared_ptr<AudioLoaderNode> MasterGraph::add_node(const s
     return node;
 }
 
-template<> inline std::shared_ptr<AudioLoaderSingleShardNode> MasterGraph::add_node(const std::vector<Tensor*>& inputs, const std::vector<Tensor*>& outputs)
-{
+template<> inline std::shared_ptr<AudioLoaderSingleShardNode> MasterGraph::add_node(const std::vector<Tensor*>& inputs, const std::vector<Tensor*>& outputs) {
     if(_loader_module)
         THROW("A loader already exists, cannot have more than one loader")
     auto node = std::make_shared<AudioLoaderSingleShardNode>(outputs[0], _device.resources());

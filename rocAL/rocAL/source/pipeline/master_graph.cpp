@@ -380,14 +380,14 @@ void MasterGraph::release()
 
     if(_graph != nullptr)
         _graph->release();
+    if(_context && (status = vxReleaseContext(&_context)) != VX_SUCCESS)
+        LOG ("Failed to call vxReleaseContext " + TOSTR(status))
     if(_meta_data_reader != nullptr)
         _meta_data_reader->release();
 
     _augmented_meta_data = nullptr;
     _meta_data_graph = nullptr;
     _meta_data_reader = nullptr;
-    if(_context && (status = vxReleaseContext(&_context)) != VX_SUCCESS)
-        LOG ("Failed to call vxReleaseContext " + TOSTR(status))
 }
 
 MasterGraph::Status
@@ -961,8 +961,8 @@ void MasterGraph::output_routine()
             }
             _rb_block_if_full_time.start();
             // _ring_buffer.get_write_buffers() is blocking and blocks here until user uses processed image by calling run() and frees space in the ring_buffer
-            auto write_output_buffers = _ring_buffer.get_write_buffers();
-            auto write_buffers = write_output_buffers.first;
+            auto write_buffers = _ring_buffer.get_write_buffers();
+            auto write_output_buffers = write_buffers.first;
             _rb_block_if_full_time.end();
 
             // Swap handles on the input tensor, so that new tensor is loaded to be processed
@@ -987,7 +987,7 @@ void MasterGraph::output_routine()
 
             // Swap handles on the output tensor, so that new processed tensor will be written to the a new buffer
             for (size_t idx = 0; idx < _internal_tensor_list.size(); idx++)
-                _internal_tensor_list[idx]->swap_handle(write_buffers[idx]);
+                _internal_tensor_list[idx]->swap_handle(write_output_buffers[idx]);
 
             if (!_processing)
                 break;
@@ -1007,6 +1007,7 @@ void MasterGraph::output_routine()
                 output_meta_data = _augmented_meta_data->clone(!_augmentation_metanode); // copy the data if metadata is not processed by the nodes, else create an empty instance
                 if (_meta_data_graph)
                 {
+                    if(_augmentation_metanode) output_meta_data->resize(_user_batch_size);
                     if(_is_random_bbox_crop)
                     {
                         _meta_data_graph->update_random_bbox_meta_data(_augmented_meta_data, output_meta_data, decode_sample_info, crop_image_info);
@@ -1022,9 +1023,9 @@ void MasterGraph::output_routine()
             _graph->process();
             _process_time.end();
 
-            auto tensor_roi_buffer = write_output_buffers.second;   // Obtain ROI buffers from ring buffer
+            auto write_roi_buffers = write_buffers.second;   // Obtain ROI buffers from ring buffer
             for (size_t idx = 0; idx < _internal_tensor_list.size(); idx++)
-                _internal_tensor_list[idx]->copy_roi(tensor_roi_buffer[idx]);   // Copy ROI from internal tensor's buffer to ring buffer
+                _internal_tensor_list[idx]->copy_roi(write_roi_buffers[idx]);   // Copy ROI from internal tensor's buffer to ring buffer
             _bencode_time.start();
             if(_is_box_encoder )
             {
