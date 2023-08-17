@@ -135,7 +135,6 @@ class ROCALGenericIterator(object):
         return self.iterator_length
 
     def __del__(self):
-        print("In rocALRelease")
         b.rocalRelease(self.loader._handle)
 
 
