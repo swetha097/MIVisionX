@@ -16,12 +16,12 @@ def plot_1d_audio(img, idx):
     label = idx
     # label = idx.cpu().detach().numpy() #TODO: Uncomment after the meta-data is enabled
     # Saving the array in a text file
-    file = open("results/rocal_data_new" + str(label) + ".txt", "w+")
+    file = open("OUTPUTS_PYTHON/AUDIO/" + str(label) + ".txt", "w+")
     content = str(audio_data)
     file.write(content)
     file.close()
     plt.plot(audio_data)
-    plt.savefig("results/rocal_data_new" + str(label) + ".png")
+    plt.savefig("OUTPUTS_PYTHON/AUDIO/" + str(label) + ".png")
     plt.close()
 
 def main():
@@ -29,7 +29,7 @@ def main():
         print ('Please pass audio_folder file_list cpu/gpu batch_size')
         exit(0)
     try:
-        path= "OUTPUT_IMAGES_PYTHON/NEW_API/FILE_READER/" + "audio"
+        path= "OUTPUTS_PYTHON/AUDIO/"
         isExist = os.path.exists(path)
         if not isExist:
             os.makedirs(path)
