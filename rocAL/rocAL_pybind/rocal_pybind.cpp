@@ -144,6 +144,24 @@ namespace rocal{
                 Returns a tensor batch size.
                 )code"
             )
+            .def(
+                "get_rois",
+                [](rocalTensor &output_tensor)
+                {
+                    return py::array(py::buffer_info(
+                            (int *)(output_tensor.get_roi()),
+                            sizeof(int),
+                            py::format_descriptor< int>::format(),
+                            1,
+                            {output_tensor.dims().at(0) * 4},
+                            {sizeof(int) }));
+                },
+                R"code(
+                Returns a tensor ROI
+                ex : width, height in case of an image data
+                ex : samples , channels in case of an audio data
+                )code"
+            )
             .def("layout", [](rocalTensor &output_tensor) {
                 return rocalToPybindLayout[(int)output_tensor.layout()];
             },

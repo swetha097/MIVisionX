@@ -1,6 +1,6 @@
 import random
 import numpy as np
-from amd.rocal.plugin.pytorch import ROCALClassificationIterator
+from amd.rocal.plugin.pytorch import ROCALAudioIterator
 import torch
 np.set_printoptions(threshold=1000, edgeitems=10000)
 from amd.rocal.pipeline import Pipeline
@@ -51,7 +51,7 @@ def main():
         audio_decode = fn.decoders.audio(file_root=data_path, file_list_path="", downmix=False, shard_id=0, num_shards=1, storage_type=0, stick_to_shard=False)
         audio_pipeline.set_outputs(audio_decode)
     audio_pipeline.build()
-    audioIteratorPipeline = ROCALClassificationIterator(audio_pipeline, auto_reset=True)
+    audioIteratorPipeline = ROCALAudioIterator(audio_pipeline)
     cnt = 0
     for epoch in range(1):
         print("Epoch :: ", epoch)
@@ -59,11 +59,12 @@ def main():
         for i , it in enumerate(audioIteratorPipeline):
             print("************************************** i *************************************",i)
             for x in range(len(it[0])):
-                for img, label in zip(it[0][x],it[1]):
+                for audio_data, label, roi in zip(it[0][x], it[1], it[2]):
                     print("label", label)
                     print("cnt", cnt)
-                    print("img", img)
-                    plot_1d_audio(img, cnt)
+                    print("roi", roi)
+                    print("audio_data", audio_data)
+                    plot_1d_audio(audio_data, cnt)
                     cnt+=1
         print("EPOCH DONE", epoch)
 if __name__ == '__main__':
