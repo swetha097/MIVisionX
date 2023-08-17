@@ -2550,8 +2550,8 @@ VX_API_ENTRY vx_node VX_API_CALL vxExtRppPreemphasisFilter(vx_graph graph, vx_te
         vx_scalar deviceType = vxCreateScalar(vxGetContext((vx_reference)graph), VX_TYPE_UINT32, &devType);
         vx_reference params[] = {
             (vx_reference)pSrc,
-            (vx_reference)pDst,
             (vx_reference)pSrcRoi,
+            (vx_reference)pDst,
             (vx_reference)pDstRoi,
             (vx_reference)preemphCoeff,
             (vx_reference)borderType,
