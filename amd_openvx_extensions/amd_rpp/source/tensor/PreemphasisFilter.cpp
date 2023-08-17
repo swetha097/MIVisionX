@@ -36,17 +36,10 @@ struct PreemphasisFilterLocalData
     vx_float32 magnitudeReference;
     RpptDescPtr pSrcDesc;
     RpptDescPtr pDstDesc;
-    Rpp32u *sampleSize;
+    Rpp32u *pSampleSize;
     size_t inputTensorDims[NUM_OF_DIMS];
     size_t outputTensorDims[NUM_OF_DIMS];
-#if ENABLE_OPENCL
-    cl_mem cl_pSrc;
-    cl_mem cl_pDst;
-#elif ENABLE_HIP
-    void *hip_pSrc;
-    void *hip_pDst;
-    // RpptROI *hip_roi_tensor_Ptr;
-#endif
+
 };
 
 void update_destination_roi(const vx_reference *parameters, PreemphasisFilterLocalData *data, RpptROI *src_roi, RpptROI *dst_roi) {
@@ -60,13 +53,9 @@ static vx_status VX_CALLBACK refreshPreemphasisFilter(vx_node node, const vx_ref
     if (data->deviceType == AGO_TARGET_AFFINITY_GPU)
     {
 #if ENABLE_OPENCL
-        STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[0], VX_TENSOR_BUFFER_OPENCL, &data->cl_pSrc, sizeof(data->cl_pSrc)));
-        STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[1], VX_TENSOR_BUFFER_OPENCL, &data->cl_pDst, sizeof(data->cl_pDst)));
+        return VX_ERROR_NOT_IMPLEMENTED;
 #elif ENABLE_HIP
-        STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[0], VX_TENSOR_BUFFER_HIP, &data->hip_pSrc, sizeof(data->hip_pSrc)));
-        STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[1], VX_TENSOR_BUFFER_HIP, &data->hip_pDst, sizeof(data->hip_pDst)));
-        STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[2], VX_TENSOR_BUFFER_HIP, &roi_tensor_ptr_src, sizeof(roi_tensor_ptr_src)));
-        STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[3], VX_TENSOR_BUFFER_HIP, &roi_tensor_ptr_dst, sizeof(roi_tensor_ptr_dst)));
+        return VX_ERROR_NOT_IMPLEMENTED;
 #endif
     }
     if (data->deviceType == AGO_TARGET_AFFINITY_CPU)
@@ -79,7 +68,7 @@ static vx_status VX_CALLBACK refreshPreemphasisFilter(vx_node node, const vx_ref
         RpptROI *src_roi = reinterpret_cast<RpptROI *>(roi_tensor_ptr_src);
         RpptROI *dst_roi = reinterpret_cast<RpptROI *>(roi_tensor_ptr_dst);
         for(int n =  data->inputTensorDims[0] - 1; n >= 0; n--)
-            data->sampleSize[n] = src_roi[n].xywhROI.xy.x * src_roi[n].xywhROI.xy.y;
+            data->pSampleSize[n] = src_roi[n].xywhROI.xy.x * src_roi[n].xywhROI.xy.y;
         update_destination_roi(parameters, data, src_roi, dst_roi);
     return status;
 }
@@ -130,7 +119,7 @@ static vx_status VX_CALLBACK processPreemphasisFilter(vx_node node, const vx_ref
     if (data->deviceType == AGO_TARGET_AFFINITY_CPU)
     {
         refreshPreemphasisFilter(node, parameters, num, data);
-        rpp_status = rppt_pre_emphasis_filter_host((float *)data->pSrc, data->pSrcDesc, (float *)data->pDst, data->pDstDesc, (Rpp32s*) data->sampleSize, data->pPreemphCoeff , RpptAudioBorderType(data->borderType), data->handle->rppHandle);
+        rpp_status = rppt_pre_emphasis_filter_host((float *)data->pSrc, data->pSrcDesc, (float *)data->pDst, data->pDstDesc, (Rpp32s*) data->pSampleSize, data->pPreemphCoeff , RpptAudioBorderType(data->borderType), data->handle->rppHandle);
         return_status = (rpp_status == RPP_SUCCESS) ? VX_SUCCESS : VX_FAILURE;
     }
     return return_status;
@@ -162,8 +151,8 @@ static vx_status VX_CALLBACK initializePreemphasisFilter(vx_node node, const vx_
     data->pDstDesc->offsetInBytes = 0;
     fillAudioDescriptionPtrFromDims(data->pDstDesc, data->outputTensorDims);
 
-    data->sampleSize = static_cast<unsigned int *>(calloc(data->pSrcDesc->n, sizeof(unsigned int)));
-    data->pPreemphCoeff = static_cast<float *>(calloc(data->pSrcDesc->n, sizeof(float)));
+    data->pSampleSize = new unsigned[data->pSrcDesc->n];
+    data->pPreemphCoeff = new float[data->pSrcDesc->n];
 
     refreshPreemphasisFilter(node, parameters, num, data);
     STATUS_ERROR_CHECK(createRPPHandle(node, &data->handle, data->pSrcDesc->n, data->deviceType));
@@ -174,8 +163,8 @@ static vx_status VX_CALLBACK initializePreemphasisFilter(vx_node node, const vx_
 static vx_status VX_CALLBACK uninitializePreemphasisFilter(vx_node node, const vx_reference *parameters, vx_uint32 num) {
     PreemphasisFilterLocalData *data;
     STATUS_ERROR_CHECK(vxQueryNode(node, VX_NODE_LOCAL_DATA_PTR, &data, sizeof(data)));
-    if (data->sampleSize != nullptr) free(data->sampleSize);
-    if (data->pPreemphCoeff != nullptr) free(data->pPreemphCoeff);
+    delete(data->pSampleSize);
+    delete(data->pPreemphCoeff);
     delete(data->pSrcDesc);
     delete(data->pDstDesc);
     STATUS_ERROR_CHECK(releaseRPPHandle(node, data->handle, data->deviceType));
