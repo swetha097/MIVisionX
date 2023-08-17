@@ -180,10 +180,9 @@ rocalJpegFileSourceSingleShard(
 
         auto info = TensorInfo(std::move(dims),
                                context->master_graph->mem_type(),
-                               RocalTensorDataType::UINT8);
-        info.set_color_format(color_format);
-        info.set_tensor_layout(tensor_layout);
-        info.set_max_shape();
+                               RocalTensorDataType::UINT8,
+                               tensor_layout,
+                               color_format);
         output = context->master_graph->create_loader_output_tensor(info);
         auto cpu_num_threads = context->master_graph->calculate_cpu_num_threads(shard_count);
 
@@ -256,13 +255,12 @@ rocalJpegFileSource(
 
         auto [color_format, tensor_layout, dims, num_of_planes] = convert_color_format(rocal_color_format, context->user_batch_size(), height, width);
         INFO("Internal buffer size width = "+ TOSTR(width)+ " height = "+ TOSTR(height) + " depth = "+ TOSTR(num_of_planes))
-        
+
         auto info = TensorInfo(std::move(dims),
                                context->master_graph->mem_type(),
-                               RocalTensorDataType::UINT8);
-        info.set_color_format(color_format);
-        info.set_tensor_layout(tensor_layout);
-        info.set_max_shape();
+                               RocalTensorDataType::UINT8,
+                               tensor_layout,
+                               color_format);
         output = context->master_graph->create_loader_output_tensor(info);
         auto cpu_num_threads = context->master_graph->calculate_cpu_num_threads(1);
 
@@ -339,7 +337,7 @@ rocalSequenceReader(
                                context->master_graph->mem_type(),
                                RocalTensorDataType::UINT8);
         info.set_color_format(color_format);
-        info.set_tensor_layout(RocalTensorlayout::NFHWC);
+        info.set_tensor_layout(tensor_layout);
         info.set_sequence_batch_size(sequence_length);
         info.set_max_shape();
 
@@ -422,7 +420,7 @@ rocalSequenceReaderSingleShard(
                                context->master_graph->mem_type(),
                                RocalTensorDataType::UINT8);
         info.set_color_format(color_format);
-        info.set_tensor_layout(RocalTensorlayout::NFHWC);
+        info.set_tensor_layout(tensor_layout);
         info.set_sequence_batch_size(sequence_length);
         info.set_max_shape();
         output = context->master_graph->create_loader_output_tensor(info);
@@ -497,10 +495,9 @@ rocalJpegCaffe2LMDBRecordSource(
 
         auto info = TensorInfo(std::move(dims),
                                context->master_graph->mem_type(),
-                               RocalTensorDataType::UINT8);
-        info.set_color_format(color_format);
-        info.set_tensor_layout(tensor_layout);
-        info.set_max_shape();
+                               RocalTensorDataType::UINT8,
+                               tensor_layout,
+                               color_format);
         output = context->master_graph->create_loader_output_tensor(info);
         auto cpu_num_threads = context->master_graph->calculate_cpu_num_threads(1);
 
@@ -576,10 +573,9 @@ rocalJpegCaffe2LMDBRecordSourceSingleShard(
 
         auto info = TensorInfo(std::move(dims),
                                context->master_graph->mem_type(),
-                               RocalTensorDataType::UINT8);
-        info.set_color_format(color_format);
-        info.set_tensor_layout(tensor_layout);
-        info.set_max_shape();
+                               RocalTensorDataType::UINT8,
+                               tensor_layout,
+                               color_format);
         output = context->master_graph->create_loader_output_tensor(info);
         auto cpu_num_threads = context->master_graph->calculate_cpu_num_threads(shard_count);
 
@@ -649,10 +645,9 @@ rocalJpegCaffeLMDBRecordSource(
 
         auto info = TensorInfo(std::move(dims),
                                context->master_graph->mem_type(),
-                               RocalTensorDataType::UINT8);
-        info.set_color_format(color_format);
-        info.set_tensor_layout(tensor_layout);
-        info.set_max_shape();
+                               RocalTensorDataType::UINT8,
+                               tensor_layout,
+                               color_format);
         output = context->master_graph->create_loader_output_tensor(info);
         auto cpu_num_threads = context->master_graph->calculate_cpu_num_threads(1);
 
@@ -729,10 +724,9 @@ rocalJpegCaffeLMDBRecordSourceSingleShard(
 
         auto info = TensorInfo(std::move(dims),
                                context->master_graph->mem_type(),
-                               RocalTensorDataType::UINT8);
-        info.set_color_format(color_format);
-        info.set_tensor_layout(tensor_layout);
-        info.set_max_shape();
+                               RocalTensorDataType::UINT8,
+                               tensor_layout,
+                               color_format);
         output = context->master_graph->create_loader_output_tensor(info);
         auto cpu_num_threads = context->master_graph->calculate_cpu_num_threads(shard_count);
 
@@ -806,10 +800,9 @@ rocalJpegCaffeLMDBRecordSourcePartialSingleShard(
 
         auto info = TensorInfo(std::move(dims),
                                context->master_graph->mem_type(),
-                               RocalTensorDataType::UINT8);
-        info.set_color_format(color_format);
-        info.set_tensor_layout(tensor_layout);
-        info.set_max_shape();
+                               RocalTensorDataType::UINT8,
+                               tensor_layout,
+                               color_format);
         output = context->master_graph->create_loader_output_tensor(info);
         auto cpu_num_threads = context->master_graph->calculate_cpu_num_threads(shard_count);
 
@@ -884,10 +877,9 @@ rocalJpegCaffe2LMDBRecordSourcePartialSingleShard(
 
         auto info = TensorInfo(std::move(dims),
                                context->master_graph->mem_type(),
-                               RocalTensorDataType::UINT8);
-        info.set_color_format(color_format);
-        info.set_tensor_layout(tensor_layout);
-        info.set_max_shape();
+                               RocalTensorDataType::UINT8,
+                               tensor_layout,
+                               color_format);
         output = context->master_graph->create_loader_output_tensor(info);
         auto cpu_num_threads = context->master_graph->calculate_cpu_num_threads(shard_count);
 
@@ -960,10 +952,9 @@ rocalMXNetRecordSource(
 
         auto info = TensorInfo(std::move(dims),
                                context->master_graph->mem_type(),
-                               RocalTensorDataType::UINT8);
-        info.set_color_format(color_format);
-        info.set_tensor_layout(tensor_layout);
-        info.set_max_shape();
+                               RocalTensorDataType::UINT8,
+                               tensor_layout,
+                               color_format);
         output = context->master_graph->create_loader_output_tensor(info);
         auto cpu_num_threads = context->master_graph->calculate_cpu_num_threads(shard_count);
 
@@ -1039,10 +1030,9 @@ rocalMXNetRecordSource(
 
         auto info = TensorInfo(std::move(dims),
                                context->master_graph->mem_type(),
-                               RocalTensorDataType::UINT8);
-        info.set_color_format(color_format);
-        info.set_tensor_layout(tensor_layout);
-        info.set_max_shape();
+                               RocalTensorDataType::UINT8,
+                               tensor_layout,
+                               color_format);
         output = context->master_graph->create_loader_output_tensor(info);
         auto cpu_num_threads = context->master_graph->calculate_cpu_num_threads(1);
 
@@ -1122,10 +1112,9 @@ rocalMXNetRecordSourceSingleShard(
 
         auto info = TensorInfo(std::move(dims),
                                context->master_graph->mem_type(),
-                               RocalTensorDataType::UINT8);
-        info.set_color_format(color_format);
-        info.set_tensor_layout(tensor_layout);
-        info.set_max_shape();
+                               RocalTensorDataType::UINT8,
+                               tensor_layout,
+                               color_format);
         output = context->master_graph->create_loader_output_tensor(info);
         auto cpu_num_threads = context->master_graph->calculate_cpu_num_threads(shard_count);
 
@@ -1196,10 +1185,9 @@ rocalJpegCOCOFileSource(
 
         auto info = TensorInfo(std::move(dims),
                                context->master_graph->mem_type(),
-                               RocalTensorDataType::UINT8);
-        info.set_color_format(color_format);
-        info.set_tensor_layout(tensor_layout);
-        info.set_max_shape();
+                               RocalTensorDataType::UINT8,
+                               tensor_layout,
+                               color_format);
         output = context->master_graph->create_loader_output_tensor(info);
         auto cpu_num_threads = context->master_graph->calculate_cpu_num_threads(1);
 
@@ -1276,10 +1264,9 @@ rocalJpegCOCOFileSourceSingleShard(
 
         auto info = TensorInfo(std::move(dims),
                                context->master_graph->mem_type(),
-                               RocalTensorDataType::UINT8);
-        info.set_color_format(color_format);
-        info.set_tensor_layout(tensor_layout);
-        info.set_max_shape();
+                               RocalTensorDataType::UINT8,
+                               tensor_layout,
+                               color_format);
         output = context->master_graph->create_loader_output_tensor(info);
         auto cpu_num_threads = context->master_graph->calculate_cpu_num_threads(shard_count);
 
@@ -1346,10 +1333,9 @@ rocalFusedJpegCrop(
 
         auto info = TensorInfo(std::move(dims),
                                context->master_graph->mem_type(),
-                               RocalTensorDataType::UINT8);
-        info.set_color_format(color_format);
-        info.set_tensor_layout(tensor_layout);
-        info.set_max_shape();
+                               RocalTensorDataType::UINT8,
+                               tensor_layout,
+                               color_format);
         output = context->master_graph->create_loader_output_tensor(info);
         auto cpu_num_threads = context->master_graph->calculate_cpu_num_threads(1);
         context->master_graph->add_node<FusedJpegCropNode>({}, {output})->init(internal_shard_count, cpu_num_threads,
@@ -1419,10 +1405,9 @@ rocalJpegCOCOFileSourcePartial(
 
         auto info = TensorInfo(std::move(dims),
                                context->master_graph->mem_type(),
-                               RocalTensorDataType::UINT8);
-        info.set_color_format(color_format);
-        info.set_tensor_layout(tensor_layout);
-        info.set_max_shape();
+                               RocalTensorDataType::UINT8,
+                               tensor_layout,
+                               color_format);
         output = context->master_graph->create_loader_output_tensor(info);
         auto cpu_num_threads = context->master_graph->calculate_cpu_num_threads(1);
 
@@ -1497,10 +1482,9 @@ rocalJpegCOCOFileSourcePartialSingleShard(
 
         auto info = TensorInfo(std::move(dims),
                                context->master_graph->mem_type(),
-                               RocalTensorDataType::UINT8);
-        info.set_color_format(color_format);
-        info.set_tensor_layout(tensor_layout);
-        info.set_max_shape();
+                               RocalTensorDataType::UINT8,
+                               tensor_layout,
+                               color_format);
         output = context->master_graph->create_loader_output_tensor(info);
         auto cpu_num_threads = context->master_graph->calculate_cpu_num_threads(shard_count);
 
@@ -1580,10 +1564,9 @@ rocalJpegTFRecordSource(
 
         auto info = TensorInfo(std::move(dims),
                                context->master_graph->mem_type(),
-                               RocalTensorDataType::UINT8);
-        info.set_color_format(color_format);
-        info.set_tensor_layout(tensor_layout);
-        info.set_max_shape();
+                               RocalTensorDataType::UINT8,
+                               tensor_layout,
+                               color_format);
         output = context->master_graph->create_loader_output_tensor(info);
         auto cpu_num_threads = context->master_graph->calculate_cpu_num_threads(1);
 
@@ -1656,10 +1639,9 @@ rocalJpegTFRecordSourceSingleShard(
 
         auto info = TensorInfo(std::move(dims),
                                context->master_graph->mem_type(),
-                               RocalTensorDataType::UINT8);
-        info.set_color_format(color_format);
-        info.set_tensor_layout(tensor_layout);
-        info.set_max_shape();
+                               RocalTensorDataType::UINT8,
+                               tensor_layout,
+                               color_format);
         output = context->master_graph->create_loader_output_tensor(info);
         auto cpu_num_threads = context->master_graph->calculate_cpu_num_threads(shard_count);
 
@@ -1729,10 +1711,9 @@ rocalRawTFRecordSource(
 
         auto info = TensorInfo(std::move(dims),
                                context->master_graph->mem_type(),
-                               RocalTensorDataType::UINT8);
-        info.set_color_format(color_format);
-        info.set_tensor_layout(tensor_layout);
-        info.set_max_shape();
+                               RocalTensorDataType::UINT8,
+                               tensor_layout,
+                               color_format);
         output = context->master_graph->create_loader_output_tensor(info);
         auto cpu_num_threads = context->master_graph->calculate_cpu_num_threads(1);
 
@@ -1797,10 +1778,9 @@ rocalRawTFRecordSourceSingleShard(
 
         auto info = TensorInfo(std::move(dims),
                                context->master_graph->mem_type(),
-                               RocalTensorDataType::UINT8);
-        info.set_color_format(color_format);
-        info.set_tensor_layout(tensor_layout);
-        info.set_max_shape();
+                               RocalTensorDataType::UINT8,
+                               tensor_layout,
+                               color_format);
         output = context->master_graph->create_loader_output_tensor(info);
         auto cpu_num_threads = context->master_graph->calculate_cpu_num_threads(shard_count);
 
@@ -1871,10 +1851,9 @@ rocalFusedJpegCropSingleShard(
 
         auto info = TensorInfo(std::move(dims),
                                context->master_graph->mem_type(),
-                               RocalTensorDataType::UINT8);
-        info.set_color_format(color_format);
-        info.set_tensor_layout(tensor_layout);
-        info.set_max_shape();
+                               RocalTensorDataType::UINT8,
+                               tensor_layout,
+                               color_format);
         output = context->master_graph->create_loader_output_tensor(info);
         auto cpu_num_threads = context->master_graph->calculate_cpu_num_threads(shard_count);
         context->master_graph->add_node<FusedJpegCropSingleShardNode>({}, {output})->init(shard_id, shard_count, cpu_num_threads,
@@ -1942,10 +1921,9 @@ rocalVideoFileSource(
         auto decoder_mode = convert_decoder_mode(rocal_decode_device);
         auto info = TensorInfo(std::move(dims),
                                context->master_graph->mem_type(),
-                               RocalTensorDataType::UINT8);
-        info.set_color_format(color_format);
-        info.set_tensor_layout(tensor_layout);
-        info.set_max_shape();
+                               RocalTensorDataType::UINT8,
+                               tensor_layout,
+                               color_format);
 
         output = context->master_graph->create_loader_output_tensor(info);
 
@@ -2026,10 +2004,9 @@ rocalVideoFileSourceSingleShard(
         auto decoder_mode = convert_decoder_mode(rocal_decode_device);
         auto info = TensorInfo(std::move(dims),
                                context->master_graph->mem_type(),
-                               RocalTensorDataType::UINT8);
-        info.set_color_format(color_format);
-        info.set_tensor_layout(tensor_layout);
-        info.set_max_shape();
+                               RocalTensorDataType::UINT8,
+                               tensor_layout,
+                               color_format);
 
         output = context->master_graph->create_loader_output_tensor(info);
 
@@ -2113,10 +2090,9 @@ rocalVideoFileResize(
         auto decoder_mode = convert_decoder_mode(rocal_decode_device);
         auto info = TensorInfo(std::move(dims),
                                context->master_graph->mem_type(),
-                               RocalTensorDataType::UINT8);
-        info.set_color_format(color_format);
-        info.set_tensor_layout(tensor_layout);
-        info.set_max_shape();
+                               RocalTensorDataType::UINT8,
+                               tensor_layout,
+                               color_format);
 
         Tensor* output = context->master_graph->create_loader_output_tensor(info);
         context->master_graph->add_node<VideoLoaderNode>({}, {output})->init(internal_shard_count,
@@ -2285,10 +2261,9 @@ rocalVideoFileResizeSingleShard(
         auto decoder_mode = convert_decoder_mode(rocal_decode_device);
         auto info = TensorInfo(std::move(dims),
                                context->master_graph->mem_type(),
-                               RocalTensorDataType::UINT8);
-        info.set_color_format(color_format);
-        info.set_tensor_layout(tensor_layout);
-        info.set_max_shape();
+                               RocalTensorDataType::UINT8,
+                               tensor_layout,
+                               color_format);
         Tensor*  output = context->master_graph->create_loader_output_tensor(info);
         context->master_graph->add_node<VideoLoaderSingleShardNode>({}, {output})->init(shard_id, shard_count,
                                                                                         source_path,
@@ -2430,10 +2405,9 @@ rocalRawCIFAR10Source(
 
         auto info = TensorInfo(std::move(dims),
                                context->master_graph->mem_type(),
-                               RocalTensorDataType::UINT8);
-        info.set_color_format(color_format);
-        info.set_tensor_layout(tensor_layout);
-        info.set_max_shape();
+                               RocalTensorDataType::UINT8,
+                               tensor_layout,
+                               color_format);
         output = context->master_graph->create_loader_output_tensor(info);
 
         context->master_graph->add_node<Cifar10LoaderNode>({}, {output})->init(source_path, "",
