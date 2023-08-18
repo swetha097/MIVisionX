@@ -39,7 +39,7 @@ def draw_patches(img, idx, bboxes=None):
         image = image.transpose([1, 2, 0])
     image = cv2.cvtColor(image, cv2.COLOR_RGB2BGR)
     if args.classification:
-        cv2.imwrite("OUTPUT_IMAGES_PYTHON/NEW_API/CAFFE_READER/CLASSIFICATION/" +
+        cv2.imwrite("OUTPUT_IMAGES_PYTHON/CAFFE_READER/CLASSIFICATION/" +
                     str(idx)+"_"+"train"+".png", image)
     else:
         if bboxes is not None:
@@ -50,7 +50,7 @@ def draw_patches(img, idx, bboxes=None):
                 thickness = 2
                 image = cv2.rectangle(image, (int(loc_[0]), int(loc_[1])), (int(
                     (loc_[2])), int((loc_[3]))), color, thickness)
-        cv2.imwrite("OUTPUT_IMAGES_PYTHON/NEW_API/CAFFE_READER/DETECTION/" +
+        cv2.imwrite("OUTPUT_IMAGES_PYTHON/CAFFE_READER/DETECTION/" +
                     str(idx)+"_"+"train"+".png", image)
 
 
@@ -70,9 +70,9 @@ def main():
     num_classes = len(next(os.walk(image_path))[1])
     try:
         if args.classification:
-            path = "OUTPUT_IMAGES_PYTHON/NEW_API/CAFFE_READER/CLASSIFICATION/"
+            path = "OUTPUT_IMAGES_PYTHON/CAFFE_READER/CLASSIFICATION/"
         else:
-            path = "OUTPUT_IMAGES_PYTHON/NEW_API/CAFFE_READER/DETECTION/"
+            path = "OUTPUT_IMAGES_PYTHON/CAFFE_READER/DETECTION/"
         isExist = os.path.exists(path)
         if not isExist:
             os.makedirs(path)

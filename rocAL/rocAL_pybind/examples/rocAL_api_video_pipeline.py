@@ -18,9 +18,6 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
 import torch
 from amd.rocal.pipeline import Pipeline
 import amd.rocal.fn as fn
@@ -101,15 +98,14 @@ def draw_frames(img, batch_idx, iter_idx, layout):
     # image is expected as a tensor, bboxes as numpy
     import cv2
     image = img.detach().numpy()
-    # print('Shape is:',img.shape)
     if layout == 'NFCHW':
         image = image.transpose([1, 2, 0])
     image = cv2.cvtColor(image, cv2.COLOR_RGB2BGR)
     import os
-    if not os.path.exists("OUTPUT_IMAGES_PYTHON/NEW_API/VIDEO_READER"):
-        os.makedirs("OUTPUT_IMAGES_PYTHON/NEW_API/VIDEO_READER")
+    if not os.path.exists("OUTPUT_IMAGES_PYTHON/VIDEO_READER"):
+        os.makedirs("OUTPUT_IMAGES_PYTHON/VIDEO_READER")
     image = cv2.UMat(image).get()
-    cv2.imwrite("OUTPUT_IMAGES_PYTHON/NEW_API/VIDEO_READER/" +
+    cv2.imwrite("OUTPUT_IMAGES_PYTHON/VIDEO_READER/" +
                 "iter_"+str(iter_idx)+"_batch_"+str(batch_idx)+".png", image)
 
 

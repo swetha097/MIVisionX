@@ -36,7 +36,7 @@ def draw_patches(img, idx, device_type):
     if not args.NHWC:
         img = img.transpose([0, 1, 2])
     image = cv2.cvtColor(img, cv2.COLOR_RGB2BGR)
-    cv2.imwrite("OUTPUT_IMAGES_PYTHON/NEW_API/TF_READER/CLASSIFICATION/" + str(idx) + "_" + "train" + ".png", image)
+    cv2.imwrite("OUTPUT_IMAGES_PYTHON/TF_READER/CLASSIFICATION/" + str(idx) + "_" + "train" + ".png", image)
 
 def main():
     args = parse_args()
@@ -55,7 +55,7 @@ def main():
         'image/filename': 'image/filename'
     }
     try:
-        path = "OUTPUT_IMAGES_PYTHON/NEW_API/TF_READER/CLASSIFICATION/"
+        path = "OUTPUT_IMAGES_PYTHON/TF_READER/CLASSIFICATION/"
         is_exist = os.path.exists(path)
         if not is_exist:
             os.makedirs(path)

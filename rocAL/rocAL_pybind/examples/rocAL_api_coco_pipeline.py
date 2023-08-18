@@ -18,22 +18,16 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
 from math import sqrt
 import torch
 import itertools
 import os
 import ctypes
-
-
 from amd.rocal.pipeline import Pipeline
 import amd.rocal.fn as fn
 import amd.rocal.types as types
 import numpy as np
 from parse_config import parse_args
-
 
 class ROCALCOCOIterator(object):
     """
@@ -53,7 +47,6 @@ class ROCALCOCOIterator(object):
             assert pipelines is not None, "Number of provided pipelines has to be at least 1"
         except Exception as ex:
             print(ex)
-
         self.loader = pipelines
         self.tensor_format = tensor_layout
         self.multiplier = multiplier if multiplier else [1.0, 1.0, 1.0]
@@ -66,8 +59,7 @@ class ROCALCOCOIterator(object):
         self.num_anchors = num_anchors
         self.output_list = self.dimensions = self.torch_dtype = None
         self.display = display
-
-        #Image id of a batch of images
+        # Image id of a batch of images
         self.image_id = np.zeros(self.bs, dtype="int32")
         # Count of labels/ bboxes in a batch
         self.bboxes_label_count = np.zeros(self.bs, dtype="int32")
@@ -86,35 +78,32 @@ class ROCALCOCOIterator(object):
 
         if self.output_list is None:
             self.output_list = []
+            self.dimensions = self.output_tensor_list[i].dimensions()
+            self.torch_dtype = self.output_tensor_list[i].dtype()
             for i in range(len(self.output_tensor_list)):
-                self.dimensions = self.output_tensor_list[i].dimensions()
                 if self.device == "cpu":
-                    self.torch_dtype = self.output_tensor_list[i].dtype()
-                    self.output = torch.empty(self.dimensions, dtype = getattr(torch, self.torch_dtype))
+                    self.output = torch.empty(self.dimensions, dtype=getattr(torch, self.torch_dtype))
                 else:
                     torch_gpu_device = torch.device('cuda', self.device_id)
-                    self.torch_dtype = self.output_tensor_list[i].dtype()
-                    self.output = torch.empty(self.dimensions, dtype = getattr(torch, self.torch_dtype), device=torch_gpu_device)
-
+                    self.output = torch.empty(self.dimensions, dtype=getattr(torch, self.torch_dtype), device=torch_gpu_device)
                 self.output_tensor_list[i].copy_data(ctypes.c_void_p(self.output.data_ptr()), self.output_memory_type)
                 self.output_list.append(self.output)
         else:
             for i in range(len(self.output_tensor_list)):
                 self.output_tensor_list[i].copy_data(ctypes.c_void_p(self.output_list[i].data_ptr()), self.output_memory_type)
-        
+
         self.labels = self.loader.get_bounding_box_labels()
         # 1D bboxes array in a batch
         self.bboxes = self.loader.get_bounding_box_cords()
+        self.loader.get_image_id(self.image_id)
         image_id_tensor = torch.tensor(self.image_id)
         image_size_tensor = torch.tensor(self.img_size).view(-1, self.bs, 2)
-        self.loader.get_image_id(self.image_id)
 
         for i in range(self.bs):
             if self.display:
                 img = self.output
                 draw_patches(img[i], self.image_id[i],
                              self.bboxes[i], self.device)
-
         return (self.output), self.bboxes, self.labels, image_id_tensor, image_size_tensor
 
     def reset(self):
@@ -125,18 +114,16 @@ class ROCALCOCOIterator(object):
 
 def draw_patches(img, idx, bboxes, device):
     args = parse_args()
-    #image is expected as a tensor, bboxes as numpy
+    # image is expected as a tensor, bboxes as numpy
     import cv2
     if device == "cpu":
         image = img.detach().numpy()
     else:
         image = img.cpu().numpy()
-    if args.NHWC:
-        htot, wtot, _ = img.shape
-    else:
+    if args.fp16:
+        image = (image).astype('uint8')
+    if not args.NHWC:
         image = image.transpose([1, 2, 0])
-        _, htot, wtot = img.shape
-
     image = cv2.cvtColor(image, cv2.COLOR_RGB2BGR)
     bboxes = np.reshape(bboxes, (-1, 4))
 
@@ -145,9 +132,10 @@ def draw_patches(img, idx, bboxes, device):
         color = (255, 0, 0)
         thickness = 2
         image = cv2.UMat(image).get()
-        image = cv2.rectangle(image, (int(loc_[0]), int(loc_[1] )), (int(
-            (loc_[2] )), int((loc_[3]))), color, thickness)
-        cv2.imwrite("OUTPUT_IMAGES_PYTHON/NEW_API/COCO_READER/" + str(idx)+"_"+"train"+".png", image)
+        image = cv2.rectangle(image, (int(loc_[0]), int(loc_[1])), (int(
+            (loc_[2])), int((loc_[3]))), color, thickness)
+        cv2.imwrite("OUTPUT_IMAGES_PYTHON/COCO_READER/" +
+                    str(idx)+"_"+"train"+".png", image)
 
 
 def main():
@@ -165,25 +153,22 @@ def main():
     tensor_format = types.NHWC if args.NHWC else types.NCHW
     tensor_dtype = types.FLOAT16 if args.fp16 else types.FLOAT
     try:
-        path = "OUTPUT_IMAGES_PYTHON/NEW_API/COCO_READER/"
+        path = "OUTPUT_IMAGES_PYTHON/COCO_READER/"
         isExist = os.path.exists(path)
         if not isExist:
             os.makedirs(path)
     except OSError as error:
         print(error)
-    # Anchors
 
     # Create Pipeline instance
-    if args.display:
-        pipe = Pipeline(batch_size=batch_size, num_threads=num_threads,
-                        device_id=args.local_rank, seed=random_seed, rocal_cpu=rocal_cpu, tensor_layout=tensor_format, tensor_dtype=tensor_dtype)
-    else:
-        pipe = Pipeline(batch_size=batch_size, num_threads=num_threads, device_id=args.local_rank, seed=random_seed, rocal_cpu=rocal_cpu, tensor_layout=tensor_format, tensor_dtype=tensor_dtype)
+    pipe = Pipeline(batch_size=batch_size, num_threads=num_threads, device_id=args.local_rank,
+                    seed=random_seed, rocal_cpu=rocal_cpu, tensor_layout=tensor_format, tensor_dtype=tensor_dtype)
     # Use pipeline instance to make calls to reader, decoder & augmentation's
     with pipe:
         jpegs, bboxes, labels = fn.readers.coco(annotations_file=annotation_path)
-        images_decoded = fn.decoders.image(jpegs, output_type = types.RGB, file_root=image_path, annotations_file=annotation_path, random_shuffle=False,shard_id=local_rank, num_shards=world_size)
-        res_images = fn.resize(images_decoded, resize_width=640, resize_height=480)
+        images_decoded = fn.decoders.image(jpegs, output_type=types.RGB, file_root=image_path,
+                                           annotations_file=annotation_path, random_shuffle=False, shard_id=local_rank, num_shards=world_size)
+        res_images = fn.resize(images_decoded, resize_width=300, resize_height=300)
         saturation = fn.uniform(rng_range=[0.1, 0.4])
         contrast = fn.uniform(rng_range=[0.1, 25.0])
         brightness = fn.uniform(rng_range=[0.875, 1.125])
@@ -192,17 +177,19 @@ def main():
             res_images, saturation=saturation, contrast=contrast, brightness=brightness, hue=hue)
         flip_coin = fn.random.coin_flip(probability=0.5)
         cmn_images = fn.crop_mirror_normalize(ct_images,
-                                                  crop=(300, 300),
-                                                  mean=[0, 0, 0],
-                                                  std=[1, 1, 1],
-                                                  mirror=flip_coin,
-                                                  rocal_tensor_output_datatype=types.UINT8,
-                                                  rocal_tensor_output_layout=types.NHWC)
+                                              crop=(224, 224),
+                                              crop_pos_x=0.0,
+                                              crop_pos_y=0.0,
+                                              mean=[0, 0, 0],
+                                              std=[1, 1, 1],
+                                              mirror=flip_coin,
+                                              rocal_tensor_output_layout=tensor_format,
+                                              rocal_tensor_output_datatype=tensor_dtype)
         pipe.set_outputs(cmn_images)
     # Build the pipeline
     pipe.build()
     # Dataloader
-    if(args.rocal_gpu):
+    if (args.rocal_gpu):
         data_loader = ROCALCOCOIterator(
             pipe, multiplier=pipe._multiplier, offset=pipe._offset, display=display, tensor_layout=tensor_format, tensor_dtype=tensor_dtype, device="cuda")
 
@@ -226,9 +213,8 @@ def main():
                 print("\nIMAGE SIZE:\n", it[4])
                 print("**************ends*******************")
                 print("**************", i, "*******************")
-            # draw_patches(img[i], self.image_id[i],self.bboxes[i], self.device)
         data_loader.reset()
-    #Your statements here
+    # Your statements here
     stop = timeit.default_timer()
 
     print('\n Time: ', stop - start)
