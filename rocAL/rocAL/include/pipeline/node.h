@@ -50,8 +50,6 @@ protected:
     const std::vector<Tensor *> _inputs;
     const std::vector<Tensor *> _outputs;
     std::shared_ptr<Graph> _graph = nullptr;
-    vx_tensor _src_tensor_roi = nullptr;
-    vx_tensor _dst_tensor_roi = nullptr;
     vx_node _node = nullptr;
     size_t _batch_size;
     pMetaDataBatch _meta_data_info;

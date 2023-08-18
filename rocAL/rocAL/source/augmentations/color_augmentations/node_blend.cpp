@@ -36,7 +36,7 @@ void BlendNode::create_node() {
         THROW("Blend node needs two input images")
 
     _ratio.create_array(_graph, VX_TYPE_FLOAT32, _batch_size);
-    _node = vxExtRppBlend(_graph->get(), _inputs[0]->handle(), _inputs[1]->handle(), _src_tensor_roi, _outputs[0]->handle(), _ratio.default_array(), _input_layout, _output_layout, _roi_type);
+    _node = vxExtRppBlend(_graph->get(), _inputs[0]->handle(), _inputs[1]->handle(), _inputs[0]->get_roi_tensor(), _outputs[0]->handle(), _ratio.default_array(), _input_layout, _output_layout, _roi_type);
 
     vx_status status;
     if((status = vxGetStatus((vx_reference)_node)) != VX_SUCCESS)

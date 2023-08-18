@@ -33,7 +33,7 @@ void FogNode::create_node() {
         return;
 
     _fog_param.create_array(_graph, VX_TYPE_FLOAT32, _batch_size);
-    _node = vxExtRppFog(_graph->get(), _inputs[0]->handle(), _src_tensor_roi, _outputs[0]->handle(), _fog_param.default_array(), _input_layout, _output_layout, _roi_type);
+    _node = vxExtRppFog(_graph->get(), _inputs[0]->handle(), _inputs[0]->get_roi_tensor(), _outputs[0]->handle(), _fog_param.default_array(), _input_layout, _output_layout, _roi_type);
 
     vx_status status;
     if((status = vxGetStatus((vx_reference)_node)) != VX_SUCCESS)

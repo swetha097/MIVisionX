@@ -36,7 +36,7 @@ void LensCorrectionNode::create_node() {
 
     _strength.create_array(_graph, VX_TYPE_FLOAT32, _batch_size);
     _zoom.create_array(_graph, VX_TYPE_FLOAT32, _batch_size);
-    _node = vxExtRppLensCorrection(_graph->get(), _inputs[0]->handle(), _src_tensor_roi, _outputs[0]->handle(), _strength.default_array(), _zoom.default_array(), _input_layout, _output_layout, _roi_type);
+    _node = vxExtRppLensCorrection(_graph->get(), _inputs[0]->handle(), _inputs[0]->get_roi_tensor(), _outputs[0]->handle(), _strength.default_array(), _zoom.default_array(), _input_layout, _output_layout, _roi_type);
 
     vx_status status;
     if((status = vxGetStatus((vx_reference)_node)) != VX_SUCCESS)

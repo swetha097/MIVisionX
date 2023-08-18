@@ -35,7 +35,7 @@ void FlipNode::create_node() {
 
     _horizontal.create_array(_graph, VX_TYPE_UINT32, _batch_size);
     _vertical.create_array(_graph, VX_TYPE_UINT32, _batch_size);
-    _node = vxExtRppFlip(_graph->get(), _inputs[0]->handle(), _src_tensor_roi, _outputs[0]->handle(),
+    _node = vxExtRppFlip(_graph->get(), _inputs[0]->handle(), _inputs[0]->get_roi_tensor(), _outputs[0]->handle(),
                          _horizontal.default_array(), _vertical.default_array(), _input_layout, _output_layout, _roi_type);
 
     vx_status status;
