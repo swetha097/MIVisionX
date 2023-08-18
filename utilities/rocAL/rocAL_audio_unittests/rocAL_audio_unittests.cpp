@@ -226,7 +226,7 @@ int test(int test_case, const char *path, float sample_rate, int downmix, unsign
 
     while (rocalGetRemainingImages(handle) >= static_cast<size_t>(inputBatchSize))
     {
-        std::cout<<"\n rocalGetRemainingImages:: "<<rocalGetRemainingImages(handle)<<"\t inputBatchsize:: "<<inputBatchSize  ;
+        std::cout<<"\n rocalGetRemainingImages:: "<<rocalGetRemainingImages(handle)<<"\t inputBatchsize:: "<< inputBatchSize;
         std::cout<<"\n iteration:: "<<iteration;
         iteration++;
         if (rocalRun(handle) != 0) {

@@ -187,8 +187,7 @@ typedef struct {
     unsigned x1, y1, x2, y2;
 } RocalROICords;
 
-enum RocalAudioBorderType
-{
+enum RocalAudioBorderType {
     ZERO = 0,
     CLAMP,
     REFLECT
