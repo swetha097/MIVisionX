@@ -115,7 +115,7 @@ def main():
                                                        random_aspect_ratio=[0.8, 1.25],
                                                        random_area=[0.1, 1.0],
                                                        num_attempts=100, path=image_path)
-        resized = fn.resize(decoded_images, resize_width=300, resize_height=300, rocal_tensor_output_layout=tensor_layout)
+        resized = fn.resize(decoded_images, resize_width=300, resize_height=300, output_layout=tensor_layout)
         pipe.set_outputs(resized)
     pipe.build()
     image_iterator = ROCALIterator(pipe, device=device)

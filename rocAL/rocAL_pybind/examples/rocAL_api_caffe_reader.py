@@ -92,7 +92,7 @@ def main():
             jpegs, labels = fn.readers.caffe(path=image_path, bbox=rocal_bbox)
             images = fn.decoders.image(jpegs, path=image_path, output_type=types.RGB, shard_id=local_rank, num_shards=world_size, random_shuffle=True)
 
-        images = fn.resize(images, resize_width=224, resize_height=224, rocal_tensor_output_layout=tensor_layout)
+        images = fn.resize(images, resize_width=224, resize_height=224, output_layout=tensor_layout)
         pipe.set_outputs(images)
     # Build the pipeline
     pipe.build()

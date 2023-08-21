@@ -74,7 +74,7 @@ def main():
         )
         jpegs = inputs["image/encoded"]
         images = fn.decoders.image(jpegs, user_feature_key_map=feature_key_map, output_type=types.RGB, path=image_path)
-        resized = fn.resize(images, resize_width=300, resize_height=300, rocal_tensor_output_layout=tensor_layout)
+        resized = fn.resize(images, resize_width=300, resize_height=300, output_layout=tensor_layout)
         if one_hot_labels == 1:
             labels = inputs["image/class/label"]
             _ = fn.one_hot(labels, num_classes=1000)

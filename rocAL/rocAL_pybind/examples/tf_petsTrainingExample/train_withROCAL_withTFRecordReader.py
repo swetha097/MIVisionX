@@ -142,8 +142,8 @@ def main():
                                               mean=[0,0,0],
                                               std=[255,255,255],
                                               mirror=flip_coin,
-                                              rocal_tensor_output_datatype=types.FLOAT,
-                                              rocal_tensor_output_layout=types.NHWC)
+                                              output_dtype=types.FLOAT,
+                                              output_layout=types.NHWC)
 		trainPipe.set_outputs(cmn_images)
 	trainPipe.build()
 
@@ -164,8 +164,8 @@ def main():
                                               mean=[0,0,0],
                                               std=[255,255,255],
                                               mirror=flip_coin,
-                                              rocal_tensor_output_datatype=types.FLOAT,
-                                              rocal_tensor_output_layout=types.NHWC)
+                                              output_dtype=types.FLOAT,
+                                              output_layout=types.NHWC)
 		valPipe.set_outputs(cmn_images)
 	valPipe.build()
 

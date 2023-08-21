@@ -87,7 +87,7 @@ def main():
         else:
             jpegs, labels = fn.readers.caffe2(path=image_path, bbox=rocal_bbox)
         images = fn.decoders.image(jpegs, output_type=types.RGB, path=image_path, random_shuffle=True)
-        images = fn.resize(images, resize_width=224, resize_height=224, rocal_tensor_output_layout=tensor_layout)
+        images = fn.resize(images, resize_width=224, resize_height=224, output_layout=tensor_layout)
         pipe.set_outputs(images)
     pipe.build()
     data_loader = ROCALClassificationIterator(pipe, display=0, device=device)

@@ -68,11 +68,11 @@ def main():
         jpegs, labels = fn.readers.file(file_root=data_path)
         decode = fn.decoders.image_slice(jpegs, output_type=types.RGB,
                                         file_root=data_path, shard_id=local_rank, num_shards=world_size, random_shuffle=True)
-        res = fn.resize(decode, resize_width=224, resize_height=224, rocal_tensor_output_layout=types.NCHW, rocal_tensor_output_datatype=types.UINT8)
+        res = fn.resize(decode, resize_width=224, resize_height=224, output_layout=types.NCHW, output_dtype=types.UINT8)
         flip_coin = fn.random.coin_flip(probability=0.5)
         cmnp = fn.crop_mirror_normalize(res,
-                                        rocal_tensor_output_layout=types.NHWC,
-                                        rocal_tensor_output_datatype=types.FLOAT16,
+                                        output_layout=types.NHWC,
+                                        output_dtype=types.FLOAT16,
                                         crop=(224, 224),
                                         mirror=flip_coin,
                                         mean=[0.485 * 255, 0.456 * 255, 0.406 * 255],
