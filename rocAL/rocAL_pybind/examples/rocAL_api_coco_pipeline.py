@@ -183,8 +183,8 @@ def main():
                                               mean=[0, 0, 0],
                                               std=[1, 1, 1],
                                               mirror=flip_coin,
-                                              rocal_tensor_output_layout=tensor_format,
-                                              rocal_tensor_output_datatype=tensor_dtype)
+                                              output_layout=tensor_format,
+                                              output_dtype=tensor_dtype)
         pipe.set_outputs(cmn_images)
     # Build the pipeline
     pipe.build()
