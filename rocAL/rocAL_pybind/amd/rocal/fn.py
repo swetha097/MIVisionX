@@ -1023,11 +1023,10 @@ def preemphasis_filter(*inputs, border=types.CLAMP, preemph_coeff=0.97, rocal_te
     X_border = 0                    if border_type == 'zero'
     X_border = X[0]                 if border_type == 'clamp'
     X_border = X[1]                 if border_type == 'reflect'
-    
     '''
     preemph_coeff_float_param = b.createFloatParameter(preemph_coeff)
     kwargs_pybind = {"input_audio0": inputs[0], "rocal_tensor_output_type" :rocal_tensor_output_type,
                      "is_output": False, "preemph_coeff": preemph_coeff_float_param, 
                      "preemph_border_type": border}
     preemphasis_output = b.PreEmphasisFilter(Pipeline._current_pipeline._handle ,*(kwargs_pybind.values()))
-    return preemphasis_output
+    return (preemphasis_output)

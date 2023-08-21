@@ -136,11 +136,11 @@ int test(int test_case, const char *path, float sample_rate, int downmix, unsign
         // break;
         case 1:
         {
+            std::cout<< "\n Augmentation - rocalPreEmphasisFilter ";
             RocalTensorLayout tensorLayout; // = RocalTensorLayout::None;
             RocalTensorOutputType tensorOutputType = RocalTensorOutputType::ROCAL_FP32;
-            // output = rocalPreEmphasisFilter(handle, input1, tensorOutputType, true);
             output = rocalPreEmphasisFilter(handle, input1, tensorOutputType, true);
-            std::cout<<"\n Calls rocalPreEmphasisFilter ";
+            
         }
         break;
         // case 2:

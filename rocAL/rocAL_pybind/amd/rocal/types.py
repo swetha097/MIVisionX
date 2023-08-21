@@ -86,6 +86,11 @@ from rocal_pybind.types import LANCZOS_INTERPOLATION
 from rocal_pybind.types import GAUSSIAN_INTERPOLATION
 from rocal_pybind.types import TRIANGULAR_INTERPOLATION
 
+#     RocalAudioBorderType
+from rocal_pybind.types import ZERO
+from rocal_pybind.types import CLAMP
+from rocal_pybind.types import REFLECT
+
 _known_types = {
 
     OK: ("OK", OK),
@@ -140,6 +145,9 @@ _known_types = {
     SCALING_MODE_NOT_SMALLER: ("SCALING_MODE_NOT_SMALLER", SCALING_MODE_NOT_SMALLER),
     SCALING_MODE_NOT_LARGER: ("SCALING_MODE_NOT_LARGER", SCALING_MODE_NOT_LARGER),
 
+    ZERO: ("ZERO", ZERO),
+    CLAMP: ("CLAMP", CLAMP),
+    REFLECT: ("REFLECT", REFLECT),
 }
 
 def data_type_function(dtype):

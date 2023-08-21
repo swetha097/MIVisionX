@@ -363,9 +363,9 @@ namespace rocal{
             .value("DECODER_VIDEO_FFMPEG_HW", ROCAL_DECODER_VIDEO_FFMPEG_HW)
             .export_values();
         py::enum_<RocalAudioBorderType>(types_m,"RocalAudioBorderType", "Rocal Audio Border Type")
-            .value("ZERO",ZERO)
-            .value("CLAMP",CLAMP)
-            .value("REFLECT",REFLECT)
+            .value("ZERO", ZERO)
+            .value("CLAMP", CLAMP)
+            .value("REFLECT", REFLECT)
             .export_values();
         // rocal_api_info.h
         m.def("getRemainingImages", &rocalGetRemainingImages);

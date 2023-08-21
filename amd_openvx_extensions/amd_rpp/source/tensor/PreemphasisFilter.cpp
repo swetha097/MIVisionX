@@ -21,11 +21,8 @@ THE SOFTWARE.
 */
 
 #include "internal_publishKernels.h"
-#include "vx_ext_amd.h"
-#define NUM_OF_DIMS 5
 
-struct PreemphasisFilterLocalData
-{
+struct PreemphasisFilterLocalData {
     vxRppHandle *handle;
     Rpp32u deviceType;
     RppPtr_t pSrc;
@@ -37,9 +34,8 @@ struct PreemphasisFilterLocalData
     RpptDescPtr pSrcDesc;
     RpptDescPtr pDstDesc;
     Rpp32u *pSampleSize;
-    size_t inputTensorDims[NUM_OF_DIMS];
-    size_t outputTensorDims[NUM_OF_DIMS];
-
+    size_t inputTensorDims[RPP_MAX_TENSOR_DIMS];
+    size_t outputTensorDims[RPP_MAX_TENSOR_DIMS];
 };
 
 void update_destination_roi(const vx_reference *parameters, PreemphasisFilterLocalData *data, RpptROI *src_roi, RpptROI *dst_roi) {
@@ -50,26 +46,24 @@ static vx_status VX_CALLBACK refreshPreemphasisFilter(vx_node node, const vx_ref
     vx_status status = VX_SUCCESS;
     void *roi_tensor_ptr_src, *roi_tensor_ptr_dst;
     STATUS_ERROR_CHECK(vxCopyArrayRange((vx_array)parameters[4], 0, data->pSrcDesc->n, sizeof(float), data->pPreemphCoeff, VX_READ_ONLY, VX_MEMORY_TYPE_HOST));
-    if (data->deviceType == AGO_TARGET_AFFINITY_GPU)
-    {
+    if (data->deviceType == AGO_TARGET_AFFINITY_GPU) {
 #if ENABLE_OPENCL
-        return VX_ERROR_NOT_IMPLEMENTED;
+    return VX_ERROR_NOT_IMPLEMENTED;
 #elif ENABLE_HIP
-        return VX_ERROR_NOT_IMPLEMENTED;
+    return VX_ERROR_NOT_IMPLEMENTED;
 #endif
     }
-    if (data->deviceType == AGO_TARGET_AFFINITY_CPU)
-    {
+    if (data->deviceType == AGO_TARGET_AFFINITY_CPU) {
         STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[0], VX_TENSOR_BUFFER_HOST, &data->pSrc, sizeof(data->pSrc)));
         STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[1], VX_TENSOR_BUFFER_HOST, &roi_tensor_ptr_src, sizeof(roi_tensor_ptr_src)));
         STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[2], VX_TENSOR_BUFFER_HOST, &data->pDst, sizeof(data->pDst)));
         STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[3], VX_TENSOR_BUFFER_HOST, &roi_tensor_ptr_dst, sizeof(roi_tensor_ptr_dst)));
     }
-        RpptROI *src_roi = reinterpret_cast<RpptROI *>(roi_tensor_ptr_src);
-        RpptROI *dst_roi = reinterpret_cast<RpptROI *>(roi_tensor_ptr_dst);
-        for(int n =  data->inputTensorDims[0] - 1; n >= 0; n--)
-            data->pSampleSize[n] = src_roi[n].xywhROI.xy.x * src_roi[n].xywhROI.xy.y;
-        update_destination_roi(parameters, data, src_roi, dst_roi);
+    RpptROI *src_roi = reinterpret_cast<RpptROI *>(roi_tensor_ptr_src);
+    RpptROI *dst_roi = reinterpret_cast<RpptROI *>(roi_tensor_ptr_dst);
+    for(int n =  data->inputTensorDims[0] - 1; n >= 0; n--)
+        data->pSampleSize[n] = src_roi[n].xywhROI.xy.x * src_roi[n].xywhROI.xy.y;
+    update_destination_roi(parameters, data, src_roi, dst_roi);
     return status;
 }
 
@@ -108,16 +102,14 @@ static vx_status VX_CALLBACK processPreemphasisFilter(vx_node node, const vx_ref
     PreemphasisFilterLocalData *data = NULL;
     STATUS_ERROR_CHECK(vxQueryNode(node, VX_NODE_LOCAL_DATA_PTR, &data, sizeof(data)));
     refreshPreemphasisFilter(node, parameters, num, data);
-    if (data->deviceType == AGO_TARGET_AFFINITY_GPU)
-    {
+    if (data->deviceType == AGO_TARGET_AFFINITY_GPU) {
 #if ENABLE_OPENCL
-        return_status = VX_ERROR_NOT_IMPLEMENTED;
+    return_status = VX_ERROR_NOT_IMPLEMENTED;
 #elif ENABLE_HIP
-        return_status = VX_ERROR_NOT_IMPLEMENTED;
+    return_status = VX_ERROR_NOT_IMPLEMENTED;
 #endif
     }
-    if (data->deviceType == AGO_TARGET_AFFINITY_CPU)
-    {
+    if (data->deviceType == AGO_TARGET_AFFINITY_CPU) {
         refreshPreemphasisFilter(node, parameters, num, data);
         rpp_status = rppt_pre_emphasis_filter_host((float *)data->pSrc, data->pSrcDesc, (float *)data->pDst, data->pDstDesc, (Rpp32s*) data->pSampleSize, data->pPreemphCoeff , RpptAudioBorderType(data->borderType), data->handle->rppHandle);
         return_status = (rpp_status == RPP_SUCCESS) ? VX_SUCCESS : VX_FAILURE;
@@ -212,8 +204,7 @@ vx_status PreemphasisFilter_Register(vx_context context) {
 #endif
     amd_kernel_query_target_support_f query_target_support_f = query_target_support;
 
-    if (kernel)
-    {
+    if (kernel) {
         STATUS_ERROR_CHECK(vxSetKernelAttribute(kernel, VX_KERNEL_ATTRIBUTE_AMD_QUERY_TARGET_SUPPORT, &query_target_support_f, sizeof(query_target_support_f)));
         PARAM_ERROR_CHECK(vxAddParameterToKernel(kernel, 0, VX_INPUT, VX_TYPE_TENSOR, VX_PARAMETER_STATE_REQUIRED));
         PARAM_ERROR_CHECK(vxAddParameterToKernel(kernel, 1, VX_INPUT, VX_TYPE_TENSOR, VX_PARAMETER_STATE_REQUIRED));
@@ -224,8 +215,7 @@ vx_status PreemphasisFilter_Register(vx_context context) {
         PARAM_ERROR_CHECK(vxAddParameterToKernel(kernel, 6, VX_INPUT, VX_TYPE_SCALAR, VX_PARAMETER_STATE_REQUIRED)); 
         PARAM_ERROR_CHECK(vxFinalizeKernel(kernel));
     }
-    if (status != VX_SUCCESS)
-    {
+    if (status != VX_SUCCESS) {
     exit:
         vxRemoveKernel(kernel);
         return VX_FAILURE;
