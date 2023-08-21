@@ -52,7 +52,7 @@ def main():
     except OSError as error:
         print(error)
     data_path = sys.argv[1]
-    _rali_cpu = True if sys.argv[2] == "cpu" else False
+    rocal_cpu = True if sys.argv[2] == "cpu" else False
     batch_size = int(sys.argv[3])
     num_threads = 1
     device_id = 0
@@ -60,7 +60,7 @@ def main():
     local_rank = 0
     world_size = 1
 
-    image_classification_train_pipeline = Pipeline(batch_size=batch_size, num_threads=num_threads, device_id=device_id, seed=random_seed, rocal_cpu=_rali_cpu)
+    image_classification_train_pipeline = Pipeline(batch_size=batch_size, num_threads=num_threads, device_id=device_id, seed=random_seed, rocal_cpu=rocal_cpu)
 
     with image_classification_train_pipeline:
         jpegs, labels = fn.readers.file(file_root=data_path)
@@ -91,7 +91,7 @@ def main():
         print("************************************** i *************************************",i)
         for img in it[0]:
             cnt = cnt + 1
-            draw_patches(img[0], cnt, device=_rali_cpu, layout="NCHW")
+            draw_patches(img[0], cnt, device=rocal_cpu, layout="NCHW")
     imageIteratorPipeline.reset()
     print("*********************************************************************")
 
