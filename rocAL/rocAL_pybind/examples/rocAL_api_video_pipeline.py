@@ -130,8 +130,8 @@ def main():
                                   random_shuffle=False, image_type=types.RGB)
         crop_size = (512, 960)
         output_images = fn.crop_mirror_normalize(images,
-                                                 rocal_tensor_output_layout=tensor_format,
-                                                 rocal_tensor_output_datatype=tensor_dtype,
+                                                 output_layout=tensor_format,
+                                                 output_dtype=tensor_dtype,
                                                  crop=crop_size,
                                                  mean=[0, 0, 0],
                                                  std=[1, 1, 1])
