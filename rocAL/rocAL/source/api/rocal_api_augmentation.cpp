@@ -621,8 +621,8 @@ ROCAL_API_CALL rocalResizeMirrorNormalize(
 
         std::shared_ptr<ResizeMirrorNormalizeNode> rmn_node = context->master_graph->add_node<ResizeMirrorNormalizeNode>({input}, {output});
         rmn_node->init(out_width, out_height, resize_scaling_mode, maximum_size, interpolation_type, mean, std_dev, mirror);
-        // if (context->master_graph->meta_data_graph())
-        //     context->master_graph->meta_add_node<ResizeMirrorNormalizeMetaNode,ResizeMirrorNormalizeNode>(rmn_node);
+        if (context->master_graph->meta_data_graph())
+            context->master_graph->meta_add_node<ResizeMirrorNormalizeMetaNode,ResizeMirrorNormalizeNode>(rmn_node);
     } catch(const std::exception& e) {
         context->capture_error(e.what());
         ERR(e.what())
@@ -1992,7 +1992,7 @@ RocalTensor  ROCAL_API_CALL rocalResizeCropMirror(
     auto input = static_cast<Tensor*>(p_input);
     auto crop_h = static_cast<FloatParam*>(p_crop_height);
     auto crop_w = static_cast<FloatParam*>(p_crop_width);
-    auto mirror  = static_cast<IntParam*>(p_mirror);
+    auto mirror = static_cast<IntParam*>(p_mirror);
     try {
         if(dest_width == 0 || dest_height == 0)
             THROW("Crop Mirror node needs tp receive non-zero destination dimensions")
@@ -2035,7 +2035,7 @@ rocalRandomCrop(
     }
     auto context = static_cast<Context*>(p_context);
     auto input = static_cast<Tensor*>(p_input);
-    auto crop_area_factor  = static_cast<FloatParam*>(p_crop_area_factor);
+    auto crop_area_factor = static_cast<FloatParam*>(p_crop_area_factor);
     auto crop_aspect_ratio = static_cast<FloatParam*>(p_crop_aspect_ratio);
     auto x_drift = static_cast<FloatParam*>(p_crop_pox_x);
     auto y_drift = static_cast<FloatParam*>(p_crop_pos_y);
@@ -2079,7 +2079,7 @@ rocalSSDRandomCrop(
     }
     auto context = static_cast<Context*>(p_context);
     auto input = static_cast<Tensor*>(p_input);
-    auto crop_area_factor  = static_cast<FloatParam*>(p_crop_area_factor);
+    auto crop_area_factor = static_cast<FloatParam*>(p_crop_area_factor);
     auto crop_aspect_ratio = static_cast<FloatParam*>(p_crop_aspect_ratio);
     auto x_drift = static_cast<FloatParam*>(p_crop_pox_x);
     auto y_drift = static_cast<FloatParam*>(p_crop_pos_y);
