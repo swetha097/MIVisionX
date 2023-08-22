@@ -125,14 +125,14 @@ int main(int argc, const char ** argv)
 
     RocalFloatParam rand_angle =   rocalCreateFloatRand( values , frequencies, num_values);
     // Creating successive blur nodes to simulate a deep branch of augmentations
-    RocalTensor input2 = rocalCropResize(handle, input0, resize_w, resize_h, false, rand_crop_area);;
+    RocalTensor input2 = rocalCropResize(handle, decoded_output, resize_w, resize_h, false, rand_crop_area);;
     for(int i = 0 ; i < aug_depth; i++)
     {
         input2 = rocalBlurFixed(handle, input2, 17.25, (i == (aug_depth -1)) ? true:false );
     }
 
 
-    RocalTensor input4 = rocalColorTemp(handle, input0, false, color_temp_adj);
+    RocalTensor input4 = rocalColorTemp(handle, decoded_output, false, color_temp_adj);
 
     RocalTensor input5 = rocalWarpAffine(handle, input4, false);
 
@@ -142,9 +142,9 @@ int main(int argc, const char ** argv)
 
 
 
-    RocalTensor input7 = rocalPixelate(handle, input0, false);
+    RocalTensor input7 = rocalPixelate(handle, decoded_output, false);
 
-    RocalTensor input8 = rocalSnow(handle, input0, false);
+    RocalTensor input8 = rocalSnow(handle, decoded_output, false);
 
     RocalTensor input9 = rocalBlend(handle, input7, input8, false);
 

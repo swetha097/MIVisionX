@@ -84,6 +84,7 @@ int main(int argc, const char ** argv)
 
 
     std::cout << ">>> Running on " << (processing_device?"GPU":"CPU") << std::endl;
+    // The cifar10 dataloader only supports ROCAL_COLOR_RGB_PLANAR
     RocalImageColor color_format = RocalImageColor::ROCAL_COLOR_RGB_PLANAR;
 
 
@@ -110,12 +111,12 @@ int main(int argc, const char ** argv)
     /*>>>>>>>>>>>>>>>>>>> Graph description <<<<<<<<<<<<<<<<<<<*/
     // create Cifar10 meta data reader
     rocalCreateTextCifar10LabelReader(handle, folderPath1, "data_batch");
-    RocalTensor input1;
-    input1 = rocalRawCIFAR10Source(handle, folderPath1,  color_format, false, decode_width, decode_height, "data_batch_", false);
+    RocalTensor image0;
+    image0 = rocalRawCIFAR10Source(handle, folderPath1,  color_format, false, decode_width, decode_height, "data_batch_", false);
 
     if(rocalGetStatus(handle) != ROCAL_OK)
     {
-        std::cout << "JPEG source could not initialize : "<<rocalGetErrorMessage(handle) << std::endl;
+        std::cout << "rawCIFAR10 source could not initializee : " << rocalGetErrorMessage(handle) << std::endl;
         return -1;
     }
 #if 0
@@ -125,7 +126,7 @@ int main(int argc, const char ** argv)
 
     RocalFloatParam rand_angle =   rocalCreateFloatRand( values , frequencies, num_values);
     // Creating successive blur nodes to simulate a deep branch of augmentations
-    RocalTensor image2 = rocalCropResize(handle, image0, resize_w, resize_h, false, rand_crop_area);;
+    RocalTensor image2 = rocalCropResize(handle, image0, resize_w, resize_h, false, rand_crop_area);
     for(int i = 0 ; i < aug_depth; i++)
     {
         image2 = rocalBlurFixed(handle, image2, 17.25, (i == (aug_depth -1)) ? true:false );
@@ -154,7 +155,7 @@ int main(int argc, const char ** argv)
 #else
     // uncomment the following to add augmentation if needed
     // just do one augmentation to test
-    rocalRain(handle, input1, true);
+    rocalRain(handle, image0, true);
 #endif
 
     if(rocalGetStatus(handle) != ROCAL_OK)
@@ -205,12 +206,12 @@ int main(int argc, const char ** argv)
         unsigned img_name_size = rocalGetImageNameLen(handle, image_name_length);
         char img_name[img_name_size];
         rocalGetImageName(handle, img_name);
-        std::string imageNamesStr(img_name);
+        std::string image_name(img_name);
         int pos = 0;
         int *labels_buffer = reinterpret_cast<int *>(labels->at(0)->buffer());
         for(int i = 0; i < inputBatchSize; i++)
         {
-            names[i] = imageNamesStr.substr(pos, image_name_length[i]);
+            names[i] = image_name.substr(pos, image_name_length[i]);
             pos += image_name_length[i];
             std::cout << "name: " << names[i] << " label: "<< labels_buffer[i] << " - ";
         }
@@ -227,26 +228,22 @@ int main(int argc, const char ** argv)
             cv::cvtColor(mat_output, mat_color, CV_RGB2BGR );
             // convert planar to packed for OPENCV
             for (int j = 0; j < n ; j++) {
-                int const kWidth = w;
-                int const kHeight = rocalGetOutputHeight(handle);
-                int single_h = kHeight;
+                int const w = w;
+                int const single_h = rocalGetOutputHeight(handle);
                 for (int n = 0; n<inputBatchSize; n++) {
-                    unsigned  channel_size = kWidth*single_h*p;
+                    unsigned  channel_size = w * single_h * p;
                     unsigned char *interleavedp = mat_output.data + channel_size*n;
                     unsigned char *planarp = mat_input.data + channel_size*n;
-                    for (int i = 0; i < (kWidth * single_h); i++) {
-                        interleavedp[i * 3 + 0] = planarp[i + 0 * kWidth * single_h];
-                        interleavedp[i * 3 + 1] = planarp[i + 1 * kWidth * single_h];
-                        interleavedp[i * 3 + 2] = planarp[i + 2 * kWidth * single_h];
+                    for (int i = 0; i < (w * single_h); i++) {
+                        interleavedp[i * 3 + 0] = planarp[i + 0 * w * single_h];
+                        interleavedp[i * 3 + 1] = planarp[i + 1 * w * single_h];
+                        interleavedp[i * 3 + 2] = planarp[i + 2 * w * single_h];
                     }
                 }
             }
-            cv::imshow("output",mat_output);
+            cv::imshow("output", mat_output);
         }
-        else
-        {
-            cv::imshow("output",mat_output);
-        }
+        // Cifar10 dataloader only supports ROCAL_COLOR_RGB_PLANAR
         cv::waitKey(1);
         col_counter = (col_counter+1)%number_of_cols;
     }

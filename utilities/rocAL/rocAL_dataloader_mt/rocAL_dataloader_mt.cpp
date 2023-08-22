@@ -96,12 +96,6 @@ int thread_func(const char *path, int gpu_mode, RocalImageColor color_format, in
 
     /*>>>>>>>>>>>>>>>> Creating Rocal parameters  <<<<<<<<<<<<<<<<*/
 
-    // Creating uniformly distributed random objects to override some of the default augmentation parameters
-    //RocalFloatParam rand_crop_area = rocalCreateFloatUniformRand( 0.3, 0.5 );
-    //RocalIntParam color_temp_adj = rocalCreateIntParameter(0);
-
-    // uncomment the following to add augmentation if needed
-    //image0 = decoded_output;
     rocalResize(handle, decoded_output, 224, 224, true);
 
     if(rocalGetStatus(handle) != ROCAL_OK)
@@ -175,7 +169,7 @@ int thread_func(const char *path, int gpu_mode, RocalImageColor color_format, in
 
         if(!display)
             continue;
-        mat_input.copyTo(mat_output(cv::Rect(col_counter*w, 0, w, h)));
+        mat_input.copyTo(mat_output(cv::Rect(col_counter * w, 0, w, h)));
         cv::cvtColor(mat_output, mat_color, CV_RGB2BGR);
         if(DISPLAY)
         cv::imshow("output.png",mat_output);

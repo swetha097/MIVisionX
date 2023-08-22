@@ -280,7 +280,6 @@ int test(int test_case, const char* path, int rgb, int processing_device, int wi
 	    std::vector<float> mean;
 	    std::vector<float> std_dev;
             rocalCropMirrorNormalize(handle, image0, 200, 200, 50, 50, mean, std_dev, true);
-
         }
             break;
         case 26: {
