@@ -25,12 +25,9 @@ THE SOFTWARE.
 #include "exception.h"
 
 CopyNode::CopyNode(const std::vector<Tensor *> &inputs, const std::vector<Tensor *> &outputs) :
-        Node(inputs, outputs)
-{
-}
+        Node(inputs, outputs) {}
 
-void CopyNode::create_node()
-{
+void CopyNode::create_node() {
     if(_node)
         return;
 
@@ -38,7 +35,6 @@ void CopyNode::create_node()
 
     vx_status status;
     if((status = vxGetStatus((vx_reference)_node)) != VX_SUCCESS)
-        THROW("Adding the copy (vxCopyNode) node failed: "+ TOSTR(status))
+        THROW("Adding the copy (vxCopyNode) node failed: " + TOSTR(status))
 
 }
-

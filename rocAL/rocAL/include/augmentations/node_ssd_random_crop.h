@@ -20,7 +20,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 #pragma once
-#include "node.h"
+#include "node_crop.h"
 #include "parameter_factory.h"
 #include "parameter_crop_factory.h"
 
@@ -59,8 +59,7 @@ private:
     int _batch_size;
 };
 
-class SSDRandomCropNode : public Node
-{
+class SSDRandomCropNode : public CropNode {
 public:
     SSDRandomCropNode(const std::vector<Tensor *> &inputs, const std::vector<Tensor *> &outputs);
     SSDRandomCropNode() = delete;
@@ -79,10 +78,7 @@ protected:
 
 private:
     std::shared_ptr<RocalRandomCropParam> _meta_crop_param;
-    vx_array _crop_width, _crop_height, _x1, _y1, _x2, _y2;
-    std::vector<uint> _crop_width_val, _crop_height_val, _x1_val, _y1_val, _x2_val, _y2_val;
-    // unsigned int _dst_width, _dst_height;
-    std::vector<uint32_t> in_width, in_height;
+    std::vector<uint> _x1_val, _y1_val, _crop_width_val, _crop_height_val;
     size_t _dest_width;
     size_t _dest_height;
     float  _threshold = 0.05;
@@ -91,5 +87,4 @@ private:
     bool _entire_iou = false;
     std::shared_ptr<RocalRandomCropParam> _crop_param;
     SeededRNG<std::mt19937, 4> _rngs;     // setting the state_size to 4 for 4 random parameters.
-
 };

@@ -41,7 +41,7 @@ public:
     void add_next(const std::shared_ptr<Node>& node) {} // To be implemented
     void add_previous(const std::shared_ptr<Node>& node) {} //To be implemented
     std::shared_ptr<Graph> graph() { return _graph; }
-    void set_meta_data(pMetaDataBatch meta_data_info){ _meta_data_info = meta_data_info;}
+    void set_meta_data(pMetaDataBatch meta_data_info) { _meta_data_info = meta_data_info; }
     bool _is_ssd = false;
 protected:
     virtual void create_node() = 0;
@@ -49,10 +49,8 @@ protected:
     const std::vector<Tensor *> _inputs;
     const std::vector<Tensor *> _outputs;
     std::shared_ptr<Graph> _graph = nullptr;
-    vx_tensor _src_tensor_roi = nullptr;
-    vx_tensor _dst_tensor_roi = nullptr;
     vx_node _node = nullptr;
     size_t _batch_size;
     pMetaDataBatch _meta_data_info;
-    vx_array _src_roi_width, _src_roi_height; // TODO - To be removed after tensor changes in augmentation nodes.
+    vx_array _src_roi_width, _src_roi_height;  // TODO - To be removed after tensor changes in augmentation nodes.
 };

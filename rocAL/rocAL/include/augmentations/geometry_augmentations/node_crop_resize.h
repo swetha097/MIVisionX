@@ -21,12 +21,11 @@ THE SOFTWARE.
 */
 
 #pragma once
-#include "node.h"
+#include "node_crop.h"
 #include "parameter_factory.h"
 #include "parameter_crop_factory.h"
 
-class CropResizeNode : public Node
-{
+class CropResizeNode : public CropNode {
 public:
     CropResizeNode(const std::vector<Tensor *> &inputs, const std::vector<Tensor *> &outputs);
     CropResizeNode() = delete;
@@ -39,12 +38,6 @@ protected:
     void create_node() override;
     void update_node() override;
 private:
-
-    size_t _dest_width;
-    size_t _dest_height;
     std::shared_ptr<RocalRandomCropParam> _crop_param;
-    vx_array _dst_roi_width ,_dst_roi_height;
+    vx_array _dst_roi_width, _dst_roi_height;
 };
-
-
-
