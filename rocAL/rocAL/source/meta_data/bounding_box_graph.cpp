@@ -25,7 +25,7 @@ void BoundingBoxGraph::process(pMetaDataBatch input_meta_data, pMetaDataBatch ou
 {
     size_t num_meta_nodes = _meta_nodes.size();
     if (!num_meta_nodes)
-        THROW ("No meta nodes present in the metadata graph")
+        WRN("No meta nodes present in the metadata graph")
     for (auto &meta_node : _meta_nodes)
     {
         meta_node->update_parameters(input_meta_data, output_meta_data);
