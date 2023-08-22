@@ -182,7 +182,7 @@ int main(int argc, const char ** argv)
     {
         image2 = rocalBlurFixed(handle, image2, 17.25, (i == (aug_depth -1)) ? true:false );
     }
-
+    // Commenting few augmentations out until tensor support is added in rpp
     // RocalTensor image4 = rocalColorTemp(handle, image0, true, color_temp_adj);
 
     // RocalTensor image6 = rocalJitter(handle, image5, true);
