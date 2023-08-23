@@ -68,7 +68,7 @@ def main():
             time.sleep(1)
         imageIterator.reset()
     end = datetime.datetime.now()
-    print("Time taken (averaged over 10 runs) ", int((end - start).total_seconds() * 1000), "milli seconds")
+    print("Time taken (averaged over 10 runs) ", int((end - start).total_seconds() * 1000) / 10, "milli seconds")
 
 if __name__ == '__main__':
     main()

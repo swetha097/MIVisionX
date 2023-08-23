@@ -78,9 +78,9 @@ class ROCALCOCOIterator(object):
 
         if self.output_list is None:
             self.output_list = []
-            self.dimensions = self.output_tensor_list[i].dimensions()
-            self.torch_dtype = self.output_tensor_list[i].dtype()
             for i in range(len(self.output_tensor_list)):
+                self.dimensions = self.output_tensor_list[i].dimensions()
+                self.torch_dtype = self.output_tensor_list[i].dtype()
                 if self.device == "cpu":
                     self.output = torch.empty(self.dimensions, dtype=getattr(torch, self.torch_dtype))
                 else:
@@ -169,12 +169,11 @@ def main():
         images_decoded = fn.decoders.image(jpegs, output_type=types.RGB, file_root=image_path,
                                            annotations_file=annotation_path, random_shuffle=False, shard_id=local_rank, num_shards=world_size)
         res_images = fn.resize(images_decoded, resize_width=300, resize_height=300)
-        saturation = fn.uniform(rng_range=[0.1, 0.4])
-        contrast = fn.uniform(rng_range=[0.1, 25.0])
-        brightness = fn.uniform(rng_range=[0.875, 1.125])
-        hue = fn.uniform(rng_range=[5.0, 170.0])
-        ct_images = fn.color_twist(
-            res_images, saturation=saturation, contrast=contrast, brightness=brightness, hue=hue)
+        saturation = fn.uniform(range=[0.1, 0.4])
+        contrast = fn.uniform(range=[0.1, 25.0])
+        brightness = fn.uniform(range=[0.875, 1.125])
+        hue = fn.uniform(range=[5.0, 170.0])
+        ct_images = fn.color_twist(res_images, saturation=saturation, contrast=contrast, brightness=brightness, hue=hue)
         flip_coin = fn.random.coin_flip(probability=0.5)
         cmn_images = fn.crop_mirror_normalize(ct_images,
                                               crop=(224, 224),
@@ -192,7 +191,6 @@ def main():
     if (args.rocal_gpu):
         data_loader = ROCALCOCOIterator(
             pipe, multiplier=pipe._multiplier, offset=pipe._offset, display=display, tensor_layout=tensor_format, tensor_dtype=tensor_dtype, device="cuda")
-
     else:
         data_loader = ROCALCOCOIterator(
             pipe, multiplier=pipe._multiplier, offset=pipe._offset, display=display, tensor_layout=tensor_format, tensor_dtype=tensor_dtype, device="cpu")
@@ -203,10 +201,10 @@ def main():
     for epoch in range(int(args.num_epochs)):
         print("EPOCH:::::", epoch)
         for i, it in enumerate(data_loader, 0):
-            if i == 0:
+            if args.print_tensor:
                 print("**************", i, "*******************")
                 print("**************starts*******************")
-                print("\n IMAGES : \n", it[0])
+                print("\nIMAGES : \n", it[0])
                 print("\nBBOXES:\n", it[1])
                 print("\nLABELS:\n", it[2])
                 print("\nIMAGE ID:\n", it[3])
