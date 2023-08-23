@@ -66,18 +66,10 @@ VideoReader::Status VideoFileSourceReader::initialize(ReaderConfig desc)
     _video_frame_count = _video_prop.frames_count;
     _start_end_frame = _video_prop.start_end_frame_num;
     _batch_count = desc.get_batch_size();
+    _last_batch_info = desc.get_last_batch_policy();
     _total_sequences_count = 0;
     ret = create_sequence_info();
 
-    // the following code is required to make every shard the same size:: required for multi-gpu training
-    if (_shard_count > 1 && _batch_count > 1) {
-        int _num_batches = _sequences.size()/_batch_count;
-        int max_batches_per_shard = (_sequence_count_all_shards + _shard_count-1)/_shard_count;
-        max_batches_per_shard = (max_batches_per_shard + _batch_count-1)/_batch_count;
-        if (_num_batches < max_batches_per_shard) {
-            replicate_last_batch_to_pad_partial_shard();
-        }
-    }
     //shuffle dataset if set
     if (ret == VideoReader::Status::OK && _shuffle)
         std::random_shuffle(_sequences.begin(), _sequences.end());
@@ -89,6 +81,19 @@ void VideoFileSourceReader::incremenet_read_ptr()
 {
     _read_counter ++;
     _curr_sequence_idx = (_curr_sequence_idx + 1) % _sequences.size();
+    if(_last_batch_info.first == RocalBatchPolicy::DROP)
+    {
+        if((_video_file_names.size() / _batch_count) == _curr_sequence_idx) // Check if its last batch
+        {
+            _curr_sequence_idx += _batch_count;
+            _curr_sequence_idx = (_curr_sequence_idx + 1) % _video_file_names.size();
+        }
+    }
+}
+
+size_t VideoFileSourceReader::last_batch_padded_size()
+{
+    return _last_batch_padded_size;
 }
 
 SequenceInfo VideoFileSourceReader::get_sequence_info()
@@ -109,7 +114,13 @@ void VideoFileSourceReader::reset()
     if (_shuffle)
         std::random_shuffle(_sequences.begin(), _sequences.end());
     _read_counter = 0;
-    _curr_sequence_idx = 0;
+    if(_last_batch_info.second == true)
+        _curr_sequence_idx = 0;
+}
+
+void VideoFileSourceReader::increment_shard_id()
+{
+    _shard_id = (_shard_id + 1) % _shard_count;
 }
 
 VideoReader::Status VideoFileSourceReader::create_sequence_info()
@@ -136,6 +147,24 @@ VideoReader::Status VideoFileSourceReader::create_sequence_info()
             incremenet_sequence_id();
         }
     }
+    uint images_to_pad_shard = _sequence_count_all_shards - (ceil(_sequence_count_all_shards / _shard_count) * _shard_count);
+    if(!images_to_pad_shard) 
+    {
+        for(uint i = 0; i < images_to_pad_shard; i++) 
+        {
+            if(get_sequence_shard_id() != _shard_id) 
+            {
+                _sequence_count_all_shards++;
+                incremenet_sequence_id();
+                continue;
+            }
+            _sequences.push_back({i, _video_file_names[i]});
+            _last_sequence = _sequences.back();
+            _sequence_count_all_shards++;
+            incremenet_sequence_id();
+        }
+    }
+    
     if(_in_batch_read_count > 0 && _in_batch_read_count < _batch_count)
     {
         replicate_last_sequence_to_fill_last_shard();
@@ -148,11 +177,34 @@ VideoReader::Status VideoFileSourceReader::create_sequence_info()
 
 void VideoFileSourceReader::replicate_last_sequence_to_fill_last_shard()
 {
-    for (size_t i = _in_batch_read_count; i < _batch_count; i++)
+    if(_last_batch_info.first == RocalBatchPolicy::BATCH_FILL || _last_batch_info.first == RocalBatchPolicy::PARTIAL)
     {
-        _sequences.push_back(_last_sequence);
-        _total_sequences_count ++;
+        if(_last_batch_info.second == true) 
+        {
+            for(size_t i = (_batch_count - _in_batch_read_count); i < _batch_count; i++)
+            {
+                _sequences.push_back(_last_sequence);
+                _total_sequences_count++;
+            }
+        } 
+        else  
+        {
+            for(size_t i = 0; i < (_batch_count - _in_batch_read_count); i++)
+            {
+                _sequences.push_back(_sequences.at(i));
+                _total_sequences_count++;
+            }
+        }
     }
+    else if(_last_batch_info.first == RocalBatchPolicy::DROP)
+    {
+        for(size_t i = 0; i < _in_batch_read_count; i++)
+            _sequences.pop_back();
+    }
+
+    if(_last_batch_info.first == RocalBatchPolicy::PARTIAL)
+        _last_batch_padded_size = _batch_count - _in_batch_read_count;
+        
 }
 
 void VideoFileSourceReader::replicate_last_batch_to_pad_partial_shard()
