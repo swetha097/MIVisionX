@@ -62,16 +62,9 @@ Reader::Status FileSourceReader::initialize(ReaderConfig desc)
     _shuffle = desc.shuffle();
     _loop = desc.loop();
     _meta_data_reader = desc.meta_data_reader();
+    _last_batch_info = desc.get_last_batch_policy();
     ret = subfolder_reading();
-    // the following code is required to make every shard the same size:: required for multi-gpu training
-    if (_shard_count > 1 && _batch_count > 1) {
-        int _num_batches = _file_names.size()/_batch_count;
-        int max_batches_per_shard = (_file_count_all_shards + _shard_count-1)/_shard_count;
-        max_batches_per_shard = (max_batches_per_shard + _batch_count-1)/_batch_count;
-        if (_num_batches < max_batches_per_shard) {
-            replicate_last_batch_to_pad_partial_shard();
-        }
-    }
+    
     //shuffle dataset if set
     if( ret==Reader::Status::OK && _shuffle)
         std::random_shuffle(_file_names.begin(), _file_names.end());
@@ -83,10 +76,17 @@ void FileSourceReader::incremenet_read_ptr()
 {
     _read_counter++;
     _curr_file_idx = (_curr_file_idx + 1) % _file_names.size();
+    if(_last_batch_info.first == RocalBatchPolicy::DROP)
+    {
+        if((_file_names.size() / _batch_count) == _curr_file_idx) // Check if its last batch
+        {
+            _curr_file_idx += _batch_count;
+            _curr_file_idx = (_curr_file_idx + 1) % _file_names.size();
+        }
+    }
 }
 
-size_t
-FileSourceReader::last_batch_padded_size()
+size_t FileSourceReader::last_batch_padded_size()
 {
     return _last_batch_padded_size;
 }
@@ -159,7 +159,13 @@ void FileSourceReader::reset()
 {
     if (_shuffle) std::random_shuffle(_file_names.begin(), _file_names.end());
     _read_counter = 0;
-    _curr_file_idx = 0;
+    if(_last_batch_info.second == true)
+        _curr_file_idx = 0;
+}
+
+void FileSourceReader::increment_shard_id()
+{
+    _shard_id = (_shard_id + 1) % _shard_count;
 }
 
 Reader::Status FileSourceReader::subfolder_reading()
@@ -216,8 +222,27 @@ Reader::Status FileSourceReader::subfolder_reading()
 }
 void FileSourceReader::replicate_last_image_to_fill_last_shard()
 {
-    for(size_t i = _in_batch_read_count; i < _batch_count; i++)
-        _file_names.push_back(_last_file_name);
+    if(_last_batch_info.first == RocalBatchPolicy::BATCH_FILL || _last_batch_info.first == RocalBatchPolicy::PARTIAL)
+    {
+        if(_last_batch_info.second == true) 
+        {
+            for(size_t i = (_batch_count - _in_batch_read_count); i < _batch_count; i++)
+                _file_names.push_back(_last_file_name);
+        } 
+        else  
+        {
+            for(size_t i = 0; i < (_batch_count - _in_batch_read_count); i++)
+                _file_names.push_back(_file_names.at(i));
+        }
+    }
+    else if(_last_batch_info.first == RocalBatchPolicy::DROP)
+    {
+        for(size_t i = 0; i < _in_batch_read_count; i++)
+            _file_names.pop_back();
+    }
+
+    if(_last_batch_info.first == RocalBatchPolicy::PARTIAL)
+        _last_batch_padded_size = _batch_count - _in_batch_read_count;
 }
 
 void FileSourceReader::replicate_last_batch_to_pad_partial_shard()

@@ -70,7 +70,7 @@ public:
 
     TFRecordReader();
 
-    size_t last_batch_padded_size() override { return 0; }
+    size_t last_batch_padded_size() override;
 private:
     //! opens the folder containnig the images
     Reader::Status tf_record_reader();
@@ -118,4 +118,7 @@ private:
     Reader::Status read_image(unsigned char* buff, std::string record_file_name, uint file_size);
     Reader::Status read_image_names(std::ifstream &file_contents, uint file_size);
     std::map <std::string, uint> _image_record_starting;
+    std::pair<RocalBatchPolicy, bool>  _last_batch_info;
+    size_t _last_batch_padded_size = 0;
+    void increment_shard_id(); //!< Used to advance to the next shard's data to increase the entropy of the data seen by the pipeline>
 };
