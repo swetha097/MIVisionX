@@ -184,15 +184,19 @@ void MXNetRecordIOReader::replicate_last_image_to_fill_last_shard()
         if(_last_batch_info.second == true) 
         {
             for(size_t i = (_batch_count - _in_batch_read_count); i < _batch_count; i++)
+            {
                 _file_names.push_back(_last_file_name);
-                _record_properties.insert(pair<std::string, std::tuple<unsigned int, int64_t, int64_t>>(_last_file_name, std::make_tuple(_last_file_size, _last_seek_pos, _last_data_size)));
+                _record_properties.insert(std::pair<std::string, std::tuple<unsigned int, int64_t, int64_t>>(_last_file_name, std::make_tuple(_last_file_size, _last_seek_pos, _last_data_size)));
+            }
         } 
         else  
         {
             for(size_t i = 0; i < (_batch_count - _in_batch_read_count); i++)
             {
-                _file_names.push_back(_file_names.at(i));
-                // _record_properties.insert(pair<std::string, std::tuple<unsigned int, int64_t, int64_t>>(_last_file_name, std::make_tuple(_last_file_size, _last_seek_pos, _last_data_size))); // TODO - check how to add these new params
+                _last_file_name = _file_names.at(i);
+                auto it = _record_properties.find(_last_file_name);
+                std::tie(_last_file_size, _last_seek_pos, _last_data_size) = it->second;
+                _record_properties.insert(std::pair<std::string, std::tuple<unsigned int, int64_t, int64_t>>(_last_file_name, std::make_tuple(_last_file_size, _last_seek_pos, _last_data_size)));
             }   
         }
     }

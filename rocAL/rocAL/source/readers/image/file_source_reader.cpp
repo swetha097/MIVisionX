@@ -205,12 +205,29 @@ Reader::Status FileSourceReader::subfolder_reading()
                     if (ex.code() == boost::system::errc::permission_denied)
                         THROW("Permission denied for directory: " + entry.path().string());
         }
-}
+    }
 
- if(_file_names.empty())
-        WRN("FileReader ShardID ["+ TOSTR(_shard_id)+ "] Did not load any file from " + _folder_path)
+    if(_file_names.empty())
+            WRN("FileReader ShardID ["+ TOSTR(_shard_id)+ "] Did not load any file from " + _folder_path)
 
-
+    uint images_to_pad_shard = _file_count_all_shards - (ceil(_file_count_all_shards / _shard_count) * _shard_count);
+    if(!images_to_pad_shard) 
+    {
+        for(uint i = 0; i < images_to_pad_shard; i++) 
+        {
+            if(get_file_shard_id() != _shard_id) 
+            {
+                _file_count_all_shards++;
+                incremenet_file_id();
+                continue;
+            }
+            _last_file_name = _file_names.at(i);
+            _file_names.push_back(_last_file_name);
+            _file_count_all_shards++;
+            incremenet_file_id();
+        }
+    }
+    
     if(_in_batch_read_count > 0 && _in_batch_read_count < _batch_count)
     {
         replicate_last_image_to_fill_last_shard();

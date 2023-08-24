@@ -213,16 +213,20 @@ void TFRecordReader::replicate_last_image_to_fill_last_shard()
         if(_last_batch_info.second == true) 
         {
             for(size_t i = (_batch_count - _in_batch_read_count); i < _batch_count; i++)
+            {
                 _file_names.push_back(_last_file_name);
                 _file_size.insert(std::pair<std::string, unsigned int>(_last_file_name, _last_file_size));
+            }
         } 
         else  
         {
             for(size_t i = 0; i < (_batch_count - _in_batch_read_count); i++)
             {
+                _last_file_name = _file_names.at(i);
+                _last_file_size = _file_size[_file_names.at(i)];
                 _file_names.push_back(_file_names.at(i));
-                // _file_size.insert(pair<std::string, unsigned int>(_file_size.at(i))); // TODO - check how to add file size
-            }   
+                _file_size.insert(std::pair<std::string, unsigned int>(_last_file_name, _last_file_size));
+            }      
         }
     }
     else if(_last_batch_info.first == RocalBatchPolicy::DROP)
