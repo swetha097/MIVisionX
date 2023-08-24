@@ -38,8 +38,8 @@ from rocal_pybind.types import FLOAT16
 from rocal_pybind.types import UINT8
 
 #  RocalOutputMemType
-from rocal_pybind.types import CPU_MEMORY
-from rocal_pybind.types import GPU_MEMORY
+from rocal_pybind.types import HOST_MEMORY
+from rocal_pybind.types import DEVICE_MEMORY
 from rocal_pybind.types import PINNED_MEMORY
 
 # RocalImageSizeEvaluationPolicy
@@ -58,6 +58,8 @@ from rocal_pybind.types import RGB_PLANAR
 #     RocalTensorLayout
 from rocal_pybind.types import NHWC
 from rocal_pybind.types import NCHW
+from rocal_pybind.types import NFHWC
+from rocal_pybind.types import NFCHW
 
 #     RocalDecodeDevice
 from rocal_pybind.types import HARDWARE_DECODE
@@ -98,8 +100,8 @@ _known_types = {
     FLOAT: ("FLOAT", FLOAT),
     FLOAT16: ("FLOAT16", FLOAT16),
     UINT8 : ("UINT8", UINT8),
-    CPU_MEMORY: ("CPU_MEMORY", CPU_MEMORY),
-    GPU_MEMORY: ("GPU_MEMORY", GPU_MEMORY),
+    HOST_MEMORY: ("HOST_MEMORY", HOST_MEMORY),
+    DEVICE_MEMORY: ("DEVICE_MEMORY", DEVICE_MEMORY),
     PINNED_MEMORY: ("PINNED_MEMORY", PINNED_MEMORY),
 
     MAX_SIZE: ("MAX_SIZE", MAX_SIZE),
@@ -110,6 +112,8 @@ _known_types = {
 
     NHWC: ("NHWC", NHWC),
     NCHW: ("NCHW", NCHW),
+    NFHWC: ("NFHWC", NFHWC),
+    NFCHW: ("NFCHW", NFCHW),
     BGR: ("BGR", BGR),
     RGB: ("RGB", RGB),
     GRAY: ("GRAY", GRAY),
