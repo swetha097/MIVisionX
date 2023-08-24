@@ -116,7 +116,7 @@ int main(int argc, const char ** argv)
 
     if(rocalGetStatus(handle) != ROCAL_OK)
     {
-        std::cout << "rawCIFAR10 source could not initializee : " << rocalGetErrorMessage(handle) << std::endl;
+        std::cout << "rawCIFAR10 source could not initialize : " << rocalGetErrorMessage(handle) << std::endl;
         return -1;
     }
 #if 0
@@ -241,7 +241,7 @@ int main(int argc, const char ** argv)
                     }
                 }
             }
-            cv::imshow("output", mat_output);
+            cv::imwrite("output.png", mat_output);
         }
         // Cifar10 dataloader only supports ROCAL_COLOR_RGB_PLANAR
         cv::waitKey(1);

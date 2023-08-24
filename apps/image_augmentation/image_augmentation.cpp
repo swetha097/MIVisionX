@@ -269,15 +269,15 @@ int main(int argc, const char ** argv)
         if(!display)
             continue;
 
-        mat_input.copyTo(mat_output(cv::Rect(  col_counter*w, AMD_ROCm_Black_resize.rows, w, h)));
+        mat_input.copyTo(mat_output(cv::Rect(col_counter * w, AMD_ROCm_Black_resize.rows, w, h)));
         if(color_format ==  RocalImageColor::ROCAL_COLOR_RGB24 )
         {
             cv::cvtColor(mat_output, mat_color, CV_RGB2BGR);
-            cv::imshow("output",mat_color);
+            cv::imwrite("output.png", mat_color);
         }
         else
         {
-            cv::imshow("output",mat_output);
+            cv::imwrite("output.png", mat_output);
         }
         cv::waitKey(1);
         col_counter = (col_counter+1)%number_of_cols;
