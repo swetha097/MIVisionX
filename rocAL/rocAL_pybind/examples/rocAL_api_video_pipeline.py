@@ -90,6 +90,9 @@ class ROCALVideoIterator(object):
     def __iter__(self):
         return self
 
+    def __del__(self):
+        self.loader.rocal_release()
+
 
 def draw_frames(img, batch_idx, iter_idx, layout):
     # image is expected as a tensor, bboxes as numpy
