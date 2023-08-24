@@ -24,6 +24,7 @@ THE SOFTWARE.
 #include <string>
 #include <map>
 #include <vector>
+#include <lmdb.h>
 #include <tuple>
 #include "meta_data_reader.h"
 #include "video_properties.h"

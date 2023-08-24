@@ -184,29 +184,28 @@ if(${BUILD_ROCAL})
                 ../../amd_openvx/openvx/include/
                 ../../amd_openvx_extensions/amd_rpp/include/
                 ../../amd_openvx_extensions/amd_media/include/
-                ./include/api/
-                ./include/augmentations/arithmetic_augmentations/
-                ./include/augmentations/audio_augmentations/
-                ./include/augmentations/color_augmentations/
-                ./include/augmentations/effects_augmentations/
-                ./include/augmentations/geometry_augmentations/
-                ./include/augmentations/
-                ./include/decoders/audio/
-                ./include/decoders/image/
-                ./include/decoders/video/
-                ./include/device/
-                ./include/loaders/
-                ./include/loaders/audio/
-                ./include/loaders/image/
-                ./include/loaders/video/
-                ./include/meta_data/
-                ./include/parameters/
-                ./include/readers/image/
-                ./include/readers/video/
-                ./include/pipeline/
-                ./include/common/
-                include
-                )
+                include/api/
+                include/augmentations/arithmetic_augmentations/
+                include/augmentations/audio_augmentations/
+                include/augmentations/color_augmentations/
+                include/augmentations/effects_augmentations/
+                include/augmentations/geometry_augmentations/
+                include/augmentations/
+                include/decoders/image/
+                include/decoders/video/
+                include/decoders/audio/
+		include/device/
+                include/loaders/
+                include/loaders/image/
+                include/loaders/video/
+                include/loaders/audio/
+		include/meta_data/
+                include/parameters/
+                include/readers/image/
+                include/readers/video/
+                include/common/
+                include/pipeline/
+		)
 
     if("${BACKEND}" STREQUAL "HIP" AND HIP_FOUND)
         link_directories(${HIP_PATH}/lib)
@@ -219,7 +218,7 @@ if(${BUILD_ROCAL})
     protobuf_generate_cpp(CAFFE_PROTO_SRCS CAFFE_PROTO_HEADERS proto/caffe_protos.proto)
     link_directories(${AMDRPP_LIBRARIES_DIRS} ${TurboJpeg_LIBRARIES_DIR} ${PROTOBUF_LIBRARY_DIRS} /usr/local/lib/)
 
-    file(GLOB_RECURSE SOURCES "./source/*.cpp")
+    file(GLOB_RECURSE SOURCES "source/*.cpp")
     add_library(${PROJECT_NAME} SHARED ${SOURCES} ${TF_PROTO_SRCS} ${TF_PROTO_HEADERS} ${CAFFE_PROTO_HEADERS} ${CAFFE_PROTO_SRCS} ${CAFFE2_PROTO_SRCS} ${CAFFE2_PROTO_HEADERS})
 
     if("${BACKEND}" STREQUAL "HIP" AND HIP_FOUND)

@@ -25,6 +25,7 @@ THE SOFTWARE.
 #include <fstream>
 #include <utility>
 #include <algorithm>
+#include <lmdb.h>
 #include <boost/filesystem.hpp>
 #include "commons.h"
 #include "exception.h"
