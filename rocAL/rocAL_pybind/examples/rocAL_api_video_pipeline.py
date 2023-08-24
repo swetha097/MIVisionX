@@ -90,9 +90,6 @@ class ROCALVideoIterator(object):
     def __iter__(self):
         return self
 
-    def __del__(self):
-        self.loader.rocal_release()
-
 
 def draw_frames(img, batch_idx, iter_idx, layout):
     # image is expected as a tensor, bboxes as numpy
@@ -123,7 +120,7 @@ def main():
     tensor_dtype = types.FLOAT16 if args.fp16 else types.FLOAT
     # Create Pipeline instance
     pipe = Pipeline(batch_size=batch_size, num_threads=num_threads, device_id=args.local_rank, seed=random_seed, rocal_cpu=rocal_cpu,
-                    tensor_layout=tensor_format, tensor_dtype=tensor_dtype, output_memory_type=types.CPU_MEMORY if rocal_cpu else types.GPU_MEMORY)
+                    tensor_layout=tensor_format, tensor_dtype=tensor_dtype)
     # Use pipeline instance to make calls to reader, decoder & augmentation's
     with pipe:
         images = fn.readers.video(file_root=video_path, sequence_length=user_sequence_length,

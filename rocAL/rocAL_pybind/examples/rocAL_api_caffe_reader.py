@@ -80,8 +80,7 @@ def main():
         print(error)
     print("num_classes:: ", num_classes)
     # Create Pipeline instance
-    pipe = Pipeline(batch_size=batch_size, num_threads=num_threads, device_id=args.local_rank,
-                    seed=random_seed, rocal_cpu=rocal_cpu, output_memory_type=types.CPU_MEMORY if rocal_cpu else types.GPU_MEMORY)
+    pipe = Pipeline(batch_size=batch_size, num_threads=num_threads, device_id=args.local_rank, seed=random_seed, rocal_cpu=rocal_cpu)
     # Use pipeline instance to make calls to reader, decoder & augmentation's
     with pipe:
         if rocal_bbox:
