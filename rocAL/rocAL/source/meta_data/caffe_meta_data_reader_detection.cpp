@@ -20,7 +20,6 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-#include "caffe_meta_data_reader_detection.h"
 #include <iostream>
 #include <fstream>
 #include <utility>
@@ -29,7 +28,8 @@ THE SOFTWARE.
 #include <string>
 #include <stdint.h>
 #include <google/protobuf/message_lite.h>
-#include "lmdb.h"
+#include <lmdb.h>
+#include "caffe_meta_data_reader_detection.h"
 #include "caffe_protos.pb.h"
 
 using namespace std;
@@ -150,12 +150,6 @@ void CaffeMetaDataReaderDetection::read_lmdb_record(std::string file_name, uint 
         Labels bb_labels;
         BoundingBoxCord box;
         ImgSize img_size;
-
-        caffe_protos::Datum image_datum = annotatedDatum_protos.datum();
-        // Parsing width of image
-        img_size.w = image_datum.width();
-        // Parsing height of image
-        img_size.h = image_datum.height();
 
         if (boundBox_size > 0)
         {

@@ -23,9 +23,12 @@ THE SOFTWARE.
 
 void BoundingBoxGraph::process(pMetaDataBatch input_meta_data, pMetaDataBatch output_meta_data)
 {
+    size_t num_meta_nodes = _meta_nodes.size();
     for (auto &meta_node : _meta_nodes)
     {
         meta_node->update_parameters(input_meta_data, output_meta_data);
+        if(--num_meta_nodes > 0)
+            input_meta_data = output_meta_data->clone();
     }
 }
 
