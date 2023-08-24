@@ -147,10 +147,10 @@ VideoReader::Status VideoFileSourceReader::create_sequence_info()
             incremenet_sequence_id();
         }
     }
-    uint images_to_pad_shard = _sequence_count_all_shards - (ceil(_sequence_count_all_shards / _shard_count) * _shard_count);
-    if(!images_to_pad_shard) 
+    uint sequences_to_pad_shard = _sequence_count_all_shards - (ceil(_sequence_count_all_shards / _shard_count) * _shard_count);
+    if(!sequences_to_pad_shard) 
     {
-        for(uint i = 0; i < images_to_pad_shard; i++) 
+        for(uint i = 0; i < sequences_to_pad_shard; i++) 
         {
             if(get_sequence_shard_id() != _shard_id) 
             {
@@ -158,8 +158,8 @@ VideoReader::Status VideoFileSourceReader::create_sequence_info()
                 incremenet_sequence_id();
                 continue;
             }
-            _sequences.push_back({i, _video_file_names[i]});
-            _last_sequence = _sequences.back();
+            _last_sequence = _sequences.at(i);
+            _sequences.push_back(_last_sequence);
             _sequence_count_all_shards++;
             incremenet_sequence_id();
         }
