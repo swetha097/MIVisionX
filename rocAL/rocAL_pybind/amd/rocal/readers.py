@@ -25,6 +25,21 @@ import amd.rocal.types as types
 
 def coco(annotations_file='', ltrb=True, masks=False, ratio=False, avoid_class_remapping=False,
          pixelwise_masks=False, is_box_encoder=False, is_box_iou_matcher=False, stick_to_shard=False, pad_last_batch=False):
+    """!Creates a COCOReader node.
+
+        @param annotations_file         Path to the COCO annotations file.
+        @param ltrb                     Whether bounding box coordinates are provided in (left, top, right, bottom) format.
+        @param masks                    Whether masks are included in the annotations.
+        @param ratio                    Whether bounding box coordinates are provided in ratio format.
+        @param avoid_class_remapping    Specifies if class remapping should be avoided.
+        @param pixelwise_masks          Whether pixel-wise masks are included in the annotations.
+        @param is_box_encoder           Whether it's used as a box encoder.
+        @param is_box_iou_matcher       Whether it's used as a box IoU matcher.
+        @param stick_to_shard           Specifies if the reader should stick to a single shard.
+        @param pad_last_batch           Specifies if the last batch should be padded.
+
+        @return    meta data, labels, and bounding boxes.
+    """
     Pipeline._current_pipeline._reader = "COCOReader"
     # Output
     labels = []
@@ -41,6 +56,16 @@ def coco(annotations_file='', ltrb=True, masks=False, ratio=False, avoid_class_r
 
 
 def file(file_root, file_filters=None, file_list='', stick_to_shard=False, pad_last_batch=False):
+    """!Creates a labelReader node for loading label data from files.
+
+        @param file_root         Root directory containing label files.
+        @param file_filters      Filters to apply to the label files.
+        @param file_list         List of label files.
+        @param stick_to_shard    Specifies if the reader should stick to a single shard.
+        @param pad_last_batch    Specifies if the last batch should be padded.
+
+        @return    label reader meta data and labels.
+    """
     Pipeline._current_pipeline._reader = "labelReader"
     # Output
     labels = []
@@ -51,6 +76,17 @@ def file(file_root, file_filters=None, file_list='', stick_to_shard=False, pad_l
 
 
 def tfrecord(path, user_feature_key_map, features, reader_type=0, stick_to_shard=False, pad_last_batch=False):
+    """!Creates a TFRecordReader node for loading TFRecord dataset.
+
+        @param path                    Path to the TFRecord dataset.
+        @param user_feature_key_map    User-provided feature key mapping.
+        @param features                Features to load from TFRecords.
+        @param reader_type             Type of reader (0 for classification, 1 for detection).
+        @param stick_to_shard          Specifies if the reader should use only a single shard.
+        @param pad_last_batch          Specifies if the last batch should be padded.
+
+        @return    Features loaded from TFRecords.
+    """
     labels = []
     if reader_type == 1:
         Pipeline._current_pipeline._reader = "TFRecordReaderDetection"
@@ -84,6 +120,15 @@ def tfrecord(path, user_feature_key_map, features, reader_type=0, stick_to_shard
 
 
 def caffe(path, bbox=False, stick_to_shard=False, pad_last_batch=False):
+    """!Creates a CaffeReader node for loading Caffe dataset.
+
+        @param path              Path to the Caffe dataset.
+        @param bbox              Specifies if bounding boxes are included in the dataset.
+        @param stick_to_shard    Specifies if the reader should use only single shard.
+        @param pad_last_batch    Specifies if the last batch should be padded.
+
+        @return    caffe reader meta data, bboxes, and labels.
+    """
     # Output
     bboxes = []
     labels = []
@@ -105,6 +150,15 @@ def caffe(path, bbox=False, stick_to_shard=False, pad_last_batch=False):
 
 
 def caffe2(path, bbox=False, stick_to_shard=False, pad_last_batch=False):
+    """!Creates a Caffe2Reader node for loading Caffe2 dataset.
+
+        @param path              Path to the Caffe2 dataset.
+        @param bbox              Specifies if bounding boxes are included in the dataset.
+        @param stick_to_shard    Specifies if the reader should stick to a single shard.
+        @param pad_last_batch    Specifies if the last batch should be padded.
+
+        @return    caffe2 reader meta data, bboxes, and labels.
+    """
     # Output
     bboxes = []
     labels = []
@@ -127,6 +181,28 @@ def video(sequence_length, file_list_frame_num=False, file_root="", image_type=t
           random_shuffle=False, step=1, stride=1, decoder_mode=types.SOFTWARE_DECODE, enable_frame_num=False,
           enable_timestamps=False, file_list="", stick_to_shard=False, pad_last_batch=False,
           file_list_include_preceding_frame=False, normalized=False, skip_vfr_check=False):
+    """!Creates a VideoDecoder node for loading video sequences.
+
+        @param sequence_length                      Number of frames in video sequence.
+        @param file_list_frame_num                  Specifies whether file list includes frame numbers.
+        @param file_root                            Root directory containing video files.
+        @param image_type                           Color format of the frames.
+        @param num_shards                           Number of shards for data parallelism.
+        @param random_shuffle                       Specifies if frames should be randomly shuffled.
+        @param step                                 Frame step size.
+        @param stride                               Frame stride size.
+        @param decoder_mode                         Mode of video decoding.
+        @param enable_frame_num                     Specifies whether frame numbers are enabled.
+        @param enable_timestamps                    Specifies whether timestamps are enabled.
+        @param file_list                            List of video files.
+        @param stick_to_shard                       Specifies if the reader should stick to a single shard.
+        @param pad_last_batch                       Specifies if the last batch should be padded.
+        @param file_list_include_preceding_frame    Specifies if file list includes preceding frames.
+        @param normalized                           Specifies if video frames should be normalized.
+        @param skip_vfr_check                       Specifies whether to skip variable frame rate check.
+
+        @return   list of loaded video sequences.
+    """
     Pipeline._current_pipeline._reader = "VideoDecoder"
     # Output
     videos = []
@@ -164,6 +240,35 @@ def video_resize(sequence_length, resize_width, resize_height, file_list_frame_n
                  resize_longer=0, resize_shorter=0, max_size=[], enable_frame_num=False,
                  enable_timestamps=False, file_list="", stick_to_shard=False, pad_last_batch=False,
                  file_list_include_preceding_frame=False, normalized=False, skip_vfr_check=False):
+    """!Creates a VideoDecoderResize node in the pipeline for loading and resizing video sequences.
+
+        @param sequence_length                      Number of frames in video sequence.
+        @param resize_width                         output width for resizing.
+        @param resize_height                        output height for resizing.
+        @param file_list_frame_num                  Specifies whether file list includes frame numbers.
+        @param file_root                            Root directory containing video files.
+        @param image_type                           Color format of the frames.
+        @param num_shards                           Number of shards for data parallelism.
+        @param random_shuffle                       Specifies if frames should be randomly shuffled.
+        @param step                                 Frame step size.
+        @param stride                               Frame stride size.
+        @param decoder_mode                         Mode of video decoding.
+        @param scaling_mode                         Scaling mode for resizing.
+        @param interpolation_type                   Interpolation type for resizing.
+        @param resize_longer                        Target size for the longer dimension during resizing.
+        @param resize_shorter                       Target size for the shorter dimension during resizing.
+        @param max_size                             Maximum size for resizing.
+        @param enable_frame_num                     Specifies whether frame numbers are enabled.
+        @param enable_timestamps                    Specifies whether timestamps are enabled.
+        @param file_list                            List of video files.
+        @param stick_to_shard                       Specifies if the reader should stick to a single shard.
+        @param pad_last_batch                       Specifies if the last batch should be padded.
+        @param file_list_include_preceding_frame    Specifies if file list includes preceding frames.
+        @param normalized                           Specifies if video frames should be normalized.
+        @param skip_vfr_check                       Specifies whether to skip variable frame rate check.
+
+        @returns   loaded and resized video sequences and meta data.
+    """
     Pipeline._current_pipeline._reader = "VideoDecoderResize"
     # Output
     videos = []
@@ -187,6 +292,20 @@ def video_resize(sequence_length, resize_width, resize_height, file_list_frame_n
 
 
 def sequence_reader(file_root, sequence_length, image_type=types.RGB, num_shards=1, random_shuffle=False, step=3, stride=1, stick_to_shard=False, pad_last_batch=False):
+    """!Creates a SequenceReader node for loading image sequences.
+
+        @param file_root            Root directory containing image sequences.
+        @param sequence_length      Number of frames in each sequence.
+        @param image_type           Color format of the frames.
+        @param num_shards           Number of shards for data parallelism.
+        @param random_shuffle       Specifies if frames should be randomly shuffled.
+        @param step                 Frame step size.
+        @param stride               Frame stride size.
+        @param stick_to_shard       Specifies if the reader should stick to a single shard.
+        @param pad_last_batch       Specifies if the last batch should be padded.
+
+        @return    list of loaded image sequences.
+    """
     Pipeline._current_pipeline._reader = "SequenceReader"
     # Output
     kwargs_pybind = {
@@ -205,6 +324,14 @@ def sequence_reader(file_root, sequence_length, image_type=types.RGB, num_shards
 
 
 def mxnet(path, stick_to_shard=False, pad_last_batch=False):
+    """!Creates an MXNETReader node for loading data from MXNet record files.
+
+        @param path              Path to the MXNet record file.
+        @param stick_to_shard    Specifies if the reader should stick to a single shard.
+        @param pad_last_batch    Specifies if the last batch should be padded.
+
+        @return    Metadata and loaded data from the MXNet record file.
+    """
     Pipeline._current_pipeline._reader = "MXNETReader"
     # Output
     kwargs_pybind = {
