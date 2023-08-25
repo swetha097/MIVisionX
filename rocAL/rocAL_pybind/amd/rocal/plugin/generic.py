@@ -18,6 +18,11 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
+##
+# @file generic.py
+#
+# @brief File containing iterators for generic use case
+
 import cupy as cp
 import numpy as np
 import rocal_pybind as b
@@ -37,6 +42,7 @@ class ROCALGenericIterator(object):
         @param device              The device to use for processing
         @param device_id           The ID of the device to use
     """
+
     def __init__(self, pipeline, tensor_layout=types.NCHW, reverse_channels=False, multiplier=[1.0, 1.0, 1.0], offset=[0.0, 0.0, 0.0], tensor_dtype=types.FLOAT, display=False, device="cpu", device_id=0):
         self.loader = pipeline
         self.tensor_format = tensor_layout
@@ -128,7 +134,7 @@ class ROCALGenericIterator(object):
 
 
 class ROCALClassificationIterator(ROCALGenericIterator):
-    """!ROCAL iterator for classification tasks for generic images. It returns 2 outputs
+    """!ROCAL iterator for classification tasks for generic use case. It returns 2 outputs
     (data and label) in the form of numpy/cupy Tensor.
 
     Calling
@@ -183,7 +189,7 @@ class ROCALClassificationIterator(ROCALGenericIterator):
 
 def draw_patches(img, idx):
     # image is expected as an array
-    """!Draws patches on an image.
+    """!Writes images to disk as a PNG file.
 
         @param img    The input image as an array.
         @param idx    Index used for naming the output file.
