@@ -110,8 +110,7 @@ int main(int argc, const char ** argv)
         rocalCreateLabelReader(handle, folderPath1);
     else
         rocalCreateTextFileBasedLabelReader(handle, label_text_file_path);
-    auto color_twist_output = rocalColorTwistFixed(handle, decoded_output, 1.2, 0.4, 1.2, 0.8, false);
-    rocalCropResizeFixed(handle, color_twist_output, 224, 224, true, 0.9, 1.1, 0.1, 0.1 );
+    rocalCropResizeFixed(handle, decoded_output, 224, 224, true, 0.9, 1.1, 0.1, 0.1 );
 
     if(rocalGetStatus(handle) != ROCAL_OK)
     {
