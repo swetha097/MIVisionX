@@ -18,6 +18,11 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
+##
+# @file random.py
+#
+# @brief File containing randomization functions used for creating RNG generators
+
 import rocal_pybind as b
 
 

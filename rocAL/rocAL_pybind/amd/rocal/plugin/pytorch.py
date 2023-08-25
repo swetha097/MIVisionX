@@ -18,6 +18,10 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
+##
+# @file pytorch.py
+# @brief File containing iterators to be used with pytorch trainings
+
 import torch
 import numpy as np
 import rocal_pybind as b
@@ -38,6 +42,7 @@ class ROCALGenericIterator(object):
         @param device              The device to use for processing
         @param device_id           The ID of the device to use
     """
+
     def __init__(self, pipeline, tensor_layout=types.NCHW, reverse_channels=False, multiplier=[1.0, 1.0, 1.0], offset=[0.0, 0.0, 0.0], tensor_dtype=types.FLOAT, device="cpu", device_id=0, display=False):
         self.loader = pipeline
         self.tensor_format = tensor_layout
@@ -172,7 +177,7 @@ class ROCALGenericIterator(object):
 
 class ROCALClassificationIterator(ROCALGenericIterator):
     """!ROCAL iterator for classification tasks for PyTorch. It returns 2 outputs
-    (data and label) in the form of PyTorch's Tensor.
+    (data and label) in the form of PyTorch's Tensors.
 
     Calling
 
@@ -215,20 +220,20 @@ class ROCALClassificationIterator(ROCALGenericIterator):
                  last_batch_padded=False,
                  display=False,
                  device="cpu",
-                 device_id=0,):
+                 device_id=0):
         pipe = pipelines
         super(ROCALClassificationIterator, self).__init__(pipe, tensor_layout=pipe._tensor_layout, tensor_dtype=pipe._tensor_dtype,
                                                           multiplier=pipe._multiplier, offset=pipe._offset, display=display, device=device, device_id=device_id)
 
 
 def draw_patches(img, idx, bboxes):
-    # image is expected as a tensor
-    """!Draws patches on an image and saves it as a PNG file.
+    """!Writes images to disk as a PNG file.
 
         @param img       The input image as a tensor.
         @param idx       Index used for naming the output file.
         @param bboxes    List of bounding boxes.
     """
+    # image is expected as a tensor
     import cv2
     img = img.cpu()
     image = img.detach().numpy()

@@ -18,6 +18,11 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
+##
+# @file readers.py
+#
+# @brief File containing reader functions for multiple datasets and data formats
+
 import rocal_pybind as b
 from amd.rocal.pipeline import Pipeline
 import amd.rocal.types as types
@@ -29,14 +34,14 @@ def coco(annotations_file='', ltrb=True, masks=False, ratio=False, avoid_class_r
 
         @param annotations_file         Path to the COCO annotations file.
         @param ltrb                     Whether bounding box coordinates are provided in (left, top, right, bottom) format.
-        @param masks                    Whether masks are included in the annotations.
-        @param ratio                    Whether bounding box coordinates are provided in ratio format.
+        @param masks                    Whether to read polygon masks from COCO annotations.
+        @param ratio                    Whether bounding box coordinates are provided in normalized format.
         @param avoid_class_remapping    Specifies if class remapping should be avoided.
-        @param pixelwise_masks          Whether pixel-wise masks are included in the annotations.
-        @param is_box_encoder           Whether it's used as a box encoder.
-        @param is_box_iou_matcher       Whether it's used as a box IoU matcher.
-        @param stick_to_shard           Specifies if the reader should stick to a single shard.
-        @param pad_last_batch           Specifies if the last batch should be padded.
+        @param pixelwise_masks          Whether to read mask data and generate pixel-wise masks.
+        @param is_box_encoder           Whether to enable box encoder in the pipeline.
+        @param is_box_iou_matcher       Whether to enable box IOU matcher in the pipeline.
+        @param stick_to_shard           Determines whether the reader should stick to a data shard instead of going through the entire dataset.
+        @param pad_last_batch           If set to True, pads the shard by repeating the last sample.
 
         @return    meta data, labels, and bounding boxes.
     """
@@ -56,13 +61,13 @@ def coco(annotations_file='', ltrb=True, masks=False, ratio=False, avoid_class_r
 
 
 def file(file_root, file_filters=None, file_list='', stick_to_shard=False, pad_last_batch=False):
-    """!Creates a labelReader node for loading label data from files.
+    """!Creates a labelReader node for reading files from folder or file_list.
 
-        @param file_root         Root directory containing label files.
-        @param file_filters      Filters to apply to the label files.
-        @param file_list         List of label files.
-        @param stick_to_shard    Specifies if the reader should stick to a single shard.
-        @param pad_last_batch    Specifies if the last batch should be padded.
+        @param file_root         Path to a directory that contains the data files.
+        @param file_filters      A list of glob strings to filter the list of files in the sub-directories of the file_root.
+        @param file_list         Path to a text file that contains one whitespace-separated filename label pair per line. The filenames are relative to the location of that file or to file_root, if specified.
+        @param stick_to_shard    Determines whether the reader should stick to a data shard instead of going through the entire dataset.
+        @param pad_last_batch    If set to True, pads the shard by repeating the last sample.
 
         @return    label reader meta data and labels.
     """
@@ -82,8 +87,8 @@ def tfrecord(path, user_feature_key_map, features, reader_type=0, stick_to_shard
         @param user_feature_key_map    User-provided feature key mapping.
         @param features                Features to load from TFRecords.
         @param reader_type             Type of reader (0 for classification, 1 for detection).
-        @param stick_to_shard          Specifies if the reader should use only a single shard.
-        @param pad_last_batch          Specifies if the last batch should be padded.
+        @param stick_to_shard          Determines whether the reader should stick to a data shard instead of going through the entire dataset.
+        @param pad_last_batch          If set to True, pads the shard by repeating the last sample.
 
         @return    Features loaded from TFRecords.
     """
@@ -123,9 +128,9 @@ def caffe(path, bbox=False, stick_to_shard=False, pad_last_batch=False):
     """!Creates a CaffeReader node for loading Caffe dataset.
 
         @param path              Path to the Caffe dataset.
-        @param bbox              Specifies if bounding boxes are included in the dataset.
-        @param stick_to_shard    Specifies if the reader should use only single shard.
-        @param pad_last_batch    Specifies if the last batch should be padded.
+        @param bbox              Type of reader (False for classification, True for detection).
+        @param stick_to_shard    Determines whether the reader should stick to a data shard instead of going through the entire dataset
+        @param pad_last_batch    If set to True, pads the shard by repeating the last sample.
 
         @return    caffe reader meta data, bboxes, and labels.
     """
@@ -153,9 +158,9 @@ def caffe2(path, bbox=False, stick_to_shard=False, pad_last_batch=False):
     """!Creates a Caffe2Reader node for loading Caffe2 dataset.
 
         @param path              Path to the Caffe2 dataset.
-        @param bbox              Specifies if bounding boxes are included in the dataset.
-        @param stick_to_shard    Specifies if the reader should stick to a single shard.
-        @param pad_last_batch    Specifies if the last batch should be padded.
+        @param bbox              Type of reader (False for classification, True for detection).
+        @param stick_to_shard    Determines whether the reader should stick to a data shard instead of going through the entire dataset.
+        @param pad_last_batch    If set to True, pads the shard by repeating the last sample.
 
         @return    caffe2 reader meta data, bboxes, and labels.
     """
@@ -189,17 +194,17 @@ def video(sequence_length, file_list_frame_num=False, file_root="", image_type=t
         @param image_type                           Color format of the frames.
         @param num_shards                           Number of shards for data parallelism.
         @param random_shuffle                       Specifies if frames should be randomly shuffled.
-        @param step                                 Frame step size.
-        @param stride                               Frame stride size.
-        @param decoder_mode                         Mode of video decoding.
+        @param step                                 Distance between first frames of consecutive sequences.
+        @param stride                               Distance between consecutive frames in a sequence.
+        @param decoder_mode                         Device used for video decoding.
         @param enable_frame_num                     Specifies whether frame numbers are enabled.
         @param enable_timestamps                    Specifies whether timestamps are enabled.
         @param file_list                            List of video files.
-        @param stick_to_shard                       Specifies if the reader should stick to a single shard.
-        @param pad_last_batch                       Specifies if the last batch should be padded.
-        @param file_list_include_preceding_frame    Specifies if file list includes preceding frames.
-        @param normalized                           Specifies if video frames should be normalized.
-        @param skip_vfr_check                       Specifies whether to skip variable frame rate check.
+        @param stick_to_shard                       Determines whether the reader should stick to a data shard instead of going through the entire dataset.
+        @param pad_last_batch                       If set to True, pads the shard by repeating the last sample.
+        @param file_list_include_preceding_frame    Changes the behavior how file_list start and end frame timestamps are translated to a frame number.
+        @param normalized                           Gets the output as normalized data.
+        @param skip_vfr_check                       Skips the check for the variable frame rate (VFR) videos.
 
         @return   list of loaded video sequences.
     """
@@ -250,9 +255,9 @@ def video_resize(sequence_length, resize_width, resize_height, file_list_frame_n
         @param image_type                           Color format of the frames.
         @param num_shards                           Number of shards for data parallelism.
         @param random_shuffle                       Specifies if frames should be randomly shuffled.
-        @param step                                 Frame step size.
-        @param stride                               Frame stride size.
-        @param decoder_mode                         Mode of video decoding.
+        @param step                                 Distance between first frames of consecutive sequences.
+        @param stride                               Distance between consecutive frames in a sequence.
+        @param decoder_mode                         Device used for video decoding.
         @param scaling_mode                         Scaling mode for resizing.
         @param interpolation_type                   Interpolation type for resizing.
         @param resize_longer                        Target size for the longer dimension during resizing.
@@ -261,11 +266,11 @@ def video_resize(sequence_length, resize_width, resize_height, file_list_frame_n
         @param enable_frame_num                     Specifies whether frame numbers are enabled.
         @param enable_timestamps                    Specifies whether timestamps are enabled.
         @param file_list                            List of video files.
-        @param stick_to_shard                       Specifies if the reader should stick to a single shard.
-        @param pad_last_batch                       Specifies if the last batch should be padded.
+        @param stick_to_shard                       Determines whether the reader should stick to a data shard instead of going through the entire dataset.
+        @param pad_last_batch                       If set to True, pads the shard by repeating the last sample.
         @param file_list_include_preceding_frame    Specifies if file list includes preceding frames.
-        @param normalized                           Specifies if video frames should be normalized.
-        @param skip_vfr_check                       Specifies whether to skip variable frame rate check.
+        @param normalized                           Gets the output as normalized data.
+        @param skip_vfr_check                       Skips the check for the variable frame rate (VFR) videos.
 
         @returns   loaded and resized video sequences and meta data.
     """
@@ -299,10 +304,10 @@ def sequence_reader(file_root, sequence_length, image_type=types.RGB, num_shards
         @param image_type           Color format of the frames.
         @param num_shards           Number of shards for data parallelism.
         @param random_shuffle       Specifies if frames should be randomly shuffled.
-        @param step                 Frame step size.
-        @param stride               Frame stride size.
-        @param stick_to_shard       Specifies if the reader should stick to a single shard.
-        @param pad_last_batch       Specifies if the last batch should be padded.
+        @param step                 Distance between first frames of consecutive sequences.
+        @param stride               Distance between consecutive frames in a sequence.
+        @param stick_to_shard       Determines whether the reader should stick to a data shard instead of going through the entire dataset.
+        @param pad_last_batch       If set to True, pads the shard by repeating the last sample.
 
         @return    list of loaded image sequences.
     """
@@ -324,11 +329,11 @@ def sequence_reader(file_root, sequence_length, image_type=types.RGB, num_shards
 
 
 def mxnet(path, stick_to_shard=False, pad_last_batch=False):
-    """!Creates an MXNETReader node for loading data from MXNet record files.
+    """!Creates an MXNETReader node for reading data from MXNet record files.
 
-        @param path              Path to the MXNet record file.
-        @param stick_to_shard    Specifies if the reader should stick to a single shard.
-        @param pad_last_batch    Specifies if the last batch should be padded.
+        @param path              Path to the MXNet record files.
+        @param stick_to_shard    Determines whether the reader should stick to a data shard instead of going through the entire dataset.
+        @param pad_last_batch    If set to True, pads the shard by repeating the last sample.
 
         @return    Metadata and loaded data from the MXNet record file.
     """

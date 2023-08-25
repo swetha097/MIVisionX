@@ -18,6 +18,9 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
+##
+# @file types.py
+# @brief File containing various user defined types used in rocAL
 
 # RocalStatus
 from rocal_pybind.types import OK
