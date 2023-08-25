@@ -228,7 +228,6 @@ int main(int argc, const char ** argv)
             cv::cvtColor(mat_output, mat_color, CV_RGB2BGR );
             // convert planar to packed for OPENCV
             for (int j = 0; j < n ; j++) {
-                int const w = w;
                 int const single_h = rocalGetOutputHeight(handle);
                 for (int n = 0; n<inputBatchSize; n++) {
                     unsigned  channel_size = w * single_h * p;
