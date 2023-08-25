@@ -63,6 +63,7 @@ int main(int argc, const char** argv) {
     size_t shard_count = 2;
     int shuffle = 0;
     int dec_mode = 0;
+    const char *outName = "image_augmentation_app.png";
 
     if (argc >= argIdx + MIN_ARG_COUNT)
         processing_device = atoi(argv[++argIdx]);
@@ -90,6 +91,9 @@ int main(int argc, const char** argv) {
 
     if (argc >= argIdx + MIN_ARG_COUNT)
         dec_mode = atoi(argv[++argIdx]);
+
+    if (argc >= argIdx + MIN_ARG_COUNT)
+        outName = argv[++argIdx];
 
     int inputBatchSize = 4;
 
@@ -138,7 +142,7 @@ int main(int argc, const char** argv) {
         if (decode_height <= 0 || decode_width <= 0)
             input1 = rocalJpegFileSource(handle, folderPath1, color_format, shard_count, false, shuffle, false);
         else
-            input1 = rocalJpegFileSource(handle, folderPath1, color_format, shard_count, false, shuffle, false, ROCAL_USE_USER_GIVEN_SIZE, decode_width, decode_height, dec_type);
+            input1 = rocalJpegFileSource(handle, folderPath1, color_format, shard_count, false, shuffle, false, ROCAL_USE_USER_GIVEN_SIZE_RESTRICTED, decode_width, decode_height, dec_type);
     }
 
     if (rocalGetStatus(handle) != ROCAL_OK) {
@@ -163,7 +167,6 @@ int main(int argc, const char** argv) {
 
     // Creating successive blur nodes to simulate a deep branch of augmentations
     RocalTensor image2 = rocalCropResize(handle, image0, resize_w, resize_h, false, rand_crop_area);
-    ;
     for (int i = 0; i < aug_depth; i++) {
         image2 = rocalBlurFixed(handle, image2, 17.25, (i == (aug_depth - 1)) ? true : false);
     }
@@ -250,12 +253,13 @@ int main(int argc, const char** argv) {
         if (!display)
             continue;
 
+        std::string out_filename = std::string(outName) + ".png"; 
         mat_input.copyTo(mat_output(cv::Rect(col_counter * w, AMD_ROCm_Black_resize.rows, w, h)));
         if (color_format == RocalImageColor::ROCAL_COLOR_RGB24) {
             cv::cvtColor(mat_output, mat_color, CV_RGB2BGR);
-            cv::imwrite("output.png", mat_color);
+            cv::imwrite(out_filename, mat_color);
         } else {
-            cv::imwrite("output.png", mat_output);
+            cv::imwrite(out_filename, mat_output);
         }
         cv::waitKey(1);
         col_counter = (col_counter + 1) % number_of_cols;
