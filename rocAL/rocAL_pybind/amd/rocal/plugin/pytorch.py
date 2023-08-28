@@ -44,7 +44,7 @@ class ROCALGenericIterator(object):
         self.last_batch_policy = self.loader._last_batch_policy
         if self.loader._name is None:
             self.loader._name = self.loader._reader
-        self.shard_size = self.loader._shard_size or size
+        self.shard_size = -1#self.loader._shard_size or size
         self.auto_reset = auto_reset
         self.batch_count = 0
 
@@ -124,7 +124,7 @@ class ROCALGenericIterator(object):
             self.labels_padded = [batch + [[0] * (max_cols1)] * (max_rows1 - len(batch)) for batch in self.labels_list]
             self.labels_padded = torch.LongTensor([row + [0] * (max_cols1 - len(row)) for batch in self.labels_padded for row in batch])
             self.labels_padded = self.labels_padded.view(-1, max_rows1, max_cols1)
-            if (self.last_batch_policy is (types.LAST_BATCH_PARTIAL)) and b.getRemainingImages(self.loader._handle) <= 0 : # Check this condition 
+            if (self.last_batch_policy is (types.LAST_BATCH_PARTIAL)) and b.getRemainingImages(self.loader._handle) == 0 and b.getLastBatchPaddedSize(self.loader._handle) > 0: #Check this condition
                 return [inner_list[0:self.last_batch_size,:] for inner_list in self.output_list], self.bb_padded[0:self.last_batch_size], self.labels_padded[0:self.last_batch_size]
             else:
                 return self.output_list, self.bb_padded, self.labels_padded
@@ -140,7 +140,7 @@ class ROCALGenericIterator(object):
                         draw_patches(img[i], i, 0)
                 self.labels = self.loader.getImageLabels()
                 self.labels_tensor = self.labels_tensor.copy_(torch.from_numpy(self.labels)).long()
-            if (self.last_batch_policy is (types.LAST_BATCH_PARTIAL)) and b.getRemainingImages(self.loader._handle) <= 0 : #Check this condition
+            if (self.last_batch_policy is (types.LAST_BATCH_PARTIAL)) and b.getRemainingImages(self.loader._handle) == 0 and b.getLastBatchPaddedSize(self.loader._handle) > 0: #Check this condition
                 return [inner_list[0:self.last_batch_size,:] for inner_list in self.output_list], self.labels_tensor[0:self.last_batch_size]
             else:
                 return self.output_list, self.labels_tensor
