@@ -168,6 +168,30 @@ TensorInfo::TensorInfo(std::vector<size_t> dims,
     if (_num_of_dims <= 3) _is_image = false;
 }
 
+TensorInfo::TensorInfo(std::vector<size_t> dims,
+                       RocalMemType mem_type,
+                       RocalTensorDataType data_type,
+                       RocalTensorlayout layout,
+                       RocalColorFormat color_format)
+    : _type(Type::UNKNOWN),
+      _dims(dims),
+      _mem_type(mem_type),
+      _data_type(data_type),
+      _layout(layout),
+      _color_format(color_format) {
+    _batch_size = dims.at(0);
+    _num_of_dims = dims.size();
+    _strides.resize(_num_of_dims);
+    _strides[_num_of_dims - 1] = tensor_data_size(data_type);
+    for (int i = _num_of_dims - 2; i >= 0; i--) {
+        _strides[i] = _strides[i + 1] * dims[i + 1];
+    }
+    _data_size = _strides[0] * dims[0];
+
+    if (_num_of_dims <= 3) _is_image = false;
+    set_max_shape();
+}
+
 void Tensor::update_tensor_roi(const std::vector<uint32_t> &width,
                                     const std::vector<uint32_t> &height) {
     if (_info.is_image()) {
