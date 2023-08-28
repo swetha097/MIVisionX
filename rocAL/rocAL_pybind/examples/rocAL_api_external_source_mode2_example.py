@@ -14,7 +14,7 @@ def main():
 
     batch_size = 5
     data_dir = os.environ["ROCAL_DATA_PATH"] + "/coco/coco_10_img/train_10images_2017/"
-
+    device = "cpu"
     try:
         path = "OUTPUT_IMAGES_PYTHON/EXTERNAL_SOURCE_READER/MODE2/"
         isExist = os.path.exists(path)
@@ -22,10 +22,13 @@ def main():
             os.makedirs(path)
     except OSError as error:
         print(error)
-    def draw_patches(image, idx):
+    def draw_patches(image, idx, device="cpu"):
     #image is expected as a tensor, bboxes as numpy
         import cv2
-        image = image.detach().numpy()
+        if device == "gpu":
+            image = image.cpu().detach().numpy()
+        else:
+            image = image.detach().numpy()
         image = image.transpose([1, 2, 0]) # NCHW
         image = (image).astype('uint8')
         image = cv2.cvtColor(image, cv2.COLOR_RGB2BGR)
@@ -93,7 +96,7 @@ def main():
     eii_2 = ExternalInputIteratorMode2(batch_size)
 
     #Create the pipeline 
-    external_source_pipeline_mode2 = Pipeline(batch_size=batch_size, num_threads=1, device_id=0, seed=1, rocal_cpu=True, tensor_layout=types.NCHW)
+    external_source_pipeline_mode2 = Pipeline(batch_size=batch_size, num_threads=1, device_id=0, seed=1, rocal_cpu=True if device=="cpu" else False, tensor_layout=types.NCHW)
 
     with external_source_pipeline_mode2:
         jpegs, _ = fn.external_source(source=eii_2, mode=types.EXTSOURCE_RAW_UNCOMPRESSED, max_width=eii_2.maxWidth, max_height=eii_2.maxHeight)
@@ -105,7 +108,7 @@ def main():
     #Index starting from 0
     cnt = 0
     # Dataloader
-    data_loader = ROCALClassificationIterator(external_source_pipeline_mode2)
+    data_loader = ROCALClassificationIterator(external_source_pipeline_mode2, device=device)
     for i, output_list in enumerate(data_loader, 0):
             print("**************", i, "*******************")
             print("**************starts*******************")
@@ -114,7 +117,7 @@ def main():
             print("**************", i, "*******************")
             for img in output_list[0]:
                 cnt = cnt+1
-                draw_patches(img, cnt)
+                draw_patches(img, cnt, device=device)
 
 if __name__ == '__main__':
     main()
