@@ -188,36 +188,31 @@ if(${BUILD_ROCAL})
                 ../../amd_openvx_extensions/amd_rpp/include/
                 ../../amd_openvx_extensions/amd_media/include/
                 include/api/
-                include/augmentations/arithmetic_augmentations/
-                include/augmentations/audio_augmentations/
                 include/augmentations/color_augmentations/
                 include/augmentations/effects_augmentations/
                 include/augmentations/geometry_augmentations/
+		        include/augmentations/audio_augmentations/
+		        include/augmentations/arithmetic_augmentations/
                 include/augmentations/
                 include/decoders/image/
                 include/decoders/video/
-                include/decoders/audio/
+		        include/decoders/audio/
                 include/device/
                 include/loaders/
                 include/loaders/image/
                 include/loaders/video/
-                include/loaders/audio/
-                include/meta_data/
-                include/parameters/
-                include/readers/image/
-                include/readers/video/
-                include/common/
-                include/pipeline/
-                include/device/
-                include/loaders/
-                include/loaders/image/
+		        include/loaders/audio/
                 include/meta_data/
                 include/parameters/
                 include/pipeline/
+		        include/common/
                 include/readers/image/
                 include/readers/video/
     )
 
+    if("${BACKEND}" STREQUAL "HIP" AND HIP_FOUND)
+        link_directories(${HIP_PATH}/lib)
+        include_directories(${ROCM_PATH}/include rocAL_hip)
         add_subdirectory(rocAL_hip)
     endif()
 
@@ -306,5 +301,4 @@ if(${BUILD_ROCAL})
 else()
     message("-- ${Red}WARNING: rocAL module excluded ${ColourReset}")
 endif()
-
 
