@@ -119,3 +119,4 @@ private:
     Reader::Status read_image_names(std::ifstream &file_contents, uint file_size);
     std::map <std::string, uint> _image_record_starting;
 };
+

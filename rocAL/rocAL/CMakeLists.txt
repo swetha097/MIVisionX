@@ -211,7 +211,6 @@ if(${BUILD_ROCAL})
                 include/device/
                 include/loaders/
                 include/loaders/image/
-                include/loaders/video/
                 include/meta_data/
                 include/parameters/
                 include/pipeline/
@@ -219,9 +218,6 @@ if(${BUILD_ROCAL})
                 include/readers/video/
     )
 
-    if("${BACKEND}" STREQUAL "HIP" AND HIP_FOUND)
-        link_directories(${HIP_PATH}/lib)
-        include_directories(${ROCM_PATH}/include rocAL_hip)
         add_subdirectory(rocAL_hip)
     endif()
 
@@ -310,4 +306,5 @@ if(${BUILD_ROCAL})
 else()
     message("-- ${Red}WARNING: rocAL module excluded ${ColourReset}")
 endif()
+
 

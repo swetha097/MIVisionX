@@ -66,3 +66,4 @@ private:
     MDB_cursor* _mdb_cursor;
 };
 
+
