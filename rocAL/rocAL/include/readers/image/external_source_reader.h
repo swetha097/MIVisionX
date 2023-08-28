@@ -26,7 +26,7 @@ THE SOFTWARE.
 #include <string>
 #include <memory>
 #include <queue>
-#include "reader.h"
+#include "image_reader.h"
 #include "commons.h"
 #include "timing_debug.h"
 

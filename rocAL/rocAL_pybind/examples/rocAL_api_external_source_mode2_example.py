@@ -1,7 +1,6 @@
 #Just a random comment
 
 import types
-import collections
 import numpy as np
 from random import shuffle
 from amd.rocal.pipeline import Pipeline
@@ -9,20 +8,29 @@ from amd.rocal.plugin.pytorch import ROCALClassificationIterator
 import amd.rocal.fn as fn
 import amd.rocal.types as types
 import cv2
+import os
 
 def main():
 
     batch_size = 5
-    data_dir = "/media/MIVisionX-data/rocal_data/coco/coco_10_img/train_10images_2017/" # Pass a directory
-    device = "cpu"
-    def draw_patches(image, idx, device):
+    data_dir = os.environ["ROCAL_DATA_PATH"] + "/coco/coco_10_img/train_10images_2017/"
+
+    try:
+        path = "OUTPUT_IMAGES_PYTHON/EXTERNAL_SOURCE_READER/MODE2/"
+        isExist = os.path.exists(path)
+        if not isExist:
+            os.makedirs(path)
+    except OSError as error:
+        print(error)
+    def draw_patches(image, idx):
     #image is expected as a tensor, bboxes as numpy
         import cv2
         image = image.detach().numpy()
         image = image.transpose([1, 2, 0]) # NCHW
         image = (image).astype('uint8')
         image = cv2.cvtColor(image, cv2.COLOR_RGB2BGR)
-        cv2.imwrite(str(idx)+"_"+"train"+".png", image)
+        cv2.imwrite("OUTPUT_IMAGES_PYTHON/EXTERNAL_SOURCE_READER/MODE2/" + str(idx)+"_"+"train"+".png", image)
+
 
     #Define the Data Source for all image samples
     class ExternalInputIteratorMode2(object):
@@ -88,8 +96,8 @@ def main():
     external_source_pipeline_mode2 = Pipeline(batch_size=batch_size, num_threads=1, device_id=0, seed=1, rocal_cpu=True, tensor_layout=types.NCHW)
 
     with external_source_pipeline_mode2:
-        jpegs, labels = fn.external_source(source=eii_2, mode=types.EXTSOURCE_RAW_UNCOMPRESSED, max_width = eii_2.maxWidth, max_height = eii_2.maxHeight)
-        output = fn.resize(jpegs, resize_width = 300, resize_height = 300, rocal_tensor_layout = types.NCHW, rocal_tensor_output_type = types.UINT8)
+        jpegs, _ = fn.external_source(source=eii_2, mode=types.EXTSOURCE_RAW_UNCOMPRESSED, max_width=eii_2.maxWidth, max_height=eii_2.maxHeight)
+        output = fn.resize(jpegs, resize_width=300, resize_height=300, output_layout=types.NCHW, output_dtype=types.UINT8)
         external_source_pipeline_mode2.set_outputs(output)
 
     # build the external_source_pipeline_mode2
@@ -97,16 +105,16 @@ def main():
     #Index starting from 0
     cnt = 0
     # Dataloader
-    data_loader = ROCALClassificationIterator(external_source_pipeline_mode2, device = "cpu", tensor_dtype = types.UINT8)
-    for i, it in enumerate(data_loader, 0):
+    data_loader = ROCALClassificationIterator(external_source_pipeline_mode2)
+    for i, output_list in enumerate(data_loader, 0):
             print("**************", i, "*******************")
             print("**************starts*******************")
-            print("\nImages:\n", it)
+            print("\nImages:\n", output_list)
             print("**************ends*******************")
             print("**************", i, "*******************")
-            for img in it[0]:
+            for img in output_list[0]:
                 cnt = cnt+1
-                draw_patches(img, cnt, device)
+                draw_patches(img, cnt)
 
 if __name__ == '__main__':
     main()
