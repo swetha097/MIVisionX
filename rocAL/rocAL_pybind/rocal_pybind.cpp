@@ -91,13 +91,6 @@ namespace rocal{
         return py::bytes(s);
     }
 
-    std::unordered_map<int, std::string> rocalToPybindLayout = {
-        {0, "NHWC"},
-        {1, "NCHW"},
-        {2, "NFHWC"},
-        {3, "NFCHW"},
-    };
-    
     py::object wrapperRocalExternalSourceFeedInput(
         RocalContext context, std::vector<std::string> input_images_names,
         std::vector<int> labels, py::list arrays,
@@ -117,14 +110,12 @@ namespace rocal{
         return py::cast<py::none>(Py_None);
     }
 
-    py::object wrapper_tensor(RocalContext context, py::object p,
-                                RocalTensorLayout tensor_format, RocalTensorOutputType tensor_output_type, float multiplier0,
-                                float multiplier1, float multiplier2, float offset0,
-                                float offset1, float offset2,
-                                bool reverse_channels, RocalOutputMemType output_mem_type)
-    {
-        auto ptr = ctypes_void_ptr(p);
-        // call pure C++ function
+    std::unordered_map<int, std::string> rocalToPybindLayout = {
+        {0, "NHWC"},
+        {1, "NCHW"},
+        {2, "NFHWC"},
+        {3, "NFCHW"},
+    };
 
     std::unordered_map<int, std::string> rocalToPybindOutputDtype = {
         {0, "float32"},

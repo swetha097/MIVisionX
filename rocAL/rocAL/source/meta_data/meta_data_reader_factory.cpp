@@ -180,9 +180,10 @@ std::shared_ptr<MetaDataReader> create_meta_data_reader(const MetaDataConfig& co
         {
             if(config.type() != MetaDataType::Label)
                 THROW("ExternalSourceLabelReader can only be used to load labels")
-            auto ret = std::make_shared<ExternalSourceLabelReader>();
-            ret->init(config);
-            return ret;
+            auto meta_data_reader = std::make_shared<ExternalSourceLabelReader>();
+            meta_data_batch = std::make_shared<LabelBatch>();
+            meta_data_reader->init(config, meta_data_batch);
+            return meta_data_reader;
         }
         break;
         default:

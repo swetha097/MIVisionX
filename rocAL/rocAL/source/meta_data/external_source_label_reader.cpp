@@ -30,8 +30,10 @@ THE SOFTWARE.
 
 ExternalSourceLabelReader::ExternalSourceLabelReader() {}
 
-void ExternalSourceLabelReader::init(const MetaDataConfig& cfg) {
-    _output = new LabelBatch();
+void ExternalSourceLabelReader::init(const MetaDataConfig &cfg, pMetaDataBatch meta_data_batch) {
+
+    _output = meta_data_batch;
+    _output->set_metadata_type(cfg.type());
 }
 
 bool ExternalSourceLabelReader::exists(const std::string& image_name) {
@@ -57,7 +59,7 @@ void  ExternalSourceLabelReader::add_labels(std::vector<std::string> image_name,
 void ExternalSourceLabelReader::print_map_contents() {
     std::cerr << "\nMap contents: \n";
     for (auto& elem : _map_content)
-        std::cerr << "Name :\t " << elem.first << "\t ID:  " << elem.second->get_label() << std::endl;
+        std::cerr << "Name :\t " << elem.first << "\t ID:  " << elem.second->get_labels()[0] << std::endl;
 }
 
 void ExternalSourceLabelReader::release() {
@@ -84,7 +86,7 @@ void ExternalSourceLabelReader::lookup(const std::vector<std::string>& image_nam
         auto image_name = image_names[i];
         auto it = _map_content.find(image_name);
         if(_map_content.end() == it)
-            THROW("ERROR: Given name not present in the map"+ image_name )
-        _output->get_label_batch()[i] = it->second->get_label();
+            THROW("ERROR: Given name not present in the map" + image_name )
+        _output->get_labels_batch()[i] = it->second->get_labels();
     }
 }

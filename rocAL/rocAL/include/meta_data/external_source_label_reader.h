@@ -30,7 +30,7 @@ THE SOFTWARE.
 class ExternalSourceLabelReader: public MetaDataReader
 {
 public:
-    void init(const MetaDataConfig& cfg) override;
+    void init(const MetaDataConfig& cfg, pMetaDataBatch meta_data_batch) override;
     void lookup(const std::vector<std::string>& image_names) override;
     void add_labels(std::vector<std::string> image_name, std::vector<int> label) override;
     void read_all(const std::string& path) override { };
@@ -38,17 +38,16 @@ public:
     void release() override;
     void print_map_contents();
     bool set_timestamp_mode() override { return false; }
-    MetaDataBatch * get_output() override { return _output; }
     const std::map<std::string, std::shared_ptr<MetaData>> & get_map_content() override { return _map_content; }
     ExternalSourceLabelReader();
-    ~ExternalSourceLabelReader() override { delete _output; }
+    ~ExternalSourceLabelReader() override { }
 private:
     void read_files(const std::string& _path) { };
     bool exists(const std::string &image_name);
     void add(std::string image_name, int label);
     std::map<std::string, std::shared_ptr<MetaData>> _map_content;
     std::map<std::string, std::shared_ptr<MetaData>>::iterator _itr;
-    LabelBatch* _output;
+    pMetaDataBatch _output;
     std::vector<std::string> _file_names;
     std::vector<std::string> _subfolder_file_names;
 };

@@ -435,7 +435,7 @@ void RingBuffer::set_meta_data(ImageNameBatch names, pMetaDataBatch meta_data)
     else
     {
         _last_image_meta_data = std::move(std::make_pair(std::move(names), meta_data));
-        if(!_box_encoder_gpu)
+        if(!_box_encoder)
         {   
             auto actual_buffer_size = meta_data->get_buffer_size();
             for(unsigned i = 0; i < actual_buffer_size.size(); i++)
