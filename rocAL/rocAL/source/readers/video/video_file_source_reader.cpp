@@ -81,14 +81,6 @@ void VideoFileSourceReader::incremenet_read_ptr()
 {
     _read_counter ++;
     _curr_sequence_idx = (_curr_sequence_idx + 1) % _sequences.size();
-    if(_last_batch_info.first == RocalBatchPolicy::DROP)
-    {
-        if((_video_file_names.size() / _batch_count) == _curr_sequence_idx) // Check if its last batch
-        {
-            _curr_sequence_idx += _batch_count;
-            _curr_sequence_idx = (_curr_sequence_idx + 1) % _video_file_names.size();
-        }
-    }
 }
 
 size_t VideoFileSourceReader::last_batch_padded_size()
@@ -181,7 +173,7 @@ void VideoFileSourceReader::replicate_last_sequence_to_fill_last_shard()
     {
         if(_last_batch_info.second == true) 
         {
-            for(size_t i = (_batch_count - _in_batch_read_count); i < _batch_count; i++)
+            for(size_t i = 0; i < (_batch_count - _in_batch_read_count); i++)
             {
                 _sequences.push_back(_last_sequence);
                 _total_sequences_count++;
@@ -196,12 +188,6 @@ void VideoFileSourceReader::replicate_last_sequence_to_fill_last_shard()
             }
         }
     }
-    else if(_last_batch_info.first == RocalBatchPolicy::DROP)
-    {
-        for(size_t i = 0; i < _in_batch_read_count; i++)
-            _sequences.pop_back();
-    }
-
     if(_last_batch_info.first == RocalBatchPolicy::PARTIAL)
         _last_batch_padded_size = _batch_count - _in_batch_read_count;
         

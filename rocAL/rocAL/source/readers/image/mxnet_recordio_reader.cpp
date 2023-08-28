@@ -82,14 +82,6 @@ void MXNetRecordIOReader::incremenet_read_ptr()
 {
     _read_counter++;
     _curr_file_idx = (_curr_file_idx + 1) % _file_names.size();
-    if(_last_batch_info.first == RocalBatchPolicy::DROP)
-    {
-        if((_file_names.size() / _batch_count) == _curr_file_idx) // Check if its last batch
-        {
-            _curr_file_idx += _batch_count;
-            _curr_file_idx = (_curr_file_idx + 1) % _file_names.size();
-        }
-    }
 }
 
 size_t MXNetRecordIOReader::last_batch_padded_size()
@@ -183,7 +175,7 @@ void MXNetRecordIOReader::replicate_last_image_to_fill_last_shard()
     {
         if(_last_batch_info.second == true) 
         {
-            for(size_t i = (_batch_count - _in_batch_read_count); i < _batch_count; i++)
+            for(size_t i = 0; i < (_batch_count - _in_batch_read_count); i++)
             {
                 _file_names.push_back(_last_file_name);
                 _record_properties.insert(std::pair<std::string, std::tuple<unsigned int, int64_t, int64_t>>(_last_file_name, std::make_tuple(_last_file_size, _last_seek_pos, _last_data_size)));
@@ -200,12 +192,6 @@ void MXNetRecordIOReader::replicate_last_image_to_fill_last_shard()
             }   
         }
     }
-    else if(_last_batch_info.first == RocalBatchPolicy::DROP)
-    {
-        for(size_t i = 0; i < _in_batch_read_count; i++)
-            _file_names.pop_back();
-    }
-
     if(_last_batch_info.first == RocalBatchPolicy::PARTIAL)
         _last_batch_padded_size = _batch_count - _in_batch_read_count;
 }
