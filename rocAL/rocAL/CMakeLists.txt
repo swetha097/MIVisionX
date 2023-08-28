@@ -20,7 +20,7 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-cmake_minimum_required(VERSION 3.0)
+cmake_minimum_required(VERSION 3.5)
 project(rocal)
 
 set(CMAKE_CXX_STANDARD 14)
@@ -54,7 +54,10 @@ if( GPU_SUPPORT AND "${BACKEND}" STREQUAL "HIP")
         endif()
     endif()
     list(APPEND CMAKE_PREFIX_PATH ${ROCM_PATH} ${ROCM_PATH}/hip)
-    set(DEFAULT_AMDGPU_TARGETS "gfx803;gfx900;gfx906;gfx908;gfx90a;gfx940;gfx1030;gfx1031;gfx1032")
+    set(DEFAULT_AMDGPU_TARGETS "gfx803;gfx900;gfx906;gfx908;gfx90a;gfx940;gfx1030;gfx1031;gfx1032;gfx1100")
+    if (BUILD_WITH_AMD_ADVANCE)
+        set(DEFAULT_AMDGPU_TARGETS ${DEFAULT_AMDGPU_TARGETS} "gfx941")
+    endif()
     set(AMDGPU_TARGETS "${DEFAULT_AMDGPU_TARGETS}" CACHE STRING "List of specific machine types for library to target")
     find_package(HIP QUIET)
     if(HIP_FOUND)
@@ -194,18 +197,27 @@ if(${BUILD_ROCAL})
                 include/decoders/image/
                 include/decoders/video/
                 include/decoders/audio/
-		include/device/
+                include/device/
                 include/loaders/
                 include/loaders/image/
                 include/loaders/video/
                 include/loaders/audio/
-		include/meta_data/
+                include/meta_data/
                 include/parameters/
                 include/readers/image/
                 include/readers/video/
                 include/common/
                 include/pipeline/
-		)
+                include/device/
+                include/loaders/
+                include/loaders/image/
+                include/loaders/video/
+                include/meta_data/
+                include/parameters/
+                include/pipeline/
+                include/readers/image/
+                include/readers/video/
+    )
 
     if("${BACKEND}" STREQUAL "HIP" AND HIP_FOUND)
         link_directories(${HIP_PATH}/lib)
@@ -298,3 +310,4 @@ if(${BUILD_ROCAL})
 else()
     message("-- ${Red}WARNING: rocAL module excluded ${ColourReset}")
 endif()
+

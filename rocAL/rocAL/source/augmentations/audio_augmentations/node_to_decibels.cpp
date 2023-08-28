@@ -35,7 +35,7 @@ void ToDeciblesNode::create_node() {
     vx_scalar cutoff_db = vxCreateScalar(vxGetContext((vx_reference)_graph->get()), VX_TYPE_FLOAT32, &_cutoff_db);
     vx_scalar multiplier = vxCreateScalar(vxGetContext((vx_reference)_graph->get()), VX_TYPE_FLOAT32, &_multiplier);
     vx_scalar reference_magnitude = vxCreateScalar(vxGetContext((vx_reference)_graph->get()), VX_TYPE_FLOAT32, &_reference_magnitude);
-    _node = vxExtRppToDecibels(_graph->get(), _inputs[0]->handle(), _src_tensor_roi, _outputs[0]->handle(), _dst_tensor_roi, cutoff_db, multiplier, reference_magnitude);
+    _node = vxExtRppToDecibels(_graph->get(), _inputs[0]->handle(), _inputs[0]->get_roi_tensor(), _outputs[0]->handle(), _outputs[0]->get_roi_tensor(), cutoff_db, multiplier, reference_magnitude);
 
     if((status = vxGetStatus((vx_reference)_node)) != VX_SUCCESS)
         THROW("Adding the to_decibels (vxRppToDecibels) node failed: "+ TOSTR(status))

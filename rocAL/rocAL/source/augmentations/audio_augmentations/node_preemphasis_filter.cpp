@@ -36,7 +36,7 @@ void PreemphasisFilterNode::create_node() {
     if(status != 0)
         THROW(" vxAddArrayItems failed in the PreemphasisFilter node node: "+ TOSTR(status) + "  "+ TOSTR(status))
     vx_scalar border_type = vxCreateScalar(vxGetContext((vx_reference)_graph->get()), VX_TYPE_UINT32, &_preemph_border);
-    _node = vxExtRppPreemphasisFilter(_graph->get(), _inputs[0]->handle(), _outputs[0]->handle(), _src_tensor_roi, _dst_tensor_roi, _preemph_coeff.default_array(), border_type);
+    _node = vxExtRppPreemphasisFilter(_graph->get(), _inputs[0]->handle(), _outputs[0]->handle(), _inputs[0]->get_roi_tensor(), _outputs[0]->get_roi_tensor(), _preemph_coeff.default_array(), border_type);
     if((status = vxGetStatus((vx_reference)_node)) != VX_SUCCESS)
         THROW("Adding the vxExtrppNode_PreemphasisFilter node failed: "+ TOSTR(status))
 }

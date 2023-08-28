@@ -23,7 +23,7 @@ THE SOFTWARE.
 #include <iostream>
 #include <utility>
 #include <algorithm>
-#include<fstream>
+#include <fstream>
 #include <string>
 #include <stdint.h>
 #include <google/protobuf/message_lite.h>

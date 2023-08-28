@@ -43,7 +43,7 @@ void SpectrogramNode::create_node() {
     vx_scalar nfft = vxCreateScalar(vxGetContext((vx_reference)_graph->get()), VX_TYPE_INT32, &_nfft);
     vx_scalar window_length = vxCreateScalar(vxGetContext((vx_reference)_graph->get()), VX_TYPE_INT32, &_window_length);
     vx_scalar window_step = vxCreateScalar(vxGetContext((vx_reference)_graph->get()), VX_TYPE_INT32, &_window_step);
-    _node = vxExtRppSpectrogram(_graph->get(), _inputs[0]->handle(), _src_tensor_roi, _outputs[0]->handle(), _dst_tensor_roi, _window_fn_vx_array,
+    _node = vxExtRppSpectrogram(_graph->get(), _inputs[0]->handle(), _inputs[0]->get_roi_tensor(), _outputs[0]->handle(), _outputs[0]->get_roi_tensor(), _window_fn_vx_array,
                                 center_windows, reflect_padding, spectrogram_layout, power, nfft, window_length, window_step);
 
     if((status = vxGetStatus((vx_reference)_node)) != VX_SUCCESS)

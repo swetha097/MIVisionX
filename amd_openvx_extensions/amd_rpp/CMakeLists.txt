@@ -18,7 +18,7 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
-cmake_minimum_required(VERSION 3.0)
+cmake_minimum_required(VERSION 3.5)
 project(vx_rpp)
 
 set(CMAKE_CXX_STANDARD 14)
@@ -170,6 +170,7 @@ list(APPEND SOURCES
         source/tensor/Resample.cpp
         source/tensor/TensorMulScalar.cpp
         source/tensor/TensorAddTensor.cpp
+        source/tensor/SequenceRearrange.cpp
         source/kernel_rpp.cpp
         source/internal_publishKernels.cpp
     )
@@ -224,3 +225,4 @@ if(BUILD_DEV)
     # install MIVisionX include files -- {ROCM_PATH}/include/mivisionx/
     install(FILES include/vx_ext_rpp.h DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/mivisionx)
 endif(BUILD_DEV)
+
