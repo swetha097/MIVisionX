@@ -80,6 +80,9 @@ public:
     //! Initializer constructor with only fields common to all types (Image/ Video / Audio)
     TensorInfo(std::vector<size_t> dims, RocalMemType mem_type,
                     RocalTensorDataType data_type);
+    TensorInfo(std::vector<size_t> dims, RocalMemType mem_type,
+               RocalTensorDataType data_type, RocalTensorlayout layout,
+               RocalColorFormat color_format);
 
     //! Copy constructor
     TensorInfo(const TensorInfo& info);

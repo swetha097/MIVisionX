@@ -43,6 +43,8 @@ public:
     std::shared_ptr<Graph> graph() { return _graph; }
     void set_meta_data(pMetaDataBatch meta_data_info) { _meta_data_info = meta_data_info; }
     bool _is_ssd = false;
+    RocalROI *get_src_roi() { return _inputs[0]->info().get_roi(); }
+    RocalROI *get_dst_roi() { return _outputs[0]->info().get_roi(); }
 protected:
     virtual void create_node() = 0;
     virtual void update_node() = 0;
@@ -52,5 +54,4 @@ protected:
     vx_node _node = nullptr;
     size_t _batch_size;
     pMetaDataBatch _meta_data_info;
-    vx_array _src_roi_width, _src_roi_height;  // TODO - To be removed after tensor changes in augmentation nodes.
 };

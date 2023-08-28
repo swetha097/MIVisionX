@@ -68,6 +68,7 @@ def main():
     args = parse_args()
     # Args
     data_path = args.image_dataset_path
+    reader_type = args.reader_type
     augmentation_name = args.augmentation_name
     print("\n AUGMENTATION NAME: ", augmentation_name)
     rocal_cpu = False if args.rocal_gpu else True
@@ -114,8 +115,9 @@ def main():
     decoder_device = 'cpu'
     # Use pipeline instance to make calls to reader, decoder & augmentation's
     with pipe:
-        jpegs, _ = fn.readers.file(file_root=data_path, shard_id=local_rank, num_shards=world_size)
-        images = fn.decoders.image(jpegs,
+        if reader_type == "file":
+            jpegs, _ = fn.readers.file(file_root=data_path)
+            images = fn.decoders.image(jpegs,
                                    file_root=data_path,
                                    device=decoder_device,
                                    max_decoded_width=max_width,
@@ -124,6 +126,143 @@ def main():
                                    shard_id=local_rank,
                                    num_shards=world_size,
                                    random_shuffle=False)
+
+        elif reader_type == "coco":
+            annotation_path = args.json_path
+            jpegs, _, _ = fn.readers.coco(annotations_file=annotation_path)
+            images = fn.decoders.image(jpegs,
+                                   file_root=data_path,
+                                   annotations_file=annotation_path,
+                                   device=decoder_device,
+                                   max_decoded_width=max_width,
+                                   max_decoded_height=max_height,
+                                   output_type=color_format,
+                                   shard_id=local_rank,
+                                   num_shards=world_size,
+                                   random_shuffle=False)
+
+        elif reader_type == "tf_classification":
+            try:
+                import tensorflow as tf
+            except ImportError:
+                print('Install tensorflow to run tf_classification tests')
+                exit()
+            featureKeyMap = {
+                'image/encoded':'image/encoded',
+                'image/class/label':'image/class/label',
+                'image/filename':'image/filename'
+            }
+            features = {
+                'image/encoded':tf.io.FixedLenFeature((), tf.string, ""),
+                'image/class/label':tf.io.FixedLenFeature([1], tf.int64,  -1),
+                'image/filename':tf.io.FixedLenFeature((), tf.string, "")
+            }
+            inputs = fn.readers.tfrecord(data_path, featureKeyMap, features, reader_type=0)
+            jpegs = inputs["image/encoded"]
+            images = fn.decoders.image(jpegs, user_feature_key_map=featureKeyMap,
+                                       output_type=color_format, path=data_path,
+                                       max_decoded_width=max_width,
+                                       max_decoded_height=max_height,
+                                       shard_id=local_rank,
+                                       num_shards=world_size,
+                                       random_shuffle=False)
+
+        elif reader_type == "tf_detection":
+            try:
+                import tensorflow as tf
+            except ImportError:
+                print('Install tensorflow to run tf_detection tests')
+                exit()
+            featureKeyMap = {
+                'image/encoded': 'image/encoded',
+                'image/class/label': 'image/object/class/label',
+                'image/class/text': 'image/object/class/text',
+                'image/object/bbox/xmin': 'image/object/bbox/xmin',
+                'image/object/bbox/ymin': 'image/object/bbox/ymin',
+                'image/object/bbox/xmax': 'image/object/bbox/xmax',
+                'image/object/bbox/ymax': 'image/object/bbox/ymax',
+                'image/filename': 'image/filename'
+            }
+            features = {
+                'image/encoded': tf.io.FixedLenFeature((), tf.string, ""),
+                'image/class/label': tf.io.FixedLenFeature([1], tf.int64,  -1),
+                'image/class/text': tf.io.FixedLenFeature([], tf.string, ''),
+                'image/object/bbox/xmin': tf.io.VarLenFeature(dtype=tf.float32),
+                'image/object/bbox/ymin': tf.io.VarLenFeature(dtype=tf.float32),
+                'image/object/bbox/xmax': tf.io.VarLenFeature(dtype=tf.float32),
+                'image/object/bbox/ymax': tf.io.VarLenFeature(dtype=tf.float32),
+                'image/filename': tf.io.FixedLenFeature((), tf.string, "")
+            }
+            inputs = fn.readers.tfrecord(path=data_path, reader_type=1, features=features, user_feature_key_map=featureKeyMap)
+            jpegs = inputs["image/encoded"]
+            _ = inputs["image/class/label"]
+            images = fn.decoders.image_random_crop(jpegs,user_feature_key_map=featureKeyMap,
+                                                   max_decoded_width=max_width,
+                                                   max_decoded_height=max_height,
+                                                   output_type=color_format,
+                                                   shard_id=local_rank,
+                                                   num_shards=world_size,
+                                                   random_shuffle=False, path=data_path)
+
+        elif reader_type == "caffe_classification":
+            jpegs, _ = fn.readers.caffe(path=data_path, bbox=False)
+            images = fn.decoders.image(jpegs,
+                                       path=data_path,
+                                       device=decoder_device,
+                                       max_decoded_width=max_width,
+                                       max_decoded_height=max_height,
+                                       output_type=color_format,
+                                       shard_id=local_rank,
+                                       num_shards=world_size,
+                                       random_shuffle=False)
+
+        elif reader_type == "caffe_detection":
+            jpegs, _, _ = fn.readers.caffe(path=data_path, bbox=True)
+            images = fn.decoders.image(jpegs,
+                                       path=data_path,
+                                       device=decoder_device,
+                                       max_decoded_width=max_width,
+                                       max_decoded_height=max_height,
+                                       output_type=color_format,
+                                       shard_id=local_rank,
+                                       num_shards=world_size,
+                                       random_shuffle=False)
+
+        elif reader_type == "caffe2_classification":
+            jpegs, _ = fn.readers.caffe2(path=data_path)
+            images = fn.decoders.image(jpegs,
+                                       path=data_path,
+                                       device=decoder_device,
+                                       max_decoded_width=max_width,
+                                       max_decoded_height=max_height,
+                                       output_type=color_format,
+                                       shard_id=local_rank,
+                                       num_shards=world_size,
+                                       random_shuffle=False)
+
+        elif reader_type == "caffe2_detection":
+            jpegs, _, _ = fn.readers.caffe2(path=data_path, bbox=True)
+            images = fn.decoders.image(jpegs,
+                                       path=data_path,
+                                       device=decoder_device,
+                                       max_decoded_width=max_width,
+                                       max_decoded_height=max_height,
+                                       output_type=color_format,
+                                       shard_id=local_rank,
+                                       num_shards=world_size,
+                                       random_shuffle=False)
+
+        elif reader_type == "mxnet":
+            jpegs = fn.readers.mxnet(path=data_path)
+            images = fn.decoders.image(jpegs,
+                                       path=data_path,
+                                       device=decoder_device,
+                                       max_decoded_width=max_width,
+                                       max_decoded_height=max_height,
+                                       output_type=color_format,
+                                       shard_id=local_rank,
+                                       num_shards=world_size,
+                                       random_shuffle=False)
 
         if augmentation_name == "resize":
             resize_w = 400
