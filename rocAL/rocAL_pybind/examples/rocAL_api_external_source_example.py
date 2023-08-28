@@ -60,7 +60,7 @@ def main():
 
     with external_source_pipeline_mode0:
         jpegs, _ = fn.external_source(source = external_input_source, mode = types.EXTSOURCE_FNAME)
-        output = fn.resize(jpegs, resize_width = 300, resize_height = 300, rocal_tensor_layout=types.NCHW, rocal_tensor_output_type=types.UINT8)
+        output = fn.resize(jpegs, resize_width = 300, resize_height = 300, rocal_tensor_output_layout=types.NCHW, rocal_tensor_output_datatype=types.UINT8)
         external_source_pipeline_mode0.set_outputs(output)
 
     # build the external_source_pipeline_mode0
@@ -68,7 +68,7 @@ def main():
     #Index starting from 0
     cnt = 0
     # Dataloader
-    data_loader = ROCALClassificationIterator(external_source_pipeline_mode0, device="cpu", tensor_dtype=types.UINT8)
+    data_loader = ROCALClassificationIterator(external_source_pipeline_mode0, tensor_dtype=types.UINT8)
     for i, it in enumerate(data_loader, 0):
             print("**************", i, "*******************")
             print("**************starts*******************")
