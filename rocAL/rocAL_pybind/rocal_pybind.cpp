@@ -315,8 +315,8 @@ namespace rocal{
             .value("UINT8", ROCAL_UINT8)
             .export_values();
         py::enum_<RocalOutputMemType>(types_m, "RocalOutputMemType", "Output memory types")
-            .value("CPU_MEMORY", ROCAL_MEMCPY_HOST)
-            .value("GPU_MEMORY", ROCAL_MEMCPY_GPU)
+            .value("HOST_MEMORY", ROCAL_MEMCPY_HOST)
+            .value("DEVICE_MEMORY", ROCAL_MEMCPY_GPU)
             .value("PINNED_MEMORY", ROCAL_MEMCPY_PINNED)
             .export_values();
         py::enum_<RocalResizeScalingMode>(types_m, "RocalResizeScalingMode", "Decode size policies")
@@ -559,8 +559,8 @@ namespace rocal{
         m.def("rocalResetLoaders", &rocalResetLoaders);
         m.def("videoMetaDataReader", &rocalCreateVideoLabelReader, py::return_value_policy::reference);
         // rocal_api_augmentation.h
-        // m.def("SSDRandomCrop", &rocalSSDRandomCrop,
-        //     py::return_value_policy::reference);
+        m.def("ssdRandomCrop", &rocalSSDRandomCrop,
+            py::return_value_policy::reference);
         m.def("resize", &rocalResize, 
             py::return_value_policy::reference);
         m.def("resizeMirrorNormalize", &rocalResizeMirrorNormalize,

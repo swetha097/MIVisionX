@@ -98,7 +98,7 @@ class Pipeline(object):
     def __init__(self, batch_size=-1, num_threads=0, device_id=-1, seed=1,
                  exec_pipelined=True, prefetch_queue_depth=2,
                  exec_async=True, bytes_per_sample=0,
-                 rocal_cpu=False, max_streams=-1, default_cuda_stream_priority=0, tensor_layout = types.NCHW, reverse_channels = False, mean = None, std = None, tensor_dtype=types.FLOAT, output_memory_type = types.CPU_MEMORY):
+                 rocal_cpu=False, max_streams=-1, default_cuda_stream_priority=0, tensor_layout=types.NCHW, reverse_channels=False, mean=None, std=None, tensor_dtype=types.FLOAT, output_memory_type=None):
         if(rocal_cpu):
             self._handle = b.rocalCreate(
                 batch_size, types.CPU, device_id, num_threads, prefetch_queue_depth, tensor_dtype)
@@ -118,7 +118,7 @@ class Pipeline(object):
         self._batch_size = batch_size
         self._num_threads = num_threads
         self._device_id = device_id
-        self._output_memory_type = output_memory_type
+        self._output_memory_type = output_memory_type if output_memory_type else (types.HOST_MEMORY if rocal_cpu else types.DEVICE_MEMORY)
         self._seed = seed
         self._exec_pipelined = exec_pipelined
         self._prefetch_queue_depth = prefetch_queue_depth
@@ -137,8 +137,8 @@ class Pipeline(object):
         self._shuffle = None
         self._name = None
         self._anchors = None
-        self._BoxEncoder = None
-        self._BoxIOUMatcher = None
+        self._box_encoder = None
+        self._box_iou_matcher = None
         self._encode_tensor = None
         self._num_classes = None
         self._one_hot_encoding = False
@@ -234,7 +234,7 @@ class Pipeline(object):
     def get_bounding_box_count(self):
         return b.getBoundingBoxCount(self._handle)
 
-    def get_bounding_box_abels(self):
+    def get_bounding_box_labels(self):
         return b.getBoundingBoxLabels(self._handle)
 
     def get_bounding_box_cords(self):
@@ -408,12 +408,12 @@ def pipeline_def(fn=None, **pipeline_kwargs):
             with pipe:
                 pipe_outputs = func(*args, **fn_kwargs)
                 if isinstance(pipe_outputs, tuple):
-                    outputs = pipe_outputs
+                    po = pipe_outputs
                 elif pipe_outputs is None:
-                    outputs = ()
+                    po = ()
                 else:
-                    outputs = (pipe_outputs, )
-                pipe.set_outputs(*outputs)
+                    po = (pipe_outputs, )
+                pipe.set_outputs(*po)
             return pipe
 
         # Add `is_pipeline_def` attribute to the function marked as `@pipeline_def`

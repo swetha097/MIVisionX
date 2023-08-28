@@ -23,12 +23,16 @@ THE SOFTWARE.
 
 void BoundingBoxGraph::process(pMetaDataBatch input_meta_data, pMetaDataBatch output_meta_data)
 {
+    size_t num_meta_nodes = _meta_nodes.size();
     for (auto &meta_node : _meta_nodes)
     {
         meta_node->update_parameters(input_meta_data, output_meta_data);
+        if(--num_meta_nodes > 0)
+            input_meta_data = output_meta_data->clone();
     }
 }
 
+// This function is used to rescale the metadata values w.r.t the decoded image sizes
 void BoundingBoxGraph::update_meta_data(pMetaDataBatch input_meta_data, decoded_image_info decode_image_info)
 {
     std::vector<uint32_t> original_height = decode_image_info._original_height;
