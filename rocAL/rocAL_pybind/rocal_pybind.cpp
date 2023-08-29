@@ -240,6 +240,15 @@ namespace rocal{
                 )code"
             )
             .def(
+            "copy_data", [](rocalTensor& output_tensor, py::object p, uint max_y1, uint max_x1) {
+                auto ptr = ctypes_void_ptr(p);
+                output_tensor.copy_data(static_cast<void *>(ptr), max_y1, max_x1);
+            },  py::return_value_policy::reference,
+                R"code(
+                Copies the ring buffer data to buffer pointers wrt max width and height passed.
+                )code"
+            )
+            .def(
                 "at",
                 [](rocalTensor &output_tensor, uint idx) {
                     std::vector<size_t> stride_per_sample(output_tensor.strides());
