@@ -127,9 +127,6 @@ static vx_status VX_CALLBACK processNonSilentRegion(vx_node node, const vx_refer
 #endif
     } else if (data->deviceType == AGO_TARGET_AFFINITY_CPU) {
         rpp_status = rppt_non_silent_region_detection_host(data->pSrc, data->pSrcDesc, data->pSrcLength, data->pDst1, data->pDst2, data->cutOffDB, data->windowLength, data->referencePower, data->resetInterval, data->handle->rppHandle);
-        for(int i = 0; i < data->pSrcDesc->n; i++)
-            std::cerr<<"begin, length: "<<data->pDst1[i]<<", "<<data->pDst2[i]<<std::endl;
-
         return_status = (rpp_status == RPP_SUCCESS) ? VX_SUCCESS : VX_FAILURE;
     }
     return return_status;
