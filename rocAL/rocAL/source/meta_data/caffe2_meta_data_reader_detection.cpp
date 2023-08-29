@@ -157,7 +157,7 @@ void Caffe2MetaDataReaderDetection::read_lmdb_record(std::string file_name, uint
             ImgSize img_size;
             if (boundBox_size != 0) {
                 int boundIter = 0;
-                for (int i = 0; i < boundBox_size / 4; i++) {
+                for (int i = 0; i < boundBox_size >> 2; i++) {
                     // Parsing the bounding box points using Iterator
                     box.l = boundingBox_proto.dims(boundIter);
                     box.t = boundingBox_proto.dims(boundIter + 1);

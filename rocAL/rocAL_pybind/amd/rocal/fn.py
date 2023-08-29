@@ -612,7 +612,7 @@ def saturation(*inputs, saturation=1.0, device=None, output_layout=types.NHWC, o
 
 
 def ssd_random_crop(*inputs, p_threshold=None, crop_area_factor=None, crop_aspect_ratio=None,
-                    crop_pos_x=None, crop_pos_y=None, num_attempts=1, device=None,
+                    crop_pos_x=None, crop_pos_y=None, num_attempts=20, device=None,
                     all_boxes_above_threshold=True, allow_no_crop=True, ltrb=True, output_layout=types.NHWC, output_dtype=types.UINT8):
     """!Crops images randomly used for SSD training.
 
@@ -622,7 +622,7 @@ def ssd_random_crop(*inputs, p_threshold=None, crop_area_factor=None, crop_aspec
         @param crop_aspect_ratio (float, optional, default = None)                    aspect ratio of the cropping windows
         @param crop_pox_x (float, optional, default = None)                           crop_x position used for crop generation
         @param crop_pox_y (float, optional, default = None)                           crop_y position used for crop generation
-        @param num_attempts (int, optional, default = 1)                              number of attempts to get a crop window that matches the area factor and aspect ratio conditions
+        @param num_attempts (int, optional, default = 20)                              number of attempts to get a crop window that matches the area factor and aspect ratio conditions
         @param device (string, optional, default = None)                              Parameter unused for augmentation
         @param all_boxes_above_threshold (bool, optional, default = True)             Parameter unused for augmentation
         @param allow_no_crop (bool, optional, default = True)                         Parameter unused for augmentation
@@ -632,10 +632,6 @@ def ssd_random_crop(*inputs, p_threshold=None, crop_area_factor=None, crop_aspec
 
         @return    Randomly Cropped images for SSD training
     """
-    if (num_attempts == 1):
-        _num_attempts = 20
-    else:
-        _num_attempts = num_attempts
     p_threshold = b.createFloatParameter(p_threshold) if isinstance(
         p_threshold, float) else p_threshold
     crop_area_factor = b.createFloatParameter(crop_area_factor) if isinstance(

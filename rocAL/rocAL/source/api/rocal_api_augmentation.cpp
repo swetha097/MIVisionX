@@ -622,7 +622,7 @@ RocalTensor ROCAL_API_CALL
         rmn_node->init(out_width, out_height, resize_scaling_mode, maximum_size, interpolation_type, mean, std_dev, mirror);
         if (context->master_graph->meta_data_graph())
             context->master_graph->meta_add_node<ResizeMirrorNormalizeMetaNode, ResizeMirrorNormalizeNode>(rmn_node);
-    } catch(const std::exception& e) {
+    } catch (const std::exception& e) {
         context->capture_error(e.what());
         ERR(e.what())
     }
@@ -1174,7 +1174,7 @@ rocalFlip(
         flip_node->init(horizontal_flag, vertical_flag);
         if (context->master_graph->meta_data_graph())
             context->master_graph->meta_add_node<FlipMetaNode, FlipNode>(flip_node);
-    } catch(const std::exception& e) {
+    } catch (const std::exception& e) {
         context->capture_error(e.what());
         ERR(e.what())
     }
@@ -1208,7 +1208,7 @@ rocalFlipFixed(
         flip_node->init(horizontal_flag, vertical_flag);
         if (context->master_graph->meta_data_graph())
             context->master_graph->meta_add_node<FlipMetaNode, FlipNode>(flip_node);
-    } catch(const std::exception& e) {
+    } catch (const std::exception& e) {
         context->capture_error(e.what());
         ERR(e.what())
     }
