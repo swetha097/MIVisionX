@@ -336,10 +336,6 @@ void Tensor::create_roi_tensor_from_handle(void **handle) {
         WRN("ROI Tensor object is already created")
         return;
     }
-    
-    if (*handle == nullptr) {
-        THROW("Empty ROI handle is passed")
-    }
 
     vx_size num_of_dims = 2;
     vx_size stride[num_of_dims];
