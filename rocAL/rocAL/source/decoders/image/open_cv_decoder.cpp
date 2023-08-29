@@ -68,14 +68,15 @@ Decoder::Status CVDecoder::decode(unsigned char *input_buffer, size_t input_size
         WRN("CVDecoder::Jpeg decode failed ");
         return Status::CONTENT_DECODE_FAILED;
     }
-
+    cv::Mat mat_scaled;
     if ( desired_decoded_color_format == Decoder::ColorFormat::RGB || desired_decoded_color_format == Decoder::ColorFormat::BGR) {
         cv::Mat mat_rgb;
         cv::cvtColor(m_mat_orig, mat_rgb, cv::COLOR_BGR2RGB, 0);
-        cv::Mat mat_scaled = cv::Mat(max_decoded_width, max_decoded_height, CV_8UC3, output_buffer); 
+        mat_scaled = cv::Mat(max_decoded_width, max_decoded_height, CV_8UC3, output_buffer); 
         cv::resize(mat_rgb, mat_scaled, cv::Size(max_decoded_width, max_decoded_height), cv::INTER_LINEAR);
+        mat_rgb.release();
     } else {
-        cv::Mat mat_scaled = cv::Mat(max_decoded_width, max_decoded_height, CV_8UC1, output_buffer); 
+        mat_scaled = cv::Mat(max_decoded_width, max_decoded_height, CV_8UC1, output_buffer); 
         cv::resize(m_mat_orig, mat_scaled, cv::Size(max_decoded_width, max_decoded_height), cv::INTER_LINEAR);
     }
 
@@ -88,7 +89,7 @@ Decoder::Status CVDecoder::decode(unsigned char *input_buffer, size_t input_size
         actual_decoded_height = mat_scaled.rows;
     }
     //printf("OpenCV image decoded: size %dx%d\n", mat_scaled.cols, mat_scaled.rows);
-    mat_rgb.release();
+    
     return Decoder::Status::OK;
 }
 
