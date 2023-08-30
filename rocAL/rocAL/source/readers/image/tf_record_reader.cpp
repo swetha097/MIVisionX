@@ -71,17 +71,11 @@ Reader::Status TFRecordReader::initialize(ReaderConfig desc)
     _loop = desc.loop();
     _shuffle = desc.shuffle();
     _record_name_prefix = desc.file_prefix();
+    _last_batch_info = desc.get_last_batch_policy();
     _encoded_key = _feature_key_map.at("image/encoded");
     _filename_key = _feature_key_map.at("image/filename");
     ret = folder_reading();
-    if (_shard_count > 1 && _batch_count > 1) {
-        int _num_batches = _file_names.size()/_batch_count;
-        int max_batches_per_shard = (_file_count_all_shards + _shard_count-1)/_shard_count;
-        max_batches_per_shard = (max_batches_per_shard + _batch_count-1)/_batch_count;
-        if (_num_batches < max_batches_per_shard) {
-            replicate_last_batch_to_pad_partial_shard();
-        }
-    }
+    
     //shuffle dataset if set
     if (ret == Reader::Status::OK && _shuffle)
         std::random_shuffle(_file_names.begin(), _file_names.end());
@@ -93,6 +87,12 @@ void TFRecordReader::incremenet_read_ptr()
     _read_counter++;
     _curr_file_idx = (_curr_file_idx + 1) % _file_names.size();
 }
+
+size_t TFRecordReader::last_batch_padded_size()
+{
+    return _last_batch_padded_size;
+}
+
 size_t TFRecordReader::open()
 {
     auto file_path = _file_names[_curr_file_idx]; // Get next file name
@@ -135,7 +135,13 @@ void TFRecordReader::reset()
     if (_shuffle)
         std::random_shuffle(_file_names.begin(), _file_names.end());
     _read_counter = 0;
-    _curr_file_idx = 0;
+    if(_last_batch_info.second == true)
+        _curr_file_idx = 0;
+}
+
+void TFRecordReader::increment_shard_id()
+{
+    _shard_id = (_shard_id + 1) % _shard_count;
 }
 
 Reader::Status TFRecordReader::folder_reading()
@@ -162,6 +168,25 @@ Reader::Status TFRecordReader::folder_reading()
         if (tf_record_reader() != Reader::Status::OK)
             WRN("FileReader ShardID [" + TOSTR(_shard_id) + "] File reader cannot access the storage at " + _folder_path);
     }
+    
+    uint images_to_pad_shard = _file_count_all_shards - (ceil(_file_count_all_shards / _shard_count) * _shard_count);
+    if(!images_to_pad_shard) 
+    {
+        for(uint i = 0; i < images_to_pad_shard; i++) 
+        {
+            if(get_file_shard_id() != _shard_id) 
+            {
+                _file_count_all_shards++;
+                incremenet_file_id();
+                continue;
+            }
+            _last_file_name = _file_names.at(i);
+            _file_names.push_back(_last_file_name);
+            _file_count_all_shards++;
+            incremenet_file_id();
+        }
+    }
+    
     if (_in_batch_read_count > 0 && _in_batch_read_count < _batch_count)
     {
         replicate_last_image_to_fill_last_shard();
@@ -172,14 +197,32 @@ Reader::Status TFRecordReader::folder_reading()
     closedir(_sub_dir);
     return ret;
 }
+
 void TFRecordReader::replicate_last_image_to_fill_last_shard()
 {
-    // std::cerr<<"\n Replicate last image";
-    for (size_t i = _in_batch_read_count; i < _batch_count; i++)
+    if(_last_batch_info.first == RocalBatchPolicy::BATCH_FILL || _last_batch_info.first == RocalBatchPolicy::PARTIAL)
     {
-        _file_names.push_back(_last_file_name);
-        _file_size.insert(std::pair<std::string, unsigned int>(_last_file_name, _last_file_size));
+        if(_last_batch_info.second == true) 
+        {
+            for(size_t i = 0; i < (_batch_count - _in_batch_read_count); i++)
+            {
+                _file_names.push_back(_last_file_name);
+                _file_size.insert(std::pair<std::string, unsigned int>(_last_file_name, _last_file_size));
+            }
+        } 
+        else  
+        {
+            for(size_t i = 0; i < (_batch_count - _in_batch_read_count); i++)
+            {
+                _last_file_name = _file_names.at(i);
+                _last_file_size = _file_size[_file_names.at(i)];
+                _file_names.push_back(_file_names.at(i));
+                _file_size.insert(std::pair<std::string, unsigned int>(_last_file_name, _last_file_size));
+            }      
+        }
     }
+    if(_last_batch_info.first == RocalBatchPolicy::PARTIAL)
+        _last_batch_padded_size = _batch_count - _in_batch_read_count;
 }
 
 void TFRecordReader::replicate_last_batch_to_pad_partial_shard()

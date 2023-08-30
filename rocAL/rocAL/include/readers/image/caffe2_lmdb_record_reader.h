@@ -70,7 +70,7 @@ public:
 
     Caffe2LMDBRecordReader();
 
-    size_t last_batch_padded_size() override { return 0; }
+    size_t last_batch_padded_size() override;
 
 private:
     //! opens the folder containnig the images
@@ -119,5 +119,8 @@ private:
     MDB_txn* _read_mdb_txn;
     MDB_cursor* _read_mdb_cursor;
     void open_env_for_read_image();
+    std::pair<RocalBatchPolicy, bool>  _last_batch_info;
+    size_t _last_batch_padded_size = 0;
+    void increment_shard_id(); //!< Used to advance to the next shard's data to increase the entropy of the data seen by the pipeline>
 };
 
