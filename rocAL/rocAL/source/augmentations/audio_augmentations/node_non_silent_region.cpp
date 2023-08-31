@@ -43,7 +43,7 @@ void NonSilentRegionNode::create_node() {
         THROW("Error adding the non silent region node (vxRppNonSilentRegion) failed: " + TOSTR(status))
 }
 
-void NonSilentRegionNode::update_node() { } // sampath - check if THROW statement is better to add here
+void NonSilentRegionNode::update_node() { }
 
 void NonSilentRegionNode::init(float cutoff_db, float reference_power, int window_length, int reset_interval) {
     _cutoff_db = cutoff_db;

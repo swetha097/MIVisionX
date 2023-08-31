@@ -1464,7 +1464,6 @@ extern "C"
 	 * successful creation should be checked using <tt>\ref vxGetStatus</tt>.
 	 */
 	SHARED_PUBLIC vx_node VX_API_CALL vxExtRppSequenceRearrange(vx_graph graph, vx_tensor pSrc, vx_tensor pDst, vx_array pNewOrder, vx_scalar layout);
-
 /*
     TODO: Add the params
     */
@@ -1496,11 +1495,6 @@ extern "C"
     */
     SHARED_PUBLIC vx_node VX_API_CALL vxExtRppToDecibels(vx_graph graph, vx_tensor pSrc, vx_tensor pSrcDims, vx_tensor pDst, vx_tensor pDstDims, vx_scalar cutOffDB, vx_scalar multiplier, vx_scalar referenceMagnitude);
 
-    /*
-    TODO: Add the params
-    */
-    SHARED_PUBLIC vx_node VX_API_CALL vxExtRppNormalize(vx_graph graph, vx_tensor pSrc, vx_tensor pSrcDims, vx_tensor pDst, vx_tensor pDstDims, vx_scalar axisMask, vx_scalar mean, vx_scalar stdDev, vx_scalar scale, vx_scalar shift, vx_scalar epsilon, vx_scalar ddof, vx_uint32 numOfDims);
-    
     /*! \brief [Graph] Creates a RPP Resample function node.
      * \ingroup group_amd_rpp
      * \param [in] graph The handle to the graph.
@@ -1526,6 +1520,10 @@ extern "C"
     TODO: Add the params
     */
     SHARED_PUBLIC vx_node VX_API_CALL vxExtRppTensorAddTensor(vx_graph graph, vx_tensor pSrc1, vx_tensor pSrc2, vx_tensor pDst, vx_tensor srcRoi, vx_tensor dstRoi, vx_uint32 nbatchSize);
+	/*
+	TODO: Add the params
+	*/
+	SHARED_PUBLIC vx_node VX_API_CALL vxExtRppNormalize(vx_graph graph, vx_tensor pSrc, vx_tensor pSrcDims, vx_tensor pDst, vx_tensor pDstDims, vx_scalar axisMask, vx_scalar mean, vx_scalar stdDev, vx_scalar scale, vx_scalar shift, vx_scalar epsilon, vx_scalar ddof);
 
 #ifdef __cplusplus
 }

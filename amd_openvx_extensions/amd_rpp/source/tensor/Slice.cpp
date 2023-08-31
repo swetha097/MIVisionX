@@ -96,31 +96,31 @@ static vx_status VX_CALLBACK validateSlice(vx_node node, const vx_reference para
     vx_enum scalar_type;
     STATUS_ERROR_CHECK(vxQueryScalar((vx_scalar)parameters[7], VX_SCALAR_TYPE, &scalar_type, sizeof(scalar_type)));
     if (scalar_type != VX_TYPE_INT32)
-        return ERRMSG(VX_ERROR_INVALID_TYPE, "validate: Paramter: #7 type=%d (must be size)\n", scalar_type);
+        return ERRMSG(VX_ERROR_INVALID_TYPE, "validate: Parameter: #7 type=%d (must be size)\n", scalar_type);
     STATUS_ERROR_CHECK(vxQueryScalar((vx_scalar)parameters[8], VX_SCALAR_TYPE, &scalar_type, sizeof(scalar_type)));
     if (scalar_type != VX_TYPE_BOOL)
-        return ERRMSG(VX_ERROR_INVALID_TYPE, "validate: Paramter: #8 type=%d (must be size)\n", scalar_type);
+        return ERRMSG(VX_ERROR_INVALID_TYPE, "validate: Parameter: #8 type=%d (must be size)\n", scalar_type);
     STATUS_ERROR_CHECK(vxQueryScalar((vx_scalar)parameters[9], VX_SCALAR_TYPE, &scalar_type, sizeof(scalar_type)));
     if (scalar_type != VX_TYPE_BOOL)
-        return ERRMSG(VX_ERROR_INVALID_TYPE, "validate: Paramter: #9 type=%d (must be size)\n", scalar_type);
+        return ERRMSG(VX_ERROR_INVALID_TYPE, "validate: Parameter: #9 type=%d (must be size)\n", scalar_type);
     STATUS_ERROR_CHECK(vxQueryScalar((vx_scalar)parameters[10], VX_SCALAR_TYPE, &scalar_type, sizeof(scalar_type)));
     if (scalar_type != VX_TYPE_UINT32)
-        return ERRMSG(VX_ERROR_INVALID_TYPE, "validate: Paramter: #10 type=%d (must be size)\n", scalar_type);
+        return ERRMSG(VX_ERROR_INVALID_TYPE, "validate: Parameter: #10 type=%d (must be size)\n", scalar_type);
     STATUS_ERROR_CHECK(vxQueryScalar((vx_scalar)parameters[11], VX_SCALAR_TYPE, &scalar_type, sizeof(scalar_type)));
     if (scalar_type != VX_TYPE_UINT32)
-        return ERRMSG(VX_ERROR_INVALID_TYPE, "validate: Paramter: #11 type=%d (must be size)\n", scalar_type);
+        return ERRMSG(VX_ERROR_INVALID_TYPE, "validate: Parameter: #11 type=%d (must be size)\n", scalar_type);
 
     // Check for input parameters
     size_t num_tensor_dims;
     STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[0], VX_TENSOR_NUMBER_OF_DIMS, &num_tensor_dims, sizeof(num_tensor_dims)));
-    if(num_tensor_dims < 3) return ERRMSG(VX_ERROR_INVALID_DIMENSION, "validate: Slice: tensor: #0 dimensions=%lu (must be greater than or equal to 4)\n", num_tensor_dims);
+    if(num_tensor_dims < 3) return ERRMSG(VX_ERROR_INVALID_DIMENSION, "validate: Slice: tensor: #0 dimensions=%lu (must be greater than or equal to 3)\n", num_tensor_dims);
 
     // Check for output parameters
     vx_uint8 tensor_fixed_point_position;
     size_t tensor_dims[RPP_MAX_TENSOR_DIMS];
     vx_enum tensor_datatype;
     STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[2], VX_TENSOR_NUMBER_OF_DIMS, &num_tensor_dims, sizeof(num_tensor_dims)));
-    if(num_tensor_dims < 3) return ERRMSG(VX_ERROR_INVALID_DIMENSION, "validate: Slice: tensor: #2 dimensions=%lu (must be greater than or equal to 4)\n", num_tensor_dims);
+    if(num_tensor_dims < 3) return ERRMSG(VX_ERROR_INVALID_DIMENSION, "validate: Slice: tensor: #2 dimensions=%lu (must be greater than or equal to 3)\n", num_tensor_dims);
 
     STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[2], VX_TENSOR_DIMS, &tensor_dims, sizeof(tensor_dims)));
     STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[2], VX_TENSOR_DATA_TYPE, &tensor_datatype, sizeof(tensor_datatype)));
@@ -139,9 +139,10 @@ static vx_status VX_CALLBACK processSlice(vx_node node, const vx_reference *para
     STATUS_ERROR_CHECK(vxQueryNode(node, VX_NODE_LOCAL_DATA_PTR, &data, sizeof(data)));
     refreshSlice(node, parameters, num, data);
     if (data->deviceType == AGO_TARGET_AFFINITY_GPU) {
-#if ENABLE_HIP
-        // rpp_status = rppt_slice_gpu(data->pSrc, data->pSrcDesc, data->pDst, data->pDstDesc, data->pSrcDims, data->pAnchor, data->pShape, data->pFillValues, data->handle->rppHandle);
-        return_status = (rpp_status == RPP_SUCCESS) ? VX_SUCCESS : VX_FAILURE;
+#if ENABLE_OPENCL
+        return_status = VX_ERROR_NOT_IMPLEMENTED;
+#elif ENABLE_HIP
+        return_status = VX_ERROR_NOT_IMPLEMENTED;
 #endif
     } else if (data->deviceType == AGO_TARGET_AFFINITY_CPU) {
         rpp_status = rppt_slice_host(data->pSrc, data->pSrcDesc, data->pDst, data->pDstDesc, data->pSrcDims, data->pAnchor, data->pShape, data->pFillValues, data->handle->rppHandle);
@@ -152,9 +153,9 @@ static vx_status VX_CALLBACK processSlice(vx_node node, const vx_reference *para
 
 static vx_status VX_CALLBACK initializeSlice(vx_node node, const vx_reference *parameters, vx_uint32 num) {
     SliceLocalData *data = new SliceLocalData;
-    memset(data, 0, sizeof(*data));
+    memset(data, 0, sizeof(SliceLocalData));
 
-    vx_enum input_tensor_datatype, output_tensor_datatype;
+    vx_enum input_tensor_dtype, output_tensor_dtype;
     STATUS_ERROR_CHECK(vxReadScalarValue((vx_scalar)parameters[7], &data->axes));
     STATUS_ERROR_CHECK(vxReadScalarValue((vx_scalar)parameters[8], &data->normalizedAnchor));
     STATUS_ERROR_CHECK(vxReadScalarValue((vx_scalar)parameters[9], &data->normalizedShape));
@@ -166,42 +167,22 @@ static vx_status VX_CALLBACK initializeSlice(vx_node node, const vx_reference *p
     data->pSrcDesc = new RpptDesc;
     STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[0], VX_TENSOR_NUMBER_OF_DIMS, &data->pSrcDesc->numDims, sizeof(data->pSrcDesc->numDims)));
     STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[0], VX_TENSOR_DIMS, &data->inputTensorDims, sizeof(vx_size) * data->pSrcDesc->numDims));
-    STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[0], VX_TENSOR_DATA_TYPE, &input_tensor_datatype, sizeof(input_tensor_datatype)));
-    data->pSrcDesc->dataType = getRpptDataType(input_tensor_datatype);
+    STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[0], VX_TENSOR_DATA_TYPE, &input_tensor_dtype, sizeof(input_tensor_dtype)));
+    data->pSrcDesc->dataType = getRpptDataType(input_tensor_dtype);
     data->pSrcDesc->offsetInBytes = 0;
+    fillAudioDescriptionPtrFromDims(data->pSrcDesc, data->inputTensorDims);
 
     // Querying for output tensor
     data->pDstDesc = new RpptDesc;
     STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[2], VX_TENSOR_NUMBER_OF_DIMS, &data->pDstDesc->numDims, sizeof(data->pDstDesc->numDims)));
     STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[2], VX_TENSOR_DIMS, &data->outputTensorDims, sizeof(vx_size) * data->pDstDesc->numDims));
-    STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[2],VX_TENSOR_DATA_TYPE, &output_tensor_datatype, sizeof(output_tensor_datatype)));
-    data->pDstDesc->dataType = getRpptDataType(output_tensor_datatype);
+    STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[2],VX_TENSOR_DATA_TYPE, &output_tensor_dtype, sizeof(output_tensor_dtype)));
+    data->pDstDesc->dataType = getRpptDataType(output_tensor_dtype);
     data->pDstDesc->offsetInBytes = 0;
+    fillAudioDescriptionPtrFromDims(data->pDstDesc, data->outputTensorDims);
 
-    // source_description_ptr
-    data->pSrcDesc->n = data->inputTensorDims[0];
-    data->pSrcDesc->h = data->inputTensorDims[2];
-    data->pSrcDesc->w = data->inputTensorDims[1];
-    data->pSrcDesc->c = 1;
-    data->pSrcDesc->strides.nStride = data->pSrcDesc->c * data->pSrcDesc->w * data->pSrcDesc->h;
-    data->pSrcDesc->strides.hStride = data->pSrcDesc->c * data->pSrcDesc->w;
-    data->pSrcDesc->strides.wStride = data->pSrcDesc->c;
-    data->pSrcDesc->strides.cStride = 1;
-    data->pSrcDesc->numDims = 4;
-
-    // source_description_ptr
-    data->pDstDesc->n = data->outputTensorDims[0];
-    data->pDstDesc->h = data->outputTensorDims[2];
-    data->pDstDesc->w = data->outputTensorDims[1];
-    data->pDstDesc->c = 1;
-    data->pDstDesc->strides.nStride = data->pDstDesc->c * data->pDstDesc->w * data->pDstDesc->h;
-    data->pDstDesc->strides.hStride = data->pDstDesc->c * data->pDstDesc->w;
-    data->pDstDesc->strides.wStride = data->pDstDesc->c;
-    data->pDstDesc->strides.cStride = 1;
-    data->pDstDesc->numDims = 4;
-
-    data->pSrcDims = static_cast<int *>(calloc(data->pSrcDesc->n * 2, sizeof(int)));
-    data->pFillValues = static_cast<float *>(calloc(data->pSrcDesc->n * data->dimsStride, sizeof(float)));
+    data->pSrcDims = new int[data->pSrcDesc->n * 2]; 
+    data->pFillValues = new float[data->pSrcDesc->n * data->dimsStride];
 
     refreshSlice(node, parameters, num, data);
     STATUS_ERROR_CHECK(createRPPHandle(node, &data->handle, data->pSrcDesc->n, data->deviceType));
@@ -213,16 +194,16 @@ static vx_status VX_CALLBACK uninitializeSlice(vx_node node, const vx_reference 
     SliceLocalData *data;
     STATUS_ERROR_CHECK(vxQueryNode(node, VX_NODE_LOCAL_DATA_PTR, &data, sizeof(data)));
     STATUS_ERROR_CHECK(releaseRPPHandle(node, data->handle, data->deviceType));
-    free(data->pSrcDims);
-    free(data->pFillValues);
+    delete(data->pSrcDims);
+    delete(data->pFillValues);
     delete(data->pSrcDesc);
     delete(data->pDstDesc);
-    delete (data);
+    delete(data);
     return VX_SUCCESS;
 }
 
 //! \brief The kernel target support callback.
-// TODO::currently the node is setting the same affinity as context. This needs to change when we have hubrid modes in the same graph
+// TODO::currently the node is setting the same affinity as context. This needs to change when we have hybrid modes in the same graph
 static vx_status VX_CALLBACK query_target_support(vx_graph graph, vx_node node,
                                                   vx_bool use_opencl_1_2,              // [input]  false: OpenCL driver is 2.0+; true: OpenCL driver is 1.2
                                                   vx_uint32 &supported_target_affinity // [output] must be set to AGO_TARGET_AFFINITY_CPU or AGO_TARGET_AFFINITY_GPU or (AGO_TARGET_AFFINITY_CPU | AGO_TARGET_AFFINITY_GPU)
