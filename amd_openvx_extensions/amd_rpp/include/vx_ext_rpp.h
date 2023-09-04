@@ -1529,7 +1529,7 @@ extern "C"
 	/*
 	TODO: Add the params
 	*/
-	SHARED_PUBLIC vx_node VX_API_CALL vxExtrppNode_Downmix(vx_graph graph, vx_tensor pSrc, vx_tensor pDst, vx_array srcSamples, vx_array srcChannels);
+	SHARED_PUBLIC vx_node VX_API_CALL vxExtRppDownmix(vx_graph graph, vx_tensor pSrc, vx_tensor pDst, vx_tensor srcRoi);
 #ifdef __cplusplus
 }
 #endif
