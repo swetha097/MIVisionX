@@ -122,85 +122,86 @@ int test(int test_case, const char *path, float sample_rate, int downmix, unsign
         std::cout << "Audio source could not initialize : " << rocalGetErrorMessage(handle) << std::endl;
         return -1;
     }
-    /* The augmentation cases - To uncomment as each augmentation is introduced
+    // The augmentation cases - To uncomment as each augmentation is introduced
 
     switch (test_case)
     {
-        case 0:
-        {
-            RocalTensorLayout tensorLayout; // = RocalTensorLayout::None;
-            RocalTensorOutputType tensorOutputType = RocalTensorOutputType::ROCAL_FP32;
-            output = rocalToDecibels(handle, input1, tensorLayout, tensorOutputType, true);
-            std::cout<<"\n Calls rocalToDecibels";
-        }
-        break;
+        // case 0:
+        // {
+        //     RocalTensorLayout tensorLayout; // = RocalTensorLayout::None;
+        //     RocalTensorOutputType tensorOutputType = RocalTensorOutputType::ROCAL_FP32;
+        //     output = rocalToDecibels(handle, input1, tensorLayout, tensorOutputType, true);
+        //     std::cerr<<"\n Calls rocalToDecibels";
+        // }
+        // break;
         case 1:
         {
+            std::cout<< "\n Augmentation - rocalPreEmphasisFilter ";
             RocalTensorLayout tensorLayout; // = RocalTensorLayout::None;
             RocalTensorOutputType tensorOutputType = RocalTensorOutputType::ROCAL_FP32;
             output = rocalPreEmphasisFilter(handle, input1, tensorOutputType, true);
-            std::cout<<"\n Calls rocalPreEmphasisFilter ";
+            
         }
         break;
-        case 2:
-        {
-            RocalTensorLayout tensorLayout; // = RocalTensorLayout::None;
-            RocalTensorOutputType tensorOutputType = RocalTensorOutputType::ROCAL_FP32;
-            // int nfftSize = 2048;
-            std::vector<float> window_fn{};
-            output = rocalSpectrogram(handle, input1, tensorOutputType, true, window_fn, true, true, RocalSpectrogramLayout(0), 2, 512, 512, 256);
-            std::cout<<"\n Calls rocalSpectrogram ";
-        }
-        break;
-        case 3:
-        {
-            auto non_silent_region = rocalNonSilentRegion(handle, input1, true, -60, 1, -1, 3);
-            // RocalTensor begin = non_silent_region->at(0);
-        }
-        break;
-        case 4:
-        {
-            std::cout<<"\n Mel Filter Bank";
-            RocalTensorLayout tensorLayout; // = RocalTensorLayout::None;
-            RocalTensorOutputType tensorOutputType = RocalTensorOutputType::ROCAL_FP32;
-            std::vector<float> window_fn{};
-            RocalTensor temp_output = rocalSpectrogram(handle, input1, tensorOutputType, false, window_fn, true, true, RocalSpectrogramLayout(0), 2, 512, 512, 256);
-            float sampleRate = 16000;
-            float minFreq = 0.0;
-            float maxFreq = sampleRate / 2;
-            RocalMelScaleFormula melFormula = RocalMelScaleFormula::SLANEY;
-            int numFilter = 128;
-            bool normalize = true;
+        // case 2:
+        // {
+        //     RocalTensorLayout tensorLayout; // = RocalTensorLayout::None;
+        //     RocalTensorOutputType tensorOutputType = RocalTensorOutputType::ROCAL_FP32;
+        //     // int nfftSize = 2048;
+        //     std::vector<float> window_fn{};
+        //     output = rocalSpectrogram(handle, input1, tensorOutputType, true, window_fn, true, true, RocalSpectrogramLayout(0), 2, 512, 512, 256);
+        //     std::cerr<<"\n Calls rocalSpectrogram ";
+        // }
+        // break;
+        // case 3:
+        // {
+        //     auto non_silent_region = rocalNonSilentRegion(handle, input1, true, -60, 1, -1, 3);
+        //     // RocalTensor begin = non_silent_region->at(0);
+        // }
+        // break;
+        // case 4:
+        // {
+        //     std::cerr<<"\n Mel Filter Bank";
+        //     RocalTensorLayout tensorLayout; // = RocalTensorLayout::None;
+        //     RocalTensorOutputType tensorOutputType = RocalTensorOutputType::ROCAL_FP32;
+        //     std::vector<float> window_fn{};
+        //     RocalTensor temp_output = rocalSpectrogram(handle, input1, tensorOutputType, false, window_fn, true, true, RocalSpectrogramLayout(0), 2, 512, 512, 256);
+        //     float sampleRate = 16000;
+        //     float minFreq = 0.0;
+        //     float maxFreq = sampleRate / 2;
+        //     RocalMelScaleFormula melFormula = RocalMelScaleFormula::SLANEY;
+        //     int numFilter = 128;
+        //     bool normalize = true;
 
-            output = rocalMelFilterBank(handle, temp_output, true, maxFreq, minFreq, melFormula, numFilter, normalize, sampleRate);
-        }
-        break;
-        case 5:
-        {
-            RocalTensorLayout tensorLayout; // = RocalTensorLayout::None;
-            RocalTensorOutputType tensorOutputType = RocalTensorOutputType::ROCAL_FP32;
-            const size_t num_values = 3;
-            std::pair <RocalTensor,RocalTensor>  non_silent_region_output;
-            non_silent_region_output = rocalNonSilentRegion(handle, input1, false, -60, 0.0, -1, 3);
-            output = rocalSlice(handle, input1, tensorOutputType, true, non_silent_region_output.first, non_silent_region_output.second, {0.3f});
-        }
-        break;
-        case 6:
-        {
-            std::cout<<"\n Normalize";
-            RocalTensorLayout tensorLayout;
-            RocalTensorOutputType tensorOutputType = RocalTensorOutputType::ROCAL_FP32;
-            output = rocalNormalize(handle, input1, tensorOutputType, true, false, {1});
-        }
-        break;
-        case 7:
-        {
-            std::cout<<"\nPad";
-            RocalTensorLayout tensorLayout;
-            RocalTensorOutputType tensorOutputType = RocalTensorOutputType::ROCAL_FP32;
-            output = rocalPad(handle, input1, tensorOutputType, true, 4.0f);
-        }
-        break;
+        //     output = rocalMelFilterBank(handle, temp_output, true, maxFreq, minFreq, melFormula, numFilter, normalize, sampleRate);
+        // }
+        // break;
+        // case 5:
+        // {
+        //     RocalTensorLayout tensorLayout; // = RocalTensorLayout::None;
+        //     RocalTensorOutputType tensorOutputType = RocalTensorOutputType::ROCAL_FP32;
+        //     const size_t num_values = 3;
+        //     std::pair <RocalTensor,RocalTensor>  non_silent_region_output;
+        //     non_silent_region_output = rocalNonSilentRegion(handle, input1, false, -60, 0.0, -1, 3);
+        //     output = rocalSlice(handle, input1, tensorOutputType, true, non_silent_region_output.first, non_silent_region_output.second, {0.3f});
+        // }
+        // break;
+        // case 6:
+        // {
+        //     std::cerr<<"\n Normalize";
+        //     RocalTensorLayout tensorLayout;
+        //     RocalTensorOutputType tensorOutputType = RocalTensorOutputType::ROCAL_FP32;
+        //     output = rocalNormalize(handle, input1, tensorOutputType, true, false, {1});
+        // }
+        // break;
+        // case 7:
+        // {
+        //     std::cerr<<"\nPad";
+        //     RocalTensorLayout tensorLayout;
+        //     RocalTensorOutputType tensorOutputType = RocalTensorOutputType::ROCAL_FP32;
+        //     output = rocalPad(handle, input1, tensorOutputType, true, 4.0f);
+        // }
+        // break;
 
         default:
         {
@@ -209,7 +210,8 @@ int test(int test_case, const char *path, float sample_rate, int downmix, unsign
         }
 
     }
-    */
+    
+   output = input1;
     rocalVerify(handle);
     if (rocalGetStatus(handle) != ROCAL_OK)
     {
@@ -224,7 +226,7 @@ int test(int test_case, const char *path, float sample_rate, int downmix, unsign
 
     while (rocalGetRemainingImages(handle) >= static_cast<size_t>(inputBatchSize))
     {
-        std::cout<<"\n rocalGetRemainingImages:: "<<rocalGetRemainingImages(handle)<<"\t inputBatchsize:: "<<inputBatchSize  ;
+        std::cout<<"\n rocalGetRemainingImages:: "<<rocalGetRemainingImages(handle)<<"\t inputBatchsize:: "<< inputBatchSize;
         std::cout<<"\n iteration:: "<<iteration;
         iteration++;
         if (rocalRun(handle) != 0) {
