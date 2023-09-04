@@ -311,35 +311,22 @@ class ROCALAudioIterator(object):
         else:
             self.output_tensor_list = self.loader.get_output_tensors()
 
-        if self.output_list is None:
-            self.output_list = []
-            for i in range(len(self.output_tensor_list)):
-                roi = self.output_tensor_list[i].get_rois().reshape(self.batch_size,4)
-                max_x1, max_y1 = np.max(roi[...,0:1]), np.max(roi[...,1:2])
-                if self.device == "cpu":
-                    torch_dtype = self.output_tensor_list[i].dtype()
-                    self.output = torch.empty((self.batch_size, max_y1, max_x1), dtype = getattr(torch, torch_dtype))
-                    self.labels_tensor = torch.empty(self.labels_size, dtype = getattr(torch, torch_dtype))
-                else:
-                    torch_gpu_device = torch.device('cuda', self.device_id)
-                    torch_dtype = self.output_tensor_list[i].dtype()
-                    self.output = torch.empty((self.batch_size, max_y1, max_x1), dtype = getattr(torch, torch_dtype), device=torch_gpu_device)
-                    self.labels_tensor = torch.empty(self.labels_size, dtype = getattr(torch, torch_dtype), device=torch_gpu_device)
-                self.output_tensor_list[i].copy_data(ctypes.c_void_p(self.output.data_ptr()), self.output_memory_type)
-                self.output_list.append(self.output)
-        else:
-            for i in range(len(self.output_tensor_list)):
-                roi = self.output_tensor_list[i].get_rois().reshape(self.batch_size,4)
-                max_x1, max_y1 = np.max(roi[...,0:1]), np.max(roi[...,1:2])
-                if self.device == "cpu":
-                    self.torch_dtype = self.output_tensor_list[i].dtype()
-                    self.output = torch.empty((self.batch_size, max_y1, max_x1), dtype = getattr(torch, self.torch_dtype))
-                    self.labels_tensor = torch.empty(self.labels_size, dtype = getattr(torch, self.torch_dtype))
-                else:
-                    torch_gpu_device = torch.device('cuda', self.device_id)
-                    self.torch_dtype = self.output_tensor_list[i].dtype()
-                    self.output = torch.empty((self.batch_size, max_y1, max_x1), dtype = getattr(torch, self.torch_dtype), device=torch_gpu_device)
-                self.output_tensor_list[i].copy_data(ctypes.c_void_p(self.output_list[i].data_ptr()), self.output_memory_type)
+        self.output_list = []
+        for i in range(len(self.output_tensor_list)):
+            dimensions = self.output_tensor_list[i].dimensions()
+            if self.device == "cpu":
+                torch_dtype = self.output_tensor_list[i].dtype()
+                output = torch.empty(dimensions, dtype=getattr(torch, torch_dtype))
+                self.labels_tensor = torch.empty(self.labels_size, dtype=getattr(torch, torch_dtype))
+            else:
+                torch_gpu_device = torch.device('cuda', self.device_id)
+                torch_dtype = self.output_tensor_list[i].dtype()
+                output = torch.empty(dimensions, dtype=getattr(torch, torch_dtype), device=torch_gpu_device)
+                self.labels_tensor = torch.empty(self.labels_size, dtype=getattr(torch, torch_dtype), device=torch_gpu_device)
+
+            self.output_tensor_list[i].copy_data(ctypes.c_void_p(output.data_ptr()), self.output_memory_type)
+            self.output_list.append(output)
+
 
         # self.labels = self.loader.get_image_labels() #Uncomment when meta-data is added
         # self.labels_tensor = self.labels_tensor.copy_(torch.from_numpy(self.labels)).long()
