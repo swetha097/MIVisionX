@@ -144,6 +144,24 @@ namespace rocal{
                 Returns a tensor batch size.
                 )code"
             )
+            .def(
+                "get_rois",
+                [](rocalTensor &output_tensor)
+                {
+                    return py::array(py::buffer_info(
+                            (int *)(output_tensor.get_roi()),
+                            sizeof(int),
+                            py::format_descriptor< int>::format(),
+                            1,
+                            {output_tensor.dims().at(0) * 4},
+                            {sizeof(int) }));
+                },
+                R"code(
+                Returns a tensor ROI
+                ex : width, height in case of an image data
+                ex : samples , channels in case of an audio data
+                )code"
+            )
             .def("layout", [](rocalTensor &output_tensor) {
                 return rocalToPybindLayout[(int)output_tensor.layout()];
             },
@@ -524,6 +542,10 @@ namespace rocal{
         m.def("sequenceReader", &rocalSequenceReader, "Creates JPEG image reader and decoder. Reads [Frames] sequences from a directory representing a collection of streams.",
             py::return_value_policy::reference);
         m.def("mxnetDecoder", &rocalMXNetRecordSourceSingleShard, "Reads file from the source given and decodes it according to the policy only for mxnet records",
+            py::return_value_policy::reference);
+        m.def("audioDecoderSingleShard", &rocalAudioFileSourceSingleShard, "Reads file from the source given and decodes it",
+            py::return_value_policy::reference);
+        m.def("audioDecoder", &rocalAudioFileSource, "Reads file from the source given and decodes it",
             py::return_value_policy::reference);
         m.def("rocalResetLoaders", &rocalResetLoaders);
         m.def("videoMetaDataReader", &rocalCreateVideoLabelReader, py::return_value_policy::reference);
