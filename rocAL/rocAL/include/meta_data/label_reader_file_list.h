@@ -28,7 +28,7 @@ THE SOFTWARE.
 #include "meta_data_reader.h"
 
 class LabelReaderFileList: public MetaDataReader {
-public :
+public:
     void init(const MetaDataConfig& cfg, pMetaDataBatch meta_data_batch) override;
     void lookup(const std::vector<std::string>& image_names) override;
     void read_all(const std::string& path) override;
@@ -36,7 +36,7 @@ public :
     void release() override;
     void print_map_contents();
     bool set_timestamp_mode() override { return false; }
-    const std::map<std::string, std::shared_ptr<MetaData>> & get_map_content() override { return _map_content;}
+    const std::map<std::string, std::shared_ptr<MetaData>> & get_map_content() override { return _map_content; }
     LabelReaderFileList();
 private:
     bool exists(const std::string &image_name) override;
