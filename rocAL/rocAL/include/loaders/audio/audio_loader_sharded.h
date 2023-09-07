@@ -22,10 +22,9 @@ THE SOFTWARE.
 
 #pragma once
 #include "audio_loader.h"
-//
+
 // AudioLoaderSharded Can be used to run load and decode in multiple shards, each shard by a single loader instance,
 // It improves load and decode performance since each loader loads the audios in parallel using an internal thread
-//
 class AudioLoaderSharded : public LoaderModule {
 public:
     explicit AudioLoaderSharded(void* dev_resources);
@@ -53,4 +52,3 @@ private:
     size_t _prefetch_queue_depth;
     Tensor *_output_tensor;
 };
-

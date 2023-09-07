@@ -172,19 +172,19 @@ Reader::Status FileSourceReader::subfolder_reading()
             {
                 if(!_meta_data_reader || _meta_data_reader->exists(entry_path_id))
                 {
-                if(get_file_shard_id() != _shard_id )
-                {
+                    if(get_file_shard_id() != _shard_id )
+                    {
+                        _file_count_all_shards++;
+                        incremenet_file_id();
+                        continue;
+                    }
+                    _in_batch_read_count++;
+                    _in_batch_read_count = (_in_batch_read_count % _batch_count == 0) ? 0 : _in_batch_read_count;
+                    std::string file_path = entry_path;
+                    _last_file_name = file_path;
+                    _file_names.push_back(file_path);
                     _file_count_all_shards++;
                     incremenet_file_id();
-                    continue;
-                }
-                _in_batch_read_count++;
-                _in_batch_read_count = (_in_batch_read_count%_batch_count == 0) ? 0 : _in_batch_read_count;
-                std::string file_path = entry_path;
-                _last_file_name = file_path;
-                _file_names.push_back(file_path);
-                _file_count_all_shards++;
-                incremenet_file_id();
                 }
             }
         }
@@ -201,7 +201,7 @@ Reader::Status FileSourceReader::subfolder_reading()
     if(_in_batch_read_count > 0 && _in_batch_read_count < _batch_count)
     {
         replicate_last_image_to_fill_last_shard();
-        LOG("FileReader ShardID [" + TOSTR(_shard_id) + "] Replicated " + _folder_path+_last_file_name + " " + TOSTR((_batch_count - _in_batch_read_count) ) + " times to fill the last batch")
+        LOG("FileReader ShardID [" + TOSTR(_shard_id) + "] Replicated " + _folder_path + _last_file_name + " " + TOSTR((_batch_count - _in_batch_read_count) ) + " times to fill the last batch")
     }
     if(!_file_names.empty())
         LOG("FileReader ShardID ["+ TOSTR(_shard_id)+ "] Total of " + TOSTR(_file_names.size()) + " images loaded from " + _full_path )
