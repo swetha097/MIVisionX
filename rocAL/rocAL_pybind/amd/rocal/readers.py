@@ -43,8 +43,8 @@ def file(file_root, file_filters=None, file_list='', stick_to_shard=False, pad_l
     labels = []
     if file_filters is None:
         file_filters = ["*.jpg", "*.jpeg", "*.png", "*.bmp", "*.tif", "*.tiff", "*.pnm", "*.ppm", "*.pgm", "*.pbm", "*.jp2", "*.webp"]
-    kwargs_pybind = {"source_path": file_root}
-    label_reader_meta_data = b.labelReader(Pipeline._current_pipeline._handle, *(kwargs_pybind.values()))
+        kwargs_pybind = {"source_path": file_root, "file_list":file_list}
+        label_reader_meta_data = b.labelReader(Pipeline._current_pipeline._handle ,*(kwargs_pybind.values()))
     return (label_reader_meta_data, labels)
 
 def tfrecord(path, user_feature_key_map, features, reader_type=0, stick_to_shard=False, pad_last_batch=False):

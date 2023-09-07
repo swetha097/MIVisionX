@@ -119,9 +119,9 @@ class ROCALGenericIterator(object):
             else:
                 if self.display:
                     for i in range(self.batch_size):
-                        img = (self.output_list[0])
-                        draw_patches(img[i], i, [])
-                self.labels = self.loader.get_image_labels()
+                        img = (self.output)
+                        draw_patches(img[i], i, 0)
+                self.labels = self.loader.getImageLabels()
                 self.labels_tensor = self.labels_tensor.copy_(torch.from_numpy(self.labels)).long()
             return self.output_list, self.labels_tensor
 

@@ -13,8 +13,8 @@ def plot_1d_audio(img, idx):
     #image is expected as a tensor, bboxes as numpy
     image = img.detach().numpy()
     audio_data = image.flatten()
-    label = idx
-    # label = idx.cpu().detach().numpy() #TODO: Uncomment after the meta-data is enabled
+    label = idx.cpu().detach().numpy()
+    print("label: ", label)
     # Saving the array in a text file
     file = open("OUTPUTS_PYTHON/AUDIO/" + str(label) + ".txt", "w+")
     content = str(audio_data)
@@ -48,7 +48,11 @@ def main():
     print("*********************************************************************")
     audio_pipeline = Pipeline(batch_size=batch_size, num_threads=num_threads, device_id=device_id, seed=random_seed, rocal_cpu=_rocal_cpu)
     with audio_pipeline:
-        audio_decode = fn.decoders.audio(file_root=data_path, file_list_path="", downmix=False, shard_id=0, num_shards=2, storage_type=0, stick_to_shard=False)
+        audio, label = fn.readers.file(
+            file_root=data_path,
+            file_list=file_list,
+            )
+        audio_decode = fn.decoders.audio(audio, file_root=data_path, file_list_path=file_list, downmix=False, shard_id=0, num_shards=2, storage_type=9, stick_to_shard=False)
         pre_emphasis_filter = fn.preemphasis_filter(audio_decode)
         audio_pipeline.set_outputs(pre_emphasis_filter)
     audio_pipeline.build()
@@ -65,7 +69,7 @@ def main():
                     print("cnt", cnt)
                     print("roi", roi)
                     print("audio_data", audio_data)
-                    plot_1d_audio(audio_data, cnt)
+                    plot_1d_audio(audio_data, label)
                     cnt+=1
         print("EPOCH DONE", epoch)
 if __name__ == '__main__':
