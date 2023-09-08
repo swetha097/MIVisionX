@@ -88,7 +88,7 @@ extern "C" TimingInfo ROCAL_API_CALL rocalGetTimingInfo(RocalContext rocal_conte
 
 ///
 /// \param rocal_context
-/// \return The number of images yet to be processed
+/// \return The number of samples that were padded in adherence with last_batch_policy and last_batch_padded
 extern "C"  size_t  ROCAL_API_CALL rocalGetLastBatchPaddedSize(RocalContext rocal_context);
 
 #endif //MIVISIONX_ROCAL_API_INFO_H

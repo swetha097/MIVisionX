@@ -231,7 +231,7 @@ class ROCALClassificationIterator(ROCALGenericIterator):
                  device_id=0,):
         pipe = pipelines
         super(ROCALClassificationIterator, self).__init__(pipe, tensor_layout=pipe._tensor_layout, tensor_dtype=pipe._tensor_dtype,
-                                                          multiplier=pipe._multiplier, offset=pipe._offset, display=display, device=device, device_id=device_id, size = size, auto_reset = auto_reset)
+                                                          multiplier=pipe._multiplier, offset=pipe._offset, display=display, device=device, device_id=device_id, size=size, auto_reset=auto_reset)
 
 
 def draw_patches(img, idx, bboxes):

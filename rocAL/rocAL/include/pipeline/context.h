@@ -34,7 +34,6 @@ struct Context
     last_batch_policy(last_batch_policy),
     last_batch_padded(last_batch_padded),
     _user_batch_size(batch_size)
-
     {
         LOG("Processing on " + STR(((affinity == RocalAffinity::CPU)?" CPU": " GPU")))
         master_graph = std::make_shared<MasterGraph>(batch_size, affinity, cpu_thread_count, gpu_id, prefetch_queue_depth, output_tensor_type, last_batch_policy, last_batch_padded);

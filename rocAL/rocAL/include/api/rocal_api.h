@@ -38,9 +38,12 @@ THE SOFTWARE.
 /// \param affinity
 /// \param gpu_id
 /// \param cpu_thread_count
+/// \param last_batch_policy What to do with the last batch when there are not enough samples in the epoch to fully fill it
+/// \param last_batch_padded Whether the last batch provided by DALI is padded with the last sample or it just wraps up.
+///                          In the conjunction with last_batch_policy it tells if the iterator returning last batch with 
+///                          data only partially filled with data from the current epoch is dropping padding samples or samples from the next epoch.
 /// \return
 extern "C"  RocalContext  ROCAL_API_CALL rocalCreate(size_t batch_size, RocalProcessMode affinity, int gpu_id = 0, size_t cpu_thread_count = 1, size_t prefetch_queue_depth = 3, RocalTensorOutputType output_tensor_data_type = RocalTensorOutputType::ROCAL_FP32, RocalLastBatchPolicy last_batch_policy = RocalLastBatchPolicy::ROCAL_LAST_BATCH_FILL, bool last_batch_padded = false);
-//extern "C"  RocalContext  ROCAL_API_CALL rocalCreate(size_t batch_size, RocalProcessMode affinity, int gpu_id = 0, size_t cpu_thread_count = 1);
 
 ///
 /// \param context
