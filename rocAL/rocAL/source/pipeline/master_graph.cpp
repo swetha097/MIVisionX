@@ -101,7 +101,7 @@ MasterGraph::~MasterGraph()
     release();
 }
 
-MasterGraph::MasterGraph(size_t batch_size, RocalAffinity affinity, size_t cpu_thread_count, int gpu_id, size_t prefetch_queue_depth, RocalTensorDataType output_tensor_data_type):
+MasterGraph::MasterGraph(size_t batch_size, RocalAffinity affinity, size_t cpu_thread_count, int gpu_id, size_t prefetch_queue_depth, RocalTensorDataType output_tensor_data_type, RocalBatchPolicy last_batch_policy, bool last_batch_padded):
         _ring_buffer(prefetch_queue_depth),
         _graph(nullptr),
         _affinity(affinity),
@@ -126,7 +126,9 @@ MasterGraph::MasterGraph(size_t batch_size, RocalAffinity affinity, size_t cpu_t
         _box_encoder_gpu(nullptr),
 #endif
         _rb_block_if_empty_time("Ring Buffer Block IF Empty Time"),
-        _rb_block_if_full_time("Ring Buffer Block IF Full Time")
+        _rb_block_if_full_time("Ring Buffer Block IF Full Time"),
+        _last_batch_policy(last_batch_policy),
+        _last_batch_padded(last_batch_padded)
 {
     try {
         vx_status status;
@@ -475,6 +477,21 @@ RocalMemType
 MasterGraph::mem_type()
 {
     return _mem_type;
+}
+
+RocalBatchPolicy
+MasterGraph::last_batch_policy() {
+    return _last_batch_policy;
+}
+
+bool
+MasterGraph::last_batch_padded() {
+    return _last_batch_padded;
+}
+
+uint 
+MasterGraph::last_batch_padded_size() {
+    return _loader_module->last_batch_padded_size();
 }
 
 Timing
@@ -949,6 +966,10 @@ void MasterGraph::output_routine()
     try {
         while (_processing)
         {
+             if (_loader_module->remaining_count() <= (_is_sequence_reader_output ? _sequence_batch_size : _user_batch_size))
+            {
+                _final_batch_padded_size = _loader_module->last_batch_padded_size();
+            }
             if (_loader_module->remaining_count() < (_is_sequence_reader_output ? _sequence_batch_size : _user_batch_size))
             {
                 // If the internal process routine ,output_routine(), has finished processing all the images, and last

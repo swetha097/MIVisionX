@@ -99,13 +99,17 @@ class Pipeline(object):
     def __init__(self, batch_size=-1, num_threads=0, device_id=-1, seed=1,
                  exec_pipelined=True, prefetch_queue_depth=2,
                  exec_async=True, bytes_per_sample=0,
-                 rocal_cpu=False, max_streams=-1, default_cuda_stream_priority=0, tensor_layout = types.NCHW, reverse_channels = False, mean = None, std = None, tensor_dtype=types.FLOAT, output_memory_type = types.CPU_MEMORY):
+                 rocal_cpu=False, max_streams=-1, default_cuda_stream_priority=0, 
+                 tensor_layout = types.NCHW, reverse_channels = False, 
+                 mean = None, std = None, tensor_dtype=types.FLOAT, 
+                 output_memory_type = types.CPU_MEMORY,
+                 last_batch_policy=types.LAST_BATCH_FILL, last_batch_padded=True):
         if(rocal_cpu):
             self._handle = b.rocalCreate(
-                batch_size, types.CPU, device_id, num_threads, prefetch_queue_depth, tensor_dtype)
+                batch_size, types.CPU, device_id, num_threads, prefetch_queue_depth, tensor_dtype, last_batch_policy, last_batch_padded)
         else:
             self._handle = b.rocalCreate(
-                batch_size, types.GPU, device_id, num_threads, prefetch_queue_depth, tensor_dtype)
+                batch_size, types.GPU, device_id, num_threads, prefetch_queue_depth, tensor_dtype, last_batch_policy, last_batch_padded)
 
         if(b.getStatus(self._handle) == types.OK):
             print("Pipeline has been created succesfully")
@@ -147,6 +151,9 @@ class Pipeline(object):
         self._current_pipeline = None
         self._reader = None
         self._define_graph_set = False
+        self._last_batch_policy = last_batch_policy
+        self.last_batch_padded = last_batch_padded
+        self.shard_size = -1
         self.setSeed(self._seed)
 
     def build(self):
@@ -255,6 +262,9 @@ class Pipeline(object):
 
     def getRemainingImages(self):
         return b.getRemainingImages(self._handle)
+
+    def getLastBatchPaddedSize(self):
+        return b.getLastBatchPaddedSize(self._handle)
 
     def rocalRelease(self):
         return b.rocalRelease(self._handle)

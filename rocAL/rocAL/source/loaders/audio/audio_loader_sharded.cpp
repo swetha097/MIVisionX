@@ -47,12 +47,12 @@ AudioLoaderSharded::~AudioLoaderSharded() {
     _loaders.clear();
 }
 
-// size_t AudioLoaderSharded::last_batch_padded_size() {
-//     size_t sum = 0;
-//     for(auto& loader: _loaders)
-//         sum += loader->last_batch_padded_size();
-//     return sum;
-// }
+size_t AudioLoaderSharded::last_batch_padded_size() {
+    size_t sum = 0;
+    for(auto& loader: _loaders)
+        sum += loader->last_batch_padded_size();
+    return sum;
+}
 
 void
 AudioLoaderSharded::fast_forward_through_empty_loaders() {
@@ -137,7 +137,6 @@ size_t AudioLoaderSharded::remaining_count() {
 void AudioLoaderSharded::reset() {
     for(auto& loader: _loaders) {
         loader->reset();
-        // loader->last_batch_padded_size();
     }
 }
 

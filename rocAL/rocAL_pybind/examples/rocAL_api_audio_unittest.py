@@ -6,6 +6,7 @@ import random
 from amd.rocal.plugin.pytorch import ROCALAudioIterator
 import torch
 from amd.rocal.pipeline import Pipeline
+import amd.rocal.types as types
 import amd.rocal.fn as fn
 import amd.rocal.types as types
 import sys
@@ -17,9 +18,7 @@ def draw_patches(img, idx, device):
     #image is expected as a tensor, bboxes as numpy
     image = img.detach().numpy()
     audio_data = image.flatten()
-    # label = idx
     label = idx.cpu().detach().numpy() #TODO: Uncomment after the meta-data is enabled
-    print("label: ", label)
     # Saving the array in a text file
     file = open("results/rocal_data_new"+str(label)+".txt", "w+")
     content = str(audio_data)
@@ -52,13 +51,13 @@ def main():
     device_id = 0
     random_seed = random.SystemRandom().randint(0, 2**32 - 1)
     print("*********************************************************************")
-    audio_pipeline = Pipeline(batch_size=batch_size, num_threads=num_threads, device_id=device_id, seed=random_seed, rocal_cpu=_rocal_cpu)
+    audio_pipeline = Pipeline(batch_size=batch_size, num_threads=num_threads, device_id=device_id, seed=random_seed, rocal_cpu=_rocal_cpu, last_batch_policy=types.LAST_BATCH_FILL, last_batch_padded=True)
     with audio_pipeline:
         audio, label = fn.readers.file(
             file_root=data_path,
             file_list=file_list,
             )
-        audio_decode = fn.decoders.audio(audio, file_root=data_path, file_list_path=file_list, downmix=False, shard_id=0, num_shards=1, storage_type=9, stick_to_shard=False)
+        audio_decode = fn.decoders.audio(audio, file_root=data_path, file_list_path=file_list, downmix=False, shard_id=0, num_shards=2, storage_type=9, stick_to_shard=False, shard_size=-1)
         pre_emphasis_filter = fn.preemphasis_filter(audio_decode)
         begin, length = fn.nonsilent_region(audio_decode, cutoff_db=-60)
         trim_silence = fn.slice(
@@ -88,7 +87,7 @@ def main():
             rocal_tensor_output_type=types.FLOAT,
         )
         normalize_audio = fn.normalize(to_decibels, axes=[1])
-        audio_pipeline.setOutputs(pre_emphasis_filter)
+        audio_pipeline.setOutputs(normalize_audio)
     audio_pipeline.build()
     audioIteratorPipeline = ROCALAudioIterator(audio_pipeline, auto_reset=True, device=device_type)
     for e in range(1):
@@ -99,8 +98,8 @@ def main():
             for audio, label, roi in zip(it[0], it[1], it[2]):
                 print("label: ", label)
                 print("roi: ", roi)
-                print("audio: ", audio)
-                # draw_patches(audio, label, "cpu")
+                # print("audio: ", audio)
+                draw_patches(audio, label, "cpu")
         print("EPOCH DONE", e)
 if __name__ == '__main__':
     main()

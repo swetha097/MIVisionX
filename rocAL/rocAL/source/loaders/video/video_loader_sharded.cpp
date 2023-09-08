@@ -168,6 +168,14 @@ std::vector<std::vector<float>> VideoLoaderSharded::get_sequence_frame_timestamp
     return _loaders[_loader_idx]->get_sequence_frame_timestamps();
 }
 
+size_t VideoLoaderSharded::last_batch_padded_size()
+{
+    size_t sum = 0;
+    for(auto& loader: _loaders)
+        sum += loader->last_batch_padded_size();
+    return sum;
+}
+
 Timing VideoLoaderSharded::timing()
 {
     Timing t;

@@ -72,6 +72,12 @@ struct ReaderConfig
     void set_sequence_length(unsigned sequence_length) { _sequence_length = sequence_length; }
     void set_frame_step(unsigned step) { _sequence_frame_step = step; }
     void set_frame_stride(unsigned stride) { _sequence_frame_stride = stride; }
+    void set_last_batch_policy(RocalBatchPolicy last_batch_policy, bool last_batch_padded) {
+        _last_batch_policy = last_batch_policy;
+        _last_batch_padded = last_batch_padded;
+    }
+    void set_stick_to_shard(bool stick_to_shard) { _stick_to_shard = stick_to_shard; }
+    void set_shard_size(signed shard_size) { _shard_size = shard_size; }
     size_t get_shard_count() { return _shard_count; }
     size_t get_shard_id() { return _shard_id; }
     size_t get_cpu_num_threads() { return _cpu_num_threads; }
@@ -89,6 +95,9 @@ struct ReaderConfig
     void set_file_prefix(const std::string &prefix) { _file_prefix = prefix; }
     std::string file_prefix() { return _file_prefix; }
     std::shared_ptr<MetaDataReader> meta_data_reader() { return _meta_data_reader; }
+    std::pair<RocalBatchPolicy, bool> get_last_batch_policy() { return std::pair<RocalBatchPolicy, bool>(_last_batch_policy, _last_batch_padded); }
+    bool get_stick_to_shard() { return _stick_to_shard; }
+    signed get_shard_size() { return _shard_size; }
 private:
     StorageType _type = StorageType::FILE_SYSTEM;
     std::string _path = "";
@@ -98,6 +107,10 @@ private:
     size_t _shard_id = 0;
     size_t _cpu_num_threads = 1;
     size_t _batch_count = 1;     //!< The reader will repeat images if necessary to be able to have images in multiples of the _batch_count.
+    RocalBatchPolicy _last_batch_policy = RocalBatchPolicy::BATCH_FILL;
+    bool _last_batch_padded = false;
+    bool _stick_to_shard = false;
+    signed _shard_size = -1;
     size_t _sequence_length = 1; // Video reader module sequence length
     size_t _sequence_frame_step;
     size_t _sequence_frame_stride = 1;
@@ -162,4 +175,5 @@ public:
     virtual unsigned count_items() = 0;
     virtual std::string file_path() = 0;
     virtual ~Reader() = default;
+    virtual size_t last_batch_padded_size() = 0;
 };

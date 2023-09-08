@@ -41,6 +41,7 @@ public:
     void set_output(Tensor* output_audio) override;
     void set_random_bbox_data_reader(std::shared_ptr<RandomBBoxCrop_MetaDataReader> randombboxcrop_meta_data_reader) override { THROW("set_random_bbox_data_reader is not compatible with this implementation") };
     size_t remaining_count() override; // returns number of remaining items to be loaded
+    size_t last_batch_padded_size() override;
     void reset() override; // Resets the loader to load from the beginning of the media
     Timing timing() override;
     void start_loading() override;
@@ -79,6 +80,8 @@ private:
     bool _decoder_keep_original = false;
     int _device_id;
     size_t _max_decoded_samples, _max_decoded_channels;
+    RocalBatchPolicy _last_batch_policy;
+    bool last_batch_padded;
 };
 
 

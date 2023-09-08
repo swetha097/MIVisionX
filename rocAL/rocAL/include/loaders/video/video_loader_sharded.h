@@ -48,6 +48,7 @@ public:
     std::vector<size_t> get_sequence_start_frame_number() override;
     std::vector<std::vector<float>> get_sequence_frame_timestamps() override;
     Timing timing() override;
+    size_t last_batch_padded_size() override;
 private:
     void increment_loader_idx();
     void *_dev_resources;
