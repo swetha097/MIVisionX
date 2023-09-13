@@ -406,7 +406,7 @@ namespace rocal{
             .value("CLAMP",CLAMP)
             .value("REFLECT",REFLECT)
             .export_values();
-        py::enum_<RocalLastBatchPolicy>(types_m,"RocalLastBatchPolicy", "Rocal Last Batch Policy")
+        py::enum_<RocalLastBatchPolicy>(types_m, "RocalLastBatchPolicy", "Rocal Last Batch Policy")
             .value("LAST_BATCH_FILL",ROCAL_LAST_BATCH_FILL)
             .value("LAST_BATCH_DROP",ROCAL_LAST_BATCH_DROP)
             .value("LAST_BATCH_PARTIAL",ROCAL_LAST_BATCH_PARTIAL)

@@ -49,6 +49,7 @@ unsigned FileListReader::count_items()
 {
     if(_loop)
         return _file_names.size();
+
     int ret = ((int)_file_names.size() -_read_counter);
     return ((ret < 0) ? 0 : ret);
 }
@@ -278,7 +279,7 @@ void FileListReader::replicate_last_image_to_fill_last_shard()
 {
     if(_last_batch_info.first == RocalBatchPolicy::BATCH_FILL) {
         if(_last_batch_info.second == true) {
-        for(size_t i = (_batch_count - _in_batch_read_count); i < _batch_count; i++)
+        for(size_t i = 0; i < (_batch_count - _in_batch_read_count); i++)
             _file_names.push_back(_last_file_name);
         } else  {
         for(size_t i = 0; i < (_batch_count - _in_batch_read_count); i++)
@@ -295,7 +296,7 @@ void FileListReader::replicate_last_image_to_fill_last_shard()
     {
         _last_batch_padded_size = _batch_count - _in_batch_read_count;
         if(_last_batch_info.second == true) {
-        for(size_t i = (_batch_count - _in_batch_read_count); i < _batch_count; i++)
+        for(size_t i = 0; i < (_batch_count - _in_batch_read_count); i++)
             _file_names.push_back(_last_file_name);
         } else  {
         for(size_t i = 0; i < (_batch_count - _in_batch_read_count); i++)
@@ -366,6 +367,5 @@ size_t FileListReader::get_file_shard_id()
 {
     if(_batch_count == 0 || _shard_count == 0)
         THROW("Shard (Batch) size cannot be set to 0")
-    //return (_file_id / (_batch_count)) % _shard_count;
     return _file_id  % _shard_count;
 }

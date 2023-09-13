@@ -75,10 +75,8 @@ rocalCreate(
                     THROW("Unkown Rocal data type")
             }
         };
-        auto translate_last_batch_policy = []( RocalLastBatchPolicy last_batch_policy)
-        {
-            switch(last_batch_policy)
-            {
+        auto translate_last_batch_policy = [](RocalLastBatchPolicy last_batch_policy) {
+            switch(last_batch_policy) {
                 case ROCAL_LAST_BATCH_FILL:
                     return RocalBatchPolicy::BATCH_FILL;
                 case ROCAL_LAST_BATCH_DROP:
