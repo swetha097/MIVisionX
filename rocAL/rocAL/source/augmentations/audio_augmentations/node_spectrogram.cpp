@@ -53,7 +53,7 @@ void SpectrogramNode::create_node() {
 void SpectrogramNode::update_node() { }
 
 void SpectrogramNode::init(bool is_center_windows, bool is_reflect_padding, RocalSpectrogramLayout spectrogram_layout,
-                            int power, int nfft, int window_length, int window_step, std::vector<float> &window_fn) {
+                           int power, int nfft, int window_length, int window_step, std::vector<float> &window_fn) {
     _is_center_windows = is_center_windows;
     _is_reflect_padding = is_reflect_padding;
     _spectrogram_layout = spectrogram_layout;

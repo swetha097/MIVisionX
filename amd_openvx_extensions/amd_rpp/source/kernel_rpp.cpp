@@ -2680,13 +2680,12 @@ VX_API_ENTRY vx_node VX_API_CALL vxExtRppToDecibels(vx_graph graph, vx_tensor pS
 
 VX_API_ENTRY vx_node VX_API_CALL vxExtRppNormalize(vx_graph graph, vx_tensor pSrc, vx_tensor pSrcDims, vx_tensor pDst, vx_tensor pDstDims,
                                                    vx_scalar axisMask, vx_scalar mean, vx_scalar stdDev, vx_scalar scale,
-                                                   vx_scalar shift, vx_scalar epsilon, vx_scalar ddof, vx_uint32 numOfDims) {
+                                                   vx_scalar shift, vx_scalar epsilon, vx_scalar ddof) {
     vx_node node = NULL;
     vx_context context = vxGetContext((vx_reference)graph);
     if (vxGetStatus((vx_reference)context) == VX_SUCCESS) {
         vx_uint32 devType = getGraphAffinity(graph);
         vx_scalar deviceType = vxCreateScalar(vxGetContext((vx_reference)graph), VX_TYPE_UINT32, &devType);
-        vx_scalar numberOfDims = vxCreateScalar(vxGetContext((vx_reference)graph), VX_TYPE_UINT32, &numOfDims);
         vx_reference params[] = {
             (vx_reference)pSrc,
             (vx_reference)pSrcDims,
@@ -2699,9 +2698,8 @@ VX_API_ENTRY vx_node VX_API_CALL vxExtRppNormalize(vx_graph graph, vx_tensor pSr
             (vx_reference)shift,
             (vx_reference)epsilon,
             (vx_reference)ddof,
-            (vx_reference)numberOfDims,
             (vx_reference)deviceType};
-        node = createNode(graph, VX_KERNEL_RPP_NORMALIZE, params, 13);
+        node = createNode(graph, VX_KERNEL_RPP_NORMALIZE, params, 12);
     }
     return node;
 }

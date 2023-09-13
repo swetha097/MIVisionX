@@ -40,5 +40,4 @@ private:
     int _ddof = 0;
     int _axis_mask = 0;
     bool _batch = false;
-    unsigned _num_of_dims;
 };
