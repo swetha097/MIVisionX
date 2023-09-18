@@ -35,7 +35,7 @@ void NonSilentRegionNode::create_node() {
     vx_scalar reference_power = vxCreateScalar(vxGetContext((vx_reference)_graph->get()), VX_TYPE_FLOAT32, &_reference_power);
     vx_scalar window_length = vxCreateScalar(vxGetContext((vx_reference)_graph->get()), VX_TYPE_INT32, &_window_length);
     vx_scalar reset_interval = vxCreateScalar(vxGetContext((vx_reference)_graph->get()), VX_TYPE_INT32, &_reset_interval);
-    _node = vxExtRppNonSilentRegion(_graph->get(), _inputs[0]->handle(), _src_tensor_roi, _outputs[0]->handle(), _outputs[1]->handle(),
+    _node = vxExtRppNonSilentRegion(_graph->get(), _inputs[0]->handle(), _inputs[0]->get_roi_tensor(), _outputs[0]->handle(), _outputs[1]->handle(),
                                     cutoff_db, reference_power, window_length, reset_interval);
 
     vx_status status;
@@ -43,7 +43,7 @@ void NonSilentRegionNode::create_node() {
         THROW("Error adding the non silent region node (vxRppNonSilentRegion) failed: " + TOSTR(status))
 }
 
-void NonSilentRegionNode::update_node() { } // sampath - check if THROW statement is better to add here
+void NonSilentRegionNode::update_node() { }
 
 void NonSilentRegionNode::init(float cutoff_db, float reference_power, int window_length, int reset_interval) {
     _cutoff_db = cutoff_db;

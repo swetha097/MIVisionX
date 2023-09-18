@@ -34,7 +34,6 @@ struct NormalizeLocalData {
     Rpp32f shift;
     Rpp32f epsilon;
     Rpp32s ddof;
-    Rpp32u numOfDims;
     RpptDescPtr pSrcDesc;
     RpptDescPtr pDstDesc;
     Rpp32s *pSamples;
@@ -80,34 +79,34 @@ static vx_status VX_CALLBACK validateNormalize(vx_node node, const vx_reference 
     vx_enum scalar_type;
     STATUS_ERROR_CHECK(vxQueryScalar((vx_scalar)parameters[4], VX_SCALAR_TYPE, &scalar_type, sizeof(scalar_type)));
     if (scalar_type != VX_TYPE_INT32)
-        return ERRMSG(VX_ERROR_INVALID_TYPE, "validate: Paramter: #4 type=%d (must be size)\n", scalar_type);
+        return ERRMSG(VX_ERROR_INVALID_TYPE, "validate: parameter: #4 type=%d (must be size)\n", scalar_type);
     STATUS_ERROR_CHECK(vxQueryScalar((vx_scalar)parameters[5], VX_SCALAR_TYPE, &scalar_type, sizeof(scalar_type)));
     if (scalar_type != VX_TYPE_FLOAT32)
-        return ERRMSG(VX_ERROR_INVALID_TYPE, "validate: Paramter: #5 type=%d (must be size)\n", scalar_type);
+        return ERRMSG(VX_ERROR_INVALID_TYPE, "validate: parameter: #5 type=%d (must be size)\n", scalar_type);
     STATUS_ERROR_CHECK(vxQueryScalar((vx_scalar)parameters[6], VX_SCALAR_TYPE, &scalar_type, sizeof(scalar_type)));
     if (scalar_type != VX_TYPE_FLOAT32)
-        return ERRMSG(VX_ERROR_INVALID_TYPE, "validate: Paramter: #6 type=%d (must be size)\n", scalar_type);
+        return ERRMSG(VX_ERROR_INVALID_TYPE, "validate: parameter: #6 type=%d (must be size)\n", scalar_type);
     STATUS_ERROR_CHECK(vxQueryScalar((vx_scalar)parameters[7], VX_SCALAR_TYPE, &scalar_type, sizeof(scalar_type)));
     if (scalar_type != VX_TYPE_FLOAT32)
-        return ERRMSG(VX_ERROR_INVALID_TYPE, "validate: Paramter: #7 type=%d (must be size)\n", scalar_type);
+        return ERRMSG(VX_ERROR_INVALID_TYPE, "validate: parameter: #7 type=%d (must be size)\n", scalar_type);
     STATUS_ERROR_CHECK(vxQueryScalar((vx_scalar)parameters[8], VX_SCALAR_TYPE, &scalar_type, sizeof(scalar_type)));
     if (scalar_type != VX_TYPE_FLOAT32)
-        return ERRMSG(VX_ERROR_INVALID_TYPE, "validate: Paramter: #8 type=%d (must be size)\n", scalar_type);
+        return ERRMSG(VX_ERROR_INVALID_TYPE, "validate: parameter: #8 type=%d (must be size)\n", scalar_type);
     STATUS_ERROR_CHECK(vxQueryScalar((vx_scalar)parameters[9], VX_SCALAR_TYPE, &scalar_type, sizeof(scalar_type)));
     if (scalar_type != VX_TYPE_FLOAT32)
-        return ERRMSG(VX_ERROR_INVALID_TYPE, "validate: Paramter: #9 type=%d (must be size)\n", scalar_type);
+        return ERRMSG(VX_ERROR_INVALID_TYPE, "validate: parameter: #9 type=%d (must be size)\n", scalar_type);
 
     // Check for input parameters
     size_t num_tensor_dims;
     STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[0], VX_TENSOR_NUMBER_OF_DIMS, &num_tensor_dims, sizeof(num_tensor_dims)));
-    if(num_tensor_dims < 3) return ERRMSG(VX_ERROR_INVALID_DIMENSION, "validate: MelFilterBank: tensor: #0 dimensions=%lu (must be greater than or equal to 4)\n", num_tensor_dims);
+    if(num_tensor_dims < 3) return ERRMSG(VX_ERROR_INVALID_DIMENSION, "validate: Normalize: tensor: #0 dimensions=%lu (must be greater than or equal to 3)\n", num_tensor_dims);
 
     // Check for output parameters
     vx_uint8 tensor_fixed_point_position;
     size_t tensor_dims[RPP_MAX_TENSOR_DIMS];
     vx_enum tensor_datatype;
     STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[2], VX_TENSOR_NUMBER_OF_DIMS, &num_tensor_dims, sizeof(num_tensor_dims)));
-    if(num_tensor_dims < 3) return ERRMSG(VX_ERROR_INVALID_DIMENSION, "validate: MelFilterBank: tensor: #2 dimensions=%lu (must be greater than or equal to 4)\n", num_tensor_dims);
+    if(num_tensor_dims < 3) return ERRMSG(VX_ERROR_INVALID_DIMENSION, "validate: Normalize: tensor: #2 dimensions=%lu (must be greater than or equal to 3)\n", num_tensor_dims);
 
     STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[2], VX_TENSOR_DIMS, &tensor_dims, sizeof(tensor_dims)));
     STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[2], VX_TENSOR_DATA_TYPE, &tensor_datatype, sizeof(tensor_datatype)));
@@ -151,8 +150,7 @@ static vx_status VX_CALLBACK initializeNormalize(vx_node node, const vx_referenc
     STATUS_ERROR_CHECK(vxReadScalarValue((vx_scalar)parameters[8], &data->shift));
     STATUS_ERROR_CHECK(vxReadScalarValue((vx_scalar)parameters[9], &data->epsilon));
     STATUS_ERROR_CHECK(vxReadScalarValue((vx_scalar)parameters[10], &data->ddof));
-    STATUS_ERROR_CHECK(vxReadScalarValue((vx_scalar)parameters[11], &data->numOfDims));
-    STATUS_ERROR_CHECK(vxCopyScalar((vx_scalar)parameters[12], &data->deviceType, VX_READ_ONLY, VX_MEMORY_TYPE_HOST));
+    STATUS_ERROR_CHECK(vxCopyScalar((vx_scalar)parameters[11], &data->deviceType, VX_READ_ONLY, VX_MEMORY_TYPE_HOST));
 
     // Querying for input tensor
     data->pSrcDesc = new RpptDesc;
@@ -172,8 +170,8 @@ static vx_status VX_CALLBACK initializeNormalize(vx_node node, const vx_referenc
     data->pDstDesc->offsetInBytes = 0;
     fillAudioDescriptionPtrFromDims(data->pDstDesc, data->outputTensorDims);
 
-    data->pSamples = static_cast<int *>(calloc(data->pSrcDesc->n, sizeof(int)));
-    data->pChannels = static_cast<int *>(calloc(data->pSrcDesc->n, sizeof(int)));
+    data->pSamples = new int[data->pSrcDesc->n];
+    data->pChannels = new int[data->pSrcDesc->n];
     refreshNormalize(node, parameters, num, data);
     STATUS_ERROR_CHECK(createRPPHandle(node, &data->handle, data->pSrcDesc->n, data->deviceType));
     STATUS_ERROR_CHECK(vxSetNodeAttribute(node, VX_NODE_LOCAL_DATA_PTR, &data, sizeof(data)));
@@ -183,8 +181,8 @@ static vx_status VX_CALLBACK initializeNormalize(vx_node node, const vx_referenc
 static vx_status VX_CALLBACK uninitializeNormalize(vx_node node, const vx_reference *parameters, vx_uint32 num) {
     NormalizeLocalData *data;
     STATUS_ERROR_CHECK(vxQueryNode(node, VX_NODE_LOCAL_DATA_PTR, &data, sizeof(data)));
-    if(data->pSamples != nullptr) free(data->pSamples);
-    if(data->pChannels != nullptr) free(data->pChannels);
+    delete(data->pSamples);
+    delete(data->pChannels);
     delete(data->pSrcDesc);
     delete(data->pDstDesc);
     STATUS_ERROR_CHECK(releaseRPPHandle(node, data->handle, data->deviceType));
@@ -193,7 +191,7 @@ static vx_status VX_CALLBACK uninitializeNormalize(vx_node node, const vx_refere
 }
 
 //! \brief The kernel target support callback.
-// TODO::currently the node is setting the same affinity as context. This needs to change when we have hubrid modes in the same graph
+// TODO::currently the node is setting the same affinity as context. This needs to change when we have hybrid modes in the same graph
 static vx_status VX_CALLBACK query_target_support(vx_graph graph, vx_node node,
                                                   vx_bool use_opencl_1_2,              // [input]  false: OpenCL driver is 2.0+; true: OpenCL driver is 1.2
                                                   vx_uint32 &supported_target_affinity // [output] must be set to AGO_TARGET_AFFINITY_CPU or AGO_TARGET_AFFINITY_GPU or (AGO_TARGET_AFFINITY_CPU | AGO_TARGET_AFFINITY_GPU)
@@ -209,14 +207,13 @@ static vx_status VX_CALLBACK query_target_support(vx_graph graph, vx_node node,
     return VX_SUCCESS;
 }
 
-vx_status Normalize_Register(vx_context context)
-{
+vx_status Normalize_Register(vx_context context) {
     vx_status status = VX_SUCCESS;
     // Add kernel to the context with callbacks
     vx_kernel kernel = vxAddUserKernel(context, "org.rpp.Normalize",
                                        VX_KERNEL_RPP_NORMALIZE,
                                        processNormalize,
-                                       13,
+                                       12,
                                        validateNormalize,
                                        initializeNormalize,
                                        uninitializeNormalize);
@@ -246,7 +243,6 @@ vx_status Normalize_Register(vx_context context)
         PARAM_ERROR_CHECK(vxAddParameterToKernel(kernel, 9, VX_INPUT, VX_TYPE_SCALAR, VX_PARAMETER_STATE_REQUIRED));
         PARAM_ERROR_CHECK(vxAddParameterToKernel(kernel, 10, VX_INPUT, VX_TYPE_SCALAR, VX_PARAMETER_STATE_REQUIRED));
         PARAM_ERROR_CHECK(vxAddParameterToKernel(kernel, 11, VX_INPUT, VX_TYPE_SCALAR, VX_PARAMETER_STATE_REQUIRED));
-        PARAM_ERROR_CHECK(vxAddParameterToKernel(kernel, 12, VX_INPUT, VX_TYPE_SCALAR, VX_PARAMETER_STATE_REQUIRED));
         PARAM_ERROR_CHECK(vxFinalizeKernel(kernel));
     }
     if (status != VX_SUCCESS) {

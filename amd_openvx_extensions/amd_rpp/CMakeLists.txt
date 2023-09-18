@@ -18,7 +18,7 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
-cmake_minimum_required(VERSION 3.0)
+cmake_minimum_required(VERSION 3.5)
 project(vx_rpp)
 
 set(CMAKE_CXX_STANDARD 14)
@@ -167,6 +167,10 @@ list(APPEND SOURCES
         source/tensor/Vignette.cpp
         source/tensor/WarpAffine.cpp
         source/tensor/PreemphasisFilter.cpp
+        source/tensor/Resample.cpp
+        source/tensor/TensorMulScalar.cpp
+        source/tensor/TensorAddTensor.cpp
+        source/tensor/SequenceRearrange.cpp
         source/kernel_rpp.cpp
         source/internal_publishKernels.cpp
     )
@@ -208,7 +212,7 @@ if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "MSVC")
     set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} /MTd")
 else()
     set(LINK_LIBRARY_LIST ${LINK_LIBRARY_LIST} openvx)
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fdata-sections -std=gnu++14")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fdata-sections -std=gnu++14 -mavx2")
 endif()
 
 target_link_libraries(vx_rpp ${LINK_LIBRARY_LIST})
@@ -221,3 +225,4 @@ if(BUILD_DEV)
     # install MIVisionX include files -- {ROCM_PATH}/include/mivisionx/
     install(FILES include/vx_ext_rpp.h DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/mivisionx)
 endif(BUILD_DEV)
+

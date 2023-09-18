@@ -19,7 +19,8 @@
 # THE SOFTWARE.
 
 import rocal_pybind as b
-
+import amd.rocal.types as types
+from amd.rocal.pipeline import Pipeline
 
 def coin_flip(*inputs, probability=0.5):
     values = [0, 1]
@@ -27,6 +28,12 @@ def coin_flip(*inputs, probability=0.5):
     output_array = b.createIntRand(values, frequencies)
     return output_array
 
-def uniform(*inputs, range=[-1, 1]):
-    output_param = b.createFloatUniformRand(range[0], range[1])
-    return output_param
+def uniform(*inputs, range=[-1.0, 1.0]):
+    kwargs_pybind = { "inputs": inputs[0], "is_output": False, "range": range }
+    output_uniform_distribution = b.UniformDistribution(Pipeline._current_pipeline._handle, *(kwargs_pybind.values()))
+    return (output_uniform_distribution)
+
+def normal(*inputs, mean=0.0, stddev=1.0):
+    kwargs_pybind = { "inputs": inputs[0], "is_output": False, "mean": mean, "stddev": stddev }
+    output_normal_distribution = b.NormalDistribution(Pipeline._current_pipeline._handle, *(kwargs_pybind.values()))
+    return (output_normal_distribution)

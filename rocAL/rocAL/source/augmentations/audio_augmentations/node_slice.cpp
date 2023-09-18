@@ -41,7 +41,7 @@ void SliceNode::create_node() {
     vx_scalar policy = vxCreateScalar(vxGetContext((vx_reference)_graph->get()), VX_TYPE_UINT32, &_policy);
     vx_scalar axis_mask = vxCreateScalar(vxGetContext((vx_reference)_graph->get()), VX_TYPE_INT32, &_axis_mask);
     vx_scalar dims_stride = vxCreateScalar(vxGetContext((vx_reference)_graph->get()), VX_TYPE_UINT32, &_dims_stride);
-    _node = vxExtRppSlice(_graph->get(), _inputs[0]->handle(), _src_tensor_roi, _outputs[0]->handle(), _dst_tensor_roi, _anchor->handle(),
+    _node = vxExtRppSlice(_graph->get(), _inputs[0]->handle(), _inputs[0]->get_roi_tensor(), _outputs[0]->handle(), _outputs[0]->get_roi_tensor(), _anchor->handle(),
                           _shape->handle(), _fill_values_array, axis_mask, normalized_anchor , normalized_shape, policy, dims_stride);
 
     if((status = vxGetStatus((vx_reference)_node)) != VX_SUCCESS)

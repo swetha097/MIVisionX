@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2019 - 2022 Advanced Micro Devices, Inc. All rights reserved.
+Copyright (c) 2019 - 2023 Advanced Micro Devices, Inc. All rights reserved.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -80,6 +80,9 @@ public:
     //! Initializer constructor with only fields common to all types (Image/ Video / Audio)
     TensorInfo(std::vector<size_t> dims, RocalMemType mem_type,
                     RocalTensorDataType data_type);
+    TensorInfo(std::vector<size_t> dims, RocalMemType mem_type,
+               RocalTensorDataType data_type, RocalTensorlayout layout,
+               RocalColorFormat color_format);
 
     // Setting properties required for Image / Video
     void set_roi_type(RocalROIType roi_type) { _roi_type = roi_type; }
@@ -102,13 +105,13 @@ public:
             dims_mapping = {0, 1, 3, 4, 2};
         } else {
             THROW("Invalid layout conversion")
-        }
+        }   
         for(unsigned i = 0; i < _num_of_dims; i++)
             new_dims[i] = _dims.at(dims_mapping[i]);
     }
     void set_max_shape() {
         if (_layout != RocalTensorlayout::NONE) {
-            _max_shape.resize(2);  // Since 2 values will be stored in the vector
+            if (!_max_shape.size()) _max_shape.resize(2);  // Since 2 values will be stored in the vector
             _is_image = true;
             if (_layout == RocalTensorlayout::NHWC) {
                 _max_shape[0] = _dims.at(2);
@@ -129,7 +132,7 @@ public:
             }
             reset_tensor_roi_buffers();
         } else if (!_is_metadata) {  // For audio
-            _max_shape.resize(2);       // Since 2 values will be stored in the vector
+            if (!_max_shape.size()) _max_shape.resize(2);       // Since 2 values will be stored in the vector
             _max_shape[0] = _dims.at(1);
             _max_shape[1] = _num_of_dims > 2 ? _dims.at(2) : 0;
             reset_tensor_roi_buffers();
@@ -141,20 +144,51 @@ public:
             std::vector<size_t> new_dims(_num_of_dims, 0);
             get_modified_dims_from_layout(_layout, layout, new_dims);
             _dims = new_dims;
+            modify_strides();
         }
         _layout = layout;
     }
     void set_dims(std::vector<size_t>& new_dims) {
         if (_num_of_dims == new_dims.size()) {
             _dims = new_dims;
-            _strides[_num_of_dims - 1] = _data_type_size;
-            for (int i = _num_of_dims - 2; i >= 0; i--) {
-                _strides[i] = _strides[i + 1] * _dims[i + 1];
-            }
+            modify_strides();
             _data_size = _strides[0] * _dims[0];
             set_max_shape();
         } else {
             THROW("The size of number of dimensions does not match with the dimensions of existing tensor")
+        }
+    }
+    void modify_dims_width_and_height(RocalTensorlayout layout, size_t width, size_t height) {
+        switch(_layout) {
+            case RocalTensorlayout::NHWC: {
+                _max_shape[1] = _dims[1] = height;
+                _max_shape[0] = _dims[2] = width;
+                break;
+            }
+            case RocalTensorlayout::NCHW:
+            case RocalTensorlayout::NFHWC: {
+                _max_shape[1] = _dims[2] = height;
+                _max_shape[0] = _dims[3] = width;
+                break;   
+            }
+            case RocalTensorlayout::NFCHW: {
+                _max_shape[1] = _dims[3] = height;
+                _max_shape[0] = _dims[4] = width;
+                break;
+            }
+            default: {
+                THROW("Invalid layout type specified")
+            }
+        }
+        modify_strides();
+        _data_size = _strides[0] * _dims[0];    // Modify data size wrt latest width and height
+        set_tensor_layout(layout);              // Modify the layout and dims based on the layout input
+        reset_tensor_roi_buffers();             // Reset ROI buffers to reflect the modified width and height
+    }
+    void modify_strides() {
+        _strides[_num_of_dims - 1] = _data_type_size;
+        for (int i = _num_of_dims - 2; i >= 0; i--) {
+            _strides[i] = _strides[i + 1] * _dims[i + 1];
         }
     }
     void set_color_format(RocalColorFormat color_format) {
@@ -249,12 +283,14 @@ public:
     //! Constructor accepting the tensor information as input
     explicit Tensor(const TensorInfo& tensor_info);
     int create(vx_context context);
+    void create_roi_tensor_from_handle(void **handle);
     void update_tensor_roi(const std::vector<uint32_t>& width, const std::vector<uint32_t>& height);
     void reset_tensor_roi() { _info.reset_tensor_roi_buffers(); }
     void update_audio_tensor_sample_rate(const std::vector<float>& sample_rate);
     void reset_audio_sample_rate() { _info.reallocate_tensor_sample_rate_buffers(); }
     void set_roi(unsigned *roi_ptr) { _info.set_roi_ptr(roi_ptr); }
     void copy_roi(void *roi_buffer) { _info.copy_roi(roi_buffer); }
+    vx_tensor get_roi_tensor() { return _vx_roi_handle; }
     // create_from_handle() no internal memory allocation is done here since
     // tensor's handle should be swapped with external buffers before usage
     int create_from_handle(vx_context context);
@@ -281,6 +317,7 @@ private:
     void* _mem_handle = nullptr;  //!< Pointer to the tensor's internal buffer (opencl or host)
     TensorInfo _info;  //!< The structure holding the info related to the stored OpenVX tensor
     vx_context _context = nullptr;
+    vx_tensor _vx_roi_handle = nullptr;  //!< The OpenVX tensor for ROI
 };
 
 /*! \brief Contains a list of rocalTensors */
@@ -312,3 +349,5 @@ private:
     std::vector<Tensor*> _tensor_list;
     std::vector<uint64_t> _tensor_data_size;
 };
+
+

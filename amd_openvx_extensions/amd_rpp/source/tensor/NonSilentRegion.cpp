@@ -56,9 +56,9 @@ static vx_status VX_CALLBACK refreshNonSilentRegion(vx_node node, const vx_refer
         STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[2], VX_TENSOR_BUFFER_HOST, &data->pDst1, sizeof(data->pDst1)));
         STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[3], VX_TENSOR_BUFFER_HOST, &data->pDst2, sizeof(data->pDst2)));
     }
-    RpptROI *srcRoi = reinterpret_cast<RpptROI *>(roi_tensor_ptr);
+    RpptROI *src_roi = reinterpret_cast<RpptROI *>(roi_tensor_ptr);
     for (unsigned i = 0; i < data->inputTensorDims[0]; i++)
-        data->pSrcLength[i] = static_cast<int>(srcRoi[i].xywhROI.xy.x);
+        data->pSrcLength[i] = static_cast<int>(src_roi[i].xywhROI.xy.x);
 
     return status;
 }
@@ -68,28 +68,28 @@ static vx_status VX_CALLBACK validateNonSilentRegion(vx_node node, const vx_refe
     vx_enum scalar_type;
     STATUS_ERROR_CHECK(vxQueryScalar((vx_scalar)parameters[4], VX_SCALAR_TYPE, &scalar_type, sizeof(scalar_type)));
     if (scalar_type != VX_TYPE_FLOAT32)
-        return ERRMSG(VX_ERROR_INVALID_TYPE, "validate: Paramter: #4 type=%d (must be size)\n", scalar_type);
+        return ERRMSG(VX_ERROR_INVALID_TYPE, "validate: Parameter: #4 type=%d (must be size)\n", scalar_type);
     STATUS_ERROR_CHECK(vxQueryScalar((vx_scalar)parameters[5], VX_SCALAR_TYPE, &scalar_type, sizeof(scalar_type)));
     if (scalar_type != VX_TYPE_FLOAT32)
-        return ERRMSG(VX_ERROR_INVALID_TYPE, "validate: Paramter: #5 type=%d (must be size)\n", scalar_type);
+        return ERRMSG(VX_ERROR_INVALID_TYPE, "validate: Parameter: #5 type=%d (must be size)\n", scalar_type);
     STATUS_ERROR_CHECK(vxQueryScalar((vx_scalar)parameters[6], VX_SCALAR_TYPE, &scalar_type, sizeof(scalar_type)));
     if (scalar_type != VX_TYPE_INT32)
-        return ERRMSG(VX_ERROR_INVALID_TYPE, "validate: Paramter: #6 type=%d (must be size)\n", scalar_type);
+        return ERRMSG(VX_ERROR_INVALID_TYPE, "validate: Parameter: #6 type=%d (must be size)\n", scalar_type);
     STATUS_ERROR_CHECK(vxQueryScalar((vx_scalar)parameters[7], VX_SCALAR_TYPE, &scalar_type, sizeof(scalar_type)));
     if (scalar_type != VX_TYPE_INT32)
-        return ERRMSG(VX_ERROR_INVALID_TYPE, "validate: Paramter: #7 type=%d (must be size)\n", scalar_type);
+        return ERRMSG(VX_ERROR_INVALID_TYPE, "validate: Parameter: #7 type=%d (must be size)\n", scalar_type);
 
     // Check for input parameters
     size_t num_tensor_dims;
     STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[0], VX_TENSOR_NUMBER_OF_DIMS, &num_tensor_dims, sizeof(num_tensor_dims)));
-    if(num_tensor_dims < 3) return ERRMSG(VX_ERROR_INVALID_DIMENSION, "validate: NonSilentRegion: tensor: #0 dimensions=%lu (must be greater than or equal to 4)\n", num_tensor_dims);
+    if(num_tensor_dims < 3) return ERRMSG(VX_ERROR_INVALID_DIMENSION, "validate: NonSilentRegion: tensor: #0 dimensions=%lu (must be greater than or equal to 3)\n", num_tensor_dims);
 
     // Check for output parameters
     vx_uint8 tensor_fixed_point_position;
     size_t tensor_dims[RPP_MAX_TENSOR_DIMS];
     vx_enum tensor_datatype;
     STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[2], VX_TENSOR_NUMBER_OF_DIMS, &num_tensor_dims, sizeof(num_tensor_dims)));
-    if(num_tensor_dims < 3) return ERRMSG(VX_ERROR_INVALID_DIMENSION, "validate: NonSilentRegion: tensor: #2 dimensions=%lu (must be greater than or equal to 4)\n", num_tensor_dims);
+    if(num_tensor_dims < 3) return ERRMSG(VX_ERROR_INVALID_DIMENSION, "validate: NonSilentRegion: tensor: #2 dimensions=%lu (must be greater than or equal to 3)\n", num_tensor_dims);
 
     STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[2], VX_TENSOR_DIMS, &tensor_dims, sizeof(tensor_dims)));
     STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[2], VX_TENSOR_DATA_TYPE, &tensor_datatype, sizeof(tensor_datatype)));
@@ -100,7 +100,7 @@ static vx_status VX_CALLBACK validateNonSilentRegion(vx_node node, const vx_refe
     STATUS_ERROR_CHECK(vxSetMetaFormatAttribute(metas[2], VX_TENSOR_FIXED_POINT_POSITION, &tensor_fixed_point_position, sizeof(tensor_fixed_point_position)));
 
     STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[3], VX_TENSOR_NUMBER_OF_DIMS, &num_tensor_dims, sizeof(num_tensor_dims)));
-    if(num_tensor_dims < 3) return ERRMSG(VX_ERROR_INVALID_DIMENSION, "validate: NonSilentRegion: tensor: #3 dimensions=%lu (must be greater than or equal to 4)\n", num_tensor_dims);
+    if(num_tensor_dims < 3) return ERRMSG(VX_ERROR_INVALID_DIMENSION, "validate: NonSilentRegion: tensor: #3 dimensions=%lu (must be greater than or equal to 3)\n", num_tensor_dims);
 
     STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[3], VX_TENSOR_DIMS, &tensor_dims, sizeof(tensor_dims)));
     STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[3], VX_TENSOR_DATA_TYPE, &tensor_datatype, sizeof(tensor_datatype)));
@@ -122,14 +122,10 @@ static vx_status VX_CALLBACK processNonSilentRegion(vx_node node, const vx_refer
 #if ENABLE_OPENCL
         return_status = VX_ERROR_NOT_IMPLEMENTED;
 #elif ENABLE_HIP
-        // rpp_status = rppt_non_silent_region_detection_gpu(data->pSrc, pSrcDesc, data->pSrcLength, data->pDst1, data->pDst2, data->cutOffDB, data->windowLength, data->referencePower, data->resetInterval, data->handle->rppHandle);
-        return_status = (rpp_status == RPP_SUCCESS) ? VX_SUCCESS : VX_FAILURE;
+        return_status = VX_ERROR_NOT_IMPLEMENTED;
 #endif
     } else if (data->deviceType == AGO_TARGET_AFFINITY_CPU) {
         rpp_status = rppt_non_silent_region_detection_host(data->pSrc, data->pSrcDesc, data->pSrcLength, data->pDst1, data->pDst2, data->cutOffDB, data->windowLength, data->referencePower, data->resetInterval, data->handle->rppHandle);
-        for(int i = 0; i < data->pSrcDesc->n; i++)
-            std::cerr<<"begin, length: "<<data->pDst1[i]<<", "<<data->pDst2[i]<<std::endl;
-
         return_status = (rpp_status == RPP_SUCCESS) ? VX_SUCCESS : VX_FAILURE;
     }
     return return_status;
@@ -137,7 +133,7 @@ static vx_status VX_CALLBACK processNonSilentRegion(vx_node node, const vx_refer
 
 static vx_status VX_CALLBACK initializeNonSilentRegion(vx_node node, const vx_reference *parameters, vx_uint32 num) {
     NonSilentRegionLocalData *data = new NonSilentRegionLocalData;
-    memset(data, 0, sizeof(*data));
+    memset(data, 0, sizeof(NonSilentRegionLocalData));
 
     vx_enum input_tensor_datatype;
     STATUS_ERROR_CHECK(vxReadScalarValue((vx_scalar)parameters[4], &data->cutOffDB));
@@ -153,19 +149,10 @@ static vx_status VX_CALLBACK initializeNonSilentRegion(vx_node node, const vx_re
     STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[0], VX_TENSOR_DATA_TYPE, &input_tensor_datatype, sizeof(input_tensor_datatype)));
     data->pSrcDesc->dataType = getRpptDataType(input_tensor_datatype);
     data->pSrcDesc->offsetInBytes = 0;
-
-    // fill dims and strides in srcDescPtr
-    data->pSrcDesc->n = data->inputTensorDims[0];
-    data->pSrcDesc->h = data->inputTensorDims[2];
-    data->pSrcDesc->w = data->inputTensorDims[1];
-    data->pSrcDesc->c = 1;
-    data->pSrcDesc->strides.nStride = data->pSrcDesc->c * data->pSrcDesc->w * data->pSrcDesc->h;
-    data->pSrcDesc->strides.hStride = data->pSrcDesc->c * data->pSrcDesc->w;
-    data->pSrcDesc->strides.wStride = data->pSrcDesc->c;
-    data->pSrcDesc->strides.cStride = 1;
+    fillAudioDescriptionPtrFromDims(data->pSrcDesc, data->inputTensorDims);
 
     data->pSrcDesc->numDims = 4;
-    data->pSrcLength = static_cast<int *>(calloc(data->pSrcDesc->n, sizeof(int)));
+    data->pSrcLength = new int[data->pSrcDesc->n];
     refreshNonSilentRegion(node, parameters, num, data);
     STATUS_ERROR_CHECK(createRPPHandle(node, &data->handle, data->pSrcDesc->n, data->deviceType));
     STATUS_ERROR_CHECK(vxSetNodeAttribute(node, VX_NODE_LOCAL_DATA_PTR, &data, sizeof(data)));
@@ -175,7 +162,7 @@ static vx_status VX_CALLBACK initializeNonSilentRegion(vx_node node, const vx_re
 static vx_status VX_CALLBACK uninitializeNonSilentRegion(vx_node node, const vx_reference *parameters, vx_uint32 num) {
     NonSilentRegionLocalData *data;
     STATUS_ERROR_CHECK(vxQueryNode(node, VX_NODE_LOCAL_DATA_PTR, &data, sizeof(data)));
-    if (data->pSrcLength != nullptr) free(data->pSrcLength);
+    delete(data->pSrcLength);
     delete(data->pSrcDesc);
     STATUS_ERROR_CHECK(releaseRPPHandle(node, data->handle, data->deviceType));
     delete(data);
@@ -183,7 +170,7 @@ static vx_status VX_CALLBACK uninitializeNonSilentRegion(vx_node node, const vx_
 }
 
 //! \brief The kernel target support callback.
-// TODO::currently the node is setting the same affinity as context. This needs to change when we have hubrid modes in the same graph
+// TODO::currently the node is setting the same affinity as context. This needs to change when we have hybrid modes in the same graph
 static vx_status VX_CALLBACK query_target_support(vx_graph graph, vx_node node,
                                                   vx_bool use_opencl_1_2,              // [input]  false: OpenCL driver is 2.0+; true: OpenCL driver is 1.2
                                                   vx_uint32 &supported_target_affinity // [output] must be set to AGO_TARGET_AFFINITY_CPU or AGO_TARGET_AFFINITY_GPU or (AGO_TARGET_AFFINITY_CPU | AGO_TARGET_AFFINITY_GPU)

@@ -20,7 +20,6 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-#include "caffe_meta_data_reader_detection.h"
 #include <iostream>
 #include <fstream>
 #include <utility>
@@ -29,7 +28,8 @@ THE SOFTWARE.
 #include <string>
 #include <stdint.h>
 #include <google/protobuf/message_lite.h>
-#include "lmdb.h"
+#include <lmdb.h>
+#include "caffe_meta_data_reader_detection.h"
 #include "caffe_protos.pb.h"
 
 using namespace std;
@@ -151,12 +151,6 @@ void CaffeMetaDataReaderDetection::read_lmdb_record(std::string file_name, uint 
         BoundingBoxCord box;
         ImgSize img_size;
 
-        caffe_protos::Datum image_datum = annotatedDatum_protos.datum();
-        // Parsing width of image
-        img_size.w = image_datum.width();
-        // Parsing height of image
-        img_size.h = image_datum.height();
-
         if (boundBox_size > 0)
         {
             for (int i = 0; i < boundBox_size; i++)
@@ -164,7 +158,7 @@ void CaffeMetaDataReaderDetection::read_lmdb_record(std::string file_name, uint 
                 caffe_protos::Annotation annot_protos = annotGrp_protos.annotation(i);
                 caffe_protos::NormalizedBBox bbox_protos = annot_protos.bbox();
 
-                // Parsing the bounding box points using Iterator & normalizing the bbox values between 0 & 1
+                // Parsing the bounding box points using Iterator & converting the bbox values to ltrb format
                 box.l = bbox_protos.xmin();
                 box.t = bbox_protos.ymin();
                 box.r = (bbox_protos.xmin() + bbox_protos.xmax());

@@ -25,12 +25,12 @@ THE SOFTWARE.
 #include <string>
 #include <memory>
 #include <dirent.h>
+#include <lmdb.h>
 #include <map>
 #include <iterator>
 #include <algorithm>
-#include "reader.h"
 #include <google/protobuf/message_lite.h>
-#include "lmdb.h"
+#include "image_reader.h"
 #include "caffe2_protos.pb.h"
 #include "timing_debug.h"
 
@@ -120,4 +120,6 @@ private:
     MDB_cursor* _read_mdb_cursor;
     void open_env_for_read_image();
 };
+
+
 

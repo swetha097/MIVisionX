@@ -28,9 +28,9 @@ THE SOFTWARE.
 #include <map>
 #include <iterator>
 #include <algorithm>
-#include "reader.h"
-#include "timing_debug.h"
 #include <google/protobuf/message_lite.h>
+#include "image_reader.h"
+#include "timing_debug.h"
 #include "example.pb.h"
 #include "feature.pb.h"
 
@@ -119,3 +119,4 @@ private:
     Reader::Status read_image_names(std::ifstream &file_contents, uint file_size);
     std::map <std::string, uint> _image_record_starting;
 };
+

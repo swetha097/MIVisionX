@@ -127,7 +127,7 @@ vx_status get_kernels_to_publish()
     STATUS_ERROR_CHECK(ADD_KERNEL(SequenceRearrangebatchPD_Register));
     STATUS_ERROR_CHECK(ADD_KERNEL(Resizetensor_Register));
 
-    //tensor
+    //tensor 
     STATUS_ERROR_CHECK(ADD_KERNEL(Blend_Register));
     STATUS_ERROR_CHECK(ADD_KERNEL(Blur_Register));
     STATUS_ERROR_CHECK(ADD_KERNEL(Brightness_Register));
@@ -167,7 +167,9 @@ vx_status get_kernels_to_publish()
     STATUS_ERROR_CHECK(ADD_KERNEL(MelFilterBank_Register));
     STATUS_ERROR_CHECK(ADD_KERNEL(ToDecibels_Register));
     STATUS_ERROR_CHECK(ADD_KERNEL(Normalize_Register));
-
+    STATUS_ERROR_CHECK(ADD_KERNEL(Resample_Register));
+    STATUS_ERROR_CHECK(ADD_KERNEL(TensorMulScalar_Register));
+    STATUS_ERROR_CHECK(ADD_KERNEL(TensorAddTensor_Register));
     return status;
 }
 

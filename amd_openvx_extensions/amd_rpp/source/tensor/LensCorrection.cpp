@@ -24,11 +24,11 @@ THE SOFTWARE.
 
 struct LensCorrectionLocalData {
     vxRppHandle *handle;
-    Rpp32u deviceType;
+    vx_uint32 deviceType;
     RppPtr_t pSrc;
     RppPtr_t pDst;
-    Rpp32f *pStrength;
-    Rpp32f *pZoom;
+    vx_float32 *pStrength;
+    vx_float32 *pZoom;
     RpptDescPtr pSrcDesc;
     RpptDescPtr pDstDesc;
     RpptROI *pSrcRoi;
@@ -43,8 +43,8 @@ struct LensCorrectionLocalData {
 
 static vx_status VX_CALLBACK refreshLensCorrection(vx_node node, const vx_reference *parameters, vx_uint32 num, LensCorrectionLocalData *data) {
     vx_status status = VX_SUCCESS;
-    STATUS_ERROR_CHECK(vxCopyArrayRange((vx_array)parameters[3], 0, data->inputTensorDims[0], sizeof(Rpp32f), data->pStrength, VX_READ_ONLY, VX_MEMORY_TYPE_HOST));
-    STATUS_ERROR_CHECK(vxCopyArrayRange((vx_array)parameters[4], 0, data->inputTensorDims[0], sizeof(Rpp32f), data->pZoom, VX_READ_ONLY, VX_MEMORY_TYPE_HOST));
+    STATUS_ERROR_CHECK(vxCopyArrayRange((vx_array)parameters[3], 0, data->inputTensorDims[0], sizeof(vx_float32), data->pStrength, VX_READ_ONLY, VX_MEMORY_TYPE_HOST));
+    STATUS_ERROR_CHECK(vxCopyArrayRange((vx_array)parameters[4], 0, data->inputTensorDims[0], sizeof(vx_float32), data->pZoom, VX_READ_ONLY, VX_MEMORY_TYPE_HOST));
 
     void *roi_tensor_ptr;
     if (data->deviceType == AGO_TARGET_AFFINITY_GPU) {
@@ -68,7 +68,7 @@ static vx_status VX_CALLBACK refreshLensCorrection(vx_node node, const vx_refere
     }
     if (data->inputLayout == vxTensorLayout::VX_NFHWC || data->inputLayout == vxTensorLayout::VX_NFCHW) {
         unsigned num_of_frames = data->inputTensorDims[1]; // Num of frames 'F'
-        for (unsigned n = data->inputTensorDims[0] - 1; n >= 0; n--) {
+        for (int n = data->inputTensorDims[0] - 1; n >= 0; n--) {
             unsigned index = n * num_of_frames;
             for (unsigned f = 0; f < num_of_frames; f++) {
                 data->pStrength[index + f] = data->pStrength[n];
@@ -152,12 +152,12 @@ static vx_status VX_CALLBACK initializeLensCorrection(vx_node node, const vx_ref
     memset(data, 0, sizeof(LensCorrectionLocalData));
 
     vx_enum input_tensor_dtype, output_tensor_dtype;
-    int roi_type, input_layout, output_layout;
+    vx_int32 roi_type, input_layout, output_layout;
     STATUS_ERROR_CHECK(vxCopyScalar((vx_scalar)parameters[5], &input_layout, VX_READ_ONLY, VX_MEMORY_TYPE_HOST));
     STATUS_ERROR_CHECK(vxCopyScalar((vx_scalar)parameters[6], &output_layout, VX_READ_ONLY, VX_MEMORY_TYPE_HOST));
     STATUS_ERROR_CHECK(vxCopyScalar((vx_scalar)parameters[7], &roi_type, VX_READ_ONLY, VX_MEMORY_TYPE_HOST));
     STATUS_ERROR_CHECK(vxCopyScalar((vx_scalar)parameters[8], &data->deviceType, VX_READ_ONLY, VX_MEMORY_TYPE_HOST));
-    data->roiType = (roi_type == 0) ? RpptRoiType::XYWH : RpptRoiType::LTRB;
+    data->roiType = static_cast<RpptRoiType>(roi_type);
     data->inputLayout = static_cast<vxTensorLayout>(input_layout);
     data->outputLayout = static_cast<vxTensorLayout>(output_layout);
 
@@ -181,9 +181,9 @@ static vx_status VX_CALLBACK initializeLensCorrection(vx_node node, const vx_ref
 
     data->maxSrcDimensions.height = data->pSrcDesc->h;
     data->maxSrcDimensions.width = data->pSrcDesc->w;
-    data->pSrcDimensions = static_cast<RppiSize *>(malloc(sizeof(RppiSize) * data->pSrcDesc->n));
-    data->pStrength = static_cast<Rpp32f *>(malloc(sizeof(Rpp32f) * data->pSrcDesc->n));
-    data->pZoom = static_cast<Rpp32f *>(malloc(sizeof(Rpp32f) * data->pSrcDesc->n));
+    data->pSrcDimensions = new RppiSize[data->pSrcDesc->n];
+    data->pStrength = new vx_float32[data->pSrcDesc->n];
+    data->pZoom = new vx_float32[data->pSrcDesc->n];
     refreshLensCorrection(node, parameters, num, data);
     STATUS_ERROR_CHECK(createRPPHandle(node, &data->handle, data->pSrcDesc->n, data->deviceType));
     STATUS_ERROR_CHECK(vxSetNodeAttribute(node, VX_NODE_LOCAL_DATA_PTR, &data, sizeof(data)));
@@ -193,13 +193,13 @@ static vx_status VX_CALLBACK initializeLensCorrection(vx_node node, const vx_ref
 static vx_status VX_CALLBACK uninitializeLensCorrection(vx_node node, const vx_reference *parameters, vx_uint32 num) {
     LensCorrectionLocalData *data;
     STATUS_ERROR_CHECK(vxQueryNode(node, VX_NODE_LOCAL_DATA_PTR, &data, sizeof(data)));
-    if (data->pStrength != nullptr) free(data->pStrength);
-    if (data->pZoom != nullptr)     free(data->pZoom);
-    if (data->pSrcDimensions != nullptr) free(data->pSrcDimensions);
-    delete(data->pSrcDesc);
-    delete(data->pDstDesc);
+    delete[] data->pStrength;
+    delete[] data->pZoom;
+    delete[] data->pSrcDimensions;
+    delete data->pSrcDesc;
+    delete data->pDstDesc;
     STATUS_ERROR_CHECK(releaseRPPHandle(node, data->handle, data->deviceType));
-    delete(data);
+    delete data;
     return VX_SUCCESS;
 }
 
