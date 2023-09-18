@@ -22,25 +22,24 @@ THE SOFTWARE.
 
 #pragma once
 #include <random>
-
 #include "common.h"
 #include "graph.h"
 #include "node.h"
 
 class UniformDistributionNode : public Node {
  public:
-  UniformDistributionNode(const std::vector<Tensor *> &inputs,
-                          const std::vector<Tensor *> &outputs);
-  UniformDistributionNode() = delete;
-  void init(std::vector<float> &range);
-  void update_param();
+    UniformDistributionNode(const std::vector<Tensor *> &inputs,
+                            const std::vector<Tensor *> &outputs);
+    UniformDistributionNode() = delete;
+    void init(std::vector<float> &range);
+    void update_param();
  protected:
-  void create_node() override;
-  void update_node() override;
-  float _min, _max;
-  std::uniform_real_distribution<float> _dist_uniform;  // uniform distribution
-  std::vector<float> _uniform_distribution_array;
-  unsigned _num_of_dims;
-  vx_size *_stride;
-  BatchRNG<std::mt19937> _rngs = {89, 2};  // Random Seed, Random BatchSize for initialization
+    void create_node() override;
+    void update_node() override;
+    float _min, _max;
+    std::uniform_real_distribution<float> _dist_uniform; // uniform distribution
+    std::vector<float> _uniform_distribution_array;
+    unsigned _num_of_dims;
+    vx_size *_stride;
+    BatchRNG<std::mt19937> _rngs = {89, 2};  // Random Seed, Random BatchSize for initialization
 };

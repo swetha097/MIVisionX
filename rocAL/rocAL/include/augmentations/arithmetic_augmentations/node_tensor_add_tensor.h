@@ -23,7 +23,6 @@ THE SOFTWARE.
 #pragma once
 #include "node.h"
 #include "graph.h"
-#include "rocal_api_types.h"
 
 class TensorAddTensorNode : public Node {
 public:

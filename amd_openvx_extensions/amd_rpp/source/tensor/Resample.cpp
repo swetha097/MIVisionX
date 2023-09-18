@@ -21,10 +21,8 @@ THE SOFTWARE.
 */
 
 #include "internal_publishKernels.h"
-#include "vx_ext_amd.h"
 
-struct ResampleLocalData 
-{
+struct ResampleLocalData {
     vxRppHandle *handle;
     Rpp32u deviceType;
     RppPtr_t pSrc;
@@ -32,54 +30,49 @@ struct ResampleLocalData
     float quality;
     RpptDescPtr pSrcDesc;
     RpptDescPtr pDstDesc;
-    Rpp32s *sampleFrames;
-    Rpp32s *sampleChannels;
-    Rpp32f *inRateTensor;
-    Rpp32f *outRateTensor;
+    Rpp32s *pSampleFrames;
+    Rpp32s *pSampleChannels;
+    Rpp32f *pInRateTensor;
+    Rpp32f *pOutRateTensor;
     size_t inputTensorDims[RPP_MAX_TENSOR_DIMS];
     size_t outputTensorDims[RPP_MAX_TENSOR_DIMS];
 };
 
-void update_destination_roi(const vx_reference *parameters, ResampleLocalData *data, RpptROI* src_roi, RpptROI* dst_roi) {
-    float _scale_ratio;
+void update_destination_roi(ResampleLocalData *data, RpptROI* src_roi, RpptROI* dst_roi) {
+    float scale_ratio;
     for(unsigned i = 0; i < data->pSrcDesc->n; i++) {
-        if (data->inRateTensor[i] != 0)
-            _scale_ratio = data->outRateTensor[i] / (float)data->inRateTensor[i];
+        data->pSampleFrames[i] = src_roi[i].xywhROI.xy.x;
+        data->pSampleChannels[i] = src_roi[i].xywhROI.xy.y;
+        if (data->pInRateTensor[i] != 0)
+            scale_ratio = data->pOutRateTensor[i] / static_cast<float>(data->pInRateTensor[i]);
         else
-            _scale_ratio = 0;
-        dst_roi[i].xywhROI.xy.x = (int)std::ceil(_scale_ratio * src_roi[i].xywhROI.xy.x);
+            scale_ratio = 0;
+        dst_roi[i].xywhROI.xy.x = (int)std::ceil(scale_ratio * src_roi[i].xywhROI.xy.x);
         dst_roi[i].xywhROI.xy.y = src_roi[i].xywhROI.xy.y;
     }
 }
 
 static vx_status VX_CALLBACK refreshResample(vx_node node, const vx_reference *parameters, vx_uint32 num, ResampleLocalData *data) {
     vx_status status = VX_SUCCESS;
-    STATUS_ERROR_CHECK(vxCopyArrayRange((vx_array)parameters[5], 0, data->pSrcDesc->n, sizeof(float), data->inRateTensor, VX_READ_ONLY, VX_MEMORY_TYPE_HOST));
-    STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[4], VX_TENSOR_BUFFER_HOST, &data->outRateTensor, sizeof(data->outRateTensor)));
+    STATUS_ERROR_CHECK(vxCopyArrayRange((vx_array)parameters[5], 0, data->pSrcDesc->n, sizeof(float), data->pInRateTensor, VX_READ_ONLY, VX_MEMORY_TYPE_HOST));
+    STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[4], VX_TENSOR_BUFFER_HOST, &data->pOutRateTensor, sizeof(data->pOutRateTensor)));
     void *roi_tensor_ptr_src, *roi_tensor_ptr_dst;
-    if (data->deviceType == AGO_TARGET_AFFINITY_GPU)
-    {
+    if (data->deviceType == AGO_TARGET_AFFINITY_GPU) {
 #if ENABLE_OPENCL
         return VX_ERROR_NOT_IMPLEMENTED;
 #elif ENABLE_HIP
         return VX_ERROR_NOT_IMPLEMENTED;
 #endif
     }
-    if (data->deviceType == AGO_TARGET_AFFINITY_CPU)
-    {
+    if (data->deviceType == AGO_TARGET_AFFINITY_CPU) {
         STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[0], VX_TENSOR_BUFFER_HOST, &data->pSrc, sizeof(data->pSrc)));
         STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[1], VX_TENSOR_BUFFER_HOST, &data->pDst, sizeof(data->pDst)));
         STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[2], VX_TENSOR_BUFFER_HOST, &roi_tensor_ptr_src, sizeof(roi_tensor_ptr_src)));
         STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[3], VX_TENSOR_BUFFER_HOST, &roi_tensor_ptr_dst, sizeof(roi_tensor_ptr_dst)));
-
     }
     RpptROI* src_roi = reinterpret_cast<RpptROI *>(roi_tensor_ptr_src);
     RpptROI* dst_roi = reinterpret_cast<RpptROI *>(roi_tensor_ptr_dst);
-    for (uint i = 0; i < data->pSrcDesc->n ; i++) {
-        data->sampleFrames[i] = src_roi[i].xywhROI.xy.x;
-        data->sampleChannels[i] = src_roi[i].xywhROI.xy.y;
-    }
-    update_destination_roi(parameters, data, src_roi, dst_roi);
+    update_destination_roi(data, src_roi, dst_roi);
     return status;
 }
 
@@ -123,6 +116,7 @@ static vx_status VX_CALLBACK processResample(vx_node node, const vx_reference *p
     vx_status return_status = VX_SUCCESS;
     ResampleLocalData *data = NULL;
     STATUS_ERROR_CHECK(vxQueryNode(node, VX_NODE_LOCAL_DATA_PTR, &data, sizeof(data)));
+    refreshResample(node, parameters, num, data);
     if (data->deviceType == AGO_TARGET_AFFINITY_GPU) {
 #if ENABLE_OPENCL
         return VX_ERROR_NOT_IMPLEMENTED;
@@ -131,9 +125,8 @@ static vx_status VX_CALLBACK processResample(vx_node node, const vx_reference *p
 #endif
     }
     if (data->deviceType == AGO_TARGET_AFFINITY_CPU) {
-        refreshResample(node, parameters, num, data);
-        rpp_status = rppt_resample_host((float *)data->pSrc, data->pSrcDesc, (float *)data->pDst, data->pDstDesc,
-                                        (float *)data->inRateTensor,(float *)data->outRateTensor, data->sampleFrames, data->sampleChannels,
+        rpp_status = rppt_resample_host(data->pSrc, data->pSrcDesc, data->pDst, data->pDstDesc,
+                                        (float *)data->pInRateTensor,(float *)data->pOutRateTensor, data->pSampleFrames, data->pSampleChannels,
                                         data->quality, data->handle->rppHandle);
         return_status = (rpp_status == RPP_SUCCESS) ? VX_SUCCESS : VX_FAILURE;
     }
@@ -143,9 +136,7 @@ static vx_status VX_CALLBACK processResample(vx_node node, const vx_reference *p
 static vx_status VX_CALLBACK initializeResample(vx_node node, const vx_reference *parameters, vx_uint32 num) {
     ResampleLocalData *data = new ResampleLocalData;
     memset(data, 0, sizeof(ResampleLocalData));
-
     vx_enum input_tensor_dtype, output_tensor_dtype;
-
     STATUS_ERROR_CHECK(vxReadScalarValue((vx_scalar)parameters[6], &data->quality));
     STATUS_ERROR_CHECK(vxCopyScalar((vx_scalar)parameters[7], &data->deviceType, VX_READ_ONLY, VX_MEMORY_TYPE_HOST));
 
@@ -167,9 +158,9 @@ static vx_status VX_CALLBACK initializeResample(vx_node node, const vx_reference
     data->pDstDesc->offsetInBytes = 0;
     fillAudioDescriptionPtrFromDims(data->pDstDesc, data->outputTensorDims);
 
-    data->sampleFrames = static_cast<signed int *>(calloc(data->pSrcDesc->n, sizeof(signed int)));
-    data->sampleChannels = static_cast<signed int *>(calloc(data->pSrcDesc->n, sizeof(signed int)));
-    data->inRateTensor = static_cast<float *>(calloc(data->pSrcDesc->n, sizeof(float)));
+    data->pSampleFrames = static_cast<signed int *>(calloc(data->pSrcDesc->n, sizeof(unsigned int)));
+    data->pSampleChannels = static_cast<signed int *>(calloc(data->pSrcDesc->n, sizeof(unsigned int)));
+    data->pInRateTensor = static_cast<float *>(calloc(data->pSrcDesc->n, sizeof(float)));
     refreshResample(node, parameters, num, data);
     STATUS_ERROR_CHECK(createRPPHandle(node, &data->handle, data->pSrcDesc->n, data->deviceType));
     STATUS_ERROR_CHECK(vxSetNodeAttribute(node, VX_NODE_LOCAL_DATA_PTR, &data, sizeof(data)));
@@ -180,12 +171,12 @@ static vx_status VX_CALLBACK uninitializeResample(vx_node node, const vx_referen
     ResampleLocalData *data;
     STATUS_ERROR_CHECK(vxQueryNode(node, VX_NODE_LOCAL_DATA_PTR, &data, sizeof(data)));
     STATUS_ERROR_CHECK(releaseRPPHandle(node, data->handle, data->deviceType));
-    if(data->sampleFrames != nullptr) free(data->sampleFrames);
-    if(data->sampleChannels != nullptr) free(data->sampleChannels);
-    if(data->inRateTensor != nullptr) free(data->inRateTensor);
+    if(data->pSampleFrames != nullptr) free(data->pSampleFrames);
+    if(data->pSampleChannels != nullptr) free(data->pSampleChannels);
+    if(data->pInRateTensor != nullptr) free(data->pInRateTensor);
     delete(data->pSrcDesc);
     delete(data->pDstDesc);
-    delete (data);
+    delete(data);
     return VX_SUCCESS;
 }
 
@@ -219,8 +210,7 @@ vx_status Resample_Register(vx_context context) {
     ERROR_CHECK_OBJECT(kernel);
     AgoTargetAffinityInfo affinity;
     vxQueryContext(context, VX_CONTEXT_ATTRIBUTE_AMD_AFFINITY, &affinity, sizeof(affinity));
-#if ENABLE_OPENCL || ENABLE_HIP
-    // enable OpenCL buffer access since the kernel_f callback uses OpenCL buffers instead of host accessible buffers
+#if ENABLE_HIP
     vx_bool enableBufferAccess = vx_true_e;
     if (affinity.device_type == AGO_TARGET_AFFINITY_GPU)
         STATUS_ERROR_CHECK(vxSetKernelAttribute(kernel, VX_KERNEL_ATTRIBUTE_AMD_GPU_BUFFER_ACCESS_ENABLE, &enableBufferAccess, sizeof(enableBufferAccess)));
@@ -238,7 +228,6 @@ vx_status Resample_Register(vx_context context) {
         PARAM_ERROR_CHECK(vxAddParameterToKernel(kernel, 4, VX_INPUT, VX_TYPE_TENSOR, VX_PARAMETER_STATE_REQUIRED));
         PARAM_ERROR_CHECK(vxAddParameterToKernel(kernel, 5, VX_INPUT, VX_TYPE_ARRAY, VX_PARAMETER_STATE_REQUIRED));
         PARAM_ERROR_CHECK(vxAddParameterToKernel(kernel, 6, VX_INPUT, VX_TYPE_SCALAR, VX_PARAMETER_STATE_REQUIRED));
-        // PARAM_ERROR_CHECK(vxAddParameterToKernel(kernel, 7, VX_INPUT, VX_TYPE_SCALAR, VX_PARAMETER_STATE_REQUIRED)); // maxDstWidth
         PARAM_ERROR_CHECK(vxAddParameterToKernel(kernel, 7, VX_INPUT, VX_TYPE_SCALAR, VX_PARAMETER_STATE_REQUIRED));
         PARAM_ERROR_CHECK(vxFinalizeKernel(kernel));
     }

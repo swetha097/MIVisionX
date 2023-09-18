@@ -122,7 +122,7 @@ ParameterFactory::generate_seed()
 }
 
 int64_t
-ParameterFactory::get_seed_from_seedsequence()
+ParameterFactory::get_seed_from_seed_sequence()
 {
     increment_seed_sequence_idx();
     return _seed_vector[_seed_sequence_idx];

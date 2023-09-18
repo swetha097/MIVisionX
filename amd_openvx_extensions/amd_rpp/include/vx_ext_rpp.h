@@ -1512,14 +1512,38 @@ extern "C"
      * successful creation should be checked using <tt>\ref vxGetStatus</tt>.
      */
     SHARED_PUBLIC vx_node VX_API_CALL vxExtRppResample(vx_graph graph, vx_tensor pSrc, vx_tensor pDst, vx_tensor pSrcDims, vx_tensor pDstDims, vx_tensor outRateTensor, vx_array inRateTensor, vx_scalar quality);
-    /*
-    TODO: Add the params
-    */
+    /*! \brief [Graph] Creates a RPP Resample function node.
+     * \ingroup group_amd_rpp
+     * \param [in] graph The handle to the graph.
+     * \param [in] pSrc1 The input tensor in <tt>\ref VX_TYPE_UINT8<tt> or <tt>\ref VX_TYPE_FLOAT32<tt> or
+     * <tt>\ref VX_TYPE_FLOAT16<tt> or <tt>\ref VX_TYPE_INT8<tt> format data.
+	 * \param [in] pSrc2 The input tensor in <tt>\ref VX_TYPE_UINT8<tt> or <tt>\ref VX_TYPE_FLOAT32<tt> or
+     * <tt>\ref VX_TYPE_FLOAT16<tt> or <tt>\ref VX_TYPE_INT8<tt> format data.
+     * \param [out] pDst The output tensor in <tt>\ref VX_TYPE_UINT8<tt> or <tt>\ref VX_TYPE_FLOAT32<tt> or
+     * <tt>\ref VX_TYPE_FLOAT16<tt> or <tt>\ref VX_TYPE_INT8<tt> format data.
+     * \param [in] nbatchSize The input batch size.
+     * \return <tt> vx_node</tt>.
+     * \returns A node reference <tt>\ref vx_node</tt>. Any possible errors preventing a
+     * successful creation should be checked using <tt>\ref vxGetStatus</tt>.
+     */
     SHARED_PUBLIC vx_node VX_API_CALL vxExtRppTensorMulScalar(vx_graph graph, vx_tensor pSrc, vx_tensor pDst, vx_scalar scalar_value, vx_uint32 nbatchSize);
-        /*
-    TODO: Add the params
-    */
-    SHARED_PUBLIC vx_node VX_API_CALL vxExtRppTensorAddTensor(vx_graph graph, vx_tensor pSrc1, vx_tensor pSrc2, vx_tensor pDst, vx_tensor srcRoi, vx_tensor dstRoi, vx_uint32 nbatchSize);
+    /*! \brief [Graph] Creates a RPP Resample function node.
+     * \ingroup group_amd_rpp
+     * \param [in] graph The handle to the graph.
+     * \param [in] pSrc1 The input tensor in <tt>\ref VX_TYPE_UINT8<tt> or <tt>\ref VX_TYPE_FLOAT32<tt> or
+     * <tt>\ref VX_TYPE_FLOAT16<tt> or <tt>\ref VX_TYPE_INT8<tt> format data.
+	 * \param [in] pSrc2 The input tensor in <tt>\ref VX_TYPE_UINT8<tt> or <tt>\ref VX_TYPE_FLOAT32<tt> or
+     * <tt>\ref VX_TYPE_FLOAT16<tt> or <tt>\ref VX_TYPE_INT8<tt> format data.
+     * \param [out] pDst The output tensor in <tt>\ref VX_TYPE_UINT8<tt> or <tt>\ref VX_TYPE_FLOAT32<tt> or
+     * <tt>\ref VX_TYPE_FLOAT16<tt> or <tt>\ref VX_TYPE_INT8<tt> format data.
+     * \param [in] pSrcDims The input tensor of batch size in <tt>unsigned int<tt> containing the roi values for the input in xywh/ltrb format.
+     * \param [in] pDstDims The input tensor of batch size in <tt>unsigned int<tt> containing the roi values for the input in xywh/ltrb format.
+     * \param [in] nbatchSize The input batch size.
+     * \return <tt> vx_node</tt>.
+     * \returns A node reference <tt>\ref vx_node</tt>. Any possible errors preventing a
+     * successful creation should be checked using <tt>\ref vxGetStatus</tt>.
+     */
+    SHARED_PUBLIC vx_node VX_API_CALL vxExtRppTensorAddTensor(vx_graph graph, vx_tensor pSrc1, vx_tensor pSrc2, vx_tensor pDst, vx_tensor pSrcDims, vx_tensor pDstDims, vx_uint32 nbatchSize);
     /*
     TODO: Add the params
     */

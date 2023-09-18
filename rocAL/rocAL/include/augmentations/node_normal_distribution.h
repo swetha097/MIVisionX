@@ -26,9 +26,7 @@ THE SOFTWARE.
 #include "graph.h"
 #include <random>
 
-
-class NormalDistributionNode : public Node
-{
+class NormalDistributionNode : public Node {
 public:
     NormalDistributionNode(const std::vector<Tensor *> &inputs, const std::vector<Tensor *> &outputs);
     NormalDistributionNode() = delete;

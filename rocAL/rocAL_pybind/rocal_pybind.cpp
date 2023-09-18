@@ -125,8 +125,8 @@ namespace rocal{
                 [](rocalTensor *output_tensor, rocalTensor *output_tensor1)
                 {
                     py::object fn_module = py::module::import("amd.rocal.fn");
-                    auto fn_function_call = fn_module.attr("tensor_add_tensor_float")(output_tensor, output_tensor1).cast<RocalTensor>();
-                    return fn_function_call;
+                    auto fn_call = fn_module.attr("tensor_add_tensor_float")(output_tensor, output_tensor1).cast<RocalTensor>();
+                    return fn_call;
                 },
                 R"code(
                 Adds a node for arithmetic operation
@@ -137,8 +137,8 @@ namespace rocal{
                 [](rocalTensor *output_tensor, float scalar)
                 {
                     py::object fn_module = py::module::import("amd.rocal.fn");
-                    auto fn_function_call = fn_module.attr("tensor_mul_scalar_float")(output_tensor, "scalar"_a=scalar).cast<RocalTensor>();
-                    return fn_function_call;
+                    auto fn_call = fn_module.attr("tensor_mul_scalar_float")(output_tensor, "scalar"_a=scalar).cast<RocalTensor>();
+                    return fn_call;
                 },
                 R"code(
                 Returns a tensor
