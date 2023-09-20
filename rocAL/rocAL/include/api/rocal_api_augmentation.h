@@ -38,7 +38,7 @@ THE SOFTWARE.
  * \note Accepts U8 and RGB24 input.
  * \param [in] p_context context for the pipeline.
  * \param [in] p_input Input Rocal Tensor
- * \param [in] new_order represents the new order of the frames in the sequence
+ * \param [in] new_order vector of type unsigned int representing the new order of the frames in the sequence
  * \param [in] is_output True: the output image is needed by user and will be copied to output buffers using the data transfer API calls. False: the output image is just an intermediate image, user is not interested in using it directly. This option allows certain optimizations to be achieved.
  * \return RocalTensor
  */
