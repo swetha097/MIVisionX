@@ -54,7 +54,7 @@ typedef struct _vx_amd_custom_params_t
  * \param [in] graph The handle to the graph.
  * \param [in] inputs The input tensor data.
  * \param [in] function custom funtion enum.
- * \param [in] custom_parameters array for user specified custom_parameters.
+ * \param [in] custom_parameters for user specified custom_parameters.
  * \param [out] outputs The output tensor data.
  * \return <tt> vx_node</tt>.
  * \returns A node reference <tt>\ref vx_node</tt>. Any possible errors preventing a

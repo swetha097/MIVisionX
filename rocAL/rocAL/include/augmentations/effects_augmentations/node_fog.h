@@ -24,6 +24,7 @@ THE SOFTWARE.
 #include "node.h"
 #include "parameter_factory.h"
 #include "parameter_vx.h"
+
 class FogNode : public Node {
    public:
     FogNode(const std::vector<Tensor *> &inputs, const std::vector<Tensor *> &outputs);
