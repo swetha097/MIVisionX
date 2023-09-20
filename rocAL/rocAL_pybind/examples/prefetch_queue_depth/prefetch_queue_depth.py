@@ -26,7 +26,6 @@ import sys
 import datetime
 import time
 
-
 def HybridTrainPipe(batch_size, num_threads, device_id, data_dir, rocal_cpu=True, prefetch_queue_depth=2):
     world_size = 1
     local_rank = 0
@@ -73,7 +72,6 @@ def main():
     end = datetime.datetime.now()
     print("Time taken (averaged over 10 runs) ", int(
         (end - start).total_seconds() * 1000) / 10, "milli seconds")
-
 
 if __name__ == '__main__':
     main()

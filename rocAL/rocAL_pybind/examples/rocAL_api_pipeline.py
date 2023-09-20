@@ -39,7 +39,7 @@ def draw_patches(img, idx, device=True, layout="NCHW"):
     if layout == "NCHW":
         image = image.transpose([1, 2, 0])
     image = cv2.cvtColor(image, cv2.COLOR_RGB2BGR)
-    cv2.imwrite("OUTPUT_IMAGES_PYTHON/FILE_READER/" +
+    cv2.imwrite("OUTPUT_FOLDER/FILE_READER/" +
                 str(idx)+"_"+"train"+".png", image * 255)
 
 
@@ -48,7 +48,7 @@ def main():
         print('Please pass image_folder cpu/gpu batch_size')
         exit(0)
     try:
-        path = "OUTPUT_IMAGES_PYTHON/FILE_READER/"
+        path = "OUTPUT_FOLDER/FILE_READER/"
         isExist = os.path.exists(path)
         if not isExist:
             os.makedirs(path)
@@ -97,7 +97,7 @@ def main():
         print(it)
         print("************************************** i *************************************", i)
         for img in it[0]:
-            cnt = cnt + 1
+            cnt += 1
             draw_patches(img[0], cnt, device=rocal_cpu, layout="NCHW")
     imageIteratorPipeline.reset()
     print("*********************************************************************")

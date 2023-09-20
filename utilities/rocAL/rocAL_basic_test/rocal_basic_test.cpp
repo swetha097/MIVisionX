@@ -106,7 +106,7 @@ int main(int argc, const char **argv) {
         rocalCreateLabelReader(handle, folderPath1);
     else
         rocalCreateTextFileBasedLabelReader(handle, label_text_file_path);
-    rocalCropFixed(handle, decoded_output, 224, 224, true, 0.9, 1.1, 0.1, 0.1);
+    rocalCropResizeFixed(handle, decoded_output, 224, 224, true, 0.9, 1.1, 0.1, 0.1);
 
     if (rocalGetStatus(handle) != ROCAL_OK) {
         std::cout << "JPEG source could not initialize : " << rocalGetErrorMessage(handle) << std::endl;
@@ -178,7 +178,7 @@ int main(int argc, const char **argv) {
             for (int i = 0; i < inputBatchSize; i++) {
                 names[i] = imageNamesStr.substr(pos, ImageNameLen[i]);
                 pos += ImageNameLen[i];
-                std::cout << "\n name: " << names[i] << " label: " << labels_buffer[i] << " - ";
+                std::cout << "name: " << names[i] << " label: " << labels_buffer[i] << " - " << std::endl;
             }
             std::cout << std::endl;
 

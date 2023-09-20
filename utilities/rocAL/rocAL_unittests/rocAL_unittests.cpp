@@ -560,7 +560,7 @@ int test(int test_case, int reader_type, const char *path, const char *outName, 
         case 40: {
             std::cout << ">>>>>>> Running "
                       << "rocalSnPNoiseFixed" << std::endl;
-            output = rocalSnPNoiseFixed(handle, input, true, 0.2, 0.2, 0.2, 0.5, 0);
+            output = rocalSnPNoiseFixed(handle, input, 0.2, 0.2, 0.2, 0.5, true, 0);
         } break;
         case 41: {
             std::cout << ">>>>>>> Running "

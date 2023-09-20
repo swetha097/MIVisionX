@@ -29,7 +29,7 @@ from parse_config import parse_args
 import cupy as cp
 
 
-def draw_patches(img, idx, device_type):
+def draw_patches(img, idx, device_type, args=None):
     import cv2
     args = parse_args()
     if device_type == "gpu":
@@ -37,7 +37,7 @@ def draw_patches(img, idx, device_type):
     if not args.NHWC:
         img = img.transpose([0, 1, 2])
     image = cv2.cvtColor(img, cv2.COLOR_RGB2BGR)
-    cv2.imwrite("OUTPUT_IMAGES_PYTHON/TF_READER/CLASSIFICATION/" +
+    cv2.imwrite("OUTPUT_FOLDER/TF_READER/CLASSIFICATION/" +
                 str(idx) + "_" + "train" + ".png", image)
 
 
@@ -58,7 +58,7 @@ def main():
         'image/filename': 'image/filename'
     }
     try:
-        path = "OUTPUT_IMAGES_PYTHON/TF_READER/CLASSIFICATION/"
+        path = "OUTPUT_FOLDER/TF_READER/CLASSIFICATION/"
         is_exist = os.path.exists(path)
         if not is_exist:
             os.makedirs(path)
@@ -97,13 +97,12 @@ def main():
             print("lables_array", labels_array)
             print("\n\nPrinted first batch with", (batch_size), "images!")
         for element in list(range(batch_size)):
-            cnt = cnt + 1
-            draw_patches(images_array[element], cnt, device)
+            cnt += 1
+            draw_patches(images_array[element], cnt, device, args=args)
         break
     image_iterator.reset()
 
-    print("###############################################    TF CLASSIFICATION    ###############################################")
-    print("###############################################    SUCCESS              ###############################################")
+    print("##############################  TF CLASSIFICATION  SUCCESS  ############################")
 
 
 if __name__ == "__main__":

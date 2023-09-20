@@ -134,7 +134,7 @@ void CIFAR10DataLoader::set_random_bbox_data_reader(std::shared_ptr<RandomBBoxCr
     _randombboxcrop_meta_data_reader = randombboxcrop_meta_data_reader;
 }
 
-std::vector<std::vector<float>>
+std::vector<std::vector<float>>&
 CIFAR10DataLoader::get_batch_random_bbox_crop_coords() {
     return _crop_coords_batch;
 }
@@ -256,7 +256,7 @@ CIFAR10DataLoader::update_output_image() {
 
     _output_decoded_img_info = _circ_buff.get_image_info();
     if (_randombboxcrop_meta_data_reader) {
-        _output_cropped_img_info = _circ_buff.get_cropped_image_info();
+        _output_cropped_image_info = _circ_buff.get_cropped_image_info();
     }
     _output_names = _output_decoded_img_info._image_names;
     _output_tensor->update_tensor_roi(_output_decoded_img_info._roi_width, _output_decoded_img_info._roi_height);
@@ -284,5 +284,5 @@ decoded_image_info CIFAR10DataLoader::get_decode_image_info() {
 }
 
 crop_image_info CIFAR10DataLoader::get_crop_image_info() {
-    return _output_cropped_img_info;
+    return _output_cropped_image_info;
 }
