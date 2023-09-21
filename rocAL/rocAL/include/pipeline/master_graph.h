@@ -46,7 +46,7 @@ THE SOFTWARE.
 #include "randombboxcrop_meta_data_reader.h"
 #include "rocal_api_types.h"
 #define MAX_STRING_LENGTH 100
-#define MAX_OBJECTS 50  // Setting an arbitrary value 50.(Max number of objects/image in COCO dataset is 93)
+#define MAX_OBJECTS 50        // Setting an arbitrary value 50.(Max number of objects/image in COCO dataset is 93)
 #define BBOX_COUNT 4
 #define MAX_NUM_ANCHORS 8732  // Num of bbox achors used in SSD training
 #define MAX_MASK_BUFFER 10000
@@ -145,18 +145,18 @@ class MasterGraph {
     void notify_user_thread();
     /// no_more_processed_data() is logically linked to the notify_user_thread() and is used to tell the user they've already consumed all the processed tensors
     bool no_more_processed_data();
-    RingBuffer _ring_buffer;                        //!< The queue that keeps the tensors that have benn processed by the internal thread (_output_thread) asynchronous to the user's thread
-    pMetaDataBatch _augmented_meta_data = nullptr;  //!< The output of the meta_data_graph,
+    RingBuffer _ring_buffer;                                                      //!< The queue that keeps the tensors that have benn processed by the internal thread (_output_thread) asynchronous to the user's thread
+    pMetaDataBatch _augmented_meta_data = nullptr;                                //!< The output of the meta_data_graph,
     std::shared_ptr<CropCordBatch> _random_bbox_crop_cords_data = nullptr;
     std::thread _output_thread;
-    TensorList _internal_tensor_list;                       //!< Keeps a list of ovx tensors that are used to store the augmented outputs (there is an augmentation output batch per element in the list)
-    TensorList _output_tensor_list;                         //!< Keeps a list of ovx tensors(augmented outputs) that are to be passed to the user (there is an augmentation output batch per element in the list)
-    std::list<Tensor *> _internal_tensors;                  //!< Keeps all the ovx tensors (virtual/non-virtual) either intermediate tensors, or input tensors that feed the graph
-    std::list<std::shared_ptr<Node>> _nodes;                //!< List of all the nodes
-    std::list<std::shared_ptr<Node>> _root_nodes;           //!< List of all root nodes (image/video loaders)
-    std::list<std::shared_ptr<Node>> _meta_data_nodes;      //!< List of nodes where meta data has to be updated after augmentation
-    std::map<Tensor *, std::shared_ptr<Node>> _tensor_map;  //!< key: tensor, value : Parent node
-    void *_output_tensor_buffer = nullptr;                  //!< In the GPU processing case , is used to convert the U8 samples to float32 before they are being transfered back to host
+    TensorList _internal_tensor_list;                                             //!< Keeps a list of ovx tensors that are used to store the augmented outputs (there is an augmentation output batch per element in the list)
+    TensorList _output_tensor_list;                                               //!< Keeps a list of ovx tensors(augmented outputs) that are to be passed to the user (there is an augmentation output batch per element in the list)
+    std::list<Tensor *> _internal_tensors;                                        //!< Keeps all the ovx tensors (virtual/non-virtual) either intermediate tensors, or input tensors that feed the graph
+    std::list<std::shared_ptr<Node>> _nodes;                                      //!< List of all the nodes
+    std::list<std::shared_ptr<Node>> _root_nodes;                                 //!< List of all root nodes (image/video loaders)
+    std::list<std::shared_ptr<Node>> _meta_data_nodes;                            //!< List of nodes where meta data has to be updated after augmentation
+    std::map<Tensor *, std::shared_ptr<Node>> _tensor_map;                        //!< key: tensor, value : Parent node
+    void *_output_tensor_buffer = nullptr;                                        //!< In the GPU processing case , is used to convert the U8 samples to float32 before they are being transfered back to host
 
     // Output tensorList for metadata
     std::vector<rocalTensorList *> _metadata_output_tensor_list;
@@ -165,27 +165,27 @@ class MasterGraph {
     TensorList _mask_tensor_list;
     std::vector<size_t> _meta_data_buffer_size;
 #if ENABLE_HIP
-    DeviceManagerHip _device;  //!< Keeps the device related constructs needed for running on GPU
+    DeviceManagerHip _device;                                                     //!< Keeps the device related constructs needed for running on GPU
 #elif ENABLE_OPENCL
-    DeviceManager _device;  //!< Keeps the device related constructs needed for running on GPU
+    DeviceManager _device;                                                        //!< Keeps the device related constructs needed for running on GPU
 #endif
     std::shared_ptr<Graph> _graph = nullptr;
     RocalAffinity _affinity;
-    size_t _cpu_num_threads;       //!< Defines the number of CPU threads used for processing
-    const int _gpu_id;             //!< Defines the device id used for processing
-    pLoaderModule _loader_module;  //!< Keeps the loader module used to feed the input the tensors of the graph
+    size_t _cpu_num_threads;                                                      //!< Defines the number of CPU threads used for processing
+    const int _gpu_id;                                                            //!< Defines the device id used for processing
+    pLoaderModule _loader_module;                                                 //!< Keeps the loader module used to feed the input the tensors of the graph
     TimingDBG _convert_time, _process_time, _bencode_time;
-    const size_t _user_batch_size;  //!< Batch size provided by the user
+    const size_t _user_batch_size;                                                //!< Batch size provided by the user
     vx_context _context;
-    const RocalMemType _mem_type;  //!< Is set according to the _affinity, if GPU, is set to CL, otherwise host
+    const RocalMemType _mem_type;                                                 //!< Is set according to the _affinity, if GPU, is set to CL, otherwise host
     std::shared_ptr<MetaDataReader> _meta_data_reader = nullptr;
     std::shared_ptr<MetaDataGraph> _meta_data_graph = nullptr;
     std::shared_ptr<RandomBBoxCrop_MetaDataReader> _randombboxcrop_meta_data_reader = nullptr;
     bool _first_run = true;
-    bool _processing;  //!< Indicates if internal processing thread should keep processing or not
+    bool _processing;                                                             //!< Indicates if internal processing thread should keep processing or not
     const static unsigned SAMPLE_SIZE = sizeof(unsigned char);
-    int _remaining_count;  //!< Keeps the count of remaining tensors yet to be processed for the user,
-    bool _loop;            //!< Indicates if user wants to indefinitely loops through tensors or not
+    int _remaining_count;                                                         //!< Keeps the count of remaining tensors yet to be processed for the user,
+    bool _loop;                                                                   //!< Indicates if user wants to indefinitely loops through tensors or not
     size_t _prefetch_queue_depth;
     bool _output_routine_finished_processing = false;
     const RocalTensorDataType _out_data_type;
@@ -195,13 +195,13 @@ class MasterGraph {
     size_t _sequence_batch_size = 0;                                              //!< Indicates the _user_batch_size when sequence reader outputs are required
     bool _is_sequence_reader_output = false;                                      //!< Set to true if Sequence Reader is invoked.
     // box encoder variables
-    bool _is_box_encoder = false;      // bool variable to set the box encoder
-    std::vector<float> _anchors;       // Anchors to be used for encoding, as the array of floats is in the ltrb format of size 8732x4
-    size_t _num_anchors;               // number of bbox anchors
-    float _criteria = 0.5;             // Threshold IoU for matching bounding boxes with anchors. The value needs to be between 0 and 1.
-    float _scale;                      // Rescales the box and anchor values before the offset is calculated (for example, to return to the absolute values).
-    bool _offset;                      // Returns normalized offsets ((encoded_bboxes*scale - anchors*scale) - mean) / stds in EncodedBBoxes that use std and the mean and scale arguments if offset="True"
-    std::vector<float> _means, _stds;  //_means:  [x y w h] mean values for normalization _stds: [x y w h] standard deviations for offset normalization.
+    bool _is_box_encoder = false;                                                 // bool variable to set the box encoder
+    std::vector<float> _anchors;                                                  // Anchors to be used for encoding, as the array of floats is in the ltrb format of size 8732x4
+    size_t _num_anchors;                                                          // number of bbox anchors
+    float _criteria = 0.5;                                                        // Threshold IoU for matching bounding boxes with anchors. The value needs to be between 0 and 1.
+    float _scale;                                                                 // Rescales the box and anchor values before the offset is calculated (for example, to return to the absolute values).
+    bool _offset;                                                                 // Returns normalized offsets ((encoded_bboxes*scale - anchors*scale) - mean) / stds in EncodedBBoxes that use std and the mean and scale arguments if offset="True"
+    std::vector<float> _means, _stds;                                             //_means:  [x y w h] mean values for normalization _stds: [x y w h] standard deviations for offset normalization.
     bool _augmentation_metanode = false;
 #if ENABLE_HIP
     BoxEncoderGpu *_box_encoder_gpu = nullptr;
