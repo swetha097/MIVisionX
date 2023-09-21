@@ -23,11 +23,11 @@ THE SOFTWARE.
 #include "node_copy.h"
 
 #include <vx_ext_rpp.h>
-#include "node_copy.h"
-#include "exception.h"
 
-CopyNode::CopyNode(const std::vector<Tensor *> &inputs, const std::vector<Tensor *> &outputs) : Node(inputs, outputs) {
-}
+#include "exception.h"
+#include "node_copy.h"
+
+CopyNode::CopyNode(const std::vector<Tensor *> &inputs, const std::vector<Tensor *> &outputs) : Node(inputs, outputs) {}
 
 void CopyNode::create_node() {
     if (_node)

@@ -74,7 +74,7 @@ void WarpAffineNode::update_affine_array() {
         _affine[i * 6 + 5] = _o1.renew();
     }
     vx_status affine_status;
-    affine_status = vxCopyArrayRange((vx_array)_affine_array, 0, _batch_size * 6, sizeof(vx_float32), _affine.data(), VX_WRITE_ONLY, VX_MEMORY_TYPE_HOST);  // vxAddArrayItems(_width_array,_batch_size, _width, sizeof(vx_uint32));
+    affine_status = vxCopyArrayRange((vx_array)_affine_array, 0, _batch_size * 6, sizeof(vx_float32), _affine.data(), VX_WRITE_ONLY, VX_MEMORY_TYPE_HOST);
     if (affine_status != 0)
         THROW(" vxCopyArrayRange failed in the WarpAffine(vxExtRppWarpAffinePD) node: " + TOSTR(affine_status))
 }
