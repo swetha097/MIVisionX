@@ -692,8 +692,7 @@ int test(int test_case, int reader_type, const char *path, const char *outName, 
         int numOfClasses = 0;
         int image_name_length[inputBatchSize];
         switch (pipeline_type) {
-            case 1:  // classification pipeline
-            {
+            case 1: {   // classification pipeline
                 RocalTensorList labels = rocalGetImageLabels(handle);
                 int *label_id = reinterpret_cast<int *>(labels->at(0)->buffer());  // The labels are present contiguously in memory
                 int img_size = rocalGetImageNameLen(handle, image_name_length);
@@ -725,8 +724,7 @@ int test(int test_case, int reader_type, const char *path, const char *outName, 
                     std::cout << "\n";
                 }
             } break;
-            case 2:  // detection pipeline
-            {
+            case 2: {   // detection pipeline
                 int img_size = rocalGetImageNameLen(handle, image_name_length);
                 char img_name[img_size];
                 rocalGetImageName(handle, img_name);
@@ -750,8 +748,7 @@ int test(int test_case, int reader_type, const char *path, const char *outName, 
                     std::cout << "\nHeight:" << img_sizes_batch[(i * 2) + 1];
                 }
             } break;
-            case 3:  // keypoints pipeline
-            {
+            case 3: {   // keypoints pipeline
                 int size = inputBatchSize;
                 RocalJointsData *joints_data;
                 rocalGetJointsDataPtr(handle, &joints_data);

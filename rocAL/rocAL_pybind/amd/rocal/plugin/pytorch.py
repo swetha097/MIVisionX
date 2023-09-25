@@ -111,7 +111,6 @@ class ROCALGenericIterator(object):
             self.loader.get_img_sizes(self.img_size)
 
             for i in range(self.batch_size):
-
                 self.label_2d_numpy = np.reshape(
                     self.labels[i], (-1, 1)).tolist()
                 self.bb_2d_numpy = np.reshape(self.bboxes[i], (-1, 4)).tolist()

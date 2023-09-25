@@ -52,7 +52,6 @@ def draw_patches(img, idx, bboxes=None, args=None):
         cv2.imwrite("OUTPUT_FOLDER/CAFFE_READER/DETECTION/" +
                     str(idx)+"_"+"train"+".png", image)
 
-
 def main():
     args = parse_args()
     # Args
@@ -131,7 +130,6 @@ def main():
                                  cnt, bboxes[element], args=args)
             data_loader.reset()
     print("##############################  CAFFE READER (CLASSIFCATION/ DETECTION)  SUCCESS  ############################")
-
 
 if __name__ == "__main__":
     main()

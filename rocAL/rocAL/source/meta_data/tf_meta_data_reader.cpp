@@ -103,10 +103,7 @@ void TFMetaDataReader::read_record(std::ifstream &file_contents, uint file_size,
     tensorflow::Example single_example;
     single_example.ParseFromArray(data, data_length);
     tensorflow::Features features = single_example.features();
-    //..............
-    // tensorflow::Features features = single_example.features();
     // features.PrintDebugString();
-    //..............
     auto feature = features.feature();
     tensorflow::Feature single_feature;
     std::string fname;
