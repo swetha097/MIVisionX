@@ -41,7 +41,7 @@ static_assert(sizeof(float16) == 2, "Bad size");
 namespace pybind11 {
 namespace detail {
 constexpr int NPY_FLOAT16 = 23;
-// Kinda following: https://github.com/pybind/pybind11/blob/9bb3313162c0b856125e481ceece9d8faa567716/include/pybind11/numpy.h#L1000
+// Similar to the implementation in: https://github.com/pybind/pybind11/blob/9bb3313162c0b856125e481ceece9d8faa567716/include/pybind11/numpy.h#L1000
 template <>
 struct npy_format_descriptor<float16> {
     static constexpr auto name = _("float16");
