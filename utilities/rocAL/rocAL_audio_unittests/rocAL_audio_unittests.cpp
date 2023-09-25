@@ -59,14 +59,13 @@ int main(int argc, const char **argv)
 
     int argIdx = 0;
     const char *path = argv[++argIdx];
-    unsigned test_case;
-    float sample_rate = 0.0; //atoi(argv[++argIdx]);
-    bool downmix = false; //atoi(argv[++argIdx]);
-    unsigned max_frames = 1; //atoi(argv[++argIdx]);
+    unsigned test_case = 0;
+    float sample_rate = 0.0;
+    bool downmix = false;
+    unsigned max_frames = 1;
     unsigned max_channels = 1;
-
-
     bool gpu = 0;
+
     if (argc >= argIdx + MIN_ARG_COUNT)
         test_case = atoi(argv[++argIdx]);
 
@@ -86,46 +85,39 @@ int main(int argc, const char **argv)
         gpu = atoi(argv[++argIdx]);
 
     int return_val = test(test_case, path, sample_rate, downmix, max_frames, max_channels, gpu);
-    return 0;
+    return return_val;
 }
 
 int test(int test_case, const char *path, float sample_rate, int downmix, unsigned max_frames, unsigned max_channels, int gpu)
 {
-    size_t num_threads = 1;
     int inputBatchSize = 10;
     std::cout << ">>> test case " << test_case << std::endl;
     std::cout << ">>> Running on " << (gpu ? "GPU" : "CPU") << std::endl;
 
-
     auto handle = rocalCreate(inputBatchSize,
-                             gpu ? RocalProcessMode::ROCAL_PROCESS_GPU : RocalProcessMode::ROCAL_PROCESS_CPU, 0,
-                             1);
+                              gpu ? RocalProcessMode::ROCAL_PROCESS_GPU : RocalProcessMode::ROCAL_PROCESS_CPU, 0,
+                              1);
 
-    if (rocalGetStatus(handle) != ROCAL_OK)
-    {
+    if (rocalGetStatus(handle) != ROCAL_OK) {
         std::cout << "Could not create the Rocal contex\n";
         return -1;
     }
 
     /*>>>>>>>>>>>>>>>> Creating Rocal parameters  <<<<<<<<<<<<<<<<*/
 
-    rocalSetSeed(0);
-
-
     RocalMetaData metadata_output;
     // MetaData reader for input file_list which has file seperated by labels
-
-    // if (METADATA) { // To uncomment later when meta-data reader for audio is added
-    //     std::cerr << "META DATA READER";
+    // if (METADATA) { // To uncomment later when meta-data reader for audio is added (PR4)
+    //     std::cout << "META DATA READER";
     //     const char* file_list_path = "/workspace/rnnt/AMD/MIVisionX-data/rocal_data/audio_samples/audio_file_list.txt" ; // TODO: Add this as an arg in main() 
     //     metadata_output = rocalCreateFileListLabelReader(handle, path, file_list_path);
     // }
 
     //Decoder
-    RocalTensor input1, output;
-    // RocalTensorList non_silent_region_op; // Uncomment when NSR is introduced
-    const char* file_list_path = "/media/MIVisionX-data/rocal_data/audio_samples/audio_file_list.txt" ; // use it when meta-data reader is introduced
-    input1 = rocalAudioFileSourceSingleShard(handle, path, file_list_path, 0, 1, true, false, false, false, max_frames, max_channels, 0, false, -1); // Yet to give support for stick_to_shard & shard_size
+    // RocalTensor input1; // Uncomment when augmentations are enabled
+    // RocalTensorList non_silent_region_op; // Uncomment when NSR is introduced (PR5)
+    // const char* file_list_path = "/media/MIVisionX-data/rocal_data/audio_samples/audio_file_list.txt" ; // Uncomment and use it when meta-data reader is introduced (PR4)
+    rocalAudioFileSourceSingleShard(handle, path, 0, 1, true, false, false, false, max_frames, max_channels, 0);
     if (rocalGetStatus(handle) != ROCAL_OK) {
         std::cout << "Audio source could not initialize : " << rocalGetErrorMessage(handle) << std::endl;
         return -1;
@@ -144,11 +136,11 @@ int test(int test_case, const char *path, float sample_rate, int downmix, unsign
         // break;
         case 1:
         {
+            std::cout<< "\n Augmentation - rocalPreEmphasisFilter ";
             RocalTensorLayout tensorLayout; // = RocalTensorLayout::None;
             RocalTensorOutputType tensorOutputType = RocalTensorOutputType::ROCAL_FP32;
-            // output = rocalPreEmphasisFilter(handle, input1, tensorOutputType, true);
             output = rocalPreEmphasisFilter(handle, input1, tensorOutputType, true);
-            std::cerr<<"\n Calls rocalPreEmphasisFilter ";
+            
         }
         break;
         // case 2:
@@ -228,63 +220,38 @@ int test(int test_case, const char *path, float sample_rate, int downmix, unsign
     }
 
     /*>>>>>>>>>>>>>>>>>>> Diplay using OpenCV <<<<<<<<<<<<<<<<<*/
-    const unsigned number_of_cols = 1; //1920 / w;
-    cv::Mat mat_output, mat_input;
-    RocalTensorOutputType tensorOutputType = RocalTensorOutputType::ROCAL_FP32;
-
-    cv::Mat mat_color;
-    int col_counter = 0;
-    //cv::namedWindow("output", CV_WINDOW_AUTOSIZE);
-    high_resolution_clock::time_point t1 = high_resolution_clock::now();
-    int index = 0;
+    cv::Mat mat_output, mat_input, mat_color;
+    int iteration = 0;
     RocalTensorList output_tensor_list;
 
-    while (rocalGetRemainingImages(handle) >= inputBatchSize)
+    while (rocalGetRemainingImages(handle) >= static_cast<size_t>(inputBatchSize))
     {
-        std::cerr<<"\n rocalGetRemainingImages:: "<<rocalGetRemainingImages(handle)<<"\t inputBatchsize:: "<<inputBatchSize  ;
-        std::cerr<<"\n index "<<index;
-        index++;
+        std::cout<<"\n rocalGetRemainingImages:: "<<rocalGetRemainingImages(handle)<<"\t inputBatchsize:: "<< inputBatchSize;
+        std::cout<<"\n iteration:: "<<iteration;
+        iteration++;
         if (rocalRun(handle) != 0) {
             break;
         }
         std::vector<float> audio_op;
         output_tensor_list = rocalGetOutputTensors(handle);
-        std::cerr<<"\n *****************************Audio output**********************************\n";
-        for(int idx = 0; idx < output_tensor_list->size(); idx++)
-        {
+        std::cout << "\n *****************************Audio output**********************************\n";
+        std::cout << "\n **************Printing the first 5 values of the Audio buffer**************\n";
+        for(uint idx = 0; idx < output_tensor_list->size(); idx++) {
             float * buffer = (float *)output_tensor_list->at(idx)->buffer();
             for(int n = 0; n < 5; n++)
-            {
-                std::cerr << buffer[n] << "\n";
-            }
-            
+                std::cout << buffer[n] << "\n";
         }
 
-        
         if (METADATA) {
             RocalTensorList labels = rocalGetImageLabels(handle);
-
-            for(int i = 0; i < labels->size(); i++)
-            {
+            for(uint i = 0; i < labels->size(); i++) {
                 int * labels_buffer = (int *)(labels->at(i)->buffer());
-                std::cerr << ">>>>> LABELS : " << labels_buffer[0] << "\t";
-
-
+                std::cout << ">>>>> LABELS : " << labels_buffer[0] << "\t";
             }
 
         }
-        std::cerr<<"******************************************************************************\n";
+        std::cout<<"******************************************************************************\n";
     }
-
-    high_resolution_clock::time_point t2 = high_resolution_clock::now();
-    auto dur = duration_cast<microseconds>(t2 - t1).count();
-    auto rocal_timing = rocalGetTimingInfo(handle);
-    std::cout << "Load     time " << rocal_timing.load_time << std::endl;
-    std::cout << "Decode   time " << rocal_timing.decode_time << std::endl;
-    std::cout << "Process  time " << rocal_timing.process_time << std::endl;
-    std::cout << "Transfer time " << rocal_timing.transfer_time << std::endl;
-    std::cout << ">>>>> Total Elapsed Time " << dur / 1000000 << " sec " << dur % 1000000 << " us " << std::endl;
     rocalRelease(handle);
-    exit(0);
     return 0;
 }

@@ -29,7 +29,7 @@ THE SOFTWARE.
 #include "circular_buffer.h"
 #include "audio_read_and_decode.h"
 #include "meta_data_reader.h"
-//
+
 // AudioLoader runs an internal thread for loading an decoding of audios asynchronously
 // It uses a circular buffer to store decoded audios for the user
 class AudioLoader : public LoaderModule {
@@ -80,5 +80,3 @@ private:
     int _device_id;
     size_t _max_decoded_samples, _max_decoded_channels;
 };
-
-

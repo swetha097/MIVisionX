@@ -26,6 +26,7 @@ THE SOFTWARE.
 ///
 /// \param rocal_context
 /// \param source_path path to the folder that contains the dataset or metadata file
+/// \param file_list_path is the path to file list that contains the file names and its corresponding labels
 /// \return RocalMetaData object, can be used to inquire about the rocal's output (processed) tensors
 extern "C" RocalMetaData ROCAL_API_CALL rocalCreateLabelReader(RocalContext rocal_context, const char* source_path, const char* file_list_path = "");
 

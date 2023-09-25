@@ -59,6 +59,7 @@ public:
     //! Returns the id of the latest file opened
     std::string id() override { return _last_id;};
 
+    //! Returns the name of the latest file_path opened
     std::string file_path() override { return _last_file_name; }
 
     unsigned count_items() override;
@@ -80,7 +81,8 @@ private:
     std::map<std::string, unsigned int > _file_size;
     unsigned  _curr_file_idx;
     unsigned _current_file_size;
-    std::string _last_id, _last_file_name;
+    std::string _last_id;
+    std::string _last_file_name;
     unsigned int _last_file_size;
     size_t _shard_id = 0;
     size_t _shard_count = 1;// equivalent of batch size

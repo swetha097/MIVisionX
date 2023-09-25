@@ -99,11 +99,11 @@ std::shared_ptr<Reader> create_reader(ReaderConfig config) {
             return ret;
         }
         break;
-        case StorageType ::FILE_LIST_SYSTEM:
+        case StorageType::FILE_LIST_SYSTEM:
         {
             auto ret = std::make_shared<FileListReader>();
             if(ret->initialize(config) != Reader::Status::OK)
-                throw std::runtime_error("File List  cannot access the storage");
+                throw std::runtime_error("File List cannot access the storage");
             return ret;
         }
         break;

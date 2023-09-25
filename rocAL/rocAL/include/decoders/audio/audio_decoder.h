@@ -28,7 +28,6 @@ THE SOFTWARE.
 #include "parameter_factory.h"
 #include "sndfile.h"
 
-
 class AudioDecoder {
 public:
     enum class Status {

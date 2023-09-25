@@ -24,13 +24,11 @@ THE SOFTWARE.
 #include "audio_decoder_factory.h"
 #include "reader_factory.h"
 
-size_t AudioSourceEvaluator::max_samples()
-{
+size_t AudioSourceEvaluator::max_samples() {
     return _samples_max;
 }
 
-size_t AudioSourceEvaluator::max_channels()
-{
+size_t AudioSourceEvaluator::max_channels() {
     return _channels_max;
 }
 
@@ -49,8 +47,7 @@ AudioSourceEvaluator::create(ReaderConfig reader_cfg, DecoderConfig decoder_cfg)
 }
 
 void
-AudioSourceEvaluator::find_max_dimension()
-{
+AudioSourceEvaluator::find_max_dimension() {
     _reader->reset();
     while( _reader->count_items() ) {
         size_t fsize = _reader->open();
@@ -67,7 +64,7 @@ AudioSourceEvaluator::find_max_dimension()
             WRN("Could not decode the header of the: "+ _reader->id())
             continue;
         }
-        if(samples <= 0 || channels <=0)
+        if(samples <= 0 || channels <= 0)
             continue;
         _samples_max = std::max(samples, _samples_max);
         _channels_max = std::max(channels, _channels_max);
