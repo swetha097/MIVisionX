@@ -147,7 +147,7 @@ enum RocalOutputMemType
     ROCAL_MEMCPY_PINNED = 2
 };
 
-// rocal external memcpy flags 
+// rocal external memcpy flags
 #define    ROCAL_MEMCPY_TO_HOST      1      // force copy to user provided host memory
 #define    ROCAL_MEMCPY_TO_DEVICE    2      // force copy to user provided device memory (gpu)
 #define    ROCAL_MEMCPY_IS_PINNED    4      // for future use
@@ -174,6 +174,28 @@ enum RocalTensorBackend {
     ROCAL_GPU = 1
 };
 
+enum RocalAudioBorderType {
+    ZERO = 0,
+    CLAMP,
+    REFLECT
+};
+
+enum RocalOutOfBoundsPolicy {
+    PAD = 0,
+    TRIMTOSHAPE,
+    ERROR
+};
+
+enum RocalSpectrogramLayout {
+    FT = 0,
+    TF
+};
+
+enum RocalMelScaleFormula {
+    SLANEY = 0,
+    HTK,
+};
+
 /*! \brief Tensor ROI type
  *
  * currently supports following formats
@@ -186,11 +208,5 @@ enum class RocalROICordsType {
 typedef struct {
     unsigned x1, y1, x2, y2;
 } RocalROICords;
-
-enum RocalAudioBorderType {
-    ZERO = 0,
-    CLAMP,
-    REFLECT
-};
 
 #endif //MIVISIONX_ROCAL_API_TYPES_H

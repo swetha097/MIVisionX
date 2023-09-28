@@ -33,7 +33,7 @@ from amd.rocal.pipeline import Pipeline
 def blend(*inputs, ratio=None, rocal_tensor_output_layout=types.NHWC, rocal_tensor_output_datatype=types.UINT8):
     """
     inputs - list containing the input images
-    
+
     ratio (float, optional, default = None) - ratio used for blending one image with another
 
     rocal_tensor_output_layout (int, optional, default = types.NHWC) - tensor layout for the augmentation output
@@ -51,7 +51,7 @@ def blend(*inputs, ratio=None, rocal_tensor_output_layout=types.NHWC, rocal_tens
 def snow(*inputs, snow=0.5, rocal_tensor_output_layout=types.NHWC, rocal_tensor_output_datatype=types.UINT8):
     """
     inputs - the input image passed to the augmentation
-    
+
     snow (float, default = 0.5) - snow fill value used for the augmentation
 
     rocal_tensor_output_layout (int, optional, default = types.NHWC) - tensor layout for the augmentation output
@@ -69,7 +69,7 @@ def snow(*inputs, snow=0.5, rocal_tensor_output_layout=types.NHWC, rocal_tensor_
 def exposure(*inputs, exposure=0.5, rocal_tensor_output_layout=types.NHWC, rocal_tensor_output_datatype=types.UINT8):
     """
     inputs - the input image passed to the augmentation
-    
+
     exposure (float, default = 0.5) - exposure fill value used for the augmentation
 
     rocal_tensor_output_layout (int, optional, default = types.NHWC) - tensor layout for the augmentation output
@@ -87,7 +87,7 @@ def exposure(*inputs, exposure=0.5, rocal_tensor_output_layout=types.NHWC, rocal
 def fish_eye(*inputs, rocal_tensor_output_layout=types.NHWC, rocal_tensor_output_datatype=types.UINT8):
     """
     inputs - the input image passed to the augmentation
-    
+
     rocal_tensor_output_layout (int, optional, default = types.NHWC) - tensor layout for the augmentation output
 
     rocal_tensor_output_datatype (int, optional, default = types.UINT8) - tensor dtype for the augmentation output
@@ -102,7 +102,7 @@ def fish_eye(*inputs, rocal_tensor_output_layout=types.NHWC, rocal_tensor_output
 def fog(*inputs, fog=0.5, rocal_tensor_output_layout=types.NHWC, rocal_tensor_output_datatype=types.UINT8):
     """
     inputs - the input image passed to the augmentation
-    
+
     fog (float, default = 0.5) - fog fill value used for the augmentation
 
     rocal_tensor_output_layout (int, optional, default = types.NHWC) - tensor layout for the augmentation output
@@ -120,7 +120,7 @@ def fog(*inputs, fog=0.5, rocal_tensor_output_layout=types.NHWC, rocal_tensor_ou
 def brightness(*inputs, alpha=None, beta=None, rocal_tensor_output_layout=types.NHWC, rocal_tensor_output_datatype=types.UINT8):
     """
     inputs - the input image passed to the augmentation
-    
+
     alpha (float, optional, default = None) - brightness multiplier. Values >= 0 are accepted. For example: 0 - black image, 1 - no change, 2 - increase brightness twice
 
     beta (float, optional, default = None) - brightness shift
@@ -143,7 +143,7 @@ def brightness_fixed(*inputs, alpha=1.0, beta=0.0,
                      rocal_tensor_output_layout=types.NHWC, rocal_tensor_output_datatype=types.UINT8):
     """
     inputs - the input image passed to the augmentation
-    
+
     alpha (float, optional, default = 1.0) - brightness multiplier. Values >= 0 are accepted. For example: 0 - black image, 1 - no change, 2 - increase brightness twice
 
     beta (float, optional, default = 0.0) - brightness shift
@@ -162,7 +162,7 @@ def brightness_fixed(*inputs, alpha=1.0, beta=0.0,
 def lens_correction(*inputs, strength=None, zoom=None, rocal_tensor_output_layout=types.NHWC, rocal_tensor_output_datatype=types.UINT8):
     """
     inputs - the input image passed to the augmentation
-    
+
     strength (float, optional, default = None) - strength value used for the augmentation
 
     zoom (float, optional, default = None) - zoom value used for the augmentation
@@ -184,7 +184,7 @@ def lens_correction(*inputs, strength=None, zoom=None, rocal_tensor_output_layou
 def blur(*inputs, kernel_size=None, rocal_tensor_output_layout=types.NHWC, rocal_tensor_output_datatype=types.UINT8):
     """
     inputs - the input image passed to the augmentation
-    
+
     kernel_size (int, default = None) - kernel size used for the filter
 
     rocal_tensor_output_layout (int, optional, default = types.NHWC) - tensor layout for the augmentation output
@@ -202,7 +202,7 @@ def blur(*inputs, kernel_size=None, rocal_tensor_output_layout=types.NHWC, rocal
 def contrast(*inputs, contrast_factor=None, contrast_center=None, rocal_tensor_output_layout=types.NHWC, rocal_tensor_output_datatype=types.UINT8):
     """
     inputs - the input image passed to the augmentation
-    
+
     contrast_factor (float, optional, default = None) - contrast multiplier used for the augmentation. Values >= 0 are accepted. For example: 0 - gray image, 1 - no change, 2 - increase contrast twice
 
     contrast_center (float, optional, default = None) - intensity value unaffected by the augmentation
@@ -224,7 +224,7 @@ def contrast(*inputs, contrast_factor=None, contrast_center=None, rocal_tensor_o
 def flip(*inputs, h_flip=0, v_flip=0, rocal_tensor_output_layout=types.NHWC, rocal_tensor_output_datatype=types.UINT8):
     """
     inputs - the input image passed to the augmentation
-    
+
     h_flip (int, optional, default = 0) - flip the horizontal dimensions
 
     v_flip (int, optional, default = 0) - flip the vertical dimension
@@ -246,7 +246,7 @@ def flip(*inputs, h_flip=0, v_flip=0, rocal_tensor_output_layout=types.NHWC, roc
 def gamma_correction(*inputs, gamma=0.5, rocal_tensor_output_layout=types.NHWC, rocal_tensor_output_datatype=types.UINT8):
     """
     inputs - the input image passed to the augmentation
-    
+
     gamma (float, default = 0.5) - gamma correction value used for the augmentation
 
     rocal_tensor_output_layout (int, optional, default = types.NHWC) - tensor layout for the augmentation output
@@ -264,7 +264,7 @@ def gamma_correction(*inputs, gamma=0.5, rocal_tensor_output_layout=types.NHWC, 
 def hue(*inputs, hue=None, rocal_tensor_output_layout=types.NHWC, rocal_tensor_output_datatype=types.UINT8):
     """
     inputs - the input image passed to the augmentation
-    
+
     hue (float, default = None) - hue change in degrees
 
     rocal_tensor_output_layout (int, optional, default = types.NHWC) - tensor layout for the augmentation output
@@ -282,7 +282,7 @@ def hue(*inputs, hue=None, rocal_tensor_output_layout=types.NHWC, rocal_tensor_o
 def jitter(*inputs, kernel_size=None, seed=0, rocal_tensor_output_layout=types.NHWC, rocal_tensor_output_datatype=types.UINT8):
     """
     inputs - the input image passed to the augmentation
-    
+
     kernel_size (int, optional, default = None) - kernel size used for the augmentation
 
     seed (int, optional, default = 0) - seed used for randomization in the augmentation
@@ -302,7 +302,7 @@ def jitter(*inputs, kernel_size=None, seed=0, rocal_tensor_output_layout=types.N
 def pixelate(*inputs, rocal_tensor_output_layout=types.NHWC, rocal_tensor_output_datatype=types.UINT8):
     """
     inputs - the input image passed to the augmentation
-    
+
     rocal_tensor_output_layout (int, optional, default = types.NHWC) - tensor layout for the augmentation output
 
     rocal_tensor_output_datatype (int, optional, default = types.UINT8) - tensor dtype for the augmentation output
@@ -318,11 +318,11 @@ def rain(*inputs, rain=None, rain_width=None, rain_height=None, rain_transparenc
          rocal_tensor_output_layout=types.NHWC, rocal_tensor_output_datatype=types.UINT8):
     """
     inputs - the input image passed to the augmentation
-    
+
     rain (float, optional, default = None) - rain fill value used for the augmentation
 
     rain_width (int, optional, default = None) - width of the rain pixels for the augmentation
-    
+
     rain_height (int, optional, default = None) - height of the rain pixels for the augmentation
 
     rain_transparency (float, optional, default = None) - transparency value used for the augmentation
@@ -563,7 +563,7 @@ def rotate(*inputs, angle=None, dest_width=0, dest_height=0, interpolation_type=
 def saturation(*inputs, saturation=1.0, rocal_tensor_output_layout=types.NHWC, rocal_tensor_output_datatype=types.UINT8):
     """
     inputs - the input image passed to the augmentation
-    
+
     saturation (float, default = 1.0) - The saturation change factor. Values must be non-negative. Example values: 0 - Completely desaturated image, 1 - No change to image's saturation.
 
     rocal_tensor_output_layout (int, optional, default = types.NHWC) - tensor layout for the augmentation output
@@ -586,7 +586,7 @@ def ssd_random_crop(*inputs, p_threshold=None, crop_area_factor=None, crop_aspec
     p_threshold (float, optional, default = None) - threshold value used for selecting bboxes during crop generation
 
     crop_area_factor (float, optional, default = None) - area factor used for crop generation
-    
+
     crop_aspect_ratio (float, optional, default = None) - aspect ratio of the cropping windows
 
     crop_pox_x (float, optional, default = None) - crop_x position used for crop generation
@@ -644,7 +644,7 @@ def warp_affine(*inputs, dest_width=0, dest_height=0, transform_matrix=[0, 0, 0,
 def vignette(*inputs, vignette=0.5, rocal_tensor_output_layout=types.NHWC, rocal_tensor_output_datatype=types.UINT8):
     """
     inputs - the input image passed to the augmentation
-    
+
     vignette (float, default = 0.5) - vignette value used for the augmentation output
 
     rocal_tensor_output_layout (int, optional, default = types.NHWC) - tensor layout for the augmentation output
@@ -671,7 +671,7 @@ def crop_mirror_normalize(*inputs, crop=[0, 0], crop_pos_x=0.5, crop_pos_y=0.5,
     crop_pox_y (float, optional, default = 0.5) - crop_y position used for crop generation
 
     crop_w (int, optional, default = 0) - crop width
-    
+
     crop_h (int, optional, default = 0) - crop height
 
     mean (list of floats, optional, default = [0.0]) - mean used for normalization
@@ -755,11 +755,11 @@ def crop(*inputs, crop=[0, 0], crop_pos_x=0.5, crop_pos_y=0.5, crop_pos_z=0.5,
     crop_pox_x (float, optional, default = 0.5) - crop_x position used for crop generation
 
     crop_pox_y (float, optional, default = 0.5) - crop_y position used for crop generation
-    
+
     crop_pox_z (float, optional, default = 0.5) - crop_z position used for crop generation
 
     crop_w (int, optional, default = 0) - crop width
-    
+
     crop_h (int, optional, default = 0) - crop height
 
     crop_d (int, optional, default = 1) - crop depth
@@ -802,7 +802,7 @@ def color_twist(*inputs, brightness=1.0, contrast=1.0, hue=0.0,
     brightness (float, optional, default = 1.0) - brightness multiplier. Values >= 0 are accepted. For example: 0 - black image, 1 - no change, 2 - increase brightness twice
 
     contrast (float, optional, default = 1.0) - contrast multiplier used for the augmentation. Values >= 0 are accepted. For example: 0 - gray image, 1 - no change, 2 - increase contrast twice
-    
+
     hue (float, optional, default = 0.0) - hue change in degrees
 
     saturation (float, optional, default = 1.0) - The saturation change factor. Values must be non-negative. Example values: 0 - Completely desaturated image, 1 - No change to image's saturation.
@@ -826,7 +826,7 @@ def color_twist(*inputs, brightness=1.0, contrast=1.0, hue=0.0,
 def uniform(*inputs, rng_range=[-1, 1]):
     """
     inputs - the input image passed to the augmentation
- 
+
     rng_range (list of ints, optional, default = [-1, 1]) - uniform distribution used for random number generation
     """
     output_param = b.createFloatUniformRand(rng_range[0], rng_range[1])
@@ -843,11 +843,11 @@ def random_bbox_crop(*inputs, all_boxes_above_threshold=True, allow_no_crop=True
     allow_no_crop (bool, optional, default = True) - If set to True, one of the possible outcomes of the random process will be to not crop
 
     aspect_ratio (list of floats, optional, default = None) - crop_y position used for crop generation
-    
+
     crop_shape (list of ints, optional, default = None) - crop shape used for crop generation
 
     num_attempts (int, optional, default = 1) - Number of attempts to get a crop window that matches the aspect_ratio and threshold
-    
+
     scaling (list of int, optional, default = None) - Range [min, max] for the crop size with respect to the original image dimensions.
 
     seed (int, optional, default = 1) - Random seed
@@ -898,11 +898,11 @@ def box_encoder(*inputs, anchors, criteria=0.5, means=None,
     criteria (float, optional, default = 0.5) - Threshold IoU for matching bounding boxes with anchors. The value needs to be between 0 and 1.
 
     means (list of floats, optional, default = None) - [x y w h] mean values for normalization.
-    
+
     offset (bool, optional, default = False) - Returns normalized offsets ((encoded_bboxes * scale - anchors * scale) - mean) / stds in Encoded bboxes that use std and the mean and scale arguments.
 
     scale (float, optional, default = 1.0) - Rescales the box and anchor values before the offset is calculated (for example, to return to the absolute values)
-    
+
     stds (list of float, optional, default = None) - [x y w h] standard deviations for offset normalization.
     """
     means = means if means else [0.0, 0.0, 0.0, 0.0]
@@ -919,7 +919,7 @@ def box_encoder(*inputs, anchors, criteria=0.5, means=None,
 def color_temp(*inputs, adjustment_value=50, rocal_tensor_output_layout=types.NHWC, rocal_tensor_output_datatype=types.UINT8):
     """
     inputs - the input image passed to the augmentation
-    
+
     adjustment_value (int, default = 50) - value for adjusting the color temperature
 
     rocal_tensor_output_layout (int, optional, default = types.NHWC) - tensor layout for the augmentation output
@@ -995,7 +995,7 @@ def box_iou_matcher(*inputs, anchors, criteria=0.5, high_threshold=0.5,
     criteria (float, optional, default = 0.5) - criteria value used for box iou matcher
 
     high_threshold (float, optional, default = 0.5) - upper threshold used for matching indices
-    
+
     low_threshold (float, optional, default = 0.4) - lower threshold used for matching indices
 
     allow_low_quality_matches (bool, optional, default = True) - Whether to allow low quality matches as output
@@ -1026,7 +1026,71 @@ def preemphasis_filter(*inputs, border=types.CLAMP, preemph_coeff=0.97, rocal_te
     '''
     preemph_coeff_float_param = b.createFloatParameter(preemph_coeff)
     kwargs_pybind = {"input_audio0": inputs[0], "rocal_tensor_output_type" :rocal_tensor_output_type,
-                     "is_output": False, "preemph_coeff": preemph_coeff_float_param, 
+                     "is_output": False, "preemph_coeff": preemph_coeff_float_param,
                      "preemph_border_type": border}
+
     preemphasis_output = b.PreEmphasisFilter(Pipeline._current_pipeline._handle ,*(kwargs_pybind.values()))
     return (preemphasis_output)
+
+def nonsilent_region(*inputs, rocal_tensor_output_type = types.FLOAT, bytes_per_sample_hint = [0], cutoff_db = -60, reference_power = 0.0, reset_interval = 8192, seed = -1, window_length = 2048):
+    """
+    Performs leading and trailing silence detection in an audio buffer.
+
+    The operator returns the beginning and length of the non-silent region by comparing the short term power calculated for window_length of the signal with a silence cut-off threshold. The signal is considered to be silent when the short_term_power_db is less than the cutoff_db. where:
+
+    short_term_power_db = 10 * log10( short_term_power / reference_power )
+
+    Unless specified otherwise, reference_power is the maximum power of the signal.
+    """
+    kwargs_pybind = {"input_audio0": inputs[0], "is_output": False, "cutoff_db": cutoff_db,
+                     "reference_power": reference_power, "reset_interval": reset_interval, "window_length": window_length}
+    non_silent_region_output = b.NonSilentRegion(Pipeline._current_pipeline._handle, *(kwargs_pybind.values()))
+    return non_silent_region_output
+
+def slice(*inputs, anchor = [], shape = [], axes = [1, 0], axis_names = "WH", bytes_per_sample_hint = [0], dtype = types.FLOAT, end = [], fill_values = [0.0], normalized_anchor = True, normalized_shape = True,  out_of_bounds_policy = types.ERROR, rel_end = [], rel_shape = [], rel_start = [], seed = -1, start = [] , rocal_tensor_output_type = types.FLOAT):
+    """
+    The slice can be specified by proving the start and end coordinates, or start coordinates and shape of the slice. Both coordinates and shapes can be provided in absolute or relative terms.
+
+    The slice arguments can be specified by the following named arguments:
+
+    start: Slice start coordinates (absolute)
+
+    rel_start: Slice start coordinates (relative)
+
+    end: Slice end coordinates (absolute)
+
+    rel_end: Slice end coordinates (relative)
+
+    shape: Slice shape (absolute)
+
+    rel_shape: Slice shape (relative)
+
+    """
+
+    kwargs_pybind = {"input_audio0": inputs[0], "is_output": False, "anchor": anchor[0], "shape": shape[0], "fill_values": fill_values, "axes": axes,
+                     "normalized_anchor": normalized_anchor , "normalized_shape": normalized_shape, "out_of_bounds_policy": out_of_bounds_policy, "rocal_tensor_output_type": rocal_tensor_output_type}
+    slice_output = b.audioSlice(Pipeline._current_pipeline._handle, *(kwargs_pybind.values()))
+    return slice_output
+
+def spectrogram(*inputs, bytes_per_sample_hint = [0], center_windows = True, layout = types.FT, nfft = None, power = 2, reflect_padding = True, seed = -1, window_fn = [], window_length = 512, window_step = 256, rocal_tensor_output_type = types.FLOAT) :
+    '''
+    Produces a spectrogram from a 1D signal (for example, audio).
+
+    Input data is expected to be one channel (shape being (nsamples,), (nsamples, 1), or (1, nsamples)) of type float32.
+    '''
+    kwargs_pybind = {"input_audio0": inputs[0], "is_output": False, "window_fn": window_fn, "center_windows": center_windows, "reflect_padding": reflect_padding,
+                     "layout": layout, "power": power, "nfft": nfft, "window_length": window_length, "window_step": window_step, "rocal_tensor_output_type": rocal_tensor_output_type}
+    spectrogram_output = b.Spectrogram(Pipeline._current_pipeline._handle, *(kwargs_pybind.values()))
+    return spectrogram_output
+
+def mel_filter_bank(*inputs, bytes_per_sample_hint = [0], freq_high = 0.0, freq_low = 0.0, mel_formula = types.SLANEY, nfilter = 128, normalize = True, sample_rate = 44100.0, seed = -1, rocal_tensor_output_type = types.FLOAT):
+    '''
+    Converts a spectrogram to a mel spectrogram by applying a bank of triangular filters.
+
+    The frequency (‘f’) dimension is selected from the input layout. In case of no layout, “f”, “ft”, or “*ft” is assumed, depending on the number of dimensions.
+    '''
+    kwargs_pybind = {"input_audio0": inputs[0], "is_output": False, "freq_high": freq_high, "freq_low": freq_low, "mel_formula": mel_formula,
+                     "nfilter": nfilter, "normalize": normalize, "sample_rate": sample_rate, "rocal_tensor_output_type": rocal_tensor_output_type}
+    mel_filter_bank_output = b.MelFilterBank(Pipeline._current_pipeline._handle, *(kwargs_pybind.values()))
+    return mel_filter_bank_output
+

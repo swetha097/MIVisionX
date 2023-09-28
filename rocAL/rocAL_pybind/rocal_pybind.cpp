@@ -195,7 +195,7 @@ namespace rocal{
             .def(
             "copy_data", [](rocalTensor& output_tensor, py::array array) {
                 auto buf = array.request();
-                output_tensor.copy_data(static_cast<void *>(buf.ptr), RocalOutputMemType::ROCAL_MEMCPY_HOST);               
+                output_tensor.copy_data(static_cast<void *>(buf.ptr), RocalOutputMemType::ROCAL_MEMCPY_HOST);
             },  py::return_value_policy::reference,
                 R"code(
                 Copies the ring buffer data to numpy arrays.
@@ -203,7 +203,7 @@ namespace rocal{
             )
             .def(
             "copy_data", [](rocalTensor& output_tensor, long array) {
-                output_tensor.copy_data((void *)array, RocalOutputMemType::ROCAL_MEMCPY_GPU);               
+                output_tensor.copy_data((void *)array, RocalOutputMemType::ROCAL_MEMCPY_GPU);
             },  py::return_value_policy::reference,
                 R"code(
                 Copies the ring buffer data to cupy arrays.
@@ -362,10 +362,23 @@ namespace rocal{
             .value("DECODER_VIDEO_FFMPEG_SW", ROCAL_DECODER_VIDEO_FFMPEG_SW)
             .value("DECODER_VIDEO_FFMPEG_HW", ROCAL_DECODER_VIDEO_FFMPEG_HW)
             .export_values();
-        py::enum_<RocalAudioBorderType>(types_m,"RocalAudioBorderType", "Rocal Audio Border Type")
+        py::enum_<RocalAudioBorderType>(types_m, "RocalAudioBorderType", "Rocal Audio Border Type")
             .value("ZERO", ZERO)
             .value("CLAMP", CLAMP)
             .value("REFLECT", REFLECT)
+            .export_values();
+        py::enum_<RocalSpectrogramLayout>(types_m, "RocalSpectrogramLayout", "Rocal Audio Spectrogram Layout")
+            .value("FT", FT)
+            .value("TF", TF)
+            .export_values();
+        py::enum_<RocalMelScaleFormula>(types_m, "RocalMelScaleFormula", "Rocal Audio Mel Formula")
+            .value("SLANEY", SLANEY)
+            .value("HTK", HTK)
+            .export_values();
+        py::enum_<RocalOutOfBoundsPolicy>(types_m, "RocalOutOfBoundsPolicy", "Rocal Audio Out Of Bounds Policy")
+            .value("PAD", PAD)
+            .value("TRIMTOSHAPE", TRIMTOSHAPE)
+            .value("ERROR", ERROR)
             .export_values();
         // rocal_api_info.h
         m.def("getRemainingImages", &rocalGetRemainingImages);
@@ -424,7 +437,7 @@ namespace rocal{
             unsigned int size_of_tensor_list = output_tensor_list->size();
             for (uint i = 0; i < size_of_tensor_list; i++)
                 list.append(output_tensor_list->at(i));
-            return list; 
+            return list;
         });
         m.def("getBoundingBoxCount", &rocalGetBoundingBoxCount);
         m.def("getImageLabels", [](RocalContext context) {
@@ -557,7 +570,7 @@ namespace rocal{
         // rocal_api_augmentation.h
         // m.def("SSDRandomCrop", &rocalSSDRandomCrop,
         //     py::return_value_policy::reference);
-        m.def("resize", &rocalResize, 
+        m.def("resize", &rocalResize,
             py::return_value_policy::reference);
         m.def("resizeMirrorNormalize", &rocalResizeMirrorNormalize,
             py::return_value_policy::reference);
@@ -627,7 +640,15 @@ namespace rocal{
             py::return_value_policy::reference);
         m.def("lensCorrection", &rocalLensCorrection,
             py::return_value_policy::reference);
-        m.def("PreEmphasisFilter", &rocalPreEmphasisFilter, 
+        m.def("PreEmphasisFilter", &rocalPreEmphasisFilter,
+            py::return_value_policy::reference);
+        m.def("NonSilentRegion", &rocalNonSilentRegion,"Performs leading and trailing silence detection in an audio buffer",
+            py::return_value_policy::reference);
+        m.def("audioSlice", &rocalSlice,"The slice can be specified by proving the start and end coordinates, or start coordinates and shape of the slice. Both coordinates and shapes can be provided in absolute or relative terms",
+            py::return_value_policy::reference);
+        m.def("Spectrogram", &rocalSpectrogram, "Produces a spectrogram from a 1D signal (for example, audio)",
+            py::return_value_policy::reference);
+        m.def("MelFilterBank", &rocalMelFilterBank, "Converts a spectrogram to a mel spectrogram by applying a bank of triangular filters",
             py::return_value_policy::reference);
     }
 }

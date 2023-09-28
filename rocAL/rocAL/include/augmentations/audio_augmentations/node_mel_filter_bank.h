@@ -21,42 +21,23 @@ THE SOFTWARE.
 */
 
 #pragma once
+#include "node.h"
+#include "graph.h"
+#include "rocal_api_types.h"
 
-#include "node_warp_affine.h"
-#include "node_exposure.h"
-#include "node_vignette.h"
-#include "node_jitter.h"
-#include "node_snp_noise.h"
-#include "node_snow.h"
-#include "node_rain.h"
-#include "node_color_temperature.h"
-#include "node_fog.h"
-#include "node_pixelate.h"
-#include "node_lens_correction.h"
-#include "node_gamma.h"
-#include "node_flip.h"
-#include "node_crop_resize.h"
-#include "node_brightness.h"
-#include "node_contrast.h"
-#include "node_blur.h"
-#include "node_fisheye.h"
-#include "node_blend.h"
-#include "node_resize.h"
-#include "node_rotate.h"
-#include "node_color_twist.h"
-#include "node_hue.h"
-#include "node_saturation.h"
-#include "node_crop_mirror_normalize.h"
-#include "node_resize_mirror_normalize.h"
-#include "node_resize_crop_mirror.h"
-#include "node_ssd_random_crop.h"
-#include "node_crop.h"
-#include "node_random_crop.h"
-#include "node_copy.h"
-#include "node_nop.h"
-#include "node_sequence_rearrange.h"
-#include "node_preemphasis_filter.h"
-#include "node_non_silent_region.h"
-#include "node_slice.h"
-#include "node_spectrogram.h"
-#include "node_mel_filter_bank.h"
+class MelFilterBankNode : public Node {
+public:
+    MelFilterBankNode(const std::vector<Tensor *> &inputs, const std::vector<Tensor *> &outputs);
+    MelFilterBankNode() = delete;
+    void init(float freq_high, float freq_low, RocalMelScaleFormula mel_formula, int nfilter, bool normalize, float sample_rate);
+protected:
+    void create_node() override;
+    void update_node() override;
+private:
+    float _freq_high = 0;
+    float _freq_low = 0;
+    RocalMelScaleFormula _mel_formula = RocalMelScaleFormula::SLANEY;
+    int _nfilter = 128;
+    float _sample_rate = 44100;
+    bool _normalize = true;
+};

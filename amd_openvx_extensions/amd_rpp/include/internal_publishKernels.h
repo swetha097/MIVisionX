@@ -155,6 +155,10 @@ vx_status Snow_Register(vx_context);
 vx_status Vignette_Register(vx_context);
 vx_status WarpAffine_Register(vx_context);
 vx_status PreemphasisFilter_Register(vx_context);
+vx_status NonSilentRegion_Register(vx_context);
+vx_status Slice_Register(vx_context);
+vx_status Spectrogram_Register(vx_context);
+vx_status MelFilterBank_Register(vx_context);
 
 // kernel names
 #define VX_KERNEL_RPP_NOPBATCHPD_NAME                   "org.rpp.NopbatchPD"
@@ -274,5 +278,8 @@ vx_status PreemphasisFilter_Register(vx_context);
 #define VX_KERNEL_RPP_VIGNETTE_NAME                             "org.rpp.Vignette"
 #define VX_KERNEL_RPP_WARPAFFINE_NAME                           "org.rpp.WarpAffine"
 #define VX_KERNEL_RPP_PREEMPHASISFILTER_NAME                    "org.rpp.PreemphasisFilter"
-
+#define VX_KERNEL_RPP_NONSILENTREGION_NAME                      "org.rpp.NonSilentRegion"
+#define VX_KERNEL_RPP_SLICE_NAME                                "org.rpp.Slice"
+#define VX_KERNEL_RPP_SPECTROGRAM_NAME                          "org.rpp.Spectrogram"
+#define VX_KERNEL_RPP_MELFILTERBANK_NAME                        "org.rpp.MelFilterBank"
 #endif //_AMDVX_EXT__PUBLISH_KERNELS_H_

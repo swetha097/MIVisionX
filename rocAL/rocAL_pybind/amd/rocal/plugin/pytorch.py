@@ -71,7 +71,7 @@ class ROCALGenericIterator(object):
         else:
             for i in range(len(self.output_tensor_list)):
                 self.output_tensor_list[i].copy_data(ctypes.c_void_p(self.output_list[i].data_ptr()), self.output_memory_type)
-        
+
         if ((self.loader._name == "Caffe2ReaderDetection") or (self.loader._name == "CaffeReaderDetection")):
             self.bbox_list = []  # Empty list for bboxes
             self.labels_list = []  # Empty list of labels
