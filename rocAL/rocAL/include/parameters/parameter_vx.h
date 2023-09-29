@@ -59,6 +59,12 @@ class ParameterVX {
         vxAddArrayItems(_array, _batch_size, _arrVal.data(), sizeof(T));
         update_array();
     }
+    void create_tensor(std::shared_ptr<Graph> graph, vx_enum tensor_data_type, unsigned batch_size, unsigned num_of_dims, const vx_size * dims, TensorInfo info) {
+        //TODO : Better to pass the _info from the node directly and fetch the num_of_dims, dims, tensor_dtype here in this function ?
+        vx_enum tensor_data_type = interpret_tensor_data_type(info.data_type()); // TODO: Add this function for interpretation
+        _tensor = vxCreateTensor(vxGetContext((vx_reference)graph->get()), info.num_of_dims(), info.dims(), tensor_data_type, 0);
+        update_tensor(info);
+    }
     void set_param(Parameter<T>* param) {
         if (!param)
             return;
@@ -75,6 +81,9 @@ class ParameterVX {
     }
     vx_array default_array() {
         return _array;
+    }
+    vx_tensor default_tensor() {
+        return _tensor;
     }
     vx_scalar default_scalar(std::shared_ptr<Graph> _graph, vx_enum data_type) {
         _scalar = vxCreateScalar(vxGetContext((vx_reference)_graph->get()), data_type, &_val);
@@ -104,6 +113,37 @@ class ParameterVX {
         if (status != 0)
             THROW(" vxCopyArrayRange failed in update_array (ParameterVX): " + TOSTR(status))
     }
+    
+    void update_tensor(TensorInfo info) {
+        vx_status status;
+        for (uint i = 0; i < _batch_size; i++) { 
+            _arrVal[i] = renew();
+        }
+        status = vxCopyTensorPatch((vx_tensor)_tensor, info.num_of_dims(), nullptr, nullptr, info.strides(), _arrVal.data(), VX_WRITE_ONLY, VX_MEMORY_TYPE_HOST);
+        if (status != VX_SUCCESS)
+            THROW("ERROR: vxCopyTensorPatch: write failed" + TOSTR(status));
+    }
+    
+    //! Converts the Rocal data_type to OpenVX
+vx_enum interpret_tensor_data_type(RocalTensorDataType data_type) {
+    switch (data_type) {
+        case RocalTensorDataType::FP32:
+            return VX_TYPE_FLOAT32;
+        case RocalTensorDataType::FP16:
+            return VX_TYPE_FLOAT16;
+        case RocalTensorDataType::UINT8:
+            return VX_TYPE_UINT8;
+        case RocalTensorDataType::INT8:
+            return VX_TYPE_INT8;
+        case RocalTensorDataType::INT32:
+            return VX_TYPE_INT32;
+        case RocalTensorDataType::UINT32:
+            return VX_TYPE_UINT32;
+        default:
+            THROW("Unsupported Tensor type " + TOSTR(data_type))
+    }
+}
+    
     T renew() {
         _param->renew();
         return _param->get();
@@ -112,6 +152,7 @@ class ParameterVX {
    private:
     vx_scalar _scalar;
     vx_array _array;
+    vx_tensor _tensor;
     Parameter<T>* _param;
     T _val;
     std::vector<T> _arrVal;
