@@ -59,10 +59,10 @@ class ParameterVX {
         vxAddArrayItems(_array, _batch_size, _arrVal.data(), sizeof(T));
         update_array();
     }
-    void create_tensor(std::shared_ptr<Graph> graph, vx_enum tensor_data_type, unsigned batch_size, unsigned num_of_dims, const vx_size * dims, TensorInfo info) {
+    void create_tensor(std::shared_ptr<Graph> graph, TensorInfo info) {
         //TODO : Better to pass the _info from the node directly and fetch the num_of_dims, dims, tensor_dtype here in this function ?
         vx_enum tensor_data_type = interpret_tensor_data_type(info.data_type()); // TODO: Add this function for interpretation
-        _tensor = vxCreateTensor(vxGetContext((vx_reference)graph->get()), info.num_of_dims(), info.dims(), tensor_data_type, 0);
+        _tensor = vxCreateTensor(vxGetContext((vx_reference)graph->get()), info.num_of_dims(), info.dims().data(), tensor_data_type, 0);
         update_tensor(info);
     }
     void set_param(Parameter<T>* param) {
