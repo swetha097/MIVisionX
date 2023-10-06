@@ -32,8 +32,10 @@ void BrightnessNode::create_node() {
     if (_node)
         return;
 
-    _alpha.create_array(_graph, VX_TYPE_FLOAT32, _batch_size);
-    _beta.create_array(_graph, VX_TYPE_FLOAT32, _batch_size);
+    // _alpha.create_array(_graph, VX_TYPE_FLOAT32, _batch_size);
+    _alpha.create_tensor(_graph, _tensor_alpha->info());
+    // _beta.create_array(_graph, VX_TYPE_FLOAT32, _batch_size);
+    _beta.create_tensor(_graph, _tensor_beta->info());
     int input_layout = static_cast<int>(_inputs[0]->info().layout());
     int output_layout = static_cast<int>(_outputs[0]->info().layout());
     int roi_type = static_cast<int>(_inputs[0]->info().roi_type());
@@ -55,6 +57,13 @@ void BrightnessNode::init(float alpha, float beta) {
 void BrightnessNode::init(FloatParam *alpha, FloatParam *beta) {
     _alpha.set_param(core(alpha));
     _beta.set_param(core(beta));
+}
+
+void BrightnessNode::init(Tensor *alpha, Tensor *beta) {
+    // _alpha.set_param(alpha); // Is this required ? As the random sources are use generated from source function of external source
+    // _beta.set_param(beta);
+    _tensor_alpha = alpha;
+    _tensor_beta = beta;
 }
 
 void BrightnessNode::update_node() {

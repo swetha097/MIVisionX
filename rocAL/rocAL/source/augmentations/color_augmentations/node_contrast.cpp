@@ -32,8 +32,8 @@ void ContrastNode::create_node() {
     if (_node)
         return;
 
-    _factor.create_array(_graph, VX_TYPE_FLOAT32, _batch_size);
-    _center.create_array(_graph, VX_TYPE_FLOAT32, _batch_size);
+    _factor.create_tensor(_graph, VX_TYPE_FLOAT32, _batch_size);
+    _center.create_tensor(_graph, VX_TYPE_FLOAT32, _batch_size);
     int input_layout = static_cast<int>(_inputs[0]->info().layout());
     int output_layout = static_cast<int>(_outputs[0]->info().layout());
     int roi_type = static_cast<int>(_inputs[0]->info().roi_type());

@@ -60,10 +60,18 @@ class ParameterVX {
         update_array();
     }
     void create_tensor(std::shared_ptr<Graph> graph, TensorInfo info) {
-        //TODO : Better to pass the _info from the node directly and fetch the num_of_dims, dims, tensor_dtype here in this function ?
+        // We cannot pass the info from the node_*.cpp as the input/ output tensors dimension would differ
+        // TODO : Better to pass the _info from the node directly and fetch the num_of_dims, dims, tensor_dtype here in this function ?
         vx_enum tensor_data_type = interpret_tensor_data_type(info.data_type()); // TODO: Add this function for interpretation
         _tensor = vxCreateTensor(vxGetContext((vx_reference)graph->get()), info.num_of_dims(), info.dims().data(), tensor_data_type, 0);
-        update_tensor(info);
+        // update_tensor(info); Is update required in case of tensor ?
+    }
+
+
+    void create_tensor(std::shared_ptr<Graph> graph, vx_enum data_type, unsigned batch_size) {
+        vx_size dims[1] = { batch_size };
+        _tensor = vxCreateTensor(vxGetContext((vx_reference)graph->get()), 1, dims, data_type, 0);
+        update_tensor();
     }
     void set_param(Parameter<T>* param) {
         if (!param)
@@ -76,6 +84,12 @@ class ParameterVX {
         ParameterFactory::instance()->destroy_param(_param);
         _param = ParameterFactory::instance()->create_single_value_param(val);
     }
+
+    void set_param(Tensor* val) {
+        // ParameterFactory::instance()->destroy_param(_param);
+        // Is this required ? As we get the sources genetrated from user.
+    }
+
     T default_value() {
         return _param->default_value();
     }
@@ -120,6 +134,17 @@ class ParameterVX {
             _arrVal[i] = renew();
         }
         status = vxCopyTensorPatch((vx_tensor)_tensor, info.num_of_dims(), nullptr, nullptr, info.strides(), _arrVal.data(), VX_WRITE_ONLY, VX_MEMORY_TYPE_HOST);
+        if (status != VX_SUCCESS)
+            THROW("ERROR: vxCopyTensorPatch: write failed" + TOSTR(status));
+    }
+
+    void update_tensor() {
+        vx_status status;
+        for (uint i = 0; i < _batch_size; i++) { 
+            _arrVal[i] = renew();
+        }
+        vx_size stride_output[1] = {sizeof(float)}; 
+        status = vxCopyTensorPatch((vx_tensor)_tensor, 1, nullptr, nullptr, stride_output, _arrVal.data(), VX_WRITE_ONLY, VX_MEMORY_TYPE_HOST);
         if (status != VX_SUCCESS)
             THROW("ERROR: vxCopyTensorPatch: write failed" + TOSTR(status));
     }
