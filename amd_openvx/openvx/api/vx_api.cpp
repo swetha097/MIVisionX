@@ -23,7 +23,7 @@ THE SOFTWARE.
 
 #include "ago_internal.h"
 #define VX_MAX_TENSOR_DIMENSIONS 6
-
+#include <iostream>
 static inline vx_uint32 vxComputePatchOffset(vx_uint32 x, vx_uint32 y, const vx_imagepatch_addressing_t *addr)
 {
 #if VX_SCALE_UNITY == (1024u)
@@ -9867,6 +9867,7 @@ VX_API_ENTRY vx_status VX_API_CALL vxQueryTensor(vx_tensor tensor, vx_enum attri
  */
 VX_API_ENTRY vx_status VX_API_CALL vxCopyTensorPatch(vx_tensor tensor, vx_size num_of_dims, const vx_size * roi_start, const vx_size * roi_end, const vx_size * user_stride, void * user_ptr, vx_enum usage, vx_enum user_mem_type)
 {
+    std::cerr << "Copy tensor patch\n";
     AgoData * data = (AgoData *)tensor;
     vx_status status = VX_ERROR_INVALID_REFERENCE;
     if (agoIsValidData(data, VX_TYPE_TENSOR))
@@ -9874,30 +9875,57 @@ VX_API_ENTRY vx_status VX_API_CALL vxCopyTensorPatch(vx_tensor tensor, vx_size n
         status = VX_ERROR_INVALID_PARAMETERS;
         bool paramsValid = false;
         bool singleCopy = true;
+        std::cerr << "valid params : \n";
+
         vx_size size = 0, start[AGO_MAX_TENSOR_DIMENSIONS], end[AGO_MAX_TENSOR_DIMENSIONS];
         memset(start, 0, sizeof(start));
+        // std::cout << "\n data->u.tensor.num_dims" << data->u.tensor.num_dims;
+        // std::cout << "\n num_of_dims" << sizeof(end);
         memcpy(end, data->u.tensor.dims, sizeof(end));
         if (num_of_dims == data->u.tensor.num_dims) {
+            // std::cerr <<"First IF";
             paramsValid = true;
             size = data->u.tensor.stride[0];
+            // std::cerr << "Size : " << size << "\t" << user_stride[0] << "\n";
             for (vx_size i = 0; i < num_of_dims; i++) {
                 if (roi_start)
                     start[i] = roi_start[i];
                 if (roi_end)
                     end[i] = roi_end[i];
-                if (start[i] >= end[i] || end[i] > data->u.tensor.dims[i])
+                if (start[i] >= end[i] || end[i] > data->u.tensor.dims[i]) {
                     paramsValid = false;
-                if (((i == 0) && (user_stride[i] != size)) || ((i > 0) && (user_stride[i] < size)))
+                    // std::cout << "paramsValid is false condition1";
+                }
+                if (((i == 0) && (user_stride[i] != size)) || ((i > 0) && (user_stride[i] < size))) {
                     paramsValid = false; // stride[0] must match and other strides shouldn't be smaller than actual dimensions
+                    // std::cout << "paramsValid is false condition2";
+                }
                 if (user_stride[i] != data->u.tensor.stride[i] || start[i] != 0 || end[i] != data->u.tensor.dims[i] || data->u.tensor.start[i] != 0 || data->u.tensor.end[i] != data->u.tensor.dims[i])
+                {
                     singleCopy = false;
+                    // std::cerr << "Single Copy is False : " << singleCopy;
+                }
                 size *= (end[i] - start[i]);
             }
         }
+        // std::cerr << "Comves over here\n";
+        // std::cerr << "\n Single COPY :" << singleCopy;
         if (data->isVirtual && !data->buffer) {
+            // std::cerr << "\n SECOND IF";
             status = VX_ERROR_OPTIMIZED_AWAY;
         }
+        // if (user_mem_type == VX_MEMORY_TYPE_HOST)
+        //     std::cerr << "\n user_mem_type: ";
+        // if (user_ptr)
+        //     std::cerr << "\n user_ptr : ";
+        // if ((usage == VX_READ_ONLY || usage == VX_WRITE_ONLY))
+        //     std::cerr << "\n usage: ";
+        // if (paramsValid)
+        //     std::cerr << "\n paramsValid" << paramsValid;
+        // if (paramsValid && (user_mem_type == VX_MEMORY_TYPE_HOST) && user_ptr && (usage == VX_READ_ONLY || usage == VX_WRITE_ONLY))
+        //     std::cerr << "\n All True";
         else if (paramsValid && (user_mem_type == VX_MEMORY_TYPE_HOST) && user_ptr && (usage == VX_READ_ONLY || usage == VX_WRITE_ONLY)) {
+            std::cerr << "\n ParamValid in the else if condition : " << paramsValid;
             if (!data->buffer) {
                 CAgoLock lock(data->ref.context->cs);
                 if (agoAllocData(data)) {
@@ -9963,6 +9991,7 @@ VX_API_ENTRY vx_status VX_API_CALL vxCopyTensorPatch(vx_tensor tensor, vx_size n
             }
             else {
                 if (singleCopy) {
+                    std::cerr << "Memcopy happens" << size << "\n";
                     memcpy(data->buffer, user_ptr, size);
                 }
                 else {

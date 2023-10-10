@@ -70,7 +70,17 @@ class ParameterVX {
 
     void create_tensor(std::shared_ptr<Graph> graph, vx_enum data_type, unsigned batch_size) {
         vx_size dims[1] = { batch_size };
-        _tensor = vxCreateTensor(vxGetContext((vx_reference)graph->get()), 1, dims, data_type, 0);
+        _batch_size = batch_size;
+        vx_size output_dims[1];
+        size_t num_tensor_dims;
+        _arrVal.resize(batch_size);
+        vx_size stride_output[1] = {sizeof(float)};
+        // _tensor = vxCreateTensor(vxGetContext((vx_reference)graph->get()), 1, dims, data_type, 0);
+        _tensor = vxCreateTensorFromHandle(vxGetContext((vx_reference)graph->get()), 1, dims, data_type, 0, stride_output, _arrVal.data(), VX_MEMORY_TYPE_HOST);
+        vxQueryTensor((vx_tensor)_tensor, VX_TENSOR_DIMS, output_dims, sizeof(output_dims)); 
+        std::cerr <<"\n Output Dims : " << output_dims[0];
+        // vxQueryTensor((vx_tensor)parameters[2], VX_TENSOR_NUMBER_OF_DIMS, &num_tensor_dims, sizeof(num_tensor_dims));
+        // std::cerr <<"\n Num of Tensor Dims : " << num_tensor_dims;
         update_tensor();
     }
     void set_param(Parameter<T>* param) {
@@ -139,14 +149,22 @@ class ParameterVX {
     }
 
     void update_tensor() {
+        std::cerr << "UPDATES TENSOR";
         vx_status status;
+        std::cerr << "\n Inside the update_tensor renewal !!!!!";
+        std::cerr << "\n _batch_size" << _batch_size;
         for (uint i = 0; i < _batch_size; i++) { 
+            std::cerr << "\n Inside the update_tensor renewal";
             _arrVal[i] = renew();
+            std::cerr << "\n That values of _arrVal in the update_tensor :" << _arrVal[i]; 
         }
-        vx_size stride_output[1] = {sizeof(float)}; 
-        status = vxCopyTensorPatch((vx_tensor)_tensor, 1, nullptr, nullptr, stride_output, _arrVal.data(), VX_WRITE_ONLY, VX_MEMORY_TYPE_HOST);
-        if (status != VX_SUCCESS)
-            THROW("ERROR: vxCopyTensorPatch: write failed" + TOSTR(status));
+        vx_size stride_output[1] = {sizeof(float)};
+        vx_size output_dims[1];
+        // vxQueryTensor((vx_tensor)_tensor, VX_TENSOR_DIMS, output_dims, sizeof(output_dims)); 
+        // std::cerr <<"\n Output Dims : " << output_dims[0];
+        // status = vxCopyTensorPatch((vx_tensor)_tensor, 1, nullptr, nullptr, stride_output, _arrVal.data(), VX_WRITE_ONLY, VX_MEMORY_TYPE_HOST);
+        // if (status != VX_SUCCESS)
+            // THROW("ERROR: vxCopyTensorPatch: write failed" + TOSTR(status));
     }
     
     //! Converts the Rocal data_type to OpenVX
@@ -173,7 +191,10 @@ vx_enum interpret_tensor_data_type(RocalTensorDataType data_type) {
         _param->renew();
         return _param->get();
     }
-
+    ~ParameterVX() {
+        if(_tensor)
+            vxReleaseTensor((vx_tensor*)&_tensor);
+    }
    private:
     vx_scalar _scalar;
     vx_array _array;
