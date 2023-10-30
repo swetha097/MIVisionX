@@ -1393,6 +1393,7 @@ extern "C"
 	 * \return A node reference <tt>\ref vx_node</tt>. Any possible errors preventing a successful creation should be checked using <tt>\ref vxGetStatus</tt>.
 	 */
 	SHARED_PUBLIC vx_node VX_API_CALL vxExtRppBrightness(vx_graph graph, vx_tensor pSrc, vx_tensor pSrcRoi, vx_tensor pDst, vx_array pAlpha, vx_array pBeta, vx_scalar inputLayout, vx_scalar outputLayout, vx_scalar roiType);
+	SHARED_PUBLIC vx_node VX_API_CALL vxExtExternalSource(vx_graph graph, vx_tensor pSrc, vx_tensor pSrcRoi, vx_tensor pDst, vx_array pSource, vx_array pFilePath, vx_uint32 dtype, vx_scalar inputLayout, vx_scalar outputLayout, vx_scalar roiType);
 
 	/*! \brief [Graph] Creates a Copy function node.
 	 * \ingroup group_amd_rpp
@@ -1483,7 +1484,7 @@ extern "C"
 	 * \param [in] roiType The type of roi <tt>\ref VX_TYPE_INT32</tt> denotes whether source roi is of XYWH/LTRB type.
 	 * \return A node reference <tt>\ref vx_node</tt>. Any possible errors preventing a successful creation should be checked using <tt>\ref vxGetStatus</tt>.
 	 */
-	SHARED_PUBLIC vx_node VX_API_CALL vxExtRppBlur(vx_graph graph, vx_tensor pSrc, vx_tensor pSrcRoi, vx_tensor pDst, vx_array pKernelSize, vx_scalar inputLayout, vx_scalar outputLayout, vx_scalar roiType);
+	SHARED_PUBLIC vx_node VX_API_CALL vxExtRppBlur(vx_graph graph, vx_tensor pSrc, vx_tensor pSrcRoi, vx_tensor pDst, vx_tensor pKernelSize, vx_scalar inputLayout, vx_scalar outputLayout, vx_scalar roiType);
 	
 	/*! \brief [Graph] Creates a ColorTemperature function node.
 	 * \ingroup group_amd_rpp
@@ -1529,7 +1530,7 @@ extern "C"
 	 * \param [in] roiType The type of roi <tt>\ref VX_TYPE_INT32</tt> denotes whether source roi is of XYWH/LTRB type.
 	 * \return A node reference <tt>\ref vx_node</tt>. Any possible errors preventing a successful creation should be checked using <tt>\ref vxGetStatus</tt>.
 	 */
-	SHARED_PUBLIC vx_node VX_API_CALL vxExtRppContrast(vx_graph graph, vx_tensor pSrc, vx_tensor pSrcRoi, vx_tensor pDst, vx_array pContrastFactor, vx_array pContrastCenter, vx_scalar inputLayout, vx_scalar outputLayout, vx_scalar roiType);
+	SHARED_PUBLIC vx_node VX_API_CALL vxExtRppContrast(vx_graph graph, vx_tensor pSrc, vx_tensor pSrcRoi, vx_tensor pDst, vx_tensor pContrastFactor, vx_tensor pContrastCenter, vx_scalar inputLayout, vx_scalar outputLayout, vx_scalar roiType);
 	
 	/*! \brief [Graph] Creates a Crop function node.
 	 * \ingroup group_amd_rpp

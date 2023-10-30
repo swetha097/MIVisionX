@@ -138,6 +138,7 @@ vx_status get_kernels_to_publish()
     STATUS_ERROR_CHECK(ADD_KERNEL(Crop_Register));
     STATUS_ERROR_CHECK(ADD_KERNEL(CropMirrorNormalize_Register));
     STATUS_ERROR_CHECK(ADD_KERNEL(Exposure_Register));
+    STATUS_ERROR_CHECK(ADD_KERNEL(ExternalSource_Register));
     STATUS_ERROR_CHECK(ADD_KERNEL(FishEye_Register));
     STATUS_ERROR_CHECK(ADD_KERNEL(Flip_Register));
     STATUS_ERROR_CHECK(ADD_KERNEL(Fog_Register));
