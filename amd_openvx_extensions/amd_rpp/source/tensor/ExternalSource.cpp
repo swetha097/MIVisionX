@@ -175,18 +175,17 @@ static vx_status VX_CALLBACK processExternalSource(vx_node node, const vx_refere
 
     PyRun_SimpleString(pythonCode.c_str());
 
-    PyObject* pArgs = PyTuple_Pack(1, PyLong_FromLong(data->pSrcDesc->n)); // Fetch from the user - either sampleInfo or BatchInfo - wrt batch argument
+    PyObject* pArgs = PyTuple_Pack(1, PyLong_FromLong(data->pSrcDesc->n));
     PyObject* pName = PyUnicode_FromString(fileName);
     PyObject* pModule = PyImport_Import(pName);
-    // float* temp_res = static_cast<float*>(data->pDst);
     if (pModule) {
-        PyObject* pFunc = PyObject_GetAttrString(pModule, data->pSource); // generate_random_numbers (__dict__ - prev)
+        PyObject* pFunc = PyObject_GetAttrString(pModule, data->pSource);
         if (pFunc && PyCallable_Check(pFunc)) {
             PyObject* pResult = PyObject_CallObject(pFunc, pArgs);
             PyObject* pItem;
             if (pResult != NULL && PyList_Check(pResult)) {
                 int listSize = PyList_Size(pResult);
-                for (int i = 0; i < data->pSrcDesc->n; i++) { // SampleInfo - Need to Handle BatchInfo
+                for (int i = 0; i < data->pSrcDesc->n; i++) {
                     pItem = PyList_GetItem(pResult, i);
                     castData(data->dtype, data->pDst, pItem, i);
                 }
@@ -217,7 +216,6 @@ static vx_status VX_CALLBACK initializeExternalSource(vx_node node, const vx_ref
     STATUS_ERROR_CHECK(vxCopyScalar((vx_scalar)parameters[5], &output_layout, VX_READ_ONLY, VX_MEMORY_TYPE_HOST));
     STATUS_ERROR_CHECK(vxCopyScalar((vx_scalar)parameters[6], &roi_type, VX_READ_ONLY, VX_MEMORY_TYPE_HOST));
     STATUS_ERROR_CHECK(vxCopyScalar((vx_scalar)parameters[7], &data->deviceType, VX_READ_ONLY, VX_MEMORY_TYPE_HOST));
-    // STATUS_ERROR_CHECK(vxCopyScalar((vx_scalar)parameters[8], &data->batchInfo, VX_READ_ONLY, VX_MEMORY_TYPE_HOST));
     data->roiType = static_cast<RpptRoiType>(roi_type);
     data->inputLayout = static_cast<vxTensorLayout>(input_layout);
     data->outputLayout = static_cast<vxTensorLayout>(output_layout);
@@ -229,7 +227,6 @@ static vx_status VX_CALLBACK initializeExternalSource(vx_node node, const vx_ref
     STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[0], VX_TENSOR_DATA_TYPE, &input_tensor_dtype, sizeof(input_tensor_dtype)));
     data->pSrcDesc->dataType = getRpptDataType(input_tensor_dtype);
     data->pSrcDesc->offsetInBytes = 0;
-    // fillDescriptionPtrfromDims(data->pSrcDesc, data->inputLayout, data->inputTensorDims);
 
     // Querying for output tensor
     data->pDstDesc = new RpptDesc;
