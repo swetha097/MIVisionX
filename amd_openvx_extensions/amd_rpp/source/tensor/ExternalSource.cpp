@@ -73,7 +73,6 @@ struct ExternalSourceLocalData {
     vx_uint32 deviceType;
     RppPtr_t pSrc;
     RppPtr_t pDst;
-    vx_char *pSource;
     RpptDescPtr pSrcDesc;
     RpptDescPtr pDstDesc;
     RpptROI *pSrcRoi;
@@ -84,15 +83,12 @@ struct ExternalSourceLocalData {
     vx_uint32 dtype;
     size_t inputTensorDims[RPP_MAX_TENSOR_DIMS];
     size_t ouputTensorDims[RPP_MAX_TENSOR_DIMS];
-    size_t charArraySize;
     size_t filePathSize;
 };
 
 static vx_status VX_CALLBACK refreshExternalSource(vx_node node, const vx_reference *parameters, vx_uint32 num, ExternalSourceLocalData *data) {
     vx_status status = VX_SUCCESS;
-    STATUS_ERROR_CHECK(vxCopyArrayRange((vx_array)parameters[3], 0, data->charArraySize, sizeof(vx_char), data->pSource, VX_READ_ONLY, VX_MEMORY_TYPE_HOST));
-    STATUS_ERROR_CHECK(vxCopyArrayRange((vx_array)parameters[4], 0, data->filePathSize, sizeof(vx_char), data->pFilePath, VX_READ_ONLY, VX_MEMORY_TYPE_HOST));
-    data->pSource[data->charArraySize] = '\0';
+    STATUS_ERROR_CHECK(vxCopyArrayRange((vx_array)parameters[3], 0, data->filePathSize, sizeof(vx_char), data->pFilePath, VX_READ_ONLY, VX_MEMORY_TYPE_HOST));
     data->pFilePath[data->filePathSize] = '\0';
 
     void *roi_tensor_ptr;
@@ -125,7 +121,7 @@ static vx_status VX_CALLBACK refreshExternalSource(vx_node node, const vx_refere
 static vx_status VX_CALLBACK validateExternalSource(vx_node node, const vx_reference parameters[], vx_uint32 num, vx_meta_format metas[]) {
     vx_status status = VX_SUCCESS;
     vx_enum scalar_type;
-    STATUS_ERROR_CHECK(vxQueryScalar((vx_scalar)parameters[6], VX_SCALAR_TYPE, &scalar_type, sizeof(scalar_type)));
+    STATUS_ERROR_CHECK(vxQueryScalar((vx_scalar)parameters[5], VX_SCALAR_TYPE, &scalar_type, sizeof(scalar_type)));
     if (scalar_type != VX_TYPE_UINT32)
         return ERRMSG(VX_ERROR_INVALID_TYPE, "validate: Parameter: #8 type=%d (must be size)\n", scalar_type);
 
@@ -156,7 +152,6 @@ static vx_status VX_CALLBACK processExternalSource(vx_node node, const vx_refere
     ExternalSourceLocalData *data = NULL;
     STATUS_ERROR_CHECK(vxQueryNode(node, VX_NODE_LOCAL_DATA_PTR, &data, sizeof(data)));
     refreshExternalSource(node, parameters, num, data);
-    std::cerr<<"\n data " <<"\n \n"<<data->pFilePath;
     std::ifstream file(data->pFilePath, std::ios::binary);
     if (!file) {
         std::cerr << "Error opening file\n";
@@ -179,15 +174,12 @@ static vx_status VX_CALLBACK processExternalSource(vx_node node, const vx_refere
             // Check if the deserialization was successful
             if (pResult_Tuple != NULL) {
                 // Access individual elements of the tuple
-                if (PyTuple_Check(pResult_Tuple) && PyTuple_Size(pResult_Tuple) == 6) {
+                if (PyTuple_Check(pResult_Tuple)) {
                     // You can extract and process each element of the tuple here
                     // For example, print the function name and its qualified name
-                    PyObject* unpickle_function = PyTuple_GetItem(pResult_Tuple, 0);
                     PyObject* basic_def = PyTuple_GetItem(pResult_Tuple, 1);
                     PyObject* fun_context = PyTuple_GetItem(pResult_Tuple, 2);
-                    PyObject* dummy1 = PyTuple_GetItem(pResult_Tuple, 3);
-                    PyObject* dummy2 = PyTuple_GetItem(pResult_Tuple, 4);
-                    PyObject* set_funcion_state = PyTuple_GetItem(pResult_Tuple, 5);
+                    PyObject* set_funcion_state = PyTuple_GetItem(pResult_Tuple, 3);
 
                     // Extract information from basic_def
                     std::string name = PyUnicode_AsUTF8(PyTuple_GetItem(basic_def, 0));
@@ -214,9 +206,6 @@ static vx_status VX_CALLBACK processExternalSource(vx_node node, const vx_refere
 
                     // Set the function state
                     PyObject* result_set_state = PyObject_CallFunction(set_funcion_state, "OO", fun, fun_context);
-
-                    // Set the function state
-                    // PyObject* result_set_state = PyObject_CallFunction(set_funcion_state, "OO", fun, fun_context);
 
                     // Execute the function
                     PyObject* pResult = PyObject_CallFunctionObjArgs(fun, PyLong_FromLong(data->pSrcDesc->n), NULL);
@@ -247,7 +236,6 @@ static vx_status VX_CALLBACK processExternalSource(vx_node node, const vx_refere
         PyErr_Print();
     }
 
-
     return return_status;
 }
 
@@ -256,7 +244,7 @@ static vx_status VX_CALLBACK initializeExternalSource(vx_node node, const vx_ref
     memset(data, 0, sizeof(ExternalSourceLocalData));
     vx_enum input_tensor_dtype, output_tensor_dtype;
     vx_int32 roi_type, input_layout, output_layout;
-    STATUS_ERROR_CHECK(vxCopyScalar((vx_scalar)parameters[6], &data->deviceType, VX_READ_ONLY, VX_MEMORY_TYPE_HOST));
+    STATUS_ERROR_CHECK(vxCopyScalar((vx_scalar)parameters[5], &data->deviceType, VX_READ_ONLY, VX_MEMORY_TYPE_HOST));
     data->roiType = static_cast<RpptRoiType>(roi_type);
     data->inputLayout = static_cast<vxTensorLayout>(input_layout);
     data->outputLayout = static_cast<vxTensorLayout>(output_layout);
@@ -277,10 +265,8 @@ static vx_status VX_CALLBACK initializeExternalSource(vx_node node, const vx_ref
     data->pDstDesc->dataType = getRpptDataType(output_tensor_dtype);
     data->pDstDesc->offsetInBytes = 0;
     data->pSrcDesc->n = data->ouputTensorDims[0];
-    STATUS_ERROR_CHECK(vxQueryArray((vx_array)parameters[3], VX_ARRAY_CAPACITY, &data->charArraySize, sizeof(data->charArraySize)));
-    STATUS_ERROR_CHECK(vxQueryArray((vx_array)parameters[4], VX_ARRAY_CAPACITY, &data->filePathSize, sizeof(data->filePathSize)));
-    STATUS_ERROR_CHECK(vxCopyScalar((vx_scalar)parameters[5], &data->dtype, VX_READ_ONLY, VX_MEMORY_TYPE_HOST));
-    data->pSource = new char[data->charArraySize + 1];
+    STATUS_ERROR_CHECK(vxQueryArray((vx_array)parameters[3], VX_ARRAY_CAPACITY, &data->filePathSize, sizeof(data->filePathSize)));
+    STATUS_ERROR_CHECK(vxCopyScalar((vx_scalar)parameters[4], &data->dtype, VX_READ_ONLY, VX_MEMORY_TYPE_HOST));
     data->pFilePath = new char[data->filePathSize + 1];
 
     refreshExternalSource(node, parameters, num, data);
@@ -291,7 +277,7 @@ static vx_status VX_CALLBACK initializeExternalSource(vx_node node, const vx_ref
 static vx_status VX_CALLBACK uninitializeExternalSource(vx_node node, const vx_reference *parameters, vx_uint32 num) {
     ExternalSourceLocalData *data;
     STATUS_ERROR_CHECK(vxQueryNode(node, VX_NODE_LOCAL_DATA_PTR, &data, sizeof(data)));
-    delete[] data->pSource;
+    std::remove(data->pFilePath);
     delete[] data->pFilePath;
     delete data->pSrcDesc;
     delete data->pDstDesc;
@@ -322,7 +308,7 @@ vx_status ExternalSource_Register(vx_context context) {
     vx_kernel kernel = vxAddUserKernel(context, "org.rpp.ExternalSource",
                                        VX_KERNEL_EXTERNALSOURCE,
                                        processExternalSource,
-                                       7,
+                                       6,
                                        validateExternalSource,
                                        initializeExternalSource,
                                        uninitializeExternalSource);
@@ -344,9 +330,8 @@ vx_status ExternalSource_Register(vx_context context) {
         PARAM_ERROR_CHECK(vxAddParameterToKernel(kernel, 1, VX_INPUT, VX_TYPE_TENSOR, VX_PARAMETER_STATE_REQUIRED));
         PARAM_ERROR_CHECK(vxAddParameterToKernel(kernel, 2, VX_OUTPUT, VX_TYPE_TENSOR, VX_PARAMETER_STATE_REQUIRED));
         PARAM_ERROR_CHECK(vxAddParameterToKernel(kernel, 3, VX_INPUT, VX_TYPE_ARRAY, VX_PARAMETER_STATE_REQUIRED));
-        PARAM_ERROR_CHECK(vxAddParameterToKernel(kernel, 4, VX_INPUT, VX_TYPE_ARRAY, VX_PARAMETER_STATE_REQUIRED));
+        PARAM_ERROR_CHECK(vxAddParameterToKernel(kernel, 4, VX_INPUT, VX_TYPE_SCALAR, VX_PARAMETER_STATE_REQUIRED));
         PARAM_ERROR_CHECK(vxAddParameterToKernel(kernel, 5, VX_INPUT, VX_TYPE_SCALAR, VX_PARAMETER_STATE_REQUIRED));
-        PARAM_ERROR_CHECK(vxAddParameterToKernel(kernel, 6, VX_INPUT, VX_TYPE_SCALAR, VX_PARAMETER_STATE_REQUIRED));
         PARAM_ERROR_CHECK(vxFinalizeKernel(kernel));
     }
     if (status != VX_SUCCESS) {

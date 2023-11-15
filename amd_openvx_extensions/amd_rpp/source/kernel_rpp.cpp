@@ -1899,7 +1899,7 @@ VX_API_ENTRY vx_node VX_API_CALL vxExtRppBrightness(vx_graph graph, vx_tensor pS
     return node;
 }
 
-VX_API_ENTRY vx_node VX_API_CALL vxExtExternalSource(vx_graph graph, vx_tensor pSrc, vx_tensor pSrcRoi, vx_tensor pDst, vx_array pSource, vx_array pFilePath, vx_uint32 dtype) {
+VX_API_ENTRY vx_node VX_API_CALL vxExtExternalSource(vx_graph graph, vx_tensor pSrc, vx_tensor pSrcRoi, vx_tensor pDst, vx_array pFilePath, vx_uint32 dtype) {
     vx_node node = NULL;
     vx_context context = vxGetContext((vx_reference)graph);
     vx_scalar DTYPE = vxCreateScalar(vxGetContext((vx_reference)graph), VX_TYPE_UINT32, &dtype);
@@ -1910,11 +1910,10 @@ VX_API_ENTRY vx_node VX_API_CALL vxExtExternalSource(vx_graph graph, vx_tensor p
             (vx_reference)pSrc,
             (vx_reference)pSrcRoi,
             (vx_reference)pDst,
-            (vx_reference)pSource,
             (vx_reference)pFilePath,
             (vx_reference)DTYPE,
             (vx_reference)deviceType};
-        node = createNode(graph, VX_KERNEL_EXTERNALSOURCE, params, 7);
+        node = createNode(graph, VX_KERNEL_EXTERNALSOURCE, params, 6);
     }
     return node;
 }
