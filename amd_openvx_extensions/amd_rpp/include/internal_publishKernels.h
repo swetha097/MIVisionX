@@ -132,6 +132,7 @@ vx_status Copy_Register(vx_context);
 vx_status Crop_Register(vx_context);
 vx_status CropMirrorNormalize_Register(vx_context);
 vx_status Exposure_Register(vx_context);
+vx_status ExternalSource_Register(vx_context);
 vx_status FishEye_Register(vx_context);
 vx_status Flip_Register(vx_context);
 vx_status Fog_Register(vx_context);

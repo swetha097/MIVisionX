@@ -25,10 +25,11 @@ set(CMAKE_CXX_STANDARD 14)
 
 list(APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/../../amd_openvx/cmake)
 
+set(Python3_FIND_VIRTUALENV FIRST)
+find_package(Python3 QUIET COMPONENTS Interpreter Development)
 find_package(AMDRPP REQUIRED)
 set(BOOST_COMPONENTS filesystem system)
 find_package(Boost COMPONENTS ${BOOST_COMPONENTS} REQUIRED)
-
 if(GPU_SUPPORT AND "${BACKEND}" STREQUAL "OPENCL")
     find_package(OpenCL REQUIRED)
 elseif(GPU_SUPPORT AND "${BACKEND}" STREQUAL "HIP")
@@ -43,6 +44,7 @@ include_directories(${AMDRPP_INCLUDE_DIRS})
 set(LINK_LIBRARY_LIST ${LINK_LIBRARY_LIST} ${AMDRPP_LIBRARIES})
 # BOOST
 include_directories(${Boost_INCLUDE_DIRS})
+include_directories(${Python3_INCLUDE_DIRS})
 set(LINK_LIBRARY_LIST ${LINK_LIBRARY_LIST} ${Boost_FILESYSTEM_LIBRARY} ${Boost_SYSTEM_LIBRARY})
 
 list(APPEND SOURCES
@@ -163,6 +165,7 @@ list(APPEND SOURCES
         source/tensor/SequenceRearrange.cpp
         source/kernel_rpp.cpp
         source/internal_publishKernels.cpp
+        source/tensor/ExternalSource.cpp
     )
 
 if(GPU_SUPPORT AND "${BACKEND}" STREQUAL "OPENCL"  AND OpenCL_FOUND)
@@ -205,7 +208,7 @@ else()
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fdata-sections -std=gnu++14")
 endif()
 
-target_link_libraries(vx_rpp ${LINK_LIBRARY_LIST})
+target_link_libraries(vx_rpp ${LINK_LIBRARY_LIST}  ${Python3_LIBRARIES})
 message("-- ${White}vx_rpp -- Link Libraries:${LINK_LIBRARY_LIST}${ColourReset}")
 message("-- ${White}vx_rpp -- CMAKE_CXX_FLAGS:${CMAKE_CXX_FLAGS}${ColourReset}")
 
