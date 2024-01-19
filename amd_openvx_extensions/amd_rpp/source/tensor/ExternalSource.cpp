@@ -27,31 +27,31 @@ THE SOFTWARE.
 #include <vector>
 #include <fstream>
 
-void castData(int type, void* data, PyObject* pItem, int index) {
+void castData(int type, void* data, string item, int index) {
     std::string result;
     switch(type) {
         case 0:
-            static_cast<vx_float32*>(data)[index] = (vx_float32)PyFloat_AsDouble(pItem);
+            static_cast<vx_float32*>(data)[index] = std::stof(item);
             break;
         case 1:
             #if defined(AMD_FP16_SUPPORT)
-                static_cast<vx_float16*>(data)[index] = (vx_float16)PyFloat_AsDouble(pItem);
+                static_cast<vx_float16*>(data)[index] = (vx_float16)std::stof(item);
             #else
                 std::cerr<<"\n FLOAT16 type tensor not supported";
                 return;
             #endif
             break;
         case 2:
-            static_cast<uint8_t*>(data)[index] = static_cast<int>((uint8_t)PyLong_AsLong(pItem));
+            static_cast<uint8_t*>(data)[index] = static_cast<int>((uint8_t)std::stoi(item));
             break;
         case 3:
-            static_cast<vx_int8*>(data)[index] = (vx_int8)PyLong_AsLong(pItem);
+            static_cast<vx_int8*>(data)[index] = (vx_int8)std::stoi(item);
             break;
         case 4:
-            static_cast<vx_uint32*>(data)[index] = (vx_uint32)PyLong_AsLong(pItem);
+            static_cast<vx_uint32*>(data)[index] = (vx_uint32)std::stoi(item);
             break;
         case 5:
-            static_cast<vx_int32*>(data)[index] = (vx_int32)PyLong_AsLong(pItem);
+            static_cast<vx_int32*>(data)[index] = (vx_int32)std::stoi(item);
             break;
         // Handle more data types as needed
         default:
@@ -152,90 +152,35 @@ static vx_status VX_CALLBACK processExternalSource(vx_node node, const vx_refere
     ExternalSourceLocalData *data = NULL;
     STATUS_ERROR_CHECK(vxQueryNode(node, VX_NODE_LOCAL_DATA_PTR, &data, sizeof(data)));
     refreshExternalSource(node, parameters, num, data);
-    std::ifstream file(data->pFilePath, std::ios::binary);
-    if (!file) {
-        std::cerr << "Error opening file\n";
-        return 1;
+    std::string command = "python3 " + std::string(data->pFilePath); 
+    // Open a pipe to capture the output of the Python script
+    FILE* pipe = popen(command.c_str(), "r");
+    if (!pipe) {
+        std::cerr << "Error opening pipe to Python script." << std::endl;
+        return -1;
     }
 
-    // Read the file contents into a vector
-    std::vector<char> buffer(std::istreambuf_iterator<char>(file), {});
-
-    // Convert the vector to a Python bytes object
-    PyObject* pBytes = PyBytes_FromStringAndSize(buffer.data(), buffer.size());
-
-    // Deserialize the Python bytes object using Dill
-    PyObject* pModule = PyImport_ImportModule("dill");
-    if (pModule != NULL) {
-        PyObject* pFunc = PyObject_GetAttrString(pModule, "loads");
-        if (pFunc != NULL && PyCallable_Check(pFunc)) {
-            PyObject* pResult_Tuple = PyObject_CallFunctionObjArgs(pFunc, pBytes, NULL);
-
-            // Check if the deserialization was successful
-            if (pResult_Tuple != NULL) {
-                // Access individual elements of the tuple
-                if (PyTuple_Check(pResult_Tuple)) {
-                    // You can extract and process each element of the tuple here
-                    // For example, print the function name and its qualified name
-                    PyObject* basic_def = PyTuple_GetItem(pResult_Tuple, 1);
-                    PyObject* fun_context = PyTuple_GetItem(pResult_Tuple, 2);
-                    PyObject* set_funcion_state = PyTuple_GetItem(pResult_Tuple, 3);
-
-                    // Extract information from basic_def
-                    std::string name = PyUnicode_AsUTF8(PyTuple_GetItem(basic_def, 0));
-                    std::string qualname = PyUnicode_AsUTF8(PyTuple_GetItem(basic_def, 1));
-                    PyObject* code_obj = PyTuple_GetItem(basic_def, 2);
-                    PyObject* closure = PyTuple_GetItem(basic_def, 3);
-
-                    // Create a new Python function
-                    PyObject* types_module = PyImport_ImportModule("types");
-                    PyObject* FunctionType = PyObject_GetAttrString(types_module, "FunctionType");
-
-                    const char* builtins_module_name = PY_MAJOR_VERSION == 2 ? "__builtin__" : "builtins";
-                    PyObject* builtins_module = PyImport_ImportModule(builtins_module_name);
-
-                    PyObject* global_scope = PyDict_New();
-                    PyDict_SetItemString(global_scope, "__builtins__", builtins_module);
-
-                    PyObject* marshal_module = PyImport_ImportModule("marshal");
-                    PyObject* loads_func = PyObject_GetAttrString(marshal_module, "loads");
-                    PyObject* code = PyObject_CallFunction(loads_func, "N", code_obj);
-
-                    PyObject* fun_args = PyTuple_Pack(4, code, global_scope, PyUnicode_FromString(name.c_str()), closure);
-                    PyObject* fun = PyObject_CallObject(FunctionType, fun_args);
-
-                    // Set the function state
-                    PyObject* result_set_state = PyObject_CallFunction(set_funcion_state, "OO", fun, fun_context);
-
-                    // Execute the function
-                    PyObject* pResult = PyObject_CallFunctionObjArgs(fun, PyLong_FromLong(data->pSrcDesc->n), NULL);
-                    if (pResult != NULL && PyList_Check(pResult)) {
-                        int listSize = PyList_Size(pResult);
-                        for (int i = 0; i < listSize; i++) {
-                            PyObject* pItem = PyList_GetItem(pResult, i);
-                            // Handle each item as needed (e.g., castData)
-                            castData(data->dtype, data->pDst, pItem, i);
-                        }
-                    }
-                } else {
-                    std::cerr << "Error: Deserialized object is not a tuple or has incorrect size\n";
-                }
-
-                Py_DECREF(pResult_Tuple);
-            } else {
-                PyErr_Print();
-            }
-
-            Py_DECREF(pFunc);
-        } else {
-            PyErr_Print();
+    // Read the output of the Python script line by line
+    char buffer[128];
+    std::vector<std::string> outputVector;  // Store each line as a string
+    while (fgets(buffer, sizeof(buffer), pipe) != nullptr) {
+        // Remove newline character, if present
+        size_t len = strlen(buffer);
+        if (len > 0 && buffer[len - 1] == '\n') {
+            buffer[len - 1] = '\0'; // Replace newline with null terminator
+            len--; // Update length
         }
 
-        Py_DECREF(pModule);
-    } else {
-        PyErr_Print();
+        // Append each line of output to the vector as a string
+        outputVector.emplace_back(buffer);
     }
 
+    for (int i = 0; i < data->pSrcDesc->n; i++) { // SampleInfo - Need to Handle BatchInfo
+        castData(data->dtype, data->pDst, outputVector[i], i);
+    }
+
+    // Close the pipe
+    pclose(pipe);
     return return_status;
 }
 
