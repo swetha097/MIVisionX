@@ -26,6 +26,8 @@ set(CMAKE_CXX_STANDARD 14)
 
 list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/../../cmake)
 
+set(Python3_FIND_VIRTUALENV FIRST)
+find_package(Python3 QUIET COMPONENTS Interpreter Development)
 find_package(AMDRPP REQUIRED)
 
 if(GPU_SUPPORT AND "${BACKEND}" STREQUAL "OPENCL")
@@ -40,6 +42,8 @@ include_directories(../../amd_openvx/openvx/include/ include)
 # AMD RPP
 include_directories(${AMDRPP_INCLUDE_DIRS})
 set(LINK_LIBRARY_LIST ${LINK_LIBRARY_LIST} ${AMDRPP_LIBRARIES})
+
+include_directories(${Python3_INCLUDE_DIRS})
 
 list(APPEND SOURCES
         source/image/AbsoluteDifferencebatchPD.cpp
@@ -157,6 +161,7 @@ list(APPEND SOURCES
         source/tensor/Vignette.cpp
         source/tensor/WarpAffine.cpp
         source/tensor/SequenceRearrange.cpp
+        source/tensor/ExternalSource.cpp
         source/kernel_rpp.cpp
         source/internal_publishKernels.cpp
     )
@@ -201,7 +206,7 @@ else()
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fdata-sections -std=gnu++14")
 endif()
 
-target_link_libraries(vx_rpp ${LINK_LIBRARY_LIST})
+target_link_libraries(vx_rpp ${LINK_LIBRARY_LIST} ${Python3_LIBRARIES})
 message("-- ${White}vx_rpp -- Link Libraries:${LINK_LIBRARY_LIST}${ColourReset}")
 message("-- ${White}vx_rpp -- CMAKE_CXX_FLAGS:${CMAKE_CXX_FLAGS}${ColourReset}")
 set_target_properties(${PROJECT_NAME} PROPERTIES VERSION ${PROJECT_VERSION} SOVERSION ${PROJECT_VERSION_MAJOR})

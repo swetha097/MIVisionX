@@ -1864,6 +1864,7 @@ extern "C"
 	 * successful creation should be checked using <tt>\ref vxGetStatus</tt>.
 	 */
 	SHARED_PUBLIC vx_node VX_API_CALL vxExtRppSequenceRearrange(vx_graph graph, vx_tensor pSrc, vx_tensor pDst, vx_array pNewOrder, vx_scalar layout);
+	SHARED_PUBLIC vx_node VX_API_CALL vxExtExternalSource(vx_graph graph, vx_tensor pSrc, vx_tensor pSrcRoi, vx_tensor pDst, vx_array pFilePath, vx_uint32 dtype);
 #ifdef __cplusplus
 }
 #endif
