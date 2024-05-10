@@ -2876,7 +2876,9 @@ void fillAudioDescriptionPtrFromDims(RpptDescPtr &descPtr, size_t *maxTensorDims
 
 void fillGenericDescriptionPtrfromDims(RpptGenericDescPtr &genericDescPtr, vxTensorLayout layout, size_t *maxTensorDims) {
     switch(layout) {
-        case vxTensorLayout::VX_NONE: {
+        case vxTensorLayout::VX_NFT:
+        case vxTensorLayout::VX_NTF: 
+        case vxTensorLayout::VX_NHW: {
             genericDescPtr->dims[0] = maxTensorDims[0];
             genericDescPtr->dims[1] = maxTensorDims[1];
             genericDescPtr->dims[2] = maxTensorDims[2];
@@ -2889,7 +2891,7 @@ void fillGenericDescriptionPtrfromDims(RpptGenericDescPtr &genericDescPtr, vxTen
             genericDescPtr->strides[0] = genericDescPtr->dims[1] * genericDescPtr->dims[2] * genericDescPtr->dims[3];
             genericDescPtr->strides[1] = genericDescPtr->dims[2] * genericDescPtr->dims[3];
             genericDescPtr->strides[2] = genericDescPtr->dims[3];
-            // genericDescPtr->layout = RpptLayout::NONE;
+            genericDescPtr->layout = getRpptLayout(layout);
             break;
         }
         default: {
