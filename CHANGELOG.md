@@ -11,6 +11,7 @@ Documentation for MIVisionX is available at
 
 * Support for advanced GPUs
 * Support for PreEmphasis Filter augmentation in openVX extensions
+* Support for Spectrogram augmentation in openVX extensions
 
 ### Optimizations
 
@@ -31,7 +32,7 @@ Documentation for MIVisionX is available at
   + Ubuntu - `20.04` / `22.04`
   + CentOS - `7`
   + RHEL - `8` / `9`
-  + SLES - `15-SP4`
+  + SLES - `15-SP5`
 * ROCm: rocm-core - `6.1.0.60100`
 * RPP - `1.5.0.60100`
 * miopen-hip - `3.1.0.60100`
@@ -39,7 +40,7 @@ Documentation for MIVisionX is available at
 * OpenCV - [4.6.0](https://github.com/opencv/opencv/releases/tag/4.6.0)
 * FFMPEG - [n4.4.2](https://github.com/FFmpeg/FFmpeg/releases/tag/n4.4.2)
 * Dependencies for all the above packages
-* MIVisionX Setup Script - `V2.6.1`
+* MIVisionX Setup Script - `V3.2.0`
 
 ### Known issues
 
