@@ -41,15 +41,20 @@ struct ToDecibelsLocalData {
 
 static vx_status VX_CALLBACK refreshToDecibels(vx_node node, const vx_reference *parameters, vx_uint32 num, ToDecibelsLocalData *data) {
     vx_status status = VX_SUCCESS;
-    if (data->deviceType == AGO_TARGET_AFFINITY_GPU) {
-#if ENABLE_OPENCL || ENABLE_HIP
-        return VX_ERROR_NOT_IMPLEMENTED;
-#endif
-    }
     void *roi_tensor_ptr_src;
+    if (data->deviceType == AGO_TARGET_AFFINITY_GPU) {
+#if ENABLE_OPENCL
+    return VX_ERROR_NOT_IMPLEMENTED;
+#elif ENABLE_HIP
+    STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[0], VX_TENSOR_BUFFER_HIP, &data->pSrc, sizeof(data->pSrc)));
+    STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[1], VX_TENSOR_BUFFER_HIP, &roi_tensor_ptr_src, sizeof(roi_tensor_ptr_src)));
+    STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[2], VX_TENSOR_BUFFER_HIP, &data->pDst, sizeof(data->pDst)));
+#endif
+    } else if (data->deviceType == AGO_TARGET_AFFINITY_CPU) {
     STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[0], VX_TENSOR_BUFFER_HOST, &data->pSrc, sizeof(data->pSrc)));
     STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[1], VX_TENSOR_BUFFER_HOST, &roi_tensor_ptr_src, sizeof(roi_tensor_ptr_src)));
     STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[2], VX_TENSOR_BUFFER_HOST, &data->pDst, sizeof(data->pDst)));
+    }
     RpptROI *src_roi = reinterpret_cast<RpptROI *>(roi_tensor_ptr_src);
     for (unsigned i = 0; i < data->inputTensorDims[0]; i++) {
         data->pSrcDims[i].width = src_roi[i].xywhROI.roiHeight;
@@ -106,16 +111,18 @@ static vx_status VX_CALLBACK processToDecibels(vx_node node, const vx_reference 
     STATUS_ERROR_CHECK(vxQueryNode(node, VX_NODE_LOCAL_DATA_PTR, &data, sizeof(data)));
     refreshToDecibels(node, parameters, num, data);
     if (data->deviceType == AGO_TARGET_AFFINITY_GPU) {
-#if ENABLE_OPENCL || ENABLE_HIP
-        return_status = VX_ERROR_NOT_IMPLEMENTED;
-#endif
-    }
-    if (data->deviceType == AGO_TARGET_AFFINITY_CPU) {
 #if RPP_AUDIO
+    #if ENABLE_OPENCL
+        return_status = VX_ERROR_NOT_IMPLEMENTED;
+    #elif ENABLE_HIP
+        rpp_status = rppt_to_decibels_gpu(data->pSrc, data->pSrcDesc, data->pDst, data->pDstDesc, data->pSrcDims, data->cutOffDB, data->multiplier, data->referenceMagnitude, data->handle->rppHandle);
+        return_status = (rpp_status == RPP_SUCCESS) ? VX_SUCCESS : VX_FAILURE;
+    #endif
+    } if (data->deviceType == AGO_TARGET_AFFINITY_CPU) {
         rpp_status = rppt_to_decibels_host(data->pSrc, data->pSrcDesc, data->pDst, data->pDstDesc, data->pSrcDims, data->cutOffDB, data->multiplier, data->referenceMagnitude, data->handle->rppHandle);
         return_status = (rpp_status == RPP_SUCCESS) ? VX_SUCCESS : VX_FAILURE;
 #else
-        return_status = VX_ERROR_NOT_SUPPORTED;
+    return_status = VX_ERROR_NOT_SUPPORTED;
 #endif
     }
     return return_status;
@@ -155,7 +162,11 @@ static vx_status VX_CALLBACK initializeToDecibels(vx_node node, const vx_referen
         data->pDstDesc->offsetInBytes = 0;
         fillAudioDescriptionPtrFromDims(data->pDstDesc, data->outputTensorDims);
 
+    #if ENABLE_HIP
+        hipHostMalloc(&data->pSrcDims, data->pSrcDesc->n * sizeof(RpptImagePatch));
+    #else
         data->pSrcDims = new RpptImagePatch[data->pSrcDesc->n];
+    #endif
         refreshToDecibels(node, parameters, num, data);
         STATUS_ERROR_CHECK(createRPPHandle(node, &data->handle, data->pSrcDesc->n, data->deviceType));
         STATUS_ERROR_CHECK(vxSetNodeAttribute(node, VX_NODE_LOCAL_DATA_PTR, &data, sizeof(data)));
@@ -168,7 +179,11 @@ static vx_status VX_CALLBACK initializeToDecibels(vx_node node, const vx_referen
 static vx_status VX_CALLBACK uninitializeToDecibels(vx_node node, const vx_reference *parameters, vx_uint32 num) {
     ToDecibelsLocalData *data;
     STATUS_ERROR_CHECK(vxQueryNode(node, VX_NODE_LOCAL_DATA_PTR, &data, sizeof(data)));
+#if ENABLE_HIP
+    if (data->pSrcDims != nullptr)  hipHostFree(data->pSrcDims);
+#else
     if (data->pSrcDims) delete[] data->pSrcDims;
+#endif
     if (data->pSrcDesc) delete data->pSrcDesc;
     if (data->pDstDesc) delete data->pDstDesc;
     STATUS_ERROR_CHECK(releaseRPPHandle(node, data->handle, data->deviceType));
