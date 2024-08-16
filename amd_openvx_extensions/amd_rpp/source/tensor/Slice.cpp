@@ -27,8 +27,8 @@ struct SliceLocalData {
     Rpp32u deviceType;
     RppPtr_t pSrc;
     RppPtr_t pDst;
-    Rpp32s *pAnchor;
-    Rpp32s *pShape;
+    Rpp32s *pAnchor = nullptr;
+    Rpp32s *pShape = nullptr;
     Rpp32f *pFillValues;
     Rpp32u policy;
     Rpp32u *pSrcDims;
@@ -63,7 +63,7 @@ void updateDestinationRoi(SliceLocalData *data, unsigned *src_roi, unsigned *dst
             std::cerr << "\n i::" << i;
             std::cerr << "\n data->pAnchor[i] :: " << data->pAnchor[i];
             std::cerr << "\n data->pShape[i] :: " << data->pShape[i];
-            dst_roi[j] = data->pAnchor[i];
+            dst_roi[j] = 0;
             dst_roi[j + 1] = 0;
             dst_roi[j + 2] = data->pShape[i];
             dst_roi[j + 3] = 1;
@@ -92,6 +92,8 @@ void updateDestinationRoi(SliceLocalData *data, unsigned *src_roi, unsigned *dst
 static vx_status VX_CALLBACK refreshSlice(vx_node node, const vx_reference *parameters, SliceLocalData *data) {
     vx_status status = VX_SUCCESS;
     void *roi_tensor_ptr, *roi_tensor_ptr_dst;
+    Rpp32s *pAnchorTemp, *pShapeTemp;
+
     if (data->deviceType == AGO_TARGET_AFFINITY_GPU) {
 #if ENABLE_OPENCL
         return VX_ERROR_NOT_IMPLEMENTED;
@@ -99,13 +101,23 @@ static vx_status VX_CALLBACK refreshSlice(vx_node node, const vx_reference *para
         STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[0], VX_TENSOR_BUFFER_HIP, &data->pSrc, sizeof(data->pSrc)));
         STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[1], VX_TENSOR_BUFFER_HIP, &roi_tensor_ptr, sizeof(roi_tensor_ptr)));
         STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[2], VX_TENSOR_BUFFER_HIP, &data->pDst, sizeof(data->pDst)));
-        STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[4], VX_TENSOR_BUFFER_HIP, &data->pAnchor, sizeof(data->pAnchor)));
-        STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[5], VX_TENSOR_BUFFER_HIP, &data->pShape, sizeof(data->pShape)));
+        STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[3], VX_TENSOR_BUFFER_HIP, &roi_tensor_ptr_dst, sizeof(roi_tensor_ptr_dst)));
+        STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[4], VX_TENSOR_BUFFER_HIP, &pAnchorTemp, sizeof(data->pAnchor)));
+        STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[5], VX_TENSOR_BUFFER_HIP, &pShapeTemp, sizeof(data->pShape)));
         if (!data->pFillValues) {
             hipError_t err = hipHostMalloc(&data->pFillValues, data->inputTensorDims[0] * sizeof(Rpp32f), hipHostMallocDefault);
             if (err != hipSuccess)
                 return ERRMSG(VX_ERROR_NOT_ALLOCATED, "refresh: hipHostMalloc of size %ld failed \n", data->inputTensorDims[0] * sizeof(Rpp32f));
         }
+
+        if (data->pAnchor == nullptr)
+            hipHostMalloc(&(data->pAnchor), data->inputTensorDims[0] * sizeof(Rpp32s)); // TODO - needs to be handled for inputs greater than 1D
+        if (data->pShape == nullptr)
+            hipHostMalloc(&(data->pShape), data->inputTensorDims[0] * sizeof(Rpp32s)); // TODO - needs to be handled for inputs greater than 1D
+        
+        CHECK_RETURN_STATUS(hipMemcpyAsync(data->pAnchor, pAnchorTemp, data->inputTensorDims[0] * sizeof(int), hipMemcpyDeviceToHost, data->handle->hipstream));
+        CHECK_RETURN_STATUS(hipMemcpyAsync(data->pShape, pShapeTemp, data->inputTensorDims[0] * sizeof(int), hipMemcpyDeviceToHost, data->handle->hipstream));
+        CHECK_RETURN_STATUS(hipStreamSynchronize(data->handle->hipstream));
         STATUS_ERROR_CHECK(vxCopyArrayRange((vx_array)parameters[6], 0, data->inputTensorDims[0], sizeof(float), data->pFillValues, VX_READ_ONLY, VX_MEMORY_TYPE_HOST));
 #endif
     } else if (data->deviceType == AGO_TARGET_AFFINITY_CPU) {
@@ -231,7 +243,6 @@ static vx_status VX_CALLBACK initializeSlice(vx_node node, const vx_reference *p
 
         data->pSrcDims = new uint[data->inputTensorDims[0] * 2];
 
-        refreshSlice(node, parameters, data);
         STATUS_ERROR_CHECK(createRPPHandle(node, &data->handle, data->inputTensorDims[0], data->deviceType));
         STATUS_ERROR_CHECK(vxSetNodeAttribute(node, VX_NODE_LOCAL_DATA_PTR, &data, sizeof(data)));
         return VX_SUCCESS;
@@ -244,11 +255,17 @@ static vx_status VX_CALLBACK uninitializeSlice(vx_node node, const vx_reference 
     SliceLocalData *data;
     STATUS_ERROR_CHECK(vxQueryNode(node, VX_NODE_LOCAL_DATA_PTR, &data, sizeof(data)));
     if (data->pSrcDims) delete[] data->pSrcDims;
-    if (data->pFillValues) delete[] data->pFillValues;
     if (data->pSrcDesc) delete data->pSrcDesc;
     if (data->pDstDesc) delete data->pDstDesc;
     if (data->pSrcGenericDesc) delete data->pSrcGenericDesc;
     if (data->pDstGenericDesc) delete data->pDstGenericDesc;
+#if ENABLE_HIP
+    hipHostFree(data->pAnchor);
+    hipHostFree(data->pShape);
+    hipHostFree(data->pFillValues);
+#else
+    if (data->pFillValues) delete[] data->pFillValues;
+#endif 
     STATUS_ERROR_CHECK(releaseRPPHandle(node, data->handle, data->deviceType));
     delete data;
     return VX_SUCCESS;
