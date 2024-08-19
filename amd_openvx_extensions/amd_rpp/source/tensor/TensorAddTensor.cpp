@@ -28,8 +28,10 @@ THE SOFTWARE.
 #include <smmintrin.h>
 #include <x86intrin.h>
 #endif
-#include <hip/hip_runtime.h>
-#include <hip/hip_runtime_api.h>
+
+#if ENABLE_HIP
+#include "../amd_rpp_hip/amd_rpp_hip_host_decls.h"
+#endif
 
 struct TensorAddTensorLocalData {
     vxRppHandle *handle;
@@ -65,13 +67,6 @@ static vx_status VX_CALLBACK refreshTensorAddTensor(vx_node node, const vx_refer
         STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[2], VX_TENSOR_BUFFER_HOST, &data->pDst, sizeof(data->pDst)));
         STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[3], VX_TENSOR_BUFFER_HOST, &roi_tensor_ptr_src, sizeof(roi_tensor_ptr_src)));
         STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[4], VX_TENSOR_BUFFER_HOST, &roi_tensor_ptr_dst, sizeof(roi_tensor_ptr_dst)));
-    }
-    if (!data->pSrcRoi) {
-        #if ENABLE_HIP
-            hipHostMalloc(&data->pSrcRoi, data->inputTensorDims1[0] * nDim * sizeof(Rpp32s));
-        #else
-            data->pSrcRoi = new Rpp32s[data->inputTensorDims1[0] * nDim];
-        #endif 
     }
     data->pDstRoi = static_cast<RpptROI *>(roi_tensor_ptr_dst);
     data->pSrcRoi = static_cast<RpptROI *>(roi_tensor_ptr_src);
@@ -119,49 +114,7 @@ static vx_status VX_CALLBACK processTensorAddTensor(vx_node node, const vx_refer
 #if ENABLE_HIP
         if (data->inTensorType == vx_type_e::VX_TYPE_FLOAT32 && data->outTensorType == vx_type_e::VX_TYPE_FLOAT32) 
         {
-            // allocate host memory for both input and output
-            size_t bufferLength = data->inputTensorDims1[0] * data->inputTensorDims1[1] * data->inputTensorDims1[2];
-            float *pSrc1Host = new float[bufferLength];
-            float *pSrc2Host = new float[data->inputTensorDims1[0]];
-            float *pDstHost = new float[bufferLength];
-           
-            // copy source from hip memory to host memory
-            CHECK_RETURN_STATUS(hipMemcpyAsync(pSrc1Host, data->pSrc1, bufferLength * sizeof(float), hipMemcpyDeviceToHost, data->handle->hipstream));
-            CHECK_RETURN_STATUS(hipMemcpyAsync(pSrc2Host, data->pSrc2, data->inputTensorDims1[0] * sizeof(float), hipMemcpyDeviceToHost, data->handle->hipstream));
-            CHECK_RETURN_STATUS(hipStreamSynchronize(data->handle->hipstream));
-            
-            size_t nStride = data->inputTensorDims1[1] * data->inputTensorDims1[2];
-            for (uint i = 0; i < data->inputTensorDims1[0]; i++) {
-                float *src1Temp = static_cast<float *>(data->pSrc1) + i * nStride;
-                float *src2Temp = static_cast<float *>(pSrc2Host) + i;
-                float *dstTemp = static_cast<float *>(pDstHost) + i * nStride;
-                uint height = data->pSrcRoi[i].xywhROI.roiHeight;
-                uint width = data->pSrcRoi[i].xywhROI.roiWidth;
-                uint alignedWidth = width & ~7;
-                float additionFactor = src2Temp[0];
-                __m256 pSrc2 = _mm256_set1_ps(additionFactor);
-                for (uint row = 0; row < height; row++) {
-                    float *srcPtr1Row = src1Temp + row * data->inputTensorDims1[1];
-                    float *dstPtrRow = dstTemp + row * data->inputTensorDims1[1];
-                    uint vectorLoopCount = 0;
-                    for (; vectorLoopCount < alignedWidth; vectorLoopCount += 8) {
-                        __m256 pSrc1 = _mm256_loadu_ps(srcPtr1Row);
-                        __m256 pDst = _mm256_add_ps(pSrc1, pSrc2);
-                        _mm256_storeu_ps(dstPtrRow, pDst);
-                        srcPtr1Row += 8;
-                        dstPtrRow += 8;
-                    }
-                    for (; vectorLoopCount < width; vectorLoopCount++)
-                        *dstPtrRow++ = (*srcPtr1Row++) + additionFactor;
-                }
-            }
-
-            // copy source from hip memory to host memory
-            CHECK_RETURN_STATUS(hipMemcpyAsync(data->pDst, pDstHost, bufferLength * sizeof(float), hipMemcpyHostToDevice, data->handle->hipstream));
-            CHECK_RETURN_STATUS(hipStreamSynchronize(data->handle->hipstream));
-            delete [] pSrc1Host;
-            delete [] pSrc2Host;
-            delete [] pDstHost;
+            HipExecTensorAddTensor(data->handle->hipstream, static_cast<float *>(data->pSrc1), static_cast<float *>(data->pSrc2), static_cast<float *>(data->pDst), data->pSrcRoi, data->inputTensorDims1);
         } else {
             return VX_ERROR_NOT_SUPPORTED;
         }
@@ -228,11 +181,6 @@ static vx_status VX_CALLBACK initializeTensorAddTensor(vx_node node, const vx_re
 static vx_status VX_CALLBACK uninitializeTensorAddTensor(vx_node node, const vx_reference *parameters, vx_uint32 num) {
     TensorAddTensorLocalData *data;
     STATUS_ERROR_CHECK(vxQueryNode(node, VX_NODE_LOCAL_DATA_PTR, &data, sizeof(data)));
-#if ENABLE_HIP
-    if (data->pSrcRoi != nullptr)  hipHostFree(data->pSrcRoi);
-#else
-    if (data->pSrcRoi != nullptr) delete[] data->pSrcRoi;
-#endif
     STATUS_ERROR_CHECK(releaseRPPHandle(node, data->handle, data->deviceType));
     if (data) delete data;
     return VX_SUCCESS;

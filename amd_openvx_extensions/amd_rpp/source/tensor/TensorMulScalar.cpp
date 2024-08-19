@@ -28,8 +28,11 @@ THE SOFTWARE.
 #include <smmintrin.h>
 #include <x86intrin.h>
 #endif
-#include <hip/hip_runtime.h>
-#include <hip/hip_runtime_api.h>
+
+#if ENABLE_HIP
+#include "../amd_rpp_hip/amd_rpp_hip_host_decls.h"
+#endif
+
 struct TensorMulScalarLocalData {
     vxRppHandle *handle;
     Rpp32u deviceType;
@@ -94,38 +97,7 @@ static vx_status VX_CALLBACK processTensorMulScalar(vx_node node, const vx_refer
     if (data->deviceType == AGO_TARGET_AFFINITY_GPU) {
 #if ENABLE_HIP
     if (data->inputTensorType == vx_type_e::VX_TYPE_FLOAT32 && data->outputTensorType == vx_type_e::VX_TYPE_FLOAT32) {
-        // allocate host memory for both input and output
-        uint bufferLength = data->tensorSize / sizeof(float);
-        float *pSrcHost = new float[bufferLength];
-        float *pDstHost = new float[bufferLength];
-
-        // copy source from hip memory to host memory
-        CHECK_RETURN_STATUS(hipMemcpyAsync(pSrcHost, data->pSrc, bufferLength * sizeof(float), hipMemcpyDeviceToHost, data->handle->hipstream));
-        CHECK_RETURN_STATUS(hipStreamSynchronize(data->handle->hipstream));
-
-        __m256 pMul = _mm256_set1_ps(data->scalarValue);
-        float scalarValue = data->scalarValue;
-        float *srcPtrTemp = static_cast<float *>(pSrcHost);
-        float *dstPtrTemp = static_cast<float *>(pDstHost);
-        
-        uint alignedLength = bufferLength & ~7;
-        uint vectorLoopCount = 0;
-        for (; vectorLoopCount < alignedLength; vectorLoopCount += 8) {
-            __m256 pSrc = _mm256_loadu_ps(srcPtrTemp);
-            __m256 pDst = _mm256_mul_ps(pSrc, pMul);
-            _mm256_storeu_ps(dstPtrTemp, pDst);
-            srcPtrTemp += 8;
-            dstPtrTemp += 8;
-        }
-        for (; vectorLoopCount < bufferLength; vectorLoopCount++)
-            *dstPtrTemp++ = *srcPtrTemp++ * scalarValue;
-        
-        // copy output from host memory to hip memory
-        CHECK_RETURN_STATUS(hipMemcpyAsync(data->pDst, pDstHost, bufferLength * sizeof(float), hipMemcpyHostToDevice, data->handle->hipstream));
-        CHECK_RETURN_STATUS(hipStreamSynchronize(data->handle->hipstream));
-
-        delete [] pSrcHost;
-        delete [] pDstHost;
+        HipExecTensorMulScalar(data->handle->hipstream, static_cast<float *>(data->pSrc), static_cast<float *>(data->pDst), data->scalarValue, data->tensorSize / sizeof(float));
     }
     else {
         return VX_ERROR_NOT_SUPPORTED;
