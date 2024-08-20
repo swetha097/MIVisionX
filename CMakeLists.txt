@@ -53,7 +53,7 @@ option(NEURAL_NET       "Build MIVisionX with Neural Net Support"  ON)
 option(LOOM             "Build MIVisionX with LOOM Support"        ON)
 option(GPU_SUPPORT      "Build MIVisionX with GPU Support"         ON)
 option(MIGRAPHX         "Build MIVisionX with MIGraphX Support"    ON)
-option(BUILD_WITH_AMD_ADVANCE "Build MIVisionX for advanced AMD GPU Architecture"    OFF)
+option(BUILD_WITH_AMD_ADVANCE "Build MIVisionX for advanced AMD GPU Architecture" OFF)
 
 if(WIN32)
   set(BACKEND "OpenCL")
@@ -123,7 +123,6 @@ message("-- ${BoldBlue}MIVisionX Build Type -- ${CMAKE_BUILD_TYPE}${ColourReset}
 list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
 list(APPEND CMAKE_PREFIX_PATH ${ROCM_PATH} ${ROCM_PATH}/hip)
 find_package(HALF QUIET)
-find_package(HIP QUIET)
 
 if(HALF_FOUND)
   add_definitions(-DAMD_FP16_SUPPORT)
@@ -133,12 +132,24 @@ else()
   message("-- ${Blue}MIVisionX Built with float16 Support OFF${ColourReset}")
 endif()
 
-if(HIP_FOUND)
-  message("-- ${BoldBlue}ROCm Version -- ${HIP_VERSION}${ColourReset}")
+# HIP backend defaults
+if("${BACKEND}" STREQUAL "HIP")
   set(LOOM OFF)
-  if(HIP_VERSION  VERSION_GREATER 5.7.50701)
-    set(BUILD_WITH_AMD_ADVANCE ON)
+  # Set supported GPU Targets
+  set(DEFAULT_AMDGPU_TARGETS "gfx908;gfx90a;gfx940;gfx941;gfx942;gfx1030;gfx1031;gfx1032;gfx1100;gfx1101;gfx1102")
+  if (BUILD_WITH_AMD_ADVANCE)
+      set(DEFAULT_AMDGPU_TARGETS ${DEFAULT_AMDGPU_TARGETS} "gfx1200;gfx1201")
   endif()
+
+  # Set AMDGPU_TARGETS
+  if(DEFINED ENV{AMDGPU_TARGETS})
+      set(AMDGPU_TARGETS $ENV{AMDGPU_TARGETS} CACHE STRING "List of specific machine types for library to target")
+  elseif(AMDGPU_TARGETS)
+      message("-- ${White}${PROJECT_NAME} -- AMDGPU_TARGETS set with -D option${ColourReset}")
+  else()
+      set(AMDGPU_TARGETS "${DEFAULT_AMDGPU_TARGETS}" CACHE STRING "List of specific machine types for library to target")
+  endif()
+  message("-- ${White}${PROJECT_NAME} -- AMDGPU_TARGETS: ${AMDGPU_TARGETS}${ColourReset}")
 endif()
 
 message("-- ${Cyan}MIVisionX Developer Options${ColourReset}")
@@ -153,8 +164,17 @@ add_subdirectory(amd_openvx)
 add_subdirectory(amd_openvx_extensions)
 add_subdirectory(utilities)
 
+# install tests
+install(FILES tests/CMakeLists.txt DESTINATION ${CMAKE_INSTALL_DATADIR}/mivisionx/test COMPONENT test)
+install(DIRECTORY cmake DESTINATION ${CMAKE_INSTALL_DATADIR}/mivisionx/test COMPONENT test)
+install(DIRECTORY tests/openvx_api_tests DESTINATION ${CMAKE_INSTALL_DATADIR}/mivisionx/test COMPONENT test)
+install(DIRECTORY tests/vision_tests DESTINATION ${CMAKE_INSTALL_DATADIR}/mivisionx/test COMPONENT test)
+install(DIRECTORY data/videos DESTINATION ${CMAKE_INSTALL_DATADIR}/mivisionx/test COMPONENT test)
+
+# CTests
 enable_testing()
 include(CTest)
+option(BUILT_WITH_SOURCE "MIVisionX built with source"        ON)
 add_subdirectory(tests)
 
 # set package information
@@ -188,8 +208,6 @@ set(CPACK_RESOURCE_FILE_LICENSE  "${CMAKE_CURRENT_SOURCE_DIR}/LICENSE.txt")
 set(CPACK_RESOURCE_FILE_LICENSE  "${CMAKE_CURRENT_SOURCE_DIR}/LICENSE.txt")
 install(FILES ${CPACK_RESOURCE_FILE_LICENSE} DESTINATION ${CMAKE_INSTALL_DOCDIR}-asan COMPONENT asan)
 install(FILES ${CPACK_RESOURCE_FILE_LICENSE} DESTINATION ${CMAKE_INSTALL_DOCDIR} COMPONENT runtime)
-install(FILES ${CPACK_RESOURCE_FILE_LICENSE} DESTINATION ${CMAKE_INSTALL_DOCDIR}-dev COMPONENT dev)
-install(FILES ${CPACK_RESOURCE_FILE_LICENSE} DESTINATION ${CMAKE_INSTALL_DOCDIR}-test COMPONENT test)
 
 if(DEFINED ENV{CPACK_DEBIAN_PACKAGE_RELEASE})
   set(CPACK_DEBIAN_PACKAGE_RELEASE $ENV{CPACK_DEBIAN_PACKAGE_RELEASE})
@@ -199,12 +217,24 @@ if(DEFINED ENV{CPACK_RPM_PACKAGE_RELEASE})
 endif()
 
 # Set the dependent packages
-set(MIVISIONX_DEBIAN_PACKAGE_LIST  "rocm-hip-runtime, half, rpp, rocblas, miopen-hip, migraphx")
-set(MIVISIONX_RPM_PACKAGE_LIST     "rocm-hip-runtime, half, rpp, rocblas, miopen-hip, migraphx")
+set(MIVISIONX_DEBIAN_PACKAGE_LIST  "rocm-hip-runtime, rpp, rocblas, miopen-hip, migraphx")
+set(MIVISIONX_RPM_PACKAGE_LIST     "rocm-hip-runtime, rpp, rocblas, miopen-hip, migraphx")
 # Set the dev dependent packages
-set(MIVISIONX_DEBIAN_DEV_PACKAGE_LIST  "rocm-hip-runtime-dev, rpp-dev, rocblas-dev, miopen-hip-dev, migraphx-dev, ffmpeg, libavcodec-dev, libavformat-dev, libavutil-dev, libswscale-dev")
+set(MIVISIONX_DEBIAN_DEV_PACKAGE_LIST  "rocm-hip-runtime-dev, half, rpp-dev, rocblas-dev, miopen-hip-dev, migraphx-dev, ffmpeg, libavcodec-dev, libavformat-dev, libavutil-dev, libswscale-dev")
 # TBD - Some RPM packages need Fusion Packages - ffmpeg, libavcodec-devel, libavformat-devel, libavutil-devel, libswscale-devel
-set(MIVISIONX_RPM_DEV_PACKAGE_LIST  "rocm-hip-runtime-devel, rpp-devel, rocblas-devel, miopen-hip-devel, migraphx-devel")
+set(MIVISIONX_RPM_DEV_PACKAGE_LIST  "rocm-hip-runtime-devel, half, rpp-devel, rocblas-devel, miopen-hip-devel, migraphx-devel")
+
+# Add rocDecode Deps - Exclude centos-7
+if (EXISTS "/etc/os-release")
+  file(READ "/etc/os-release" OS_RELEASE)
+  string(REGEX MATCH "CentOS-7" CENTOS_7_FOUND ${OS_RELEASE})
+  if(NOT CENTOS_7_FOUND)
+    set(MIVISIONX_DEBIAN_PACKAGE_LIST  "${MIVISIONX_DEBIAN_PACKAGE_LIST}, rocdecode")
+    set(MIVISIONX_RPM_PACKAGE_LIST     "${MIVISIONX_RPM_PACKAGE_LIST}, rocdecode")
+    set(MIVISIONX_DEBIAN_DEV_PACKAGE_LIST  "${MIVISIONX_DEBIAN_DEV_PACKAGE_LIST}, rocdecode-dev")
+    set(MIVISIONX_RPM_DEV_PACKAGE_LIST  "${MIVISIONX_RPM_DEV_PACKAGE_LIST}, rocdecode-devel")
+  endif()
+endif()
 
 # '%{?dist}' breaks manual builds on debian systems due to empty Provides
 execute_process(
@@ -239,22 +269,14 @@ set(CPACK_DEBIAN_TEST_PACKAGE_DEPENDS "rocm-core, ${CPACK_DEBIAN_DEV_PACKAGE_NAM
 set(CPACK_RPM_COMPONENT_INSTALL ON)
 set(CPACK_RPM_RUNTIME_PACKAGE_NAME "${PROJECT_NAME}")
 set(CPACK_RPM_RUNTIME_PACKAGE_REQUIRES "rocm-core, ${MIVISIONX_RPM_PACKAGE_LIST}")
-set(CPACK_RPM_RUNTIME_PACKAGE_PROVIDES "${PROJECT_NAME}")
-set(CPACK_RPM_RUNTIME_PACKAGE_OBSOLETES "${PROJECT_NAME}")
 set(CPACK_RPM_DEV_PACKAGE_NAME "${PROJECT_NAME}-devel")
 set(CPACK_RPM_DEV_PACKAGE_REQUIRES "rocm-core, ${CPACK_RPM_RUNTIME_PACKAGE_NAME}, ${MIVISIONX_RPM_DEV_PACKAGE_LIST}")
-set(CPACK_RPM_DEV_PACKAGE_PROVIDES "${PROJECT_NAME}-devel")
-set(CPACK_RPM_DEV_PACKAGE_OBSOLETES "${PROJECT_NAME}-devel")
 # RPM package - specific variable for ASAN
 set(CPACK_RPM_ASAN_PACKAGE_NAME "${PROJECT_NAME}-asan" )
 set(CPACK_RPM_ASAN_PACKAGE_REQUIRES "rocm-core-asan, ${MIVISIONX_RPM_PACKAGE_LIST}" )
-set(CPACK_RPM_ASAN_PACKAGE_PROVIDES "${PROJECT_NAME}-asan")
-set(CPACK_RPM_ASAN_PACKAGE_OBSOLETES "${PROJECT_NAME}-asan")
 # RPM package specific variable for ASAN
 set(CPACK_RPM_TEST_PACKAGE_NAME "${PROJECT_NAME}-test" )
 set(CPACK_RPM_TEST_PACKAGE_REQUIRES "rocm-core, ${CPACK_RPM_DEV_PACKAGE_NAME}" )
-set(CPACK_RPM_TEST_PACKAGE_PROVIDES "${PROJECT_NAME}-test")
-set(CPACK_RPM_TEST_PACKAGE_OBSOLETES "${PROJECT_NAME}-test")
 
 if(NOT ROCM_DEP_ROCMCORE)
   string(REGEX REPLACE ",? ?rocm-core," "" CPACK_RPM_RUNTIME_PACKAGE_REQUIRES ${CPACK_RPM_RUNTIME_PACKAGE_REQUIRES})
@@ -280,10 +302,10 @@ set(CPACK_DEBIAN_PACKAGE_RELEASE "local")
 set(CPACK_RPM_PACKAGE_RELEASE "local")
 
 if(DEFINED ENV{CPACK_DEBIAN_PACKAGE_RELEASE})
- set(CPACK_DEBIAN_PACKAGE_RELEASE $ENV{CPACK_DEBIAN_PACKAGE_RELEASE})
+  set(CPACK_DEBIAN_PACKAGE_RELEASE $ENV{CPACK_DEBIAN_PACKAGE_RELEASE})
 endif()
 if(DEFINED ENV{CPACK_RPM_PACKAGE_RELEASE})
- set(CPACK_RPM_PACKAGE_RELEASE $ENV{CPACK_RPM_PACKAGE_RELEASE})
+  set(CPACK_RPM_PACKAGE_RELEASE $ENV{CPACK_RPM_PACKAGE_RELEASE})
 endif()
 
 if(APPLE)

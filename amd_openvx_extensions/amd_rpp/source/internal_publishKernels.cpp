@@ -149,6 +149,7 @@ vx_status get_kernels_to_publish()
     STATUS_ERROR_CHECK(ADD_KERNEL(Noise_Register));
     STATUS_ERROR_CHECK(ADD_KERNEL(Nop_Register));
     STATUS_ERROR_CHECK(ADD_KERNEL(Pixelate_Register));
+    STATUS_ERROR_CHECK(ADD_KERNEL(PreemphasisFilter_Register));
     STATUS_ERROR_CHECK(ADD_KERNEL(Rain_Register));
     STATUS_ERROR_CHECK(ADD_KERNEL(Resize_Register));
     STATUS_ERROR_CHECK(ADD_KERNEL(ResizeCrop_Register));
@@ -160,7 +161,16 @@ vx_status get_kernels_to_publish()
     STATUS_ERROR_CHECK(ADD_KERNEL(Snow_Register));
     STATUS_ERROR_CHECK(ADD_KERNEL(Vignette_Register));
     STATUS_ERROR_CHECK(ADD_KERNEL(WarpAffine_Register));
-
+    STATUS_ERROR_CHECK(ADD_KERNEL(Spectrogram_Register));
+    STATUS_ERROR_CHECK(ADD_KERNEL(Downmix_Register));
+    STATUS_ERROR_CHECK(ADD_KERNEL(ToDecibels_Register));
+    STATUS_ERROR_CHECK(ADD_KERNEL(Resample_Register));
+    STATUS_ERROR_CHECK(ADD_KERNEL(TensorMulScalar_Register));
+    STATUS_ERROR_CHECK(ADD_KERNEL(TensorAddTensor_Register));
+    STATUS_ERROR_CHECK(ADD_KERNEL(NonSilentRegionDetection_Register));
+    STATUS_ERROR_CHECK(ADD_KERNEL(Slice_Register));
+    STATUS_ERROR_CHECK(ADD_KERNEL(Normalize_Register));
+    STATUS_ERROR_CHECK(ADD_KERNEL(MelFilterBank_Register));
     return status;
 }
 

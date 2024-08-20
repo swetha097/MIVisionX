@@ -22,6 +22,7 @@ import os
 import sys
 import argparse
 import platform
+import traceback
 if sys.version_info[0] < 3:
     import commands
 else:
@@ -29,7 +30,7 @@ else:
 
 __copyright__ = "Copyright 2018 - 2024, AMD ROCm MIVisionX"
 __license__ = "MIT"
-__version__ = "3.0.0"
+__version__ = "3.5.0"
 __email__ = "mivisionx.support@amd.com"
 __status__ = "Shipping"
 
@@ -38,6 +39,7 @@ def ERROR_CHECK(call):
     status = call
     if(status != 0):
         print('ERROR_CHECK failed with status:'+str(status))
+        traceback.print_stack()
         exit(status)
 
 # Arguments
@@ -131,7 +133,6 @@ else:
         print("\nSTATUS: CPU Backend Install\n")
     neuralNetInstall = 'OFF'
     inferenceInstall = 'OFF'
-    ffmpegInstall = 'OFF'
 
 # get platfrom info
 platfromInfo = platform.platform()
@@ -158,32 +159,55 @@ else:
 deps_dir = os.path.expanduser(setupDir_deps)
 deps_dir = os.path.abspath(deps_dir)
 
+# check os version
+os_info_data = 'NOT Supported'
+if os.path.exists('/etc/os-release'):
+    with open('/etc/os-release', 'r') as os_file:
+        os_info_data = os_file.read().replace('\n', ' ')
+        os_info_data = os_info_data.replace('"', '')
+
 # setup for Linux
 linuxSystemInstall = ''
 linuxCMake = 'cmake'
 linuxSystemInstall_check = ''
 linuxFlag = ''
-if "centos" in platfromInfo or "redhat" in platfromInfo or os.path.exists('/usr/bin/yum'):
+sudoValidate = 'sudo -v'
+if "centos" in os_info_data or "redhat" in os_info_data:
     linuxSystemInstall = 'yum -y'
     linuxSystemInstall_check = '--nogpgcheck'
-    if "centos-7" in platfromInfo or "redhat-7" in platfromInfo:
+    if "VERSION_ID=7" in os_info_data:
         linuxCMake = 'cmake3'
-        ERROR_CHECK(os.system(linuxSystemInstall+' install cmake3')) 
-    if "centos" not in platfromInfo or "redhat" not in platfromInfo:
-        platfromInfo = platfromInfo+'-redhat'
-elif "Ubuntu" in platfromInfo or os.path.exists('/usr/bin/apt-get'):
+        sudoValidate = 'sudo -k'
+        platfromInfo = platfromInfo+'-redhat-7'
+    elif "VERSION_ID=8" in os_info_data:
+        platfromInfo = platfromInfo+'-redhat-8'
+    elif "VERSION_ID=9" in os_info_data:
+        platfromInfo = platfromInfo+'-redhat-9'
+    else:
+        platfromInfo = platfromInfo+'-redhat-centos-undefined-version'
+elif "Ubuntu" in os_info_data:
     linuxSystemInstall = 'apt-get -y'
     linuxSystemInstall_check = '--allow-unauthenticated'
     linuxFlag = '-S'
-    if "Ubuntu" not in platfromInfo:
-        platfromInfo = platfromInfo+'-Ubuntu'
-elif os.path.exists('/usr/bin/zypper'):
+    if "VERSION_ID=20" in os_info_data:
+        platfromInfo = platfromInfo+'-Ubuntu-20'
+    elif "VERSION_ID=22" in os_info_data:
+        platfromInfo = platfromInfo+'-Ubuntu-22'
+    elif "VERSION_ID=24" in os_info_data:
+        platfromInfo = platfromInfo+'-Ubuntu-24'
+    else:
+        platfromInfo = platfromInfo+'-Ubuntu-undefined-version'
+elif "SLES" in os_info_data:
     linuxSystemInstall = 'zypper -n'
     linuxSystemInstall_check = '--no-gpg-checks'
     platfromInfo = platfromInfo+'-SLES'
+elif "Mariner" in os_info_data:
+    linuxSystemInstall = 'tdnf -y'
+    linuxSystemInstall_check = '--nogpgcheck'
+    platfromInfo = platfromInfo+'-Mariner'
 else:
     print("\nMIVisionX Setup on "+platfromInfo+" is unsupported\n")
-    print("\nMIVisionX Setup Supported on: Ubuntu 20/22, CentOS 7, RedHat 8/9, & SLES 15\n")
+    print("\nMIVisionX Setup Supported on: Ubuntu 20/22, RedHat 8/9, & SLES 15\n")
     exit()
 
 # MIVisionX Setup
@@ -195,18 +219,21 @@ if userName == 'root':
 
 # Delete previous install
 if os.path.exists(deps_dir) and reinstall == 'ON':
-    ERROR_CHECK(os.system('sudo -v'))
+    ERROR_CHECK(os.system(sudoValidate))
     ERROR_CHECK(os.system('sudo rm -rf '+deps_dir))
     print("\nMIVisionX Setup: Removing Previous Install -- "+deps_dir+"\n")
 
 # source install - package dependencies
+libpkgConfig = "pkg-config"
+if "centos" in os_info_data and "VERSION_ID=7" in os_info_data:
+    libpkgConfig = "pkgconfig"
 commonPackages = [
     'gcc',
     'cmake',
     'git',
     'wget',
     'unzip',
-    'pkg-config',
+    str(libpkgConfig),
     'inxi'
 ]
 
@@ -231,20 +258,46 @@ neuralNetRPMPackages = [
     'migraphx-devel'
 ]
 
+libPythonProto = "python3-protobuf"
+if "centos" in os_info_data and "VERSION_ID=7" in os_info_data:
+    libPythonProto = "protobuf-python"
 inferenceRPMPackages = [
     'python3-devel',
     'python3-pip',
     'protobuf-devel',
-    'python3-protobuf'
+    str(libPythonProto)
 ]
 
-pip3InferencePackages = [
+pipNumpyVersion = "numpy==1.23.0"
+pipProtoVersion= "protobuf==3.12.4"
+pipONNXVersion = "onnx==1.12.0"
+
+if "VERSION_ID=24" in os_info_data:
+    pipNumpyVersion = "numpy==2.0.0"
+    pipONNXVersion = "onnx==1.16.0"
+    pipProtoVersion= "protobuf==3.20.2"
+pip3InferencePackagesUbuntu = [
     'future==0.18.2',
     'pytz==2022.1',
-    'numpy==1.21',
     'google==3.0.0',
-    'protobuf==3.12.4',
-    'onnx==1.12.0'
+    str(pipNumpyVersion),
+    str(pipProtoVersion),
+    str(pipONNXVersion),
+]
+
+pipONNXversion = "onnx==1.11.0"
+if "VERSION_ID=7" in os_info_data or "VERSION_ID=8" in os_info_data:
+    pipNumpyVersion = "numpy==1.19.5"
+if "NAME=SLES" in os_info_data:
+    pipNumpyVersion = "numpy==1.19.5"
+    pipProtoVersion= "protobuf==3.19.5"
+pip3InferencePackagesRPM = [
+    'future==0.18.2',
+    'pytz==2022.1',
+    'google==3.0.0',
+    str(pipNumpyVersion),
+    str(pipProtoVersion),
+    str(pipONNXversion)
 ]
 
 ffmpegDebianPackages = [
@@ -265,6 +318,16 @@ rppRPMPackages = [
     'rpp-devel'
 ]
 
+rocdecodeDebianPackages = [
+    'rocdecode',
+    'rocdecode-dev'
+]
+
+rocdecodeRPMPackages = [
+    'rocdecode',
+    'rocdecode-devel'
+]
+
 opencvDebianPackages = [
     'build-essential',
     'pkg-config',
@@ -272,7 +335,6 @@ opencvDebianPackages = [
     'libavcodec-dev',
     'libavformat-dev',
     'libswscale-dev',
-    'libtbb2',
     'libtbb-dev',
     'libjpeg-dev',
     'libpng-dev',
@@ -290,6 +352,9 @@ opencvRPMPackages = [
     'unzip'
 ]
 
+# update
+ERROR_CHECK(os.system('sudo '+linuxFlag+' '+linuxSystemInstall +' '+linuxSystemInstall_check+' update'))
+
 # Re-Install
 if os.path.exists(deps_dir):
     print("\nMIVisionX Setup: Re-Installing Libraries from -- "+deps_dir+"\n")
@@ -298,10 +363,13 @@ if os.path.exists(deps_dir):
     for i in range(len(commonPackages)):
         ERROR_CHECK(os.system('sudo '+linuxFlag+' '+linuxSystemInstall +
                         ' '+linuxSystemInstall_check+' install -y '+ commonPackages[i]))
+    if "centos-7" in platfromInfo or "redhat-7" in platfromInfo:
+        ERROR_CHECK(os.system('sudo '+linuxFlag+' '+linuxSystemInstall +
+                        ' '+linuxSystemInstall_check+' install cmake3'))
 
     # neural net packages
     if neuralNetInstall == 'ON' and backend == 'HIP':
-        ERROR_CHECK(os.system('sudo -v'))
+        ERROR_CHECK(os.system(sudoValidate))
         if "Ubuntu" in platfromInfo:
             for i in range(len(neuralNetDebianPackages)):
                 ERROR_CHECK(os.system('sudo '+linuxFlag+' '+linuxSystemInstall +
@@ -319,8 +387,18 @@ if os.path.exists(deps_dir):
         for i in range(len(rppRPMPackages)):
             ERROR_CHECK(os.system('sudo '+linuxFlag+' '+linuxSystemInstall +
                         ' '+linuxSystemInstall_check+' install -y '+ rppRPMPackages[i]))
+    
+    # rocDecode
+    if "Ubuntu" in platfromInfo:
+        for i in range(len(rocdecodeDebianPackages)):
+            ERROR_CHECK(os.system('sudo '+linuxFlag+' '+linuxSystemInstall +
+                        ' '+linuxSystemInstall_check+' install -y '+ rocdecodeDebianPackages[i]))
+    elif "redhat-7" not in platfromInfo:
+        for i in range(len(rocdecodeRPMPackages)):
+            ERROR_CHECK(os.system('sudo '+linuxFlag+' '+linuxSystemInstall +
+                        ' '+linuxSystemInstall_check+' install -y '+ rocdecodeRPMPackages[i]))
 
-    print("\nMIVisionX Dependencies Re-Installed with MIVisionX-setup.py V-"+__version__+"\n")
+    print("\nMIVisionX Dependencies Re-Installed with MIVisionX-setup.py V-"+__version__+" on "+platfromInfo+"\n")
     exit()
 
 # Clean Install
@@ -330,20 +408,18 @@ else:
     # Create Build folder
     ERROR_CHECK(os.system('(cd '+deps_dir+'; mkdir build )'))
     # install pre-reqs
-    ERROR_CHECK(os.system('sudo -v'))
+    ERROR_CHECK(os.system(sudoValidate))
     # common packages
     for i in range(len(commonPackages)):
         ERROR_CHECK(os.system('sudo '+linuxFlag+' '+linuxSystemInstall +
                         ' '+linuxSystemInstall_check+' install -y '+ commonPackages[i]))
-
-    # Get Installation Source
-    ERROR_CHECK(os.system(
-        '(cd '+deps_dir+'; wget https://github.com/opencv/opencv/archive/'+opencvVersion+'.zip )'))
-    ERROR_CHECK(os.system('(cd '+deps_dir+'; unzip '+opencvVersion+'.zip )'))
+    if "centos-7" in platfromInfo or "redhat-7" in platfromInfo:
+        ERROR_CHECK(os.system('sudo '+linuxFlag+' '+linuxSystemInstall +
+                        ' '+linuxSystemInstall_check+' install cmake3'))
 
     # neural net packages
     if neuralNetInstall == 'ON' and backend == 'HIP':
-        ERROR_CHECK(os.system('sudo -v'))
+        ERROR_CHECK(os.system(sudoValidate))
         if "Ubuntu" in platfromInfo:
             for i in range(len(neuralNetDebianPackages)):
                 ERROR_CHECK(os.system('sudo '+linuxFlag+' '+linuxSystemInstall +
@@ -359,31 +435,34 @@ else:
 
             # Delete previous install
             if os.path.exists(modelCompilerDeps) and reinstall == 'ON':
-                ERROR_CHECK(os.system('sudo -v'))
+                ERROR_CHECK(os.system(sudoValidate))
                 ERROR_CHECK(os.system('sudo rm -rf '+modelCompilerDeps))
                 print("\nMIVisionX Setup: Removing Previous Inference Install -- "+modelCompilerDeps+"\n")
 
             if not os.path.exists(modelCompilerDeps):
                 print("STATUS: Model Compiler Deps Install - " +modelCompilerDeps+"\n")
                 os.makedirs(modelCompilerDeps)
-                ERROR_CHECK(os.system('sudo -v'))
+                ERROR_CHECK(os.system(sudoValidate))
                 if "Ubuntu" in platfromInfo:
                     for i in range(len(inferenceDebianPackages)):
                         ERROR_CHECK(os.system('sudo '+linuxFlag+' '+linuxSystemInstall +
                                 ' '+linuxSystemInstall_check+' install -y '+ inferenceDebianPackages[i]))
+                    # Install base Deps
+                    for i in range(len(pip3InferencePackagesUbuntu)):
+                        ERROR_CHECK(os.system('pip3 install '+ pip3InferencePackagesUbuntu[i]))
                 else:
                     for i in range(len(inferenceRPMPackages)):
                         ERROR_CHECK(os.system('sudo '+linuxFlag+' '+linuxSystemInstall +
                                 ' '+linuxSystemInstall_check+' install -y '+ inferenceRPMPackages[i]))
-                # Install base Deps
-                for i in range(len(pip3InferencePackages)):
-                        ERROR_CHECK(os.system('sudo pip3 install '+ pip3InferencePackages[i]))
+                    # Install base Deps
+                    for i in range(len(pip3InferencePackagesRPM)):
+                            ERROR_CHECK(os.system('pip3 install '+ pip3InferencePackagesRPM[i]))
                 # Install NNEF Deps
                 ERROR_CHECK(os.system('mkdir -p '+modelCompilerDeps+'/nnef-deps'))
                 ERROR_CHECK(os.system(
-                    '(cd '+modelCompilerDeps+'/nnef-deps; git clone https://github.com/KhronosGroup/NNEF-Tools.git)'))
+                    '(cd '+modelCompilerDeps+'/nnef-deps; git clone -b nnef-v1.0.0 https://github.com/KhronosGroup/NNEF-Tools.git)'))
                 ERROR_CHECK(os.system(
-                    '(cd '+modelCompilerDeps+'/nnef-deps/NNEF-Tools/parser/cpp; mkdir -p build && cd build; '+linuxCMake+' ..; make)'))
+                    '(cd '+modelCompilerDeps+'/nnef-deps/NNEF-Tools/parser/cpp; mkdir -p build && cd build; '+linuxCMake+' ..; make -j$(nproc); sudo make install)'))
                 ERROR_CHECK(os.system(
                     '(cd '+modelCompilerDeps+'/nnef-deps/NNEF-Tools/parser/python; sudo python3 setup.py install)'))
             else:
@@ -403,6 +482,16 @@ else:
                         ' '+linuxSystemInstall_check+' install -y '+ rppRPMPackages[i]))
     else:
         print("\nSTATUS: MIVisionX Setup: AMD VX RPP only supported with HIP backend\n")
+        
+    # rocDecode
+    if "Ubuntu" in platfromInfo:
+        for i in range(len(rocdecodeDebianPackages)):
+            ERROR_CHECK(os.system('sudo '+linuxFlag+' '+linuxSystemInstall +
+                        ' '+linuxSystemInstall_check+' install -y '+ rocdecodeDebianPackages[i]))
+    elif "redhat-7" not in platfromInfo:
+        for i in range(len(rocdecodeRPMPackages)):
+                ERROR_CHECK(os.system('sudo '+linuxFlag+' '+linuxSystemInstall +
+                        ' '+linuxSystemInstall_check+' install -y '+ rocdecodeRPMPackages[i]))
 
     # Install ffmpeg
     if ffmpegInstall == 'ON':
@@ -429,13 +518,13 @@ else:
             ERROR_CHECK(os.system('sudo '+linuxFlag+' '+linuxSystemInstall+' '+linuxSystemInstall_check +
                         ' install ffmpeg ffmpeg-devel'))
         elif "centos-9" in platfromInfo or "redhat-9" in platfromInfo:
-            # el8 x86_64 packages
+            # el9 x86_64 packages
             ERROR_CHECK(os.system('sudo '+linuxFlag+' '+linuxSystemInstall+' '+linuxSystemInstall_check +
                 ' install https://dl.fedoraproject.org/pub/epel/epel-release-latest-9.noarch.rpm'))
             ERROR_CHECK(os.system('sudo '+linuxFlag+' '+linuxSystemInstall+' '+linuxSystemInstall_check +
-                ' install install https://dl.fedoraproject.org/pub/epel/epel-next-release-latest-9.noarch.rpm'))
+                ' install https://dl.fedoraproject.org/pub/epel/epel-next-release-latest-9.noarch.rpm'))
             ERROR_CHECK(os.system('sudo '+linuxFlag+' '+linuxSystemInstall+' '+linuxSystemInstall_check +
-                ' install install --nogpgcheck https://mirrors.rpmfusion.org/free/el/rpmfusion-free-release-$(rpm -E %rhel).noarch.rpm'))
+                ' install --nogpgcheck https://mirrors.rpmfusion.org/free/el/rpmfusion-free-release-$(rpm -E %rhel).noarch.rpm'))
             ERROR_CHECK(os.system('sudo '+linuxFlag+' '+linuxSystemInstall+' '+linuxSystemInstall_check +
                 ' install https://mirrors.rpmfusion.org/nonfree/el/rpmfusion-nonfree-release-$(rpm -E %rhel).noarch.rpm'))
             ERROR_CHECK(os.system('sudo '+linuxFlag+' '+linuxSystemInstall+' '+linuxSystemInstall_check +
@@ -451,7 +540,7 @@ else:
     # Install OpenCV -- TBD cleanup
     ERROR_CHECK(os.system('(cd '+deps_dir+'/build; mkdir OpenCV )'))
     # Install pre-reqs
-    ERROR_CHECK(os.system('sudo -v'))
+    ERROR_CHECK(os.system(sudoValidate))
     if "Ubuntu" in platfromInfo:
         for i in range(len(opencvDebianPackages)):
             ERROR_CHECK(os.system('sudo '+linuxFlag+' '+linuxSystemInstall +
@@ -467,15 +556,19 @@ else:
             ERROR_CHECK(os.system('sudo '+linuxFlag+' '+linuxSystemInstall +
                         ' '+linuxSystemInstall_check+' install -y '+ opencvRPMPackages[i]))
     # OpenCV 4.6.0
+    # Get Source and install
+    ERROR_CHECK(os.system(
+        '(cd '+deps_dir+'; wget https://github.com/opencv/opencv/archive/'+opencvVersion+'.zip )'))
+    ERROR_CHECK(os.system('(cd '+deps_dir+'; unzip '+opencvVersion+'.zip )'))
     ERROR_CHECK(os.system('(cd '+deps_dir+'/build/OpenCV; '+linuxCMake +
-            ' -D WITH_GTK=ON -D WITH_JPEG=ON -D BUILD_JPEG=ON -D WITH_OPENCL=OFF -D WITH_OPENCLAMDFFT=OFF -D WITH_OPENCLAMDBLAS=OFF -D WITH_VA_INTEL=OFF -D WITH_OPENCL_SVM=OFF  -D CMAKE_INSTALL_PREFIX=/usr/local ../../opencv-'+opencvVersion+' )'))
+            ' -D WITH_EIGEN=OFF -D WITH_GTK=ON -D WITH_JPEG=ON -D BUILD_JPEG=ON -D WITH_OPENCL=OFF -D WITH_OPENCLAMDFFT=OFF -D WITH_OPENCLAMDBLAS=OFF -D WITH_VA_INTEL=OFF -D WITH_OPENCL_SVM=OFF  -D CMAKE_INSTALL_PREFIX=/usr/local ../../opencv-'+opencvVersion+' )'))
     ERROR_CHECK(os.system('(cd '+deps_dir+'/build/OpenCV; make -j$(nproc))'))
-    ERROR_CHECK(os.system('sudo -v'))
+    ERROR_CHECK(os.system(sudoValidate))
     ERROR_CHECK(os.system('(cd '+deps_dir+'/build/OpenCV; sudo make install)'))
     ERROR_CHECK(os.system('(cd '+deps_dir+'/build/OpenCV; sudo ldconfig)'))
 
     if developerInstall == 'ON':
-        ERROR_CHECK(os.system('sudo -v'))
+        ERROR_CHECK(os.system(sudoValidate))
         ERROR_CHECK(os.system('sudo '+linuxFlag+' '+linuxSystemInstall+' '+linuxSystemInstall_check +
                 ' install autoconf texinfo wget'))
         if "Ubuntu" in platfromInfo:
@@ -492,4 +585,4 @@ else:
         ERROR_CHECK(os.system(
             '(cd '+deps_dir+'/gdb-12.1; ./configure --with-python3; make CXXFLAGS="-static-libstdc++" -j$(nproc); sudo make install)'))
 
-    print("\nMIVisionX Dependencies Installed with MIVisionX-setup.py V-"+__version__+"\n")
+    print("\nMIVisionX Dependencies Installed with MIVisionX-setup.py V-"+__version__+" on "+platfromInfo+"\n")

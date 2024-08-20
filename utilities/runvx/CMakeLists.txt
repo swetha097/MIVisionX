@@ -108,9 +108,9 @@ if(WIN32)
 else()
     target_link_libraries(runvx pthread)
     find_path(SSL_INCLUDE
-              NAMES openssl/hmac.h openssl/md5.h
-              HINTS /usr/local/opt/openssl/include /usr/include /usr/local/include /opt/local/include
-             )
+            NAMES openssl/hmac.h openssl/md5.h
+            HINTS /usr/local/opt/openssl/include /usr/include /usr/local/include /opt/local/include
+    )
     if(NOT "${SSL_INCLUDE}" STREQUAL "SSL_INCLUDE-NOTFOUND")
         include_directories(${SSL_INCLUDE})
         set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DHAVE_OpenSSL=1")
@@ -123,6 +123,6 @@ endif()
 install(TARGETS runvx DESTINATION ${CMAKE_INSTALL_BINDIR} COMPONENT runtime)
 
 # install MIVisionX apps & samples -- {ROCM_PATH}/share/mivisionx/
-install(DIRECTORY ../../samples/gdf DESTINATION ${CMAKE_INSTALL_DATADIR}/mivisionx/samples COMPONENT dev)
+install(DIRECTORY ${CMAKE_SOURCE_DIR}/samples/gdf DESTINATION ${CMAKE_INSTALL_DATADIR}/mivisionx/samples COMPONENT dev)
 
 message("-- ${White}runVX -- CMAKE_CXX_FLAGS:${CMAKE_CXX_FLAGS}${ColourReset}")
