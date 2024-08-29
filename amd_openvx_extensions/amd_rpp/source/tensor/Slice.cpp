@@ -52,28 +52,16 @@ void updateDestinationRoi(SliceLocalData *data, unsigned *src_roi, unsigned *dst
     uint total_anchor_dims = 1;
     for (uint n = 0; n < num_dims; n++)
         total_anchor_dims *= anchorTensorDims[n];
-    std::cerr << "\n Slice Update 1";
     total_anchor_dims /= anchorTensorDims[0];
-    std::cerr << "\n Slice Update 2";
     if (total_anchor_dims == 1) {
-        std::cerr << "\n Slice Update 3";
-        std::cerr << "\n data->inputTensorDims[0] :: " << data->inputTensorDims[0];
         // if input is 1D - shape will be of size (batchSize) or (batchSize, 1) - so fill only 1st dim of length in dst_roi from buffer and set 2nd dim of length to 1
         for (unsigned i = 0, j = 0; i < data->inputTensorDims[0]; i++, j += 4) {
-            std::cerr << "\n i::" << i;
-            std::cerr << "\n data->pAnchor[i] :: " << data->pAnchor[i];
-            std::cerr << "\n data->pShape[i] :: " << data->pShape[i];
             dst_roi[j] = 0;
             dst_roi[j + 1] = 0;
             dst_roi[j + 2] = data->pShape[i];
             dst_roi[j + 3] = 1;
-            std::cerr << "\n dst_roi[j]" << dst_roi[j];
-            std::cerr << "\n dst_roi[j+1]" << dst_roi[j+1];
-            std::cerr << "\n dst_roi[j+2]" << dst_roi[j+2];
-            std::cerr << "\n dst_roi[j+3]" << dst_roi[j+3];
         }
     } else {
-        std::cerr << "\n Slice Update 4";
         // if input is nD - shape will be of size (batchSize * n) - so fill dst_roi using both values
         unsigned *tensor_shape = dst_roi;
         uint anchor_index = 0, shape_index = 0;
@@ -86,7 +74,6 @@ void updateDestinationRoi(SliceLocalData *data, unsigned *src_roi, unsigned *dst
             }
         }
     }
-    std::cerr << "\n Slice Update 5";
 }
 
 static vx_status VX_CALLBACK refreshSlice(vx_node node, const vx_reference *parameters, SliceLocalData *data) {
@@ -136,7 +123,6 @@ static vx_status VX_CALLBACK refreshSlice(vx_node node, const vx_reference *para
 
     // For Identifying if the input Tensor is 1D (excluding the Nth dimension) [ even if 2nd dim is 1 - The tensor is considered 1D ]
     if ((numDims == 3) && (data->inputTensorDims[2] == 1)) {
-        std::cerr << "\n numDims is 3 and inTensorDims[2] is 1 :: " << numDims;
         RpptROI *src_roi = reinterpret_cast<RpptROI *>(roi_tensor_ptr);
         for (unsigned i = 0, j = 0; i < data->inputTensorDims[0]; i++, j += 2) {
             data->pSrcDims[j] = src_roi[i].xywhROI.xy.x;
