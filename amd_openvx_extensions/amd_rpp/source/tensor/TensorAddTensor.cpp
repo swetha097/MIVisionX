@@ -29,13 +29,18 @@ THE SOFTWARE.
 #include <x86intrin.h>
 #endif
 
+#if ENABLE_HIP
+#include "../amd_rpp_hip/amd_rpp_hip_host_decls.h"
+#endif
+
 struct TensorAddTensorLocalData {
+    vxRppHandle *handle;
     Rpp32u deviceType;
     RppPtr_t pSrc1;
     RppPtr_t pSrc2;
     RppPtr_t pDst;
-    RpptROI *pSrcRoi;
-    RpptROI *pDstRoi;
+    RpptROI *pSrcRoi = nullptr;
+    RpptROI *pDstRoi = nullptr;
     size_t inputTensorDims1[RPP_MAX_TENSOR_DIMS];
     size_t inputTensorDims2[RPP_MAX_TENSOR_DIMS];
     vx_enum inTensorType;
@@ -44,25 +49,30 @@ struct TensorAddTensorLocalData {
 
 static vx_status VX_CALLBACK refreshTensorAddTensor(vx_node node, const vx_reference *parameters, vx_uint32 num, TensorAddTensorLocalData *data) {
     vx_status status = VX_SUCCESS;
+    int32_t nDim = 2;  // Num dimensions for audio tensor
+    void *roi_tensor_ptr_src, *roi_tensor_ptr_dst;
     if (data->deviceType == AGO_TARGET_AFFINITY_GPU) {
-#if ENABLE_OPENCL || ENABLE_HIP
-        return VX_ERROR_NOT_IMPLEMENTED;
+#if ENABLE_HIP
+    void *roi_tensor_ptr_src, *roi_tensor_ptr_dst;
+        STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[0], VX_TENSOR_BUFFER_HIP, &data->pSrc1, sizeof(data->pSrc1)));
+        STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[1], VX_TENSOR_BUFFER_HIP, &data->pSrc2, sizeof(data->pSrc2)));
+        STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[2], VX_TENSOR_BUFFER_HIP, &data->pDst, sizeof(data->pDst)));
+        STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[3], VX_TENSOR_BUFFER_HIP, &roi_tensor_ptr_src, sizeof(roi_tensor_ptr_src)));
+        STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[4], VX_TENSOR_BUFFER_HIP, &roi_tensor_ptr_dst, sizeof(roi_tensor_ptr_dst)));
 #endif
     }
     if (data->deviceType == AGO_TARGET_AFFINITY_CPU) {
-        void *roi_tensor_ptr_src, *roi_tensor_ptr_dst;
         STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[0], VX_TENSOR_BUFFER_HOST, &data->pSrc1, sizeof(data->pSrc1)));
         STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[1], VX_TENSOR_BUFFER_HOST, &data->pSrc2, sizeof(data->pSrc2)));
         STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[2], VX_TENSOR_BUFFER_HOST, &data->pDst, sizeof(data->pDst)));
         STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[3], VX_TENSOR_BUFFER_HOST, &roi_tensor_ptr_src, sizeof(roi_tensor_ptr_src)));
         STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[4], VX_TENSOR_BUFFER_HOST, &roi_tensor_ptr_dst, sizeof(roi_tensor_ptr_dst)));
-        data->pDstRoi = static_cast<RpptROI *>(roi_tensor_ptr_dst);
-        data->pSrcRoi = static_cast<RpptROI *>(roi_tensor_ptr_src);
-        for (uint i = 0; i < data->inputTensorDims1[0]; i++) {
-            data->pDstRoi[i].xywhROI.roiWidth = data->pSrcRoi[i].xywhROI.roiWidth;
-            data->pDstRoi[i].xywhROI.roiHeight = data->pSrcRoi[i].xywhROI.roiHeight;
-        }
-        return status;
+    }
+    data->pDstRoi = static_cast<RpptROI *>(roi_tensor_ptr_dst);
+    data->pSrcRoi = static_cast<RpptROI *>(roi_tensor_ptr_src);
+    for (uint i = 0; i < data->inputTensorDims1[0]; i++) {
+        data->pDstRoi[i].xywhROI.roiWidth = data->pSrcRoi[i].xywhROI.roiWidth;
+        data->pDstRoi[i].xywhROI.roiHeight = data->pSrcRoi[i].xywhROI.roiHeight;
     }
     return status;
 }
@@ -98,14 +108,19 @@ static vx_status VX_CALLBACK processTensorAddTensor(vx_node node, const vx_refer
     vx_status status = VX_SUCCESS;
     TensorAddTensorLocalData *data = NULL;
     STATUS_ERROR_CHECK(vxQueryNode(node, VX_NODE_LOCAL_DATA_PTR, &data, sizeof(data)));
+    refreshTensorAddTensor(node, parameters, num, data);
 
     if (data->deviceType == AGO_TARGET_AFFINITY_GPU) {
-#if ENABLE_OPENCL || ENABLE_HIP
-        return VX_ERROR_NOT_IMPLEMENTED;
+#if ENABLE_HIP
+        if (data->inTensorType == vx_type_e::VX_TYPE_FLOAT32 && data->outTensorType == vx_type_e::VX_TYPE_FLOAT32) 
+        {
+            HipExecTensorAddTensor(data->handle->hipstream, static_cast<float *>(data->pSrc1), static_cast<float *>(data->pSrc2), static_cast<float *>(data->pDst), data->pSrcRoi, data->inputTensorDims1);
+        } else {
+            return VX_ERROR_NOT_SUPPORTED;
+        }
 #endif
     }
     if (data->deviceType == AGO_TARGET_AFFINITY_CPU) {
-        refreshTensorAddTensor(node, parameters, num, data);
         // Currently supports adding audio tensors and distribution node tensors - (BS, samples, 1) and (BS, 1) - will be extended to include all tensors of supported layouts
         if (data->inTensorType == vx_type_e::VX_TYPE_FLOAT32 && data->outTensorType == vx_type_e::VX_TYPE_FLOAT32) {
             size_t nStride = data->inputTensorDims1[1] * data->inputTensorDims1[2];
@@ -156,6 +171,7 @@ static vx_status VX_CALLBACK initializeTensorAddTensor(vx_node node, const vx_re
         STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[2], VX_TENSOR_DATA_TYPE, &data->outTensorType, sizeof(data->outTensorType)));
 
         STATUS_ERROR_CHECK(vxSetNodeAttribute(node, VX_NODE_LOCAL_DATA_PTR, &data, sizeof(data)));
+        STATUS_ERROR_CHECK(createRPPHandle(node, &data->handle, 1, data->deviceType));
         return VX_SUCCESS;
     } else {
         return VX_FAILURE;
@@ -165,6 +181,7 @@ static vx_status VX_CALLBACK initializeTensorAddTensor(vx_node node, const vx_re
 static vx_status VX_CALLBACK uninitializeTensorAddTensor(vx_node node, const vx_reference *parameters, vx_uint32 num) {
     TensorAddTensorLocalData *data;
     STATUS_ERROR_CHECK(vxQueryNode(node, VX_NODE_LOCAL_DATA_PTR, &data, sizeof(data)));
+    STATUS_ERROR_CHECK(releaseRPPHandle(node, data->handle, data->deviceType));
     if (data) delete data;
     return VX_SUCCESS;
 }

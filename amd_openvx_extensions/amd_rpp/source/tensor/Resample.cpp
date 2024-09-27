@@ -34,45 +34,51 @@ struct ResampleLocalData {
     Rpp32f *pInRateTensor;
     Rpp32f *pOutRateTensor;
 #if RPP_AUDIO
-    RpptResamplingWindow window;
+RpptResamplingWindow *window;
+// #if ENABLE_HIP
+//     RpptResamplingWindow *window;
+// #else
+//     RpptResamplingWindow window;
+// #endif
 #endif
     size_t inputTensorDims[RPP_MAX_TENSOR_DIMS];
     size_t outputTensorDims[RPP_MAX_TENSOR_DIMS];
 };
 
-inline float sinc(float x) {
-    x *= M_PI;
-    return (std::abs(x) < 1e-5f) ? (1.0f - x * x * (1.0f / 6)) : std::sin(x) / x;
-}
+// TODO: Remove from MIVISIONX - as its already defined in the rpp.
+// inline float sinc(float x) {
+//     x *= M_PI;
+//     return (std::abs(x) < 1e-5f) ? (1.0f - x * x * (1.0f / 6)) : std::sin(x) / x;
+// }
 
-inline double hann(double x) {
-    return 0.5 * (1 + std::cos(x * M_PI));
-}
+// inline double hann(double x) {
+//     return 0.5 * (1 + std::cos(x * M_PI));
+// }
 
 // initialization function used for filling the values in Resampling window (RpptResamplingWindow)
 // using the coeffs and lobes value this function generates a LUT (look up table) which is further used in Resample audio augmentation
-#if RPP_AUDIO
-inline void windowed_sinc(RpptResamplingWindow &window, int32_t coeffs, int32_t lobes) {
-    float scale = 2.0f * lobes / (coeffs - 1);
-    float scale_envelope = 2.0f / coeffs;
-    window.coeffs = coeffs;
-    window.lobes = lobes;
-    window.lookup.clear();
-    window.lookup.resize(coeffs + 5);
-    window.lookupSize = window.lookup.size();
-    int32_t center = (coeffs - 1) * 0.5f;
-    for (int32_t i = 0; i < coeffs; i++) {
-        float x = (i - center) * scale;
-        float y = (i - center) * scale_envelope;
-        float w = sinc(x) * hann(y);
-        window.lookup[i + 1] = w;
-    }
-    window.center = center + 1;
-    window.scale = 1.0f / scale;
-    window.pCenter = _mm_set1_ps(window.center);
-    window.pScale = _mm_set1_ps(window.scale);
-}
-#endif
+// #if RPP_AUDIO
+// inline void windowed_sinc(RpptResamplingWindow &window, int32_t coeffs, int32_t lobes) {
+//     float scale = 2.0f * lobes / (coeffs - 1);
+//     float scale_envelope = 2.0f / coeffs;
+//     window.coeffs = coeffs;
+//     window.lobes = lobes;
+//     window.lookup.clear();
+//     window.lookup.resize(coeffs + 5);
+//     window.lookupSize = window.lookup.size();
+//     int32_t center = (coeffs - 1) * 0.5f;
+//     for (int32_t i = 0; i < coeffs; i++) {
+//         float x = (i - center) * scale;
+//         float y = (i - center) * scale_envelope;
+//         float w = sinc(x) * hann(y);
+//         window.lookup[i + 1] = w;
+//     }
+//     window.center = center + 1;
+//     window.scale = 1.0f / scale;
+//     window.pCenter = _mm_set1_ps(window.center);
+//     window.pScale = _mm_set1_ps(window.scale);
+// }
+// #endif
 
 void update_destination_roi(ResampleLocalData *data, RpptROI *src_roi, RpptROI *dst_roi) {
     float scale_ratio;
@@ -80,37 +86,53 @@ void update_destination_roi(ResampleLocalData *data, RpptROI *src_roi, RpptROI *
         scale_ratio = (data->pInRateTensor[i] != 0) ? (data->pOutRateTensor[i] / static_cast<float>(data->pInRateTensor[i])) : 0;
         dst_roi[i].xywhROI.roiWidth = static_cast<int32_t>(std::ceil(scale_ratio * src_roi[i].xywhROI.roiWidth));
         dst_roi[i].xywhROI.roiHeight = src_roi[i].xywhROI.roiHeight;
+        // std::cerr << "\n dst ROI roiWidth: " << dst_roi[i].xywhROI.roiWidth; 
+        // std::cerr << "\n dst ROI roiHeight: " << dst_roi[i].xywhROI.roiHeight;
     }
 }
 
 static vx_status VX_CALLBACK refreshResample(vx_node node, const vx_reference *parameters, vx_uint32 num, ResampleLocalData *data) {
     vx_status status = VX_SUCCESS;
     int32_t nDim = 2;  // Num dimensions for audio tensor
+    void *roi_tensor_ptr_src, *roi_tensor_ptr_dst;
     STATUS_ERROR_CHECK(vxCopyArrayRange((vx_array)parameters[5], 0, data->pSrcDesc->n, sizeof(float), data->pInRateTensor, VX_READ_ONLY, VX_MEMORY_TYPE_HOST));
-    STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[4], VX_TENSOR_BUFFER_HOST, &data->pOutRateTensor, sizeof(data->pOutRateTensor)));
     if (data->deviceType == AGO_TARGET_AFFINITY_GPU) {
-#if ENABLE_OPENCL || ENABLE_HIP
-        return VX_ERROR_NOT_IMPLEMENTED;
+#if ENABLE_OPENCL
+    return VX_ERROR_NOT_IMPLEMENTED;
+#elif ENABLE_HIP
+    STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[0], VX_TENSOR_BUFFER_HIP, &data->pSrc, sizeof(data->pSrc)));
+    STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[1], VX_TENSOR_BUFFER_HIP, &data->pDst, sizeof(data->pDst)));
+    STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[2], VX_TENSOR_BUFFER_HIP, &roi_tensor_ptr_src, sizeof(roi_tensor_ptr_src)));
+    STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[3], VX_TENSOR_BUFFER_HIP, &roi_tensor_ptr_dst, sizeof(roi_tensor_ptr_dst)));
+    STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[4], VX_TENSOR_BUFFER_HIP, &data->pOutRateTensor, sizeof(data->pOutRateTensor)));
 #endif
     }
     if (data->deviceType == AGO_TARGET_AFFINITY_CPU) {
-        void *roi_tensor_ptr_src, *roi_tensor_ptr_dst;
         STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[0], VX_TENSOR_BUFFER_HOST, &data->pSrc, sizeof(data->pSrc)));
         STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[1], VX_TENSOR_BUFFER_HOST, &data->pDst, sizeof(data->pDst)));
         STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[2], VX_TENSOR_BUFFER_HOST, &roi_tensor_ptr_src, sizeof(roi_tensor_ptr_src)));
         STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[3], VX_TENSOR_BUFFER_HOST, &roi_tensor_ptr_dst, sizeof(roi_tensor_ptr_dst)));
-        if (!data->pSrcRoi) {
-            data->pSrcRoi = new Rpp32s[data->pSrcDesc->n * nDim];
-        }
-        RpptROI *src_roi = reinterpret_cast<RpptROI *>(roi_tensor_ptr_src);
-        RpptROI *dst_roi = reinterpret_cast<RpptROI *>(roi_tensor_ptr_dst);
-        update_destination_roi(data, src_roi, dst_roi);
-        for (uint32_t i = 0; i < data->pSrcDesc->n; i++) {
-            data->pSrcRoi[i * nDim] = src_roi[i].xywhROI.roiWidth;
-            data->pSrcRoi[i * nDim + 1] = src_roi[i].xywhROI.roiHeight;
-        }
-        return status;
+        STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[4], VX_TENSOR_BUFFER_HOST, &data->pOutRateTensor, sizeof(data->pOutRateTensor)));
     }
+    // if (!data->pSrcRoi) {
+    //     data->pSrcRoi = new Rpp32s[data->pSrcDesc->n * nDim];
+    // }
+    if (!data->pSrcRoi) {
+        #if ENABLE_HIP
+            hipHostMalloc(&data->pSrcRoi, data->pSrcDesc->n * nDim * sizeof(Rpp32s));
+        #else
+            data->pSrcRoi = new Rpp32s[data->pSrcDesc->n * nDim];
+        #endif 
+    }
+
+    RpptROI *src_roi = reinterpret_cast<RpptROI *>(roi_tensor_ptr_src);
+    RpptROI *dst_roi = reinterpret_cast<RpptROI *>(roi_tensor_ptr_dst);
+    update_destination_roi(data, src_roi, dst_roi);
+    for (uint32_t i = 0; i < data->pSrcDesc->n; i++) {
+        data->pSrcRoi[i * nDim] = src_roi[i].xywhROI.roiWidth;
+        data->pSrcRoi[i * nDim + 1] = src_roi[i].xywhROI.roiHeight;
+    }
+
     return status;
 }
 
@@ -155,15 +177,64 @@ static vx_status VX_CALLBACK processResample(vx_node node, const vx_reference *p
     ResampleLocalData *data = NULL;
     STATUS_ERROR_CHECK(vxQueryNode(node, VX_NODE_LOCAL_DATA_PTR, &data, sizeof(data)));
     refreshResample(node, parameters, num, data);
+#if RPP_AUDIO
     if (data->deviceType == AGO_TARGET_AFFINITY_GPU) {
-#if ENABLE_OPENCL || ENABLE_HIP
+    #if ENABLE_OPENCL
         return VX_ERROR_NOT_IMPLEMENTED;
-#endif
+    #elif ENABLE_HIP
+        // allocate host memory for both input and output
+        // size_t bufferLength = data->inputTensorDims[0] * data->inputTensorDims[1] * data->inputTensorDims[2];
+        // float *pSrcHost = new float[bufferLength];
+        // float *pDstHost = new float[bufferLength];
+        // float* pOutRateTensor = new float[data->pSrcDesc->n];
+        // // copy source from hip memory to host memory
+        // CHECK_RETURN_STATUS(hipMemcpyAsync(pSrcHost, data->pSrc, sizeof(data->pSrc), hipMemcpyDeviceToHost, data->handle->hipstream));
+        // CHECK_RETURN_STATUS(hipMemcpyAsync(pOutRateTensor, data->pOutRateTensor, sizeof(data->pOutRateTensor), hipMemcpyDeviceToHost, data->handle->hipstream));
+        // CHECK_RETURN_STATUS(hipStreamSynchronize(data->handle->hipstream));
+
+        // call rpp cpu resample
+        // rpp_status = rppt_resample_host(pSrcHost, data->pSrcDesc, pDstHost, data->pDstDesc,
+        //                                 data->pInRateTensor, pOutRateTensor, data->pSrcRoi, *(data->window), data->handle->rppHandle);
+
+        // copy source from hip memory to host memory
+        // CHECK_RETURN_STATUS(hipMemcpyAsync(data->pDst, pDstHost, sizeof(data->pDst), hipMemcpyHostToDevice, data->handle->hipstream));
+        // CHECK_RETURN_STATUS(hipMemcpyAsync(data->pOutRateTensor, pOutRateTensor, sizeof(data->pOutRateTensor), hipMemcpyHostToDevice, data->handle->hipstream));
+
+        // CHECK_RETURN_STATUS(hipStreamSynchronize(data->handle->hipstream));
+        // delete [] pSrcHost;
+        // delete [] pDstHost;
+        // delete [] pOutRateTensor;
+
+        // for (uint i = 0; i < 1; i++) {
+        //     std::cout << "\n data->pInRateTensor: " << data->pInRateTensor[i];
+        //     std::cout <<  "\n data->pOutRateTensor: " << data->pOutRateTensor[i];
+        //     std::cout <<  "\n data->pSrcRoi 1: " << data->pSrcRoi[i * 2];
+        //     std::cout <<  "\n data->pSrcRoi 2: " << data->pSrcRoi[i * 2 + 1];
+        //     std::cout << "\n window lookup Size: " << data->window->lookupSize;
+        //     std::cout << "\n data->pSrcDesc->numDims: " << data->pSrcDesc->numDims;
+        //     std::cout << "\n data->pDstDesc->strides.hStride: " << data->pDstDesc->strides.hStride << std::endl;
+        // }
+        
+        // data->pDstDesc->n = 1;
+        data->pDstDesc->strides.hStride = data->pDstDesc->strides.nStride;
+        rpp_status = rppt_resample_gpu(data->pSrc, data->pSrcDesc, data->pDst, data->pDstDesc,
+                                            data->pInRateTensor, data->pOutRateTensor, data->pSrcRoi, *(data->window), data->handle->rppHandle);
+        // CHECK_RETURN_STATUS(hipDeviceSynchronize());
+        // auto obufferSize = data->pDstDesc->n * data->pDstDesc->strides.nStride;
+        // Rpp32f *outputf32 = static_cast<Rpp32f *>(calloc(obufferSize, sizeof(Rpp32f)));
+        
+        // hipMemcpy(outputf32, data->pDst, 196984 * sizeof(Rpp32f), hipMemcpyDeviceToHost);
+        // CHECK_RETURN_STATUS(hipDeviceSynchronize());
+        // std::cout << "\n Printing Resample Outputs";
+        // for (int i = 0; i < 196984; i++)
+        //     std::cout << outputf32[i] << std::endl;
+        // std::cout << "\n Resample Outputs Printed";
+        return_status = (rpp_status == RPP_SUCCESS) ? VX_SUCCESS : VX_FAILURE;
+    #endif
     }
     if (data->deviceType == AGO_TARGET_AFFINITY_CPU) {
-#if RPP_AUDIO
         rpp_status = rppt_resample_host(data->pSrc, data->pSrcDesc, data->pDst, data->pDstDesc,
-                                        data->pInRateTensor, data->pOutRateTensor, data->pSrcRoi, data->window, data->handle->rppHandle);
+                                        data->pInRateTensor, data->pOutRateTensor, data->pSrcRoi, *(data->window), data->handle->rppHandle);
         return_status = (rpp_status == RPP_SUCCESS) ? VX_SUCCESS : VX_FAILURE;
 #else
         return_status = VX_ERROR_NOT_SUPPORTED;
@@ -198,11 +269,22 @@ static vx_status VX_CALLBACK initializeResample(vx_node node, const vx_reference
         data->pDstDesc->offsetInBytes = 0;
         fillAudioDescriptionPtrFromDims(data->pDstDesc, data->outputTensorDims);
 
+    #if ENABLE_HIP
+        hipHostMalloc(&data->pInRateTensor, data->pSrcDesc->n * sizeof(float));
+    #else
         data->pInRateTensor = new float[data->pSrcDesc->n];
+    #endif 
         int32_t lobes = std::round(0.007 * data->quality * data->quality - 0.09 * data->quality + 3);
         int32_t lookupSize = lobes * 64 + 1;
 #if RPP_AUDIO
-        windowed_sinc(data->window, lookupSize, lobes);
+    #if ENABLE_HIP
+        hipHostMalloc(&(data->window), sizeof(RpptResamplingWindow));
+        windowed_sinc(*(data->window), lookupSize, lobes);
+    #else
+        // data->window = new RpptResamplingWindow[1]; // TODO: Re-check this part
+        // data->window = new RpptResamplingWindow();
+        windowed_sinc(*(data->window), lookupSize, lobes);
+    #endif
 #endif
         refreshResample(node, parameters, num, data);
         STATUS_ERROR_CHECK(createRPPHandle(node, &data->handle, data->pSrcDesc->n, data->deviceType));
@@ -216,8 +298,21 @@ static vx_status VX_CALLBACK initializeResample(vx_node node, const vx_reference
 static vx_status VX_CALLBACK uninitializeResample(vx_node node, const vx_reference *parameters, vx_uint32 num) {
     ResampleLocalData *data;
     STATUS_ERROR_CHECK(vxQueryNode(node, VX_NODE_LOCAL_DATA_PTR, &data, sizeof(data)));
+#if ENABLE_HIP
+    if (data->pInRateTensor != nullptr)  hipHostFree(data->pInRateTensor);
+    if (data->pSrcRoi != nullptr)  hipHostFree(data->pSrcRoi);
+    if (data->window != nullptr) {
+        if (data->window->lookup != nullptr)
+            hipHostFree(data->window->lookup);
+        hipHostFree(data->window);
+    }
+#else
     if (data->pInRateTensor) delete[] data->pInRateTensor;
     if (data->pSrcRoi) delete[] data->pSrcRoi;
+    if (data->window->lookup) delete [] data->window->lookup;
+#endif
+
+
     if (data->pSrcDesc) delete data->pSrcDesc;
     if (data->pDstDesc) delete data->pDstDesc;
     STATUS_ERROR_CHECK(releaseRPPHandle(node, data->handle, data->deviceType));
