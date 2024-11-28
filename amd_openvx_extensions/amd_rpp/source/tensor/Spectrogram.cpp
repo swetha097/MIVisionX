@@ -62,8 +62,13 @@ static vx_status VX_CALLBACK refreshSpectrogram(vx_node node, const vx_reference
     vx_status return_status = VX_SUCCESS;
     void *roi_tensor_ptr_src, *roi_tensor_ptr_dst;
     if (data->deviceType == AGO_TARGET_AFFINITY_GPU) {
-#if ENABLE_OPENCL || ENABLE_HIP
-        return_status = VX_ERROR_NOT_IMPLEMENTED;
+#if ENABLE_OPENCL
+    return_status = VX_ERROR_NOT_IMPLEMENTED;
+#elif ENABLE_HIP
+    STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[0], VX_TENSOR_BUFFER_HIP, &data->pSrc, sizeof(data->pSrc)));
+    STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[1], VX_TENSOR_BUFFER_HIP, &roi_tensor_ptr_src, sizeof(roi_tensor_ptr_src)));
+    STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[2], VX_TENSOR_BUFFER_HIP, &data->pDst, sizeof(data->pDst)));
+    STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[3], VX_TENSOR_BUFFER_HIP, &roi_tensor_ptr_dst, sizeof(roi_tensor_ptr_dst)));
 #endif
     } else if (data->deviceType == AGO_TARGET_AFFINITY_CPU) {
         STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[0], VX_TENSOR_BUFFER_HOST, &data->pSrc, sizeof(data->pSrc)));
@@ -130,12 +135,16 @@ static vx_status VX_CALLBACK processSpectrogram(vx_node node, const vx_reference
     SpectrogramLocalData *data = NULL;
     STATUS_ERROR_CHECK(vxQueryNode(node, VX_NODE_LOCAL_DATA_PTR, &data, sizeof(data)));
     refreshSpectrogram(node, parameters, data);
-    if (data->deviceType == AGO_TARGET_AFFINITY_GPU) {
-#if ENABLE_OPENCL || ENABLE_HIP
-        return_status = VX_ERROR_NOT_IMPLEMENTED;
-#endif
-    } else if (data->deviceType == AGO_TARGET_AFFINITY_CPU) {
 #if RPP_AUDIO
+    if (data->deviceType == AGO_TARGET_AFFINITY_GPU) {
+    #if ENABLE_OPENCL
+            return_status = VX_ERROR_NOT_IMPLEMENTED;
+    #elif ENABLE_HIP
+            rpp_status = rppt_spectrogram_gpu(data->pSrc, data->pSrcDesc, data->pDst, data->pDstDesc, data->pSrcLength, data->centerWindows, data->reflectPadding,
+                                            data->pWindowFn, data->nfft, data->power, data->windowLength, data->windowStep, data->handle->rppHandle);
+            return_status = (rpp_status == RPP_SUCCESS) ? VX_SUCCESS : VX_FAILURE;
+    #endif
+    } else if (data->deviceType == AGO_TARGET_AFFINITY_CPU) {
         rpp_status = rppt_spectrogram_host(data->pSrc, data->pSrcDesc, data->pDst, data->pDstDesc, data->pSrcLength, data->centerWindows, data->reflectPadding,
                                            data->pWindowFn, data->nfft, data->power, data->windowLength, data->windowStep, data->handle->rppHandle);
         return_status = (rpp_status == RPP_SUCCESS) ? VX_SUCCESS : VX_FAILURE;
@@ -182,8 +191,13 @@ static vx_status VX_CALLBACK initializeSpectrogram(vx_node node, const vx_refere
         data->pDstDesc->offsetInBytes = 0;
         fillAudioDescriptionPtrFromDims(data->pDstDesc, data->outputTensorDims, data->spectrogramLayout);
 
+    #if ENABLE_HIP
+        hipHostMalloc(&data->pSrcLength, data->pSrcDesc->n * sizeof(int));
+        hipHostMalloc(&data->pWindowFn, data->windowLength * sizeof(float));
+    #else
         data->pSrcLength = new int[data->pSrcDesc->n];
         data->pWindowFn = new float[data->windowLength];
+    #endif 
 
         STATUS_ERROR_CHECK(vxCopyArrayRange((vx_array)parameters[4], 0, data->windowLength, sizeof(float), data->pWindowFn, VX_READ_ONLY, VX_MEMORY_TYPE_HOST));
         STATUS_ERROR_CHECK(createRPPHandle(node, &data->handle, data->pSrcDesc->n, data->deviceType));
@@ -197,8 +211,13 @@ static vx_status VX_CALLBACK initializeSpectrogram(vx_node node, const vx_refere
 static vx_status VX_CALLBACK uninitializeSpectrogram(vx_node node, const vx_reference *parameters, vx_uint32 num) {
     SpectrogramLocalData *data;
     STATUS_ERROR_CHECK(vxQueryNode(node, VX_NODE_LOCAL_DATA_PTR, &data, sizeof(data)));
+#if ENABLE_HIP
+    if (data->pSrcLength != nullptr)  hipHostFree(data->pSrcLength);
+    if (data->pWindowFn != nullptr)  hipHostFree(data->pWindowFn);
+#else
     if (data->pSrcLength) delete[] data->pSrcLength;
     if (data->pWindowFn) delete[] data->pWindowFn;
+#endif
     if (data->pSrcDesc) delete data->pSrcDesc;
     if (data->pDstDesc) delete data->pDstDesc;
     STATUS_ERROR_CHECK(releaseRPPHandle(node, data->handle, data->deviceType));

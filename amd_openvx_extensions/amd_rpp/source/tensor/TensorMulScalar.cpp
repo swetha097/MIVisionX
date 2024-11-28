@@ -29,7 +29,12 @@ THE SOFTWARE.
 #include <x86intrin.h>
 #endif
 
+#if ENABLE_HIP
+#include "../amd_rpp_hip/amd_rpp_hip_host_decls.h"
+#endif
+
 struct TensorMulScalarLocalData {
+    vxRppHandle *handle;
     Rpp32u deviceType;
     RppPtr_t pSrc;
     RppPtr_t pDst;
@@ -42,8 +47,9 @@ struct TensorMulScalarLocalData {
 static vx_status VX_CALLBACK refreshTensorMulScalar(vx_node node, const vx_reference *parameters, vx_uint32 num, TensorMulScalarLocalData *data) {
     vx_status status = VX_SUCCESS;
     if (data->deviceType == AGO_TARGET_AFFINITY_GPU) {
-#if ENABLE_OPENCL || ENABLE_HIP
-        return VX_ERROR_NOT_IMPLEMENTED;
+#if ENABLE_HIP
+        STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[0], VX_TENSOR_BUFFER_HIP, &data->pSrc, sizeof(data->pSrc)));
+        STATUS_ERROR_CHECK(vxQueryTensor((vx_tensor)parameters[1], VX_TENSOR_BUFFER_HIP, &data->pDst, sizeof(data->pDst)));
 #endif
     }
     if (data->deviceType == AGO_TARGET_AFFINITY_CPU) {
@@ -89,8 +95,13 @@ static vx_status VX_CALLBACK processTensorMulScalar(vx_node node, const vx_refer
     STATUS_ERROR_CHECK(vxQueryNode(node, VX_NODE_LOCAL_DATA_PTR, &data, sizeof(data)));
     refreshTensorMulScalar(node, parameters, num, data);
     if (data->deviceType == AGO_TARGET_AFFINITY_GPU) {
-#if ENABLE_OPENCL || ENABLE_HIP
-        return VX_ERROR_NOT_IMPLEMENTED;
+#if ENABLE_HIP
+    if (data->inputTensorType == vx_type_e::VX_TYPE_FLOAT32 && data->outputTensorType == vx_type_e::VX_TYPE_FLOAT32) {
+        HipExecTensorMulScalar(data->handle->hipstream, static_cast<float *>(data->pSrc), static_cast<float *>(data->pDst), data->scalarValue, data->tensorSize / sizeof(float));
+    }
+    else {
+        return VX_ERROR_NOT_SUPPORTED;
+    }
 #endif
     }
     if (data->deviceType == AGO_TARGET_AFFINITY_CPU) {
@@ -139,6 +150,7 @@ static vx_status VX_CALLBACK initializeTensorMulScalar(vx_node node, const vx_re
         else
             return VX_ERROR_NOT_SUPPORTED;
         STATUS_ERROR_CHECK(vxSetNodeAttribute(node, VX_NODE_LOCAL_DATA_PTR, &data, sizeof(data)));
+        STATUS_ERROR_CHECK(createRPPHandle(node, &data->handle, 1, data->deviceType));
         return VX_SUCCESS;
     } else {
         return VX_FAILURE;
@@ -148,6 +160,7 @@ static vx_status VX_CALLBACK initializeTensorMulScalar(vx_node node, const vx_re
 static vx_status VX_CALLBACK uninitializeTensorMulScalar(vx_node node, const vx_reference *parameters, vx_uint32 num) {
     TensorMulScalarLocalData *data;
     STATUS_ERROR_CHECK(vxQueryNode(node, VX_NODE_LOCAL_DATA_PTR, &data, sizeof(data)));
+    STATUS_ERROR_CHECK(releaseRPPHandle(node, data->handle, data->deviceType));
     if (data) delete data;
     return VX_SUCCESS;
 }

@@ -2845,14 +2845,22 @@ void fillDescriptionPtrfromDims(RpptDescPtr &descPtr, vxTensorLayout layout, siz
 
 void fillAudioDescriptionPtrFromDims(RpptDescPtr &descPtr, size_t *maxTensorDims, vxTensorLayout layout) {
     descPtr->n = maxTensorDims[0];
+    // std::cerr << "\n  maxTensorDims[0] :: " <<  maxTensorDims[0];
     descPtr->h = maxTensorDims[1];
+    // std::cerr << "\n  maxTensorDims[1] :: " <<  maxTensorDims[1];
     descPtr->w = maxTensorDims[2];
+    // std::cerr << "\n  maxTensorDims[2] :: " <<  maxTensorDims[2];
     descPtr->c = 1;
     descPtr->strides.nStride = descPtr->c * descPtr->w * descPtr->h;
     descPtr->strides.hStride = descPtr->c * descPtr->w;
     descPtr->strides.wStride = descPtr->c;
     descPtr->strides.cStride = 1;
-    descPtr->numDims = 4;
+    // 1d tensor - num_dims = 2 - BS x dim1 [dim2 = 1]
+    // 2d tensor - num_dims = 3 - BS x dim1 x dim2
+    if (maxTensorDims[2] == 1)
+        descPtr->numDims = 2;
+    else if(maxTensorDims[2] > 1)
+        descPtr->numDims = 3;
     if(tensorLayoutMapping.find(layout) != tensorLayoutMapping.end()) {
         descPtr->layout = tensorLayoutMapping.at(layout);
     } else {
